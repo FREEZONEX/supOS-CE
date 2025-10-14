@@ -1,0 +1,582 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "",
+    "version": ""
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/inter-api/supos/uns/alias": {
+      "post": {
+        "summary": "根据别名查询模板详情",
+        "operationId": "postInter-apiSuposUnsAlias",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/WithID"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/template",
+          "suposUnsTemplate"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/external/tree": {
+      "post": {
+        "summary": "搜索外部topic主题树，默认整个树",
+        "operationId": "postInter-apiSuposUnsExternalTree",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/external",
+          "suposUnsExternal"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/model/pageList": {
+      "post": {
+        "summary": "查询模板列表",
+        "operationId": "postInter-apiSuposUnsModelPageList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/model",
+          "suposUnsModel"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/systemConfig": {
+      "get": {
+        "summary": "获取系统配置",
+        "operationId": "getInter-apiSuposUnsSystemConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns",
+          "suposUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/template": {
+      "get": {
+        "summary": "根据ID查询模板详情",
+        "operationId": "getInter-apiSuposUnsTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/template",
+          "suposUnsTemplate"
+        ]
+      },
+      "post": {
+        "summary": "新增模板",
+        "operationId": "postInter-apiSuposUnsTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/WithID"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/template",
+          "suposUnsTemplate"
+        ]
+      },
+      "put": {
+        "summary": "修改模板基本信息",
+        "operationId": "putInter-apiSuposUnsTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/WithID"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/template",
+          "suposUnsTemplate"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/template/pageList": {
+      "post": {
+        "summary": "查询模板列表",
+        "operationId": "postInter-apiSuposUnsTemplatePageList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/template",
+          "suposUnsTemplate"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "CommonResp": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "description": " id"
+        }
+      },
+      "title": "CommonResp"
+    },
+    "Compare": {
+      "type": "object",
+      "properties": {
+        "cmpType": {
+          "type": "string",
+          "description": "\"=\":相等 \"!=\":不相等 \"\u003e\":大于\"\u003e=\":大于等于\"\u003c\":小于\"\u003c=\":小于等于 \"like\":模糊查询,只有string类型可以使用"
+        },
+        "value": {
+          "type": "string"
+        },
+        "castTo": {
+          "type": "string",
+          "description": "参数的类型(填写了会进行数据类型的转换): int float string"
+        }
+      },
+      "title": "Compare",
+      "required": [
+        "cmpType",
+        "value",
+        "castTo"
+      ]
+    },
+    "CompareInt64": {
+      "type": "object",
+      "properties": {
+        "cmpType": {
+          "type": "string",
+          "description": "\"=\":相等 \"!=\":不相等 \"\u003e\":大于\"\u003e=\":大于等于\"\u003c\":小于\"\u003c=\":小于等于 \"like\":模糊查询"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "CompareInt64",
+      "required": [
+        "cmpType",
+        "value"
+      ]
+    },
+    "CompareString": {
+      "type": "object",
+      "properties": {
+        "cmpType": {
+          "type": "string",
+          "description": "\"=\":相等 \"!=\":不相等 \"\u003e\":大于\"\u003e=\":大于等于\"\u003c\":小于\"\u003c=\":小于等于 \"like\":模糊查询"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "CompareString",
+      "required": [
+        "cmpType",
+        "value"
+      ]
+    },
+    "DateRange": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "开始时间 格式：yyyy-mm-dd"
+        },
+        "end": {
+          "type": "string",
+          "description": "结束时间 格式：yyyy-mm-dd"
+        }
+      },
+      "title": "DateRange"
+    },
+    "Empty": {
+      "type": "object",
+      "properties": {},
+      "title": "Empty"
+    },
+    "IDList": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "title": "IDList",
+      "required": [
+        "ids"
+      ]
+    },
+    "OrderBy": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "排序的字段名"
+        },
+        "sort": {
+          "type": "integer",
+          "format": "int64",
+          "description": "排序方式：0 从小到大, 1 从大到小"
+        }
+      },
+      "title": "OrderBy"
+    },
+    "PageInfo": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": " 页码"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64",
+          "description": " 每页大小"
+        },
+        "orders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderBy"
+          },
+          "description": "排序"
+        }
+      },
+      "title": "PageInfo"
+    },
+    "PageResp": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "description": " 页码"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int64",
+          "description": " 每页大小"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "PageResp",
+      "required": [
+        "total"
+      ]
+    },
+    "Point": {
+      "type": "object",
+      "properties": {
+        "longitude": {
+          "type": "number",
+          "format": "double",
+          "description": "经度",
+          "maximum": 180
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double",
+          "description": "纬度",
+          "maximum": 90
+        }
+      },
+      "title": "Point",
+      "required": [
+        "longitude",
+        "latitude"
+      ]
+    },
+    "SendOption": {
+      "type": "object",
+      "properties": {
+        "timeoutToFail": {
+          "type": "integer",
+          "format": "int64",
+          "description": "超时失败时间"
+        },
+        "requestTimeout": {
+          "type": "integer",
+          "format": "int64",
+          "description": "请求超时,超时后会进行重试"
+        },
+        "retryInterval": {
+          "type": "integer",
+          "format": "int64",
+          "description": "重试间隔"
+        }
+      },
+      "title": "SendOption"
+    },
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "Tag",
+      "required": [
+        "key",
+        "value"
+      ]
+    },
+    "TimeRange": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "integer",
+          "format": "int64",
+          "description": "开始时间 unix时间戳"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int64",
+          "description": "结束时间 unix时间戳"
+        }
+      },
+      "title": "TimeRange"
+    },
+    "WithCode": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        }
+      },
+      "title": "WithCode"
+    },
+    "WithGroupCode": {
+      "type": "object",
+      "properties": {
+        "groupCode": {
+          "type": "string",
+          "description": " id"
+        },
+        "code": {
+          "type": "string"
+        }
+      },
+      "title": "WithGroupCode"
+    },
+    "WithID": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "description": " id"
+        }
+      },
+      "title": "WithID"
+    },
+    "WithIDOrCode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "description": " id"
+        },
+        "code": {
+          "type": "string"
+        }
+      },
+      "title": "WithIDOrCode"
+    },
+    "WithIDStr": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": " id"
+        }
+      },
+      "title": "WithIDStr"
+    }
+  },
+  "securityDefinitions": {
+    "apiKey": {
+      "type": "apiKey",
+      "description": "Enter JWT Bearer token **_only_**",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}
