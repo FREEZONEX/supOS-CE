@@ -1,0 +1,9 @@
+# Check if any staged files are inside the 'frontend/' directory
+if git diff --cached --name-only | grep -q "^frontend/"; then
+  # If yes, run commitlint from the frontend directory
+  echo "Frontend files changed. Running commitlint..."
+  cd frontend && pnpm commitlint --edit $1
+else
+  # If no, skip commitlint
+  echo "No frontend files changed. Skipping commitlint."
+fi

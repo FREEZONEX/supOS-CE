@@ -1,0 +1,25 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "catalog:framework",
+    "react-dom": "catalog:framework",
+    "antd": "catalog:ui",
+    "@ant-design/v5-patch-for-react-19": "catalog:ui"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:type",
+    "@types/react": "catalog:type",
+    "@types/react-dom": "catalog:type",
+    "@vitejs/plugin-react": "catalog:dev",
+    "vite": "catalog:build"
+  }
+}

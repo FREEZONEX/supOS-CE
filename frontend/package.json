@@ -1,0 +1,54 @@
+{
+  "name": "frontend",
+  "private": true,
+  "description": "pnpm monorepo supos-os-edge",
+  "type": "module",
+  "scripts": {
+    "prepare": "cd .. && husky frontend/.husky",
+    "lint": "eslint .",
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter ./apps/web",
+    "clean": "rimraf --glob \"**/node_modules\"  || exit 0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ],
+    "*.{css,less,scss}": [
+      "stylelint --fix --allow-empty-input"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:lint",
+    "eslint": "catalog:lint",
+    "eslint-plugin-react-hooks": "catalog:lint",
+    "eslint-plugin-react-refresh": "catalog:lint",
+    "globals": "catalog:lint",
+    "typescript": "catalog:lint",
+    "typescript-eslint": "catalog:lint",
+    "prettier": "catalog:lint",
+    "eslint-config-prettier": "catalog:lint",
+    "eslint-plugin-prettier": "catalog:lint",
+    "stylelint": "catalog:lint",
+    "stylelint-config-prettier": "catalog:lint",
+    "stylelint-config-standard": "catalog:lint",
+    "stylelint-config-standard-scss": "catalog:lint",
+    "stylelint-prettier": "catalog:lint",
+    "stylelint-scss": "catalog:lint",
+    "@commitlint/cli": "catalog:lint",
+    "@commitlint/config-conventional": "catalog:lint",
+    "@commitlint/prompt-cli": "catalog:lint",
+    "lint-staged": "catalog:lint",
+    "husky": "catalog:lint",
+    "turbo": "catalog:build",
+    "rimraf": "catalog:build"
+  },
+  "packageManager": "pnpm@10.13.1",
+  "engines": {
+    "pnpm": ">=10.13.1",
+    "node": ">=22.20.0"
+  }
+}

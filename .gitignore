@@ -1,2 +1,10 @@
 /backend/backend
 *.exe
+
+.idea
+# frontend
+**/node_modules
+**/build
+**/dist
+**/.turbo
+**/.vite
