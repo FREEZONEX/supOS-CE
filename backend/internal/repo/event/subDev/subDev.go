@@ -1,0 +1,35 @@
+package subDev
+
+import (
+	"context"
+	"fmt"
+
+	"gitee.com/unitedrhino/share/conf"
+	"github.com/FREEZONEX/Tier0-Backend/share/clients"
+)
+
+type (
+	SubDev interface {
+		SubDevMsg(handle Handle) error
+	}
+	Handle       func(ctx context.Context) DevSubHandle
+	DevSubHandle interface {
+		Msg(topic string, payload []byte) error
+		Connected(out *clients.DevConn) error
+		Disconnected(out *clients.DevConn) error
+	}
+)
+
+func Check(conf conf.DevLinkConf) error {
+	if conf.Mqtt == nil {
+		return fmt.Errorf("DevLinkConf need")
+	}
+	return nil
+}
+
+func NewSubDev(conf conf.DevLinkConf) (SubDev, error) {
+	if err := Check(conf); err != nil {
+		return nil, err
+	}
+	return newEmqClient(conf.Mqtt)
+}

@@ -1,0 +1,23 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "获取系统配置"
+    @handler systemConfig
+    get /systemConfig () returns ()
+
+}
+
+type (
+
+)

@@ -1,0 +1,50 @@
+_transform: false
+_format_version: '3.0'
+parameters:
+- created_at: ~
+  value: 8873dce8-0405-46fa-8172-fb27ac277a33
+  key: cluster_id
+services:
+- port: 3000
+  enabled: true
+  retries: 5
+  tls_verify: ~
+  path: ~
+  updated_at: 1754389467
+  tls_verify_depth: ~
+  ca_certificates: ~
+  connect_timeout: 60000
+  client_certificate: ~
+  read_timeout: 60000
+  tags: []
+  write_timeout: 60000
+  name: frontend
+  protocol: http
+  created_at: 1754382043
+  id: 7ac0aa8a-c7de-44a1-bce7-ab061a17aed3
+  host: frontend
+routes:
+- protocols:
+  - http
+  - https
+  hosts: ~
+  path_handling: v1
+  preserve_host: false
+  snis: ~
+  created_at: 1754382383
+  regex_priority: 0
+  tags: ~
+  paths:
+  - /
+  service: 7ac0aa8a-c7de-44a1-bce7-ab061a17aed3
+  updated_at: 1754382383
+  id: b06942e1-ccff-4215-8ed6-807b8e04a7ce
+  sources: ~
+  https_redirect_status_code: 426
+  methods: ~
+  name: frontend
+  destinations: ~
+  request_buffering: true
+  headers: ~
+  response_buffering: true
+  strip_path: true

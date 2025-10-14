@@ -1,0 +1,23 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/external
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "搜索外部topic主题树，默认整个树"
+    @handler tree
+    post /external/tree () returns ()
+
+}
+
+type (
+
+)

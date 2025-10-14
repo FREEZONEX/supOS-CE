@@ -1,0 +1,35 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/template
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "查询模板列表"
+    @handler pageList
+    post /template/pageList () returns ()
+    @doc "根据ID查询模板详情"
+    @handler read
+    get /template (WithID) returns ()
+    @doc "根据别名查询模板详情"
+    @handler alias
+    post /alias (WithID) returns ()
+    @doc "新增模板"
+
+    @handler add
+    post /template (WithID) returns ()
+    @doc "修改模板基本信息"
+    @handler update
+    put /template (WithID) returns ()
+}
+
+type (
+
+)

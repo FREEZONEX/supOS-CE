@@ -1,0 +1,89 @@
+info(
+    title: "公共结构体定义"
+    desc: "公共结构体定义"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+type(
+    PageInfo{
+        Page     int64 `json:"page,optional" form:"page,optional"`         // 页码
+        Size int64 `json:"size,optional" form:"size,optional"` // 每页大小
+        Orders []*OrderBy `json:"orders,optional"` //排序
+    }
+    PageResp{
+        Page     int64 `json:"page,optional"`         // 页码
+        PageSize int64 `json:"pageSize,optional"` // 每页大小
+        Total int64 `json:"total"`
+    }
+    OrderBy{
+        Field string `json:"field,optional"` ////排序的字段名
+        Sort int64 `json:"sort,optional"`//排序方式：0 从小到大, 1 从大到小
+    }
+    CommonResp{
+        ID int64 `json:"id,optional"`         // id
+    }
+    IDList{
+        IDs []int64 `json:"ids"`
+    }
+    WithID{
+        ID int64 `json:"id,optional"`         // id
+    }
+    WithIDStr{
+        ID int64 `json:"id,string,optional"`         // id
+    }
+    WithCode{
+        Code string `json:"code,optional"`
+    }
+    WithIDOrCode{
+        ID int64 `json:"id,optional"`         // id
+        Code string `json:"code,optional"`
+    }
+    WithGroupCode{
+        GroupCode string `json:"groupCode,optional"`         // id
+        Code string `json:"code,optional"`
+    }
+    Tag  {
+        Key string `json:"key"`
+        Value string `json:"value"`
+    }
+
+    Point {
+        Longitude float64 `json:"longitude,range=[0:180]"`                           //经度
+        Latitude  float64 `json:"latitude,range=[0:90]"`                            //纬度
+    }
+
+    DateRange {
+        Start string `json:"start,optional"`       //开始时间 格式：yyyy-mm-dd
+        End string `json:"end,optional"`           //结束时间 格式：yyyy-mm-dd
+    }
+    TimeRange  {
+        Start int64 `json:"start,optional"`       //开始时间 unix时间戳
+        End int64 `json:"end,optional"`           //结束时间 unix时间戳
+    }
+
+    SendOption  {
+        TimeoutToFail  int64 `json:"timeoutToFail,optional"`   //超时失败时间
+        RequestTimeout int64 `json:"requestTimeout,optional"` //请求超时,超时后会进行重试
+        RetryInterval  int64 `json:"retryInterval,optional"`   //重试间隔
+    }
+
+    Empty{
+
+    }
+    
+    CompareInt64{
+        CmpTYpe string `json:"cmpType"`//"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询
+        Value int64 `json:"value,string"`
+    }
+    CompareString{
+        CmpTYpe string `json:"cmpType"`//"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询
+        Value string `json:"value"`
+    }
+    Compare{
+        CmpTYpe string `json:"cmpType"`//"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询,只有string类型可以使用
+        Value string `json:"value"`
+        CastTo string  `json:"castTo"` //参数的类型(填写了会进行数据类型的转换): int float string
+    }
+)
