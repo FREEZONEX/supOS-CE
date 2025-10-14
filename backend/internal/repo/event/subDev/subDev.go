@@ -1,11 +1,11 @@
 package subDev
 
 import (
+	"backend/share/clients"
 	"context"
 	"fmt"
 
 	"gitee.com/unitedrhino/share/conf"
-	"github.com/FREEZONEX/Tier0-Backend/share/clients"
 )
 
 type (
