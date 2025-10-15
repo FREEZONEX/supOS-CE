@@ -1,0 +1,34 @@
+.com-btn-tabs {
+  display: flex;
+  align-items: center;
+
+  .com-tab {
+    padding: 6px 0;
+    cursor: pointer;
+    background: var(--supos-switchwrap-bg-color);
+
+    &:first-of-type {
+      padding-left: 6px;
+    }
+
+    &:last-of-type {
+      padding-right: 6px;
+    }
+
+    &.com-tab-active,
+    &:hover {
+      .com-tab-label {
+        background: var(--supos-switchwrap-active-bg-color);
+        color: var(--supos-switchwrap-active-text-color);
+      }
+    }
+  }
+
+  .com-tab-label {
+    padding: 0 12px;
+    height: 32px;
+    line-height: 32px;
+    border-radius: 1px;
+    color: #525252;
+  }
+}

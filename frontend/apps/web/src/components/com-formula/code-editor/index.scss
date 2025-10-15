@@ -1,0 +1,169 @@
+.formulaCodeEditor {
+  display: flex;
+  flex-flow: row wrap;
+  height: 100px;
+  padding: 0 15px;
+  //background: #2c323c;
+  background-color: var(--supos-user-color);
+  border: 1px solid #dfe2e5;
+  border-radius: 3px;
+  font-size: 12px;
+  //color: #fff;
+  color: var(--supos-text-color);
+  overflow: hidden;
+  resize: vertical;
+  min-height: 45px;
+}
+
+.formulaHead {
+  display: flex;
+  padding: 10px 0;
+  height: 90px;
+  overflow: hidden;
+
+  .formulaName {
+    width: 60px;
+    line-height: 22px;
+    flex: 1 0 auto;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  .formulaEqual {
+    width: 20px;
+    line-height: 22px;
+    text-align: center;
+  }
+}
+
+.formulaCodeMirrorWrap {
+  flex: 1;
+  height: 100% !important;
+  padding: 8px 0;
+
+  /** CodeMirror 样式 **/
+  // 编辑器背景色
+  .cm-s-material-darker.CodeMirror {
+    //background: #2c323c;
+    background-color: var(--supos-user-color);
+  }
+  // 光标
+  .cm-s-material-darker .CodeMirror-cursor {
+    border-left: 1px solid var(--supos-text-color);
+  }
+
+  .CodeMirror-cursor {
+    height: 17px;
+  }
+  // 文本颜色
+  // .cm-negative {
+  //   color: #fff;
+  // }
+  .cm-s-default .cm-keyword {
+    color: #cb5b2c;
+  }
+
+  .cm-field {
+    display: inline-block;
+    background: #2a4c37;
+    color: #25b222;
+    padding: 2px 5px;
+    margin: 1px;
+    border-radius: 2px;
+  }
+
+  .cm-field-invalid {
+    background: rgb(224 32 32 / 20%);
+    color: #e02020;
+  }
+
+  .cm-s-material-darker {
+    .cm-string,
+    .cm-atom,
+    .cm-bracket,
+    .cm-number {
+      //color: #fff;
+      color: var(--supos-text-color);
+      line-height: 19px;
+      white-space: nowrap;
+    }
+
+    .cm-operator {
+      color: #15f0fc;
+    }
+
+    .cm-keyword {
+      color: #cb5b2c;
+    }
+
+    .cm-keyword,
+    .cm-string {
+      display: inline-block;
+      padding: 2px 0;
+    }
+
+    .cm-negative {
+      display: inline-block;
+      padding: 2px 0;
+      color: #e02020;
+      background: rgb(224 32 32 / 20%);
+    }
+
+    .CodeMirror-matchingbracket {
+      text-decoration: none;
+      background: rgb(203 133 44 / 70%);
+    }
+
+    &.CodeMirror-focused div.CodeMirror-selected,
+    &.div.CodeMirror-selected {
+      background: #0075db;
+    }
+  }
+
+  .CodeMirror-sizer {
+    border-right: 0;
+  }
+
+  .CodeMirror-scroll {
+    margin-right: 0;
+    padding-bottom: 10px;
+
+    div:nth-child(2):not(.CodeMirror-sizer) {
+      display: none;
+    }
+  }
+}
+
+.formulaCodeEditorReadonly {
+  background-color: var(--supos-bg-color) !important;
+
+  .cm-s-material-darker.CodeMirror {
+    //background: #2c323c;
+    background-color: var(--supos-bg-color) !important;
+  }
+}
+
+.CodeMirror-hints {
+  position: absolute !important;
+  z-index: 10000 !important;
+  overflow: hidden !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 2px !important;
+  box-shadow: 2px 3px 5px rgb(0 0 0 / 20%) !important;
+  border-radius: 3px !important;
+  border: 1px solid silver !important;
+  background: white !important;
+  font-size: 90% !important;
+  font-family: monospace !important;
+  max-height: 20em !important;
+  overflow-y: auto !important;
+
+  li.CodeMirror-hint-active {
+    background: #08f;
+    color: white;
+  }
+}

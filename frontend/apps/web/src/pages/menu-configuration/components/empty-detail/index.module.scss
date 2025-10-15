@@ -1,0 +1,50 @@
+.emptyDetail-wrap {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .detailInfo-list {
+    list-style: inside;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #c6c6c6;
+    border-radius: 3px;
+    padding: 20px 30px;
+
+    .detailInfo-list-item {
+      display: inline-flex;
+      align-items: center;
+      border-bottom: 1px solid #c6c6c6;
+      padding-bottom: 10px;
+
+      &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      :global {
+        .ant-tag {
+          color: var(--supos-theme-color);
+          border-color: var(--supos-theme-color);
+          background-color: var(--supos-primary-bg);
+          display: flex;
+          align-items: center;
+        }
+
+        .icon-arrow {
+          margin: 0 10px 0 0;
+          font-size: 12px;
+          color: #6f6f6f;
+        }
+
+        .tag-info {
+          color: #6f6f6f;
+          padding: 0 4px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}

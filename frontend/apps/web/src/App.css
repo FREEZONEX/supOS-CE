@@ -1,45 +1,74 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  z-index: 99;
+  background: transparent;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: #d3d3d3;
+  cursor: pointer;
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+::-webkit-scrollbar-track {
+  margin: 4px 0;
+  border-radius: 8px;
 }
 
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+::-webkit-scrollbar-thumb:hover {
+  background: #a5a5a5;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.ant-message {
+  z-index: 9001;
+}
+
+.CodeMirror-hints {
+  z-index: 10000;
+}
+
+::selection {
+  /* Firefox */
+  background: var(--supos-theme-color);
+  color: #fff;
+}
+
+/* autoprefixer: ignore next */
+::-webkit-selection {
+  /* Chrome, Safari, Opera */
+  background: var(--supos-theme-color);
+  color: #fff;
+}
+
+body {
+  background-color: var(--supos-bg-color) !important;
+  color: var(--supos-text-color, #161616) !important;
+}
+
+.ant-btn > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ant-form-item-horizontal > .ant-row {
+  align-items: center;
+
+  .ant-form-item-label > label {
+    height: auto;
+    min-height: 32px;
   }
+}
 
-  to {
-    transform: rotate(360deg);
+.ant-modal-confirm-btns {
+  .ant-btn {
+    max-width: 48%;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
+/* .ant-table-cell-scrollbar { */
 
-.card {
-  padding: 2em;
-}
+/*  visibility: hidden; */
 
-.read-the-docs {
-  color: #888;
-}
+/* } */

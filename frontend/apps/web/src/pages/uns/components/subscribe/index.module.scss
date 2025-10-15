@@ -1,0 +1,24 @@
+.subscribe {
+  margin-right: 18px;
+
+  .label {
+    margin-right: 5px;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 24px;
+    white-space: nowrap;
+  }
+}
+
+.configBox {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.configLabel {
+  width: 100px;
+}
+
+.fileCount {
+  color: #df4928;
+}

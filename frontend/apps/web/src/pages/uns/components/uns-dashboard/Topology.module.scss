@@ -1,0 +1,82 @@
+.item-wrapper {
+  flex-wrap: nowrap;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.16px;
+  flex-shrink: 0;
+}
+
+.item {
+  min-height: 500px;
+  padding-bottom: 24px;
+}
+
+.item-left {
+  flex: 3 1 calc(75% - 4px);
+}
+
+.item-right {
+  flex: 1 1 calc(25% - 12px);
+}
+
+@media (800px < width <= 1400px) {
+  .item-left {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .item-right {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (width <= 800px) {
+  .item-wrapper {
+    flex-wrap: wrap;
+  }
+
+  .item-left {
+    flex: 1 1 100%;
+  }
+
+  .item-right {
+    flex: 1 1 100%;
+  }
+}
+
+.common-node {
+  width: 100%;
+  height: 100%;
+  background-color: var(--supos-bg-color);
+  border-radius: 3px;
+  border-left: 4px solid var(--supos-mode-color, var(--supos-theme-color));
+  color: var(--supos-text-color);
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  gap: 10px;
+
+  .node-count {
+    display: flex;
+    align-items: center;
+
+    span {
+      background-color: var(--supos-status-color);
+      height: 5px;
+      width: 5px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+      margin-left: 10px;
+    }
+  }
+}
+
+.common-node-hover {
+  &:hover {
+    background-color: var(--supos-active-bg-color);
+    cursor: pointer;
+  }
+}

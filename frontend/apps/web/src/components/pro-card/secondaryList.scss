@@ -1,0 +1,10 @@
+.secondaryList {
+  opacity: 0.6;
+
+  .span-ellipsis {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

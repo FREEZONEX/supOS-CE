@@ -1,0 +1,23 @@
+.com-copy-content {
+  .label {
+    color: var(--supos-text-color);
+    font-size: 16px;
+    width: 100px;
+    font-weight: 500;
+  }
+
+  .content {
+    flex: 1;
+    background: var(--supos-tag-color);
+    border-radius: 3px;
+    overflow: hidden;
+    padding: 4px 8px 4px 16px;
+  }
+
+  .text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+}

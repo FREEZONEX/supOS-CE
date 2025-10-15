@@ -1,0 +1,55 @@
+.container {
+  height: 100%;
+
+  :global {
+    .infinite-scroll-component__outerdiv {
+      height: 100%;
+      overflow: auto;
+    }
+
+    .ant-list-item {
+      padding: 5px 0 5px 10px;
+      border-bottom: 0;
+      cursor: pointer;
+
+      &:hover {
+        background-color: var(--supos-t-card-hover-bg);
+
+        .infinite-scroll-list-extra {
+          display: flex;
+        }
+      }
+    }
+  }
+
+  .active {
+    position: relative;
+    background-color: var(--supos-select-card-color);
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 4px;
+      height: 32px;
+      top: 0;
+      left: 0;
+      background-color: var(--supos-theme-color);
+    }
+  }
+
+  .title {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .extra {
+    padding-right: 5px;
+    display: none;
+    align-items: center;
+    flex-shrink: 0;
+    flex-grow: 0;
+  }
+}

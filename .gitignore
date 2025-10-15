@@ -8,3 +8,5 @@
 **/dist
 **/.turbo
 **/.vite
+**/*.local
+**/.__mf__temp

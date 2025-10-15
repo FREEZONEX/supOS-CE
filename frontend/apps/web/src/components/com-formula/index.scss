@@ -1,0 +1,39 @@
+.comFormula {
+  .expression {
+    padding: 20px 0 10px;
+    color: var(--supos-text-color);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 16px; /* 100% */
+    text-transform: capitalize;
+
+    .calc {
+      cursor: pointer;
+      background-color: #c6c6c6;
+      border-radius: 3px;
+      padding: 4px 6px;
+      color: #161616;
+      font-weight: 500;
+    }
+
+    .require {
+      &::before {
+        display: inline-block;
+        margin-inline-end: 4px;
+        color: #ff4d4f;
+        font-size: 14px;
+        font-family: SimSun, sans-serif;
+        line-height: 1;
+        content: '*';
+      }
+    }
+  }
+
+  .expression-readonly {
+    border: 1px solid #dfe2e5;
+    border-bottom-color: transparent;
+    background-color: var(--supos-table-head-color);
+    padding: 8px 15px;
+  }
+}

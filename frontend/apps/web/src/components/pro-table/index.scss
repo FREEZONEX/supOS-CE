@@ -1,0 +1,163 @@
+.pro-table,
+.resizable-table {
+  .ant-table-row {
+    &:hover {
+      .custom-operation {
+        display: block;
+      }
+
+      .custom-pin {
+        display: block;
+      }
+    }
+
+    .custom-operation {
+      display: none;
+    }
+
+    .custom-pin {
+      display: none;
+    }
+
+    .custom-pin-fixed {
+      display: block !important;
+    }
+  }
+
+  .ant-table-thead {
+    .ant-table-cell {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      .react-resizable-line {
+        background-color: transparent;
+        position: absolute;
+        inset-inline-end: -3px;
+        top: 0;
+        z-index: 2;
+        width: 6px;
+        height: 100%;
+        cursor: col-resize;
+        transition:
+          background-color 0.2s,
+          width 0.2s;
+
+        &:hover {
+          background-color: var(--supos-theme-color);
+        }
+      }
+    }
+  }
+
+  .ant-table-row.ant-table-row-selected > .ant-table-cell {
+    background-color: var(--supos-table-select-bg-color) !important;
+  }
+
+  .ant-table-tbody {
+    > tr > td {
+      height: 40px;
+      padding: 8px 16px;
+    }
+  }
+
+  .ant-table {
+    scrollbar-color: auto;
+  }
+
+  /* 针对Antd5的Table组件 */
+  .ant-table-content .ant-table-body::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background: transparent;
+  }
+
+  .ant-table-content .ant-table-body::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background: #d3d3d3;
+  }
+
+  .ant-table-content .ant-table-body::-webkit-scrollbar-track {
+    margin: 4px 0;
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100% !important;
+  }
+
+  .ant-pagination-item,
+  .ant-pagination-options-quick-jumper,
+  .ant-pagination-options-quick-jumper input {
+    background-color: var(--supos-header-bg-color) !important;
+  }
+
+  .ant-pagination-item-active,
+  .ant-pagination-options-quick-jumper input:focus-within {
+    border-color: var(--supos-theme-color) !important;
+  }
+
+  .ant-pagination-item-active a {
+    color: var(--supos-theme-color) !important;
+  }
+}
+
+.ant-table-cell.ant-table-cell-scrollbar .react-resizable-line {
+  display: none !important;
+}
+
+.hidden-empty {
+  .ant-table-placeholder {
+    display: none;
+  }
+}
+
+.fixed-pagination-bottom {
+  &,
+  .ant-spin-nested-loading {
+    height: 100%;
+
+    .ant-table {
+      height: calc(100% - 76px);
+    }
+  }
+}
+
+.pro-table-container {
+  position: relative;
+  overflow: hidden;
+
+  .pro-table-expand-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: -40px;
+    width: 40px;
+    height: 100%;
+    border-radius: 0 3px 3px 0;
+    border: 1px solid #c6c6c6;
+    background: #f4f4f4;
+    cursor: pointer;
+    transition: right 0.2s;
+
+    &.pro-table-expanded {
+      right: 0;
+    }
+  }
+}
+
+.table-link-button {
+  padding: 0;
+  margin-right: 10px;
+  max-width: 80%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

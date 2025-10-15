@@ -1,0 +1,27 @@
+.overview {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.item {
+  width: calc((100% - 48px) / 4);
+}
+
+.title {
+  font-size: 30px;
+  font-weight: bold;
+  letter-spacing: 0.16px;
+}
+
+@media (width <= 800px) {
+  .item {
+    width: 100%;
+  }
+}
+
+@media (800px < width <= 1400px) {
+  .item {
+    width: calc(50% - 8px);
+  }
+}

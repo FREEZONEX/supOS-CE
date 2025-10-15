@@ -1,0 +1,58 @@
+.inline-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+
+  &-animation {
+    position: relative;
+    width: 16px;
+    height: 16px;
+  }
+
+  &-spinner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    transition: opacity 0.15s ease-in;
+  }
+
+  .ods-loading_svg {
+    animation: rotate 1s linear infinite;
+  }
+
+  .ods-loading_background {
+    fill: none;
+    stroke: #dde1e6;
+    stroke-width: 14px;
+  }
+
+  .ods-loading_stroke {
+    fill: none;
+    stroke: var(--supos-theme-color);
+    stroke-width: 14px;
+    stroke-linecap: round;
+    stroke-dasharray: 125.6;
+    stroke-dashoffset: 75.36;
+  }
+
+  &-text {
+    color: var(--supos-t-menu-active-color);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

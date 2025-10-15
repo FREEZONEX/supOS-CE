@@ -1,0 +1,110 @@
+.home-title {
+  padding: 32px 36px 30px;
+  background-color: var(--supos-home-bg-color);
+  border-bottom: 1px solid var(--supos-home-border-color);
+  width: 100%;
+}
+
+.home-tabs {
+  :global {
+    .ant-tabs {
+      height: 100%;
+    }
+
+    .ant-tabs-top > div > .ant-tabs-nav {
+      &::before {
+        border-bottom: none;
+      }
+
+      border-bottom: 1px solid var(--supos-home-border-color);
+    }
+
+    .ant-tabs-nav-wrap {
+      padding: 0 36px;
+      background-color: var(--supos-home-bg-color);
+    }
+
+    .ant-tabs-content-holder {
+      overflow: auto;
+      height: calc(100% - 48px);
+    }
+
+    .ant-tabs-nav {
+      margin: 0 !important;
+      z-index: 1;
+      width: 100%;
+      overflow: auto;
+    }
+  }
+}
+
+.menu-item {
+  width: 350px;
+  height: var(--supos-card-height, 156px);
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: var(--supos-uns-button-color);
+  padding: 24px;
+  cursor: pointer;
+  line-height: 1.2;
+
+  :global {
+    .item-content {
+      flex: 1;
+      padding: 0 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    .label {
+      color: var(--supos-table-first-color);
+      font-size: 20px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 28px;
+      margin-bottom: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    .description {
+      color: var(--supos-table-first-color);
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 18.2px;
+      letter-spacing: 0.16px;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: -webkit-box; /* 设置为弹性盒模型 */
+      -webkit-box-orient: vertical; /* 设置为竖直排列 */
+      -webkit-line-clamp: var(--supos-line-height, 4); /* 显示 4 行，超过部分显示省略号 */
+      text-overflow: ellipsis; /* 超出部分显示省略号 */
+    }
+  }
+
+  .exampleItemContent {
+    padding-right: 0;
+  }
+
+  .exampleLabel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .name {
+    flex-shrink: 1;
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

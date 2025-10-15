@@ -1,0 +1,112 @@
+.side-nav-list {
+  position: relative !important;
+  max-width: 100%;
+  width: 100%;
+  min-width: 100%;
+  border-top: 1px solid #c6c6c6;
+  padding-top: 8px;
+
+  :global {
+    // img {
+    //   vertical-align: baseline !important;
+    // }
+    .ant-image {
+      line-height: 0.875rem;
+    }
+
+    .ant-menu-item {
+      width: 100%;
+    }
+
+    .ant-menu-submenu {
+      border-radius: 0 !important;
+    }
+
+    .ant-menu-submenu-title {
+      width: 100%;
+    }
+
+    .ant-menu-item-selected {
+      position: relative;
+      border-radius: 0;
+      background-color: var(--supos-background-selected);
+
+      &::before {
+        position: absolute;
+        background-color: var(--supos-theme-color);
+        content: '';
+        inline-size: 3px;
+        inset-block: 0;
+        inset-inline-start: 0;
+      }
+    }
+
+    .ant-menu-submenu-selected.ant-menu-submenu-open > .ant-menu-submenu-title {
+      background-color: transparent;
+    }
+
+    .ant-menu-submenu-selected:not(.ant-menu-submenu-open) > .ant-menu-submenu-title {
+      &:hover {
+        border: 0;
+        background-color: var(--supos-background-selected, rgb(141 141 141 / 20%));
+      }
+    }
+
+    .ant-menu-submenu-inline.ant-menu-submenu-selected.ant-menu-submenu-open > .ant-menu-submenu-title {
+      color: var(--supos-text-color);
+    }
+
+    .ant-menu-submenu-inline.ant-menu-submenu-selected:not(.ant-menu-submenu-open) {
+      position: relative;
+      border-radius: 0;
+
+      &::before {
+        position: absolute;
+        background-color: var(--supos-theme-color);
+        content: '';
+        inline-size: 3px;
+        inset-block: 0;
+        inset-inline-start: 0;
+      }
+
+      & > .ant-menu-submenu-title {
+        color: var(--supos-text-color);
+      }
+    }
+
+    .ant-menu-submenu-selected > .ant-menu-submenu-title {
+      color: var(--supos-theme-color);
+      background-color: var(--supos-background-selected);
+      width: 100%;
+    }
+
+    .ant-menu-item,
+    .ant-menu-submenu-title {
+      height: 32px !important;
+      margin: 0;
+
+      &:focus-within {
+        border-color: var(--supos-theme-color) !important;
+      }
+    }
+
+    .ant-menu-item:active,
+    .ant-menu-submenu-title:active {
+      background: none !important;
+    }
+
+    .ant-menu-sub {
+      .ant-menu-item-selected {
+        border: none;
+      }
+    }
+  }
+}
+
+.side-menu-list-item {
+  :global {
+    img {
+      vertical-align: baseline !important;
+    }
+  }
+}

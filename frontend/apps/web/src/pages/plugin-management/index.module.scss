@@ -1,0 +1,15 @@
+.plugin-management {
+  .flex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  :global {
+    .ant-segmented-item-label {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+}

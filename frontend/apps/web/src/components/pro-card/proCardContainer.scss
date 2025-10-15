@@ -1,0 +1,6 @@
+.proCardContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--supos-pro-card-grid-min-width), 1fr));
+  gap: 16px;
+  width: 100%;
+}

@@ -1,0 +1,110 @@
+.com-tree-wrap {
+  flex: 1;
+  overflow: hidden;
+
+  .com-tree-box {
+    min-width: 100%;
+    height: 100%;
+
+    .ant-tree {
+      background: transparent;
+    }
+  }
+
+  .ibm-style {
+    .ant-tree {
+      .ant-tree-list {
+        padding-right: 8px;
+      }
+
+      .ant-tree-treenode {
+        height: 32px;
+        line-height: 32px;
+        margin-bottom: 0;
+        padding-left: 10px;
+        font-weight: bold;
+
+        &::before {
+          height: 0;
+        }
+
+        &:has(.rightKeySelected) {
+          background: var(--supos-t-card-hover-bg);
+        }
+
+        &:hover {
+          background-color: var(--supos-t-card-hover-bg);
+        }
+
+        .customTreeNode {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: relative;
+          white-space: nowrap;
+
+          &:hover {
+            .treeNodeIconWrap {
+              display: flex;
+            }
+          }
+
+          .customTreeNodeTitle {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+
+          .treeNodeIconWrap {
+            display: none;
+            height: 32px;
+          }
+        }
+
+        .ant-tree-node-content-wrapper {
+          padding: 0;
+          flex: 1;
+          overflow: hidden;
+        }
+
+        .ant-tree-node-content-wrapper:hover {
+          background-color: transparent;
+        }
+
+        .ant-tree-switcher:not(.ant-tree-switcher-noop):hover::before {
+          background-color: transparent;
+        }
+
+        .ant-tree-switcher {
+          &::before {
+            height: 32px;
+          }
+
+          .ant-tree-switcher-icon {
+            font-size: 12px;
+            vertical-align: middle;
+          }
+        }
+      }
+
+      .ant-tree-treenode-selected {
+        background-color: var(--supos-hover-card-color);
+        position: relative;
+
+        &::before {
+          position: absolute;
+          width: 4px;
+          height: 32px;
+          top: 0;
+          left: 0;
+          background-color: var(--supos-theme-color);
+        }
+
+        .ant-tree-node-content-wrapper.ant-tree-node-selected {
+          background-color: transparent;
+        }
+      }
+    }
+  }
+}

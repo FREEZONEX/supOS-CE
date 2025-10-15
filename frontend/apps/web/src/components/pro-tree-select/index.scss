@@ -1,0 +1,35 @@
+.pro-tree-select-expend {
+  .ant-select-tree-switcher {
+    display: none !important;
+  }
+}
+
+.pro-tree-select-node-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pro-tree-select-node-block {
+  .ant-select-tree-node-content-wrapper {
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+.pro-tree-select {
+  .pro-tree-select-node-title {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: bold;
+  }
+
+  .pro-tree-select-node-extra {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}

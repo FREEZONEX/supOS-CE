@@ -1,0 +1,17 @@
+.container {
+  background-color: var(--supos-bg-color);
+  box-shadow: 1px 1px 10px 2px var(--supos-boxshadow-color);
+}
+
+.list-item {
+  cursor: pointer;
+  padding: 0 8px;
+
+  &:hover {
+    background-color: var(--supos-t-card-hover-bg);
+  }
+}
+
+.selected {
+  background-color: var(--supos-select-card-color);
+}
