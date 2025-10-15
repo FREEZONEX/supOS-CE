@@ -23,6 +23,10 @@ type CompareString struct {
 	Value   string `json:"value"`
 }
 
+type CreateGrafanaByUnsReq struct {
+	Alias string `path:"alias"`
+}
+
 type DateRange struct {
 	Start string `json:"start,optional"` //开始时间 格式：yyyy-mm-dd
 	End   string `json:"end,optional"`   //结束时间 格式：yyyy-mm-dd
@@ -93,4 +97,8 @@ type WithIDOrCode struct {
 
 type WithIDStr struct {
 	ID int64 `json:"id,string,optional"` // id
+}
+
+type WithUid struct {
+	Uid string `path:"uid"`
 }

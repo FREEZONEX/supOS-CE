@@ -1,0 +1,23 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/devtools
+    prefix: /inter-api/supos/dev
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "logs"
+    @handler logs
+    post /logs () returns ()
+
+}
+
+type (
+
+)

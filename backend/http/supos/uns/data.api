@@ -1,0 +1,28 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/file
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "批量修改文件值"
+    @handler batchUpdate
+    post /file/batchUpdate () returns ()
+    @doc "批量查询文件实时值"
+    @handler batchQuery
+    post /file/batchQuery () returns ()
+    @doc "获取文件BLOB类型的值"
+    @handler blob
+    post /file/blob () returns ()
+}
+
+type (
+
+)

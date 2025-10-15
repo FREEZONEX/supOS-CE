@@ -1,0 +1,31 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/alarm
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "创建报警规则"
+    @handler create
+    post /alarm/rule () returns ()
+    @doc "更新报警规则"
+    @handler update
+    put /alarm/rule () returns ()
+    @doc "查询报警列表"
+    @handler pageList
+    post /alarm/pageList () returns ()
+    @doc "确认报警"
+    @handler confirm
+    post /alarm/confirm () returns ()
+}
+
+type (
+
+)
