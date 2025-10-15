@@ -30,6 +30,9 @@ type(
     WithID{
         ID int64 `json:"id,optional"`         // id
     }
+    WithUid{
+        Uid string  `path:"uid"`
+    }
     WithIDStr{
         ID int64 `json:"id,string,optional"`         // id
     }

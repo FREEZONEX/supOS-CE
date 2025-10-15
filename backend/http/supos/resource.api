@@ -1,0 +1,34 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/resource
+    prefix: /inter-api/supos/resource
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "get"
+    @handler get
+    get / () returns ()
+    @doc "post"
+    @handler post
+    post / () returns ()
+    @doc "batch"
+    @handler batch
+    post /batch () returns ()
+    @doc "delete"
+    @handler delete
+    delete /:id () returns ()
+    @doc "batch"
+    @handler batchDelete
+    delete /batch () returns ()
+}
+
+type (
+
+)

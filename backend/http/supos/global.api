@@ -1,0 +1,35 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/global
+    prefix: /inter-api/supos/global
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "全局数据导入"
+    @handler dataImport
+    post /data/import () returns ()
+    @doc "全局数据导出"
+    @handler dataExport
+    post /data/export () returns ()
+    @doc "获取导出记录"
+    @handler userGetExportRecords
+    post /user/getExportRecords () returns ()
+    @doc "确认导出记录"
+    @handler userExportRecordConfirm
+    post /user/exportRecordConfirm () returns ()
+    @doc "根据路径下载文件"
+    @handler fileDownload
+    post /file/download () returns ()
+
+}
+
+type (
+
+)

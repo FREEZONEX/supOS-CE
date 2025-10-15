@@ -6,10 +6,19 @@ package handler
 import (
 	"net/http"
 
+	suposdevtools "backend/internal/handler/supos/devtools"
+	suposexample "backend/internal/handler/supos/example"
+	suposglobal "backend/internal/handler/supos/global"
+	suposmount "backend/internal/handler/supos/mount"
+	suposresource "backend/internal/handler/supos/resource"
 	suposuns "backend/internal/handler/supos/uns"
+	suposunsalarm "backend/internal/handler/supos/uns/alarm"
+	suposunsdashboard "backend/internal/handler/supos/uns/dashboard"
 	suposunsexternal "backend/internal/handler/supos/uns/external"
+	suposunsfile "backend/internal/handler/supos/uns/file"
+	suposunskong "backend/internal/handler/supos/uns/kong"
 	suposunsmodel "backend/internal/handler/supos/uns/model"
-	suposunstemplate "backend/internal/handler/supos/uns/template"
+	suposunsperson "backend/internal/handler/supos/uns/person"
 	"backend/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -21,10 +30,289 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
+					// logs
+					Method:  http.MethodPost,
+					Path:    "/logs",
+					Handler: suposdevtools.LogsHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/dev"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 安装接口
+					Method:  http.MethodPost,
+					Path:    "/install",
+					Handler: suposexample.InstallHandler(serverCtx),
+				},
+				{
+					// 初始化发电机数据
+					Method:  http.MethodPost,
+					Path:    "/mock/demo/init",
+					Handler: suposexample.MockDemoInitHandler(serverCtx),
+				},
+				{
+					// 模拟restApi数据
+					Method:  http.MethodPost,
+					Path:    "/mock/restapi",
+					Handler: suposexample.MockRestapiHandler(serverCtx),
+				},
+				{
+					// 模拟电器厂IT数据
+					Method:  http.MethodPost,
+					Path:    "/mock/restapi/demo",
+					Handler: suposexample.MockRestapiDemoHandler(serverCtx),
+				},
+				{
+					// 模拟订单数据
+					Method:  http.MethodPost,
+					Path:    "/mock/restapi/order",
+					Handler: suposexample.MockRestapiOrderHandler(serverCtx),
+				},
+				{
+					// 获取
+					Method:  http.MethodPost,
+					Path:    "/pageList",
+					Handler: suposexample.PageListHandler(serverCtx),
+				},
+				{
+					// 卸载
+					Method:  http.MethodPost,
+					Path:    "/uninstall",
+					Handler: suposexample.UninstallHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/example"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 全局数据导出
+					Method:  http.MethodPost,
+					Path:    "/data/export",
+					Handler: suposglobal.DataExportHandler(serverCtx),
+				},
+				{
+					// 全局数据导入
+					Method:  http.MethodPost,
+					Path:    "/data/import",
+					Handler: suposglobal.DataImportHandler(serverCtx),
+				},
+				{
+					// 根据路径下载文件
+					Method:  http.MethodPost,
+					Path:    "/file/download",
+					Handler: suposglobal.FileDownloadHandler(serverCtx),
+				},
+				{
+					// 确认导出记录
+					Method:  http.MethodPost,
+					Path:    "/user/exportRecordConfirm",
+					Handler: suposglobal.UserExportRecordConfirmHandler(serverCtx),
+				},
+				{
+					// 获取导出记录
+					Method:  http.MethodPost,
+					Path:    "/user/getExportRecords",
+					Handler: suposglobal.UserGetExportRecordsHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/global"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 手动挂载
+					Method:  http.MethodPost,
+					Path:    "/",
+					Handler: suposmount.MountHandler(serverCtx),
+				},
+				{
+					// 获取挂载数据源
+					Method:  http.MethodPost,
+					Path:    "/source",
+					Handler: suposmount.SourceHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/mount"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// get
+					Method:  http.MethodGet,
+					Path:    "/",
+					Handler: suposresource.GetHandler(serverCtx),
+				},
+				{
+					// post
+					Method:  http.MethodPost,
+					Path:    "/",
+					Handler: suposresource.PostHandler(serverCtx),
+				},
+				{
+					// delete
+					Method:  http.MethodDelete,
+					Path:    "/:id",
+					Handler: suposresource.DeleteHandler(serverCtx),
+				},
+				{
+					// batch
+					Method:  http.MethodPost,
+					Path:    "/batch",
+					Handler: suposresource.BatchHandler(serverCtx),
+				},
+				{
+					// batch
+					Method:  http.MethodDelete,
+					Path:    "/batch",
+					Handler: suposresource.BatchDeleteHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/resource"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
 					// 获取系统配置
 					Method:  http.MethodGet,
 					Path:    "/systemConfig",
 					Handler: suposuns.SystemConfigHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/uns"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 确认报警
+					Method:  http.MethodPost,
+					Path:    "/alarm/confirm",
+					Handler: suposunsalarm.ConfirmHandler(serverCtx),
+				},
+				{
+					// 查询报警列表
+					Method:  http.MethodPost,
+					Path:    "/alarm/pageList",
+					Handler: suposunsalarm.PageListHandler(serverCtx),
+				},
+				{
+					// 创建报警规则
+					Method:  http.MethodPost,
+					Path:    "/alarm/rule",
+					Handler: suposunsalarm.CreateHandler(serverCtx),
+				},
+				{
+					// 更新报警规则
+					Method:  http.MethodPut,
+					Path:    "/alarm/rule",
+					Handler: suposunsalarm.UpdateHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/uns"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// createGrafanaByUns
+					Method:  http.MethodPost,
+					Path:    "/createGrafanaByUns/:alias",
+					Handler: suposunsdashboard.CreateGrafanaByUnsHandler(serverCtx),
+				},
+				{
+					// 获取列表
+					Method:  http.MethodGet,
+					Path:    "/dashboard",
+					Handler: suposunsdashboard.PageListHandler(serverCtx),
+				},
+				{
+					// 创建
+					Method:  http.MethodPost,
+					Path:    "/dashboard",
+					Handler: suposunsdashboard.CreateHandler(serverCtx),
+				},
+				{
+					// edit
+					Method:  http.MethodPut,
+					Path:    "/dashboard",
+					Handler: suposunsdashboard.EditHandler(serverCtx),
+				},
+				{
+					// delete
+					Method:  http.MethodDelete,
+					Path:    "/dashboard/:uid",
+					Handler: suposunsdashboard.DeleteHandler(serverCtx),
+				},
+				{
+					// get
+					Method:  http.MethodGet,
+					Path:    "/dashboard/:uid",
+					Handler: suposunsdashboard.GetHandler(serverCtx),
+				},
+				{
+					// bindUns
+					Method:  http.MethodPost,
+					Path:    "/dashboard/bindUns",
+					Handler: suposunsdashboard.BindUnsHandler(serverCtx),
+				},
+				{
+					// 获取详情
+					Method:  http.MethodPost,
+					Path:    "/dashboard/detail",
+					Handler: suposunsdashboard.DetailHandler(serverCtx),
+				},
+				{
+					// getByUns
+					Method:  http.MethodGet,
+					Path:    "/dashboard/getByUns",
+					Handler: suposunsdashboard.GetByUnsHandler(serverCtx),
+				},
+				{
+					// isExist
+					Method:  http.MethodGet,
+					Path:    "/dashboard/isExist",
+					Handler: suposunsdashboard.IsExistHandler(serverCtx),
+				},
+				{
+					// 置顶
+					Method:  http.MethodPost,
+					Path:    "/dashboard/mark",
+					Handler: suposunsdashboard.MarkHandler(serverCtx),
+				},
+				{
+					// 取消置顶
+					Method:  http.MethodDelete,
+					Path:    "/dashboard/unmark",
+					Handler: suposunsdashboard.UnmarkHandler(serverCtx),
 				},
 			}...,
 		),
@@ -51,6 +339,66 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
+					// 批量查询文件实时值
+					Method:  http.MethodPost,
+					Path:    "/file/batchQuery",
+					Handler: suposunsfile.BatchQueryHandler(serverCtx),
+				},
+				{
+					// 批量修改文件值
+					Method:  http.MethodPost,
+					Path:    "/file/batchUpdate",
+					Handler: suposunsfile.BatchUpdateHandler(serverCtx),
+				},
+				{
+					// 获取文件BLOB类型的值
+					Method:  http.MethodPost,
+					Path:    "/file/blob",
+					Handler: suposunsfile.BlobHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/uns"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 确认报警
+					Method:  http.MethodPost,
+					Path:    "/alarm/confirm",
+					Handler: suposunskong.ConfirmHandler(serverCtx),
+				},
+				{
+					// 查询报警列表
+					Method:  http.MethodPost,
+					Path:    "/alarm/pageList",
+					Handler: suposunskong.PageListHandler(serverCtx),
+				},
+				{
+					// 更新报警规则
+					Method:  http.MethodPut,
+					Path:    "/alarm/rule",
+					Handler: suposunskong.UpdateHandler(serverCtx),
+				},
+				{
+					// 获取路由
+					Method:  http.MethodGet,
+					Path:    "/routeList",
+					Handler: suposunskong.RouteListHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/kong"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
 					// 查询模板列表
 					Method:  http.MethodPost,
 					Path:    "/model/pageList",
@@ -66,37 +414,19 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
-					// 根据别名查询模板详情
-					Method:  http.MethodPost,
-					Path:    "/alias",
-					Handler: suposunstemplate.AliasHandler(serverCtx),
-				},
-				{
-					// 根据ID查询模板详情
+					// 获取个人配置
 					Method:  http.MethodGet,
-					Path:    "/template",
-					Handler: suposunstemplate.ReadHandler(serverCtx),
+					Path:    "/config",
+					Handler: suposunsperson.ConfigHandler(serverCtx),
 				},
 				{
-					// 新增模板
+					// 设置个人配置
 					Method:  http.MethodPost,
-					Path:    "/template",
-					Handler: suposunstemplate.AddHandler(serverCtx),
-				},
-				{
-					// 修改模板基本信息
-					Method:  http.MethodPut,
-					Path:    "/template",
-					Handler: suposunstemplate.UpdateHandler(serverCtx),
-				},
-				{
-					// 查询模板列表
-					Method:  http.MethodPost,
-					Path:    "/template/pageList",
-					Handler: suposunstemplate.PageListHandler(serverCtx),
+					Path:    "/config",
+					Handler: suposunsperson.UpdateHandler(serverCtx),
 				},
 			}...,
 		),
-		rest.WithPrefix("/inter-api/supos/uns"),
+		rest.WithPrefix("/inter-api/supos/uns/person"),
 	)
 }
