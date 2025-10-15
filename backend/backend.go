@@ -7,6 +7,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"runtime"
 
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -20,7 +21,11 @@ func main() {
 	flag.Parse()
 	logx.DisableStat()
 	var c config.Config
-	utils.ConfMustLoad("etc/backend.yaml", &c)
+	var confFile = "etc/backend.yaml"
+	if runtime.GOOS == "windows" {
+		confFile = "etc/backend-dev.yaml"
+	}
+	utils.ConfMustLoad(confFile, &c)
 
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
