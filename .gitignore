@@ -2,6 +2,8 @@
 *.exe
 
 .idea
+.cursorrules
+
 # frontend
 **/node_modules
 **/build
