@@ -15,10 +15,816 @@
     "application/json"
   ],
   "paths": {
-    "/inter-api/supos/uns/alias": {
+    "/inter-api/supos/dev/logs": {
       "post": {
-        "summary": "根据别名查询模板详情",
-        "operationId": "postInter-apiSuposUnsAlias",
+        "summary": "logs",
+        "operationId": "postInter-apiSuposDevLogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/devtools",
+          "suposDevtools"
+        ]
+      }
+    },
+    "/inter-api/supos/example/install": {
+      "post": {
+        "summary": "安装接口",
+        "operationId": "postInter-apiSuposExampleInstall",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/example",
+          "suposExample"
+        ]
+      }
+    },
+    "/inter-api/supos/example/mock/demo/init": {
+      "post": {
+        "summary": "初始化发电机数据",
+        "operationId": "postInter-apiSuposExampleMockDemoInit",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/example",
+          "suposExample"
+        ]
+      }
+    },
+    "/inter-api/supos/example/mock/restapi": {
+      "post": {
+        "summary": "模拟restApi数据",
+        "operationId": "postInter-apiSuposExampleMockRestapi",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/example",
+          "suposExample"
+        ]
+      }
+    },
+    "/inter-api/supos/example/mock/restapi/demo": {
+      "post": {
+        "summary": "模拟电器厂IT数据",
+        "operationId": "postInter-apiSuposExampleMockRestapiDemo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/example",
+          "suposExample"
+        ]
+      }
+    },
+    "/inter-api/supos/example/mock/restapi/order": {
+      "post": {
+        "summary": "模拟订单数据",
+        "operationId": "postInter-apiSuposExampleMockRestapiOrder",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/example",
+          "suposExample"
+        ]
+      }
+    },
+    "/inter-api/supos/example/pageList": {
+      "post": {
+        "summary": "获取",
+        "operationId": "postInter-apiSuposExamplePageList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/example",
+          "suposExample"
+        ]
+      }
+    },
+    "/inter-api/supos/example/uninstall": {
+      "post": {
+        "summary": "卸载",
+        "operationId": "postInter-apiSuposExampleUninstall",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/example",
+          "suposExample"
+        ]
+      }
+    },
+    "/inter-api/supos/global/data/export": {
+      "post": {
+        "summary": "全局数据导出",
+        "operationId": "postInter-apiSuposGlobalDataExport",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/global",
+          "suposGlobal"
+        ]
+      }
+    },
+    "/inter-api/supos/global/data/import": {
+      "post": {
+        "summary": "全局数据导入",
+        "operationId": "postInter-apiSuposGlobalDataImport",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/global",
+          "suposGlobal"
+        ]
+      }
+    },
+    "/inter-api/supos/global/file/download": {
+      "post": {
+        "summary": "根据路径下载文件",
+        "operationId": "postInter-apiSuposGlobalFileDownload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/global",
+          "suposGlobal"
+        ]
+      }
+    },
+    "/inter-api/supos/global/user/exportRecordConfirm": {
+      "post": {
+        "summary": "确认导出记录",
+        "operationId": "postInter-apiSuposGlobalUserExportRecordConfirm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/global",
+          "suposGlobal"
+        ]
+      }
+    },
+    "/inter-api/supos/global/user/getExportRecords": {
+      "post": {
+        "summary": "获取导出记录",
+        "operationId": "postInter-apiSuposGlobalUserGetExportRecords",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/global",
+          "suposGlobal"
+        ]
+      }
+    },
+    "/inter-api/supos/kong/alarm/confirm": {
+      "post": {
+        "summary": "确认报警",
+        "operationId": "postInter-apiSuposKongAlarmConfirm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/kong",
+          "suposUnsKong"
+        ]
+      }
+    },
+    "/inter-api/supos/kong/alarm/pageList": {
+      "post": {
+        "summary": "查询报警列表",
+        "operationId": "postInter-apiSuposKongAlarmPageList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/kong",
+          "suposUnsKong"
+        ]
+      }
+    },
+    "/inter-api/supos/kong/alarm/rule": {
+      "put": {
+        "summary": "更新报警规则",
+        "operationId": "putInter-apiSuposKongAlarmRule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/kong",
+          "suposUnsKong"
+        ]
+      }
+    },
+    "/inter-api/supos/kong/routeList": {
+      "get": {
+        "summary": "获取路由",
+        "operationId": "getInter-apiSuposKongRouteList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/kong",
+          "suposUnsKong"
+        ]
+      }
+    },
+    "/inter-api/supos/mount/": {
+      "post": {
+        "summary": "手动挂载",
+        "operationId": "postInter-apiSuposMount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/mount",
+          "suposMount"
+        ]
+      }
+    },
+    "/inter-api/supos/mount/source": {
+      "post": {
+        "summary": "获取挂载数据源",
+        "operationId": "postInter-apiSuposMountSource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/mount",
+          "suposMount"
+        ]
+      }
+    },
+    "/inter-api/supos/resource/": {
+      "get": {
+        "summary": "get",
+        "operationId": "getInter-apiSuposResource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/resource",
+          "suposResource"
+        ]
+      },
+      "post": {
+        "summary": "post",
+        "operationId": "postInter-apiSuposResource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/resource",
+          "suposResource"
+        ]
+      }
+    },
+    "/inter-api/supos/resource/batch": {
+      "delete": {
+        "summary": "batch",
+        "operationId": "deleteInter-apiSuposResourceBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/resource",
+          "suposResource"
+        ]
+      },
+      "post": {
+        "summary": "batch",
+        "operationId": "postInter-apiSuposResourceBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/resource",
+          "suposResource"
+        ]
+      }
+    },
+    "/inter-api/supos/resource/{id}": {
+      "delete": {
+        "summary": "delete",
+        "operationId": "deleteInter-apiSuposResource:id",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/resource",
+          "suposResource"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/alarm/confirm": {
+      "post": {
+        "summary": "确认报警",
+        "operationId": "postInter-apiSuposUnsAlarmConfirm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/alarm",
+          "suposUnsAlarm"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/alarm/pageList": {
+      "post": {
+        "summary": "查询报警列表",
+        "operationId": "postInter-apiSuposUnsAlarmPageList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/alarm",
+          "suposUnsAlarm"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/alarm/rule": {
+      "post": {
+        "summary": "创建报警规则",
+        "operationId": "postInter-apiSuposUnsAlarmRule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/alarm",
+          "suposUnsAlarm"
+        ]
+      },
+      "put": {
+        "summary": "更新报警规则",
+        "operationId": "putInter-apiSuposUnsAlarmRule",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/alarm",
+          "suposUnsAlarm"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/createGrafanaByUns/{alias}": {
+      "post": {
+        "summary": "createGrafanaByUns",
+        "operationId": "postInter-apiSuposUnsCreateGrafanaByUns:alias",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -40,17 +846,355 @@
         },
         "parameters": [
           {
+            "name": "alias",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "schema": {}
+          },
+          {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/WithID"
+              "$ref": "#/definitions/CreateGrafanaByUnsReq"
             }
           }
         ],
         "tags": [
-          "supos/uns/template",
-          "suposUnsTemplate"
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/dashboard": {
+      "get": {
+        "summary": "获取列表",
+        "operationId": "getInter-apiSuposUnsDashboard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      },
+      "post": {
+        "summary": "创建",
+        "operationId": "postInter-apiSuposUnsDashboard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      },
+      "put": {
+        "summary": "edit",
+        "operationId": "putInter-apiSuposUnsDashboard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/dashboard/bindUns": {
+      "post": {
+        "summary": "bindUns",
+        "operationId": "postInter-apiSuposUnsDashboardBindUns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/dashboard/detail": {
+      "post": {
+        "summary": "获取详情",
+        "operationId": "postInter-apiSuposUnsDashboardDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/dashboard/getByUns": {
+      "get": {
+        "summary": "getByUns",
+        "operationId": "getInter-apiSuposUnsDashboardGetByUns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/dashboard/isExist": {
+      "get": {
+        "summary": "isExist",
+        "operationId": "getInter-apiSuposUnsDashboardIsExist",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/dashboard/mark": {
+      "post": {
+        "summary": "置顶",
+        "operationId": "postInter-apiSuposUnsDashboardMark",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/dashboard/unmark": {
+      "delete": {
+        "summary": "取消置顶",
+        "operationId": "deleteInter-apiSuposUnsDashboardUnmark",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/dashboard/{uid}": {
+      "get": {
+        "summary": "get",
+        "operationId": "getInter-apiSuposUnsDashboard:uid",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
+        ]
+      },
+      "delete": {
+        "summary": "delete",
+        "operationId": "deleteInter-apiSuposUnsDashboard:uid",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/dashboard",
+          "suposUnsDashboard"
         ]
       }
     },
@@ -83,6 +1227,93 @@
         ]
       }
     },
+    "/inter-api/supos/uns/file/batchQuery": {
+      "post": {
+        "summary": "批量查询文件实时值",
+        "operationId": "postInter-apiSuposUnsFileBatchQuery",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/file",
+          "suposUnsFile"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/file/batchUpdate": {
+      "post": {
+        "summary": "批量修改文件值",
+        "operationId": "postInter-apiSuposUnsFileBatchUpdate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/file",
+          "suposUnsFile"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/file/blob": {
+      "post": {
+        "summary": "获取文件BLOB类型的值",
+        "operationId": "postInter-apiSuposUnsFileBlob",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/file",
+          "suposUnsFile"
+        ]
+      }
+    },
     "/inter-api/supos/uns/model/pageList": {
       "post": {
         "summary": "查询模板列表",
@@ -112,6 +1343,62 @@
         ]
       }
     },
+    "/inter-api/supos/uns/person/config": {
+      "get": {
+        "summary": "获取个人配置",
+        "operationId": "getInter-apiSuposUnsPersonConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/person",
+          "suposUnsPerson"
+        ]
+      },
+      "post": {
+        "summary": "设置个人配置",
+        "operationId": "postInter-apiSuposUnsPersonConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/person",
+          "suposUnsPerson"
+        ]
+      }
+    },
     "/inter-api/supos/uns/systemConfig": {
       "get": {
         "summary": "获取系统配置",
@@ -138,138 +1425,6 @@
         "tags": [
           "supos/uns",
           "suposUns"
-        ]
-      }
-    },
-    "/inter-api/supos/uns/template": {
-      "get": {
-        "summary": "根据ID查询模板详情",
-        "operationId": "getInter-apiSuposUnsTemplate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
-                },
-                "msg": {
-                  "type": "string",
-                  "title": "返回的消息"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "supos/uns/template",
-          "suposUnsTemplate"
-        ]
-      },
-      "post": {
-        "summary": "新增模板",
-        "operationId": "postInter-apiSuposUnsTemplate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
-                },
-                "msg": {
-                  "type": "string",
-                  "title": "返回的消息"
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/WithID"
-            }
-          }
-        ],
-        "tags": [
-          "supos/uns/template",
-          "suposUnsTemplate"
-        ]
-      },
-      "put": {
-        "summary": "修改模板基本信息",
-        "operationId": "putInter-apiSuposUnsTemplate",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
-                },
-                "msg": {
-                  "type": "string",
-                  "title": "返回的消息"
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/WithID"
-            }
-          }
-        ],
-        "tags": [
-          "supos/uns/template",
-          "suposUnsTemplate"
-        ]
-      }
-    },
-    "/inter-api/supos/uns/template/pageList": {
-      "post": {
-        "summary": "查询模板列表",
-        "operationId": "postInter-apiSuposUnsTemplatePageList",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
-                },
-                "msg": {
-                  "type": "string",
-                  "title": "返回的消息"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "supos/uns/template",
-          "suposUnsTemplate"
         ]
       }
     }
@@ -341,6 +1496,11 @@
         "cmpType",
         "value"
       ]
+    },
+    "CreateGrafanaByUnsReq": {
+      "type": "object",
+      "properties": {},
+      "title": "CreateGrafanaByUnsReq"
     },
     "DateRange": {
       "type": "object",
@@ -569,6 +1729,11 @@
         }
       },
       "title": "WithIDStr"
+    },
+    "WithUid": {
+      "type": "object",
+      "properties": {},
+      "title": "WithUid"
     }
   },
   "securityDefinitions": {

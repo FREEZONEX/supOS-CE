@@ -1,2 +1,6 @@
 import "uns/model.api"
-import "uns/template.api"
+import "uns/alarm.api"
+import "uns/dashboard.api"
+import "uns/data.api"
+import "uns/kong.api"
+import "uns/person.api"

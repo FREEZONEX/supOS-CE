@@ -1,0 +1,41 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/example
+    prefix: /inter-api/supos/example
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "获取"
+    @handler pageList
+    post /pageList () returns ()
+    @doc "安装接口"
+    @handler install
+    post /install () returns ()
+    @doc "卸载"
+    @handler uninstall
+    post /uninstall () returns ()
+    @doc "模拟restApi数据"
+    @handler mockRestapi
+    post /mock/restapi () returns ()
+    @doc "模拟电器厂IT数据"
+    @handler mockRestapiDemo
+    post /mock/restapi/demo () returns ()
+    @doc "模拟订单数据"
+    @handler mockRestapiOrder
+    post /mock/restapi/order () returns ()
+    @doc "初始化发电机数据"
+    @handler mockDemoInit
+    post /mock/demo/init () returns ()
+
+}
+
+type (
+
+)

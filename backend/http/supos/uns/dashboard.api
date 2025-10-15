@@ -1,0 +1,61 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/dashboard
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "获取详情"
+    @handler detail
+    post /dashboard/detail () returns ()
+    @doc "获取列表"
+    @handler pageList
+    get /dashboard () returns ()
+    @doc "创建"
+    @handler create
+    post /dashboard () returns ()
+    @doc "edit"
+    @handler edit
+    put /dashboard () returns ()
+    @doc "delete"
+    @handler delete
+    delete /dashboard/:uid (WithUid) returns ()
+    @doc "get"
+    @handler get
+    get /dashboard/:uid (WithUid) returns ()
+    @doc "createGrafanaByUns"
+    @handler createGrafanaByUns
+    post /createGrafanaByUns/:alias (CreateGrafanaByUnsReq) returns ()
+    @doc "isExist"
+    @handler isExist
+    get /dashboard/isExist () returns ()
+
+    @doc "置顶"
+    @handler mark
+    post /dashboard/mark () returns ()
+
+    @doc "取消置顶"
+    @handler unmark
+    delete /dashboard/unmark () returns ()
+
+    @doc "bindUns"
+    @handler bindUns
+    post /dashboard/bindUns () returns ()
+
+    @doc "getByUns"
+    @handler getByUns
+    get /dashboard/getByUns () returns ()
+}
+
+type (
+    CreateGrafanaByUnsReq{
+        Alias string  `path:"alias"`
+    }
+)
