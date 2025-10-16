@@ -10,3 +10,4 @@
 **/dist
 **/.turbo
 **/.vite
+.vscode/launch.json

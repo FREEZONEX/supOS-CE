@@ -77,6 +77,24 @@ type TimeRange struct {
 	End   int64 `json:"end,optional"`   //结束时间 unix时间戳
 }
 
+type UnsLabel struct {
+	ID        int64  `json:"id"`
+	LabelName string `json:"labelName"`
+	CreateAt  int64  `json:"createAt,optional"`
+}
+
+type UnsLabelCreateReq struct {
+	LabelName string `json:"labelName"`
+}
+
+type UnsLabelListReq struct {
+	Key string `form:"key,optional"`
+}
+
+type UnsLabelListResp struct {
+	List []*UnsLabel `json:"list"`
+}
+
 type WithCode struct {
 	Code string `json:"code,optional"`
 }
@@ -87,7 +105,7 @@ type WithGroupCode struct {
 }
 
 type WithID struct {
-	ID int64 `json:"id,optional"` // id
+	ID int64 `json:"id,optional" form:"id,optional"` // id
 }
 
 type WithIDOrCode struct {

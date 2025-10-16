@@ -28,7 +28,7 @@ type(
         IDs []int64 `json:"ids"`
     }
     WithID{
-        ID int64 `json:"id,optional"`         // id
+        ID int64 `json:"id,optional" form:"id,optional"`         // id
     }
     WithUid{
         Uid string  `path:"uid"`

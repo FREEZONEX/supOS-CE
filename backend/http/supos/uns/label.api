@@ -1,0 +1,51 @@
+info(
+    title: "uns标签"
+    desc: "uns标签"
+    author: "pingan"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/label
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "标签列表"
+    @handler allLabel
+    get /allLabel (UnsLabelListReq) returns (UnsLabelListResp)
+
+    @doc "查询详情"
+    @handler detail
+    get /label/detail (WithID) returns (UnsLabel)
+
+    @doc "创建标签"
+    @handler create
+    post /label (UnsLabelCreateReq) returns (WithID)
+
+    @doc "删除标签"
+    @handler delete
+    delete /label (WithID) returns (Empty)
+
+    @doc "修改标签"
+    @handler update
+    put /label (UnsLabel) returns (Empty)
+
+}
+
+type (
+    UnsLabel{
+        ID int64 `json:"id"`
+        LabelName string `json:"labelName"`
+        CreateAt int64 `json:"createAt,optional"`
+    }
+    UnsLabelListReq{
+        Key string `form:"key,optional"`
+    }
+    UnsLabelListResp{
+        List []*UnsLabel `json:"list"`
+    }
+    UnsLabelCreateReq{
+        LabelName string `json:"labelName"`
+    }
+)

@@ -2,6 +2,7 @@ package relationDB
 
 import (
 	"context"
+	"time"
 
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
@@ -18,11 +19,15 @@ func NewUnsLabelRepo(in any) *UnsLabelRepo {
 
 type UnsLabelFilter struct {
 	//todo 添加过滤字段
+	LabelName string
 }
 
 func (p UnsLabelRepo) fmtFilter(ctx context.Context, f UnsLabelFilter) *gorm.DB {
 	db := p.db.WithContext(ctx)
 	//todo 添加条件
+	if f.LabelName != "" {
+		db = db.Where("label_name = ?", f.LabelName)
+	}
 	return db
 }
 
@@ -91,4 +96,30 @@ func (d UnsLabelRepo) UpdateWithField(ctx context.Context, f UnsLabelFilter, upd
 	db := d.fmtFilter(ctx, f)
 	err := db.Model(&UnsLabel{}).Updates(updates).Error
 	return stores.ErrFmt(err)
+}
+
+// GORM hooks
+// AfterUpdate: touch update_at to current time to ensure timestamp consistency
+func (u *UnsLabel) AfterUpdate(tx *gorm.DB) (err error) {
+	if u == nil || u.ID == 0 {
+		return nil
+	}
+	// Skip hooks to avoid recursion
+	if err = tx.Session(&gorm.Session{SkipHooks: true}).Model(&UnsLabel{}).
+		Where("id = ?", u.ID).
+		Update("update_at", time.Now()).Error; err != nil {
+		return stores.ErrFmt(err)
+	}
+	return nil
+}
+
+// AfterDelete: cascade delete label refs to avoid orphaned rows
+func (u *UnsLabel) AfterDelete(tx *gorm.DB) (err error) {
+	if u == nil || u.ID == 0 {
+		return nil
+	}
+	if err = tx.Where("label_id = ?", u.ID).Delete(&UnsLabelRef{}).Error; err != nil {
+		return stores.ErrFmt(err)
+	}
+	return nil
 }

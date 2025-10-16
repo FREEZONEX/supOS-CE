@@ -821,6 +821,47 @@
         ]
       }
     },
+    "/inter-api/supos/uns/allLabel": {
+      "get": {
+        "summary": "标签列表",
+        "operationId": "getInter-apiSuposUnsAllLabel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/UnsLabelListResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/label",
+          "suposUnsLabel"
+        ]
+      }
+    },
     "/inter-api/supos/uns/createGrafanaByUns/{alias}": {
       "post": {
         "summary": "createGrafanaByUns",
@@ -1314,6 +1355,172 @@
         ]
       }
     },
+    "/inter-api/supos/uns/label": {
+      "delete": {
+        "summary": "删除标签",
+        "operationId": "deleteInter-apiSuposUnsLabel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/Empty"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": " id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/label",
+          "suposUnsLabel"
+        ]
+      },
+      "post": {
+        "summary": "创建标签",
+        "operationId": "postInter-apiSuposUnsLabel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/WithID"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UnsLabelCreateReq"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/label",
+          "suposUnsLabel"
+        ]
+      },
+      "put": {
+        "summary": "修改标签",
+        "operationId": "putInter-apiSuposUnsLabel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/Empty"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UnsLabel"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/label",
+          "suposUnsLabel"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/label/detail": {
+      "get": {
+        "summary": "查询详情",
+        "operationId": "getInter-apiSuposUnsLabelDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/UnsLabel"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": " id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/label",
+          "suposUnsLabel"
+        ]
+      }
+    },
     "/inter-api/supos/uns/model/pageList": {
       "post": {
         "summary": "查询模板列表",
@@ -1672,6 +1879,63 @@
         }
       },
       "title": "TimeRange"
+    },
+    "UnsLabel": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "labelName": {
+          "type": "string"
+        },
+        "createAt": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "UnsLabel",
+      "required": [
+        "id",
+        "labelName"
+      ]
+    },
+    "UnsLabelCreateReq": {
+      "type": "object",
+      "properties": {
+        "labelName": {
+          "type": "string"
+        }
+      },
+      "title": "UnsLabelCreateReq",
+      "required": [
+        "labelName"
+      ]
+    },
+    "UnsLabelListReq": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        }
+      },
+      "title": "UnsLabelListReq"
+    },
+    "UnsLabelListResp": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnsLabel"
+          }
+        }
+      },
+      "title": "UnsLabelListResp",
+      "required": [
+        "list"
+      ]
     },
     "WithCode": {
       "type": "object",

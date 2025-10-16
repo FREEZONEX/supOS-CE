@@ -17,6 +17,7 @@ import (
 	suposunsexternal "backend/internal/handler/supos/uns/external"
 	suposunsfile "backend/internal/handler/supos/uns/file"
 	suposunskong "backend/internal/handler/supos/uns/kong"
+	suposunslabel "backend/internal/handler/supos/uns/label"
 	suposunsmodel "backend/internal/handler/supos/uns/model"
 	suposunsperson "backend/internal/handler/supos/uns/person"
 	"backend/internal/svc"
@@ -392,6 +393,45 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/kong"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 标签列表
+					Method:  http.MethodGet,
+					Path:    "/allLabel",
+					Handler: suposunslabel.AllLabelHandler(serverCtx),
+				},
+				{
+					// 创建标签
+					Method:  http.MethodPost,
+					Path:    "/label",
+					Handler: suposunslabel.CreateHandler(serverCtx),
+				},
+				{
+					// 删除标签
+					Method:  http.MethodDelete,
+					Path:    "/label",
+					Handler: suposunslabel.DeleteHandler(serverCtx),
+				},
+				{
+					// 修改标签
+					Method:  http.MethodPut,
+					Path:    "/label",
+					Handler: suposunslabel.UpdateHandler(serverCtx),
+				},
+				{
+					// 查询详情
+					Method:  http.MethodGet,
+					Path:    "/label/detail",
+					Handler: suposunslabel.DetailHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/uns"),
 	)
 
 	server.AddRoutes(
