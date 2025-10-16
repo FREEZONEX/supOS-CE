@@ -62,6 +62,7 @@
     "zustand": "catalog:util"
   },
   "devDependencies": {
+    "@supos-os-edge/typescript-config": "workspace:^",
     "@types/blueimp-md5": "^2.18.2",
     "@types/codemirror": "catalog:type",
     "@types/insert-css": "catalog:type",

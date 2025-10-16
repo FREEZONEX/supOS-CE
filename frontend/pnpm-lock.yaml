@@ -478,6 +478,9 @@ importers:
         specifier: catalog:util
         version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     devDependencies:
+      '@supos-os-edge/typescript-config':
+        specifier: workspace:^
+        version: link:../../packages/typescript-config
       '@types/blueimp-md5':
         specifier: ^2.18.2
         version: 2.18.2
@@ -532,6 +535,12 @@ importers:
       vite:
         specifier: catalog:build
         version: 7.1.9(@types/node@24.7.2)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(yaml@2.8.1)
+
+  packages/typescript-config:
+    dependencies:
+      typescript:
+        specifier: catalog:lint
+        version: 5.9.3
 
 packages:
 
