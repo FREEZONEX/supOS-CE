@@ -1,0 +1,426 @@
+package relationDB
+
+import "time"
+
+type Example struct {
+	ID    int64 `gorm:"column:id;type:bigint;primary_key;AUTO_INCREMENT"`    // id编号
+	alias int64 `gorm:"column:alias;type:bigint;primary_key;AUTO_INCREMENT"` // 别名
+}
+
+func (m *Example) TableName() string {
+	return "example"
+}
+
+const TableNameUnsNamespace = "uns_namespace"
+
+// UnsNamespace mapped from table <uns_namespace>
+type UnsNamespace struct {
+	ID               int64     `gorm:"column:id;primaryKey" json:"id"`
+	LayRec           string    `gorm:"column:lay_rec;not null" json:"lay_rec"`
+	Alias_           string    `gorm:"column:alias;not null" json:"alias"`
+	ParentAlias      string    `gorm:"column:parent_alias" json:"parent_alias"`
+	Name             string    `gorm:"column:name;not null" json:"name"`
+	Path             string    `gorm:"column:path;not null" json:"path"`
+	PathType         int16     `gorm:"column:path_type;not null" json:"path_type"`
+	DataType         int16     `gorm:"column:data_type" json:"data_type"`
+	Fields           Fields    `gorm:"column:fields;type:json;" json:"fields"`
+	CreateAt         time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+	Status           int16     `gorm:"column:status;default:1" json:"status"`
+	Description      string    `gorm:"column:description" json:"description"`
+	UpdateAt         time.Time `gorm:"column:update_at" json:"update_at"`
+	Protocol         string    `gorm:"column:protocol" json:"protocol"`
+	DataPath         string    `gorm:"column:data_path" json:"data_path"`
+	WithFlags        int32     `gorm:"column:with_flags" json:"with_flags"`
+	DataSrcID        int16     `gorm:"column:data_src_id" json:"data_src_id"`
+	RefUns           RefUns    `gorm:"column:ref_uns;default:{};type:jsonb;" json:"ref_uns"`
+	Refers           Refers    `gorm:"column:refers;type:json;" json:"refers"`
+	Expression       string    `gorm:"column:expression" json:"expression"`
+	TableName_       string    `gorm:"column:table_name" json:"table_name"`
+	NumberFields     int16     `gorm:"column:number_fields" json:"number_fields"`
+	ParentID         int64     `gorm:"column:parent_id" json:"parent_id"`
+	ModelID          int64     `gorm:"column:model_id" json:"model_id"`
+	ProtocolType     string    `gorm:"column:protocol_type" json:"protocol_type"`
+	Extend           string    `gorm:"column:extend;type:jsonb;" json:"extend"`
+	DisplayName      string    `gorm:"column:display_name" json:"display_name"`
+	LabelIds         LabelIds  `gorm:"column:label_ids;type:jsonb;" json:"label_ids"`
+	ExtendFieldFlags int32     `gorm:"column:extend_field_flags" json:"extend_field_flags"`
+	L                int32     `gorm:"column:l" json:"l"`
+	R                int32     `gorm:"column:r" json:"r"`
+	MountType        int16     `gorm:"column:mount_type" json:"mount_type"`
+	MountSource      string    `gorm:"column:mount_source" json:"mount_source"`
+	SubscribeAt      time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
+}
+
+type Fields struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Unique      bool   `json:"unique"`
+	SystemField bool   `json:"system_field"`
+}
+type RefUns map[string]int
+type Refer struct {
+	ID    string `json:"id"`
+	Alias string `json:"alias"`
+}
+type Refers []Refer
+type LabelId map[string]string
+type LabelIds []LabelId
+
+// TableName UnsNamespace's table name
+func (*UnsNamespace) TableName() string {
+	return TableNameUnsNamespace
+}
+
+const TableNameUnsLabel = "uns_label"
+
+// UnsLabel mapped from table <uns_label>
+type UnsLabel struct {
+	ID                 int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	LabelName          string    `gorm:"column:label_name" json:"label_name"`
+	CreateAt           time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+	WithFlags          int32     `gorm:"column:with_flags" json:"with_flags"`
+	SubscribeFrequency string    `gorm:"column:subscribe_frequency" json:"subscribe_frequency"`
+	SubscribeAt        time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
+	UpdateAt           time.Time `gorm:"column:update_at;default:now()" json:"update_at"`
+}
+
+// TableName UnsLabel's table name
+func (*UnsLabel) TableName() string {
+	return TableNameUnsLabel
+}
+
+const TableNameUnsLabelRef = "uns_label_ref"
+
+// UnsLabelRef mapped from table <uns_label_ref>
+type UnsLabelRef struct {
+	LabelID  int64     `gorm:"column:label_id;primaryKey" json:"label_id"`
+	UnsID    int64     `gorm:"column:uns_id;primaryKey" json:"uns_id"`
+	CreateAt time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+}
+
+// TableName UnsLabelRef's table name
+func (*UnsLabelRef) TableName() string {
+	return TableNameUnsLabelRef
+}
+
+const TableNameUnsDashboard = "uns_dashboard"
+
+// UnsDashboard mapped from table <uns_dashboard>
+type UnsDashboard struct {
+	ID          string    `gorm:"column:id;primaryKey" json:"id"`
+	Name        string    `gorm:"column:name" json:"name"`
+	Description string    `gorm:"column:description" json:"description"`
+	JSONContent string    `gorm:"column:json_content" json:"json_content"`
+	UpdateTime  time.Time `gorm:"column:update_time" json:"update_time"`
+	CreateTime  time.Time `gorm:"column:create_time" json:"create_time"`
+	Type        int16     `gorm:"column:type;default:1" json:"type"`
+	Creator     string    `gorm:"column:creator" json:"creator"`
+}
+
+// TableName UnsDashboard's table name
+func (*UnsDashboard) TableName() string {
+	return TableNameUnsDashboard
+}
+
+const TableNameUnsDashboardRef = "uns_dashboard_ref"
+
+// UnsDashboardRef mapped from table <uns_dashboard_ref>
+type UnsDashboardRef struct {
+	DashboardID string    `gorm:"column:dashboard_id;not null" json:"dashboard_id"`
+	UnsAlias    string    `gorm:"column:uns_alias;not null" json:"uns_alias"`
+	CreateAt    time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+}
+
+// TableName UnsDashboardRef's table name
+func (*UnsDashboardRef) TableName() string {
+	return TableNameUnsDashboardRef
+}
+
+const TableNameUnsDashboardTopRecode = "uns_dashboard_top_recodes"
+
+// UnsDashboardTopRecode mapped from table <uns_dashboard_top_recodes>
+type UnsDashboardTopRecode struct {
+	ID         int64     `gorm:"column:id;not null" json:"id"`
+	UserID     string    `gorm:"column:user_id;not null" json:"user_id"`
+	Mark       int16     `gorm:"column:mark;default:1" json:"mark"`
+	MarkTime   time.Time `gorm:"column:mark_time;default:CURRENT_TIMESTAMP" json:"mark_time"`
+	UpdateTime time.Time `gorm:"column:update_time" json:"update_time"`
+}
+
+// TableName UnsDashboardTopRecode's table name
+func (*UnsDashboardTopRecode) TableName() string {
+	return TableNameUnsDashboardTopRecode
+}
+
+const TableNameUnsAttachment = "uns_attachment"
+
+// UnsAttachment mapped from table <uns_attachment>
+type UnsAttachment struct {
+	ID             int64     `gorm:"column:id;primaryKey" json:"id"`
+	UnsAlias       string    `gorm:"column:uns_alias;not null" json:"uns_alias"`
+	OriginalName   string    `gorm:"column:original_name;not null" json:"original_name"`
+	AttachmentName string    `gorm:"column:attachment_name;not null" json:"attachment_name"`
+	AttachmentPath string    `gorm:"column:attachment_path" json:"attachment_path"`
+	ExtensionName  string    `gorm:"column:extension_name" json:"extension_name"`
+	CreateAt       time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+}
+
+// TableName UnsAttachment's table name
+func (*UnsAttachment) TableName() string {
+	return TableNameUnsAttachment
+}
+
+const TableNameUnsAlarmsDatum = "uns_alarms_data"
+
+// UnsAlarmsDatum mapped from table <uns_alarms_data>
+type UnsAlarmsDatum struct {
+	Ct           time.Time `gorm:"column:_ct;default:now()" json:"_ct"`
+	ID           int64     `gorm:"column:_id;primaryKey;autoIncrement:true" json:"_id"`
+	CurrentValue float32   `gorm:"column:current_value" json:"current_value"`
+	IsAlarm      bool      `gorm:"column:is_alarm;default:true" json:"is_alarm"`
+	LimitValue   float32   `gorm:"column:limit_value" json:"limit_value"`
+	ReadStatus   bool      `gorm:"column:read_status" json:"read_status"`
+	Uns          int64     `gorm:"column:uns" json:"uns"`
+	UnsPath      string    `gorm:"column:uns_path" json:"uns_path"`
+}
+
+// TableName UnsAlarmsDatum's table name
+func (*UnsAlarmsDatum) TableName() string {
+	return TableNameUnsAlarmsDatum
+}
+
+const TableNameUnsAlarmsHandler = "uns_alarms_handler"
+
+// UnsAlarmsHandler mapped from table <uns_alarms_handler>
+type UnsAlarmsHandler struct {
+	ID       int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	UnsID    int64     `gorm:"column:uns_id" json:"uns_id"`
+	UserID   string    `gorm:"column:user_id" json:"user_id"`
+	Username string    `gorm:"column:username" json:"username"`
+	CreateAt time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+}
+
+// TableName UnsAlarmsHandler's table name
+func (*UnsAlarmsHandler) TableName() string {
+	return TableNameUnsAlarmsHandler
+}
+
+const TableNameUnsExportRecord = "uns_export_record"
+
+// UnsExportRecord mapped from table <uns_export_record>
+type UnsExportRecord struct {
+	ID         int64     `gorm:"column:id;primaryKey" json:"id"`
+	UserID     string    `gorm:"column:user_id" json:"user_id"`
+	FilePath   string    `gorm:"column:file_path" json:"file_path"`
+	CreateTime time.Time `gorm:"column:create_time;default:CURRENT_TIMESTAMP" json:"create_time"`
+	UpdateTime time.Time `gorm:"column:update_time" json:"update_time"`
+	Confirm    bool      `gorm:"column:confirm" json:"confirm"`
+}
+
+// TableName UnsExportRecord's table name
+func (*UnsExportRecord) TableName() string {
+	return TableNameUnsExportRecord
+}
+
+const TableNameUnsHistoryDeleteJob = "uns_history_delete_job"
+
+// UnsHistoryDeleteJob mapped from table <uns_history_delete_job>
+type UnsHistoryDeleteJob struct {
+	ID         int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	Alias_     string    `gorm:"column:alias;not null" json:"alias"`
+	Name       string    `gorm:"column:name;not null" json:"name"`
+	TableName_ string    `gorm:"column:table_name" json:"table_name"`
+	Path       string    `gorm:"column:path;not null" json:"path"`
+	PathType   int16     `gorm:"column:path_type;not null" json:"path_type"`
+	DataType   int16     `gorm:"column:data_type" json:"data_type"`
+	Fields     string    `gorm:"column:fields" json:"fields"`
+	Status     int16     `gorm:"column:status;default:1" json:"status"`
+	CreateAt   time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+}
+
+// TableName UnsHistoryDeleteJob's table name
+func (*UnsHistoryDeleteJob) TableName() string {
+	return TableNameUnsHistoryDeleteJob
+}
+
+const TableNameUnsMountExtend = "uns_mount_extend"
+
+// UnsMountExtend mapped from table <uns_mount_extend>
+type UnsMountExtend struct {
+	ID                int64  `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	SourceSubType     string `gorm:"column:source_sub_type" json:"source_sub_type"`
+	MountSeq          string `gorm:"column:mount_seq" json:"mount_seq"`
+	TargetAlias       string `gorm:"column:target_alias" json:"target_alias"`
+	FirstSourceAlias  string `gorm:"column:first_source_alias" json:"first_source_alias"`
+	SecondSourceAlias string `gorm:"column:second_source_alias" json:"second_source_alias"`
+	SourceName        string `gorm:"column:source_name" json:"source_name"`
+	Extend            string `gorm:"column:extend" json:"extend"`
+}
+
+// TableName UnsMountExtend's table name
+func (*UnsMountExtend) TableName() string {
+	return TableNameUnsMountExtend
+}
+
+const TableNameUnsMount = "uns_mount"
+
+// UnsMount mapped from table <uns_mount>
+type UnsMount struct {
+	ID          int64  `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	MountSeq    string `gorm:"column:mount_seq" json:"mount_seq"`
+	TargetType  string `gorm:"column:target_type" json:"target_type"`
+	TargetAlias string `gorm:"column:target_alias" json:"target_alias"`
+	MountModel  string `gorm:"column:mount_model" json:"mount_model"`
+	SourceAlias string `gorm:"column:source_alias" json:"source_alias"`
+	MountStatus int16  `gorm:"column:mount_status" json:"mount_status"`
+	Status      string `gorm:"column:status" json:"status"`
+	DataType    int16  `gorm:"column:data_type" json:"data_type"`
+	WithFlags   int32  `gorm:"column:with_flags" json:"with_flags"`
+	Version     string `gorm:"column:version" json:"version"`
+	NextVersion string `gorm:"column:next_version" json:"next_version"`
+}
+
+// TableName UnsMount's table name
+func (*UnsMount) TableName() string {
+	return TableNameUnsMount
+}
+
+const TableNameUnsPersonConfig = "uns_person_config"
+
+// UnsPersonConfig mapped from table <uns_person_config>
+type UnsPersonConfig struct {
+	ID           int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	UserID       string    `gorm:"column:user_id;not null" json:"user_id"`
+	MainLanguage string    `gorm:"column:main_language" json:"main_language"`
+	CreateAt     time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+	UpdateAt     time.Time `gorm:"column:update_at;default:now()" json:"update_at"`
+}
+
+// TableName UnsPersonConfig's table name
+func (*UnsPersonConfig) TableName() string {
+	return TableNameUnsPersonConfig
+}
+
+const TableNameUnsSysCode = "uns_sys_code"
+
+// UnsSysCode mapped from table <uns_sys_code>
+type UnsSysCode struct {
+	ID          int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	ModuleCode  string    `gorm:"column:module_code;not null" json:"module_code"`
+	EntityCode  string    `gorm:"column:entity_code;not null" json:"entity_code"`
+	Code        string    `gorm:"column:code;not null" json:"code"`
+	Name        string    `gorm:"column:name;not null" json:"name"`
+	Sort        float64   `gorm:"column:sort;default:1000" json:"sort"`
+	DesA        string    `gorm:"column:des_a" json:"des_a"`
+	DesB        string    `gorm:"column:des_b" json:"des_b"`
+	DesC        string    `gorm:"column:des_c" json:"des_c"`
+	CreateTime  time.Time `gorm:"column:create_time;default:now()" json:"create_time"`
+	Description string    `gorm:"column:description" json:"description"`
+}
+
+// TableName UnsSysCode's table name
+func (*UnsSysCode) TableName() string {
+	return TableNameUnsSysCode
+}
+
+const TableNameUnsSysEntity = "uns_sys_entity"
+
+// UnsSysEntity mapped from table <uns_sys_entity>
+type UnsSysEntity struct {
+	ID          int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	ModuleCode  string    `gorm:"column:module_code;not null" json:"module_code"`
+	Code        string    `gorm:"column:code;not null" json:"code"`
+	Name        string    `gorm:"column:name;not null" json:"name"`
+	Description string    `gorm:"column:description" json:"description"`
+	CreateTime  time.Time `gorm:"column:create_time;default:now()" json:"create_time"`
+	SysDefault  bool      `gorm:"column:sys_default;default:true" json:"sys_default"`
+}
+
+// TableName UnsSysEntity's table name
+func (*UnsSysEntity) TableName() string {
+	return TableNameUnsSysEntity
+}
+
+const TableNameUnsSysModule = "uns_sys_module"
+
+// UnsSysModule mapped from table <uns_sys_module>
+type UnsSysModule struct {
+	ID         int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	Code       string    `gorm:"column:code;not null" json:"code"`
+	Name       string    `gorm:"column:name;not null" json:"name"`
+	Type       string    `gorm:"column:type;not null" json:"type"`
+	CreateTime time.Time `gorm:"column:create_time;default:now()" json:"create_time"`
+}
+
+// TableName UnsSysModule's table name
+func (*UnsSysModule) TableName() string {
+	return TableNameUnsSysModule
+}
+
+const TableNameUnsTag = "uns_tag"
+
+// UnsTag mapped from table <uns_tag>
+type UnsTag struct {
+	ID        int64     `gorm:"column:id;primaryKey" json:"id"`
+	Topic     string    `gorm:"column:topic" json:"topic"`
+	TagName   string    `gorm:"column:tag_name" json:"tag_name"`
+	IsDeleted bool      `gorm:"column:is_deleted" json:"is_deleted"`
+	CreateAt  time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+}
+
+// TableName UnsTag's table name
+func (*UnsTag) TableName() string {
+	return TableNameUnsTag
+}
+
+const TableNameUnsWebhookAction = "uns_webhook_action"
+
+// UnsWebhookAction mapped from table <uns_webhook_action>
+type UnsWebhookAction struct {
+	ID         int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	Name       string    `gorm:"column:name;not null" json:"name"`
+	Service    string    `gorm:"column:service;not null" json:"service"`
+	EventMeta  string    `gorm:"column:event_meta;not null" json:"event_meta"`
+	Action     string    `gorm:"column:action;not null" json:"action"`
+	MethodType string    `gorm:"column:method_type;not null" json:"method_type"`
+	Timeout    int32     `gorm:"column:timeout;not null" json:"timeout"`
+	URL        string    `gorm:"column:url;not null" json:"url"`
+	Headers    string    `gorm:"column:headers" json:"headers"`
+	Params     string    `gorm:"column:params" json:"params"`
+	Payload    string    `gorm:"column:payload" json:"payload"`
+	Status     string    `gorm:"column:status" json:"status"`
+	Message    string    `gorm:"column:message" json:"message"`
+	CreateTime time.Time `gorm:"column:create_time;default:now()" json:"create_time"`
+	UpdateTime time.Time `gorm:"column:update_time" json:"update_time"`
+	Body       string    `gorm:"column:body" json:"body"`
+}
+
+// TableName UnsWebhookAction's table name
+func (*UnsWebhookAction) TableName() string {
+	return TableNameUnsWebhookAction
+}
+
+const TableNameUnsWebhook = "uns_webhook"
+
+// UnsWebhook mapped from table <uns_webhook>
+type UnsWebhook struct {
+	ID          int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	Name        string    `gorm:"column:name;not null" json:"name"`
+	Service     string    `gorm:"column:service;not null" json:"service"`
+	EventMeta   string    `gorm:"column:event_meta;not null" json:"event_meta"`
+	Actions     string    `gorm:"column:actions;not null" json:"actions"`
+	MethodType  string    `gorm:"column:method_type;not null" json:"method_type"`
+	URL         string    `gorm:"column:url;not null" json:"url"`
+	Headers     string    `gorm:"column:headers" json:"headers"`
+	Params      string    `gorm:"column:params" json:"params"`
+	Description string    `gorm:"column:description" json:"description"`
+	CreateTime  time.Time `gorm:"column:create_time;default:now()" json:"create_time"`
+	UpdateTime  time.Time `gorm:"column:update_time" json:"update_time"`
+	Timeout     int32     `gorm:"column:timeout;not null;default:1000" json:"timeout"`
+	Body        string    `gorm:"column:body" json:"body"`
+}
+
+// TableName UnsWebhook's table name
+func (*UnsWebhook) TableName() string {
+	return TableNameUnsWebhook
+}
