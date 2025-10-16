@@ -1,6 +1,5 @@
 @use './reset';
 @use './theme/theme' as *;
-
 @use '@ibm/plex-sans/scss' as PlexSans with (
   $font-prefix: '@ibm/plex-sans',
   $font-weights: (
@@ -22,6 +21,7 @@
     thinItalic: false,
   )
 );
+
 @include PlexSans.all();
 
 * {
@@ -76,11 +76,11 @@ iframe {
   --supos-card-color: var(--supos-t-white-color);
   --supos-card-active-color: #8ebbfe;
   --supos-copilot-color: var(--supos-t-blue-color-10);
-  --supos-navwrap-color: rgba(255, 255, 255, 60%);
+  --supos-navwrap-color: rgb(255 255 255 / 60%);
   --supos-message-color: var(--supos-t-gray-color-70);
   --supos-gray-color-10-message: var(--supos-t-gray-color-10);
   --supos-blue-color-10: var(--supos-t-blue-color-10);
-  --supos-button-def-10: rgba(0, 0, 0, 0.04);
+  --supos-button-def-10: rgb(0 0 0 / 4%);
   --supos-view-item: var(--supos-t-table-first-color);
   --supos-useremail-color: #515151;
   --supos-tree-fooer-color: var(--supos-t-white-color);
@@ -103,19 +103,19 @@ iframe {
   --supos-active-bg-color: var(--supos-t-gray-color-20);
   --supos-table-tr-color: var(--supos-t-gray-color-30);
   --supos-card-border-color: var(--supos-t-blue-color-20);
-  --supos-fill-secondary: rgba(0, 0, 0, 0.06);
-  --supos-fill-tertiary: rgba(0, 0, 0, 0.04);
+  --supos-fill-secondary: rgb(0 0 0 / 6%);
+  --supos-fill-tertiary: rgb(0 0 0 / 4%);
   --supos-active-with-range-bg: var(--supos-t-blue-color-10);
-  --supos-cell-hover-bg: rgba(0, 0, 0, 0.04);
+  --supos-cell-hover-bg: rgb(0 0 0 / 4%);
   --supos-header-splitter-color: var(--supos-t-gray-color-20);
   --supos-primary-bg: var(--supos-t-blue-color-10);
   --supos-primary-bg-hover: var(--supos-t-blue-color-20);
   --supos-promodal-bg-pg-color: var(--supos-t-white-color);
-  --supos-modal-mask-bg: rgba(0, 0, 0, 0.45);
+  --supos-modal-mask-bg: rgb(0 0 0 / 45%);
   --supos-icon-disabled-color: var(--supos-t-gray-color-40);
   --supos-t-card-select-bg: var(--supos-t-light-card-select-bg);
   --supos-t-card-hover-bg: var(--supos-t-table-head-color);
-  --supos-background-selected: rgba(141 141 141 / 20%);
+  --supos-background-selected: rgb(141 141 141 / 20%);
   --supos-border-interactive: #0f62fe;
   --supos-craft-bg-color: #f4f4f4;
   --supos-t-text-disabled-color: var(--supos-t-select-d-color);
@@ -170,7 +170,7 @@ iframe {
   --supos-tag-color: var(--supos-t-gray-color-90);
   --supos-icon-color: var(--supos-text-color);
   --supos-shadow-color: var(--supos-t-gray-color-90);
-  --supos-select-d-color: rgba(255, 255, 255, 0.25);
+  --supos-select-d-color: rgb(255 255 255 / 25%);
   --supos-modal-color: var(--supos-t-gray-color-100);
   --supos-useravatar-color: var(--supos-t-gray-color-90);
   --supos-boxshadow-color: var(--supos-t-boxshadow-dark-color);
@@ -183,16 +183,16 @@ iframe {
   --supos-uns-home-color: var(--supos-t-gray-color-70);
   --supos-active-bg-color: var(--supos-t-gray-color-60);
   --supos-table-tr-color: var(--supos-t-gray-color-50);
-  --supos-fill-secondary: rgba(255, 255, 255, 0.08);
-  --supos-fill-tertiary: rgba(255, 255, 255, 0.06);
+  --supos-fill-secondary: rgb(255 255 255 / 8%);
+  --supos-fill-tertiary: rgb(255 255 255 / 6%);
   --supos-active-with-range-bg: var(--supos-t-gray-color-70);
   --supos-cell-hover-bg: var(--supos-t-gray-color-80);
   --supos-header-splitter-color: var(--supos-t-white-color);
   --supos-primary-bg: var(--supos-t-gray-color-70);
   --supos-primary-bg-hover: var(--supos-t-gray-color-80);
   --supos-promodal-bg-pg-color: var(--supos-t-boxshadow-dark-color);
-  --supos-modal-mask-bg: rgba(255, 255, 255, 0.45);
-  --supos-icon-disabled-color: rgba(255, 255, 255, 0.25);
+  --supos-modal-mask-bg: rgb(255 255 255 / 45%);
+  --supos-icon-disabled-color: rgb(255 255 255 / 25%);
   --supos-t-card-select-bg: var(--supos-t-gray-color-80);
   --supos-t-card-hover-bg: var(--supos-t-menu-hover-color);
   --supos-layer-selecter-hover: #d1d1d1;
@@ -230,6 +230,7 @@ iframe {
   --supos-primary-bg: var(--supos-t-gray-color-70);
   --supos-primary-bg-hover: var(--supos-t-gray-color-80);
 }
+
 .ant-select-arrow {
   color: var(--supos-text-color) !important; /* 设置下拉箭头的颜色 */
 }
@@ -265,14 +266,17 @@ iframe {
 input {
   caret-color: var(--supos-text-color) !important;
 }
+
 input:-webkit-autofill {
   box-shadow: 0 0 0 1000px var(--supos-input-color) inset !important;
 }
+
 input:-internal-autofill-previewed,
 input:-internal-autofill-selected {
   -webkit-text-fill-color: var(--supos-text-color) !important;
   transition: background-color 5000s ease-in-out 0s !important;
 }
+
 input::placeholder {
   color: var(--supos-t-placeholder-color) !important;
 }
