@@ -44,8 +44,6 @@ type UnsNamespace struct {
 	DisplayName      string    `gorm:"column:display_name" json:"display_name"`
 	LabelIds         LabelIds  `gorm:"column:label_ids;type:jsonb;" json:"label_ids"`
 	ExtendFieldFlags int32     `gorm:"column:extend_field_flags" json:"extend_field_flags"`
-	L                int32     `gorm:"column:l" json:"l"`
-	R                int32     `gorm:"column:r" json:"r"`
 	MountType        int16     `gorm:"column:mount_type" json:"mount_type"`
 	MountSource      string    `gorm:"column:mount_source" json:"mount_source"`
 	SubscribeAt      time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
@@ -57,14 +55,13 @@ type Fields struct {
 	Unique      bool   `json:"unique"`
 	SystemField bool   `json:"system_field"`
 }
-type RefUns map[string]int
+type RefUns map[int64]int
 type Refer struct {
 	ID    string `json:"id"`
 	Alias string `json:"alias"`
 }
 type Refers []Refer
-type LabelId map[string]string
-type LabelIds []LabelId
+type LabelIds map[int64]string
 
 // TableName UnsNamespace's table name
 func (*UnsNamespace) TableName() string {
