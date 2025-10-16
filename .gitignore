@@ -10,3 +10,4 @@
 **/.vite
 **/*.local
 **/.__mf__temp
+**/properties-output

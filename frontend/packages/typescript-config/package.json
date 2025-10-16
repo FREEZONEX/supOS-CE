@@ -24,7 +24,6 @@
   ],
   "author": "zhengfayue",
   "license": "ISC",
-  "packageManager": "pnpm@10.13.1",
   "publishConfig": {
     "access": "public"
   }

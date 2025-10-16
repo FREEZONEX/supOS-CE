@@ -3,9 +3,21 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["build/**", "dist/**"]
     },
     "dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "intl:once": {
+      "persistent": true,
+      "cache": false
+    },
+    "intl:watch": {
+      "persistent": true,
+      "cache": false
+    },
+    "properties:convert": {
       "persistent": true,
       "cache": false
     }

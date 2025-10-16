@@ -5,9 +5,16 @@
   "type": "module",
   "scripts": {
     "prepare": "cd .. && husky frontend/.husky",
+    "postinstall": "node scripts/check-scripts-dist.js",
     "lint": "eslint .",
+    "intl:once": "turbo run intl:once",
+    "intl:watch": "turbo run intl:watch",
+    "properties:convert": "turbo run properties:convert",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter ./apps/web",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter ./apps/web",
+    "build:scripts": "turbo run build --filter ./packages/scripts",
     "clean": "rimraf --glob \"**/node_modules\"  || exit 0"
   },
   "lint-staged": {
