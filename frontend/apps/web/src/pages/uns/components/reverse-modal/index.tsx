@@ -24,6 +24,7 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
   const [types, setTypes] = useState<string[]>([]);
   const [fullScreen, setFullScreen] = useState<boolean>(false);
   const [folderList, setFolderList] = useState([]);
+  const [temporaryNode, setTemporaryNode] = useState(currentNode);
 
   const attributeType = Form.useWatch('attributeType', form) || form.getFieldValue('attributeType');
   const source = Form.useWatch('source', form) || form.getFieldValue('source');
@@ -79,6 +80,20 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
     ],
   };
 
+  useEffect(() => {
+    if (
+      attributeType === 2 &&
+      temporaryNode?.pathType === 0 &&
+      temporaryNode?.countChildren === 0 &&
+      !(temporaryNode?.children?.length || temporaryNode?.hasChildren)
+    ) {
+      form.setFieldsValue({
+        targetFolder: temporaryNode?.alias,
+      });
+      setTemporaryNode(undefined);
+    }
+  }, [temporaryNode, attributeType]);
+
   return (
     <ProModal
       title={formatMessage('uns.batchGeneration')}
@@ -129,7 +144,7 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
                 source: e.target.value === 1 ? 'json' : 'connect',
                 jsonData: undefined,
 
-                targetFolder: undefined,
+                // targetFolder: undefined,
                 dataSource: undefined,
                 persistence: false,
                 dashboard: false,
@@ -145,6 +160,8 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
               placeholder={formatMessage('uns.targetFolder')}
               options={folderList}
               fieldNames={{ label: 'path', value: 'alias' }}
+              showSearch
+              optionFilterProp="path"
             />
           </Form.Item>
         )}
