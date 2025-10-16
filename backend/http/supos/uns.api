@@ -4,5 +4,6 @@ import "uns/dashboard.api"
 import "uns/data.api"
 import "uns/kong.api"
 import "uns/person.api"
+import "uns/uns.api"
 import "uns/label.api"
 
