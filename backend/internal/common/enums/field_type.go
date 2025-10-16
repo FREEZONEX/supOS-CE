@@ -62,7 +62,7 @@ func (f FieldType) IsNumber() bool {
 }
 
 // DefaultValue returns the default value for the field type.
-func (f FieldType) DefaultValue() interface{} {
+func (f FieldType) DefaultValue() any {
 	return fieldTypeDetails[f].defaultValue
 }
 

@@ -1,6 +1,6 @@
 package common
 
-import "supos-edge/internal/common/constants"
+import "backend/internal/common/constants"
 
 // SrcJdbcType contains information about a JDBC type
 type SrcJdbcType struct {
