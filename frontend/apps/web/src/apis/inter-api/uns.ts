@@ -246,4 +246,6 @@ export const getCollectorList = async (params?: Record<string, unknown>) =>
   api.get('/mount/source/collector', { params }); // 获取采集器列表
 export const getSourceList = async (params?: Record<string, unknown>) => api.get('/mount/source', { params }); // 获取数据源列表
 export const pasteUns = async (data?: { sourceId?: any; targetId?: any; newF?: Record<string, unknown> }) =>
-  api.post('/paste', data); // 黏贴uns文件文件夹
+  api.post('/paste', data, {
+    [CustomAxiosConfigEnum.BusinessResponse]: true,
+  }); // 黏贴uns文件文件夹

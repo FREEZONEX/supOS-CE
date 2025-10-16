@@ -15,7 +15,6 @@ import c2 from '@/assets/uns/cw.svg';
 import error from '@/assets/uns/error.svg';
 import ReactDOM from 'react-dom/client'; // React 18 使用 'react-dom/client'
 import { debounce } from 'lodash-es';
-import md5 from 'blueimp-md5';
 import { useDeepCompareEffect } from 'ahooks';
 import classNames from 'classnames';
 import { getRefreshList, getSourceList } from '@/apis/chat2db';
@@ -604,7 +603,7 @@ const data = {
   ],
 };
 
-const TopologyChart = ({ instanceInfo, payload, dt }: any) => {
+const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
   const graphRef = useRef<any>(null);
   const dashboardType = useBaseStore((state) => state.dashboardType);
   const [active, setActive] = useState<any>('');
@@ -812,7 +811,7 @@ const TopologyChart = ({ instanceInfo, payload, dt }: any) => {
       return;
     }
     if (cell?.id === 'apps1' && dashboardType?.includes('grafana') && launchButton) {
-      navigate('/grafana-design', { state: { url: getAppsLink(instanceInfo), name: 'GrafanaDesign' } });
+      navigate('/grafana-design', { state: { url: getAppsLink(dashboardInfo), name: 'GrafanaDesign' } });
       return;
     }
     setActive((active: any) => (active === cell.id ? '' : cell.id));
@@ -861,9 +860,7 @@ const TopologyChart = ({ instanceInfo, payload, dt }: any) => {
     }
   };
   const getAppsLink = (data: any) => {
-    const { alias } = data || {};
-    const aliasHash = md5(instanceInfo?.alias).slice(8, 24);
-    return `/grafana/home/d/${aliasHash}/${alias.replaceAll('_', '-')}`;
+    return `/grafana/home/d/${data.id}`;
   };
 
   // 获取并更新图表数据

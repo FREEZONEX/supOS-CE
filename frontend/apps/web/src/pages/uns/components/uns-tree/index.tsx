@@ -555,7 +555,8 @@ const TopTreeCom = ({
         sourceId: source?.id,
         targetId,
       })
-        .then((data) => {
+        .then(({ data, msg }) => {
+          message.success(msg);
           loadData({
             queryType: source?.type === 0 ? 'addFolder' : 'addFile',
             key: targetId ? targetId : ROOT_NODE_ID,

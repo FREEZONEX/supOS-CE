@@ -20,6 +20,8 @@ interface UsePaginationParams {
         isAsc?: boolean;
       }
     | { [key: string]: any };
+  /** 是否累加数据，默认为false，即覆盖数据 */
+  appendData?: boolean;
 }
 
 const usePagination = <T>({
@@ -34,6 +36,7 @@ const usePagination = <T>({
   refreshInterval = 5000, // 默认5秒
   rowKey = 'id',
   defaultSort = {},
+  appendData = false,
 }: UsePaginationParams) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
@@ -87,7 +90,12 @@ const usePagination = <T>({
         if (abortControllerRef.current?.signal.aborted) {
           return; // 如果请求被中止，则不处理响应
         }
-        setData(data?.data);
+        // 根据appendData参数决定是追加数据还是覆盖数据
+        if (appendData && paramsData.pageNo > 1) {
+          setData((prevData) => [...prevData, ...(data?.data || [])]);
+        } else {
+          setData(data?.data);
+        }
         totalRef.current = data?.total ?? 0;
         if (onSuccessCallback) {
           onSuccessCallback?.(data);
@@ -270,6 +278,7 @@ const usePagination = <T>({
     setSearchParams,
     setPagination,
     clearData,
+    hasMore: !data.length || data.length < totalRef.current,
     rowSelection: {
       selectedRowKeys,
       onChange: rowSelectionChange,

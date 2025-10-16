@@ -321,15 +321,16 @@ const FormStep: FC<FormStepProps> = ({
           data.path = path;
           data.labelList = labelList;
         }
-        console.log(data, pasteInfo, isCreateFolder, '最终数据');
         if (pasteInfo) {
           pasteUns({
             sourceId: pasteInfo?.sourceId,
             targetId: data?.parentId,
             newF: data,
           })
-            .then((res) => {
-              handleCallback(res, isCreateFolder ? 'addFolder' : 'addFile');
+            .then(({ data, msg }) => {
+              handleCallback(data, isCreateFolder ? 'addFolder' : 'addFile');
+              handleClose(() => setLoading(false));
+              message.success(msg);
             })
             .catch(() => {
               setLoading(false);

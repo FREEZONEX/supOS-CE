@@ -32,7 +32,6 @@
     "ahooks": "catalog:util",
     "antd": "catalog:ui",
     "axios": "catalog:util",
-    "blueimp-md5": "^2.19.0",
     "classnames": "catalog:util",
     "clipboard": "catalog:util",
     "codemirror": "catalog:util",

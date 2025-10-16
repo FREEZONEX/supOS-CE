@@ -1,5 +1,4 @@
 import { type FC, useEffect, useRef, useState, useCallback } from 'react';
-import md5 from 'blueimp-md5';
 import { ResizableBox } from 'react-resizable';
 import '@/components/resizable-container/index.scss';
 import { Result, type TimeRangePickerProps } from 'antd';
@@ -20,14 +19,11 @@ interface DetailDashboardProps {
 }
 
 const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo }) => {
-  const { dataType, refers, alias } = instanceInfo;
+  const { dataType } = instanceInfo;
 
   const formatMessage = useTranslate();
   const hasDashboards = useBaseStore((state) => state.menuGroup?.some((f) => f.url === '/dashboards'));
   const observer = useRef<MutationObserver | null>(null);
-  const newAlias = dataType === 7 ? refers?.[0]?.alias : alias;
-  const aliasHash = md5(newAlias).slice(8, 24);
-  const iframeName = `${newAlias?.replaceAll('_', '-')}`;
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [iframeUrl, setIframeUrl] = useState('');
@@ -37,7 +33,7 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo
     if (instanceInfo && dashboardInfo) {
       if (!dashboardInfo?.type || dashboardInfo?.type === 1) {
         // grafana
-        setIframeUrl(`/grafana/home/d-solo/${aliasHash}/${iframeName}?orgId=1&panelId=1&__feature.dashboardSceneSolo`);
+        setIframeUrl(`/grafana/home/d-solo/${dashboardInfo?.id}?orgId=1&panelId=1&__feature.dashboardSceneSolo`);
       } else if (dashboardInfo?.type === 2) {
         // fuxa
         setIframeUrl(`/fuxa/home/?id=${dashboardInfo?.id}=lab`);
@@ -49,7 +45,7 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo
     if (!dashboardInfo?.type || dashboardInfo?.type === 1) {
       const timeFrame = dates ? `&from=${dayjs(dates[0]).valueOf()}&to=${dayjs(dates[1]).valueOf()}` : '';
       setIframeUrl(
-        `/grafana/home/d-solo/${aliasHash}/${iframeName}?orgId=1&panelId=1&__feature.dashboardSceneSolo${timeFrame}`
+        `/grafana/home/d-solo/${dashboardInfo?.id}?orgId=1&panelId=1&__feature.dashboardSceneSolo${timeFrame}`
       );
     }
   }, [dates, dashboardInfo]);

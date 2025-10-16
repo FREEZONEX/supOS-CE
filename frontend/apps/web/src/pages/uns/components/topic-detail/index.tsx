@@ -280,14 +280,6 @@ const Module: FC<FileDetailProps> = (props) => {
               label: formatMessage('uns.dashboard'),
               children: <Dashboard instanceInfo={instanceInfo} dashboardInfo={dashboardInfo} />,
               style: panelStyle,
-              // extra: [1, 2, 3].includes(instanceInfo.dataType) &&
-              //   (!instanceInfo.withDashboard || !instanceInfo.dashboardIsExist) && (
-              //     <Space.Compact block>
-              //       <Button loading={createLoading} onClick={handleCreateDashboard}>
-              //         {formatMessage('common.create')}
-              //       </Button>
-              //     </Space.Compact>
-              //   ),
               extra: [1, 2, 3].includes(instanceInfo.dataType) && (
                 <Space>
                   <DashboardBinding
@@ -330,7 +322,12 @@ const Module: FC<FileDetailProps> = (props) => {
               key: [1, 2].includes(instanceInfo.dataType) ? 'topologyChart' : '',
               label: formatMessage('uns.topology'),
               children: (
-                <TopologyChart instanceInfo={instanceInfo} payload={websocketData?.data} dt={websocketData?.dt || {}} />
+                <TopologyChart
+                  instanceInfo={instanceInfo}
+                  dashboardInfo={dashboardInfo}
+                  payload={websocketData?.data}
+                  dt={websocketData?.dt || {}}
+                />
               ),
               style: panelStyle,
             },

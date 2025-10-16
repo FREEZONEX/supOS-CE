@@ -11,6 +11,7 @@ import { debounce } from 'lodash-es';
 import ComInput from '@/components/com-input';
 import { getDashboardList } from '@/apis/inter-api';
 import usePropsValue from '@/hooks/usePropsValue.ts';
+import usePagination from '@/hooks/usePagination.ts';
 
 const CONTAINER_HEIGHT = 200;
 const PAGE_SIZE = 20;
@@ -22,8 +23,6 @@ const DashboardBinding: FC<{
   selectValue?: string;
   setSelectValue?: (value: string) => void;
 }> = ({ isCreated, onCreated, onBinding, selectValue, setSelectValue }) => {
-  const [data, setData] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = usePropsValue({
     value: selectValue,
@@ -31,47 +30,35 @@ const DashboardBinding: FC<{
   });
   const formatMessage = useTranslate();
   const [searchValue, setSearchValue] = useState('');
+  const { data, pagination, clearData, setSearchParams, hasMore } = usePagination({
+    firstNotGetData: true,
+    appendData: true,
+    fetchApi: getDashboardList,
+    initPageSize: PAGE_SIZE,
+  });
 
-  const appendData = useCallback(
-    (reset: boolean = false, searchText?: string) => {
-      getDashboardList({
-        pageSize: PAGE_SIZE,
-        page: page,
-        k: searchText,
-      }).then(({ data }) => {
-        const results = Array.isArray(data) ? data : [];
-        if (reset) {
-          setData(results);
-          setPage(1);
-        } else {
-          setData(data.concat(results));
-          setPage(page + 1);
-        }
-      });
-    },
-    [page, data]
-  );
   useEffect(() => {
     setSearchValue('');
     if (open) {
-      appendData(true);
+      setSearchParams({});
     } else {
-      setData([]);
+      clearData();
     }
   }, [open]);
 
   // 防抖搜索
   const debouncedSearch = useCallback(
-    // eslint-disable-next-line react-hooks/use-memo
     debounce((value: any) => {
-      appendData(true, value);
+      setSearchParams({ k: value });
     }, 300),
-    [appendData]
+    [setSearchParams]
   );
 
   const onScroll = (e: React.UIEvent<HTMLElement, UIEvent>) => {
     if (Math.abs(e.currentTarget.scrollHeight - e.currentTarget.scrollTop - CONTAINER_HEIGHT) <= 1) {
-      appendData();
+      if (hasMore) {
+        pagination?.onChange?.(pagination.page + 1);
+      }
     }
   };
 
@@ -108,7 +95,9 @@ const DashboardBinding: FC<{
                     debouncedSearch(searchValue);
                   }
                 }}
-                onClear={() => appendData(true)}
+                onClear={() => {
+                  setSearchParams({});
+                }}
               />
               <Divider
                 style={{
