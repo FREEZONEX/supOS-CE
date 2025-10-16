@@ -8,6 +8,8 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/parnurzeal/gorequest v0.3.0
+	github.com/samber/do/v2 v2.0.0
+	github.com/samber/go-type-to-string v1.8.0
 	github.com/spf13/cast v1.9.2
 	github.com/zeromicro/go-zero v1.9.2
 	go.opentelemetry.io/otel v1.35.0
