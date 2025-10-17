@@ -37,15 +37,4 @@ export class ServerManager {
       });
     });
   }
-
-  // 获取服务器信息
-  getServerInfo() {
-    return {
-      port: config.port,
-      environment: config.nodeEnv,
-      platform: process.platform,
-      nodeVersion: process.version,
-      uptime: process.uptime(),
-    };
-  }
 }

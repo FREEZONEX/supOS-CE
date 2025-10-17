@@ -13,6 +13,4 @@ export const config = {
   dockerPort: parseInt(process.env.DOCKER_PORT || '2375', 10),
 } as const;
 
-console.log(config);
-
 export type Config = typeof config;
