@@ -1,6 +1,12 @@
 package relationDB
 
-import "time"
+import (
+	"backend/internal/types"
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"time"
+)
 
 type Example struct {
 	ID    int64 `gorm:"column:id;type:bigint;primary_key;AUTO_INCREMENT"`    // id编号
@@ -48,20 +54,89 @@ type UnsNamespace struct {
 	MountSource      string    `gorm:"column:mount_source" json:"mount_source"`
 	SubscribeAt      time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
 }
+type Fields []types.FieldDefine
 
-type Fields struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Unique      bool   `json:"unique"`
-	SystemField bool   `json:"system_field"`
+func (f *Fields) Scan(value interface{}) error {
+	if value == nil {
+		*f = nil
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan Fields")
+	}
+	return json.Unmarshal(bytes, f)
 }
+
+func (f Fields) Value() (driver.Value, error) {
+	if f == nil {
+		return nil, nil
+	}
+	return json.Marshal(f)
+}
+
 type RefUns map[int64]int
-type Refer struct {
-	ID    string `json:"id"`
-	Alias string `json:"alias"`
+
+func (f *RefUns) Scan(value interface{}) error {
+	if value == nil {
+		*f = nil
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan RefUns")
+	}
+	return json.Unmarshal(bytes, f)
 }
-type Refers []Refer
+
+func (f RefUns) Value() (driver.Value, error) {
+	if f == nil {
+		return nil, nil
+	}
+	return json.Marshal(f)
+}
+
+type Refers []types.InstanceFieldVo
+
+func (f *Refers) Scan(value interface{}) error {
+	if value == nil {
+		*f = nil
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan Refers")
+	}
+	return json.Unmarshal(bytes, f)
+}
+
+func (f Refers) Value() (driver.Value, error) {
+	if f == nil {
+		return nil, nil
+	}
+	return json.Marshal(f)
+}
+
 type LabelIds map[int64]string
+
+func (f *LabelIds) Scan(value interface{}) error {
+	if value == nil {
+		*f = nil
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to scan LabelIds")
+	}
+	return json.Unmarshal(bytes, f)
+}
+
+func (f LabelIds) Value() (driver.Value, error) {
+	if f == nil {
+		return nil, nil
+	}
+	return json.Marshal(f)
+}
 
 // TableName UnsNamespace's table name
 func (*UnsNamespace) TableName() string {

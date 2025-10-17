@@ -20,6 +20,9 @@ type UnsNamespaceRepo struct {
 }
 
 func NewUnsNamespaceRepo(in any) *UnsNamespaceRepo {
+	if in == nil {
+		in = stores.GetCommonConn(context.Background()).Debug()
+	}
 	return &UnsNamespaceRepo{db: stores.GetCommonConn(in)}
 }
 
