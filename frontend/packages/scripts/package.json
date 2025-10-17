@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsc --watch"
+    "dev": "tsdown --watch"
   },
   "keywords": [],
   "author": "zhengfayue",
