@@ -75,8 +75,8 @@ const (
 
 	// Regex Strings
 	AliasReg = `[a-zA-Z_\$][a-zA-Z0-9_\$]*$`
-	TopicReg = `^[\u4e00-\u9fa5a-zA-Z0-9/_-]+$`
-	NameReg  = `^[\u4e00-\u9fa5a-zA-Z0-9_-]+$`
+	TopicReg = `^[\p{Han}a-zA-Z0-9/_-]+$`
+	NameReg  = `^[\p{Han}a-zA-Z0-9_-]+$`
 
 	VarPrev               = "a"
 	DefaultRoleID         = "d12d7ca2-34e1-4f26-9a03-6b4f7f411567"

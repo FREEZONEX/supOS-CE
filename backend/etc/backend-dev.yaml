@@ -1,6 +1,6 @@
 Name: backend
 Host: 0.0.0.0
-Port: 6547
+Port: 8080
 CpuThreshold: 0
 Timeout: 20000
 
