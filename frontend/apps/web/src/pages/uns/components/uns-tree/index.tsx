@@ -95,17 +95,17 @@ const Operation = () => {
         key: 'addFolder',
         disabled: !!selectedNode?.mount,
       },
-      {
-        title: formatMessage('uns.batchGeneration'),
-        auth: ButtonPermission['uns.batchGeneration'],
-        onClick: () => {
-          setReverserOpen(true);
-        },
-        buttonType: 'RepoArtifact',
-        showTreeType: 'uns',
-        key: 'batchGeneration',
-        disabled: !!selectedNode?.mount,
-      },
+      // {
+      //   title: formatMessage('uns.batchGeneration'),
+      //   auth: ButtonPermission['uns.batchGeneration'],
+      //   onClick: () => {
+      //     setReverserOpen(true);
+      //   },
+      //   buttonType: 'RepoArtifact',
+      //   showTreeType: 'uns',
+      //   key: 'batchGeneration',
+      //   disabled: !!selectedNode?.mount,
+      // },
       {
         title: formatMessage('uns.addTemplate'),
         auth: ButtonPermission['uns.templateAdd'],
