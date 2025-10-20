@@ -3,7 +3,7 @@ import {
   OpenAIAdapter,
   LangChainAdapter,
   copilotRuntimeNodeHttpEndpoint,
-  // langGraphPlatformEndpoint,
+  langGraphPlatformEndpoint,
 } from '@copilotkit/runtime';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
@@ -67,22 +67,22 @@ const llmType: any = {
 
 export const copilotkitHandler = async (c: Context, next: Next): Promise<void | Response> => {
   // 直连mcpclient的agent
-  // const runtime = new CopilotRuntime({
-  //   remoteEndpoints: [
-  //     langGraphPlatformEndpoint({
-  //       deploymentUrl: config.agentDeploymentUrl,
-  //       langsmithApiKey: config.langsmithAiKey,
-  //       agents: [
-  //         {
-  //           name: 'sample_agent',
-  //           description: 'A helpful LLM agent.',
-  //         },
-  //       ],
-  //     }),
-  //   ],
-  // });
+  const runtime = new CopilotRuntime({
+    remoteEndpoints: [
+      langGraphPlatformEndpoint({
+        deploymentUrl: config.agentDeploymentUrl,
+        langsmithApiKey: config.langsmithAiKey,
+        agents: [
+          {
+            name: 'sample_agent',
+            description: 'A helpful LLM agent.',
+          },
+        ],
+      }),
+    ],
+  });
 
-  const runtime = new CopilotRuntime();
+  // const runtime = new CopilotRuntime();
 
   const handler = copilotRuntimeNodeHttpEndpoint({
     endpoint: '/copilotkit',
