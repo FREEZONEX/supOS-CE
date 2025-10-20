@@ -9,7 +9,7 @@ import (
 
 var NeedInitColumn bool
 
-func Migrate(c conf.Database) error {
+func Migrate(c conf.Database, schema string) error {
 	// return nil
 	//if c.IsInitTable == false {
 	//	return nil
@@ -23,6 +23,10 @@ func Migrate(c conf.Database) error {
 		// &UnsNamespace{},
 		&UnsLabel{},
 	)
+	if c.DBType == "pgsql" && schema != "" {
+		db.Exec("create schema if not exists " + schema)
+		db.Exec("SET search_path TO " + schema)
+	}
 	if err != nil {
 		return err
 	}

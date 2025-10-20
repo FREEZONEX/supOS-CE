@@ -1,152 +1,618 @@
-info(
-    title: "uns模板"
-    desc: "uns模板"
-    author: "杨磊"
-    email: "603685348@qq.com"
-    version: "v1"
-)
+syntax = "v1"
 
-@server(
-    group: supos/uns/uns
-    prefix: /inter-api/supos/uns
-    middleware:  CheckTokenWare,InitCtxsWare
+info (
+	title:   "统一命名空间 (UNS) API"
+	desc:    "转换自 UnsApiController.java 的 API 定义"
+	author:  "Kilo Code"
+	version: "1.0"
 )
-service backend {
-    @doc "分页搜索主题"
-    @handler search
-    post /search () returns ()
-    @doc "搜索主题树，默认整个树"
-    @handler tree
-    post /tree () returns ()
-    @doc "清除所有外部topic"
-    @handler externalTopicClear
-    post /external/topic/clear () returns ()
-    @doc "多条件分页查询树结构"
-    @handler conditionTree
-    post /condition/tree () returns ()
-    @doc "枚举数据类型"
-    @handler types
-    post /types () returns ()
-    @doc "查询文件夹详情"
-    @handler modelDetail
-    get /model () returns ()
-    @doc "查询文件详情"
-    @handler instance
-    post /instance () returns ()
-    @doc "外部数据源表的字段定义转uns字段定义"
-    @handler ds2fs
-    post /ds2fs () returns ()
-    @doc "外部JSON定义转uns字段定义"
-    @handler json2fs
-    post /json2fs () returns ()
-    @doc "创建文件夹和文件"
-    @handler modelCreate
-    post /model (UnsCreateTopicDTO) returns (WithID)
-    @doc "修改文件夹或文件明细"
-    @handler modelUpdate
-    post /detail () returns ()
-    @doc "修改文件夹或文件名称"
-    @handler name
-    put /name () returns ()
-    @doc "文件或文件夹修改订阅"
-    @handler modelSubscribe
-    post /model/subscribe () returns ()
-    @doc "预先判断是否有属性关联"
-    @handler modelDetect
-    post /model/detect () returns ()
-    @doc "批量创建文件夹和文件"
-    @handler batch
-    post /batch () returns ()
-    @doc "批量创建文件夹和文件(node-red导入专用)"
-    @handler forNodered
-    post /for/nodered () returns ()
-    @doc "删除前预先判断是否有被引用对象"
-    @handler detectIfRemove
-    post /detectIfRemove () returns ()
-    @doc "删除指定路径下的所有文件夹和文件"
-    @handler deletePath
-    delete / () returns ()
-    @doc "根据别名集合批量删除文件夹和文件"
-    @handler batchAlias
-    post /batch/alias () returns ()
-    @doc "校验指定文件夹夹是否已存在文件夹、文件名称"
-    @handler nameDuplication
-    post /name/duplication () returns ()
-    @doc "批量查询文件实时值"
-    @handler fileCurrentBatchQuery
-    post /file/current/batchQuery () returns ()
-    @doc "批量查询文件历史值"
-    @handler fileHistoryBatchQuery
-    post /file/history/batch/query () returns ()
-    @doc "批量写文件实时值"
-    @handler fileCurrentBatchUpdate
-    post /file/current/batchUpdate () returns ()
-    @doc "外部topic payload解析"
-    @handler externalParserTopicPayload
-    post /external/parserTopicPayload () returns ()
-    @doc "外部topic转UNS"
-    @handler externalTopic2Uns
-    post /external/topic2Uns () returns ()
-}
 
 type (
-    
-    // 外部/内部创建主题（文件夹/文件）的入参
-    UnsCreateTopicDTO{
-        // 父级别名（可选），与 ParentId 任选其一
-        ParentAlias string `json:"parentAlias,optional"`
-        // 父级ID，可与 ParentAlias 任选其一
-        ParentID int64 `json:"parentId,optional"`
-        // 模板id
-        ModelID int64 `json:"modelId,optional"`
-        // 自定义别名（可选）
-        Alias string `json:"alias,optional"`
-        // 名称（文件夹或文件名）
-        Name string `json:"name"`
-        // 路径类型：1=文件夹 2=文件
-        PathType int64 `json:"pathType"`
-        // 数据类型（当 PathType=文件 时可指定，如 int/float/bool/string 等编码值）
-        DataType int64 `json:"dataType,optional"`
-        // 字段定义（当为文件且需定义结构化字段时可填写）
-        Fields []FieldDef `json:"fields,optional"`
-        // 描述
-        Description string `json:"description,optional"`
-        // 协议（可选，例如 mqtt/kafka/http 等）
-        Protocol string `json:"protocol,optional"`
-        // 协议类型/子类型（可选）
-        ProtocolType string `json:"protocolType,optional"`
-        // 外部数据源ID（可选）
-        DataSrcId int64 `json:"dataSrcId,optional"`
-        // 是否附带创建仪表盘
-        AddDashBoard bool `json:"addDashBoard,optional"`
-        // 是否保存数据到库
-        Save2db bool `json:"save2db,optional"`
-        // 是否创建流程
-        AddFlow bool `json:"addFlow,optional"`
-        // 标签名称集合（按名称绑定标签）
-        LabelNames []string `json:"labelNames,optional"`
-        // extend
-        Extend map[string]interface{} `json:"extend,optional"`
-        // 生成模板
-        CreateTemplate bool `json:"createTemplate,optional"`
-    }
-    // 字段定义（参考 Java DTO 提供的字段）
-    FieldDef{
-        // 字段名
-        Name string `json:"name"`
-        // 字段类型：int, long, float, string, boolean
-        Type string `json:"type"`
-        // 是否唯一约束（新建模板时不生效）
-        Unique bool `json:"unique,optional"`
-        // 对应的协议字段key（新建模板时不生效）
-        Index string `json:"index,optional"`
-        // 显式名
-        DisplayName string `json:"displayName,optional"`
-        // 备注
-        Remark string `json:"remark,optional"`
-        // 最大长度（string字段类型生效）
-        MaxLen int64 `json:"maxLen,optional"`
-        // tbValueName（内部使用）
-        TbValueName string `json:"tbValueName,optional"`
-    }
+	SearchPagedReq {
+		Key        string   `form:"k,optional"`
+		ModelTopic string   `form:"modelTopic,optional"`
+		SearchType int      `form:"type,optional,default=2"`
+		Normal     bool     `form:"normal,optional"`
+		DataTypes  []string `form:"dataTypes,optional"`
+		PageNo     int      `form:"pageNo,optional,default=1"`
+		PageSize   int      `form:"pageSize,optional,default=10"`
+		Nfc        int      `form:"nfc,optional"`
+	}
+	TopicPaginationSearchResult {
+		Code     int         `json:"code"`
+		Msg      string      `json:"msg"`
+		PageNo   int64       `json:"pageNo"`
+		PageSize int64       `json:"pageSize"`
+		Total    int64       `json:"total"`
+		Data     []TopicInfo `json:"data"`
+	}
+	TopicInfo {
+		Id         string  `json:"id"`
+		Alias      string  `json:"alias"`
+		ParentId   string  `json:"parentId"`
+		Name       string  `json:"name"`
+		Path       string  `json:"path"`
+		DataType   int     `json:"dataType"`
+		PathType   int     `json:"pathType"`
+		Fields     []Field `json:"fields"`
+		CreateTime int64   `json:"createTime"`
+		UpdateTime int64   `json:"updateTime"`
+	}
+	Field {
+		Name string `json:"name"`
+		Type string `json:"type"`
+	}
+	SearchTreeReq {
+		Keyword    string `form:"key,optional"`
+		ParentId   int64  `form:"parentId,optional"`
+		ShowRec    bool   `form:"showRec,optional,default=false"`
+		SearchType int    `form:"type,optional,default=1"`
+		PathType   int    `form:"pathType,optional"`
+	}
+	SearchTreeResp {
+		BaseResult
+		Data []TopicTreeResult `json:"data"`
+	}
+	TopicTreeResult {
+		Id             string                 `json:"id"`
+		Alias          string                 `json:"alias"`
+		ParentId       string                 `json:"parentId"`
+		ParentAlias    string                 `json:"parentAlias"`
+		Value          int64                  `json:"value"`
+		LastUpdateTime int64                  `json:"lastUpdateTime"`
+		CountChildren  int                    `json:"countChildren"`
+		PathType       int                    `json:"pathType"`
+		Type           int                    `json:"type"`
+		DataType       int                    `json:"dataType"`
+		Name           string                 `json:"name"`
+		DisplayName    string                 `json:"displayName"`
+		Path           string                 `json:"path"`
+		PathName       string                 `json:"pathName"`
+		Description    string                 `json:"description"`
+		TemplateAlias  string                 `json:"templateAlias"`
+		Protocol       string                 `json:"protocol"`
+		Fields         []FieldDefine          `json:"fields"`
+		Children       []TopicTreeResult      `json:"children"`
+		Extend         map[string]interface{} `json:"extend"`
+		HasChildren    bool                   `json:"hasChildren"`
+		CreateAt       string                 `json:"createAt"`
+		UpdateAt       string                 `json:"updateAt"`
+		Mount          MountDetailVo          `json:"mount"`
+	}
+	MountDetailVo {
+		MountType   int    `json:"mountType"`
+		MountSource string `json:"mountSource"`
+		DisplayName string `json:"displayName"`
+	}
+	UnsTreeCondition {
+		PageNo     int64  `form:"pageNo,optional,default=1"`
+		PageSize   int64  `form:"pageSize,optional,default=10"`
+		SearchType int    `form:"searchType,optional,default=1"`
+		Keyword    string `form:"keyword,optional"`
+		ParentId   int64  `form:"parentId,optional"`
+		DataType   int    `form:"dataType,optional"`
+		PathType   int    `form:"pathType,optional"`
+	}
+	PageResultDTO {
+		PageNo   int64             `json:"pageNo"`
+		PageSize int64             `json:"pageSize"`
+		Total    int64             `json:"total"`
+		Code     int64             `json:"code"`
+		Data     []TopicTreeResult `json:"data"`
+	}
+	GetLastMsgReq {
+		Paths []string `form:"path,optional"`
+		Id    int64    `form:"id,optional"`
+		Alias string   `form:"alias,optional"`
+	}
+	GetLastMsgResp {
+		BaseResult
+		Data map[string]interface{} `json:"data"`
+	}
+	ModelDetailReq {
+		Id int64 `form:"id"`
+	}
+	ModelDetailResp {
+		BaseResult
+		Data ModelDetail `json:"data"`
+	}
+	ModelDetail {
+		Id            string                 `json:"id"`
+		Topic         string                 `json:"topic"`
+		Alias         string                 `json:"alias"`
+		ParentAlias   string                 `json:"parentAlias"`
+		Path          string                 `json:"path"`
+		DataType      int                    `json:"dataType"`
+		Fields        []FieldDefine          `json:"fields"`
+		CreateTime    int64                  `json:"createTime"`
+		UpdateTime    int64                  `json:"updateTime"`
+		Description   string                 `json:"description"`
+		Name          string                 `json:"name"`
+		DisplayName   string                 `json:"displayName"`
+		PathName      string                 `json:"pathName"`
+		ModelId       string                 `json:"modelId"`
+		ModelName     string                 `json:"modelName"`
+		Extend        map[string]interface{} `json:"extend"`
+		TemplateAlias string                 `json:"templateAlias"`
+		Mount         MountDetailVo          `json:"mount"`
+	}
+	InstanceDetailReq {
+		Id int64 `form:"id"`
+	}
+	InstanceDetailResp {
+		BaseResult
+		Data InstanceDetail `json:"data"`
+	}
+	InstanceDetail {
+		Id               string                 `json:"id"`
+		Topic            string                 `json:"topic"`
+		Alias            string                 `json:"alias"`
+		ParentAlias      string                 `json:"parentAlias"`
+		Path             string                 `json:"path"`
+		DataType         int                    `json:"dataType"`
+		DataPath         string                 `json:"dataPath"`
+		PathType         int                    `json:"pathType"`
+		Fields           []FieldDefine          `json:"fields"`
+		CreateTime       int64                  `json:"createTime"`
+		UpdateTime       int64                  `json:"updateTime"`
+		Protocol         map[string]interface{} `json:"protocol"`
+		ModelDescription string                 `json:"modelDescription"`
+		Description      string                 `json:"description"`
+		WithFlow         bool                   `json:"withFlow"`
+		WithDashboard    bool                   `json:"withDashboard"`
+		WithSave2db      bool                   `json:"withSave2db"`
+		Save2db          bool                   `json:"save2db"`
+		Expression       string                 `json:"expression"`
+		ShowExpression   string                 `json:"showExpression"`
+		Refers           []InstanceFieldVo      `json:"refers"`
+		LabelList        []LabelVo              `json:"labelList"`
+		Name             string                 `json:"name"`
+		DisplayName      string                 `json:"displayName"`
+		PathName         string                 `json:"pathName"`
+		ModelId          string                 `json:"modelId"`
+		ModelName        string                 `json:"modelName"`
+		Extend           map[string]interface{} `json:"extend"`
+		Payload          string                 `json:"payload"`
+		TemplateName     string                 `json:"templateName"`
+		TemplateAlias    string                 `json:"templateAlias"`
+		AccessLevel      string                 `json:"accessLevel"`
+		Mount            MountDetailVo          `json:"mount"`
+	}
+	InstanceFieldVo {
+		Id    string `json:"id"`
+		Alias string `json:"alias"`
+		Path  string `json:"path"`
+		Field string `json:"field"`
+		Uts   bool   `json:"uts"`
+	}
+	LabelVo {
+		Id   int64  `json:"id"`
+		Name string `json:"name"`
+	}
+	DbFieldsInfoVo {
+		DatabaseType string            `json:"databaseType"`
+		Fields       []DbFieldDefineVo `json:"fields"`
+	}
+	DbFieldsInfoVoResp {
+		BaseResult
+		Data []FieldDefine `json:"data"`
+	}
+	DbFieldDefineVo {
+		Name       string `json:"name"`
+		Type       string `json:"type"`
+		Length     int    `json:"length"`
+		IsNullable bool   `json:"isNullable"`
+		Comment    string `json:"comment"`
+	}
+	FieldDefine {
+		Name        string  `json:"name"`
+		Type        string  `json:"type"`
+		Unique      bool    `json:"unique,optional"`
+		Index       string  `json:"index,optional"`
+		DisplayName string  `json:"displayName,optional"`
+		Remark      string  `json:"remark,optional"`
+		MaxLen      int     `json:"maxLen,optional"`
+		TbValueName string  `json:"tbValueName,optional"`
+		Unit        string  `json:"unit,optional"`
+		UpperLimit  float64 `json:"upperLimit,optional"`
+		LowerLimit  float64 `json:"lowerLimit,optional"`
+		Decimal     int     `json:"decimal,optional"`
+	}
+	JsonBodyReq {
+		Json string `json:"json"`
+	}
+	ParseJson2UnsResp {
+		BaseResult
+		Data []OuterStructureVo `json:"data"`
+	}
+	OuterStructureVo {
+		DataPath string        `json:"dataPath"`
+		Fields   []FieldDefine `json:"fields"`
+	}
+	ParseJson2TreeUnsResp {
+		BaseResult
+		Data []TreeOuterStructureVo `json:"data"`
+	}
+	TreeOuterStructureVo {
+		Name     string                 `json:"name"`
+		DataPath string                 `json:"dataPath"`
+		Fields   []FieldDefine          `json:"fields"`
+		Children []TreeOuterStructureVo `json:"children"`
+	}
+	CreateTopicDto {
+		Id                            int64                  `json:"id,optional"`
+		Name                          string                 `json:"name"`
+		DisplayName                   string                 `json:"displayName,optional"`
+		PathType                      int                    `json:"pathType"`
+		ReferUns                      map[int64]int          `json:"referUns,optional"`
+		ReferIds                      []int64                `json:"referIds,optional"`
+		ReferTable                    string                 `json:"referTable,optional"`
+		RefFields                     []FieldDefine          `json:"refFields,optional"`
+		ReferModelId                  string                 `json:"referModelId,optional"`
+		Alias                         string                 `json:"alias"`
+		ModelId                       int64                  `json:"modelId,optional"`
+		ModelAlias                    string                 `json:"modelAlias,optional"`
+		ParentAlias                   string                 `json:"parentAlias,optional"`
+		ParentId                      int64                  `json:"parentId,optional"`
+		DataType                      int                    `json:"dataType"`
+		Fields                        []FieldDefine          `json:"fields"`
+		ExtendFieldUsed               []string               `json:"extendFieldUsed,optional"`
+		DataPath                      string                 `json:"dataPath,optional"`
+		Description                   string                 `json:"description,optional"`
+		Refers                        []InstanceFieldVo      `json:"refers,optional"`
+		Expression                    string                 `json:"expression,optional"`
+		StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
+		AddFlow                       bool                   `json:"addFlow,optional"`
+		AddDashBoard                  bool                   `json:"addDashBoard,optional"`
+		Save2db                       bool                   `json:"save2db,optional"`
+		RetainTableWhenDeleteInstance bool                   `json:"retainTableWhenDeleteInstance,optional"`
+		CreateTemplate                bool                   `json:"createTemplate,optional"`
+		Frequency                     string                 `json:"frequency,optional"`
+		Extend                        map[string]interface{} `json:"extend,optional"`
+		LabelNames                    []string               `json:"labelNames,optional"`
+		RefSource                     string                 `json:"refSource,optional"`
+		ValueType                     string                 `json:"valueType,optional"`
+		InitValue                     interface{}            `json:"initValue,optional"`
+		StrMaxLen                     int                    `json:"strMaxLen,optional"`
+		AccessLevel                   string                 `json:"accessLevel,optional"`
+		MountType                     int                    `json:"mountType,optional"`
+		MountSource                   string                 `json:"mountSource,optional"`
+		UpdateAt                      string                 `json:"updateAt,optional"`
+	}
+	StreamOptions  {}
+	UpdateUnsDto {
+		Id                            int64                  `json:"id,optional"`
+		Name                          string                 `json:"name,optional"`
+		DisplayName                   string                 `json:"displayName,optional"`
+		PathType                      int                    `json:"pathType,optional"`
+		ReferUns                      string                 `json:"referUns,optional"`
+		ReferIds                      []int64                `json:"referIds,optional"`
+		ReferTable                    string                 `json:"referTable,optional"`
+		RefFields                     []FieldDefine          `json:"refFields,optional"`
+		ReferModelId                  string                 `json:"referModelId,optional"`
+		Alias                         string                 `json:"alias"`
+		ModelId                       int64                  `json:"modelId,optional"`
+		ModelAlias                    string                 `json:"modelAlias,optional"`
+		ParentAlias                   string                 `json:"parentAlias,optional"`
+		ParentId                      int64                  `json:"parentId,optional"`
+		DataType                      int                    `json:"dataType,optional"`
+		Fields                        []FieldDefine          `json:"fields,optional"`
+		DataPath                      string                 `json:"dataPath,optional"`
+		Description                   string                 `json:"description,optional"`
+		Refers                        []InstanceFieldVo      `json:"refers,optional"`
+		Expression                    string                 `json:"expression,optional"`
+		StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
+		AddFlow                       bool                   `json:"addFlow,optional"`
+		AddDashBoard                  bool                   `json:"addDashBoard,optional"`
+		Save2db                       bool                   `json:"save2db,optional"`
+		RetainTableWhenDeleteInstance bool                   `json:"retainTableWhenDeleteInstance,optional"`
+		Frequency                     string                 `json:"frequency,optional"`
+		Extend                        map[string]interface{} `json:"extend,optional"`
+		LabelNames                    []string               `json:"labelNames,optional"`
+		RefSource                     string                 `json:"refSource,optional"`
+		ValueType                     string                 `json:"valueType,optional"`
+		InitValue                     interface{}            `json:"initValue,optional"`
+		StrMaxLen                     int                    `json:"strMaxLen,optional"`
+		AccessLevel                   string                 `json:"accessLevel,optional"`
+	}
+	UpdateNameVo {
+		Id   int64  `json:"id"`
+		Name string `json:"name"`
+	}
+	UpdateModeRequestVo {
+		Alias            string        `json:"alias"`
+		Fields           []FieldDefine `json:"fields,optional"`
+		ModelDescription string        `json:"modelDescription,optional"`
+	}
+	BatchCreateReq {
+		Flags      int              `form:"flags,optional"`
+		FromImport bool             `form:"fromImport,optional,default=false"`
+		List       []CreateTopicDto `json:"list"`
+	}
+	CreateUnsNodeRedDto {
+		Path      string `json:"path"`
+		Alias     string `json:"alias,optional"`
+		FieldType string `json:"fieldType,optional"`
+		FieldName string `json:"fieldName,optional"`
+		Tag       string `json:"tag,optional"`
+	}
+	DetectRemoveReq {
+		Id int64 `form:"id"`
+	}
+	RemoveResult {
+		BaseResult
+		Data RemoveTip `json:"data"`
+	}
+	RemoveTip {
+		Refs int `json:"refs"`
+	}
+	RemoveReq {
+		Id            int64 `form:"id"`
+		WithFlow      bool  `form:"withFlow,default=true"`
+		WithDashboard bool  `form:"withDashboard,default=true"`
+		RemoveRefer   bool  `form:"cascade,optional"`
+	}
+	BatchRemoveUnsDto {
+		AliasList       []string `json:"aliasList"`
+		WithFlow        bool     `json:"withFlow,optional"`
+		WithDashboard   bool     `json:"withDashboard,optional"`
+		RemoveRefer     bool     `json:"removeRefer,optional"`
+		CheckMount      bool     `json:"checkMount,optional"`
+		OnlyRemoveChild bool     `json:"onlyRemoveChild,optional"`
+	}
+	CheckDuplicationNameReq {
+		Folder    string `form:"folder,optional"`
+		Name      string `form:"name"`
+		CheckType int    `form:"checkType"`
+	}
+	BatchQueryFileReq {
+		AliasList []string `json:"aliasList"`
+	}
+	HistoryValueRequest  {}
+	UnsHistoryQueryResult  {}
+	UpdateFileDTO {
+		Alias string                 `json:"alias"`
+		Data  map[string]interface{} `json:"data"`
+	}
+	UnsDataResponseVo {
+		NotExists   []string          `json:"notExists"`
+		ErrorFields map[string]string `json:"errorFields"`
+	}
+	ParserTopicPayloadReq {
+		Topic string `form:"topic"`
+	}
+	CreateFileDto {
+		Name             string                 `json:"name"`
+		Alias            string                 `json:"alias,optional"`
+		DisplayName      string                 `json:"displayName,optional"`
+		ParentAlias      string                 `json:"parentAlias,optional"`
+		DataType         int                    `json:"dataType,optional"`
+		Description      string                 `json:"description,optional"`
+		Definition       []FieldDefine          `json:"definition,optional"`
+		Persistence      bool                   `json:"persistence,optional"`
+		DashBoard        bool                   `json:"dashBoard,optional"`
+		AddFlow          bool                   `json:"addFlow,optional"`
+		Refers           []InstanceFieldVo      `json:"refers,optional"`
+		Expression       string                 `json:"expression,optional"`
+		Frequency        string                 `json:"frequency,optional"`
+		ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+		TemplateAlias    string                 `json:"templateAlias,optional"`
+		LabelNames       []string               `json:"labelNames,optional"`
+	}
+	EmptyFolderReq  {}
+	PasteRequestVO {
+		SourceId int64 `json:"sourceId"`
+		TargetId int64 `json:"targetId"`
+		NewF     bool  `json:"newF"`
+	}
+	SubscribeModelReq {
+		Id        int64  `form:"id"`
+		Enable    bool   `form:"enable"`
+		Frequency string `form:"frequency,optional"`
+	}
+	BaseResult {
+		Code int    `json:"code"`
+		Msg  string `json:"msg"`
+	}
+	ListTypesResult {
+		BaseResult
+		Data []string `json:"data"`
+	}
+	StringResult {
+		BaseResult
+		Data string `json:"data,optional"`
+	}
 )
+
+type ResultVO {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data,optional"`
+}
+
+@server (
+	prefix: /inter-api/supos
+	group:  supos/uns/uns
+)
+service backend {
+	@doc (
+		summary: "分页搜索主题"
+	)
+	@handler searchPaged
+	get /uns/search (SearchPagedReq) returns (TopicPaginationSearchResult)
+
+	@doc (
+		summary: "搜索主题树，默认整个树"
+	)
+	@handler searchTree
+	get /uns/tree (SearchTreeReq) returns (SearchTreeResp)
+
+	@doc (
+		summary: "搜索外部topic主题树，默认整个树"
+	)
+	@handler searchExternalTree
+	get /external/tree (SearchTreeReq) returns (SearchTreeResp)
+
+	@doc (
+		summary: "清除所有外部topic"
+	)
+	@handler clearExternalTree
+	delete /external/topic/clear returns (StringResult)
+
+	@doc (
+		summary: "多条件分页查询树结构"
+	)
+	@handler unsTreeByDefinitions
+	post /uns/condition/tree (UnsTreeCondition) returns (PageResultDTO)
+
+	@doc (
+		summary: "枚举数据类型"
+	)
+	@handler listTypes
+	get /uns/types returns (ListTypesResult)
+
+	@doc (
+		summary: "获取最新消息"
+	)
+	@handler getLastMsg
+	get /uns/getLastMsg (GetLastMsgReq) returns (GetLastMsgResp)
+
+	@doc (
+		summary: "查询文件夹详情"
+	)
+	@handler getModelDefinition
+	get /uns/model (ModelDetailReq) returns (ModelDetailResp)
+
+	@doc (
+		summary: "查询文件详情"
+	)
+	@handler getInstanceDetail
+	get /uns/instance (InstanceDetailReq) returns (InstanceDetailResp)
+
+	@doc (
+		summary: "外部数据源表的字段定义转uns字段定义"
+	)
+	@handler dataSrc2UnsFields
+	post /uns/ds2fs (DbFieldsInfoVo) returns (DbFieldsInfoVoResp)
+
+	@doc (
+		summary: "外部JSON定义转uns字段定义"
+	)
+	@handler parseJson2uns
+	post /uns/json2fs (JsonBodyReq) returns (ParseJson2UnsResp)
+
+	@doc (
+		summary: "外部JSON定义转树结构uns字段定义"
+	)
+	@handler parseJson2TreeUns
+	post /uns/json2fs/tree (JsonBodyReq) returns (ParseJson2TreeUnsResp)
+
+	@doc (
+		summary: "创建文件夹和文件"
+	)
+	@handler createModelInstance
+	post /uns/model (CreateTopicDto) returns (StringResult)
+
+	@doc (
+		summary: "修改文件夹或文件明细"
+	)
+	@handler updateDetail
+	put /uns/detail (UpdateUnsDto) returns (StringResult)
+
+	@doc (
+		summary: "修改文件夹或文件名称"
+	)
+	@handler updateName
+	put /uns/name (UpdateNameVo) returns (StringResult)
+
+	@doc (
+		summary: "粘贴文件夹和文件"
+	)
+	@handler pasteFolderOrFile
+	post /uns/paste (PasteRequestVO) returns (ResultVO)
+
+	@doc (
+		summary: "文件或文件夹修改订阅"
+	)
+	@handler subscribeModel
+	put /uns/model/subscribe (SubscribeModelReq) returns (ResultVO)
+
+	@doc (
+		summary: "预先判断是否有属性关联"
+	)
+	@handler detectIfFieldReferenced
+	post /uns/model/detect (UpdateModeRequestVo) returns (ResultVO)
+
+	@doc (
+		summary: "批量创建文件夹和文件"
+	)
+	@handler createModelInstances
+	post /uns/batch (BatchCreateReq) returns (ResultVO)
+
+	@doc (
+		summary: "批量创建文件夹和文件(node-red导入专用)"
+	)
+	@handler createModelsForNodeRed
+	post /uns/for/nodered (CreateUnsNodeRedDto) returns (ResultVO)
+
+	@doc (
+		summary: "删除前预先判断是否有被引用对象"
+	)
+	@handler detectIfRemove
+	get /uns/detectIfRemove (DetectRemoveReq) returns (RemoveResult)
+
+	@doc (
+		summary: "删除指定路径下的所有文件夹和文件"
+	)
+	@handler removeModelOrInstance
+	delete /uns (RemoveReq) returns (RemoveResult)
+
+	@doc (
+		summary: "根据别名集合批量删除文件夹和文件"
+	)
+	@handler batchRemoveResultByAliasList
+	delete /uns/batch/alias (BatchRemoveUnsDto) returns (RemoveResult)
+
+	@doc (
+		summary: "校验指定文件夹夹是否已存在文件夹、文件名称"
+	)
+	@handler checkDuplicationName
+	get /uns/name/duplication (CheckDuplicationNameReq) returns (ResultVO)
+
+	@doc (
+		summary: "批量查询文件实时值"
+	)
+	@handler batchQueryFile
+	post /uns/file/current/batchQuery (BatchQueryFileReq) returns (ResultVO)
+
+	@doc (
+		summary: "批量查询文件历史值"
+	)
+	@handler batchQueryFileHistoryValue
+	post /uns/file/history/batch/query (HistoryValueRequest) returns (UnsHistoryQueryResult)
+
+	@doc (
+		summary: "批量写文件实时值"
+	)
+	@handler batchUpdateFile
+	post /uns/file/current/batchUpdate (UpdateFileDTO) returns (UnsDataResponseVo)
+
+	@doc (
+		summary: "外部topic payload解析"
+	)
+	@handler parserTopicPayload
+	get /external/parserTopicPayload (ParserTopicPayloadReq) returns (ResultVO)
+
+	@doc (
+		summary: "外部topic转UNS"
+	)
+	@handler externalTopicAdd
+	post /external/topic2Uns (CreateFileDto) returns (ResultVO)
+
+	@doc (
+		summary: "查询空文件夹"
+	)
+	@handler searchEmptyFolder
+	get /uns/folder/empty (EmptyFolderReq) returns ([]CreateTopicDto)
+}
+

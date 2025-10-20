@@ -22,9 +22,9 @@ type ServiceContext struct {
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	stores.InitConn(c.Database)
-	relationDB.Migrate(c.Database)
 	caches.InitStore(c.CacheRedis)
 	nodeID := utils.GetNodeID(c.CacheRedis, c.Name)
+	relationDB.Migrate(c.Database, c.DatabaseSchema)
 	return &ServiceContext{
 		Config:         c,
 		CheckTokenWare: middleware.NewCheckTokenWareMiddleware().Handle,

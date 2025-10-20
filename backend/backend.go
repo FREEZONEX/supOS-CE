@@ -4,6 +4,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/handler"
 	"backend/internal/svc"
+	"backend/share/spring"
 	"context"
 	"flag"
 	"fmt"
@@ -34,5 +35,6 @@ func main() {
 	handler.RegisterHandlers(server, ctx)
 	server.PrintRoutes()
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
+	spring.RefreshBeanContext()
 	server.Start()
 }

@@ -5,8 +5,10 @@ go 1.24.2
 require (
 	gitee.com/unitedrhino/share v1.5.25
 	github.com/eclipse/paho.mqtt.golang v1.5.0
+	github.com/expr-lang/expr v1.17.6
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
+	github.com/mozillazg/go-pinyin v0.21.0
 	github.com/parnurzeal/gorequest v0.3.0
 	github.com/samber/do/v2 v2.0.0
 	github.com/samber/go-type-to-string v1.8.0

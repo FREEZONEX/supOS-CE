@@ -10,7 +10,16 @@ import (
 )
 
 // --- Simple Compile-time Constants ---
-
+const (
+	// Data Types (using iota for sequential values)
+	TimeSequenceType    = iota + 1 // 时序类型 (1)
+	RelationType                   // 关系类型 (2)
+	CalculationRealType            // 实时计算 (3)
+	CalculationHistType            // 历史值计算 (4)
+	AlarmRuleType                  // 报警规则类型 (5)
+	MergeType                      // 聚合类型 (6)
+	CitingType                     // 引用类型 (7)
+)
 const (
 	// System Fields and Flags
 	SystemFieldPrev = "_"
@@ -30,15 +39,6 @@ const (
 	ResultTopicPrev = "_rs/"       // 处理结果 topic前缀
 	MsgRawDataKey   = "_source_"   // 原始数据的 json key
 	MsgResDataKey   = "_resource_" // 处理过的 json key
-
-	// Data Types (using iota for sequential values)
-	TimeSequenceType    = iota + 1 // 时序类型 (1)
-	RelationType                   // 关系类型 (2)
-	CalculationRealType            // 实时计算 (3)
-	CalculationHistType            // 历史值计算 (4)
-	AlarmRuleType                  // 报警规则类型 (5)
-	MergeType                      // 聚合类型 (6)
-	CitingType                     // 引用类型 (7)
 
 	// Pagination Defaults
 	DefaultPageSize = 20
@@ -132,6 +132,7 @@ const (
 	_                                             // Skip 1 << 8
 	UnsFlagWithAttachment                         // UNS带附件的标志
 	UnsFlagHasData                                // UNS有存过数据的标志
+	UnsFlagWithSubscribeEnable                    // 是否开启订阅
 )
 
 // --- Runtime-initialized Variables and Compiled Regex ---

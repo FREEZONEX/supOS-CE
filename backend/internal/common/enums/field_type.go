@@ -3,6 +3,7 @@ package enums
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -10,7 +11,7 @@ import (
 type FieldType int
 
 const (
-	FieldTypeInteger FieldType = iota
+	FieldTypeInteger FieldType = iota + 1
 	FieldTypeLong
 	FieldTypeFloat
 	FieldTypeDouble
@@ -43,12 +44,18 @@ var fieldTypeDetails = map[FieldType]fieldTypeInfo{
 
 // nameMap provides a fast, case-insensitive lookup from a string name to a FieldType.
 var nameMap = make(map[string]FieldType)
+var fieldTypes []FieldType
 
 // init populates the nameMap for fast lookups.
 func init() {
+	fieldTypes = make([]FieldType, 0, len(fieldTypeDetails))
 	for ft, info := range fieldTypeDetails {
+		fieldTypes = append(fieldTypes, ft)
 		nameMap[strings.ToUpper(info.name)] = ft
 	}
+	sort.Slice(fieldTypes, func(i, j int) bool {
+		return fieldTypes[i] < fieldTypes[j]
+	})
 }
 
 // Name returns the canonical string name of the field type.
@@ -69,6 +76,10 @@ func (f FieldType) DefaultValue() any {
 // String implements the fmt.Stringer interface for easy printing.
 func (f FieldType) String() string {
 	return f.Name()
+}
+
+func FieldTypes() (ts []FieldType) {
+	return fieldTypes
 }
 
 func GetFieldTypeByName(name string) (FieldType, bool) {
