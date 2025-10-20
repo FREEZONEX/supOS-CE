@@ -3,7 +3,7 @@ module backend
 go 1.24.2
 
 require (
-	gitee.com/unitedrhino/share v1.5.25
+	gitee.com/unitedrhino/share v1.5.27
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/expr-lang/expr v1.17.6
 	github.com/golang-jwt/jwt/v5 v5.2.2
@@ -24,6 +24,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	gitee.com/unitedrhino/driver-go/v3 v3.30.2 // indirect
 	gitee.com/unitedrhino/squirrel v1.20.7 // indirect
+	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.7+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
