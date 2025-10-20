@@ -110,6 +110,8 @@ const criteria: Criteria<DataItem> = {
   buttonGroup: (item: any) => item?.uri?.includes('button:'),
 };
 
+// edge版本 用户默认支持所有的权限和菜单
+const IsSupAdmin = true;
 // 更新路由基础方法 (私有)
 const updateBaseStore = async (isFirst: boolean = false) => {
   if (isFirst) {
@@ -144,7 +146,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const allRoutes = filterRouteByUserResource(
         mapResource(resource?.filter((r: ResourceProps) => r.type !== 3)),
         userRoutesResourceList,
-        systemInfo?.authEnable && !info?.superAdmin
+        (systemInfo?.authEnable && !info?.superAdmin) || IsSupAdmin
       );
       // 剔除未启用的路由
       const enableRoutes = allRoutes?.filter((f) => f.enable);
@@ -152,7 +154,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const { homeTree, homeTabGroup, homeGroup, menuGroup, menuTree } = buildResourceTrees(enableRoutes);
       const allButtonGroup = resource?.filter((r: ResourceProps) => r.type === 3);
       const _buttonList =
-        systemInfo?.authEnable === false || info?.superAdmin === true
+        systemInfo?.authEnable === false || info?.superAdmin === true || IsSupAdmin
           ? handleButtonPermissions(['button:*'], allButtonGroup) || []
           : filterArrays(
               handleButtonPermissions(denyButtonGroup?.map((i: any) => i.uri) || [], allButtonGroup) || [],

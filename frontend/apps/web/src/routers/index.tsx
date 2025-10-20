@@ -17,7 +17,7 @@ import DashboardsPreview from '@/pages/dashboards/DashboardsPreview';
 import Localization from '@/pages/localization';
 import MenuConfiguration from '@/pages/menu-configuration';
 import Home from '@/pages/home';
-import AccountManagement from '@/pages/account-management';
+// import AccountManagement from '@/pages/account-management';
 import AboutUs from '@/pages/aboutus';
 import AdvancedUse from '@/pages/advanced-use';
 import DevPage from '@/pages/dev-page';
@@ -174,10 +174,10 @@ export const childrenRoutes = [
       code: 'route.dashboardsPreview',
     },
   },
-  {
-    path: '/account-management',
-    Component: AccountManagement,
-  },
+  // {
+  //   path: '/account-management',
+  //   Component: AccountManagement,
+  // },
   {
     path: '/aboutus',
     Component: AboutUs,
