@@ -1,4 +1,4 @@
-import { User, Menu as MenuIcon, Close, Task, TreeView as TreeViewIcon, Notification } from '@carbon/icons-react';
+import { User, Menu as MenuIcon, Close, TreeView as TreeViewIcon, Notification } from '@carbon/icons-react';
 import { useState, useEffect } from 'react';
 import { useMenuNavigate, useTranslate, useMediaSize, useLocalStorage } from '@/hooks';
 import { Divider, Menu, Splitter, Drawer, Badge } from 'antd';
@@ -115,9 +115,9 @@ const CustomMenuHeader = () => {
       };
     }
   });
-  const handleTodoClick = (e: any) => {
-    navigate(e.key);
-  };
+  // const handleTodoClick = (e: any) => {
+  //   navigate(e.key);
+  // };
   return (
     <div
       className="custom-menu-header"
@@ -240,12 +240,12 @@ const CustomMenuHeader = () => {
                 label: <HelpNav />,
                 key: 'help',
               },
-              {
-                label: <Task size={20} style={{ color: 'var(--supos-text-color)' }} />,
-                title: formatMessage('common.taskCenter'),
-                key: 'todo',
-                onClick: handleTodoClick,
-              },
+              // {
+              //   label: <Task size={20} style={{ color: 'var(--supos-text-color)' }} />,
+              //   title: formatMessage('common.taskCenter'),
+              //   key: 'todo',
+              //   onClick: handleTodoClick,
+              // },
               {
                 label: (
                   <Badge dot={noticeDot}>
