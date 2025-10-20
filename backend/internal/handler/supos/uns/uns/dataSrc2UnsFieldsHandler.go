@@ -12,17 +12,17 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 删除前预先判断是否有被引用对象
-func DetectIfRemoveHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// 外部数据源表的字段定义转uns字段定义
+func DataSrc2UnsFieldsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.DetectRemoveReq
+		var req types.DbFieldsInfoVo
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := uns.NewDetectIfRemoveLogic(r.Context(), svcCtx)
-		resp, err := l.DetectIfRemove(&req)
+		l := uns.NewDataSrc2UnsFieldsLogic(r.Context(), svcCtx)
+		resp, err := l.DataSrc2UnsFields(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

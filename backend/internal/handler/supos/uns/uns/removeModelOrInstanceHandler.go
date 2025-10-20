@@ -12,17 +12,17 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 删除前预先判断是否有被引用对象
-func DetectIfRemoveHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// 删除指定路径下的所有文件夹和文件
+func RemoveModelOrInstanceHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.DetectRemoveReq
+		var req types.RemoveReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := uns.NewDetectIfRemoveLogic(r.Context(), svcCtx)
-		resp, err := l.DetectIfRemove(&req)
+		l := uns.NewRemoveModelOrInstanceLogic(r.Context(), svcCtx)
+		resp, err := l.RemoveModelOrInstance(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

@@ -12,22 +12,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DetectIfRemoveLogic struct {
+type GetLastMsgLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 删除前预先判断是否有被引用对象
-func NewDetectIfRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetectIfRemoveLogic {
-	return &DetectIfRemoveLogic{
+// 获取最新消息
+func NewGetLastMsgLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetLastMsgLogic {
+	return &GetLastMsgLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DetectIfRemoveLogic) DetectIfRemove(req *types.DetectRemoveReq) (resp *types.RemoveResult, err error) {
+func (l *GetLastMsgLogic) GetLastMsg(req *types.GetLastMsgReq) (resp *types.GetLastMsgResp, err error) {
 	// todo: add your logic here and delete this line
 
 	return

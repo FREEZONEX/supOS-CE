@@ -12,22 +12,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DetectIfRemoveLogic struct {
+type ParseJson2TreeUnsLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 删除前预先判断是否有被引用对象
-func NewDetectIfRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetectIfRemoveLogic {
-	return &DetectIfRemoveLogic{
+// 外部JSON定义转树结构uns字段定义
+func NewParseJson2TreeUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ParseJson2TreeUnsLogic {
+	return &ParseJson2TreeUnsLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DetectIfRemoveLogic) DetectIfRemove(req *types.DetectRemoveReq) (resp *types.RemoveResult, err error) {
+func (l *ParseJson2TreeUnsLogic) ParseJson2TreeUns(req *types.JsonBodyReq) (resp *types.ParseJson2TreeUnsResp, err error) {
 	// todo: add your logic here and delete this line
 
 	return

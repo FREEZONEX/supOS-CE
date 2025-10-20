@@ -8,7 +8,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"runtime"
 
 	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/utils"
@@ -24,9 +23,6 @@ func main() {
 	logx.DisableStat()
 	var c config.Config
 	var confFile = "etc/backend.yaml"
-	if runtime.GOOS == "windows" {
-		confFile = "etc/backend-dev.yaml"
-	}
 	utils.ConfMustLoad(confFile, &c)
 	i18ns.InitWithFS("etc/i18n")
 	/* 下面是使用示例

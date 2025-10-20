@@ -12,22 +12,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DetectIfRemoveLogic struct {
+type UpdateNameLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 删除前预先判断是否有被引用对象
-func NewDetectIfRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetectIfRemoveLogic {
-	return &DetectIfRemoveLogic{
+// 修改文件夹或文件名称
+func NewUpdateNameLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UpdateNameLogic {
+	return &UpdateNameLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DetectIfRemoveLogic) DetectIfRemove(req *types.DetectRemoveReq) (resp *types.RemoveResult, err error) {
+func (l *UpdateNameLogic) UpdateName(req *types.UpdateNameVo) (resp *types.StringResult, err error) {
 	// todo: add your logic here and delete this line
 
 	return

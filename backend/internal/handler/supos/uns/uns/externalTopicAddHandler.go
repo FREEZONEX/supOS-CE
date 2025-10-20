@@ -12,17 +12,17 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 删除前预先判断是否有被引用对象
-func DetectIfRemoveHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// 外部topic转UNS
+func ExternalTopicAddHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.DetectRemoveReq
+		var req types.CreateFileDto
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := uns.NewDetectIfRemoveLogic(r.Context(), svcCtx)
-		resp, err := l.DetectIfRemove(&req)
+		l := uns.NewExternalTopicAddLogic(r.Context(), svcCtx)
+		resp, err := l.ExternalTopicAdd(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

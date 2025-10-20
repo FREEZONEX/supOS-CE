@@ -12,22 +12,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DetectIfRemoveLogic struct {
+type PasteFolderOrFileLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 删除前预先判断是否有被引用对象
-func NewDetectIfRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetectIfRemoveLogic {
-	return &DetectIfRemoveLogic{
+// 粘贴文件夹和文件
+func NewPasteFolderOrFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PasteFolderOrFileLogic {
+	return &PasteFolderOrFileLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DetectIfRemoveLogic) DetectIfRemove(req *types.DetectRemoveReq) (resp *types.RemoveResult, err error) {
+func (l *PasteFolderOrFileLogic) PasteFolderOrFile(req *types.PasteRequestVO) (resp *types.ResultVO, err error) {
 	// todo: add your logic here and delete this line
 
 	return

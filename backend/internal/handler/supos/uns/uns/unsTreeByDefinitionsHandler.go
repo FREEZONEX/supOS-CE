@@ -12,17 +12,17 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 删除前预先判断是否有被引用对象
-func DetectIfRemoveHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// 多条件分页查询树结构
+func UnsTreeByDefinitionsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.DetectRemoveReq
+		var req types.UnsTreeCondition
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := uns.NewDetectIfRemoveLogic(r.Context(), svcCtx)
-		resp, err := l.DetectIfRemove(&req)
+		l := uns.NewUnsTreeByDefinitionsLogic(r.Context(), svcCtx)
+		resp, err := l.UnsTreeByDefinitions(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

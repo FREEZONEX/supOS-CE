@@ -12,17 +12,17 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 删除前预先判断是否有被引用对象
-func DetectIfRemoveHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// 校验指定文件夹夹是否已存在文件夹、文件名称
+func CheckDuplicationNameHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.DetectRemoveReq
+		var req types.CheckDuplicationNameReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := uns.NewDetectIfRemoveLogic(r.Context(), svcCtx)
-		resp, err := l.DetectIfRemove(&req)
+		l := uns.NewCheckDuplicationNameLogic(r.Context(), svcCtx)
+		resp, err := l.CheckDuplicationName(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

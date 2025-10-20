@@ -12,22 +12,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DetectIfRemoveLogic struct {
+type RemoveModelOrInstanceLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 删除前预先判断是否有被引用对象
-func NewDetectIfRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetectIfRemoveLogic {
-	return &DetectIfRemoveLogic{
+// 删除指定路径下的所有文件夹和文件
+func NewRemoveModelOrInstanceLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RemoveModelOrInstanceLogic {
+	return &RemoveModelOrInstanceLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DetectIfRemoveLogic) DetectIfRemove(req *types.DetectRemoveReq) (resp *types.RemoveResult, err error) {
+func (l *RemoveModelOrInstanceLogic) RemoveModelOrInstance(req *types.RemoveReq) (resp *types.RemoveResult, err error) {
 	// todo: add your logic here and delete this line
 
 	return

@@ -12,22 +12,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DetectIfRemoveLogic struct {
+type CreateModelsForNodeRedLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 删除前预先判断是否有被引用对象
-func NewDetectIfRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetectIfRemoveLogic {
-	return &DetectIfRemoveLogic{
+// 批量创建文件夹和文件(node-red导入专用)
+func NewCreateModelsForNodeRedLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateModelsForNodeRedLogic {
+	return &CreateModelsForNodeRedLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DetectIfRemoveLogic) DetectIfRemove(req *types.DetectRemoveReq) (resp *types.RemoveResult, err error) {
+func (l *CreateModelsForNodeRedLogic) CreateModelsForNodeRed(req *types.CreateUnsNodeRedDto) (resp *types.ResultVO, err error) {
 	// todo: add your logic here and delete this line
 
 	return
