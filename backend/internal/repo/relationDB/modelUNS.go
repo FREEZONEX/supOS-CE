@@ -54,6 +54,17 @@ type UnsNamespace struct {
 	MountSource      string    `gorm:"column:mount_source" json:"mount_source"`
 	SubscribeAt      time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
 }
+type UnsPo struct {
+	UnsNamespace
+	// 以下都是数据库表不存在的字段，对应 java 的注解： @TableField(exist = false)
+	PathName            string `gorm:"column:path_name" json:"pathName"`
+	ModelAlias          string `gorm:"column:model_alias" json:"modelAlias"`
+	TemplateName        string `gorm:"column:template_name" json:"templateName"`
+	TemplateAlias       string `gorm:"column:template_alias" json:"TemplateAlias"`
+	CountChildren       int    `gorm:"column:count_children" json:"countChildren"`
+	CountDirectChildren int    `gorm:"column:count_direct_children" json:"countDirectChildren"`
+	Labels              string `gorm:"column:labels" json:"labels"`
+}
 type Fields []types.FieldDefine
 
 func (f *Fields) Scan(value interface{}) error {

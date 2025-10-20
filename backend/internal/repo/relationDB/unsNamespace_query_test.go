@@ -1,6 +1,7 @@
 package relationDB
 
 import (
+	"backend/internal/common/dto"
 	"backend/internal/config"
 	"encoding/json"
 	"testing"
@@ -18,12 +19,41 @@ func TestUnsQuery(t *testing.T) {
 	t.Log(len(rs), string(jbs), err)
 
 	if len(rs) > 0 {
-		rs, err = dao.ListUnsByIds(ctx, []int64{rs[0].ID})
-		jbs, _ = json.MarshalIndent(rs, "", " ")
+		unsPos, err := dao.ListUnsByIds(ctx, []int64{1960575789291339779, rs[0].ID})
+		jbs, _ = json.MarshalIndent(unsPos, "", " ")
 		t.Log(string(jbs), err)
 	}
+	{
+		unsPos, err := dao.ListInTemplate(ctx, "pride")
+		jbs, _ = json.Marshal(unsPos)
+		t.Log(len(unsPos), string(jbs), err)
+	}
 }
-
+func TestListInTemplate(t *testing.T) {
+	dao := NewUnsNamespaceRepo(nil)
+	ctx := t.Context()
+	{
+		unsPos, err := dao.ListInTemplate(ctx, "pride")
+		jbs, _ := json.Marshal(unsPos)
+		t.Log(len(unsPos), string(jbs), err)
+	}
+	{
+		count, err := dao.CountAlarmRules(ctx, "pride")
+		t.Log("countAlarm:", count, err)
+	}
+}
+func TestListByConditions(t *testing.T) {
+	dao := NewUnsNamespaceRepo(nil)
+	ctx := t.Context()
+	{
+		unsPos, err := dao.ListByConditions(ctx, dto.UnsSearchCondition{
+			Keyword:   "pride",
+			LabelName: "seq",
+		})
+		jbs, _ := json.Marshal(unsPos)
+		t.Log(len(unsPos), string(jbs), err)
+	}
+}
 func init() {
 	c := config.Config{
 		Database: conf.Database{

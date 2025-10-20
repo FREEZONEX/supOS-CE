@@ -4,7 +4,6 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
 	"strings"
-	"time"
 )
 
 // UpdateUnsDto represents UNS update DTO
@@ -236,51 +235,6 @@ func (s *SimpleUnsInstance) GetDataType() int          { return s.DataType }
 func (s *SimpleUnsInstance) GetFields() []*FieldDefine { return s.Fields }
 
 // UnsSearchCondition represents UNS search conditions
-type UnsSearchCondition struct {
-	PaginationDTO
-
-	SearchType      int      `json:"searchType" form:"searchType"`      // 查询类型：1-UNS（名称+别名） 2-含标签 3-含模板
-	Deep            int      `json:"deep,omitzero" form:"deep"`         // 查询深度。-1为默认值，表示全深度；1表示1层，以此类推
-	ParentID        int64    `json:"parentId,omitzero" form:"parentId"` // 父级ID
-	PathType        int      `json:"pathType,omitzero" form:"pathType"` // 路径类型 0--文件夹，2--文件
-	Keyword         string   `json:"keyword,omitzero" form:"keyword"`
-	Alias           string   `json:"alias,omitzero" form:"alias"`
-	ParentAlias     string   `json:"parentAlias,omitzero" form:"parentAlias"`
-	ParentAliasList []string `json:"parentAliasList,omitzero" form:"parentAliasList"`
-	AliasList       []string `json:"aliasList,omitzero" form:"aliasList"`
-	Name            string   `json:"name,omitzero" form:"name"`
-	DisplayName     string   `json:"displayName,omitzero" form:"displayName"`
-	Path            string   `json:"path,omitzero" form:"path"`
-	LayRec          string   `json:"layRec,omitzero" form:"layRec"`
-	PathList        []string `json:"pathList,omitzero" form:"pathList"`
-	Description     string   `json:"description,omitzero" form:"description"`
-	TemplateName    string   `json:"templateName,omitzero" form:"templateName"`
-	TemplateAlias   string   `json:"templateAlias,omitzero" form:"templateAlias"`
-	TemplateID      int64    `json:"templateId,omitzero" form:"templateId"`
-	DataType        int      `json:"dataType,omitzero" form:"dataType"` // 0--保留（模板），1--时序，2--关系，3--计算型, 5--告警
-	LabelName       string   `json:"labelName,omitzero" form:"labelName"`
-
-	UpdateStartTime time.Time `json:"updateStartTime,omitzero" form:"updateStartTime"`
-	UpdateEndTime   time.Time `json:"updateEndTime,omitzero" form:"updateEndTime"`
-	CreateStartTime time.Time `json:"createStartTime,omitzero" form:"createStartTime"`
-	CreateEndTime   time.Time `json:"createEndTime,omitzero" form:"createEndTime"`
-
-	Extend           map[string]any `json:"extend,omitzero" form:"extend"`
-	WithValues       bool           `json:"withValues,omitzero" form:"withValues"`
-	ReturnParentInfo bool           `json:"returnParentInfo,omitzero" form:"returnParentInfo"` // 返回数据是否包含parentId/parentAlias中指定的文件夹信息
-	ShowRec          bool           `json:"showRec,omitzero" form:"showRec"`
-	FilterFolder     bool           `json:"filterFolder,omitzero" form:"filterFolder"`
-}
-
-// NewUnsSearchCondition creates a new search condition with keyword
-func NewUnsSearchCondition(keyword string) *UnsSearchCondition {
-	returnParentInfo := true
-	return &UnsSearchCondition{
-		SearchType:       1,
-		Keyword:          keyword,
-		ReturnParentInfo: returnParentInfo,
-	}
-}
 
 // UnsTreeCondition represents UNS tree query conditions
 type UnsTreeCondition struct {

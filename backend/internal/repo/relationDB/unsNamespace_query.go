@@ -3,6 +3,7 @@ package relationDB
 import (
 	"backend/internal/common/constants"
 	"context"
+	"strings"
 
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
@@ -180,7 +181,7 @@ func (p UnsNamespaceRepo) CountAlarmRules(ctx context.Context, key string) (coun
 	db := p.dbx(ctx)
 	db.Where("path_type = ?", 2).Where("data_type = ?", constants.AlarmRuleType)
 	if key != "" {
-		db = db.Where(db.Where("data_path iLike ?", key).Or("description like ?", key))
+		db = db.Where("(data_path iLike ? OR description like ?)", key, key)
 	}
 	db = db.Where("status = ?", 1)
 	err := db.Count(&count).Error
@@ -203,7 +204,7 @@ func (p UnsNamespaceRepo) ListAlarmRules(ctx context.Context, key string, page *
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListUnsByIds(ctx context.Context, ids []int64) (results []*UnsNamespace, err error) {
+func (p UnsNamespaceRepo) ListUnsByIds(ctx context.Context, ids []int64) (results []*UnsPo, err error) {
 	query := `
         SELECT a.*, 
                (SELECT COUNT(*) FROM uns_namespace c WHERE c.parent_id = a.id) AS count_direct_children
@@ -211,5 +212,47 @@ func (p UnsNamespaceRepo) ListUnsByIds(ctx context.Context, ids []int64) (result
         WHERE a.id IN ? AND a.status = 1
     `
 	err = p.dbx(ctx).Raw(query, ids).Scan(&results).Error
+	return results, err
+}
+func (p UnsNamespaceRepo) ListInTemplate(ctx context.Context, name string) (results []*UnsNamespace, err error) {
+	db := p.dbx(ctx)
+	query := db.Where("path_type in ?", []int{0, 2}).
+		Where("data_type <> ?", constants.AlarmRuleType).
+		Where("model_id IS NOT NULL")
+	if name != "" {
+		lowerName := strings.ToLower(name)
+		query = query.Where(
+			"(LOWER(path) LIKE ? OR LOWER(alias) LIKE ?)",
+			"%"+lowerName+"%",
+			"%"+lowerName+"%",
+		)
+	}
+	err = query.Order("path_type ASC, id ASC").Find(&results).Error
+	return results, err
+}
+func (p UnsNamespaceRepo) CountAllChildrenByLayRec(ctx context.Context, layRec string) (count int64, er error) {
+	db := p.dbx(ctx)
+	db.Where("path_type = ?", 2).Where("lay_rec like CONCAT('?', '/%')", layRec)
+	db = db.Where("status = ?", 1)
+	err := db.Count(&count).Error
+	if err != nil {
+		return -1, stores.ErrFmt(err)
+	}
+	return
+}
+func (p UnsNamespaceRepo) CountDirectChildrenByParentId(ctx context.Context, parentId int64) (count int64, er error) {
+	db := p.dbx(ctx).Where("parent_id = ?", parentId).Where("status = ?", 1)
+	err := db.Count(&count).Error
+	if err != nil {
+		return -1, stores.ErrFmt(err)
+	}
+	return
+}
+
+func (p UnsNamespaceRepo) ListAllEmptyFolder(ctx context.Context) (results []*UnsNamespace, err error) {
+	db := p.dbx(ctx)
+	query := db.Raw(`select * from ` + TableNameUnsNamespace + `WHERE path_type = 0 and status=1 and (mount_type=0 or mount_type is null) and id NOT IN (
+           SELECT DISTINCT parent_id FROM ` + TableNameUnsNamespace + `  WHERE parent_id IS NOT NULL  AND status=1`)
+	err = query.Find(&results).Error
 	return results, err
 }
