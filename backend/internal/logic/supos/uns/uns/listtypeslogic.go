@@ -1,11 +1,6 @@
-// Code scaffolded by goctl. Safe to edit.
-// goctl 1.9.2
-
 package uns
 
 import (
-	"backend/internal/common/enums"
-	"backend/share/base"
 	"context"
 
 	"backend/internal/svc"
@@ -30,10 +25,7 @@ func NewListTypesLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ListTyp
 }
 
 func (l *ListTypesLogic) ListTypes() (resp *types.ListTypesResult, err error) {
-	return &types.ListTypesResult{
-		BaseResult: types.BaseResult{Code: 200, Msg: "ok"},
-		Data: base.Map[enums.FieldType, string](enums.FieldTypes(), func(e enums.FieldType) string {
-			return e.Name()
-		}),
-	}, nil
+	// todo: add your logic here and delete this line
+
+	return
 }
