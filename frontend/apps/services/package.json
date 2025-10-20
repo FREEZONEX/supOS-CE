@@ -12,12 +12,16 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@hono/node-server": "catalog:server",
+    "express": "^5.1.0",
     "dockerode": "catalog:server",
-    "hono": "catalog:server",
-    "@copilotkit/runtime": "catalog:ai"
+    "openai": "catalog:ai",
+    "@copilotkit/runtime": "catalog:ai",
+    "@langchain/anthropic": "catalog:ai",
+    "@langchain/ollama": "catalog:ai",
+    "@langchain/openai": "catalog:ai"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "@types/dockerode": "^3.3.44"
   }
 }

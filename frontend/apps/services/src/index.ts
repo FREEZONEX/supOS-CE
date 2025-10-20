@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { errorHandler, notFoundHandler } from '@/middleware';
+import { copilotkitHandler, errorHandler, notFoundHandler } from '@/middleware';
 import { registerRoutes } from '@/routes';
 import { ServerManager } from '@/server';
 
@@ -9,6 +9,8 @@ const app = new Hono();
 // 应用基础中间件
 
 // 应用自定义中间件
+// copilotkit => ai
+app.use('/copilotkit', copilotkitHandler);
 
 // 注册所有路由
 registerRoutes(app);
