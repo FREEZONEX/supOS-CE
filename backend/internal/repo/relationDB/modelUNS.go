@@ -1,10 +1,8 @@
 package relationDB
 
 import (
+	"backend/internal/common/uns"
 	"backend/internal/types"
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"time"
 )
 
@@ -21,38 +19,38 @@ const TableNameUnsNamespace = "uns_namespace"
 
 // UnsNamespace mapped from table <uns_namespace>
 type UnsNamespace struct {
-	ID               int64     `gorm:"column:id;primaryKey" json:"id"`
-	LayRec           string    `gorm:"column:lay_rec;not null" json:"lay_rec"`
-	Alias_           string    `gorm:"column:alias;not null" json:"alias"`
-	ParentAlias      string    `gorm:"column:parent_alias" json:"parent_alias"`
-	Name             string    `gorm:"column:name;not null" json:"name"`
-	Path             string    `gorm:"column:path;not null" json:"path"`
-	PathType         int16     `gorm:"column:path_type;not null" json:"path_type"`
-	DataType         int16     `gorm:"column:data_type" json:"data_type"`
-	Fields           Fields    `gorm:"column:fields;type:json;" json:"fields"`
-	CreateAt         time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
-	Status           int16     `gorm:"column:status;default:1" json:"status"`
-	Description      string    `gorm:"column:description" json:"description"`
-	UpdateAt         time.Time `gorm:"column:update_at" json:"update_at"`
-	Protocol         string    `gorm:"column:protocol" json:"protocol"`
-	DataPath         string    `gorm:"column:data_path" json:"data_path"`
-	WithFlags        int32     `gorm:"column:with_flags" json:"with_flags"`
-	DataSrcID        int16     `gorm:"column:data_src_id" json:"data_src_id"`
-	RefUns           RefUns    `gorm:"column:ref_uns;default:{};type:jsonb;" json:"ref_uns"`
-	Refers           Refers    `gorm:"column:refers;type:json;" json:"refers"`
-	Expression       string    `gorm:"column:expression" json:"expression"`
-	TableName_       string    `gorm:"column:table_name" json:"table_name"`
-	NumberFields     int16     `gorm:"column:number_fields" json:"number_fields"`
-	ParentID         int64     `gorm:"column:parent_id" json:"parent_id"`
-	ModelID          int64     `gorm:"column:model_id" json:"model_id"`
-	ProtocolType     string    `gorm:"column:protocol_type" json:"protocol_type"`
-	Extend           string    `gorm:"column:extend;type:jsonb;" json:"extend"`
-	DisplayName      string    `gorm:"column:display_name" json:"display_name"`
-	LabelIds         LabelIds  `gorm:"column:label_ids;type:jsonb;" json:"label_ids"`
-	ExtendFieldFlags int32     `gorm:"column:extend_field_flags" json:"extend_field_flags"`
-	MountType        int16     `gorm:"column:mount_type" json:"mount_type"`
-	MountSource      string    `gorm:"column:mount_source" json:"mount_source"`
-	SubscribeAt      time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
+	ID          int64                  `gorm:"column:id;primaryKey" json:"id"`
+	LayRec      string                 `gorm:"column:lay_rec;not null" json:"lay_rec"`
+	Alias_      string                 `gorm:"column:alias;not null" json:"alias"`
+	ParentAlias string                 `gorm:"column:parent_alias" json:"parent_alias"`
+	Name        string                 `gorm:"column:name;not null" json:"name"`
+	Path        string                 `gorm:"column:path;not null" json:"path"`
+	PathType    int16                  `gorm:"column:path_type;not null" json:"path_type"`
+	DataType    int16                  `gorm:"column:data_type" json:"data_type"`
+	Fields      uns.DefinitionListJSON `gorm:"column:fields;type:json;" json:"fields"`
+	CreateAt    time.Time              `gorm:"column:create_at;default:now()" json:"create_at"`
+	Status      int16                  `gorm:"column:status;default:1" json:"status"`
+	Description string                 `gorm:"column:description" json:"description"`
+	UpdateAt    time.Time              `gorm:"column:update_at" json:"update_at"`
+	Protocol    string                 `gorm:"column:protocol" json:"protocol"`
+	DataPath    string                 `gorm:"column:data_path" json:"data_path"`
+	WithFlags   int32                  `gorm:"column:with_flags" json:"with_flags"`
+	DataSrcID   int16                  `gorm:"column:data_src_id" json:"data_src_id"`
+	// RefUns           RefUns    `gorm:"column:ref_uns;default:{};type:jsonb;" json:"ref_uns"`
+	// Refers           Refers    `gorm:"column:refers;type:json;" json:"refers"`
+	Expression   string         `gorm:"column:expression" json:"expression"`
+	TableName_   string         `gorm:"column:table_name" json:"table_name"`
+	NumberFields int16          `gorm:"column:number_fields" json:"number_fields"`
+	ParentID     int64          `gorm:"column:parent_id" json:"parent_id"`
+	ModelID      int64          `gorm:"column:model_id" json:"model_id"`
+	ProtocolType string         `gorm:"column:protocol_type" json:"protocol_type"`
+	Extend       map[string]any `gorm:"column:extend;type:jsonb;serializer:json;" json:"extend"`
+	DisplayName  string         `gorm:"column:display_name" json:"display_name"`
+	// LabelIds         map[int64]string `gorm:"column:label_ids;type:jsonb;serializer:json;" json:"label_ids"`
+	ExtendFieldFlags int32  `gorm:"column:extend_field_flags" json:"extend_field_flags"`
+	MountType        int16  `gorm:"column:mount_type" json:"mount_type"`
+	MountSource      string `gorm:"column:mount_source" json:"mount_source"`
+	// SubscribeAt      time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
 }
 type UnsPo struct {
 	UnsNamespace
@@ -67,87 +65,42 @@ type UnsPo struct {
 }
 type Fields []types.FieldDefine
 
-func (f *Fields) Scan(value interface{}) error {
-	if value == nil {
-		*f = nil
-		return nil
-	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to scan Fields")
-	}
-	return json.Unmarshal(bytes, f)
-}
+// type Fields struct {
+// 	Name        string `json:"name"`
+// 	Type        string `json:"type"`
+// 	Unique      bool   `json:"unique"`
+// 	SystemField bool   `json:"system_field"`
+// 	Unit        string `json:"unit"`
+// }
 
-func (f Fields) Value() (driver.Value, error) {
-	if f == nil {
-		return nil, nil
-	}
-	return json.Marshal(f)
-}
+// type RefUns map[int64]int
+//
+//	type Refer struct {
+//		ID    string `json:"id"`
+//		Alias string `json:"alias"`
+//	}
+//
+// type Refers []Refer
+// type LabelIds map[int64]string
 
-type RefUns map[int64]int
+// func (f *LabelIds) Scan(value interface{}) error {
+// 	if value == nil {
+// 		*f = nil
+// 		return nil
+// 	}
+// 	bytes, ok := value.([]byte)
+// 	if !ok {
+// 		return errors.New("failed to scan LabelIds")
+// 	}
+// 	return json.Unmarshal(bytes, f)
+// }
 
-func (f *RefUns) Scan(value interface{}) error {
-	if value == nil {
-		*f = nil
-		return nil
-	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to scan RefUns")
-	}
-	return json.Unmarshal(bytes, f)
-}
-
-func (f RefUns) Value() (driver.Value, error) {
-	if f == nil {
-		return nil, nil
-	}
-	return json.Marshal(f)
-}
-
-type Refers []types.InstanceFieldVo
-
-func (f *Refers) Scan(value interface{}) error {
-	if value == nil {
-		*f = nil
-		return nil
-	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to scan Refers")
-	}
-	return json.Unmarshal(bytes, f)
-}
-
-func (f Refers) Value() (driver.Value, error) {
-	if f == nil {
-		return nil, nil
-	}
-	return json.Marshal(f)
-}
-
-type LabelIds map[int64]string
-
-func (f *LabelIds) Scan(value interface{}) error {
-	if value == nil {
-		*f = nil
-		return nil
-	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed to scan LabelIds")
-	}
-	return json.Unmarshal(bytes, f)
-}
-
-func (f LabelIds) Value() (driver.Value, error) {
-	if f == nil {
-		return nil, nil
-	}
-	return json.Marshal(f)
-}
+// func (f LabelIds) Value() (driver.Value, error) {
+// 	if f == nil {
+// 		return nil, nil
+// 	}
+// 	return json.Marshal(f)
+// }
 
 // TableName UnsNamespace's table name
 func (*UnsNamespace) TableName() string {

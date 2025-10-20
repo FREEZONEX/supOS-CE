@@ -2,6 +2,7 @@ package relationDB
 
 import (
 	"context"
+	"strings"
 
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
@@ -90,6 +91,17 @@ func (p UnsNamespaceRepo) FindOne(ctx context.Context, id int64) (*UnsNamespace,
 	}
 	return &result, nil
 }
+func (p UnsNamespaceRepo) FindOneByAlias(ctx context.Context, alias string) (*UnsNamespace, error) {
+	if alias == "" {
+		return nil, stores.ErrFmt(gorm.ErrRecordNotFound)
+	}
+	var result UnsNamespace
+	err := p.db.WithContext(ctx).Where("alias = ?", alias).First(&result).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return &result, nil
+}
 
 // 批量插入 LightStrategyDevice 记录
 func (p UnsNamespaceRepo) MultiInsert(ctx context.Context, data []*UnsNamespace) error {
@@ -101,4 +113,29 @@ func (d UnsNamespaceRepo) UpdateWithField(ctx context.Context, f UnsNamespaceFil
 	db := d.fmtFilter(ctx, f)
 	err := db.Model(&UnsNamespace{}).Updates(updates).Error
 	return stores.ErrFmt(err)
+}
+
+func escapeLikePattern(input string) string {
+	if input == "" {
+		return input
+	}
+	input = strings.ReplaceAll(input, `\`, `\\`)
+	input = strings.ReplaceAll(input, `%`, `\%`)
+	input = strings.ReplaceAll(input, `_`, `\_`)
+	return input
+}
+
+func (p UnsNamespaceRepo) ListAliasByBase(ctx context.Context, base string) ([]string, error) {
+	if base == "" {
+		return nil, nil
+	}
+	escaped := escapeLikePattern(base)
+	pattern := escaped + "-%"
+	var aliases []string
+	err := p.db.WithContext(ctx).
+		Model(&UnsNamespace{}).
+		Select("alias").
+		Where("alias = ? OR alias LIKE ? ", base, pattern).
+		Pluck("alias", &aliases).Error
+	return aliases, stores.ErrFmt(err)
 }

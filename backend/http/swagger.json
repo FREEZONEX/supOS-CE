@@ -247,6 +247,196 @@
         ]
       }
     },
+    "/inter-api/supos/external/parserTopicPayload": {
+      "get": {
+        "summary": "外部topic payload解析",
+        "operationId": "getInter-apiSuposExternalParserTopicPayload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "topic",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/external/topic/clear": {
+      "delete": {
+        "summary": "清除所有外部topic",
+        "operationId": "deleteInter-apiSuposExternalTopicClear",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/StringResult"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/external/topic2Uns": {
+      "post": {
+        "summary": "外部topic转UNS",
+        "operationId": "postInter-apiSuposExternalTopic2Uns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateFileDto"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/external/tree": {
+      "get": {
+        "summary": "搜索外部topic主题树，默认整个树",
+        "operationId": "getInter-apiSuposExternalTree",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/SearchTreeResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "parentId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          },
+          {
+            "name": "showRec",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean",
+            "default": "false",
+            "schema": {}
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "1",
+            "schema": {}
+          },
+          {
+            "name": "pathType",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
     "/inter-api/supos/global/data/export": {
       "post": {
         "summary": "全局数据导出",
@@ -707,6 +897,74 @@
         ]
       }
     },
+    "/inter-api/supos/uns": {
+      "delete": {
+        "summary": "删除指定路径下的所有文件夹和文件",
+        "operationId": "deleteInter-apiSuposUns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/RemoveResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          },
+          {
+            "name": "withFlow",
+            "in": "query",
+            "required": true,
+            "type": "boolean",
+            "format": "boolean",
+            "default": "true",
+            "schema": {}
+          },
+          {
+            "name": "withDashboard",
+            "in": "query",
+            "required": true,
+            "type": "boolean",
+            "format": "boolean",
+            "default": "true",
+            "schema": {}
+          },
+          {
+            "name": "cascade",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
     "/inter-api/supos/uns/alarm/confirm": {
       "post": {
         "summary": "确认报警",
@@ -859,6 +1117,200 @@
         "tags": [
           "supos/uns/label",
           "suposUnsLabel"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/batch": {
+      "post": {
+        "summary": "批量创建文件夹和文件",
+        "operationId": "postInter-apiSuposUnsBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "flags",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "schema": {}
+          },
+          {
+            "name": "fromImport",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean",
+            "default": "false",
+            "schema": {}
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BatchCreateReq"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/batch/alias": {
+      "delete": {
+        "summary": "根据别名集合批量删除文件夹和文件",
+        "operationId": "deleteInter-apiSuposUnsBatchAlias",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/RemoveResult"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/condition/tree": {
+      "post": {
+        "summary": "多条件分页查询树结构",
+        "operationId": "postInter-apiSuposUnsConditionTree",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/PageResultDTO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageNo",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64",
+            "default": "1",
+            "schema": {}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64",
+            "default": "10",
+            "schema": {}
+          },
+          {
+            "name": "searchType",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "1",
+            "schema": {}
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "parentId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          },
+          {
+            "name": "dataType",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "schema": {}
+          },
+          {
+            "name": "pathType",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "schema": {}
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UnsTreeCondition"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ],
+        "consumes": [
+          "application/x-www-form-urlencoded"
         ]
       }
     },
@@ -1239,6 +1691,132 @@
         ]
       }
     },
+    "/inter-api/supos/uns/detail": {
+      "put": {
+        "summary": "修改文件夹或文件明细",
+        "operationId": "putInter-apiSuposUnsDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/StringResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateUnsDto"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/detectIfRemove": {
+      "get": {
+        "summary": "删除前预先判断是否有被引用对象",
+        "operationId": "getInter-apiSuposUnsDetectIfRemove",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/RemoveResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/ds2fs": {
+      "post": {
+        "summary": "外部数据源表的字段定义转uns字段定义",
+        "operationId": "postInter-apiSuposUnsDs2fs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/DbFieldsInfoVoResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DbFieldsInfoVo"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
     "/inter-api/supos/uns/external/tree": {
       "post": {
         "summary": "搜索外部topic主题树，默认整个树",
@@ -1352,6 +1930,388 @@
         "tags": [
           "supos/uns/file",
           "suposUnsFile"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/file/current/batchQuery": {
+      "post": {
+        "summary": "批量查询文件实时值",
+        "operationId": "postInter-apiSuposUnsFileCurrentBatchQuery",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BatchQueryFileReq"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/file/current/batchUpdate": {
+      "post": {
+        "summary": "批量写文件实时值",
+        "operationId": "postInter-apiSuposUnsFileCurrentBatchUpdate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/UnsDataResponseVo"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateFileDTO"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/file/history/batch/query": {
+      "post": {
+        "summary": "批量查询文件历史值",
+        "operationId": "postInter-apiSuposUnsFileHistoryBatchQuery",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/UnsHistoryQueryResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/HistoryValueRequest"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/folder/empty": {
+      "get": {
+        "summary": "查询空文件夹",
+        "operationId": "getInter-apiSuposUnsFolderEmpty",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CreateTopicDto"
+              },
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/for/nodered": {
+      "post": {
+        "summary": "批量创建文件夹和文件(node-red导入专用)",
+        "operationId": "postInter-apiSuposUnsForNodered",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateUnsNodeRedDto"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/getLastMsg": {
+      "get": {
+        "summary": "获取最新消息",
+        "operationId": "getInter-apiSuposUnsGetLastMsg",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/GetLastMsgResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          },
+          {
+            "name": "alias",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/instance": {
+      "get": {
+        "summary": "查询文件详情",
+        "operationId": "getInter-apiSuposUnsInstance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/InstanceDetailResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/json2fs": {
+      "post": {
+        "summary": "外部JSON定义转uns字段定义",
+        "operationId": "postInter-apiSuposUnsJson2fs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ParseJson2UnsResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/JsonBodyReq"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/json2fs/tree": {
+      "post": {
+        "summary": "外部JSON定义转树结构uns字段定义",
+        "operationId": "postInter-apiSuposUnsJson2fsTree",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ParseJson2TreeUnsResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/JsonBodyReq"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
         ]
       }
     },
@@ -1521,6 +2481,130 @@
         ]
       }
     },
+    "/inter-api/supos/uns/model": {
+      "get": {
+        "summary": "查询文件夹详情",
+        "operationId": "getInter-apiSuposUnsModel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ModelDetailResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      },
+      "post": {
+        "summary": "创建文件夹和文件",
+        "operationId": "postInter-apiSuposUnsModel",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/StringResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateTopicDto"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/model/detect": {
+      "post": {
+        "summary": "预先判断是否有属性关联",
+        "operationId": "postInter-apiSuposUnsModelDetect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateModeRequestVo"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
     "/inter-api/supos/uns/model/pageList": {
       "post": {
         "summary": "查询模板列表",
@@ -1547,6 +2631,257 @@
         "tags": [
           "supos/uns/model",
           "suposUnsModel"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/model/subscribe": {
+      "put": {
+        "summary": "文件或文件夹修改订阅",
+        "operationId": "putInter-apiSuposUnsModelSubscribe",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          },
+          {
+            "name": "enable",
+            "in": "query",
+            "required": true,
+            "type": "boolean",
+            "format": "boolean",
+            "schema": {}
+          },
+          {
+            "name": "frequency",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SubscribeModelReq"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ],
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/model_v0": {
+      "post": {
+        "summary": "创建文件夹和文件",
+        "operationId": "postInter-apiSuposUnsModel_v0",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/WithID"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": " 外部/内部创建主题（文件夹/文件）的入参",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UnsCreateTopicDTO"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/name": {
+      "put": {
+        "summary": "修改文件夹或文件名称",
+        "operationId": "putInter-apiSuposUnsName",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/StringResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateNameVo"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/name/duplication": {
+      "get": {
+        "summary": "校验指定文件夹夹是否已存在文件夹、文件名称",
+        "operationId": "getInter-apiSuposUnsNameDuplication",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "folder",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "checkType",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/paste": {
+      "post": {
+        "summary": "粘贴文件夹和文件",
+        "operationId": "postInter-apiSuposUnsPaste",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PasteRequestVO"
+            }
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
         ]
       }
     },
@@ -1606,6 +2941,104 @@
         ]
       }
     },
+    "/inter-api/supos/uns/search": {
+      "get": {
+        "summary": "分页搜索主题",
+        "operationId": "getInter-apiSuposUnsSearch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/TopicPaginationSearchResult"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "k",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "modelTopic",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "2",
+            "schema": {}
+          },
+          {
+            "name": "normal",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean",
+            "schema": {}
+          },
+          {
+            "name": "dataTypes",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "1",
+            "schema": {}
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "10",
+            "schema": {}
+          },
+          {
+            "name": "nfc",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
     "/inter-api/supos/uns/systemConfig": {
       "get": {
         "summary": "获取系统配置",
@@ -1634,9 +3067,218 @@
           "suposUns"
         ]
       }
+    },
+    "/inter-api/supos/uns/tree": {
+      "get": {
+        "summary": "搜索主题树，默认整个树",
+        "operationId": "getInter-apiSuposUnsTree",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/SearchTreeResp"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "parentId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64",
+            "schema": {}
+          },
+          {
+            "name": "showRec",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean",
+            "default": "false",
+            "schema": {}
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "default": "1",
+            "schema": {}
+          },
+          {
+            "name": "pathType",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32",
+            "schema": {}
+          }
+        ],
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
+    },
+    "/inter-api/supos/uns/types": {
+      "get": {
+        "summary": "枚举数据类型",
+        "operationId": "getInter-apiSuposUnsTypes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ListTypesResult"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/uns/uns",
+          "suposUnsUns"
+        ]
+      }
     }
   },
   "definitions": {
+    "BaseResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        }
+      },
+      "title": "BaseResult",
+      "required": [
+        "code",
+        "msg"
+      ]
+    },
+    "BatchCreateReq": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CreateTopicDto"
+          }
+        }
+      },
+      "title": "BatchCreateReq",
+      "required": [
+        "list"
+      ]
+    },
+    "BatchQueryFileReq": {
+      "type": "object",
+      "properties": {
+        "aliasList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "BatchQueryFileReq",
+      "required": [
+        "aliasList"
+      ]
+    },
+    "BatchRemoveUnsDto": {
+      "type": "object",
+      "properties": {
+        "aliasList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "withFlow": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "withDashboard": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "removeRefer": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "checkMount": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "onlyRemoveChild": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "BatchRemoveUnsDto",
+      "required": [
+        "aliasList"
+      ]
+    },
+    "CheckDuplicationNameReq": {
+      "type": "object",
+      "properties": {
+        "folder": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "checkType": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CheckDuplicationNameReq",
+      "required": [
+        "name",
+        "checkType"
+      ]
+    },
     "CommonResp": {
       "type": "object",
       "properties": {
@@ -1704,10 +3346,262 @@
         "value"
       ]
     },
+    "CreateFileDto": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "parentAlias": {
+          "type": "string"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "description": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "persistence": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "dashBoard": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "addFlow": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "refers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InstanceFieldVo"
+          }
+        },
+        "expression": {
+          "type": "string"
+        },
+        "frequency": {
+          "type": "string"
+        },
+        "extendProperties": {
+          "type": "object"
+        },
+        "templateAlias": {
+          "type": "string"
+        },
+        "labelNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "CreateFileDto",
+      "required": [
+        "name"
+      ]
+    },
     "CreateGrafanaByUnsReq": {
       "type": "object",
       "properties": {},
       "title": "CreateGrafanaByUnsReq"
+    },
+    "CreateTopicDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "pathType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referUns": {
+          "type": "object"
+        },
+        "referIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "referTable": {
+          "type": "string"
+        },
+        "refFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "referModelId": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "modelAlias": {
+          "type": "string"
+        },
+        "parentAlias": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "extendFieldUsed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dataPath": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "refers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InstanceFieldVo"
+          }
+        },
+        "expression": {
+          "type": "string"
+        },
+        "streamOptions": {
+          "$ref": "#/definitions/StreamOptions"
+        },
+        "addFlow": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "addDashBoard": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "save2db": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "retainTableWhenDeleteInstance": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "createTemplate": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "frequency": {
+          "type": "string"
+        },
+        "extend": {
+          "type": "object"
+        },
+        "labelNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "refSource": {
+          "type": "string"
+        },
+        "valueType": {
+          "type": "string"
+        },
+        "initValue": {
+          "type": "object"
+        },
+        "strMaxLen": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "accessLevel": {
+          "type": "string"
+        },
+        "mountType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mountSource": {
+          "type": "string"
+        },
+        "updateAt": {
+          "type": "string"
+        }
+      },
+      "title": "CreateTopicDto",
+      "required": [
+        "name",
+        "pathType",
+        "alias",
+        "dataType",
+        "fields"
+      ]
+    },
+    "CreateUnsNodeRedDto": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "fieldType": {
+          "type": "string"
+        },
+        "fieldName": {
+          "type": "string"
+        },
+        "tag": {
+          "type": "string"
+        }
+      },
+      "title": "CreateUnsNodeRedDto",
+      "required": [
+        "path"
+      ]
     },
     "DateRange": {
       "type": "object",
@@ -1723,10 +3617,245 @@
       },
       "title": "DateRange"
     },
+    "DbFieldDefineVo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "length": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isNullable": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "comment": {
+          "type": "string"
+        }
+      },
+      "title": "DbFieldDefineVo",
+      "required": [
+        "name",
+        "type",
+        "length",
+        "isNullable",
+        "comment"
+      ]
+    },
+    "DbFieldsInfoVo": {
+      "type": "object",
+      "properties": {
+        "databaseType": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DbFieldDefineVo"
+          }
+        }
+      },
+      "title": "DbFieldsInfoVo",
+      "required": [
+        "databaseType",
+        "fields"
+      ]
+    },
+    "DbFieldsInfoVoResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        }
+      },
+      "title": "DbFieldsInfoVoResp",
+      "required": [
+        "data"
+      ]
+    },
+    "DetectRemoveReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "DetectRemoveReq",
+      "required": [
+        "id"
+      ]
+    },
     "Empty": {
       "type": "object",
       "properties": {},
       "title": "Empty"
+    },
+    "EmptyFolderReq": {
+      "type": "object",
+      "properties": {},
+      "title": "EmptyFolderReq"
+    },
+    "Field": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "title": "Field",
+      "required": [
+        "name",
+        "type"
+      ]
+    },
+    "FieldDef": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "unique": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "index": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "maxLen": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tbValueName": {
+          "type": "string"
+        }
+      },
+      "title": "FieldDef",
+      "required": [
+        "name",
+        "type"
+      ]
+    },
+    "FieldDefine": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "unique": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "index": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "remark": {
+          "type": "string"
+        },
+        "maxLen": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "tbValueName": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "upperLimit": {
+          "type": "number",
+          "format": "double"
+        },
+        "lowerLimit": {
+          "type": "number",
+          "format": "double"
+        },
+        "decimal": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "FieldDefine",
+      "required": [
+        "name",
+        "type"
+      ]
+    },
+    "GetLastMsgReq": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "alias": {
+          "type": "string"
+        }
+      },
+      "title": "GetLastMsgReq"
+    },
+    "GetLastMsgResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "title": "GetLastMsgResp",
+      "required": [
+        "data"
+      ]
+    },
+    "HistoryValueRequest": {
+      "type": "object",
+      "properties": {},
+      "title": "HistoryValueRequest"
     },
     "IDList": {
       "type": "object",
@@ -1744,6 +3873,414 @@
         "ids"
       ]
     },
+    "InstanceDetail": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "parentAlias": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "dataPath": {
+          "type": "string"
+        },
+        "pathType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "createTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "updateTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "protocol": {
+          "type": "object"
+        },
+        "modelDescription": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "withFlow": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "withDashboard": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "withSave2db": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "save2db": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "expression": {
+          "type": "string"
+        },
+        "showExpression": {
+          "type": "string"
+        },
+        "refers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InstanceFieldVo"
+          }
+        },
+        "labelList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LabelVo"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "pathName": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "string"
+        },
+        "modelName": {
+          "type": "string"
+        },
+        "extend": {
+          "type": "object"
+        },
+        "payload": {
+          "type": "string"
+        },
+        "templateName": {
+          "type": "string"
+        },
+        "templateAlias": {
+          "type": "string"
+        },
+        "accessLevel": {
+          "type": "string"
+        },
+        "mount": {
+          "$ref": "#/definitions/MountDetailVo"
+        }
+      },
+      "title": "InstanceDetail",
+      "required": [
+        "id",
+        "topic",
+        "alias",
+        "parentAlias",
+        "path",
+        "dataType",
+        "dataPath",
+        "pathType",
+        "fields",
+        "createTime",
+        "updateTime",
+        "protocol",
+        "modelDescription",
+        "description",
+        "withFlow",
+        "withDashboard",
+        "withSave2db",
+        "save2db",
+        "expression",
+        "showExpression",
+        "refers",
+        "labelList",
+        "name",
+        "displayName",
+        "pathName",
+        "modelId",
+        "modelName",
+        "extend",
+        "payload",
+        "templateName",
+        "templateAlias",
+        "accessLevel",
+        "mount"
+      ]
+    },
+    "InstanceDetailReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "InstanceDetailReq",
+      "required": [
+        "id"
+      ]
+    },
+    "InstanceDetailResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/InstanceDetail"
+        }
+      },
+      "title": "InstanceDetailResp",
+      "required": [
+        "data"
+      ]
+    },
+    "InstanceFieldVo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        },
+        "uts": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "InstanceFieldVo",
+      "required": [
+        "id",
+        "alias",
+        "path",
+        "field",
+        "uts"
+      ]
+    },
+    "JsonBodyReq": {
+      "type": "object",
+      "properties": {
+        "json": {
+          "type": "string"
+        }
+      },
+      "title": "JsonBodyReq",
+      "required": [
+        "json"
+      ]
+    },
+    "LabelVo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "title": "LabelVo",
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "ListTypesResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "ListTypesResult",
+      "required": [
+        "data"
+      ]
+    },
+    "ModelDetail": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "parentAlias": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "createTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "updateTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "pathName": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "string"
+        },
+        "modelName": {
+          "type": "string"
+        },
+        "extend": {
+          "type": "object"
+        },
+        "templateAlias": {
+          "type": "string"
+        },
+        "mount": {
+          "$ref": "#/definitions/MountDetailVo"
+        }
+      },
+      "title": "ModelDetail",
+      "required": [
+        "id",
+        "topic",
+        "alias",
+        "parentAlias",
+        "path",
+        "dataType",
+        "fields",
+        "createTime",
+        "updateTime",
+        "description",
+        "name",
+        "displayName",
+        "pathName",
+        "modelId",
+        "modelName",
+        "extend",
+        "templateAlias",
+        "mount"
+      ]
+    },
+    "ModelDetailReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "ModelDetailReq",
+      "required": [
+        "id"
+      ]
+    },
+    "ModelDetailResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/ModelDetail"
+        }
+      },
+      "title": "ModelDetailResp",
+      "required": [
+        "data"
+      ]
+    },
+    "MountDetailVo": {
+      "type": "object",
+      "properties": {
+        "mountType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mountSource": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      },
+      "title": "MountDetailVo",
+      "required": [
+        "mountType",
+        "mountSource",
+        "displayName"
+      ]
+    },
     "OrderBy": {
       "type": "object",
       "properties": {
@@ -1758,6 +4295,25 @@
         }
       },
       "title": "OrderBy"
+    },
+    "OuterStructureVo": {
+      "type": "object",
+      "properties": {
+        "dataPath": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        }
+      },
+      "title": "OuterStructureVo",
+      "required": [
+        "dataPath",
+        "fields"
+      ]
     },
     "PageInfo": {
       "type": "object",
@@ -1805,6 +4361,120 @@
         "total"
       ]
     },
+    "PageResultDTO": {
+      "type": "object",
+      "properties": {
+        "pageNo": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TopicTreeResult"
+          }
+        }
+      },
+      "title": "PageResultDTO",
+      "required": [
+        "pageNo",
+        "pageSize",
+        "total",
+        "code",
+        "data"
+      ]
+    },
+    "ParseJson2TreeUnsResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TreeOuterStructureVo"
+          }
+        }
+      },
+      "title": "ParseJson2TreeUnsResp",
+      "required": [
+        "data"
+      ]
+    },
+    "ParseJson2UnsResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OuterStructureVo"
+          }
+        }
+      },
+      "title": "ParseJson2UnsResp",
+      "required": [
+        "data"
+      ]
+    },
+    "ParserTopicPayloadReq": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string"
+        }
+      },
+      "title": "ParserTopicPayloadReq",
+      "required": [
+        "topic"
+      ]
+    },
+    "PasteRequestVO": {
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "targetId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "newF": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "PasteRequestVO",
+      "required": [
+        "sourceId",
+        "targetId",
+        "newF"
+      ]
+    },
     "Point": {
       "type": "object",
       "properties": {
@@ -1827,6 +4497,177 @@
         "latitude"
       ]
     },
+    "RemoveReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "withFlow": {
+          "type": "boolean",
+          "format": "boolean",
+          "default": "true"
+        },
+        "withDashboard": {
+          "type": "boolean",
+          "format": "boolean",
+          "default": "true"
+        },
+        "cascade": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "RemoveReq",
+      "required": [
+        "id",
+        "withFlow",
+        "withDashboard"
+      ]
+    },
+    "RemoveResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/RemoveTip"
+        }
+      },
+      "title": "RemoveResult",
+      "required": [
+        "data"
+      ]
+    },
+    "RemoveTip": {
+      "type": "object",
+      "properties": {
+        "refs": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "RemoveTip",
+      "required": [
+        "refs"
+      ]
+    },
+    "ResultVO": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "title": "ResultVO",
+      "required": [
+        "code",
+        "msg"
+      ]
+    },
+    "SearchPagedReq": {
+      "type": "object",
+      "properties": {
+        "k": {
+          "type": "string"
+        },
+        "modelTopic": {
+          "type": "string"
+        },
+        "type": {
+          "type": "integer",
+          "format": "int32",
+          "default": "2"
+        },
+        "normal": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "dataTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pageNo": {
+          "type": "integer",
+          "format": "int32",
+          "default": "1"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32",
+          "default": "10"
+        },
+        "nfc": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "SearchPagedReq"
+    },
+    "SearchTreeReq": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "showRec": {
+          "type": "boolean",
+          "format": "boolean",
+          "default": "false"
+        },
+        "type": {
+          "type": "integer",
+          "format": "int32",
+          "default": "1"
+        },
+        "pathType": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "SearchTreeReq"
+    },
+    "SearchTreeResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TopicTreeResult"
+          }
+        }
+      },
+      "title": "SearchTreeResp",
+      "required": [
+        "data"
+      ]
+    },
     "SendOption": {
       "type": "object",
       "properties": {
@@ -1847,6 +4688,48 @@
         }
       },
       "title": "SendOption"
+    },
+    "StreamOptions": {
+      "type": "object",
+      "properties": {},
+      "title": "StreamOptions"
+    },
+    "StringResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        }
+      },
+      "title": "StringResult"
+    },
+    "SubscribeModelReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "frequency": {
+          "type": "string"
+        }
+      },
+      "title": "SubscribeModelReq",
+      "required": [
+        "id",
+        "enable"
+      ]
     },
     "Tag": {
       "type": "object",
@@ -1879,6 +4762,350 @@
         }
       },
       "title": "TimeRange"
+    },
+    "TopicInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pathType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Field"
+          }
+        },
+        "createTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "updateTime": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "TopicInfo",
+      "required": [
+        "id",
+        "alias",
+        "parentId",
+        "name",
+        "path",
+        "dataType",
+        "pathType",
+        "fields",
+        "createTime",
+        "updateTime"
+      ]
+    },
+    "TopicPaginationSearchResult": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "pageNo": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TopicInfo"
+          }
+        }
+      },
+      "title": "TopicPaginationSearchResult",
+      "required": [
+        "code",
+        "msg",
+        "pageNo",
+        "pageSize",
+        "total",
+        "data"
+      ]
+    },
+    "TopicTreeResult": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "parentAlias": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "lastUpdateTime": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "countChildren": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pathType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "type": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "pathName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "templateAlias": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TopicTreeResult"
+          }
+        },
+        "extend": {
+          "type": "object"
+        },
+        "hasChildren": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "createAt": {
+          "type": "string"
+        },
+        "updateAt": {
+          "type": "string"
+        },
+        "mount": {
+          "$ref": "#/definitions/MountDetailVo"
+        }
+      },
+      "title": "TopicTreeResult",
+      "required": [
+        "id",
+        "alias",
+        "parentId",
+        "parentAlias",
+        "value",
+        "lastUpdateTime",
+        "countChildren",
+        "pathType",
+        "type",
+        "dataType",
+        "name",
+        "displayName",
+        "path",
+        "pathName",
+        "description",
+        "templateAlias",
+        "protocol",
+        "fields",
+        "children",
+        "extend",
+        "hasChildren",
+        "createAt",
+        "updateAt",
+        "mount"
+      ]
+    },
+    "TreeOuterStructureVo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "dataPath": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TreeOuterStructureVo"
+          }
+        }
+      },
+      "title": "TreeOuterStructureVo",
+      "required": [
+        "name",
+        "dataPath",
+        "fields",
+        "children"
+      ]
+    },
+    "UnsCreateTopicDTO": {
+      "type": "object",
+      "properties": {
+        "parentAlias": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "modelId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pathType": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDef"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        },
+        "protocolType": {
+          "type": "string"
+        },
+        "dataSrcId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "addDashBoard": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "save2db": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "addFlow": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "labelNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extend": {
+          "type": "object"
+        },
+        "createTemplate": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "UnsCreateTopicDTO",
+      "required": [
+        "name",
+        "pathType"
+      ]
+    },
+    "UnsDataResponseVo": {
+      "type": "object",
+      "properties": {
+        "notExists": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "errorFields": {
+          "type": "object"
+        }
+      },
+      "title": "UnsDataResponseVo",
+      "required": [
+        "notExists",
+        "errorFields"
+      ]
+    },
+    "UnsHistoryQueryResult": {
+      "type": "object",
+      "properties": {},
+      "title": "UnsHistoryQueryResult"
     },
     "UnsLabel": {
       "type": "object",
@@ -1935,6 +5162,230 @@
       "title": "UnsLabelListResp",
       "required": [
         "list"
+      ]
+    },
+    "UnsTreeCondition": {
+      "type": "object",
+      "properties": {
+        "pageNo": {
+          "type": "integer",
+          "format": "int64",
+          "default": "1"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int64",
+          "default": "10"
+        },
+        "searchType": {
+          "type": "integer",
+          "format": "int32",
+          "default": "1"
+        },
+        "keyword": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pathType": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "UnsTreeCondition"
+    },
+    "UpdateFileDTO": {
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "title": "UpdateFileDTO",
+      "required": [
+        "alias",
+        "data"
+      ]
+    },
+    "UpdateModeRequestVo": {
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "modelDescription": {
+          "type": "string"
+        }
+      },
+      "title": "UpdateModeRequestVo",
+      "required": [
+        "alias"
+      ]
+    },
+    "UpdateNameVo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "title": "UpdateNameVo",
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "UpdateUnsDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "pathType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referUns": {
+          "type": "string"
+        },
+        "referIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "referTable": {
+          "type": "string"
+        },
+        "refFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "referModelId": {
+          "type": "string"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "modelAlias": {
+          "type": "string"
+        },
+        "parentAlias": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "dataType": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDefine"
+          }
+        },
+        "dataPath": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "refers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InstanceFieldVo"
+          }
+        },
+        "expression": {
+          "type": "string"
+        },
+        "streamOptions": {
+          "$ref": "#/definitions/StreamOptions"
+        },
+        "addFlow": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "addDashBoard": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "save2db": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "retainTableWhenDeleteInstance": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "frequency": {
+          "type": "string"
+        },
+        "extend": {
+          "type": "object"
+        },
+        "labelNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "refSource": {
+          "type": "string"
+        },
+        "valueType": {
+          "type": "string"
+        },
+        "initValue": {
+          "type": "object"
+        },
+        "strMaxLen": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "accessLevel": {
+          "type": "string"
+        }
+      },
+      "title": "UpdateUnsDto",
+      "required": [
+        "alias"
       ]
     },
     "WithCode": {

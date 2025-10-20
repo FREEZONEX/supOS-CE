@@ -8,7 +8,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -31,7 +30,7 @@ func (l *DeleteLogic) Delete(req *types.WithID) (resp *types.Empty, err error) {
 	if req.ID <= 0 {
 		return nil, errors.Parameter.WithMsg("id无效")
 	}
-	db := relationDB.NewUnsLabelRepo(stores.GetCommonConn(l.ctx))
+	db := relationDB.NewUnsLabelRepo(l.ctx)
 	if err = db.Delete(l.ctx, req.ID); err != nil {
 		return nil, err
 	}

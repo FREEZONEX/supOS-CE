@@ -7,10 +7,10 @@ Timeout: 20000
 Database:
   DBType: pgsql
   DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres
-#CacheRedis:
-#  - Host: localhost:6379
-#    Pass:
-#    Type: node
+CacheRedis:
+ - Host: localhost:6379
+   Pass:
+   Type: node
 #TimedJobRpc:
 #  Enable: true
 #  Mode: grpc
