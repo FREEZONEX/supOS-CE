@@ -20,6 +20,7 @@ import (
 	suposunslabel "backend/internal/handler/supos/uns/label"
 	suposunsmodel "backend/internal/handler/supos/uns/model"
 	suposunsperson "backend/internal/handler/supos/uns/person"
+	suposunsuns "backend/internal/handler/supos/uns/uns"
 	"backend/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -468,5 +469,164 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/uns/person"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 删除指定路径下的所有文件夹和文件
+					Method:  http.MethodDelete,
+					Path:    "/",
+					Handler: suposunsuns.DeletePathHandler(serverCtx),
+				},
+				{
+					// 批量创建文件夹和文件
+					Method:  http.MethodPost,
+					Path:    "/batch",
+					Handler: suposunsuns.BatchHandler(serverCtx),
+				},
+				{
+					// 根据别名集合批量删除文件夹和文件
+					Method:  http.MethodPost,
+					Path:    "/batch/alias",
+					Handler: suposunsuns.BatchAliasHandler(serverCtx),
+				},
+				{
+					// 多条件分页查询树结构
+					Method:  http.MethodPost,
+					Path:    "/condition/tree",
+					Handler: suposunsuns.ConditionTreeHandler(serverCtx),
+				},
+				{
+					// 修改文件夹或文件明细
+					Method:  http.MethodPost,
+					Path:    "/detail",
+					Handler: suposunsuns.ModelUpdateHandler(serverCtx),
+				},
+				{
+					// 删除前预先判断是否有被引用对象
+					Method:  http.MethodPost,
+					Path:    "/detectIfRemove",
+					Handler: suposunsuns.DetectIfRemoveHandler(serverCtx),
+				},
+				{
+					// 外部数据源表的字段定义转uns字段定义
+					Method:  http.MethodPost,
+					Path:    "/ds2fs",
+					Handler: suposunsuns.Ds2fsHandler(serverCtx),
+				},
+				{
+					// 外部topic payload解析
+					Method:  http.MethodPost,
+					Path:    "/external/parserTopicPayload",
+					Handler: suposunsuns.ExternalParserTopicPayloadHandler(serverCtx),
+				},
+				{
+					// 清除所有外部topic
+					Method:  http.MethodPost,
+					Path:    "/external/topic/clear",
+					Handler: suposunsuns.ExternalTopicClearHandler(serverCtx),
+				},
+				{
+					// 外部topic转UNS
+					Method:  http.MethodPost,
+					Path:    "/external/topic2Uns",
+					Handler: suposunsuns.ExternalTopic2UnsHandler(serverCtx),
+				},
+				{
+					// 批量查询文件实时值
+					Method:  http.MethodPost,
+					Path:    "/file/current/batchQuery",
+					Handler: suposunsuns.FileCurrentBatchQueryHandler(serverCtx),
+				},
+				{
+					// 批量写文件实时值
+					Method:  http.MethodPost,
+					Path:    "/file/current/batchUpdate",
+					Handler: suposunsuns.FileCurrentBatchUpdateHandler(serverCtx),
+				},
+				{
+					// 批量查询文件历史值
+					Method:  http.MethodPost,
+					Path:    "/file/history/batch/query",
+					Handler: suposunsuns.FileHistoryBatchQueryHandler(serverCtx),
+				},
+				{
+					// 批量创建文件夹和文件(node-red导入专用)
+					Method:  http.MethodPost,
+					Path:    "/for/nodered",
+					Handler: suposunsuns.ForNoderedHandler(serverCtx),
+				},
+				{
+					// 查询文件详情
+					Method:  http.MethodPost,
+					Path:    "/instance",
+					Handler: suposunsuns.InstanceHandler(serverCtx),
+				},
+				{
+					// 外部JSON定义转uns字段定义
+					Method:  http.MethodPost,
+					Path:    "/json2fs",
+					Handler: suposunsuns.Json2fsHandler(serverCtx),
+				},
+				{
+					// 查询文件夹详情
+					Method:  http.MethodGet,
+					Path:    "/model",
+					Handler: suposunsuns.ModelDetailHandler(serverCtx),
+				},
+				{
+					// 创建文件夹和文件
+					Method:  http.MethodPost,
+					Path:    "/model",
+					Handler: suposunsuns.ModelCreateHandler(serverCtx),
+				},
+				{
+					// 预先判断是否有属性关联
+					Method:  http.MethodPost,
+					Path:    "/model/detect",
+					Handler: suposunsuns.ModelDetectHandler(serverCtx),
+				},
+				{
+					// 文件或文件夹修改订阅
+					Method:  http.MethodPost,
+					Path:    "/model/subscribe",
+					Handler: suposunsuns.ModelSubscribeHandler(serverCtx),
+				},
+				{
+					// 修改文件夹或文件名称
+					Method:  http.MethodPut,
+					Path:    "/name",
+					Handler: suposunsuns.NameHandler(serverCtx),
+				},
+				{
+					// 校验指定文件夹夹是否已存在文件夹、文件名称
+					Method:  http.MethodPost,
+					Path:    "/name/duplication",
+					Handler: suposunsuns.NameDuplicationHandler(serverCtx),
+				},
+				{
+					// 分页搜索主题
+					Method:  http.MethodPost,
+					Path:    "/search",
+					Handler: suposunsuns.SearchHandler(serverCtx),
+				},
+				{
+					// 搜索主题树，默认整个树
+					Method:  http.MethodPost,
+					Path:    "/tree",
+					Handler: suposunsuns.TreeHandler(serverCtx),
+				},
+				{
+					// 枚举数据类型
+					Method:  http.MethodPost,
+					Path:    "/types",
+					Handler: suposunsuns.TypesHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/uns"),
 	)
 }

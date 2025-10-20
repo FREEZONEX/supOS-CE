@@ -35,6 +35,17 @@ type DateRange struct {
 type Empty struct {
 }
 
+type FieldDef struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Unique      bool   `json:"unique,optional"`
+	Index       string `json:"index,optional"`
+	DisplayName string `json:"displayName,optional"`
+	Remark      string `json:"remark,optional"`
+	MaxLen      int64  `json:"maxLen,optional"`
+	TbValueName string `json:"tbValueName,optional"`
+}
+
 type IDList struct {
 	IDs []int64 `json:"ids"`
 }
@@ -75,6 +86,27 @@ type Tag struct {
 type TimeRange struct {
 	Start int64 `json:"start,optional"` //开始时间 unix时间戳
 	End   int64 `json:"end,optional"`   //结束时间 unix时间戳
+}
+
+type UnsCreateTopicDTO struct {
+	ParentAlias    string                 `json:"parentAlias,optional"`
+	ParentID       int64                  `json:"parentId,optional"`
+	ModelID        int64                  `json:"modelId,optional"`
+	Alias          string                 `json:"alias,optional"`
+	Name           string                 `json:"name"`
+	PathType       int64                  `json:"pathType"`
+	DataType       int64                  `json:"dataType,optional"`
+	Fields         []FieldDef             `json:"fields,optional"`
+	Description    string                 `json:"description,optional"`
+	Protocol       string                 `json:"protocol,optional"`
+	ProtocolType   string                 `json:"protocolType,optional"`
+	DataSrcId      int64                  `json:"dataSrcId,optional"`
+	AddDashBoard   bool                   `json:"addDashBoard,optional"`
+	Save2db        bool                   `json:"save2db,optional"`
+	AddFlow        bool                   `json:"addFlow,optional"`
+	LabelNames     []string               `json:"labelNames,optional"`
+	Extend         map[string]interface{} `json:"extend,optional"`
+	CreateTemplate bool                   `json:"createTemplate,optional"`
 }
 
 type UnsLabel struct {

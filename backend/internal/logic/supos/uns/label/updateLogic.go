@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -36,7 +35,7 @@ func (l *UpdateLogic) Update(req *types.UnsLabel) (resp *types.Empty, err error)
 	if strings.TrimSpace(req.LabelName) == "" {
 		return nil, errors.Parameter.WithMsg("labelName不能为空")
 	}
-	db := relationDB.NewUnsLabelRepo(stores.GetCommonConn(l.ctx))
+	db := relationDB.NewUnsLabelRepo(l.ctx)
 	item, err := db.FindOne(l.ctx, req.ID)
 	if err != nil {
 		return nil, err

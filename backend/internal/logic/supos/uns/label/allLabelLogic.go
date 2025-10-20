@@ -7,7 +7,6 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -27,7 +26,7 @@ func NewAllLabelLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AllLabel
 }
 
 func (l *AllLabelLogic) AllLabel(req *types.UnsLabelListReq) (resp *types.UnsLabelListResp, err error) {
-	db := relationDB.NewUnsLabelRepo(stores.GetCommonConn(l.ctx))
+	db := relationDB.NewUnsLabelRepo(l.ctx)
 	dbFilter := relationDB.UnsLabelFilter{
 		LabelName: req.Key,
 	}

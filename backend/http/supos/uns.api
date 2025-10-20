@@ -5,4 +5,5 @@ import "uns/data.api"
 import "uns/kong.api"
 import "uns/person.api"
 import "uns/label.api"
+import "uns/uns.api"
 

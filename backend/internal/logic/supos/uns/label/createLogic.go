@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -36,7 +35,7 @@ func (l *CreateLogic) Create(req *types.UnsLabelCreateReq) (resp *types.WithID, 
 	}
 
 	// 写入数据库
-	db := relationDB.NewUnsLabelRepo(stores.GetCommonConn(l.ctx))
+	db := relationDB.NewUnsLabelRepo(l.ctx)
 	data := &relationDB.UnsLabel{
 		LabelName: req.LabelName,
 	}

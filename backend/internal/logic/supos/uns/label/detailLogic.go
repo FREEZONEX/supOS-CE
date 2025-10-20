@@ -8,7 +8,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -31,7 +30,7 @@ func (l *DetailLogic) Detail(req *types.WithID) (resp *types.UnsLabel, err error
 	if req.ID <= 0 {
 		return nil, errors.Parameter.WithMsg("id无效")
 	}
-	db := relationDB.NewUnsLabelRepo(stores.GetCommonConn(l.ctx))
+	db := relationDB.NewUnsLabelRepo(l.ctx)
 	item, err := db.FindOne(l.ctx, req.ID)
 	if err != nil {
 		return nil, err
