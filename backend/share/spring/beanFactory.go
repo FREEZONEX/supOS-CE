@@ -56,4 +56,6 @@ func RefreshBeanContext() {
 	}
 	lazyCallbacks = lazyCallbacks[:]
 	beanLock.Unlock()
+
+	onRefreshBeanContext()
 }

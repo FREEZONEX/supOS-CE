@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (u *UserService) OnEventUserCreatedEvent(userData UserCreatedEvent) error {
+func (u *UserService) OnEventUserCreatedEvent_2000(userData UserCreatedEvent) error {
 	u.Logger.Log(fmt.Sprintf("UserEventHandler: Processing UserCreatedEvent %s", userData.GetType()))
 
 	u.Logger.Log(fmt.Sprintf("User created: ID=%s, Username=%s, Email=%s",
@@ -35,7 +35,10 @@ func (h *PaymentEventHandler) OnEventPaymentProcessedEvent(paymentData PaymentPr
 
 	return nil
 }
-
+func (u *PaymentEventHandler) OnEventUserCreatedEvent_100(userData UserCreatedEvent) error {
+	u.Logger.Log(fmt.Sprintf("PaymentEventHandler: Processing UserCreatedEvent %s", userData.GetType()))
+	return nil
+}
 func (h *PaymentEventHandler) GetEventType() string {
 	return "payment.processed"
 }
