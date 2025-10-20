@@ -8,5 +8,5 @@ export default defineConfig({
   unbundle: true, // 输出目录和源文件木有一一对应 https://tsdown.dev/zh-CN/options/unbundle
   minify: true,
   external: ['dotenv'],
-  watch: ['./src/**/*.ts'],
+  watch: process.argv.includes('--watch') ? ['./src/**/*.ts'] : false,
 });
