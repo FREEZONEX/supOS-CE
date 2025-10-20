@@ -184,6 +184,12 @@ const ProTree = forwardRef<ProTreeRef, ProTreeProps>((props, ref) => {
         })}
         style={wrapperStyle}
         onContextMenu={(event) => {
+          if (event.target instanceof Element) {
+            const inModal = event.target.closest?.('.ant-modal-root') !== null;
+            if (inModal) {
+              return;
+            }
+          }
           onRightClickHandle({ event } as any);
         }}
       >

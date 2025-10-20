@@ -54,7 +54,6 @@ const TreeNodeExtra: FC<{
           }}
         >
           <Subtract
-            style={{ cursor: 'pointer' }}
             onClick={(e) => {
               e?.stopPropagation();
               if (deleteDisabled) return;

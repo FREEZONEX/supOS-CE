@@ -54,6 +54,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
     }));
     const globalDataType = Form.useWatch('dataType', form);
     const hasGrafana = dashboardType?.includes('grafana');
+    const jsonData = Form.useWatch('jsonData', form);
 
     useImperativeHandle(ref, () => ({
       batchModifyDataType,
@@ -291,6 +292,19 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
       }
     }, [isSave]);
 
+    const exampleJson = `{
+    "Example": {
+        "PathName": {
+            "TopicName": [
+                {
+                    "attribute1": 1380,
+                    "attribute2": 1440
+                }
+            ]
+        }
+    }
+}`;
+
     const renderContent = () => {
       return isSave ? (
         <>
@@ -401,30 +415,43 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
           <Divider style={{ borderColor: '#c6c6c6' }} />
         </>
       ) : (
-        <Form.Item
-          name="jsonData"
-          label=""
-          wrapperCol={{ span: 24 }}
-          rules={[{ required: true, validator: validatorJson }]}
-          validateTrigger={['onBlur', 'onChange']}
-        >
-          <TextArea
-            allowClear
-            placeholder={`{
-    "Example": {
-        "PathName": {
-            "TopicName": [
-                {
-                    "attribute1": 1380,
-                    "attribute2": 1440
+        <div style={{ position: 'relative', width: '100%' }}>
+          <Form.Item
+            name="jsonData"
+            label=""
+            wrapperCol={{ span: 24 }}
+            rules={[{ required: true, validator: validatorJson }]}
+            validateTrigger={['onBlur', 'onChange']}
+          >
+            <TextArea
+              allowClear
+              placeholder={exampleJson}
+              style={{ height: fullScreen ? 'calc(100vh - 305px)' : '300px' }}
+              onKeyDown={(e) => {
+                if (e.ctrlKey && e.code === 'KeyP') {
+                  if (jsonData) return;
+                  e.preventDefault();
+                  form.setFieldsValue({ jsonData: exampleJson });
                 }
-            ]
-        }
-    }
-}`}
-            style={{ height: fullScreen ? 'calc(100vh - 305px)' : '300px' }}
-          />
-        </Form.Item>
+              }}
+            />
+          </Form.Item>
+          {!jsonData && (
+            <span
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 12,
+                fontSize: '12px',
+                pointerEvents: 'none',
+                zIndex: 10,
+                color: '#c6c6c6',
+              }}
+            >
+              {formatMessage('uns.ctrlPQuickApplyExample')}
+            </span>
+          )}
+        </div>
       );
     };
 

@@ -673,6 +673,7 @@
   "uns.gateway": "Gateway",
   "uns.device": "Device",
   "uns.gaugingPoint": "Measuring points",
+  "uns.ctrlPQuickApplyExample": "Ctrl+P Quick Apply Example",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

@@ -27,6 +27,7 @@ const ReverseGeneration: FC<ReverseGenerationProps> = ({ types }) => {
   const next = Form.useWatch('next', form) || form.getFieldValue('next');
   const jsonList = Form.useWatch('jsonList', form) || form.getFieldValue('jsonList');
   const jsonDataPath = Form.useWatch('jsonDataPath', form) || form.getFieldValue('jsonDataPath');
+  const jsonData = Form.useWatch('jsonData', form) || form.getFieldValue('jsonData');
   const systemInfo = useBaseStore((state) => state.systemInfo);
 
   const [sourceList, setSourceList] = useState([]);
@@ -146,6 +147,19 @@ const ReverseGeneration: FC<ReverseGenerationProps> = ({ types }) => {
     }
   }, [systemInfo?.containerMap?.chat2db]);
 
+  const exampleJson = `{
+    "Example": {
+        "PathName": {
+            "TopicName": [
+                {
+                    "attribute1": 1380,
+                    "attribute2": 1440
+                }
+            ]
+        }
+    }
+}`;
+
   return (
     <div className="dashedWrap">
       <Form.Item name="next" hidden initialValue={false}>
@@ -171,15 +185,43 @@ const ReverseGeneration: FC<ReverseGenerationProps> = ({ types }) => {
         />
       </Form.Item>
       {source === 'json' && !next && !hasMoreJson && (
-        <Form.Item
-          name="jsonData"
-          label=""
-          wrapperCol={{ span: 24 }}
-          rules={[{ required: true, validator: validatorJson }]}
-          validateTrigger={['onBlur', 'onChange']}
-        >
-          <TextArea placeholder={formatMessage('uns.pleaseEnterJSON')} rows={8} allowClear />
-        </Form.Item>
+        <div style={{ position: 'relative', width: '100%' }}>
+          <Form.Item
+            name="jsonData"
+            label=""
+            wrapperCol={{ span: 24 }}
+            rules={[{ required: true, validator: validatorJson }]}
+            validateTrigger={['onBlur', 'onChange']}
+          >
+            <TextArea
+              placeholder={exampleJson}
+              rows={8}
+              allowClear
+              onKeyDown={(e) => {
+                if (e.ctrlKey && e.code === 'KeyP') {
+                  if (jsonData) return;
+                  e.preventDefault();
+                  form.setFieldValue('jsonData', exampleJson);
+                }
+              }}
+            />
+          </Form.Item>
+          {!jsonData && (
+            <span
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 12,
+                fontSize: '12px',
+                pointerEvents: 'none',
+                zIndex: 10,
+                color: '#c6c6c6',
+              }}
+            >
+              {formatMessage('uns.ctrlPQuickApplyExample')}
+            </span>
+          )}
+        </div>
       )}
       {source === 'dataSource' && !next && (
         <>

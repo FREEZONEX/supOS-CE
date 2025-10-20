@@ -711,6 +711,7 @@ const messages = {
   'uns.gateway': '网关',
   'uns.device': '设备',
   'uns.gaugingPoint': '测点',
+  'uns.ctrlPQuickApplyExample': 'Ctrl+P 快速应用示例',
 
   //公共通用模块
   'common.url': '地址',

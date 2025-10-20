@@ -673,6 +673,7 @@
   "uns.gateway": "网关",
   "uns.device": "设备",
   "uns.gaugingPoint": "测点",
+  "uns.ctrlPQuickApplyExample": "Ctrl+P 快速应用示例",
   "common.url": "地址",
   "common.usage": "用法",
   "common.example": "示例",
