@@ -1,5 +1,5 @@
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { Badge, Button, Flex, message, Modal, Space, Tabs, type TabsProps, Typography } from 'antd';
+import { Button, message, Modal, Space, Tabs, type TabsProps, Typography } from 'antd';
 import OverviewList from '@/pages/home/components/OverviewList.tsx';
 import type { ResourceProps } from '@/stores/types';
 import styles from './index.module.scss';
@@ -8,17 +8,17 @@ import { useGuideSteps, useTranslate } from '@/hooks';
 import { useNavigate } from 'react-router';
 import { guideSteps } from './guide-steps';
 import { queryExamples, installExample, unInstallExample } from '@/apis/inter-api/example';
-import { Code, Download, Export, Pin, TemperatureWater } from '@carbon/icons-react';
+import { Code, Pin, TemperatureWater } from '@carbon/icons-react';
 import { useActivate } from '@/contexts/tabs-lifecycle-context.ts';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
 import { fetchBaseStore, useBaseStore } from '@/stores/base';
 import { useThemeStore } from '@/stores/theme-store.ts';
-import { ButtonPermission } from '@/common-types/button-permission';
-import { AuthButton, AuthWrapper } from '@/components';
-import ImportModal from './components/import-modal';
-import ExportModal from './components/export-modal';
-import { getGlobalExportRecords } from '@/apis/inter-api/global.ts';
+// import { ButtonPermission } from '@/common-types/button-permission';
+// import { AuthButton, AuthWrapper } from '@/components';
+// import ImportModal from './components/import-modal';
+// import ExportModal from './components/export-modal';
+// import { getGlobalExportRecords } from '@/apis/inter-api/global.ts';
 import ComClickTrigger from '@/components/com-click-trigger';
 import IframeWrapper from '../../components/iframe-wrapper';
 import { FullscreenOutlined } from '@ant-design/icons';
@@ -63,13 +63,13 @@ const Index = () => {
   const [pathname, setPathname] = useState('');
   const [exampleDataSource, setExampleDataSource] = useState<ExampleProps[]>([]);
   const [loadingViews, setLoadingViews] = useState<string[]>([]);
-  const [importModal, setImportModal] = useState(false);
-  const exportRef = useRef<any>(null);
-  const [exportRecords, setExportRecords] = useState([]);
+  // const [importModal, setImportModal] = useState(false);
+  // const exportRef = useRef<any>(null);
+  // const [exportRecords, setExportRecords] = useState([]);
 
   useEffect(() => {
     fetchBaseStore?.();
-    getRecords?.();
+    // getRecords?.();
   }, []);
   useEffect(() => {
     getExamples();
@@ -92,7 +92,7 @@ const Index = () => {
   useActivate(() => {
     // 每次进home页刷新下，保持页面完整
     fetchBaseStore?.();
-    getRecords?.();
+    // getRecords?.();
   });
 
   // 获取example列表
@@ -242,11 +242,11 @@ const Index = () => {
         };
   };
 
-  const getRecords = () => {
-    return getGlobalExportRecords().then((data) => {
-      setExportRecords(data);
-    });
-  };
+  // const getRecords = () => {
+  //   return getGlobalExportRecords().then((data) => {
+  //     setExportRecords(data);
+  //   });
+  // };
   const isHidden = !['common.overview', 'common.example'].includes(tabKey);
   return (
     <ComLayout>
@@ -280,33 +280,33 @@ const Index = () => {
                 />
                 {!isHidden ? (
                   <>
-                    <AuthButton
-                      auth={ButtonPermission['Home.import']}
-                      type="primary"
-                      onClick={() => setImportModal(true)}
-                    >
-                      <Flex gap={8}>
-                        <Download />
-                        {formatMessage('common.import')}
-                      </Flex>
-                    </AuthButton>
-                    <AuthWrapper auth={ButtonPermission['Home.export']}>
-                      <Badge dot={exportRecords?.some((s: any) => !s.confirm)}>
-                        <Button
-                          color="default"
-                          variant="filled"
-                          style={{ background: '#c6c6c6', color: '#161616' }}
-                          onClick={() => {
-                            exportRef.current?.setOpen(true);
-                          }}
-                        >
-                          <Flex gap={8}>
-                            <Export />
-                            {formatMessage('common.export')}
-                          </Flex>
-                        </Button>
-                      </Badge>
-                    </AuthWrapper>
+                    {/*<AuthButton*/}
+                    {/*  auth={ButtonPermission['Home.import']}*/}
+                    {/*  type="primary"*/}
+                    {/*  onClick={() => setImportModal(true)}*/}
+                    {/*>*/}
+                    {/*  <Flex gap={8}>*/}
+                    {/*    <Download />*/}
+                    {/*    {formatMessage('common.import')}*/}
+                    {/*  </Flex>*/}
+                    {/*</AuthButton>*/}
+                    {/*<AuthWrapper auth={ButtonPermission['Home.export']}>*/}
+                    {/*  <Badge dot={exportRecords?.some((s: any) => !s.confirm)}>*/}
+                    {/*    <Button*/}
+                    {/*      color="default"*/}
+                    {/*      variant="filled"*/}
+                    {/*      style={{ background: '#c6c6c6', color: '#161616' }}*/}
+                    {/*      onClick={() => {*/}
+                    {/*        exportRef.current?.setOpen(true);*/}
+                    {/*      }}*/}
+                    {/*    >*/}
+                    {/*      <Flex gap={8}>*/}
+                    {/*        <Export />*/}
+                    {/*        {formatMessage('common.export')}*/}
+                    {/*      </Flex>*/}
+                    {/*    </Button>*/}
+                    {/*  </Badge>*/}
+                    {/*</AuthWrapper>*/}
                   </>
                 ) : (
                   <Button
@@ -369,8 +369,8 @@ const Index = () => {
             ]?.filter((f) => f.key !== 'common.example')}
           />
         </div>
-        <ImportModal importModal={importModal} setImportModal={setImportModal} />
-        <ExportModal setButtonExportRecords={setExportRecords} exportRef={exportRef} />
+        {/*<ImportModal importModal={importModal} setImportModal={setImportModal} />*/}
+        {/*<ExportModal setButtonExportRecords={setExportRecords} exportRef={exportRef} />*/}
       </ComContent>
     </ComLayout>
   );
