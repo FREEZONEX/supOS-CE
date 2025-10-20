@@ -21,7 +21,7 @@ import Definition from './Definition';
 import Payload from './Payload';
 import Dashboard from './Dashboard';
 import RawData from './RawData';
-import SqlQuery from './SqlQuery';
+// import SqlQuery from './SqlQuery';
 import DocumentList from '@/pages/uns/components/DocumentList.tsx';
 import UploadButton from '@/pages/uns/components/UploadButton.tsx';
 import { ButtonPermission } from '@/common-types/button-permission.ts';
@@ -69,7 +69,7 @@ const Module: FC<FileDetailProps> = (props) => {
     'definition',
     'payload',
     'dashboard',
-    'sqlQuery',
+    // 'sqlQuery',
   ]);
   const [showPayloadTable, setShowPayloadTable] = useState<boolean>(true);
   const [websocketData, setWebsocketData] = useState<any>({});
@@ -335,13 +335,13 @@ const Module: FC<FileDetailProps> = (props) => {
         : []),
       ...(!isH5
         ? [
-            {
-              id: 'sqlQuery',
-              key: 'sqlQuery',
-              label: formatMessage('uns.dataOperation'),
-              children: <SqlQuery instanceInfo={instanceInfo} id={id as string} />,
-              style: panelStyle,
-            },
+            // {
+            //   id: 'sqlQuery',
+            //   key: 'sqlQuery',
+            //   label: formatMessage('uns.dataOperation'),
+            //   children: <SqlQuery instanceInfo={instanceInfo} id={id as string} />,
+            //   style: panelStyle,
+            // },
           ]
         : []),
       {
