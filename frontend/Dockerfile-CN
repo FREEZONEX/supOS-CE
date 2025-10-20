@@ -16,6 +16,12 @@ COPY packages/typescript-config/package.json ./packages/typescript-config/
 
 # Install dependencies
 RUN npm install -g pnpm
+
+# First build the scripts package to avoid postinstall errors
+RUN pnpm install --filter ./packages/scripts
+RUN pnpm run build:scripts
+
+# Then install all dependencies
 RUN pnpm install
 
 # Copy source code
@@ -27,7 +33,7 @@ COPY packages/ ./packages/
 RUN pnpm run build:web
 
 # Build services application
-RUN pnpm run build:services
+RUN pnpm run build --filter ./apps/services
 
 # --------------------------------------
 # Stage 2: Create final runtime image
