@@ -1,5 +1,5 @@
 # --------------------------------------
-# Stage 1: Build the supos-os-edge
+# Stage 1: Build the web application
 # --------------------------------------
 FROM node:22-alpine AS web-builder
 
@@ -7,45 +7,54 @@ RUN npm config set registry https://registry.npmmirror.com/
 
 WORKDIR /app
 
-COPY supos-os-web/ ./
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY apps/services/package.json ./apps/services/
+COPY packages/scripts/package.json ./packages/scripts/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
 
+# Install dependencies
 RUN npm install -g pnpm
 RUN pnpm install
+
+# Copy source code
+COPY apps/web/ ./apps/web/
+COPY apps/services/ ./apps/services/
+COPY packages/ ./packages/
+
+# Build web application
 RUN pnpm run build:web
 
+# Build services application
+RUN pnpm run build:services
+
 # --------------------------------------
-# Stage 2: Combine everything into final image
+# Stage 2: Create final runtime image
 # --------------------------------------
 FROM node:22-alpine
 
-WORKDIR /app
-
 RUN npm config set registry https://registry.npmmirror.com/
 
-COPY --from=platform-builder /app/apps/chat2db-client/chat2db-client/dist ./platform-build
-# 2) Copy the "supos-frontend" build artifacts
-#    If that build ended up in /app/build, copy to "frontend-build"
-COPY --from=frontend-builder /app/build ./frontend-build
-
-# Node backend from supos-frontend (.docker-node)
-COPY --from=frontend-builder /app/.docker-node ./.docker-node
+WORKDIR /app
 
 # Install global dependencies
 RUN npm install -g serve concurrently pnpm
 
-# Install Node backend dependencies
-WORKDIR /app/.docker-node
-RUN pnpm install
+# Copy web build artifacts
+COPY --from=web-builder /app/apps/web/dist ./web-dist
 
-# 创建plugins-build目录
-RUN mkdir -p /app/plugins-build
+# Copy services build artifacts and dependencies
+COPY --from=web-builder /app/apps/services/dist ./services-dist
+COPY --from=web-builder /app/apps/services/package.json ./services-dist/
 
-# Expose ports (frontend:3000, node backend: 4000, chat2db frontend:3001)
-EXPOSE 3000 3001 4000 3002
+# Copy node_modules from build stage to avoid re-installation issues
+COPY --from=web-builder /app/node_modules ./services-dist/node_modules/
 
-# Start all 3 services concurrently
+# Expose ports (web:3000, services:4000)
+EXPOSE 3000 4000
+
+# Start both services concurrently
 CMD ["concurrently", \
-    "serve -s /app/plugins-build -l 3002", \
-    "serve -s /app/platform-build -l 3001", \
-    "serve -s /app/frontend-build -l 3000", \
-    "node /app/.docker-node/index.js"]
+    "serve -s /app/web-dist -l 3000", \
+    "node /app/services-dist/index.js"]

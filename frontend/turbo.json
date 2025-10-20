@@ -9,6 +9,10 @@
       "persistent": true,
       "cache": false
     },
+    "start": {
+      "persistent": true,
+      "cache": false
+    },
     "intl:once": {
       "persistent": true,
       "cache": false

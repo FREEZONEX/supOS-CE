@@ -6,7 +6,7 @@ envConfig();
 // 环境配置
 export const config = {
   // 服务器配置
-  port: parseInt(process.env.PORT || '3002', 10),
+  port: parseInt(process.env.PORT || '4000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   // Docker配置
   dockerHost: process.env.DOCKER_HOST || 'localhost',
