@@ -2,8 +2,6 @@ package common
 
 import "backend/internal/common/constants"
 
-// SrcJdbcType contains information about a JDBC type
-
 type SrcJdbcType int
 type srcJdbcTypeInfo struct {
 	dataSrcType string // Data source type

@@ -1,7 +1,8 @@
 package common
 
+import "gitee.com/unitedrhino/share/i18ns"
+
 // RunningStatus represents running status information
-// Corresponds to Java's RunningStatus.java
 type RunningStatus struct {
 	Module     string   `json:"module,omitempty"`     // 模块 uns sourceFlow eventFlow dashboard
 	Code       int      `json:"code"`                 // 状态码 200表示成功
@@ -31,7 +32,7 @@ func NewRunningStatusWithCode(code int, msg string) *RunningStatus {
 	finished := true
 	return &RunningStatus{
 		Code:     code,
-		Msg:      msg, // TODO: Apply I18n translation
+		Msg:      i18ns.LocalizeMsg(msg),
 		Finished: &finished,
 	}
 }
@@ -41,7 +42,7 @@ func NewRunningStatusWithError(code int, msg string, errTipFile string) *Running
 	finished := true
 	return &RunningStatus{
 		Code:       code,
-		Msg:        msg, // TODO: Apply I18n translation
+		Msg:        i18ns.LocalizeMsg(msg),
 		ErrTipFile: errTipFile,
 		Finished:   &finished,
 	}
@@ -53,7 +54,7 @@ func NewRunningStatusWithProgress(n, i int, task, msg string) *RunningStatus {
 		N:    &n,
 		I:    &i,
 		Task: task,
-		Msg:  msg,
+		Msg:  i18ns.LocalizeMsg(msg),
 	}
 }
 

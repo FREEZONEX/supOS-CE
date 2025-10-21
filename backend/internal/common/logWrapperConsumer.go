@@ -2,11 +2,11 @@ package common
 
 import (
 	"encoding/json"
-	"log"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 // LogWrapperConsumer wraps a consumer with logging functionality
-// Corresponds to Java's LogWrapperConsumer.java
 type LogWrapperConsumer struct {
 	target       func(*RunningStatus) // Target consumer function
 	finished     *bool                // Last finished status
@@ -25,7 +25,7 @@ func NewLogWrapperConsumer(target func(*RunningStatus)) *LogWrapperConsumer {
 func (l *LogWrapperConsumer) Accept(status *RunningStatus) {
 	// Log the status as JSON
 	jsonData, _ := json.Marshal(status)
-	log.Printf("** status: %s", string(jsonData))
+	logx.Infof("** status: %s", string(jsonData))
 
 	// Update internal state
 	l.finished = status.Finished

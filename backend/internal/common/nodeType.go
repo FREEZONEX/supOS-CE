@@ -1,7 +1,6 @@
 package common
 
 // NodeType represents node type enumeration
-// Corresponds to Java's NodeType.java
 type NodeType int
 
 const (
