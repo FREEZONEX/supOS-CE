@@ -80,7 +80,7 @@ func DeleteDatasource(uid string) error {
 
 // CreateDatasource creates a Grafana datasource.
 func CreateDatasource(jdbcType *common.SrcJdbcType, username, password string, reCreate bool) (bool, error) {
-	title := jdbcType.Alias
+	title := jdbcType.Alias()
 	datasource := &grafanadto.GrafanaDataSourceDto{
 		User:     username,
 		Password: password,
@@ -94,19 +94,19 @@ func CreateDatasource(jdbcType *common.SrcJdbcType, username, password string, r
 	}
 
 	var dsTemplate string
-	switch jdbcType.ID {
-	case common.SrcJdbcTypePostgresql.ID:
+	switch jdbcType.Id() {
+	case common.SrcJdbcTypePostgresql.Id():
 		dsTemplate = loadTemplate("templates/pg-datasource.json")
 		datasource.URL = constants.PGJDBCURL
-	case common.SrcJdbcTypeTimeScaleDB.ID:
+	case common.SrcJdbcTypeTimeScaleDB.Id():
 		dsTemplate = loadTemplate("templates/pg-datasource.json")
 		datasource.URL = constants.TSDBJDBCURL
-	case common.SrcJdbcTypeTdEngine.ID:
+	case common.SrcJdbcTypeTdEngine.Id():
 		datasource.URL = constants.TDJDBCURL
 		datasource.CreateBasicAuth()
 		dsTemplate = loadTemplate("templates/td-datasource.json")
 	default:
-		return false, fmt.Errorf("unsupported JDBC type: %d", jdbcType.ID)
+		return false, fmt.Errorf("unsupported JDBC type: %d", jdbcType.Id())
 	}
 
 	dsJSON := formatTemplate(dsTemplate, datasource)
@@ -164,8 +164,8 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *common.SrcJdbcTyp
 	var template string
 	var dbParams map[string]any
 
-	switch jdbcType.ID {
-	case common.SrcJdbcTypePostgresql.ID:
+	switch jdbcType.Id() {
+	case common.SrcJdbcTypePostgresql.Id():
 		template = loadTemplate("templates/pg-dashboard.json")
 		dbParams = map[string]any{
 			"title":          title,
@@ -176,7 +176,7 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *common.SrcJdbcTyp
 			"tableName":      table,
 			"columns":        columns,
 		}
-	case common.SrcJdbcTypeTdEngine.ID:
+	case common.SrcJdbcTypeTdEngine.Id():
 		template = loadTemplate("templates/td-dashboard.json")
 		dbParams = map[string]any{
 			"title":            title,
@@ -188,7 +188,7 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *common.SrcJdbcTyp
 			"tagNameCondition": tagNameCondition,
 			"columns":          columns,
 		}
-	case common.SrcJdbcTypeTimeScaleDB.ID:
+	case common.SrcJdbcTypeTimeScaleDB.Id():
 		template = loadTemplate("templates/ts-dashboard.json")
 		dbParams = map[string]any{
 			"title":            title,
@@ -201,7 +201,7 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *common.SrcJdbcTyp
 			"columns":          columns,
 		}
 	default:
-		return "", fmt.Errorf("unsupported JDBC type: %d", jdbcType.ID)
+		return "", fmt.Errorf("unsupported JDBC type: %d", jdbcType.Id())
 	}
 
 	dbParams["sys_field_create_time"] = ct
@@ -299,7 +299,7 @@ func GetDataSourceByName(name string) (string, error) {
 
 // GetDatasourceUUIDByJDBC generates a datasource UUID from JDBC type.
 func GetDatasourceUUIDByJDBC(jdbcType *common.SrcJdbcType) string {
-	hash := md5.Sum([]byte(jdbcType.Alias))
+	hash := md5.Sum([]byte(jdbcType.Alias()))
 	return hex.EncodeToString(hash[:])
 }
 
@@ -307,7 +307,7 @@ func GetDatasourceUUIDByJDBC(jdbcType *common.SrcJdbcType) string {
 func Fields2Columns(jdbcType *common.SrcJdbcType, fields []*dto.FieldDefine) string {
 	// TDengine uses `, PostgreSQL and TimescaleDB use "
 	flag := "`"
-	if jdbcType.ID != common.SrcJdbcTypeTdEngine.ID {
+	if jdbcType.Id() != common.SrcJdbcTypeTdEngine.Id() {
 		flag = `\"`
 	}
 
@@ -334,7 +334,7 @@ func CreateTimeSeriesListDashboard(srcJdbcType *common.SrcJdbcType, topics []*dt
 	logx.Infof("调用 创建时序组合Dashboard: %s", dashboardName)
 
 	var panelTemplate string
-	if srcJdbcType.ID == common.SrcJdbcTypeTimeScaleDB.ID {
+	if srcJdbcType.Id() == common.SrcJdbcTypeTimeScaleDB.Id() {
 		panelTemplate = loadTemplate("templates/ts-panel.json")
 	} else {
 		panelTemplate = loadTemplate("templates/td-panel.json")

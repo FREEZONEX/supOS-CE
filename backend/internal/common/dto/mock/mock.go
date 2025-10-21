@@ -125,9 +125,9 @@ func NewMockDemoDTO() *MockDemoDTO {
 
 // ConvertOrderToParams converts the DTO to a slice of any for database operations.
 func (m *MockDemoDTO) ConvertOrderToParams(srcJdbcType *common.SrcJdbcType) []any {
-	if srcJdbcType.TypeCode == common.SrcJdbcTypeTdEngine.TypeCode {
+	if srcJdbcType.TypeCode() == common.SrcJdbcTypeTdEngine.TypeCode() {
 		return []any{m.TimeStamp, m.ID, m.Name, m.InstalledCapacity, m.DailyPowerGeneration, m.Owner}
-	} else if srcJdbcType.TypeCode == common.SrcJdbcTypeTimeScaleDB.TypeCode {
+	} else if srcJdbcType.TypeCode() == common.SrcJdbcTypeTimeScaleDB.TypeCode() {
 		return []any{time.UnixMilli(m.TimeStamp), m.ID, m.Name, m.InstalledCapacity, m.DailyPowerGeneration, m.Owner}
 	}
 	return nil
