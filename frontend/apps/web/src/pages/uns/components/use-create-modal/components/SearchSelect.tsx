@@ -11,6 +11,7 @@ export interface DebounceSelectProps extends Omit<SelectProps, 'onChange'> {
   onChange?: (e: any) => void;
   apiParams?: { type: number; [key: string]: string | number | boolean };
   disabledIds?: string[];
+  onFirstBack?: (data: any) => void;
 }
 
 const DebounceSelect: FC<DebounceSelectProps> = ({
@@ -22,6 +23,7 @@ const DebounceSelect: FC<DebounceSelectProps> = ({
   labelInValue = false,
   mode,
   disabledIds,
+  onFirstBack,
   ...rest
 }) => {
   const [fetching, setFetching] = useState(false);
@@ -42,13 +44,14 @@ const DebounceSelect: FC<DebounceSelectProps> = ({
   const searchData = (key?: string) => {
     const params: any = { pageNo: 1, pageSize: 100, type, ...apiParams };
     if (key) params.k = key;
-    searchTreeData(params)
+    return searchTreeData(params)
       .then((res: any) => {
         res.forEach((e: any) => {
           e.disabled = disabledIds?.includes(e.id);
         });
         setOptions(res);
         setFetching(false);
+        return res;
       })
       .catch((err) => {
         setFetching(false);
@@ -57,7 +60,9 @@ const DebounceSelect: FC<DebounceSelectProps> = ({
   };
 
   useEffect(() => {
-    searchData?.();
+    searchData?.().then((data: any) => {
+      onFirstBack?.(data);
+    });
   }, []);
 
   const _onChange = (e: any) => {

@@ -496,6 +496,7 @@ const messages = {
   'uns.optional': '选填',
   'uns.description': '描述',
   'uns.databaseType': '数据类型',
+  'uns.databaseInfo': '数据库信息',
   'uns.timeSeries': '时序型',
   'uns.relational': '关系型',
   'uns.autoFlow': '生成数据连接',
@@ -712,6 +713,13 @@ const messages = {
   'uns.device': '设备',
   'uns.gaugingPoint': '测点',
   'uns.ctrlPQuickApplyExample': 'Ctrl+P 快速应用示例',
+  'uns.dbEngine': '数据库引擎',
+  'uns.host': '主机',
+  'uns.port': '端口',
+  'uns.database': '数据库',
+  'uns.connectionString': '连接字符串',
+  'uns.table': 'Table',
+  'uns.schema': 'Schema',
 
   //公共通用模块
   'common.url': '地址',

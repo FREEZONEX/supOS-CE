@@ -16,7 +16,7 @@ import { useDeepCompareEffect, useMemoizedFn, useSize } from 'ahooks';
 import { data } from './data.ts';
 import { Graph } from '@antv/x6';
 import { ApplicationWeb } from '@carbon/icons-react';
-import ComCopy from '@/components/com-copy';
+import MQTT from './MQTT.tsx';
 
 const Modbus = (nodes: any) => {
   return (
@@ -306,8 +306,7 @@ const Topology = ({ datas }: any) => {
   const graphRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const outerContainerRef = useRef<HTMLDivElement>(null);
-  const systemInfo = useBaseStore((state) => state.systemInfo);
-  const wsPort = systemInfo?.mqttTcpPort ?? window.location.port;
+
   const datahandle = useMemoizedFn(() => {
     if (!datas) return;
     const edges = graphRef.current.getEdges();
@@ -412,69 +411,13 @@ const Topology = ({ datas }: any) => {
     }
   }, [size]);
 
-  const mqttList = [
-    {
-      key: 'url',
-      label: 'uns.MQTTUrl',
-      text: `mqtt://${window.location.hostname}`,
-    },
-    {
-      key: 'port',
-      label: 'uns.MQTTPort',
-      text: wsPort,
-    },
-    {
-      key: 'dependent',
-      label: 'uns.dependent',
-      text: 'npm install mqtt',
-    },
-    {
-      key: 'payload',
-      label: 'uns.payload',
-      text: JSON.stringify(
-        {
-          Name: 'Name',
-          CurrentValue: 1,
-          InitialValue: 1,
-        },
-        null,
-        2
-      ),
-    },
-  ];
-
   return (
     <Flex gap={16} className={styles['item-wrapper']} style={{ height: '100%' }} ref={outerContainerRef}>
       <Flex vertical className={cx(styles['item'], styles['item-left'])} gap={16} style={{ overflow: 'hidden' }}>
         <ComEllipsis className={styles['title']}>{formatMessage('uns.topologyMap')}</ComEllipsis>
         <div ref={containerRef} style={{ minHeight: 400, flex: 1 }} />
       </Flex>
-      <Flex vertical className={cx(styles['item'], styles['item-right'])} gap={16}>
-        <ComEllipsis className={styles['title']}>{formatMessage('uns.mqttAccess')}</ComEllipsis>
-        <div style={{ flex: 1, background: 'var(--supos-card-bg)', padding: 16, overflow: 'auto' }}>
-          {mqttList?.map((item: any) => {
-            return (
-              <div key={item.key}>
-                <ComEllipsis style={{ fontWeight: 500, fontSize: 16 }}>{formatMessage(item.label)}</ComEllipsis>
-                <Flex
-                  title={item.text}
-                  style={{
-                    background: 'var(--supos-bg-color)',
-                    padding: '8px 16px',
-                    margin: '12px 0',
-                    borderRadius: '3px',
-                  }}
-                  align="center"
-                  justify="space-between"
-                >
-                  <pre>{item.text}</pre>
-                  <ComCopy textToCopy={item.text} />
-                </Flex>
-              </div>
-            );
-          })}
-        </div>
-      </Flex>
+      <MQTT />
     </Flex>
   );
 };
