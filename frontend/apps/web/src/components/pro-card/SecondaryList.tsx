@@ -23,13 +23,13 @@ const SecondaryList = ({
         return (
           <Col span={span} style={{ display: 'flex', ...wrapperStyle }} key={key}>
             <div
-              style={labelStyle ? labelStyle : { maxWidth: 'calc(50% - 9px)', opacity: 0.6 }}
+              style={labelStyle ? labelStyle : { maxWidth: 'calc(50% - 9px)', color: '#A8A8A8' }}
               className="span-ellipsis"
               title={label}
             >
               {label}
             </div>
-            {colon && <span style={{ paddingRight: 4, opacity: 0.6 }}>:</span>}
+            {colon && <span style={{ paddingRight: 4, color: '#A8A8A8' }}>:</span>}
             <div
               style={contentStyle ? contentStyle : { flex: 1, minWidth: 0 }}
               className="span-ellipsis"
