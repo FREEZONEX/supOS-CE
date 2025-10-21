@@ -10,7 +10,7 @@
       "outputs": ["dist/**"]
     },
     "build:web": {
-      "dependsOn": ["build:scripts", "^build"],
+      "dependsOn": ["^build"],
       "outputs": ["build/**", "dist/**"]
     },
     "build:server": {
@@ -22,12 +22,12 @@
       "outputs": ["dist/**"]
     },
     "dev": {
-      "dependsOn": ["build:scripts", "^build"],
+      "dependsOn": ["^build"],
       "persistent": true,
       "cache": false
     },
     "dev:web": {
-      "dependsOn": ["build:scripts", "^build"],
+      "dependsOn": ["^build"],
       "persistent": true,
       "cache": false
     },
