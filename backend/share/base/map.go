@@ -9,6 +9,17 @@ func Map[E any, M any](arr []E, op func(e E) M) (rs []M) {
 	}
 	return rs
 }
+func MapKeys[K comparable, V any](m map[K]V) (rs []K) {
+	rs = make([]K, len(m))
+	if len(m) > 0 {
+		i := 0
+		for k := range m {
+			rs[i] = k
+			i++
+		}
+	}
+	return rs
+}
 func MapArrayToMap[E any, K comparable, V any](arr []E, op func(e E) (ok bool, k K, v V)) (rs map[K]V) {
 	rs = make(map[K]V, len(arr))
 	if len(arr) > 0 {

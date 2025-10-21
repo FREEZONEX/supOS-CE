@@ -1,9 +1,10 @@
 package label
 
 import (
+	"backend/internal/logic/supos/uns/label/service"
+	"backend/share/spring"
 	"context"
 
-	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -26,23 +27,6 @@ func NewAllLabelLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AllLabel
 }
 
 func (l *AllLabelLogic) AllLabel(req *types.UnsLabelListReq) (resp *types.UnsLabelListResp, err error) {
-	db := relationDB.NewUnsLabelRepo(l.ctx)
-	dbFilter := relationDB.UnsLabelFilter{
-		LabelName: req.Key,
-	}
-	list, err := db.FindByFilter(l.ctx, dbFilter, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp = &types.UnsLabelListResp{
-		List: make([]*types.UnsLabel, 0),
-	}
-	for _, item := range list {
-		resp.List = append(resp.List, &types.UnsLabel{
-			ID:        item.ID,
-			LabelName: item.LabelName,
-			CreateAt:  item.CreateAt.UnixMilli(),
-		})
-	}
-	return
+	sv := spring.GetBean[*service.UnsLabelService]()
+	return sv.AllLabel(l.ctx, req)
 }

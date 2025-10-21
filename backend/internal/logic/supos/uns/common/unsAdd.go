@@ -1,5 +1,7 @@
 package common
 
+/**
+
 import (
 	"context"
 	"fmt"
@@ -35,7 +37,7 @@ func CreateTemplate(ctx context.Context, svcCtx *svc.ServiceContext, req *types.
 		return nil, shareerrors.Parameter.WithMsg("模板字段不能为空")
 	}
 
-	repo := relationDB.NewUnsNamespaceRepo(ctx)
+	repo := relationDB.NewUnsNamespaceRepo()
 
 	aliasSeed := strings.TrimSpace(req.Alias)
 	pathForAlias := fmt.Sprintf("%s/%s", templateRootPath, templateName)
@@ -392,3 +394,4 @@ func calcUnsFlags(req *types.UnsCreateTopicDTO) int32 {
 	}
 	return int32(flags)
 }
+*/

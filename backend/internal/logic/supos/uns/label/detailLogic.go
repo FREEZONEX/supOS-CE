@@ -1,13 +1,13 @@
 package label
 
 import (
+	"backend/internal/logic/supos/uns/label/service"
+	"backend/share/spring"
 	"context"
 
-	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -27,17 +27,6 @@ func NewDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetailLogi
 }
 
 func (l *DetailLogic) Detail(req *types.WithID) (resp *types.UnsLabel, err error) {
-	if req.ID <= 0 {
-		return nil, errors.Parameter.WithMsg("id无效")
-	}
-	db := relationDB.NewUnsLabelRepo(l.ctx)
-	item, err := db.FindOne(l.ctx, req.ID)
-	if err != nil {
-		return nil, err
-	}
-	return &types.UnsLabel{
-		ID:        item.ID,
-		LabelName: item.LabelName,
-		CreateAt:  item.CreateAt.UnixMilli(),
-	}, nil
+	sv := spring.GetBean[*service.UnsLabelService]()
+	return sv.Detail(l.ctx, req)
 }

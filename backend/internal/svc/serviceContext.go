@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"backend/internal/common"
 	"backend/internal/config"
 	"backend/internal/middleware"
 	"backend/internal/repo/relationDB"
@@ -25,11 +26,13 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	caches.InitStore(c.CacheRedis)
 	nodeID := utils.GetNodeID(c.CacheRedis, c.Name)
 	relationDB.Migrate(c.Database, c.DatabaseSchema)
+	SnowFlake := utils.NewSnowFlake(nodeID)
+	common.SnowFlake = SnowFlake
 	return &ServiceContext{
 		Config:         c,
 		CheckTokenWare: middleware.NewCheckTokenWareMiddleware().Handle,
 		InitCtxsWare:   middleware.NewInitCtxsWareMiddleware().Handle,
 		Redis:          redis.MustNewRedis(c.CacheRedis[0].RedisConf),
-		SnowFlake:      utils.NewSnowFlake(nodeID),
+		SnowFlake:      SnowFlake,
 	}
 }

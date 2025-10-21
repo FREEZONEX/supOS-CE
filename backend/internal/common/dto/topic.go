@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"backend/internal/common"
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
 	"fmt"
@@ -32,9 +33,9 @@ type CreateTopicDto struct {
 	ParentID    int64  `json:"parentId,omitzero"`
 
 	// Data type and fields
-	DataType  int            `json:"dataType" validate:"required,min=1,max=7"`
-	Fields    []*FieldDefine `json:"fields,omitzero"`
-	DataSrcID any            `json:"-"` // SrcJdbcType
+	DataType  int                `json:"dataType" validate:"required,min=1,max=7"`
+	Fields    []*FieldDefine     `json:"fields,omitzero"`
+	DataSrcID common.SrcJdbcType `json:"-"` // SrcJdbcType
 
 	// Table fields
 	TableName    string   `json:"-"`
@@ -138,7 +139,7 @@ func (c *CreateTopicDto) GetTimestampField() string {
 
 // GetQualityField returns the quality field name
 func (c *CreateTopicDto) GetQualityField() string {
-	if len(c.Fields) > 2 && c.DataSrcID != nil {
+	if len(c.Fields) > 2 && c.DataSrcID > 0 {
 		// Find quality field (implementation depends on FieldUtils and dataSrcId.typeCode)
 		for _, f := range c.Fields {
 			if f.Name == constants.QosField || f.Name == "quality" {
