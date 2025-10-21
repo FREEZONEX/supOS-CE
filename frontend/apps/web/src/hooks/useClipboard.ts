@@ -1,12 +1,13 @@
 import { type RefObject, useEffect, useState, useRef } from 'react';
 import Clipboard from 'clipboard';
-import { message } from 'antd';
 import { useTranslate } from '@/hooks';
+import { App } from 'antd';
 
 // 复制的hooks
 const useClipboard = (buttonRef: RefObject<HTMLElement> | null = null, textToCopy?: string, msg?: string) => {
   const [isCopied, setIsCopied] = useState(false); // 状态：是否成功复制
   const formatMessage = useTranslate();
+  const { message } = App.useApp();
   // 如果没有传入ref，则创建一个临时的DOM元素
   const internalRef = useRef<HTMLDivElement | null>(null);
   // 用于存储clipboard实例的ref
