@@ -60,6 +60,7 @@ catalogs:
     '@carbon/icons-react': '11.69.0'
     '@antv/x6': '2.18.1'
     '@antv/x6-react-shape': '2.2.3'
+    'rc-virtual-list': '3.19.2'
   # 规范
   lint:
     '@eslint/js': '^9.37.0'

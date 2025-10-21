@@ -19,10 +19,9 @@ RUN npm install -g pnpm
 # Then install all dependencies
 RUN pnpm install
 
-# Build web application
+# build
+RUN pnpm run build:scripts
 RUN pnpm run build:web
-
-# Build services application
 RUN pnpm run build:servicesExpress
 
 # --------------------------------------

@@ -62,7 +62,8 @@
     "shepherd.js": "^14.4.0",
     "use-immer": "catalog:util",
     "uuid": "catalog:util",
-    "zustand": "catalog:util"
+    "zustand": "catalog:util",
+    "rc-virtual-list": "catalog:ui"
   },
   "devDependencies": {
     "@supos-os-edge/scripts": "workspace:^",

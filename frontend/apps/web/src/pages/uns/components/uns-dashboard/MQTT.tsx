@@ -9,7 +9,7 @@ import SearchSelect from '@/pages/uns/components/use-create-modal/components/Sea
 import { useRef, useState } from 'react';
 import { getInstanceInfo } from '@/apis/inter-api';
 import { getExampleForJavaType } from '@/utils';
-import { fromPairs, map } from 'lodash';
+import { fromPairs, map } from 'lodash-es';
 import DatabaseInfoModal, { type ModalRef } from './DatabaseInfoModal.tsx';
 
 const defaultPayload = JSON.stringify(
@@ -97,7 +97,7 @@ const MQTT = () => {
                       type: item.type,
                     };
                   });
-                  const jsObj = fromPairs(map(fieldExampleList, (item) => [item.key, item.value]));
+                  const jsObj = fromPairs(map(fieldExampleList, (item: any) => [item.key, item.value]));
                   setPayLoadInfo(JSON.stringify(jsObj, null, 2));
                 })
                 .catch(() => {

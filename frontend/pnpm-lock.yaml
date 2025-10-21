@@ -187,6 +187,9 @@ catalogs:
     antd:
       specifier: 5.27.4
       version: 5.27.4
+    rc-virtual-list:
+      specifier: 3.19.2
+      version: 3.19.2
     sass:
       specifier: 1.93.2
       version: 1.93.2
@@ -525,6 +528,9 @@ importers:
       qs:
         specifier: catalog:util
         version: 6.14.0
+      rc-virtual-list:
+        specifier: catalog:ui
+        version: 3.19.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react:
         specifier: catalog:framework
         version: 19.2.0
