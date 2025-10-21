@@ -8,7 +8,7 @@ RUN npm config set registry https://registry.npmmirror.com/
 WORKDIR /app
 
 # Copy package files
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
 COPY apps ./apps
 COPY packages ./packages
 COPY scripts ./scripts
