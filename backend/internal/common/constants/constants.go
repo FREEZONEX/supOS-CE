@@ -10,16 +10,7 @@ import (
 )
 
 // --- Simple Compile-time Constants ---
-const (
-	// Data Types (using iota for sequential values)
-	TimeSequenceType    = iota + 1 // 时序类型 (1)
-	RelationType                   // 关系类型 (2)
-	CalculationRealType            // 实时计算 (3)
-	CalculationHistType            // 历史值计算 (4)
-	AlarmRuleType                  // 报警规则类型 (5)
-	MergeType                      // 聚合类型 (6)
-	CitingType                     // 引用类型 (7)
-)
+
 const (
 	// System Fields and Flags
 	SystemFieldPrev = "_"
@@ -39,6 +30,15 @@ const (
 	ResultTopicPrev = "_rs/"       // 处理结果 topic前缀
 	MsgRawDataKey   = "_source_"   // 原始数据的 json key
 	MsgResDataKey   = "_resource_" // 处理过的 json key
+
+	// Data Types (using iota for sequential values)
+	TimeSequenceType    = iota + 1 // 时序类型 (1)
+	RelationType                   // 关系类型 (2)
+	CalculationRealType            // 实时计算 (3)
+	CalculationHistType            // 历史值计算 (4)
+	AlarmRuleType                  // 报警规则类型 (5)
+	MergeType                      // 聚合类型 (6)
+	CitingType                     // 引用类型 (7)
 
 	// Pagination Defaults
 	DefaultPageSize = 20
@@ -74,9 +74,9 @@ const (
 	CookieMaxAge          = 60 * 60 * 24 * 365
 
 	// Regex Strings
-	AliasReg = "[a-zA-Z_$][a-zA-Z0-9_$]*$"
-	TopicReg = "^[\u4e00-\u9fa5a-zA-Z0-9/_-]+$"
-	NameReg  = "^[\u4e00-\u9fa5a-zA-Z0-9_-]+$"
+	AliasReg = `[a-zA-Z_$][a-zA-Z0-9_$]*$`
+	TopicReg = `^[\x{4e00}-\x{9fa5}a-zA-Z0-9/_-]+$`
+	NameReg  = `^[\x{4e00}-\x{9fa5}a-zA-Z0-9_-]+$`
 
 	VarPrev               = "a"
 	DefaultRoleID         = "d12d7ca2-34e1-4f26-9a03-6b4f7f411567"
@@ -119,6 +119,13 @@ const (
 	AppPrefix  = "APP"
 )
 
+const (
+	_                   = iota // 0 is unused
+	JDBCTypePostgres           // 1
+	JDBCTypeMariaDB            // 2
+	JDBCTypeTimeScaleDB        // 3
+)
+
 // UnsFlags are bitmask constants for UNS features.
 const (
 	UnsFlagWithFlow                   = 1 << iota // 是否添加数据采集流程
@@ -132,7 +139,6 @@ const (
 	_                                             // Skip 1 << 8
 	UnsFlagWithAttachment                         // UNS带附件的标志
 	UnsFlagHasData                                // UNS有存过数据的标志
-	UnsFlagWithSubscribeEnable                    // 是否开启订阅
 )
 
 // --- Runtime-initialized Variables and Compiled Regex ---

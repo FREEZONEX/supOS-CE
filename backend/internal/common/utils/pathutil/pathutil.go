@@ -1,4 +1,4 @@
-package utils
+package pathutil
 
 import (
 	"backend/internal/common/constants"
@@ -208,7 +208,6 @@ func SubParentPath(path string) string {
 	if x > 0 {
 		return path[:x]
 	}
-	// Java版返回null，Go中返回空字符串更 idiomatic
 	return ""
 }
 

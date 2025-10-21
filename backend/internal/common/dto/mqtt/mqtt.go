@@ -7,7 +7,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/dto"
 	"backend/internal/common/enums"
-	"backend/internal/common/utils"
+	"backend/internal/common/utils/expressionutil"
 )
 
 // TopicDefinition MQTT Topic 定义
@@ -106,7 +106,7 @@ func (t *TopicDefinition) GetCompileExpression() any {
 
 	calculationExpr := t.CreateTopicDto.Expression
 	if calculationExpr != "" && t.CreateTopicDto.CompileExpression == nil {
-		compiled, _ := utils.CompileExpression(calculationExpr)
+		compiled, _ := expressionutil.CompileExpression(calculationExpr)
 		t.CreateTopicDto.CompileExpression = compiled
 	}
 	return t.CreateTopicDto.CompileExpression

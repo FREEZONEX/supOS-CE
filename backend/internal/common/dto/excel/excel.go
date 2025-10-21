@@ -2,7 +2,7 @@ package excel
 
 import (
 	"backend/internal/common/dto"
-	"backend/internal/common/utils"
+	"backend/internal/common/utils/pathutil"
 	"fmt"
 	"strings"
 )
@@ -66,7 +66,7 @@ func (e *ExcelNameSpaceDto) CreateTopic() *dto.CreateTopicDto {
 		Index:       e.Index,
 		Batch:       e.Batch,
 		Path:        e.Path,
-		Name:        utils.GetName(e.Path),
+		Name:        pathutil.GetName(e.Path),
 		Alias:       e.Alias,
 		DisplayName: e.DisplayName,
 		Description: e.Description,
@@ -95,7 +95,7 @@ func (e *ExcelFolderDto) CreateTopic() *dto.CreateTopicDto {
 		Index:       e.Index,
 		Batch:       e.Batch,
 		Path:        e.Path,
-		Name:        utils.GetName(e.Path),
+		Name:        pathutil.GetName(e.Path),
 		Alias:       e.Alias,
 		DisplayName: e.DisplayName,
 		Description: e.Description,
