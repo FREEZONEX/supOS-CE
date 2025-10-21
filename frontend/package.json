@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "prepare": "cd .. && husky frontend/.husky",
-    "postinstall": "node scripts/check-scripts-dist.js",
     "lint": "eslint .",
     "intl:once": "turbo run intl:once",
     "intl:watch": "turbo run intl:watch",

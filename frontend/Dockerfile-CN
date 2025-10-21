@@ -11,7 +11,6 @@ WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
 COPY apps ./apps
 COPY packages ./packages
-COPY scripts ./scripts
 
 # Install pnpm
 RUN npm install -g pnpm
