@@ -1,6 +1,6 @@
 import { Col, Row } from 'antd';
-import './secondaryList.scss';
 import type { CSSProperties } from 'react';
+import './secondaryList.scss';
 
 const SecondaryList = ({
   options,
@@ -18,14 +18,18 @@ const SecondaryList = ({
   colon?: boolean;
 }) => {
   return (
-    <Row style={{ overflow: 'hidden', margin: '4px 0' }} className="secondaryList">
+    <Row style={{ overflow: 'hidden', marginTop: 4 }} className="secondaryList">
       {options?.map(({ label, labelStyle, contentStyle, span, content, wrapperStyle, key }) => {
         return (
           <Col span={span} style={{ display: 'flex', ...wrapperStyle }} key={key}>
-            <div style={labelStyle ? labelStyle : { maxWidth: 100 }} className="span-ellipsis" title={label}>
+            <div
+              style={labelStyle ? labelStyle : { maxWidth: 'calc(50% - 9px)', opacity: 0.6 }}
+              className="span-ellipsis"
+              title={label}
+            >
               {label}
             </div>
-            {colon && <span style={{ paddingRight: 4 }}>:</span>}
+            {colon && <span style={{ paddingRight: 4, opacity: 0.6 }}>:</span>}
             <div
               style={contentStyle ? contentStyle : { flex: 1, minWidth: 0 }}
               className="span-ellipsis"

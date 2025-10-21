@@ -64,37 +64,36 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
       dataIndex: 'preferredUsername',
       ellipsis: true,
       titleIntlId: 'account.account',
-      width: '10%',
+      width: 250,
     },
     {
-      width: '10%',
       dataIndex: 'firstName',
       ellipsis: true,
       titleIntlId: 'common.name',
+      width: 250,
     },
     {
-      width: '10%',
       dataIndex: 'phone',
       ellipsis: true,
       titleIntlId: 'account.phone',
+      width: 250,
     },
     {
-      width: '10%',
       dataIndex: 'email',
       ellipsis: true,
       titleIntlId: 'account.email',
+      width: 400,
     },
     {
-      width: '10%',
       dataIndex: 'roleList',
       ellipsis: true,
       titleIntlId: 'account.role',
       render: (text: any) => {
         return text?.map((i: any) => i.roleName)?.join(',');
       },
+      width: 200,
     },
     {
-      width: '10%',
       dataIndex: 'enabled',
       ellipsis: true,
       titleIntlId: 'common.status',
@@ -109,10 +108,11 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
           </Tag>
         );
       },
+      width: 200,
     },
     {
       dataIndex: 'edit',
-      width: '15%',
+      width: 150,
       ellipsis: true,
       titleIntlId: 'common.operation',
       render: (_: any, record: any) => {

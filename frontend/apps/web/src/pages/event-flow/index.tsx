@@ -337,14 +337,14 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                             {
                               label: formatMessage('common.creator'),
                               content: d?.creator,
-                              span: 12,
-                              key: 'dev',
+                              span: 24,
+                              key: 'creator',
                             },
                             {
                               label: formatMessage('collectionFlow.flowTemplate'),
                               content: d?.template,
-                              span: 12,
-                              key: 'dev',
+                              span: 24,
+                              key: 'flowTemplate',
                             },
                           ]}
                         />

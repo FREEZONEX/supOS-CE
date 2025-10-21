@@ -2,8 +2,7 @@ import { Checkbox, Divider, Flex, Spin, Image, Typography, Dropdown, Button } fr
 import { type FC, useState } from 'react';
 import type { ProCardProps } from '@/components/pro-card/type.ts';
 import cx from 'classnames';
-import { ChevronRight, Pin, PinFilled } from '@carbon/icons-react';
-import { EllipsisOutlined } from '@ant-design/icons';
+import { ChevronRight, OverflowMenuVertical, Pin, PinFilled } from '@carbon/icons-react';
 import { AuthButton } from '@/components/auth';
 import defaultUrl from '@/assets/home-icons/default.svg';
 import InlineLoading from '@/components/inline-loading';
@@ -262,7 +261,7 @@ const ProCard: FC<ProCardProps> = ({
           {actions && (
             <Divider
               style={{
-                margin: '16px 0',
+                margin: '12px 0',
                 backgroundColor: 'var(--supos-t-dividr-color)',
               }}
             />
@@ -307,7 +306,7 @@ const ProCard: FC<ProCardProps> = ({
                     })),
                   }}
                 >
-                  <Button type="text" icon={<EllipsisOutlined />} size="small" />
+                  <Button type="text" icon={<OverflowMenuVertical />} size="small" />
                 </Dropdown>
               )}
             </Flex>

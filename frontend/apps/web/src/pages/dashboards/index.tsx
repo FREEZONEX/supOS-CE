@@ -335,14 +335,14 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                             {
                               label: formatMessage('common.creator'),
                               content: d?.creator,
-                              span: 12,
-                              key: 'dev',
+                              span: 24,
+                              key: 'creator',
                             },
                             {
                               label: formatMessage('dashboards.dashboardsTemplate'),
                               content: d?.typeName,
-                              span: 12,
-                              key: 'dev',
+                              span: 24,
+                              key: 'dashboardsTemplate',
                             },
                           ]}
                         />

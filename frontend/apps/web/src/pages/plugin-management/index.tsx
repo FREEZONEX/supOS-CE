@@ -387,16 +387,13 @@ const Index: FC<PageProps> = ({ title }) => {
                             {
                               label: commonFormatMessage('common.dev'),
                               content: plugInfoYml?.vendorName,
-                              span: 8,
+                              span: 24,
                               key: 'dev',
                             },
                             {
                               label: commonFormatMessage('common.version'),
                               content: plugInfoYml?.version,
-                              span: 16,
-                              contentStyle: { maxWidth: 'calc(100% - 55px)' },
-                              labelStyle: { maxWidth: '50%' },
-                              wrapperStyle: { justifyContent: 'flex-end' },
+                              span: 24,
                               key: 'version',
                             },
                             {
