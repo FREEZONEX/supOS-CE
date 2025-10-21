@@ -50,6 +50,9 @@ func GetSrcJdbcTypeByID(id int) SrcJdbcType {
 	}
 	return SrcJdbcTypeNone
 }
+func (s SrcJdbcType) Id() int {
+	return int(s)
+}
 func (s SrcJdbcType) DataSrcType() string {
 	return srcJdbcTypes[s].dataSrcType
 }
