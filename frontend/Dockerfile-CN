@@ -20,7 +20,6 @@ RUN npm install -g pnpm
 RUN pnpm install
 
 # build
-RUN pnpm run build:scripts
 RUN pnpm run build:web
 RUN pnpm run build:servicesExpress
 
@@ -38,7 +37,7 @@ RUN npm install -g serve concurrently pnpm
 
 # Copy web build artifacts
 COPY --from=web-builder /app/apps/web/dist ./web-dist
-COPY --from=web-builder /app/apps/services ./services-dist
+COPY --from=web-builder /app/apps/services-express ./services-express-dist
 
 # Expose ports (web:3000, services:4000)
 EXPOSE 3000 4000
