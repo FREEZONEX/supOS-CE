@@ -61,7 +61,6 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'build', // 设置构建输出目录为 build
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
   },
 });
