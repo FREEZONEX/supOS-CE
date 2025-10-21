@@ -39,8 +39,19 @@ func (p UnsLabelRefRepo) ListUnsIds(db *gorm.DB, labelId int64) (unsIds []int64,
 	})
 	return
 }
+func (p UnsLabelRefRepo) ListByUnsId(db *gorm.DB, unsId int64) (result []*UnsLabelRef, err error) {
+	err = p.model(db).Where("uns_id=?", unsId).Find(&result).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return
+}
 func (p UnsLabelRefRepo) DeleteByUnsIds(db *gorm.DB, unsIds []int64) error {
 	err := p.model(db).Where("uns_id in ?", unsIds).Delete(&UnsLabelRef{}).Error
+	return stores.ErrFmt(err)
+}
+func (p UnsLabelRefRepo) DeleteByUnsIdAndLabelIds(db *gorm.DB, unsId int64, labelIds []int64) error {
+	err := p.model(db).Where("uns_id = ?", unsId).Where("label_id in ?", labelIds).Delete(&UnsLabelRef{}).Error
 	return stores.ErrFmt(err)
 }
 func (p UnsLabelRefRepo) FindOneByFilter(db *gorm.DB, f UnsLabelRefFilter) (*UnsLabelRef, error) {

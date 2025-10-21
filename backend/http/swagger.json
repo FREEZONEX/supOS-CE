@@ -3679,13 +3679,37 @@
                         "type": "object",
                         "required": [
                           "id",
-                          "name"
+                          "labelName",
+                          "createAt",
+                          "topic",
+                          "subscribeEnable",
+                          "subscribeFrequency",
+                          "createTime",
+                          "subscribeAt"
                         ],
                         "properties": {
-                          "id": {
+                          "createAt": {
+                            "type": "string"
+                          },
+                          "createTime": {
                             "type": "integer"
                           },
-                          "name": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "labelName": {
+                            "type": "string"
+                          },
+                          "subscribeAt": {
+                            "type": "string"
+                          },
+                          "subscribeEnable": {
+                            "type": "boolean"
+                          },
+                          "subscribeFrequency": {
+                            "type": "string"
+                          },
+                          "topic": {
                             "type": "string"
                           }
                         }
@@ -5790,7 +5814,7 @@
       }
     }
   },
-  "x-date": "2025-10-20 20:09:38",
+  "x-date": "2025-10-21 18:55:33",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

@@ -86,11 +86,13 @@ func (p UnsNamespaceRepo) Delete(db *gorm.DB, id int64) error {
 	err := p.model(db).Where("id = ?", id).Delete(&UnsNamespace{}).Error
 	return stores.ErrFmt(err)
 }
-func (p UnsNamespaceRepo) FindOne(db *gorm.DB, id int64) (*UnsNamespace, error) {
+func (p UnsNamespaceRepo) SelectById(db *gorm.DB, id int64) (*UnsNamespace, error) {
 	var result UnsNamespace
 	err := p.model(db).Where("id = ?", id).First(&result).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
+	} else if result.ID == 0 {
+		return nil, nil
 	}
 	return &result, nil
 }

@@ -265,8 +265,14 @@ type JsonBodyReq struct {
 }
 
 type LabelVo struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
+	ID                 string `json:"id"`
+	LabelName          string `json:"labelName"`
+	CreateAt           string `json:"createAt"`
+	Topic              string `json:"topic"`
+	SubscribeEnable    bool   `json:"subscribeEnable"`
+	SubscribeFrequency string `json:"subscribeFrequency"`
+	CreateTime         int64  `json:"createTime"`
+	SubscribeAt        string `json:"subscribeAt"`
 }
 
 type ListTypesResult struct {

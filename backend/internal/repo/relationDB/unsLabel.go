@@ -27,9 +27,27 @@ func (p UnsLabelRepo) fmtFilter(db *gorm.DB, f UnsLabelFilter) *gorm.DB {
 	}
 	return db
 }
-
+func (p UnsLabelRepo) SelectById(db *gorm.DB, id int64) (*UnsLabel, error) {
+	var result UnsLabel
+	err := db.Model(&UnsLabel{}).Where("id=?", id).First(&result).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	} else if result.ID == 0 {
+		return nil, nil
+	}
+	return &result, nil
+}
+func (p UnsLabelRepo) ListByIds(db *gorm.DB, ids []int64) ([]*UnsLabel, error) {
+	var results []*UnsLabel
+	db = db.Model(&UnsLabel{}).Where("id in ? ", ids)
+	err := db.Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
 func (p UnsLabelRepo) Insert(db *gorm.DB, data *UnsLabel) error {
-	result := db.Create(data)
+	result := db.Model(&UnsLabel{}).Create(data)
 	return stores.ErrFmt(result.Error)
 }
 

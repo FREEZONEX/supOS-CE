@@ -186,8 +186,22 @@ type (
 		Uts   bool   `json:"uts"`
 	}
 	LabelVo {
-		Id   int64  `json:"id"`
-		Name string `json:"name"`
+        // 标签ID：已有标签时必传，新建标签时不需要传
+        ID string `json:"id"`
+        // 标签名称，新建标签时，必传
+        LabelName string `json:"labelName"`
+        // 创建时间
+        CreateAt string `json:"createAt"`
+        // 主题
+        Topic string `json:"topic"`
+        // 是否订阅
+        SubscribeEnable bool `json:"subscribeEnable"`
+        // 订阅频率
+        SubscribeFrequency string `json:"subscribeFrequency"`
+        // 创建时间--单位：毫秒
+        CreateTime int64 `json:"createTime"`
+        // 订阅时间
+        SubscribeAt string `json:"subscribeAt"`
 	}
 	DbFieldsInfoVo {
 		DatabaseType string            `json:"databaseType"`
