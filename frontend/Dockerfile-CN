@@ -8,35 +8,22 @@ RUN npm config set registry https://registry.npmmirror.com/
 WORKDIR /app
 
 # Copy package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY apps/services/package.json ./apps/services/
-COPY packages/scripts/package.json ./packages/scripts/
-COPY packages/typescript-config/package.json ./packages/typescript-config/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps ./apps
+COPY packages ./packages
+COPY scripts ./scripts
 
-# Copy scripts directory before running pnpm install
-COPY scripts/ ./scripts/
-
-# Install dependencies
+# Install pnpm
 RUN npm install -g pnpm
-
-# First build the scripts package to avoid postinstall errors
-RUN pnpm install --filter ./packages/scripts
-RUN pnpm run build:scripts
 
 # Then install all dependencies
 RUN pnpm install
-
-# Copy source code
-COPY apps/web/ ./apps/web/
-COPY apps/services/ ./apps/services/
-COPY packages/ ./packages/
 
 # Build web application
 RUN pnpm run build:web
 
 # Build services application
-RUN pnpm run build --filter ./apps/services
+RUN pnpm run build:servicesExpress
 
 # --------------------------------------
 # Stage 2: Create final runtime image
@@ -52,13 +39,7 @@ RUN npm install -g serve concurrently pnpm
 
 # Copy web build artifacts
 COPY --from=web-builder /app/apps/web/dist ./web-dist
-
-# Copy services build artifacts and dependencies
-COPY --from=web-builder /app/apps/services/dist ./services-dist
-COPY --from=web-builder /app/apps/services/package.json ./services-dist/
-
-# Copy node_modules from build stage to avoid re-installation issues
-COPY --from=web-builder /app/node_modules ./services-dist/node_modules/
+COPY --from=web-builder /app/apps/services ./services-dist
 
 # Expose ports (web:3000, services:4000)
 EXPOSE 3000 4000
