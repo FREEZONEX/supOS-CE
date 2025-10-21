@@ -386,6 +386,9 @@ importers:
       '@types/node':
         specifier: catalog:type
         version: 24.7.2
+      tsdown:
+        specifier: catalog:build
+        version: 0.14.2(typescript@5.9.3)
 
   apps/services-express:
     dependencies:
@@ -420,6 +423,9 @@ importers:
       '@types/node':
         specifier: catalog:type
         version: 24.7.2
+      tsdown:
+        specifier: catalog:build
+        version: 0.14.2(typescript@5.9.3)
 
   apps/web:
     dependencies:
