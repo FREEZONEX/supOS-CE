@@ -280,6 +280,9 @@ const Module: FC<FolderDetailProps> = (props) => {
                           formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 })
                         );
                       }
+                      if (['label', 'template'].includes(val)) {
+                        return message.warning(formatMessage('uns.prohibitKeywords'));
+                      }
                       if (!/^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/.test(val)) {
                         return message.warning(formatMessage('uns.nameFormat'));
                       }

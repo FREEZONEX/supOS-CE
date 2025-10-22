@@ -682,6 +682,7 @@
   "uns.connectionString": "连接字符串",
   "uns.table": "Table",
   "uns.schema": "Schema",
+  "uns.prohibitKeywords": "禁止关键字label和template",
   "common.url": "地址",
   "common.usage": "用法",
   "common.example": "示例",

@@ -720,6 +720,7 @@ const messages = {
   'uns.connectionString': '连接字符串',
   'uns.table': 'Table',
   'uns.schema': 'Schema',
+  'uns.prohibitKeywords': '禁止关键字label和template',
 
   //公共通用模块
   'common.url': '地址',

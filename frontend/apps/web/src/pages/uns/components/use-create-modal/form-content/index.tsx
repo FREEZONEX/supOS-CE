@@ -144,6 +144,15 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
                 max: 63,
                 message: formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 }),
               },
+              {
+                validator: (_: any, value: string) => {
+                  if (isCreateFolder && ['label', 'template'].includes(value)) {
+                    return Promise.reject(new Error(formatMessage('uns.prohibitKeywords')));
+                  } else {
+                    return Promise.resolve();
+                  }
+                },
+              }, // 添加自定义校验规则
             ],
           },
         });

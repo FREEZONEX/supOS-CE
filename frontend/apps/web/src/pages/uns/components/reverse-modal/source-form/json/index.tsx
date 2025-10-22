@@ -338,6 +338,15 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                       max: 63,
                       message: formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 }),
                     },
+                    {
+                      validator: (_, value) => {
+                        if (selectedInfo.type === 0 && ['label', 'template'].includes(value)) {
+                          return Promise.reject(new Error(formatMessage('uns.prohibitKeywords')));
+                        } else {
+                          return Promise.resolve();
+                        }
+                      },
+                    },
                   ]}
                 >
                   <Input />

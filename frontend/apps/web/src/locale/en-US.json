@@ -682,6 +682,7 @@
   "uns.connectionString": "Connection String",
   "uns.table": "Table",
   "uns.schema": "Schema",
+  "uns.prohibitKeywords": "Ban keyword label and template",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",
