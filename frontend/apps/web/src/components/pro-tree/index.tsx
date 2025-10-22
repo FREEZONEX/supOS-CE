@@ -71,7 +71,11 @@ const ProTree = forwardRef<ProTreeRef, ProTreeProps>((props, ref) => {
 
   useEffect(() => {
     if (treeContentSize?.width === 0) return;
-    if (height !== undefined && treeContentSize?.height !== undefined && [true, undefined].includes(isShow?.current)) {
+    if (
+      height !== undefined &&
+      treeContentSize?.height !== undefined &&
+      [true, undefined, null].includes(isShow?.current)
+    ) {
       // 虚拟滚动设置自适应高度
       setTreeHeight(treeContentSize?.height);
     }
