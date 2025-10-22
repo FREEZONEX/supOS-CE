@@ -25,6 +25,8 @@ frontend/
 ├── packages/               # 共享包
 │   ├── scripts/            # 构建脚本
 │   └── typescript-config/  # TypeScript配置
+├── plugins/               # 插件 - 模块联邦实现
+│   └──alert/            # 报警模块
 ├── scripts/                # 项目脚本
 └── 配置文件
 ```
@@ -54,6 +56,12 @@ pnpm install
 pnpm dev:web
 ```
 
+### 仅启动services应用
+
+```bash
+pnpm dev:servicesExpress
+```
+
 ### 构建项目
 
 ```bash
@@ -61,8 +69,8 @@ pnpm dev:web
 # 仅构建Web应用
 pnpm build:web
 
-# 构建脚本包
-pnpm build:scripts
+# 仅构建services应用
+pnpm build:servicesExpress
 ```
 
 ### 代码质量
@@ -106,16 +114,14 @@ pnpm clean  # 清理node_modules
 - 现代化的用户界面
 - 模块联邦支持
 - 国际化支持
-- AI 助手集成
-- 流程图编辑器（基于 AntV X6）
-
-### 服务应用 (`apps/services`)
-
-后端服务应用，提供 API 接口服务。
 
 ### 服务应用 - Express (`apps/services-express`)
 
-基于 Express 的后端服务。
+后端服务应用，目前提供copilotkit接口和健康检查接口。
+
+### 服务应用 (`apps/services`)
+
+基于hono.js实现的版本
 
 ## 📊 特性
 
