@@ -2,8 +2,10 @@ package service
 
 import (
 	"backend/internal/common"
+	"backend/internal/common/dto"
+	"backend/internal/common/event"
 	"backend/internal/logic/supos/uns/uns/bo"
-	"backend/internal/repo/relationDB"
+	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
@@ -18,19 +20,19 @@ import (
 )
 
 type UnsLabelService struct {
-	unsMapper      relationDB.UnsNamespaceRepo
-	labelMapper    relationDB.UnsLabelRepo
-	labelRefMapper relationDB.UnsLabelRefRepo
+	unsMapper      dao.UnsNamespaceRepo
+	labelMapper    dao.UnsLabelRepo
+	labelRefMapper dao.UnsLabelRefRepo
 }
 
 func init() {
 	spring.RegisterBean[*UnsLabelService](&UnsLabelService{})
 }
 func (l *UnsLabelService) AllLabel(ctx context.Context, req *types.UnsLabelListReq) (resp *types.UnsLabelListResp, err error) {
-	dbFilter := relationDB.UnsLabelFilter{
+	dbFilter := dao.UnsLabelFilter{
 		LabelName: req.Key,
 	}
-	db := relationDB.GetDb(ctx)
+	db := dao.GetDb(ctx)
 	list, err := l.labelMapper.FindByFilter(db, dbFilter, nil)
 	if err != nil {
 		return nil, err
@@ -55,10 +57,10 @@ func (l *UnsLabelService) Create(ctx context.Context, req *types.UnsLabelCreateR
 	}
 
 	// 写入数据库
-	data := &relationDB.UnsLabel{
+	data := &dao.UnsLabel{
 		LabelName: req.LabelName,
 	}
-	db := relationDB.GetDb(ctx)
+	db := dao.GetDb(ctx)
 	if err = l.labelMapper.Insert(db, data); err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func (l *UnsLabelService) Delete(ctx context.Context, req *types.WithID) (resp *
 	if id <= 0 {
 		return nil, errors.Parameter.WithMsg("id无效")
 	}
-	err = relationDB.GetDb(ctx).Transaction(func(tx *gorm.DB) (er error) {
+	err = dao.GetDb(ctx).Transaction(func(tx *gorm.DB) (er error) {
 		if err = l.labelMapper.Delete(tx, id); err != nil {
 			return err
 		}
@@ -98,7 +100,7 @@ func (l *UnsLabelService) Detail(ctx context.Context, req *types.WithID) (resp *
 	if req.ID <= 0 {
 		return nil, errors.Parameter.WithMsg("id无效")
 	}
-	db := relationDB.GetDb(ctx)
+	db := dao.GetDb(ctx)
 	item, err := l.labelMapper.FindOne(db, req.ID)
 	if err != nil {
 		return nil, err
@@ -116,7 +118,7 @@ func (l *UnsLabelService) Update(ctx context.Context, req *types.UnsLabel) (resp
 	if strings.TrimSpace(req.LabelName) == "" {
 		return nil, errors.Parameter.WithMsg("labelName不能为空")
 	}
-	db := relationDB.GetDb(ctx)
+	db := dao.GetDb(ctx)
 	item, err := l.labelMapper.FindOne(db, req.ID)
 	if err != nil {
 		return nil, err
@@ -129,20 +131,20 @@ func (l *UnsLabelService) Update(ctx context.Context, req *types.UnsLabel) (resp
 }
 
 func (l *UnsLabelService) CreateBatch(ctx context.Context, labels []string) (err error) {
-	db := relationDB.GetDb(ctx)
+	db := dao.GetDb(ctx)
 	labelsPos, er := l.labelMapper.FindByNames(db, labels)
 	if er != nil {
 		return er
 	}
-	labelMap := base.MapArrayToMap[*relationDB.UnsLabel, string, *relationDB.UnsLabel](labelsPos, func(e *relationDB.UnsLabel) (ok bool, k string, v *relationDB.UnsLabel) {
+	labelMap := base.MapArrayToMap[*dao.UnsLabel, string, *dao.UnsLabel](labelsPos, func(e *dao.UnsLabel) (ok bool, k string, v *dao.UnsLabel) {
 		return true, e.LabelName, e
 	})
-	insertList := make([]*relationDB.UnsLabel, 0, len(labels))
+	insertList := make([]*dao.UnsLabel, 0, len(labels))
 	updateTime := time.Now()
 	for _, label := range labels {
 		po, has := labelMap[label]
 		if !has {
-			po = &relationDB.UnsLabel{ID: common.NextId(), LabelName: label}
+			po = &dao.UnsLabel{ID: common.NextId(), LabelName: label}
 			insertList = append(insertList, po)
 			po.CreateAt = updateTime
 		}
@@ -152,7 +154,7 @@ func (l *UnsLabelService) CreateBatch(ctx context.Context, labels []string) (err
 	}
 	return err
 }
-func (l *UnsLabelService) MakeUnsLabels(ctx context.Context, unsLabels []bo.UnsLabels, createTime time.Time) (rs []*relationDB.UnsLabel, er error) {
+func (l *UnsLabelService) MakeUnsLabels(ctx context.Context, unsLabels []bo.UnsLabels, createTime time.Time) (rs []*dao.UnsLabel, er error) {
 	var resetUnsIds []int64
 	labelUnsMap := make(map[string][]bo.UnsLabels)
 	for _, unsLabel := range unsLabels {
@@ -169,7 +171,7 @@ func (l *UnsLabelService) MakeUnsLabels(ctx context.Context, unsLabels []bo.UnsL
 			}
 		}
 	}
-	db := relationDB.GetDb(ctx)
+	db := dao.GetDb(ctx)
 	if len(resetUnsIds) > 0 {
 		er := l.labelRefMapper.DeleteByUnsIds(db, resetUnsIds)
 		if er != nil {
@@ -177,28 +179,28 @@ func (l *UnsLabelService) MakeUnsLabels(ctx context.Context, unsLabels []bo.UnsL
 		}
 	}
 	labels := base.MapKeys[string](labelUnsMap)
-	allLabels := make([]*relationDB.UnsLabel, 0, len(labels))
-	var saveLabels []*relationDB.UnsLabel
-	saveLabelRef := make([]*relationDB.UnsLabelRef, 0, len(labels))
+	allLabels := make([]*dao.UnsLabel, 0, len(labels))
+	var saveLabels []*dao.UnsLabel
+	saveLabelRef := make([]*dao.UnsLabelRef, 0, len(labels))
 	if len(labels) > 0 {
 		existLabels, er := l.labelMapper.FindByNames(db, labels)
 		if er != nil {
 			return nil, er
 		}
-		existLabelMap := base.MapArrayToMap[*relationDB.UnsLabel, string, *relationDB.UnsLabel](existLabels, func(e *relationDB.UnsLabel) (ok bool, k string, v *relationDB.UnsLabel) {
+		existLabelMap := base.MapArrayToMap[*dao.UnsLabel, string, *dao.UnsLabel](existLabels, func(e *dao.UnsLabel) (ok bool, k string, v *dao.UnsLabel) {
 			return true, e.LabelName, e
 		})
 		for _, label := range labels {
 			existLabel := existLabelMap[label]
 			labelPo := existLabel
 			if labelPo == nil {
-				labelPo = &relationDB.UnsLabel{LabelName: label, CreateAt: createTime}
+				labelPo = &dao.UnsLabel{LabelName: label, CreateAt: createTime}
 			}
 			if existLabel == nil {
 				// 新增标签
 				labelPo.ID = common.NextId()
 				if saveLabels == nil {
-					saveLabels = make([]*relationDB.UnsLabel, 0, len(labels))
+					saveLabels = make([]*dao.UnsLabel, 0, len(labels))
 				}
 				saveLabels = append(saveLabels, labelPo)
 				allLabels = append(allLabels, labelPo)
@@ -208,8 +210,8 @@ func (l *UnsLabelService) MakeUnsLabels(ctx context.Context, unsLabels []bo.UnsL
 			for _, ul := range unsLabelsList {
 				ul.SetLabelId(label, labelId)
 			}
-			saveLabelRef = append(saveLabelRef, base.Map[bo.UnsLabels, *relationDB.UnsLabelRef](unsLabelsList, func(e bo.UnsLabels) *relationDB.UnsLabelRef {
-				return &relationDB.UnsLabelRef{LabelID: labelId, UnsID: e.UnsId()}
+			saveLabelRef = append(saveLabelRef, base.Map[bo.UnsLabels, *dao.UnsLabelRef](unsLabelsList, func(e bo.UnsLabels) *dao.UnsLabelRef {
+				return &dao.UnsLabelRef{LabelID: labelId, UnsID: e.UnsId()}
 			})...)
 		}
 	}
@@ -224,20 +226,20 @@ func (l *UnsLabelService) MakeUnsLabels(ctx context.Context, unsLabels []bo.UnsL
 	}
 	return allLabels, er
 }
-func (s *UnsLabelService) MakeLabels(ctx context.Context, unsId int64, labelList []*types.LabelVo) *types.ResultVO {
-	db := relationDB.GetDb(ctx)
+func (s *UnsLabelService) MakeLabels(ctx context.Context, unsId int64, labelList []*types.LabelVo) error {
+	db := dao.GetDb(ctx)
 	uns, er := s.unsMapper.SelectById(db, unsId)
 	if uns == nil {
-		return &types.ResultVO{Code: 0, Msg: "ok"}
+		return nil
 	} else if er != nil {
-		return &types.ResultVO{Code: 500, Msg: er.Error()}
+		return er
 	}
 
 	labelIdNameMap := make(map[int64]string)
 	uns.LabelIds = labelIdNameMap
 	er = s.labelMapper.DeleteRefByUnsId(db, unsId)
 	if er != nil {
-		return &types.ResultVO{Code: 500, Msg: er.Error()}
+		return er
 	}
 
 	if len(labelList) > 0 {
@@ -256,7 +258,7 @@ func (s *UnsLabelService) MakeLabels(ctx context.Context, unsId int64, labelList
 			ids := base.MapKeys[int64](noNames)
 			labels, er := s.labelMapper.ListByIds(db, ids)
 			if er != nil {
-				return &types.ResultVO{Code: 500, Msg: er.Error()}
+				return er
 			} else if len(labels) > 0 {
 				for _, lb := range labels {
 					vo := noNames[lb.ID]
@@ -266,20 +268,20 @@ func (s *UnsLabelService) MakeLabels(ctx context.Context, unsId int64, labelList
 				}
 			}
 		}
-		labels := make([]*relationDB.UnsLabel, 0, len(labelList))
-		refs := make([]*relationDB.UnsLabelRef, 0, len(labelList))
+		labels := make([]*dao.UnsLabel, 0, len(labelList))
+		refs := make([]*dao.UnsLabelRef, 0, len(labelList))
 		now := time.Now()
 		for _, labelVo := range labelList {
 			lid := labelVo.ID
-			var ref *relationDB.UnsLabelRef
+			var ref *dao.UnsLabelRef
 			if lid != "" {
 				id, _ := strconv.ParseInt(lid, 10, 64)
-				ref = &relationDB.UnsLabelRef{LabelID: id, UnsID: unsId}
+				ref = &dao.UnsLabelRef{LabelID: id, UnsID: unsId}
 			} else {
 				// 创建标签
 				// 假设创建成功并返回 ID
-				label := &relationDB.UnsLabel{ID: common.NextId(), LabelName: labelVo.LabelName, CreateAt: now}
-				ref = &relationDB.UnsLabelRef{LabelID: label.ID, UnsID: unsId}
+				label := &dao.UnsLabel{ID: common.NextId(), LabelName: labelVo.LabelName, CreateAt: now}
+				ref = &dao.UnsLabelRef{LabelID: label.ID, UnsID: unsId}
 				labels = append(labels, label)
 			}
 			labelIdNameMap[ref.LabelID] = labelVo.LabelName
@@ -288,68 +290,89 @@ func (s *UnsLabelService) MakeLabels(ctx context.Context, unsId int64, labelList
 		if len(labels) > 0 {
 			er = s.labelMapper.MultiInsert(db, labels)
 			if er != nil {
-				return &types.ResultVO{Code: 500, Msg: er.Error()}
+				return er
 			}
 		}
 		if len(refs) > 0 {
 			er = s.labelRefMapper.MultiInsert(db, refs)
 			if er != nil {
-				return &types.ResultVO{Code: 500, Msg: er.Error()}
+				return er
 			}
 		}
 	}
 	uns.UpdateAt = time.Now()
 	er = s.unsMapper.Update(db, uns)
-	return &types.ResultVO{Code: 0, Msg: "ok"}
+	return er
 }
-func (s *UnsLabelService) CancelLabel(ctx context.Context, unsId int64, labelIds []int64) *types.ResultVO {
-	db := relationDB.GetDb(ctx)
+func (s *UnsLabelService) CancelLabel(ctx context.Context, unsId int64, labelIds []int64) error {
+	db := dao.GetDb(ctx)
 	uns, er := s.unsMapper.SelectById(db, unsId)
 	if uns == nil {
-		return &types.ResultVO{Code: 200, Msg: "ok"}
+		return nil
 	} else if er != nil {
-		return &types.ResultVO{Code: 500, Msg: er.Error()}
+		return er
 	}
 	er = s.labelRefMapper.DeleteByUnsIdAndLabelIds(db, uns.ID, labelIds)
 	if er != nil {
-		return &types.ResultVO{Code: 500, Msg: er.Error()}
+		return er
 	}
 	refs, er := s.labelRefMapper.ListByUnsId(db, unsId)
 	if er != nil {
-		return &types.ResultVO{Code: 500, Msg: er.Error()}
+		return er
 	}
 	labelIdMap := make(map[int64]string)
 	for _, ref := range refs {
 		labelIdMap[ref.LabelID] = ""
 	}
 	now := time.Now()
-	updatePo := &relationDB.UnsNamespace{}
+	updatePo := &dao.UnsNamespace{}
 	updatePo.LabelIds = labelIdMap
 	updatePo.ID = unsId
 	updatePo.UpdateAt = now
 	er = s.unsMapper.Update(db, updatePo)
 	if er != nil {
-		return &types.ResultVO{Code: 500, Msg: er.Error()}
+		return er
 	}
-	return &types.ResultVO{Code: 200, Msg: "ok"}
+	return nil
 }
-func (s *UnsLabelService) CancelLabelByNames(ctx context.Context, unsAlias string, labelNames []string) *types.ResultVO {
-	db := relationDB.GetDb(ctx)
+func (s *UnsLabelService) CancelLabelByNames(ctx context.Context, unsAlias string, labelNames []string) error {
+	db := dao.GetDb(ctx)
 	uns, er := s.unsMapper.GetByAlias(db, unsAlias)
 	if uns == nil {
-		return &types.ResultVO{Code: 400, Msg: i18ns.LocalizeMsg("uns.file.not.exist")}
+		return errors.NewCodeError(400, i18ns.LocalizeMsg("uns.file.not.exist"))
 	} else if er != nil {
-		return &types.ResultVO{Code: 500, Msg: er.Error()}
+		return er
 	}
 	labelList, er := s.labelMapper.FindByNames(db, labelNames)
 	if len(labelList) == 0 {
-		return &types.ResultVO{Code: 200, Msg: "ok"}
+		return nil
 	} else if er != nil {
-		return &types.ResultVO{Code: 500, Msg: er.Error()}
+		return nil
 	}
-	labelIds := base.Map[*relationDB.UnsLabel, int64](labelList, func(e *relationDB.UnsLabel) int64 {
+	labelIds := base.Map[*dao.UnsLabel, int64](labelList, func(e *dao.UnsLabel) int64 {
 		return e.ID
 	})
-	ctx = relationDB.SetDb(ctx, db)
+	ctx = dao.SetDb(ctx, db)
 	return s.CancelLabel(ctx, uns.ID, labelIds)
+}
+
+// OnEventRemoveTopicsEvent 处理UNS 删除事件
+func (s *UnsLabelService) OnEventRemoveTopicsEvent(event event.RemoveTopicsEvent) (er error) {
+	labelIds := base.FilterAndFlatMap[*dto.CreateTopicDto, int64](event.Topics, func(e *dto.CreateTopicDto) (vs []int64, ok bool) {
+		if len(e.LabelIDs) > 0 {
+			vs, ok = base.MapKeys(e.LabelIDs), true
+		}
+		return
+	})
+	if len(labelIds) == 0 {
+		return nil
+	}
+	db := dao.GetDb(event.Context)
+	for _, partLabelIds := range base.Partition(labelIds, 1000) {
+		er = s.labelRefMapper.DeleteByLabelIds(db, partLabelIds)
+		if er != nil {
+			return er
+		}
+	}
+	return
 }

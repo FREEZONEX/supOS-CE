@@ -7,6 +7,7 @@ import (
 
 // BatchCreateTableEvent defines an event for batch creating database tables.
 type BatchCreateTableEvent struct {
+	ApplicationEvent
 	FromImport    bool
 	FlowName      string
 	Topics        map[common.SrcJdbcType][]*dto.CreateTopicDto

@@ -8,6 +8,7 @@ const (
 
 // FlowInstallEvent defines an event for flow installation or uninstallation.
 type FlowInstallEvent struct {
+	ApplicationEvent
 	FlowName  string
 	Operation string
 }

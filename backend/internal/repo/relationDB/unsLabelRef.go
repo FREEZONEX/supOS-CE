@@ -50,6 +50,10 @@ func (p UnsLabelRefRepo) DeleteByUnsIds(db *gorm.DB, unsIds []int64) error {
 	err := p.model(db).Where("uns_id in ?", unsIds).Delete(&UnsLabelRef{}).Error
 	return stores.ErrFmt(err)
 }
+func (p UnsLabelRefRepo) DeleteByLabelIds(db *gorm.DB, labelIds []int64) error {
+	err := p.model(db).Where("label_id in ?", labelIds).Delete(&UnsLabelRef{}).Error
+	return stores.ErrFmt(err)
+}
 func (p UnsLabelRefRepo) DeleteByUnsIdAndLabelIds(db *gorm.DB, unsId int64, labelIds []int64) error {
 	err := p.model(db).Where("uns_id = ?", unsId).Where("label_id in ?", labelIds).Delete(&UnsLabelRef{}).Error
 	return stores.ErrFmt(err)

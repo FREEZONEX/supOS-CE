@@ -3,14 +3,14 @@ package service
 import (
 	"backend/internal/logic/supos/uns/label/service"
 	"backend/internal/logic/supos/uns/uns/bo"
-	"backend/internal/repo/relationDB"
+	dao "backend/internal/repo/relationDB"
 	"backend/share/spring"
 	"context"
 )
 
 type UnsAddService struct {
-	unsMapper       relationDB.UnsNamespaceRepo
-	labelRefMapper  relationDB.UnsLabelRefRepo
+	unsMapper       dao.UnsNamespaceRepo
+	labelRefMapper  dao.UnsLabelRefRepo
 	unsLabelService *service.UnsLabelService
 }
 
