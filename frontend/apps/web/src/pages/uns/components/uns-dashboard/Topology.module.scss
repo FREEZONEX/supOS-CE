@@ -76,7 +76,10 @@
 
 .common-node-hover {
   &:hover {
-    background-color: var(--supos-active-bg-color);
+    background-color: var(--supos-primary-bg);
+    border-right: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+    border-top: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+    border-bottom: 1px solid var(--supos-mode-color, var(--supos-theme-color));
     cursor: pointer;
   }
 }

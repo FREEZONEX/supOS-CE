@@ -15,7 +15,7 @@ import { useEffect, useRef } from 'react';
 import { useDeepCompareEffect, useMemoizedFn, useSize } from 'ahooks';
 import { data } from './data.ts';
 import { Graph } from '@antv/x6';
-import { ApplicationWeb } from '@carbon/icons-react';
+import { ApplicationWeb, Launch } from '@carbon/icons-react';
 import MQTT from './MQTT.tsx';
 
 const Modbus = (nodes: any) => {
@@ -151,6 +151,7 @@ const NodeRed = () => {
       <img src={nodeRed} alt="" width="28px" />
       {/*{formatMessage('common.nodeRed')}*/}
       Node-Red
+      <Launch size={16} />
     </div>
   );
 };
@@ -183,6 +184,7 @@ const Grafana = () => {
     <div className={classNames(styles['common-node'], styles['common-node-hover'])}>
       <ApplicationWeb size={28} />
       {formatMessage('dashboards.dashboard')}
+      <Launch size={16} />
     </div>
   );
 };
