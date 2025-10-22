@@ -122,13 +122,13 @@
               width: 30%;
               font-weight: bold;
               flex-shrink: 0;
-              word-break: break-word;
+              overflow-wrap: break-word;
             }
 
-            div:last-child {
+            & > div:last-child {
               padding: 5px 0;
               width: 70%;
-              word-break: break-word;
+              overflow-wrap: break-word;
             }
           }
 
