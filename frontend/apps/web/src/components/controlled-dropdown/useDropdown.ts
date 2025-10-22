@@ -87,8 +87,6 @@ const useDropdown = (): UseDropdownResult => {
   return {
     open,
     menuItems,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
     triggerRef,
     showDropdown,
     hideDropdown,

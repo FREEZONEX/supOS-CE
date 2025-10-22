@@ -28,8 +28,6 @@ export const AuthWrapper: FC<{ children: ReactNode; auth?: string | string[] }> 
           ) {
             return <div data-button-auth={auth}>{child}</div>;
           }
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
           return cloneElement(child, { ...child.props, 'data-button-auth': auth });
         }
         // 如果 child 不是有效的 React 元素，直接返回它

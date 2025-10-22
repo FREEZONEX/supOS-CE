@@ -444,8 +444,6 @@ const useRoleSetting = ({ onSaveBack }: any) => {
                 children: (
                   <Permission
                     disabled={disabledRoleList.includes(item.roleId)}
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-expect-error
                     ref={(el) => permissionRefs.current.set(item.roleId, el)}
                     initValue={item.resourceList}
                     onChange={(pre) => {

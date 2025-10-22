@@ -17,14 +17,12 @@ const SideMenuList: FC<{
   const handleNavigate = useMenuNavigate();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [menuSelectedKeys, setSelectedKeys] = useState<string[]>([]);
-  const menuRef = useRef(null);
+  const menuRef = useRef<any>(null);
   const handleClickOutside = (event: any) => {
     if (menuRef.current) {
       if (event.target.closest('.imgWrap')) return;
       if (event.target.closest('.ant-menu-submenu-popup')) return;
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      if (!menuRef.current.contains(event.target)) {
+      if (!menuRef.current?.contains?.(event.target)) {
         setOpenHoverNav(false);
       }
     }

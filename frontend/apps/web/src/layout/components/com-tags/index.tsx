@@ -59,8 +59,6 @@ const DraggableTagNode = forwardRef<HTMLDivElement, DraggableTabPaneProps>((prop
 
   // eslint-disable-next-line react-hooks/refs
   return cloneElement(props.children as ReactElement, {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
     ref: (node: HTMLDivElement) => {
       setNodeRef(node);
       if (typeof ref === 'function') {

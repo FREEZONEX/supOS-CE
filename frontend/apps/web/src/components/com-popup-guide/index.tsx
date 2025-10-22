@@ -82,8 +82,6 @@ const ComPopupGuide: FC<ComPopupGuideProps> = ({
   const Children = isValidElement(children) ? (
     cloneElement(children, {
       ...(children.props || {}),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
       className: classNames(children.props?.className, { 'com-popup-guide-wrapper': open }),
     })
   ) : open ? (

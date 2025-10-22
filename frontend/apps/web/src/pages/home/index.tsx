@@ -50,7 +50,7 @@ export interface ExampleProps extends ResourceProps {
 }
 
 const Index = () => {
-  const selectedIdRef = useRef<string | number>(null);
+  const selectedIdRef = useRef<string | number | null>(null);
   const { systemInfo, homeTree, homeTabGroup } = useBaseStore((state) => ({
     systemInfo: state.systemInfo,
     homeTree: state.homeTree,
@@ -108,9 +108,7 @@ const Index = () => {
         const { dashboardId, dashboardName, dashboardType } = data.find(
           (item: exampleItemTypes) => item.id === selectedIdRef.current
         );
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        selectedIdRef.current = undefined;
+        selectedIdRef.current = null;
         if (dashboardId) {
           window.open(
             `/dashboards/preview?id=${dashboardId}&type=${dashboardType}&status=preview&name=${dashboardName}`

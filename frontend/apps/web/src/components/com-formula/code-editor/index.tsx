@@ -52,7 +52,7 @@ const CodeEditor = forwardRef<CodeEditorRef | undefined, CodeEditorProp>(functio
   useImperativeHandle(ref, () => ({ getEditor: () => editor.current }));
   useEffect(() => {
     if (!editorContainer.current) return;
-    const keywords: Array<string> = getKeywords();
+    const keywords: any = getKeywords();
     codemirror.defineMode('formula', () => {
       function zipObject(arr: Array<string>) {
         const map: any = {};
