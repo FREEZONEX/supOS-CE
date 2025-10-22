@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - plugins/*
 catalogs:
   # 框架
   framework:

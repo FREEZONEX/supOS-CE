@@ -282,6 +282,10 @@ catalogs:
 importers:
 
   .:
+    dependencies:
+      lodash-es:
+        specifier: catalog:util
+        version: 4.17.21
     devDependencies:
       '@commitlint/cli':
         specifier: catalog:lint
@@ -295,6 +299,9 @@ importers:
       '@eslint/js':
         specifier: catalog:lint
         version: 9.37.0
+      '@types/lodash-es':
+        specifier: catalog:type
+        version: 4.17.12
       eslint:
         specifier: catalog:lint
         version: 9.37.0(jiti@2.6.1)
@@ -519,9 +526,6 @@ importers:
       js-cookie:
         specifier: catalog:util
         version: 3.0.5
-      lodash-es:
-        specifier: catalog:util
-        version: 4.17.21
       mermaid:
         specifier: ^11.5.0
         version: 11.12.0
@@ -604,9 +608,6 @@ importers:
       '@types/js-cookie':
         specifier: catalog:type
         version: 3.0.6
-      '@types/lodash-es':
-        specifier: catalog:type
-        version: 4.17.12
       '@types/node':
         specifier: catalog:type
         version: 24.7.2
@@ -658,6 +659,28 @@ importers:
       typescript:
         specifier: '>=5.7.2'
         version: 5.9.3
+
+  plugins/alert:
+    dependencies:
+      react:
+        specifier: catalog:framework
+        version: 18.3.1
+      react-dom:
+        specifier: catalog:framework
+        version: 18.3.1(react@18.3.1)
+      react-router:
+        specifier: catalog:framework
+        version: 7.9.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    devDependencies:
+      '@supos-os-edge/scripts':
+        specifier: workspace:^
+        version: link:../../packages/scripts
+      '@supos-os-edge/typescript-config':
+        specifier: workspace:^
+        version: link:../../packages/typescript-config
+      vite:
+        specifier: catalog:build
+        version: 7.1.9(@types/node@24.7.2)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
 
 packages:
 

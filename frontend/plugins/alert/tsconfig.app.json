@@ -1,0 +1,15 @@
+{
+  "extends": "@supos-os-edge/typescript-config/react",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "types": ["vite/client"],
+    /* Linting */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "customConditions": ["development"]
+  },
+  "include": ["src", "config", "src/types"],
+  "exclude": ["node_modules"]
+}

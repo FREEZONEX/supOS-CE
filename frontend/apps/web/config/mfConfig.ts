@@ -19,11 +19,11 @@ export const mfConfig = {
   shared: {
     react: {
       singleton: true,
-      requiredVersion: '19.2.0',
+      requiredVersion: '18.3.1',
     },
     'react-dom': {
       singleton: true,
-      requiredVersion: '19.2.0',
+      requiredVersion: '18.3.1',
     },
     'react-router': {
       singleton: true,
