@@ -17,7 +17,12 @@ const Item = ({ item }: any) => {
   const formatMessage = useTranslate();
   return (
     <div key={item.key}>
-      <ComEllipsis style={{ fontWeight: 400, fontSize: 12, color: '#525252' }}>{formatMessage(item.label)}</ComEllipsis>
+      <Flex justify="space-between" align="center">
+        <ComEllipsis style={{ fontWeight: 400, fontSize: 12, color: '#525252' }}>
+          {formatMessage(item.label)}
+        </ComEllipsis>
+        {item?.extra && <div style={{ flexShrink: 0 }}>{item?.extra}</div>}
+      </Flex>
       <Flex
         title={item.text}
         style={{
@@ -114,19 +119,17 @@ const MQTT = () => {
             key: 'payload',
             label: 'uns.payload',
             text: payloadInfo,
+            extra: topicInfo?.withSave2db ? (
+              <Button
+                title={formatMessage('uns.databaseInfo')}
+                size="small"
+                onClick={() => modalRef.current?.onOpen(topicInfo)}
+              >
+                <DataBase />
+              </Button>
+            ) : null,
           }}
         />
-        {topicInfo?.withDashboard && (
-          <>
-            <ComEllipsis style={{ fontWeight: 400, fontSize: 12, color: '#525252' }}>
-              {formatMessage('uns.databaseInfo')}
-            </ComEllipsis>
-            <Button style={{ marginTop: 12 }} size="small" onClick={() => modalRef.current?.onOpen(topicInfo)}>
-              <DataBase />
-              {formatMessage('uns.seeMore')}
-            </Button>
-          </>
-        )}
       </div>
       <DatabaseInfoModal ref={modalRef} />
     </Flex>

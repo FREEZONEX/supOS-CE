@@ -1,17 +1,20 @@
 export const getExampleForJavaType = (type: string, name: string) => {
   switch (type) {
-    case 'string':
+    case 'STRING':
       return name;
-    case 'integer':
-    case 'long':
-    case 'float':
-    case 'double':
-      return 1;
-    case 'boolean':
+    case 'INTEGER':
+      return 42; // 使用更具代表性的数字
+    case 'LONG':
+      return 123456; // 使用更具代表性的数字
+    case 'FLOAT':
+      return 123.45; // 使用更具代表性的数字
+    case 'DOUBLE':
+      return '123.456789';
+    case 'BOOLEAN':
       return true;
-    case 'datetime':
+    case 'DATETIME':
       return new Date().getTime();
     default:
-      return 1;
+      return 23;
   }
 };

@@ -478,6 +478,7 @@ const messages = {
   'uns.dataOperation': '数据源展示',
   'uns.definition': '定义',
   'uns.payload': '消息体',
+  'uns.payloadExample': '消息体示例',
   'uns.model': '文件夹',
   'uns.MQTTAccessPoint': 'MQTT接入点',
   'uns.MQTTAccessMethod': 'MQTT接入方式',

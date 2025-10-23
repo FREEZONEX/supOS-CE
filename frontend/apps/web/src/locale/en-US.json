@@ -440,6 +440,7 @@
   "uns.dataOperation": "Data Source",
   "uns.definition": "Definition",
   "uns.payload": "Payload",
+  "uns.payloadExample": "Payload Example",
   "uns.model": "Path",
   "uns.MQTTAccessPoint": "MQTT Access Point",
   "uns.MQTTAccessMethod": "MQTT Access Method",

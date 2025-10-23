@@ -102,7 +102,7 @@ const DatabaseInfoModal = forwardRef<ModalRef, ModalProps>((_props, ref) => {
         },
         {
           label: 'uns.table',
-          value: props?.alias,
+          value: props?.table,
           span: 12,
           key: 6,
         },
