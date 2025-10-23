@@ -41,7 +41,8 @@ const Item = ({ item }: any) => {
             whiteSpace: 'pre-wrap',
             wordWrap: 'break-word',
             wordBreak: 'break-all',
-            maxWidth: '100%',
+            width: '100%',
+            maxHeight: 150,
           }}
         >
           {item.text}
