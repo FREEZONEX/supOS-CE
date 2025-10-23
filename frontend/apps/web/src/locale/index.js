@@ -721,6 +721,8 @@ const messages = {
   'uns.table': 'Table',
   'uns.schema': 'Schema',
   'uns.prohibitKeywords': '禁止关键字label和template',
+  'uns.seeMore': '查看更多',
+  'uns.selectTopic': '请选择Topic',
 
   //公共通用模块
   'common.url': '地址',

@@ -683,6 +683,8 @@
   "uns.table": "Table",
   "uns.schema": "Schema",
   "uns.prohibitKeywords": "Ban keyword label and template",
+  "uns.selectTopic": "Please Select Topic",
+  "uns.seeMore": "See More",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

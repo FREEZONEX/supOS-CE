@@ -683,6 +683,8 @@
   "uns.table": "Table",
   "uns.schema": "Schema",
   "uns.prohibitKeywords": "禁止关键字label和template",
+  "uns.seeMore": "查看更多",
+  "uns.selectTopic": "请选择Topic",
   "common.url": "地址",
   "common.usage": "用法",
   "common.example": "示例",

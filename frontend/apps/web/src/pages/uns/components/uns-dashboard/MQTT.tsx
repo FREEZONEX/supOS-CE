@@ -11,22 +11,13 @@ import { getInstanceInfo } from '@/apis/inter-api';
 import { getExampleForJavaType } from '@/utils';
 import { fromPairs, map } from 'lodash-es';
 import DatabaseInfoModal, { type ModalRef } from './DatabaseInfoModal.tsx';
-
-const defaultPayload = JSON.stringify(
-  {
-    Name: 'Name',
-    CurrentValue: 1,
-    InitialValue: 1,
-  },
-  null,
-  2
-);
+import { DataBase } from '@carbon/icons-react';
 
 const Item = ({ item }: any) => {
   const formatMessage = useTranslate();
   return (
     <div key={item.key}>
-      <ComEllipsis style={{ fontWeight: 500, fontSize: 16 }}>{formatMessage(item.label)}</ComEllipsis>
+      <ComEllipsis style={{ fontWeight: 400, fontSize: 12, color: '#525252' }}>{formatMessage(item.label)}</ComEllipsis>
       <Flex
         title={item.text}
         style={{
@@ -41,9 +32,11 @@ const Item = ({ item }: any) => {
       >
         <pre
           style={{
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
+            overflow: 'auto',
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            wordBreak: 'break-all',
+            maxWidth: '100%',
           }}
         >
           {item.text}
@@ -58,9 +51,9 @@ const MQTT = () => {
   const systemInfo = useBaseStore((state) => state.systemInfo);
   const wsPort = systemInfo?.mqttTcpPort ?? window.location.port;
   const formatMessage = useTranslate();
-  const [payloadInfo, setPayLoadInfo] = useState<any>(defaultPayload);
+  const [payloadInfo, setPayLoadInfo] = useState<any>(formatMessage('uns.selectTopic'));
   const modalRef = useRef<ModalRef>(null);
-  const topicInfo = useRef(null);
+  const [topicInfo, setTopicInfo] = useState<any>(null);
   const mqttList = [
     {
       key: 'url',
@@ -73,31 +66,29 @@ const MQTT = () => {
       text: wsPort,
     },
   ];
-
   return (
     <Flex vertical className={cx(styles['item'], styles['item-right'])} gap={16}>
       <Flex justify="space-between" align="center">
         <ComEllipsis className={styles['title']}>{formatMessage('uns.mqttAccess')}</ComEllipsis>
-        <Button size="small" onClick={() => modalRef.current?.onOpen(topicInfo.current)}>
-          {formatMessage('uns.databaseInfo')}
-        </Button>
       </Flex>
       <div style={{ flex: 1, background: 'var(--supos-card-bg)', padding: 16, overflow: 'auto' }}>
         {mqttList?.map((item: any) => {
           return <Item item={item} key={item.key} />;
         })}
-        <ComEllipsis style={{ fontWeight: 500, fontSize: 16 }}>{formatMessage('uns.topic')}</ComEllipsis>
+        <ComEllipsis style={{ fontWeight: 400, fontSize: 12, color: '#525252' }}>
+          {formatMessage('uns.topic')}
+        </ComEllipsis>
         <SearchSelect
           style={{
             margin: '12px 0',
             width: '100%',
           }}
-          placeholder={formatMessage('uns.namespace')}
+          placeholder={formatMessage('common.select')}
           onChange={(e) => {
             if (e?.value) {
               getInstanceInfo({ id: e?.value })
                 .then((data) => {
-                  topicInfo.current = data;
+                  setTopicInfo(data);
                   const fieldExampleList = data?.fields?.map((item: any) => {
                     return {
                       key: item.name,
@@ -109,11 +100,11 @@ const MQTT = () => {
                   setPayLoadInfo(JSON.stringify(jsObj, null, 2));
                 })
                 .catch(() => {
-                  topicInfo.current = null;
+                  setTopicInfo(null);
                 });
             } else {
-              topicInfo.current = null;
-              setPayLoadInfo(defaultPayload);
+              setTopicInfo(null);
+              setPayLoadInfo(formatMessage('uns.selectTopic'));
             }
           }}
           labelInValue
@@ -125,6 +116,17 @@ const MQTT = () => {
             text: payloadInfo,
           }}
         />
+        {topicInfo?.withDashboard && (
+          <>
+            <ComEllipsis style={{ fontWeight: 400, fontSize: 12, color: '#525252' }}>
+              {formatMessage('uns.databaseInfo')}
+            </ComEllipsis>
+            <Button style={{ marginTop: 12 }} size="small" onClick={() => modalRef.current?.onOpen(topicInfo)}>
+              <DataBase />
+              {formatMessage('uns.seeMore')}
+            </Button>
+          </>
+        )}
       </div>
       <DatabaseInfoModal ref={modalRef} />
     </Flex>
