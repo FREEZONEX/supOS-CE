@@ -20,6 +20,7 @@
 
 .item-right {
   flex: 1 1 calc(25% - 12px);
+  overflow: hidden;
 }
 
 @media (800px < width <= 1400px) {
