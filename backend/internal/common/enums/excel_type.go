@@ -88,7 +88,7 @@ func ExcelTypeListFile() []ExcelTypeEnum {
 }
 
 // GetExcelTypeFromDataType returns ExcelTypeEnum from data type constant
-func GetExcelTypeFromDataType(dataType int) ExcelTypeEnum {
+func GetExcelTypeFromDataType(dataType int16) ExcelTypeEnum {
 	switch dataType {
 	case constants.TimeSequenceType:
 		return ExcelTypeFileTimeseries

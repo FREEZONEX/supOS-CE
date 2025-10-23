@@ -137,13 +137,13 @@ func (d UnsLabelRepo) UpdateWithField(db *gorm.DB, f UnsLabelFilter, updates map
 
 // GORM hooks
 // AfterUpdate: touch update_at to current time to ensure timestamp consistency
-func (u *UnsLabel) AfterUpdate(tx *gorm.DB) (err error) {
-	if u == nil || u.ID == 0 {
+func (l *UnsLabel) AfterUpdate(tx *gorm.DB) (err error) {
+	if l == nil || l.ID == 0 {
 		return nil
 	}
 	// Skip hooks to avoid recursion
 	if err = tx.Session(&gorm.Session{SkipHooks: true}).Model(&UnsLabel{}).
-		Where("id = ?", u.ID).
+		Where("id = ?", l.ID).
 		Update("update_at", time.Now()).Error; err != nil {
 		return stores.ErrFmt(err)
 	}
@@ -151,11 +151,11 @@ func (u *UnsLabel) AfterUpdate(tx *gorm.DB) (err error) {
 }
 
 // AfterDelete: cascade delete label refs to avoid orphaned rows
-func (u *UnsLabel) AfterDelete(tx *gorm.DB) (err error) {
-	if u == nil || u.ID == 0 {
+func (l *UnsLabel) AfterDelete(tx *gorm.DB) (err error) {
+	if l == nil || l.ID == 0 {
 		return nil
 	}
-	if err = tx.Where("label_id = ?", u.ID).Delete(&UnsLabelRef{}).Error; err != nil {
+	if err = tx.Where("label_id = ?", l.ID).Delete(&UnsLabelRef{}).Error; err != nil {
 		return stores.ErrFmt(err)
 	}
 	return nil

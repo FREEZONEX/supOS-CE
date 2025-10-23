@@ -18,22 +18,22 @@ type CreateTopicDto struct {
 	FlagNo      string `json:"-"`
 	Name        string `json:"name" validate:"required,max=63"`
 	DisplayName string `json:"displayName,omitzero" validate:"max=128"`
-	PathType    int    `json:"pathType" validate:"required,min=0,max=2"`
+	PathType    int16  `json:"pathType" validate:"required,min=0,max=2"`
 	Path        string `json:"path,omitzero"`
 	Alias       string `json:"alias" validate:"required"`
 	Description string `json:"description,omitzero" validate:"max=255"`
 
 	// Model/Template fields
-	ModelID    int64  `json:"modelId,omitzero"`
+	ModelID    *int64 `json:"modelId,omitzero"`
 	ModelAlias string `json:"modelAlias,omitzero"`
 	Template   string `json:"-"`
 
 	// Parent fields
 	ParentAlias string `json:"parentAlias,omitzero"`
-	ParentID    int64  `json:"parentId,omitzero"`
+	ParentID    *int64 `json:"parentId,omitzero"`
 
 	// Data type and fields
-	DataType  int                `json:"dataType" validate:"required,min=1,max=7"`
+	DataType  *int16             `json:"dataType" validate:"required,min=1,max=7"`
 	Fields    []*FieldDefine     `json:"fields,omitzero"`
 	DataSrcID common.SrcJdbcType `json:"-"` // SrcJdbcType
 
@@ -60,22 +60,23 @@ type CreateTopicDto struct {
 	StreamOptions     *StreamOptions   `json:"streamOptions,omitzero"`
 
 	// Protocol fields
-	DataPath     string         `json:"-"`
-	Protocol     map[string]any `json:"-"`
-	ProtocolType string         `json:"-"`
+	DataPath     string         `json:"dataPath"`
+	Protocol     map[string]any `json:"protocol"`
+	ProtocolType string         `json:"protocolType"`
 	ProtocolBean any            `json:"-"`
 
 	// Flags and options
-	Flags                         int `json:"-"`
-	AddFlow                       int `json:"addFlow,omitzero"`
-	AddDashBoard                  int `json:"-"`
-	Save2DB                       int `json:"save2db,omitzero"`
-	RetainTableWhenDeleteInstance int `json:"-"`
-	CreateTemplate                int `json:"-"`
+	Flags                         int32 `json:"flags"`
+	AddFlow                       *bool `json:"addFlow"`
+	AddDashBoard                  *bool `json:"addDashBoard"`
+	Save2DB                       *bool `json:"save2db"`
+	RetainTableWhenDeleteInstance *bool `json:"retainTableWhenDeleteInstance"`
+	CreateTemplate                *bool `json:"createTemplate"`
+	SubscribeEnable               *bool `json:"subscribeEnable"`
 
 	// Frequency for merge type
 	Frequency        string `json:"frequency,omitzero"`
-	FrequencySeconds int64  `json:"-"`
+	FrequencySeconds *int64 `json:"-"`
 
 	// Alarm rule
 	AlarmRuleDefine any `json:"-"` // AlarmRuleDefine type
@@ -97,17 +98,26 @@ type CreateTopicDto struct {
 	AccessLevel string `json:"accessLevel,omitzero"`
 
 	// Mount fields
-	MountType   int    `json:"mountType,omitzero"`
+	MountType   *int16 `json:"mountType,omitzero"`
 	MountSource string `json:"mountSource,omitzero"`
 
 	// Update metadata
 	UpdateAt      time.Time `json:"updateAt,omitzero"`
+	CreateAt      time.Time `json:"createAt,omitzero"`
 	FieldsChanged bool      `json:"-"`
 
 	// Internal fields
 	tmField        string                    `json:"-"`
 	fieldDefines   *FieldDefines             `json:"-"`
 	RefTopicFields map[int64]map[string]bool `json:"-"`
+	Status         int16                     `json:"-"`
+}
+
+func (u *CreateTopicDto) GetID() int64 {
+	return u.ID
+}
+func (u *CreateTopicDto) GetParentID() *int64 {
+	return u.ParentID
 }
 
 // GetTopic returns the topic based on configuration
@@ -225,7 +235,7 @@ func (c *CreateTopicDto) SetFrequency(frequency string) {
 		nano, ok := enums.TimeUnitsParseToNanoSecond(frequency)
 		if ok {
 			seconds := nano / enums.TimeUnitSecond.Multiple
-			c.FrequencySeconds = seconds
+			c.FrequencySeconds = &seconds
 		}
 	}
 }
@@ -237,12 +247,12 @@ func (c *CreateTopicDto) SetExpression(expression string) {
 }
 
 // CountNumberFields counts number of numeric fields
-func (c *CreateTopicDto) CountNumberFields() int {
+func (c *CreateTopicDto) CountNumberFields() int16 {
 	if c.Fields == nil {
 		return 0
 	}
 
-	count := 0
+	count := int16(0)
 	for _, f := range c.Fields {
 		if f.Type.IsNumber() && !f.IsSystemField() {
 			count++
@@ -312,6 +322,49 @@ func (c *CreateTopicDto) SetDataPath(dataPath string) *CreateTopicDto {
 func (c *CreateTopicDto) GetFieldDefines() *FieldDefines {
 	return c.fieldDefines
 }
+func (t *CreateTopicDto) GetId() int64 {
+	return t.ID
+}
+
+func (t *CreateTopicDto) GetParentId() *int64 {
+	return t.ParentID
+}
+
+func (t *CreateTopicDto) GetAlias() string {
+	return t.Alias
+}
+
+func (t *CreateTopicDto) GetParentAlias() string {
+	return t.ParentAlias
+}
+
+func (t *CreateTopicDto) GetName() string {
+	return t.Name
+}
+
+func (t *CreateTopicDto) GetDisplayName() string {
+	return t.DisplayName
+}
+
+func (t *CreateTopicDto) GetPath() string {
+	return t.Path
+}
+
+func (t *CreateTopicDto) GetDataType() *int16 {
+	return t.DataType
+}
+
+func (t *CreateTopicDto) GetPathType() int16 {
+	return t.PathType
+}
+
+func (t *CreateTopicDto) GetMountType() *int16 {
+	return t.MountType
+}
+
+func (t *CreateTopicDto) GetMountSource() string {
+	return t.MountSource
+}
 
 // TimestampField is an alias for GetTimestampField
 var TimestampField = (*CreateTopicDto).GetTimestampField
@@ -334,10 +387,9 @@ type CreateFileDto struct {
 
 // NewCreateFileDto creates a new CreateFileDto with PATH_TYPE_FILE
 func NewCreateFileDto() *CreateFileDto {
-	pathType := constants.PathTypeFile
 	return &CreateFileDto{
 		CreateTopicDto: CreateTopicDto{
-			PathType: pathType,
+			PathType: constants.PathTypeFile,
 		},
 	}
 }
@@ -349,10 +401,9 @@ type CreateFolderDto struct {
 
 // NewCreateFolderDto creates a new CreateFolderDto with PATH_TYPE_DIR
 func NewCreateFolderDto() *CreateFolderDto {
-	pathType := constants.PathTypeDir
 	return &CreateFolderDto{
 		CreateTopicDto: CreateTopicDto{
-			PathType: pathType,
+			PathType: constants.PathTypeDir,
 		},
 	}
 }

@@ -1,10 +1,11 @@
-package fieldutils
+package FieldUtils
 
 import (
+	"backend/internal/common"
 	"backend/internal/common/constants"
 	"backend/internal/common/dto"
 	"backend/internal/common/enums"
-	"backend/internal/common/utils/pathutil"
+	"backend/internal/common/utils/PathUtil"
 	"fmt"
 	"strings"
 )
@@ -13,7 +14,7 @@ import (
 var ExtendFields = []string{"unit", "upperLimit", "lowerLimit", "decimal"}
 
 // ExtendFlags for extended fields
-var ExtendFlags = []int{1 << 0, 1 << 1, 1 << 2, 1 << 3}
+var ExtendFlags = []int32{1 << 0, 1 << 1, 1 << 2, 1 << 3}
 
 // GetTimestampField finds the timestamp field in field definitions
 func GetTimestampField(fields []*dto.FieldDefine) *dto.FieldDefine {
@@ -26,7 +27,7 @@ func GetTimestampField(fields []*dto.FieldDefine) *dto.FieldDefine {
 }
 
 // GetQualityField finds the quality field in field definitions
-func GetQualityField(fields []*dto.FieldDefine, dataType int) *dto.FieldDefine {
+func GetQualityField(fields []*dto.FieldDefine, dataType int16) *dto.FieldDefine {
 	if dataType == constants.TimeSequenceType && fields != nil && len(fields) > 2 {
 		// Quality field is usually the last or second-to-last field
 		lastIdx := len(fields) - 1
@@ -69,7 +70,7 @@ func ValidateFields(fields []*dto.FieldDefine, checkSysField bool) error {
 		if name[0] >= '0' && name[0] <= '9' {
 			return fmt.Errorf("field name '%s' cannot start with a digit", name)
 		}
-		if !pathutil.IsFieldNameFormatOK(name) {
+		if !PathUtil.IsFieldNameFormatOK(name) {
 			return fmt.Errorf("field name '%s' has invalid format", name)
 		}
 	}
@@ -94,8 +95,8 @@ func CountNumericFields(fields []*dto.FieldDefine) int {
 }
 
 // GenerateFlag generates a bitmask flag from a list of used field names
-func GenerateFlag(extendFieldUsed []string) int {
-	flags := 0
+func GenerateFlag(extendFieldUsed []string) int32 {
+	flags := int32(0)
 	if len(extendFieldUsed) == 0 {
 		return flags
 	}
@@ -113,7 +114,7 @@ func GenerateFlag(extendFieldUsed []string) int {
 }
 
 // ParseFlag parses a bitmask flag into a list of used field names
-func ParseFlag(flag *int) []string {
+func ParseFlag(flag *int32) []string {
 	if flag == nil || *flag == 0 {
 		return nil
 	}
@@ -223,7 +224,7 @@ type TableFieldDefine struct {
 }
 
 // ProcessFieldDefines validates and processes a list of field definitions, optionally adding system fields.
-func ProcessFieldDefines(jdbcType int, fields []*dto.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
+func ProcessFieldDefines(jdbcType common.SrcJdbcType, fields []*dto.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
 	if len(fields) == 0 {
 		return nil, nil
 	}
@@ -254,7 +255,7 @@ func ProcessFieldDefines(jdbcType int, fields []*dto.FieldDefine, checkSysField 
 	var tableName string
 	var fNews []*dto.FieldDefine
 
-	if jdbcType == constants.TimeSequenceType {
+	if jdbcType.TypeCode() == constants.TimeSequenceType {
 		// Time-series data
 		fNews = make([]*dto.FieldDefine, 0, len(processedFields)+2)
 		fNews = append(fNews, &dto.FieldDefine{Name: constants.SysFieldCreateTime, Type: enums.FieldTypeDatetime})
@@ -267,7 +268,7 @@ func ProcessFieldDefines(jdbcType int, fields []*dto.FieldDefine, checkSysField 
 		}
 
 		// Special handling for TimeScaleDB when there is only one non-system field named "value".
-		if jdbcType == constants.JDBCTypeTimeScaleDB && len(nonSysFields) == 1 && nonSysFields[0].Name == constants.SystemSeqValue {
+		if jdbcType == common.SrcJdbcTypeTimeScaleDB && len(nonSysFields) == 1 && nonSysFields[0].Name == constants.SystemSeqValue {
 			theField := nonSysFields[0]
 			theField.Name = constants.SystemSeqValue // Ensure the name is correct
 			fNews = append(fNews, theField)

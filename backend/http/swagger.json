@@ -360,7 +360,7 @@
                         "type": "string"
                       },
                       "id": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "path": {
                         "type": "string"
@@ -559,23 +559,7 @@
                               "type": "integer"
                             },
                             "mount": {
-                              "type": "object",
-                              "required": [
-                                "mountType",
-                                "mountSource",
-                                "displayName"
-                              ],
-                              "properties": {
-                                "displayName": {
-                                  "type": "string"
-                                },
-                                "mountSource": {
-                                  "type": "string"
-                                },
-                                "mountType": {
-                                  "type": "integer"
-                                }
-                              }
+                              "type": "object"
                             },
                             "name": {
                               "type": "string"
@@ -1465,12 +1449,6 @@
                       "referTable": {
                         "type": "string"
                       },
-                      "referUns": {
-                        "type": "object",
-                        "additionalProperties": {
-                          "type": "integer"
-                        }
-                      },
                       "refers": {
                         "type": "array",
                         "items": {
@@ -1490,7 +1468,7 @@
                               "type": "string"
                             },
                             "id": {
-                              "type": "string"
+                              "type": "integer"
                             },
                             "path": {
                               "type": "string"
@@ -1801,23 +1779,7 @@
                               "type": "integer"
                             },
                             "mount": {
-                              "type": "object",
-                              "required": [
-                                "mountType",
-                                "mountSource",
-                                "displayName"
-                              ],
-                              "properties": {
-                                "displayName": {
-                                  "type": "string"
-                                },
-                                "mountSource": {
-                                  "type": "string"
-                                },
-                                "mountType": {
-                                  "type": "integer"
-                                }
-                              }
+                              "type": "object"
                             },
                             "name": {
                               "type": "string"
@@ -2460,7 +2422,7 @@
                         "type": "string"
                       },
                       "id": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "path": {
                         "type": "string"
@@ -3107,12 +3069,6 @@
                   "referTable": {
                     "type": "string"
                   },
-                  "referUns": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "integer"
-                    }
-                  },
                   "refers": {
                     "type": "array",
                     "items": {
@@ -3132,7 +3088,7 @@
                           "type": "string"
                         },
                         "id": {
-                          "type": "string"
+                          "type": "integer"
                         },
                         "path": {
                           "type": "string"
@@ -3352,12 +3308,6 @@
                 "referTable": {
                   "type": "string"
                 },
-                "referUns": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "integer"
-                  }
-                },
                 "refers": {
                   "type": "array",
                   "items": {
@@ -3377,7 +3327,7 @@
                         "type": "string"
                       },
                       "id": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "path": {
                         "type": "string"
@@ -4670,12 +4620,6 @@
                 "referTable": {
                   "type": "string"
                 },
-                "referUns": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "integer"
-                  }
-                },
                 "refers": {
                   "type": "array",
                   "items": {
@@ -4695,7 +4639,7 @@
                         "type": "string"
                       },
                       "id": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "path": {
                         "type": "string"
@@ -5585,23 +5529,7 @@
                               "type": "integer"
                             },
                             "mount": {
-                              "type": "object",
-                              "required": [
-                                "mountType",
-                                "mountSource",
-                                "displayName"
-                              ],
-                              "properties": {
-                                "displayName": {
-                                  "type": "string"
-                                },
-                                "mountSource": {
-                                  "type": "string"
-                                },
-                                "mountType": {
-                                  "type": "integer"
-                                }
-                              }
+                              "type": "object"
                             },
                             "name": {
                               "type": "string"
@@ -5814,7 +5742,7 @@
       }
     }
   },
-  "x-date": "2025-10-21 18:55:33",
+  "x-date": "2025-10-23 13:20:52",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

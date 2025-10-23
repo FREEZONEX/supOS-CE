@@ -10,7 +10,16 @@ import (
 )
 
 // --- Simple Compile-time Constants ---
-
+const ( // 注意：不能合并到第二个const()块，否则常量值可能会变
+	// Data Types (using iota for sequential values)
+	TimeSequenceType    int16 = iota + 1 // 时序类型 (1)
+	RelationType                         // 关系类型 (2)
+	CalculationRealType                  // 实时计算 (3)
+	CalculationHistType                  // 历史值计算 (4)
+	AlarmRuleType                        // 报警规则类型 (5)
+	MergeType                            // 聚合类型 (6)
+	CitingType                           // 引用类型 (7)
+)
 const (
 	// System Fields and Flags
 	SystemFieldPrev = "_"
@@ -22,23 +31,15 @@ const (
 	FirstMsgFlag    = "#1#"  // 启动时首条消息的标志
 
 	// Path Types
-	PathTypeDir      = 0 // 目录
-	PathTypeFile     = 2 // 文件
-	PathTypeTemplate = 1 // 模板
+	PathTypeDir      = int16(0) // 目录
+	PathTypeFile     = int16(2) // 文件
+	PathTypeTemplate = int16(1) // 模板
+	PathTypeLabel    = int16(7) // 标签
 
 	// Topic and Message Data Keys
 	ResultTopicPrev = "_rs/"       // 处理结果 topic前缀
 	MsgRawDataKey   = "_source_"   // 原始数据的 json key
 	MsgResDataKey   = "_resource_" // 处理过的 json key
-
-	// Data Types (using iota for sequential values)
-	TimeSequenceType    = iota + 1 // 时序类型 (1)
-	RelationType                   // 关系类型 (2)
-	CalculationRealType            // 实时计算 (3)
-	CalculationHistType            // 历史值计算 (4)
-	AlarmRuleType                  // 报警规则类型 (5)
-	MergeType                      // 聚合类型 (6)
-	CitingType                     // 引用类型 (7)
 
 	// Pagination Defaults
 	DefaultPageSize = 20
@@ -136,7 +137,7 @@ const (
 	UnsFlagAlarmAcceptWorkflow                    // 报警规则接收方式 32工作流
 	UnsFlagAccessLevelReadOnly                    // 北向访问级别:READ_ONLY-只读
 	UnsFlagAccessLevelReadWrite                   // 北向访问级别:READ_WRITE-读写
-	_                                             // Skip 1 << 8
+	UnsFlagWithSubscribeEnable                    // Skip 1 << 8
 	UnsFlagWithAttachment                         // UNS带附件的标志
 	UnsFlagHasData                                // UNS有存过数据的标志
 )
@@ -217,23 +218,23 @@ func getEnvAsBool(key string, defaultValue bool) bool {
 
 // --- Helper Functions (equivalent to public static methods) ---
 
-func WithFlow(unsFlag int) bool {
+func WithFlow(unsFlag int32) bool {
 	return (unsFlag & UnsFlagWithFlow) == UnsFlagWithFlow
 }
 
-func WithDashBoard(unsFlag int) bool {
+func WithDashBoard(unsFlag int32) bool {
 	return (unsFlag & UnsFlagWithDashboard) == UnsFlagWithDashboard
 }
 
-func WithSave2db(unsFlag int) bool {
+func WithSave2db(unsFlag int32) bool {
 	return (unsFlag & UnsFlagWithSave2DB) == UnsFlagWithSave2DB
 }
 
-func WithRetainTableWhenDeleteInstance(unsFlag int) bool {
+func WithRetainTableWhenDeleteInstance(unsFlag int32) bool {
 	return (unsFlag & UnsFlagRetainTableWhenDelInstance) == UnsFlagRetainTableWhenDelInstance
 }
 
-func WithReadOnly(unsFlag int) string {
+func WithReadOnly(unsFlag int32) string {
 	if (unsFlag & UnsFlagAccessLevelReadOnly) == UnsFlagAccessLevelReadOnly {
 		return AccessLevelReadOnly
 	}
@@ -243,21 +244,21 @@ func WithReadOnly(unsFlag int) string {
 	return "" // Go uses "" instead of null for strings
 }
 
-func WithAttachment(flags *int) bool {
+func WithAttachment(flags *int32) bool {
 	if flags == nil {
 		return false
 	}
 	return (*flags & UnsFlagWithAttachment) == UnsFlagWithAttachment
 }
 
-func WithHasData(flags *int) bool {
+func WithHasData(flags *int32) bool {
 	if flags == nil {
 		return false
 	}
 	return (*flags & UnsFlagHasData) == UnsFlagHasData
 }
 
-func IsValidDataType(dataType int) bool {
+func IsValidDataType(dataType int16) bool {
 	return dataType >= TimeSequenceType && dataType <= CitingType
 }
 

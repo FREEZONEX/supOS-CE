@@ -26,13 +26,12 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	caches.InitStore(c.CacheRedis)
 	nodeID := utils.GetNodeID(c.CacheRedis, c.Name)
 	relationDB.Migrate(c.Database, c.DatabaseSchema)
-	SnowFlake := utils.NewSnowFlake(nodeID)
-	common.SnowFlake = SnowFlake
+	common.InitSnowflake(nodeID)
 	return &ServiceContext{
 		Config:         c,
 		CheckTokenWare: middleware.NewCheckTokenWareMiddleware().Handle,
 		InitCtxsWare:   middleware.NewInitCtxsWareMiddleware().Handle,
 		Redis:          redis.MustNewRedis(c.CacheRedis[0].RedisConf),
-		SnowFlake:      SnowFlake,
+		SnowFlake:      utils.NewSnowFlake(nodeID),
 	}
 }

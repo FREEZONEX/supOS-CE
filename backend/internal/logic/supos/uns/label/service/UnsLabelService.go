@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/common"
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/dto"
 	"backend/internal/common/event"
 	"backend/internal/logic/supos/uns/uns/bo"
@@ -15,7 +16,6 @@ import (
 	"time"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"gorm.io/gorm"
 )
 
@@ -155,6 +155,9 @@ func (l *UnsLabelService) CreateBatch(ctx context.Context, labels []string) (err
 	return err
 }
 func (l *UnsLabelService) MakeUnsLabels(ctx context.Context, unsLabels []bo.UnsLabels, createTime time.Time) (rs []*dao.UnsLabel, er error) {
+	if len(unsLabels) == 0 {
+		return nil, nil
+	}
 	var resetUnsIds []int64
 	labelUnsMap := make(map[string][]bo.UnsLabels)
 	for _, unsLabel := range unsLabels {
@@ -339,7 +342,7 @@ func (s *UnsLabelService) CancelLabelByNames(ctx context.Context, unsAlias strin
 	db := dao.GetDb(ctx)
 	uns, er := s.unsMapper.GetByAlias(db, unsAlias)
 	if uns == nil {
-		return errors.NewCodeError(400, i18ns.LocalizeMsg("uns.file.not.exist"))
+		return errors.NewCodeError(400, I18nUtils.GetMessage("uns.file.not.exist"))
 	} else if er != nil {
 		return er
 	}

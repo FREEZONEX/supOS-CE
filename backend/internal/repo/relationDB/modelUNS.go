@@ -1,7 +1,8 @@
 package relationDB
 
 import (
-	"backend/internal/types"
+	"backend/internal/common/constants"
+	"backend/internal/common/dto"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -23,12 +24,12 @@ const TableNameUnsNamespace = "uns_namespace"
 type UnsNamespace struct {
 	ID               int64            `gorm:"column:id;primaryKey" json:"id"`
 	LayRec           string           `gorm:"column:lay_rec;not null" json:"lay_rec"`
-	Alias_           string           `gorm:"column:alias;not null" json:"alias"`
+	Alias            string           `gorm:"column:alias;not null" json:"alias"`
 	ParentAlias      string           `gorm:"column:parent_alias" json:"parent_alias"`
 	Name             string           `gorm:"column:name;not null" json:"name"`
 	Path             string           `gorm:"column:path;not null" json:"path"`
 	PathType         int16            `gorm:"column:path_type;not null" json:"path_type"`
-	DataType         int16            `gorm:"column:data_type" json:"data_type"`
+	DataType         *int16           `gorm:"column:data_type" json:"data_type"`
 	Fields           Fields           `gorm:"column:fields;type:json;" json:"fields"`
 	CreateAt         time.Time        `gorm:"column:create_at;default:now()" json:"create_at"`
 	Status           int16            `gorm:"column:status;default:1" json:"status"`
@@ -36,36 +37,84 @@ type UnsNamespace struct {
 	UpdateAt         time.Time        `gorm:"column:update_at" json:"update_at"`
 	Protocol         string           `gorm:"column:protocol" json:"protocol"`
 	DataPath         string           `gorm:"column:data_path" json:"data_path"`
-	WithFlags        int32            `gorm:"column:with_flags" json:"with_flags"`
+	WithFlags        *int32           `gorm:"column:with_flags" json:"with_flags"`
 	DataSrcID        int16            `gorm:"column:data_src_id" json:"data_src_id"`
 	RefUns           RefUns           `gorm:"column:ref_uns;default:{};type:jsonb;" json:"ref_uns"`
 	Refers           Refers           `gorm:"column:refers;type:json;" json:"refers"`
 	Expression       string           `gorm:"column:expression" json:"expression"`
 	TableName_       string           `gorm:"column:table_name" json:"table_name"`
 	NumberFields     int16            `gorm:"column:number_fields" json:"number_fields"`
-	ParentID         int64            `gorm:"column:parent_id" json:"parent_id"`
-	ModelID          int64            `gorm:"column:model_id" json:"model_id"`
+	ParentID         *int64           `gorm:"column:parent_id" json:"parent_id"`
+	ModelID          *int64           `gorm:"column:model_id" json:"model_id"`
 	ProtocolType     string           `gorm:"column:protocol_type" json:"protocol_type"`
 	Extend           map[string]any   `gorm:"column:extend;type:jsonb;serializer:json;" json:"extend"`
 	DisplayName      string           `gorm:"column:display_name" json:"display_name"`
 	LabelIds         map[int64]string `gorm:"column:label_ids;type:jsonb;serializer:json;" json:"label_ids"`
-	ExtendFieldFlags int32            `gorm:"column:extend_field_flags" json:"extend_field_flags"`
-	MountType        int16            `gorm:"column:mount_type" json:"mount_type"`
+	ExtendFieldFlags *int32           `gorm:"column:extend_field_flags" json:"extend_field_flags"`
+	MountType        *int16           `gorm:"column:mount_type" json:"mount_type"`
 	MountSource      string           `gorm:"column:mount_source" json:"mount_source"`
 	SubscribeAt      time.Time        `gorm:"column:subscribe_at" json:"subscribe_at"`
+
+	ModelAlias string `gorm:"-" json:"modelAlias"`
+	PathName   string `gorm:"-" json:"pathName"`
 }
+
+func (t *UnsNamespace) GetId() int64 {
+	return t.ID
+}
+
+func (t *UnsNamespace) GetParentId() *int64 {
+	return t.ParentID
+}
+
+func (t *UnsNamespace) GetAlias() string {
+	return t.Alias
+}
+
+func (t *UnsNamespace) GetParentAlias() string {
+	return t.ParentAlias
+}
+
+func (t *UnsNamespace) GetName() string {
+	return t.Name
+}
+
+func (t *UnsNamespace) GetDisplayName() string {
+	return t.DisplayName
+}
+
+func (t *UnsNamespace) GetPath() string {
+	return t.Path
+}
+
+func (t *UnsNamespace) GetDataType() *int16 {
+	return t.DataType
+}
+
+func (t *UnsNamespace) GetPathType() int16 {
+	return t.PathType
+}
+
+func (t *UnsNamespace) GetMountType() *int16 {
+	return t.MountType
+}
+
+func (t *UnsNamespace) GetMountSource() string {
+	return t.MountSource
+}
+
 type UnsPo struct {
 	UnsNamespace
 	// 以下都是数据库表不存在的字段，对应 java 的注解： @TableField(exist = false)
-	PathName            string `gorm:"column:path_name" json:"pathName"`
-	ModelAlias          string `gorm:"column:model_alias" json:"modelAlias"`
-	TemplateName        string `gorm:"column:template_name" json:"templateName"`
-	TemplateAlias       string `gorm:"column:template_alias" json:"TemplateAlias"`
-	CountChildren       int    `gorm:"column:count_children" json:"countChildren"`
-	CountDirectChildren int    `gorm:"column:count_direct_children" json:"countDirectChildren"`
-	Labels              string `gorm:"column:labels" json:"labels"`
+	PathName            string `gorm:"->;<-:false;column:path_name" json:"pathName"`
+	ModelAlias          string `gorm:"->;<-:false;column:model_alias" json:"modelAlias"`
+	TemplateName        string `gorm:"->;<-:false;column:template_name" json:"templateName"`
+	TemplateAlias       string `gorm:"->;<-:false;column:template_alias" json:"TemplateAlias"`
+	CountChildren       int    `gorm:"->;<-:false;column:count_children" json:"countChildren"`
+	CountDirectChildren int    `gorm:"->;<-:false;column:count_direct_children" json:"countDirectChildren"`
+	Labels              string `gorm:"->;<-:false;column:labels" json:"labels"`
 }
-type Fields []types.FieldDefine
+type Fields []*dto.FieldDefine
 
 func (f *Fields) Scan(value interface{}) error {
 	if value == nil {
@@ -107,7 +156,7 @@ func (f RefUns) Value() (driver.Value, error) {
 	return json.Marshal(f)
 }
 
-type Refers []types.InstanceFieldVo
+type Refers []*dto.InstanceField
 
 func (f *Refers) Scan(value interface{}) error {
 	if value == nil {
@@ -153,6 +202,12 @@ func (f LabelIds) Value() (driver.Value, error) {
 func (*UnsNamespace) TableName() string {
 	return TableNameUnsNamespace
 }
+func (u *UnsNamespace) GetID() int64 {
+	return u.ID
+}
+func (u *UnsNamespace) GetParentID() *int64 {
+	return u.ParentID
+}
 
 const TableNameUnsLabel = "uns_label"
 
@@ -168,8 +223,51 @@ type UnsLabel struct {
 }
 
 // TableName UnsLabel's table name
-func (*UnsLabel) TableName() string {
+func (l *UnsLabel) TableName() string {
 	return TableNameUnsLabel
+}
+func (l *UnsLabel) GetId() int64 {
+	return l.ID
+}
+
+func (l *UnsLabel) GetParentId() *int64 {
+	return nil
+}
+
+func (l *UnsLabel) GetAlias() string {
+	return ""
+}
+
+func (l *UnsLabel) GetParentAlias() string {
+	return ""
+}
+
+func (l *UnsLabel) GetName() string {
+	return l.LabelName
+}
+
+func (l *UnsLabel) GetDisplayName() string {
+	return l.LabelName
+}
+
+func (l *UnsLabel) GetPath() string {
+	return "label/" + l.LabelName
+}
+
+func (l *UnsLabel) GetDataType() *int16 {
+	return nil
+}
+
+func (l *UnsLabel) GetPathType() int16 {
+	return constants.PathTypeLabel
+}
+
+func (l *UnsLabel) GetMountType() *int16 {
+	return nil
+}
+
+func (l *UnsLabel) GetMountSource() string {
+	return ""
 }
 
 const TableNameUnsLabelRef = "uns_label_ref"

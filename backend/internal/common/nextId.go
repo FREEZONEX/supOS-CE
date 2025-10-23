@@ -1,9 +1,20 @@
 package common
 
-import "gitee.com/unitedrhino/share/utils"
+import (
+	"github.com/bwmarrin/snowflake"
+)
 
-var SnowFlake *utils.SnowFlake
+var snowFlake *snowflake.Node
 
+func InitSnowflake(nodeId int64) {
+	node, err := snowflake.NewNode(nodeId)
+	if err != nil {
+		panic(err)
+	}
+	snowFlake = node
+}
+
+// NextId 这里使用标准雪花算法，而 gitee.com/unitedrhino/share/utils.Snowflake 生成的格式不对，不能用
 func NextId() int64 {
-	return SnowFlake.GetSnowflakeId()
+	return snowFlake.Generate().Int64()
 }

@@ -100,6 +100,17 @@ func Equals[T comparable](a, b []T) bool {
 	}
 	return true
 }
+func EqualsF[T comparable](a, b []T, compare func(a, b T) bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, e := range a {
+		if !compare(b[i], e) {
+			return false
+		}
+	}
+	return true
+}
 func ToString[T comparable](arr []T) string {
 	var str = strings.Builder{}
 	str.Grow(4 + len(arr)*10)

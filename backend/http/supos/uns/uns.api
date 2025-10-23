@@ -63,7 +63,7 @@ type (
 		CountChildren  int                    `json:"countChildren"`
 		PathType       int                    `json:"pathType"`
 		Type           int                    `json:"type"`
-		DataType       int                    `json:"dataType"`
+		DataType       *int16                 `json:"dataType"`
 		Name           string                 `json:"name"`
 		DisplayName    string                 `json:"displayName"`
 		Path           string                 `json:"path"`
@@ -77,7 +77,7 @@ type (
 		HasChildren    bool                   `json:"hasChildren"`
 		CreateAt       string                 `json:"createAt"`
 		UpdateAt       string                 `json:"updateAt"`
-		Mount          MountDetailVo          `json:"mount"`
+		Mount          *MountDetailVo          `json:"mount"`
 	}
 	MountDetailVo {
 		MountType   int    `json:"mountType"`
@@ -178,6 +178,13 @@ type (
 		AccessLevel      string                 `json:"accessLevel"`
 		Mount            MountDetailVo          `json:"mount"`
 	}
+    InstanceField {
+        Id    int64 `json:"id"`
+        Alias string `json:"alias"`
+        Path  string `json:"path"`
+        Field string `json:"field"`
+        Uts   bool   `json:"uts"`
+    }
 	InstanceFieldVo {
 		Id    string `json:"id"`
 		Alias string `json:"alias"`
@@ -258,7 +265,6 @@ type (
 		Name                          string                 `json:"name"`
 		DisplayName                   string                 `json:"displayName,optional"`
 		PathType                      int                    `json:"pathType"`
-		ReferUns                      map[int64]int          `json:"referUns,optional"`
 		ReferIds                      []int64                `json:"referIds,optional"`
 		ReferTable                    string                 `json:"referTable,optional"`
 		RefFields                     []FieldDefine          `json:"refFields,optional"`
@@ -273,7 +279,7 @@ type (
 		ExtendFieldUsed               []string               `json:"extendFieldUsed,optional"`
 		DataPath                      string                 `json:"dataPath,optional"`
 		Description                   string                 `json:"description,optional"`
-		Refers                        []InstanceFieldVo      `json:"refers,optional"`
+		Refers                        []InstanceField      `json:"refers,optional"`
 		Expression                    string                 `json:"expression,optional"`
 		StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 		AddFlow                       bool                   `json:"addFlow,optional"`
@@ -313,7 +319,7 @@ type (
 		Fields                        []FieldDefine          `json:"fields,optional"`
 		DataPath                      string                 `json:"dataPath,optional"`
 		Description                   string                 `json:"description,optional"`
-		Refers                        []InstanceFieldVo      `json:"refers,optional"`
+		Refers                        []InstanceField      `json:"refers,optional"`
 		Expression                    string                 `json:"expression,optional"`
 		StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 		AddFlow                       bool                   `json:"addFlow,optional"`
@@ -406,7 +412,7 @@ type (
 		Persistence      bool                   `json:"persistence,optional"`
 		DashBoard        bool                   `json:"dashBoard,optional"`
 		AddFlow          bool                   `json:"addFlow,optional"`
-		Refers           []InstanceFieldVo      `json:"refers,optional"`
+		Refers           []InstanceField      `json:"refers,optional"`
 		Expression       string                 `json:"expression,optional"`
 		Frequency        string                 `json:"frequency,optional"`
 		ExtendProperties map[string]interface{} `json:"extendProperties,optional"`

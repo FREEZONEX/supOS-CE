@@ -64,7 +64,7 @@ type CreateFileDto struct {
 	Persistence      bool                   `json:"persistence,optional"`
 	DashBoard        bool                   `json:"dashBoard,optional"`
 	AddFlow          bool                   `json:"addFlow,optional"`
-	Refers           []InstanceFieldVo      `json:"refers,optional"`
+	Refers           []InstanceField        `json:"refers,optional"`
 	Expression       string                 `json:"expression,optional"`
 	Frequency        string                 `json:"frequency,optional"`
 	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
@@ -81,7 +81,6 @@ type CreateTopicDto struct {
 	Name                          string                 `json:"name"`
 	DisplayName                   string                 `json:"displayName,optional"`
 	PathType                      int                    `json:"pathType"`
-	ReferUns                      map[int64]int          `json:"referUns,optional"`
 	ReferIds                      []int64                `json:"referIds,optional"`
 	ReferTable                    string                 `json:"referTable,optional"`
 	RefFields                     []FieldDefine          `json:"refFields,optional"`
@@ -91,12 +90,12 @@ type CreateTopicDto struct {
 	ModelAlias                    string                 `json:"modelAlias,optional"`
 	ParentAlias                   string                 `json:"parentAlias,optional"`
 	ParentId                      int64                  `json:"parentId,optional"`
-	DataType                      int                    `json:"dataType"`
-	Fields                        []FieldDefine          `json:"fields"`
+	DataType                      int                    `json:"dataType,optional"`
+	Fields                        []FieldDefine          `json:"fields,optional"`
 	ExtendFieldUsed               []string               `json:"extendFieldUsed,optional"`
 	DataPath                      string                 `json:"dataPath,optional"`
 	Description                   string                 `json:"description,optional"`
-	Refers                        []InstanceFieldVo      `json:"refers,optional"`
+	Refers                        []InstanceField        `json:"refers,optional"`
 	Expression                    string                 `json:"expression,optional"`
 	StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 	AddFlow                       bool                   `json:"addFlow,optional"`
@@ -250,6 +249,14 @@ type InstanceDetailReq struct {
 type InstanceDetailResp struct {
 	BaseResult
 	Data InstanceDetail `json:"data"`
+}
+
+type InstanceField struct {
+	Id    int64  `json:"id"`
+	Alias string `json:"alias"`
+	Path  string `json:"path"`
+	Field string `json:"field"`
+	Uts   bool   `json:"uts"`
 }
 
 type InstanceFieldVo struct {
@@ -479,7 +486,7 @@ type TopicTreeResult struct {
 	CountChildren  int                    `json:"countChildren"`
 	PathType       int                    `json:"pathType"`
 	Type           int                    `json:"type"`
-	DataType       int                    `json:"dataType"`
+	DataType       *int16                 `json:"dataType"`
 	Name           string                 `json:"name"`
 	DisplayName    string                 `json:"displayName"`
 	Path           string                 `json:"path"`
@@ -493,7 +500,7 @@ type TopicTreeResult struct {
 	HasChildren    bool                   `json:"hasChildren"`
 	CreateAt       string                 `json:"createAt"`
 	UpdateAt       string                 `json:"updateAt"`
-	Mount          MountDetailVo          `json:"mount"`
+	Mount          *MountDetailVo         `json:"mount"`
 }
 
 type TreeOuterStructureVo struct {
@@ -595,7 +602,7 @@ type UpdateUnsDto struct {
 	Fields                        []FieldDefine          `json:"fields,optional"`
 	DataPath                      string                 `json:"dataPath,optional"`
 	Description                   string                 `json:"description,optional"`
-	Refers                        []InstanceFieldVo      `json:"refers,optional"`
+	Refers                        []InstanceField        `json:"refers,optional"`
 	Expression                    string                 `json:"expression,optional"`
 	StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 	AddFlow                       bool                   `json:"addFlow,optional"`

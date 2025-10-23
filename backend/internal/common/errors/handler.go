@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"backend/internal/common/I18nUtils"
 	"log"
 	"net/http"
 	"runtime/debug"
@@ -25,7 +26,7 @@ func GlobalErrorHandler(next http.Handler) http.Handler {
 						if buzErr.Code >= 400 && buzErr.Code < 600 {
 							httpStatus = buzErr.Code
 						}
-						msg := i18ns.LocalizeMsg(buzErr.Msg, buzErr.Params...)
+						msg := I18nUtils.GetMessage(buzErr.Msg, buzErr.Params...)
 						Fail(w, httpStatus, buzErr.Code, msg)
 						return
 					}

@@ -2,14 +2,14 @@ package bo
 
 type NodeUnsInfo interface {
 	GetId() int64
-	GetParentId() int64
+	GetParentId() *int64
 	GetAlias() string
 	GetParentAlias() string
 	GetName() string
 	GetDisplayName() string
 	GetPath() string
-	GetDataType() int32
-	GetPathType() int32
-	GetMountType() int32
+	GetDataType() *int16
+	GetPathType() int16
+	GetMountType() *int16
 	GetMountSource() string
 }

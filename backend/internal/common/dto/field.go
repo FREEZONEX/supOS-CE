@@ -42,6 +42,9 @@ func (f *FieldDefine) SetName(name string) {
 func (f *FieldDefine) SetIndex(index string) {
 	f.Index = strings.TrimSpace(index)
 }
+func (f *FieldDefine) Equals(a *FieldDefine) bool {
+	return f.Name == a.Name && f.Type == a.Type
+}
 
 // Clone creates a deep copy of FieldDefine
 func (f *FieldDefine) Clone() *FieldDefine {

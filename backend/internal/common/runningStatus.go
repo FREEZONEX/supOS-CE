@@ -1,6 +1,8 @@
 package common
 
-import "gitee.com/unitedrhino/share/i18ns"
+import (
+	"backend/internal/common/I18nUtils"
+)
 
 // RunningStatus represents running status information
 type RunningStatus struct {
@@ -32,7 +34,7 @@ func NewRunningStatusWithCode(code int, msg string) *RunningStatus {
 	finished := true
 	return &RunningStatus{
 		Code:     code,
-		Msg:      i18ns.LocalizeMsg(msg),
+		Msg:      I18nUtils.GetMessage(msg),
 		Finished: &finished,
 	}
 }
@@ -42,7 +44,7 @@ func NewRunningStatusWithError(code int, msg string, errTipFile string) *Running
 	finished := true
 	return &RunningStatus{
 		Code:       code,
-		Msg:        i18ns.LocalizeMsg(msg),
+		Msg:        I18nUtils.GetMessage(msg),
 		ErrTipFile: errTipFile,
 		Finished:   &finished,
 	}
@@ -54,7 +56,7 @@ func NewRunningStatusWithProgress(n, i int, task, msg string) *RunningStatus {
 		N:    &n,
 		I:    &i,
 		Task: task,
-		Msg:  i18ns.LocalizeMsg(msg),
+		Msg:  I18nUtils.GetMessage(msg),
 	}
 }
 

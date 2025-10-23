@@ -7,20 +7,22 @@ type TreeNodeUns struct {
 	Path          string `json:"path"`
 	Alias         string `json:"alias"`
 	ParentAlias   string `json:"parentAlias"`
-	ParentID      int64  `json:"parentId"`
-	PathType      int32  `json:"pathType"`
-	DataType      int32  `json:"dataType"`
-	MountType     int32  `json:"mountType"`
+	ParentID      *int64 `json:"parentId"`
+	PathType      int16  `json:"pathType"`
+	DataType      *int16 `json:"dataType"`
+	MountType     *int16 `json:"mountType"`
 	MountSource   string `json:"mountSource"`
 	CountChildren string `json:"countChildren"`
 }
+
+var _ NodeUnsInfo = &TreeNodeUns{}
 
 // 实现NodeUnsInfo接口的方法
 func (t *TreeNodeUns) GetId() int64 {
 	return t.ID
 }
 
-func (t *TreeNodeUns) GetParentId() int64 {
+func (t *TreeNodeUns) GetParentId() *int64 {
 	return t.ParentID
 }
 
@@ -44,15 +46,15 @@ func (t *TreeNodeUns) GetPath() string {
 	return t.Path
 }
 
-func (t *TreeNodeUns) GetDataType() int32 {
+func (t *TreeNodeUns) GetDataType() *int16 {
 	return t.DataType
 }
 
-func (t *TreeNodeUns) GetPathType() int32 {
+func (t *TreeNodeUns) GetPathType() int16 {
 	return t.PathType
 }
 
-func (t *TreeNodeUns) GetMountType() int32 {
+func (t *TreeNodeUns) GetMountType() *int16 {
 	return t.MountType
 }
 

@@ -29,7 +29,7 @@ func GetDb(ctx context.Context) *gorm.DB {
 			return db
 		}
 	}
-	return stores.GetCommonConn(ctx)
+	return stores.GetCommonConn(ctx).Debug()
 }
 func SetDb(ctx context.Context, db *gorm.DB) context.Context {
 	return context.WithValue(ctx, "db", db)
@@ -48,6 +48,15 @@ func (p UnsNamespaceRepo) Insert(db *gorm.DB, data *UnsNamespace) error {
 	return stores.ErrFmt(result.Error)
 }
 
+// 批量插入记录
+func (p UnsNamespaceRepo) MultiInsert(db *gorm.DB, data []*UnsNamespace) error {
+	err := p.model(db).Clauses(clause.OnConflict{UpdateAll: true}).Create(data).Error
+	return stores.ErrFmt(err)
+}
+func (p UnsNamespaceRepo) MultiUpdate(db *gorm.DB, data []*UnsNamespace) error {
+	err := p.model(db).Save(data).Error
+	return stores.ErrFmt(err)
+}
 func (p UnsNamespaceRepo) FindOneByFilter(db *gorm.DB, f UnsNamespaceFilter) (*UnsNamespace, error) {
 	var result UnsNamespace
 	err := p.model(db).First(&result).Error
@@ -108,12 +117,6 @@ func (p UnsNamespaceRepo) FindOneByAlias(db *gorm.DB, alias string) (*UnsNamespa
 	return &result, nil
 }
 
-// 批量插入 LightStrategyDevice 记录
-func (p UnsNamespaceRepo) MultiInsert(db *gorm.DB, data []*UnsNamespace) error {
-	err := p.model(db).Clauses(clause.OnConflict{UpdateAll: true}).Create(data).Error
-	return stores.ErrFmt(err)
-}
-
 func (p UnsNamespaceRepo) UpdateWithField(db *gorm.DB, f UnsNamespaceFilter, updates map[string]any) error {
 	err := p.model(db).Updates(updates).Error
 	return stores.ErrFmt(err)
@@ -139,7 +142,8 @@ func (p UnsNamespaceRepo) ListAliasByBase(db *gorm.DB, base string) ([]string, e
 	err := p.model(db).
 		Model(&UnsNamespace{}).
 		Select("alias").
-		Where("alias = ? OR alias LIKE ? ", base, pattern).
+		Where("(alias = ? OR alias LIKE ? )", base, pattern).
+		Where("status=1").
 		Pluck("alias", &aliases).Error
 	return aliases, stores.ErrFmt(err)
 }

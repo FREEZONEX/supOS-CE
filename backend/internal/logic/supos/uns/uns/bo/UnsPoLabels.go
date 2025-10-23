@@ -6,14 +6,14 @@ import (
 )
 
 type UnsPoLabels struct {
-	unsPo       relationDB.UnsNamespace
+	unsPo       *relationDB.UnsNamespace
 	labels      []string
 	resetLabels bool
 	dto         *dto.CreateTopicDto
 	labelIds    map[int64]string
 }
 
-func NewUnsPoLabels(unsPo relationDB.UnsNamespace, resetLabels bool, labels []string) *UnsPoLabels {
+func NewUnsPoLabels(unsPo *relationDB.UnsNamespace, resetLabels bool, labels []string) *UnsPoLabels {
 	labelIds := make(map[int64]string)
 	unsPo.LabelIds = labelIds
 	return &UnsPoLabels{

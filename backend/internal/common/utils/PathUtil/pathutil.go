@@ -1,4 +1,4 @@
-package pathutil
+package PathUtil
 
 import (
 	"backend/internal/common/constants"
@@ -20,7 +20,7 @@ var (
 )
 
 // ValidTopicFormat 校验topic格式
-func ValidTopicFormat(topic string, dataType *int) bool {
+func ValidTopicFormat(topic string, dataType *int16) bool {
 	// 报警规则类型没有格式限制
 	if dataType != nil && *dataType == constants.AlarmRuleType {
 		return true
@@ -153,7 +153,7 @@ func GenerateFileAlias(path string) string {
 }
 
 // GenerateAlias 根据路径和类型生成别名
-func GenerateAlias(path string, pathType int) string {
+func GenerateAlias(path string, pathType int16) string {
 	if pathType == constants.PathTypeFile { // 2 is file type
 		return GenerateFileAlias(path)
 	}
