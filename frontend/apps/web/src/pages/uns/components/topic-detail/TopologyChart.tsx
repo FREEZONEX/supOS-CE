@@ -628,10 +628,18 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
       });
     }
     if (!withSave2db) {
-      return Object.assign({}, _data, {
-        nodes: _data.nodes.slice(0, -2),
-        edges: _data.edges.slice(0, -2),
-      });
+      if (!withDashboard) {
+        return Object.assign({}, _data, {
+          nodes: _data.nodes.slice(0, -2),
+          edges: _data.edges.slice(0, -2),
+        });
+      } else {
+        // 这里我要删除apps1节点
+        return Object.assign({}, _data, {
+          nodes: [_data.nodes[0], _data.nodes[1], { ..._data.nodes[3], x: 680 }],
+          edges: [_data.edges[0], { ..._data.edges[1], target: 'apps1' }],
+        });
+      }
     }
     if (withSave2db && (!dashboardType?.includes('grafana') || !withDashboard)) {
       return Object.assign({}, _data, {
