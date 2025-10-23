@@ -156,7 +156,15 @@ const DatabaseInfoModal = forwardRef<ModalRef, ModalProps>((_props, ref) => {
                     align="center"
                     justify="space-between"
                   >
-                    <pre>{item.value}</pre>
+                    <pre
+                      style={{
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {item.value}
+                    </pre>
                     <ComCopy textToCopy={item.value} />
                   </Flex>
                 </Col>

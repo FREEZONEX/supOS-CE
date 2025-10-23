@@ -39,7 +39,15 @@ const Item = ({ item }: any) => {
         align="center"
         justify="space-between"
       >
-        <pre>{item.text}</pre>
+        <pre
+          style={{
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {item.text}
+        </pre>
         <ComCopy textToCopy={item.text} />
       </Flex>
     </div>
