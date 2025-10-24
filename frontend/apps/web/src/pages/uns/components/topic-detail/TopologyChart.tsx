@@ -21,9 +21,9 @@ import { getRefreshList, getSourceList } from '@/apis/chat2db';
 import timescaleDB from '@/assets/home-icons/timescaleDB.svg';
 import ComFormula from '@/components/com-formula';
 import ProTable from '@/components/pro-table';
-import { simpleFormat, formatTimestamp } from '@/utils/format';
 import { getSearchParamsString } from '@/utils/url-util';
 import { useBaseStore } from '@/stores/base';
+import ComCodeSnippet from '../../../../components/com-code-snippet';
 
 const NodeRed: FC<any> = (data) => {
   const [mounted, setMounted] = useState(false);
@@ -251,87 +251,25 @@ const NodeRedTable: FC<any> = ({ flowList }) => {
     </div>
   );
 };
-const TdEngine1: FC<any> = ({ payload, dt = {}, instanceInfo }) => {
-  // const systemInfo = useBaseStore((state) => state.systemInfo);
-  console.log(instanceInfo);
-  const formatMessage = useTranslate();
-  // const navigate = useNavigate();
-  const columns: any = [
-    {
-      title: formatMessage('uns.attribute'),
-      dataIndex: 'key',
-      width: '30%',
-      render: (text: any) => <span className="payloadFirstTd">{text}</span>,
-    },
-    {
-      title: formatMessage('uns.value'),
-      dataIndex: 'value',
-      width: '30%',
-      render: (text: any) => simpleFormat(text),
-    },
-    {
-      title: formatMessage('common.latestUpdate'),
-      width: '35%',
-      dataIndex: 'updateTime',
-      render: (text: any) => formatTimestamp(text),
-    },
-  ];
-
-  const dataSource = payload
-    ? Object.keys(payload).map((key) => ({
-        key,
-        value: payload[key],
-        updateTime: dt?.[key],
-      }))
-    : [];
+const TdEngine1: FC<any> = ({ instanceInfo }) => {
+  const fieldList = instanceInfo?.fields?.map((field: any) => `"${field.name}"`).join(', ') || '"*"';
+  const sql = !instanceInfo?.tbFieldName
+    ? `SELECT ${fieldList} FROM "public"."${instanceInfo?.table}" LIMIT 10`
+    : `SELECT ${fieldList} FROM "public"."${instanceInfo?.table}" WHERE tag=${instanceInfo?.id} LIMIT 10`;
   return (
     <>
       <div style={{ width: '100%', marginBottom: 12 }} className={styles['name']}>
-        Database
+        SQL
       </div>
-      <ProTable
-        className={styles.customTable}
-        columns={columns}
-        dataSource={dataSource}
-        pagination={false}
-        rowKey="key"
-        hiddenEmpty
-        bordered
-        rowHoverable={false}
-      />
-      {/*{systemInfo?.containerMap?.chat2db && instanceInfo?.dataType === 2 && instanceInfo?.alias && (*/}
-      {/*  <div className={styles['btn']}>*/}
-      {/*    <Button*/}
-      {/*      color="default"*/}
-      {/*      variant="filled"*/}
-      {/*      style={{ marginTop: '10px', width: '100px' }}*/}
-      {/*      icon={<Launch />}*/}
-      {/*      iconPosition="end"*/}
-      {/*      onClick={() => {*/}
-      {/*        getSourceList().then((data: any) => {*/}
-      {/*          const sourceData = data?.data?.data?.find((i: any) => i.alias === '@postgresql');*/}
-      {/*          const loadData = (params: any) => {*/}
-      {/*            getRefreshList(params).then((res: any) => {*/}
-      {/*              if (res.hasNextPage) {*/}
-      {/*                loadData({*/}
-      {/*                  dataSourceId: sourceData?.id,*/}
-      {/*                  pageNo: res.data?.pageNo + 1,*/}
-      {/*                });*/}
-      {/*              } else {*/}
-      {/*                navigate(*/}
-      {/*                  `/SQLEditor?dataSourceName=@postgresql&databaseName=postgres&databaseType=POSTGRESQL&schemaName=public&tableName=${instanceInfo?.alias}`*/}
-      {/*                );*/}
-      {/*              }*/}
-      {/*            });*/}
-      {/*          };*/}
-      {/*          loadData({ dataSourceId: sourceData?.id });*/}
-      {/*        });*/}
-      {/*      }}*/}
-      {/*    >*/}
-      {/*      {formatMessage('uns.sqlEditor')}*/}
-      {/*    </Button>*/}
-      {/*  </div>*/}
-      {/*)}*/}
+      <ComCodeSnippet
+        style={{ border: '1px solid var(--supos-table-tr-color)' }}
+        minCollapsedNumberOfRows={4}
+        maxCollapsedNumberOfRows={4}
+        copyPosition={true}
+        copyText={sql}
+      >
+        {sql}
+      </ComCodeSnippet>
     </>
   );
 };
