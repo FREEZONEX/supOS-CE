@@ -5,8 +5,6 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
-
-	"gitee.com/unitedrhino/share/i18ns"
 )
 
 // GlobalErrorHandler returns a middleware that recovers from any panics and handles errors.

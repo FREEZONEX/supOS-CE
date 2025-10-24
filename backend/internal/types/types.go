@@ -90,8 +90,8 @@ type CreateTopicDto struct {
 	ModelAlias                    string                 `json:"modelAlias,optional"`
 	ParentAlias                   string                 `json:"parentAlias,optional"`
 	ParentId                      int64                  `json:"parentId,optional"`
-	DataType                      int                    `json:"dataType,optional"`
-	Fields                        []FieldDefine          `json:"fields,optional"`
+	DataType                      int                    `json:"dataType"`
+	Fields                        []FieldDefine          `json:"fields"`
 	ExtendFieldUsed               []string               `json:"extendFieldUsed,optional"`
 	DataPath                      string                 `json:"dataPath,optional"`
 	Description                   string                 `json:"description,optional"`
@@ -400,6 +400,21 @@ type ResultVO struct {
 	Data interface{} `json:"data,optional"`
 }
 
+type RouteListResp struct {
+	Code int             `json:"code"`
+	Msg  string          `json:"msg"`
+	Data []SimpleRouteVO `json:"data"`
+}
+
+type SaveMenuReq struct {
+	ServiceName string `form:"serviceName,optional"` // 服务名（可选）
+	Name        string `form:"name"`                 // 名称，唯一标识一个菜单
+	ShowName    string `form:"showName"`             // 显示名
+	Description string `form:"description,optional"` // 描述（可选）
+	BaseUrl     string `form:"baseUrl"`              // baseURL
+	OpenType    int    `form:"openType"`             // 跳转方式：0-iframe打开，1-打开新页面，2-app
+}
+
 type SearchPagedReq struct {
 	Key        string   `form:"k,optional"`
 	ModelTopic string   `form:"modelTopic,optional"`
@@ -428,6 +443,12 @@ type SendOption struct {
 	TimeoutToFail  int64 `json:"timeoutToFail,optional"`  //超时失败时间
 	RequestTimeout int64 `json:"requestTimeout,optional"` //请求超时,超时后会进行重试
 	RetryInterval  int64 `json:"retryInterval,optional"`  //重试间隔
+}
+
+type SimpleRouteVO struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
 }
 
 type StreamOptions struct {

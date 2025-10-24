@@ -77,7 +77,7 @@ func (t *TopicDefinition) GetJdbcType() any {
 // GetDataType 获取数据类型
 func (t *TopicDefinition) GetDataType() int {
 	if t.CreateTopicDto != nil {
-		return t.CreateTopicDto.DataType
+		return int(*t.CreateTopicDto.DataType)
 	}
 	return 0
 }
@@ -157,7 +157,7 @@ func (t *TopicDefinition) initByCreateTopicDto(createDto *dto.CreateTopicDto, in
 	expr := createDto.CompileExpression
 	if expr != nil || len(createDto.Refers) > 0 {
 		dataType := t.GetDataType()
-		if dataType == constants.AlarmRuleType {
+		if dataType == int(constants.AlarmRuleType) {
 			fieldsMap := t.FieldDefines.FieldsMap
 			rsField, exists := fieldsMap["isAlarm"] // AlarmRuleDefine.FIELD_IS_ALARM
 			if !exists {

@@ -7,10 +7,13 @@ require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/expr-lang/expr v1.17.6
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/jinzhu/copier v0.4.0
+	github.com/magiconair/properties v1.8.7
 	github.com/mozillazg/go-pinyin v0.21.0
+	github.com/orcaman/concurrent-map/v2 v2.0.1
 	github.com/parnurzeal/gorequest v0.3.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/samber/do/v2 v2.0.0

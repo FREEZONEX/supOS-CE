@@ -9,14 +9,16 @@ import (
 	suposdevtools "backend/internal/handler/supos/devtools"
 	suposexample "backend/internal/handler/supos/example"
 	suposglobal "backend/internal/handler/supos/global"
+	suposkong "backend/internal/handler/supos/kong"
+	suposmenu "backend/internal/handler/supos/menu"
 	suposmount "backend/internal/handler/supos/mount"
+	suposnodered "backend/internal/handler/supos/nodered"
 	suposresource "backend/internal/handler/supos/resource"
 	suposuns "backend/internal/handler/supos/uns"
 	suposunsalarm "backend/internal/handler/supos/uns/alarm"
 	suposunsdashboard "backend/internal/handler/supos/uns/dashboard"
 	suposunsexternal "backend/internal/handler/supos/uns/external"
 	suposunsfile "backend/internal/handler/supos/uns/file"
-	suposunskong "backend/internal/handler/supos/uns/kong"
 	suposunslabel "backend/internal/handler/supos/uns/label"
 	suposunsmodel "backend/internal/handler/supos/uns/model"
 	suposunsperson "backend/internal/handler/supos/uns/person"
@@ -133,6 +135,30 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 获取简化的路由列表
+				Method:  http.MethodGet,
+				Path:    "/routeList",
+				Handler: suposkong.RouteListHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/inter-api/supos/kong"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 保存菜单
+				Method:  http.MethodPost,
+				Path:    "/menu",
+				Handler: suposmenu.SaveMenuHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api"),
+	)
+
+	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
@@ -151,6 +177,23 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/mount"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 代理 NodeRed /flows 接口（备用路径）
+				Method:  http.MethodGet,
+				Path:    "/flows/test/nodered",
+				Handler: suposnodered.ProxyNodeRedFlowsHandler2Handler(serverCtx),
+			},
+			{
+				// 代理 NodeRed /flows 接口
+				Method:  http.MethodGet,
+				Path:    "/test/nodered",
+				Handler: suposnodered.ProxyNodeRedFlowsHandler(serverCtx),
+			},
+		},
 	)
 
 	server.AddRoutes(
@@ -361,39 +404,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/uns"),
-	)
-
-	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
-			[]rest.Route{
-				{
-					// 确认报警
-					Method:  http.MethodPost,
-					Path:    "/alarm/confirm",
-					Handler: suposunskong.ConfirmHandler(serverCtx),
-				},
-				{
-					// 查询报警列表
-					Method:  http.MethodPost,
-					Path:    "/alarm/pageList",
-					Handler: suposunskong.PageListHandler(serverCtx),
-				},
-				{
-					// 更新报警规则
-					Method:  http.MethodPut,
-					Path:    "/alarm/rule",
-					Handler: suposunskong.UpdateHandler(serverCtx),
-				},
-				{
-					// 获取路由
-					Method:  http.MethodGet,
-					Path:    "/routeList",
-					Handler: suposunskong.RouteListHandler(serverCtx),
-				},
-			}...,
-		),
-		rest.WithPrefix("/inter-api/supos/kong"),
 	)
 
 	server.AddRoutes(
