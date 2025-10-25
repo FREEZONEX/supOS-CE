@@ -357,7 +357,7 @@ func newUnsFile(unsDto *dto.CreateTopicDto) *dao.UnsNamespace {
 	instance.Name = unsDto.Name
 	instance.ParentAlias = unsDto.ParentAlias
 	instance.TableName_ = unsDto.TableName
-	instance.WithFlags = &unsDto.Flags
+	instance.WithFlags = unsDto.Flags
 	instance.ModelID = unsDto.ModelID
 	instance.ModelAlias = unsDto.ModelAlias
 
@@ -588,7 +588,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *dto.CreateTopicDto, exist
 		newUns.Refers = unsDto.Refers
 		newUns.Expression = unsDto.Expression
 	} else {
-		if unsDto.Flags == 0 {
+		if unsDto.Flags == nil {
 			flag := generateFlag(unsDto.AddFlow, unsDto.Save2DB, unsDto.AddDashBoard,
 				unsDto.RetainTableWhenDeleteInstance, unsDto.SubscribeEnable, unsDto.AccessLevel)
 			newUns.WithFlags = &flag

@@ -66,13 +66,13 @@ type CreateTopicDto struct {
 	ProtocolBean any            `json:"-"`
 
 	// Flags and options
-	Flags                         int32 `json:"flags"`
-	AddFlow                       *bool `json:"addFlow"`
-	AddDashBoard                  *bool `json:"addDashBoard"`
-	Save2DB                       *bool `json:"save2db"`
-	RetainTableWhenDeleteInstance *bool `json:"retainTableWhenDeleteInstance"`
-	CreateTemplate                *bool `json:"createTemplate"`
-	SubscribeEnable               *bool `json:"subscribeEnable"`
+	Flags                         *int32 `json:"flags"`
+	AddFlow                       *bool  `json:"addFlow"`
+	AddDashBoard                  *bool  `json:"addDashBoard"`
+	Save2DB                       *bool  `json:"save2db"`
+	RetainTableWhenDeleteInstance *bool  `json:"retainTableWhenDeleteInstance"`
+	CreateTemplate                *bool  `json:"createTemplate"`
+	SubscribeEnable               *bool  `json:"subscribeEnable"`
 
 	// Frequency for merge type
 	Frequency        string `json:"frequency,omitzero"`

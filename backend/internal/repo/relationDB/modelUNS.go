@@ -218,7 +218,7 @@ type UnsLabel struct {
 	ID                 int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
 	LabelName          string    `gorm:"column:label_name" json:"label_name"`
 	CreateAt           time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
-	WithFlags          int32     `gorm:"column:with_flags" json:"with_flags"`
+	WithFlags          *int32    `gorm:"column:with_flags" json:"with_flags"`
 	SubscribeFrequency string    `gorm:"column:subscribe_frequency" json:"subscribe_frequency"`
 	SubscribeAt        time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
 	UpdateAt           time.Time `gorm:"column:update_at;default:now()" json:"update_at"`

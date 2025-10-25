@@ -76,7 +76,7 @@ func po2Dto(p *dao.UnsNamespace, unsDto *dto.CreateTopicDto) {
 		withFlags = *p.WithFlags
 	}
 	unsDto.ID = p.ID
-	unsDto.Flags = withFlags
+	unsDto.Flags = p.WithFlags
 	unsDto.AddFlow = boPt(constants.WithFlow(withFlags))
 	unsDto.AddDashBoard = boPt(constants.WithDashBoard(withFlags))
 	unsDto.Save2DB = boPt(constants.WithSave2db(withFlags))
@@ -168,6 +168,11 @@ var apiConvertOptions = copier.Option{IgnoreEmpty: true, Converters: []copier.Ty
 }}
 
 func ConvertApiDto(apiDto types.CreateTopicDto) *dto.CreateTopicDto {
+	var target dto.CreateTopicDto
+	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
+	return &target
+}
+func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *dto.CreateTopicDto {
 	var target dto.CreateTopicDto
 	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
 	return &target

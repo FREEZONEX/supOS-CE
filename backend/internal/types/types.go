@@ -616,10 +616,10 @@ type UpdateUnsDto struct {
 	ReferModelId                  string                 `json:"referModelId,optional"`
 	Alias                         string                 `json:"alias"`
 	ModelId                       int64                  `json:"modelId,optional"`
-	ModelAlias                    string                 `json:"modelAlias,optional"`
-	ParentAlias                   string                 `json:"parentAlias,optional"`
-	ParentId                      int64                  `json:"parentId,optional"`
-	DataType                      int                    `json:"dataType,optional"`
+	ModelAlias                    *string                `json:"modelAlias,optional"`
+	ParentAlias                   *string                `json:"parentAlias,optional"`
+	ParentId                      *int64                 `json:"parentId,optional"`
+	DataType                      *int                   `json:"dataType,optional"`
 	Fields                        []FieldDefine          `json:"fields,optional"`
 	DataPath                      string                 `json:"dataPath,optional"`
 	Description                   string                 `json:"description,optional"`
