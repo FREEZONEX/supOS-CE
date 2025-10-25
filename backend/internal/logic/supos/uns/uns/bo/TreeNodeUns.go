@@ -1,18 +1,18 @@
 package bo
 
 type TreeNodeUns struct {
-	ID            int64  `json:"id"`
-	Name          string `json:"name"`
-	DisplayName   string `json:"displayName"`
-	Path          string `json:"path"`
-	Alias         string `json:"alias"`
-	ParentAlias   string `json:"parentAlias"`
-	ParentID      *int64 `json:"parentId"`
-	PathType      int16  `json:"pathType"`
-	DataType      *int16 `json:"dataType"`
-	MountType     *int16 `json:"mountType"`
-	MountSource   string `json:"mountSource"`
-	CountChildren string `json:"countChildren"`
+	ID            int64   `json:"id"`
+	Name          string  `json:"name"`
+	DisplayName   string  `json:"displayName"`
+	Path          string  `json:"path"`
+	Alias         string  `json:"alias"`
+	ParentAlias   *string `json:"parentAlias"`
+	ParentID      *int64  `json:"parentId"`
+	PathType      int16   `json:"pathType"`
+	DataType      *int16  `json:"dataType"`
+	MountType     *int16  `json:"mountType"`
+	MountSource   string  `json:"mountSource"`
+	CountChildren string  `json:"countChildren"`
 }
 
 var _ NodeUnsInfo = &TreeNodeUns{}
@@ -30,7 +30,7 @@ func (t *TreeNodeUns) GetAlias() string {
 	return t.Alias
 }
 
-func (t *TreeNodeUns) GetParentAlias() string {
+func (t *TreeNodeUns) GetParentAlias() *string {
 	return t.ParentAlias
 }
 

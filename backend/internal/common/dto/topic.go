@@ -29,8 +29,8 @@ type CreateTopicDto struct {
 	Template   string `json:"-"`
 
 	// Parent fields
-	ParentAlias string `json:"parentAlias,omitzero"`
-	ParentID    *int64 `json:"parentId,omitzero"`
+	ParentAlias *string `json:"parentAlias,omitzero"`
+	ParentID    *int64  `json:"parentId,omitzero"`
 
 	// Data type and fields
 	DataType  *int16             `json:"dataType" validate:"required,min=1,max=7"`
@@ -107,10 +107,11 @@ type CreateTopicDto struct {
 	FieldsChanged bool      `json:"-"`
 
 	// Internal fields
-	tmField        string                    `json:"-"`
-	fieldDefines   *FieldDefines             `json:"-"`
-	RefTopicFields map[int64]map[string]bool `json:"-"`
-	Status         int16                     `json:"-"`
+	tmField             string                    `json:"-"`
+	fieldDefines        *FieldDefines             `json:"-"`
+	RefTopicFields      map[int64]map[string]bool `json:"-"`
+	Status              int16                     `json:"-"`
+	CountExistsSiblings int64                     `json:"-"`
 }
 
 func (u *CreateTopicDto) GetID() int64 {
@@ -334,7 +335,7 @@ func (t *CreateTopicDto) GetAlias() string {
 	return t.Alias
 }
 
-func (t *CreateTopicDto) GetParentAlias() string {
+func (t *CreateTopicDto) GetParentAlias() *string {
 	return t.ParentAlias
 }
 

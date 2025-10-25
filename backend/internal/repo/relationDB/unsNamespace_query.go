@@ -2,6 +2,8 @@ package relationDB
 
 import (
 	"backend/internal/common/constants"
+	"backend/share/base"
+	"fmt"
 	"strings"
 
 	"gitee.com/unitedrhino/share/stores"
@@ -115,21 +117,36 @@ func (p UnsNamespaceRepo) ListSubTree(db *gorm.DB, layRec string) (results []*Un
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListTops(db *gorm.DB) (results []*UnsNamespace, err error) {
-	err = p.model(db).Where("parent_id is null").
-		Where("status = ?", 1).
-		Find(&results).Error
+func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAndNames []*UnsNamespace) (results []*UnsNamespace, err error) {
+	// 构建VALUES参数
+	var sql = &base.StringBuilder{}
+	sql.Grow(512)
+	sql.Append(`select  u.parent_alias, u."name",count(*) as id from (`)
+	for i, data := range parentAliasAndNames {
+		if i > 0 {
+			sql.Append(" UNION ALL ")
+		}
+		parentAlias, name := data.ParentAlias, data.Name
+		var args string
+		if parentAlias != nil {
+			args = fmt.Sprintf("select '%s' as parent_alias,'%s' as name", escapeSQL(*parentAlias), escapeSQL(name))
+		} else {
+			args = fmt.Sprintf("select null as parent_alias,'%s' as name", escapeSQL(name))
+		}
+		sql.Append(args)
+	}
+	sql.Append(`) x
+	join uns_namespace u on (x.parent_alias = u.parent_alias OR (x.parent_alias IS NULL AND u.parent_alias IS NULL)) 
+	where u.status =1 group by u.parent_alias, u."name" HAVING COUNT(*) > 1
+    `)
+	err = p.model(db).Raw(sql.String()).Scan(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
-	return
-}
-func (p UnsNamespaceRepo) ListByParentAlias(db *gorm.DB, parentAlias []string) (results []*UnsNamespace, err error) {
-	err = p.model(db).Where("parent_alias in ?", parentAlias).
-		Where("status = ?", 1).
-		Find(&results).Error
-	if err != nil {
-		return nil, stores.ErrFmt(err)
+	if len(results) > 0 {
+		for _, po := range results {
+			po.CountExistsSiblings = po.ID
+		}
 	}
 	return
 }
@@ -230,6 +247,35 @@ func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.P
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
+	return
+}
+func (p UnsNamespaceRepo) ListByLayRec(db *gorm.DB, layRec string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
+	db = page.ToGorm(db)
+	err = db.Where("lay_rec like '" + escapeSQL(layRec) + "%'").Where("status=1").Find(&results).Error
+	return
+}
+func (p UnsNamespaceRepo) ListByLayRecs(db *gorm.DB, layRecs []string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
+	db = page.ToGorm(db)
+	sql := &base.StringBuilder{}
+	sql.Grow(80 * len(layRecs))
+	sql.Append("select * from ").Append(TableNameUnsNamespace).Append(" WHERE ")
+	sql.Append("( ")
+	for i, layRec := range layRecs {
+		if i > 0 {
+			sql.Append(" OR ")
+		}
+		sql.Append("lay_rec like '").Append(layRec).Append("%'")
+	}
+	sql.Append(" ) and status=1")
+	err = db.Raw(sql.String()).Find(&results).Error
+	return
+}
+func (p UnsNamespaceRepo) ListByTemplateId(db *gorm.DB, templateId int64, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
+	db = page.ToGorm(db)
+	err = db.Where("model_id =?", templateId).Where("status=1").Find(&results).Error
 	return
 }
 func (p UnsNamespaceRepo) ListUnsByIds(db *gorm.DB, ids []int64) (results []*UnsPo, err error) {

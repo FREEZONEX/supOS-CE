@@ -75,7 +75,11 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		reverseGraph := base.BuildReverseGraph(folders, func(t *dto.CreateTopicDto) string {
 			return t.Alias
 		}, func(t *dto.CreateTopicDto) string {
-			return t.ParentAlias
+			parentAlias := ""
+			if pa := t.ParentAlias; pa != nil {
+				parentAlias = *pa
+			}
+			return parentAlias
 		})
 		levelMap := base.CalculateLevels(reverseGraph)
 		sort.Sort(&unsLevel{uns: folders, levelMap: levelMap})
@@ -120,6 +124,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	createList := make([]*dto.CreateTopicDto, 0, len(addFiles))
 	dtoUpdateList := make([]*dto.CreateTopicDto, 0, len(addFiles))
 
+	u.log.Infof("addFiles:%d,db:%d, createList.size=%d, updateList.size=%d\n", len(addFiles), len(dbFiles), len(rs.insertList), len(rs.updateList))
 	for _, file := range addFiles {
 		file.Status = 1
 		createTopicDto := UnsConverter.Po2Dto(file)
@@ -271,7 +276,7 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *dto.C
 	result := &types.StringResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
 	db := dao.GetDb(ctx)
 	// 处理父文件夹ID
-	if topicDto.ParentID != nil && *topicDto.ParentID != 0 && topicDto.ParentAlias == "" {
+	if topicDto.ParentID != nil && *topicDto.ParentID != 0 && topicDto.ParentAlias == nil {
 		folder, err := u.unsMapper.SelectById(db, *topicDto.ParentID)
 		if err != nil || folder == nil {
 			result.Code = 400
@@ -282,7 +287,7 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *dto.C
 		//if folder.MountType != nil && MountSourceType.IsCollectorMountSource(*folder.MountType) {
 		//	return &JsonResult[string]{Code: 400, Message: I18nUtils.GetMessage("uns.mount.folder.operate")}
 		//}
-		topicDto.ParentAlias = folder.Alias
+		topicDto.ParentAlias = &folder.Alias
 	}
 
 	// TODO 是文件夹并且需要创建模板
@@ -357,9 +362,9 @@ func (u *UnsAddService) CreateModelAndInstance(ctx context.Context, topicDtos []
 		topicDto.Batch = 0
 		topicDto.Index = i
 
-		if topicDto.ParentAlias != "" {
+		if parentAlias := topicDto.ParentAlias; parentAlias != nil {
 			batchIndex := topicDto.GainBatchIndex()
-			parentAliasMap[batchIndex] = topicDto.ParentAlias
+			parentAliasMap[batchIndex] = *parentAlias
 		}
 	}
 	//db := dao.GetDb(ctx)

@@ -4,7 +4,7 @@ type NodeUnsInfo interface {
 	GetId() int64
 	GetParentId() *int64
 	GetAlias() string
-	GetParentAlias() string
+	GetParentAlias() *string
 	GetName() string
 	GetDisplayName() string
 	GetPath() string

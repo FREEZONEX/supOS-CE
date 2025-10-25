@@ -56,8 +56,8 @@ type (
 	TopicTreeResult {
 		Id             string                 `json:"id"`
 		Alias          string                 `json:"alias"`
-		ParentId       string                 `json:"parentId"`
-		ParentAlias    string                 `json:"parentAlias"`
+		ParentId       *string                 `json:"parentId"`
+		ParentAlias    *string                 `json:"parentAlias"`
 		Value          int64                  `json:"value"`
 		LastUpdateTime int64                  `json:"lastUpdateTime"`
 		CountChildren  int                    `json:"countChildren"`
@@ -271,15 +271,15 @@ type (
 		ReferModelId                  string                 `json:"referModelId,optional"`
 		Alias                         string                 `json:"alias"`
 		ModelId                       int64                  `json:"modelId,optional"`
-		ModelAlias                    string                 `json:"modelAlias,optional"`
-		ParentAlias                   string                 `json:"parentAlias,optional"`
-		ParentId                      int64                  `json:"parentId,optional"`
-		DataType                      int                    `json:"dataType"`
-		Fields                        []FieldDefine          `json:"fields"`
+		ModelAlias                    *string                 `json:"modelAlias,optional"`
+		ParentAlias                   *string                 `json:"parentAlias,optional"`
+		ParentId                      *int64                  `json:"parentId,optional"`
+		DataType                      *int                    `json:"dataType,optional"`
+		Fields                        []FieldDefine          `json:"fields,optional"`
 		ExtendFieldUsed               []string               `json:"extendFieldUsed,optional"`
 		DataPath                      string                 `json:"dataPath,optional"`
 		Description                   string                 `json:"description,optional"`
-		Refers                        []InstanceField      `json:"refers,optional"`
+		Refers                        []InstanceField        `json:"refers,optional"`
 		Expression                    string                 `json:"expression,optional"`
 		StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 		AddFlow                       bool                   `json:"addFlow,optional"`
@@ -368,17 +368,17 @@ type (
 	}
 	RemoveReq {
 		Id            int64 `form:"id"`
-		WithFlow      bool  `form:"withFlow,default=true"`
-		WithDashboard bool  `form:"withDashboard,default=true"`
-		RemoveRefer   bool  `form:"cascade,optional"`
+		WithFlow      *bool  `form:"withFlow,default=true"`
+		WithDashboard *bool  `form:"withDashboard,default=true"`
+		RemoveRefer   *bool  `form:"cascade,optional"`
 	}
 	BatchRemoveUnsDto {
 		AliasList       []string `json:"aliasList"`
-		WithFlow        bool     `json:"withFlow,optional"`
-		WithDashboard   bool     `json:"withDashboard,optional"`
-		RemoveRefer     bool     `json:"removeRefer,optional"`
-		CheckMount      bool     `json:"checkMount,optional"`
-		OnlyRemoveChild bool     `json:"onlyRemoveChild,optional"`
+		WithFlow        *bool     `json:"withFlow,optional"`
+		WithDashboard   *bool     `json:"withDashboard,optional"`
+		RemoveRefer     *bool     `json:"removeRefer,optional"`
+		CheckMount      *bool     `json:"checkMount,optional"`
+		OnlyRemoveChild *bool     `json:"onlyRemoveChild,optional"`
 	}
 	CheckDuplicationNameReq {
 		Folder    string `form:"folder,optional"`

@@ -5,6 +5,8 @@ import (
 	"backend/share/base"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -128,4 +130,94 @@ func (p UnsNamespaceRepo) RemoveRefUns(db *gorm.DB, id int64, calcIds []int64, u
 	}
 	sql.Append(" where id=").Long(id)
 	return p.model(db).Raw(sql.String()).Error
+}
+
+// getValidColumns 获取结构体有效的数据库列名
+func getValidColumns(model interface{}) map[string]string {
+	result := make(map[string]string)
+	t := reflect.TypeOf(model)
+
+	// 如果传入的是指针，获取其指向的类型
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+
+	// 确保是结构体类型
+	if t.Kind() != reflect.Struct {
+		return result
+	}
+
+	// 遍历结构体字段
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+
+		// 获取gorm标签
+		gormTag := field.Tag.Get("gorm")
+		if gormTag == "" {
+			continue
+		}
+
+		// 检查是否被忽略的字段
+		if strings.Contains(gormTag, "-") {
+			continue
+		}
+
+		// 解析column名称
+		columnName := parseColumnName(gormTag)
+		if columnName != "" {
+			result[columnName] = field.Name
+		}
+	}
+
+	return result
+}
+
+// parseColumnName 解析gorm标签中的column名称
+func parseColumnName(gormTag string) string {
+	// 如果标签包含"-"，表示忽略该字段
+	if strings.Contains(gormTag, "-") {
+		return ""
+	}
+
+	// 查找column:xxx的模式
+	tagParts := strings.Split(gormTag, ";")
+	for _, part := range tagParts {
+		part = strings.TrimSpace(part)
+		if strings.HasPrefix(part, "column:") {
+			return strings.TrimPrefix(part, "column:")
+		}
+	}
+
+	// 如果没有明确指定column，使用默认的蛇形命名
+	return "" //toSnakeCase(fieldName)
+}
+
+var logDeleteUns = map[string]interface{}{"status": 0}
+
+func init() {
+	excludeFields := map[string]bool{
+		"id":        true,
+		"alias":     true,
+		"name":      true,
+		"path_type": true,
+		"status":    true,
+	}
+	columnFields := getValidColumns(&UnsNamespace{})
+	for ef := range excludeFields {
+		delete(columnFields, ef)
+	}
+	for column := range columnFields {
+		logDeleteUns[column] = nil
+	}
+}
+
+func (p UnsNamespaceRepo) LogicDeleteByLayRec(db *gorm.DB, layRec string) error {
+	return p.model(db).Where("lay_rec like '" + escapeSQL(layRec) + "%'").Updates(logDeleteUns).Error
+}
+
+func (p UnsNamespaceRepo) LogicDeleteByIds(db *gorm.DB, ids []int64) error {
+	return p.model(db).Where("id IN ?", ids).Updates(logDeleteUns).Error
+}
+func (p UnsNamespaceRepo) LogicDeleteById(db *gorm.DB, id int64) error {
+	return p.model(db).Where("id=?", id).Updates(logDeleteUns).Error
 }

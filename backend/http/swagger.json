@@ -14,6 +14,26 @@
   },
   "basePath": "/",
   "paths": {
+    "/flows/test/nodered": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "代理 NodeRed /flows 接口（备用路径）",
+        "operationId": "supos/NoderedProxyNodeRedFlowsHandler2",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/inter-api/supos/dev/logs": {
       "post": {
         "produces": [
@@ -827,60 +847,6 @@
         }
       }
     },
-    "/inter-api/supos/kong/alarm/confirm": {
-      "post": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "确认报警",
-        "operationId": "supos/Uns/KongConfirm",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
-          }
-        }
-      }
-    },
-    "/inter-api/supos/kong/alarm/pageList": {
-      "post": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "查询报警列表",
-        "operationId": "supos/Uns/KongPageList",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
-          }
-        }
-      }
-    },
-    "/inter-api/supos/kong/alarm/rule": {
-      "put": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "更新报警规则",
-        "operationId": "supos/Uns/KongUpdate",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
-          }
-        }
-      }
-    },
     "/inter-api/supos/kong/routeList": {
       "get": {
         "produces": [
@@ -889,12 +855,44 @@
         "schemes": [
           "https"
         ],
-        "summary": "获取路由",
-        "operationId": "supos/Uns/KongRouteList",
+        "summary": "获取简化的路由列表",
+        "operationId": "supos/KongRouteListHandler",
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name",
+                      "url"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "url": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -1256,9 +1254,7 @@
                     "required": [
                       "name",
                       "pathType",
-                      "alias",
-                      "dataType",
-                      "fields"
+                      "alias"
                     ],
                     "properties": {
                       "accessLevel": {
@@ -2876,9 +2872,7 @@
                 "required": [
                   "name",
                   "pathType",
-                  "alias",
-                  "dataType",
-                  "fields"
+                  "alias"
                 ],
                 "properties": {
                   "accessLevel": {
@@ -4427,9 +4421,7 @@
               "required": [
                 "name",
                 "pathType",
-                "alias",
-                "dataType",
-                "fields"
+                "alias"
               ],
               "properties": {
                 "accessLevel": {
@@ -5740,9 +5732,105 @@
           }
         }
       }
+    },
+    "/open-api/menu": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "保存菜单",
+        "operationId": "supos/MenuSaveMenuHandler",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "服务名（可选）",
+            "name": "serviceName",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "名称，唯一标识一个菜单",
+            "name": "name",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "显示名",
+            "name": "showName",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "描述（可选）",
+            "name": "description",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "baseURL",
+            "name": "baseUrl",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "跳转方式：0-iframe打开，1-打开新页面，2-app",
+            "name": "openType",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test/nodered": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "代理 NodeRed /flows 接口",
+        "operationId": "supos/NoderedProxyNodeRedFlowsHandler",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
     }
   },
-  "x-date": "2025-10-23 13:20:52",
+  "x-date": "2025-10-25 16:02:02",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

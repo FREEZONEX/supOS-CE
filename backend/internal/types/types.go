@@ -20,11 +20,11 @@ type BatchQueryFileReq struct {
 
 type BatchRemoveUnsDto struct {
 	AliasList       []string `json:"aliasList"`
-	WithFlow        bool     `json:"withFlow,optional"`
-	WithDashboard   bool     `json:"withDashboard,optional"`
-	RemoveRefer     bool     `json:"removeRefer,optional"`
-	CheckMount      bool     `json:"checkMount,optional"`
-	OnlyRemoveChild bool     `json:"onlyRemoveChild,optional"`
+	WithFlow        *bool    `json:"withFlow,optional"`
+	WithDashboard   *bool    `json:"withDashboard,optional"`
+	RemoveRefer     *bool    `json:"removeRefer,optional"`
+	CheckMount      *bool    `json:"checkMount,optional"`
+	OnlyRemoveChild *bool    `json:"onlyRemoveChild,optional"`
 }
 
 type CheckDuplicationNameReq struct {
@@ -87,11 +87,11 @@ type CreateTopicDto struct {
 	ReferModelId                  string                 `json:"referModelId,optional"`
 	Alias                         string                 `json:"alias"`
 	ModelId                       int64                  `json:"modelId,optional"`
-	ModelAlias                    string                 `json:"modelAlias,optional"`
-	ParentAlias                   string                 `json:"parentAlias,optional"`
-	ParentId                      int64                  `json:"parentId,optional"`
-	DataType                      int                    `json:"dataType"`
-	Fields                        []FieldDefine          `json:"fields"`
+	ModelAlias                    *string                `json:"modelAlias,optional"`
+	ParentAlias                   *string                `json:"parentAlias,optional"`
+	ParentId                      *int64                 `json:"parentId,optional"`
+	DataType                      *int                   `json:"dataType,optional"`
+	Fields                        []FieldDefine          `json:"fields,optional"`
 	ExtendFieldUsed               []string               `json:"extendFieldUsed,optional"`
 	DataPath                      string                 `json:"dataPath,optional"`
 	Description                   string                 `json:"description,optional"`
@@ -380,9 +380,9 @@ type Point struct {
 
 type RemoveReq struct {
 	Id            int64 `form:"id"`
-	WithFlow      bool  `form:"withFlow,default=true"`
-	WithDashboard bool  `form:"withDashboard,default=true"`
-	RemoveRefer   bool  `form:"cascade,optional"`
+	WithFlow      *bool `form:"withFlow,default=true"`
+	WithDashboard *bool `form:"withDashboard,default=true"`
+	RemoveRefer   *bool `form:"cascade,optional"`
 }
 
 type RemoveResult struct {
@@ -500,8 +500,8 @@ type TopicPaginationSearchResult struct {
 type TopicTreeResult struct {
 	Id             string                 `json:"id"`
 	Alias          string                 `json:"alias"`
-	ParentId       string                 `json:"parentId"`
-	ParentAlias    string                 `json:"parentAlias"`
+	ParentId       *string                `json:"parentId"`
+	ParentAlias    *string                `json:"parentAlias"`
 	Value          int64                  `json:"value"`
 	LastUpdateTime int64                  `json:"lastUpdateTime"`
 	CountChildren  int                    `json:"countChildren"`

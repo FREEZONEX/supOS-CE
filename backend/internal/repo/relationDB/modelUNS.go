@@ -25,7 +25,7 @@ type UnsNamespace struct {
 	ID               int64            `gorm:"column:id;primaryKey" json:"id"`
 	LayRec           string           `gorm:"column:lay_rec;not null" json:"lay_rec"`
 	Alias            string           `gorm:"column:alias;not null" json:"alias"`
-	ParentAlias      string           `gorm:"column:parent_alias" json:"parent_alias"`
+	ParentAlias      *string          `gorm:"column:parent_alias" json:"parent_alias"`
 	Name             string           `gorm:"column:name;not null" json:"name"`
 	Path             string           `gorm:"column:path;not null" json:"path"`
 	PathType         int16            `gorm:"column:path_type;not null" json:"path_type"`
@@ -55,8 +55,10 @@ type UnsNamespace struct {
 	MountSource      string           `gorm:"column:mount_source" json:"mount_source"`
 	SubscribeAt      time.Time        `gorm:"column:subscribe_at" json:"subscribe_at"`
 
-	ModelAlias string `gorm:"-" json:"modelAlias"`
-	PathName   string `gorm:"-" json:"pathName"`
+	ModelAlias          string `gorm:"-" json:"modelAlias"`
+	PathName            string `gorm:"-" json:"pathName"`
+	OldPath             string `gorm:"-" json:"oldPath"`
+	CountExistsSiblings int64  `gorm:"-" json:"countExistsSiblings"`
 }
 
 func (t *UnsNamespace) GetId() int64 {
@@ -71,7 +73,7 @@ func (t *UnsNamespace) GetAlias() string {
 	return t.Alias
 }
 
-func (t *UnsNamespace) GetParentAlias() string {
+func (t *UnsNamespace) GetParentAlias() *string {
 	return t.ParentAlias
 }
 
@@ -238,8 +240,8 @@ func (l *UnsLabel) GetAlias() string {
 	return ""
 }
 
-func (l *UnsLabel) GetParentAlias() string {
-	return ""
+func (l *UnsLabel) GetParentAlias() *string {
+	return nil
 }
 
 func (l *UnsLabel) GetName() string {

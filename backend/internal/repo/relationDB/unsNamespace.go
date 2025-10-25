@@ -50,12 +50,38 @@ func (p UnsNamespaceRepo) Insert(db *gorm.DB, data *UnsNamespace) error {
 
 // 批量插入记录
 func (p UnsNamespaceRepo) MultiInsert(db *gorm.DB, data []*UnsNamespace) error {
-	err := p.model(db).Clauses(clause.OnConflict{UpdateAll: true}).Create(data).Error
+	err := p.model(db).Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(data, 1000).Error
 	return stores.ErrFmt(err)
 }
-func (p UnsNamespaceRepo) MultiUpdate(db *gorm.DB, data []*UnsNamespace) error {
-	err := p.model(db).Save(data).Error
+func (p UnsNamespaceRepo) MultiUpdate(db *gorm.DB, data []*UnsNamespace) (err error) {
+	err = p.model(db).Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(data, 1000).Error
 	return stores.ErrFmt(err)
+	/*	_, isTransaction := db.Statement.ConnPool.(gorm.TxCommitter)
+		db = p.model(db)
+		if isTransaction {
+			for _, item := range data {
+				if item.ID == 0 {
+					continue
+				}
+				err = db.Omit("id", "created_at").Updates(item).Error
+				if err != nil {
+					break
+				}
+			}
+		} else {
+			err = db.Transaction(func(tx *gorm.DB) error {
+				for _, item := range data {
+					if item.ID == 0 {
+						continue // 记录日志或返回错误
+					}
+					if dbErr := tx.Model(&UnsNamespace{}).Omit("id", "created_at").Updates(item).Error; dbErr != nil {
+						return fmt.Errorf("failed to update record ID %d: %w", item.ID, dbErr)
+					}
+				}
+				return nil
+			})
+		}
+		return stores.ErrFmt(err)*/
 }
 func (p UnsNamespaceRepo) FindOneByFilter(db *gorm.DB, f UnsNamespaceFilter) (*UnsNamespace, error) {
 	var result UnsNamespace
@@ -105,6 +131,7 @@ func (p UnsNamespaceRepo) SelectById(db *gorm.DB, id int64) (*UnsNamespace, erro
 	}
 	return &result, nil
 }
+
 func (p UnsNamespaceRepo) FindOneByAlias(db *gorm.DB, alias string) (*UnsNamespace, error) {
 	if alias == "" {
 		return nil, stores.ErrFmt(gorm.ErrRecordNotFound)

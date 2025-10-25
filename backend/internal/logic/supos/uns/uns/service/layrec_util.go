@@ -61,12 +61,11 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 		if _, inDB := dbFiles[id]; !inDB {
 			// 新增节点
 			return base.PutIfAbsent(nodesToInsert, po.ID, po)
-		} else if _, inArgs := addFiles[id]; inArgs {
+		} else {
 			// 更新节点
 			po.UpdateAt = updateTime
 			return base.PutIfAbsent(nodesToUpdate, po.ID, po)
 		}
-		return false
 	}
 
 	// 处理所有节点
@@ -74,7 +73,7 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 		id := node.ID
 		proc := addFiles[id] != nil
 		if !proc {
-			if dbPo := dbFiles[id]; dbPo != nil && !equalsInt64(node.ParentID, dbPo.ParentID) {
+			if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentID, dbPo.ParentID)) {
 				proc = true
 			}
 		}
@@ -158,25 +157,16 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 
 	// 对每个分组按ID排序并设置pathName
 	for name, group := range nameGroup {
-		if len(group) == 1 {
-			group[0].PathName = name
-		} else {
+		if len(group) > 1 {
 			sort.Slice(group, func(i, j int) bool {
 				return group[i].ID < group[j].ID
 			})
-			countExitsSameNames := 0
-			for _, node := range group {
-				if !base.MapContainsKey(addFiles, node.ID) {
-					countExitsSameNames++
-				}
-			}
-			if len(group) > countExitsSameNames {
-				for _, node := range group {
-					if base.MapContainsKey(addFiles, node.ID) {
-						countExitsSameNames++
-						node.PathName = name + "_" + strconv.Itoa(countExitsSameNames)
-					}
-				}
+		}
+		for i, node := range group {
+			if base.MapContainsKey(addFiles, node.ID) && node.CountExistsSiblings > 0 {
+				node.PathName = name + "-" + strconv.FormatInt(node.CountExistsSiblings+int64(i), 10)
+			} else {
+				node.PathName = name
 			}
 		}
 	}

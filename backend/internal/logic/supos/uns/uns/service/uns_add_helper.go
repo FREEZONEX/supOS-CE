@@ -19,6 +19,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/jinzhu/copier"
 )
 
 func checkInstanceFields(modelFields []*dto.FieldDefine, insFields []*dto.FieldDefine) string {
@@ -88,8 +90,8 @@ func addAlias(bos []*dto.CreateTopicDto, aliasSet map[string]bool, ids map[int64
 		}
 
 		// 添加parentAlias
-		if folderAlias := unsDto.ParentAlias; folderAlias != "" {
-			aliasSet[folderAlias] = true
+		if folderAlias := unsDto.ParentAlias; folderAlias != nil {
+			aliasSet[*folderAlias] = true
 		}
 
 		// 处理referIds
@@ -133,17 +135,35 @@ func addAlias(bos []*dto.CreateTopicDto, aliasSet map[string]bool, ids map[int64
 		}
 	}
 }
-func scanChangedNodes(files []*dto.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, parentAliasSet map[string]bool, changedSubTree *[]*dao.UnsNamespace) {
+
+func scanChangedNodes(files []*dto.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, siblings map[string]*Siblings, changedSubTree *[]*dao.UnsNamespace) {
 	for _, bo := range files {
 		alias := bo.Alias
 		dbo := existsUns[alias]
 		parentAlias := bo.ParentAlias
 		if dbo == nil {
-		} else if bo.PathType == constants.PathTypeDir && (parentAlias != dbo.ParentAlias || bo.Name != dbo.Name) {
+		} else if bo.PathType == constants.PathTypeDir && (!eqStrP(parentAlias, dbo.ParentAlias) || bo.Name != dbo.Name) {
 			*changedSubTree = append(*changedSubTree, dbo)
 		}
-		parentAliasSet[parentAlias] = true
+		pAlias := ""
+		if parentAlias != nil {
+			pAlias = *parentAlias
+		}
+		sib, has := siblings[pAlias]
+		if !has {
+			sib = newSiblings()
+			siblings[pAlias] = sib
+		}
+		sib.add(bo)
 	}
+}
+func eqStrP(s1, s2 *string) bool {
+	if s1 == nil && s2 == nil {
+		return true
+	} else if s1 == nil || s2 == nil {
+		return false
+	}
+	return *s1 == *s2
 }
 func tryFillIdOrAlias(paramFiles map[string]*dto.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, errTipMap map[string]string) {
 	for key, topicDto := range paramFiles {
@@ -163,13 +183,13 @@ func tryFillIdOrAlias(paramFiles map[string]*dto.CreateTopicDto, existsUns map[s
 		// 处理父级ID和ParentAlias
 		pid := topicDto.ParentID
 		parentAlias := topicDto.ParentAlias
-		if pid == nil && parentAlias != "" {
-			if parent, exists := existsUns[parentAlias]; exists {
+		if pid == nil && parentAlias != nil {
+			if parent, exists := existsUns[*parentAlias]; exists {
 				topicDto.ParentID = &parent.ID
 			}
-		} else if parentAlias == "" && pid != nil {
+		} else if parentAlias == nil && pid != nil {
 			if parent, exists := dbFiles[*pid]; exists {
-				topicDto.ParentAlias = parent.Alias
+				topicDto.ParentAlias = &parent.Alias
 			}
 		}
 
@@ -304,7 +324,7 @@ func checkTopicDto(errTipMap map[string]string,
 func setJdbcType(unsDto *dto.CreateTopicDto) {
 	dataType := unsDto.DataType
 	jdbcType := unsDto.DataSrcID
-	if jdbcType == 0 && dataType != nil {
+	if jdbcType == 0 && dataType != nil && unsDto.PathType == constants.PathTypeFile {
 		switch *dataType {
 		case constants.CalculationHistType, constants.CalculationRealType, constants.TimeSequenceType:
 			jdbcType = common.SrcJdbcTypeTimeScaleDB
@@ -319,11 +339,12 @@ func setJdbcType(unsDto *dto.CreateTopicDto) {
 func newUnsFile(unsDto *dto.CreateTopicDto) *dao.UnsNamespace {
 	alias := unsDto.Alias
 	instance := &dao.UnsNamespace{
-		ID:          unsDto.ID,
-		Alias:       alias,
-		Name:        unsDto.Name,
-		PathType:    unsDto.PathType,
-		Description: unsDto.Description,
+		ID:                  unsDto.ID,
+		Alias:               alias,
+		Name:                unsDto.Name,
+		PathType:            unsDto.PathType,
+		Description:         unsDto.Description,
+		CountExistsSiblings: unsDto.CountExistsSiblings,
 	}
 
 	if jdbcType := unsDto.DataSrcID; jdbcType != 0 {
@@ -386,7 +407,7 @@ func newUnsFile(unsDto *dto.CreateTopicDto) *dao.UnsNamespace {
 func getTemplate(topicDto *dto.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) (template *dao.UnsNamespace, errMsg string) {
 	modelId := topicDto.ModelID
 	modelAlias := topicDto.ModelAlias
-	var folderAlias string
+	var folderAlias *string
 
 	if modelId != nil && *modelId != 0 {
 		template = dbFiles[*modelId]
@@ -406,8 +427,8 @@ func getTemplate(topicDto *dto.CreateTopicDto, existsUns func(string) *dao.UnsNa
 		} else if template == nil {
 			errMsg = I18nUtils.GetMessage("uns.template.not.exists")
 		}
-	} else if folderAlias = topicDto.ParentAlias; folderAlias != "" {
-		folder := existsUns(folderAlias)
+	} else if folderAlias = topicDto.ParentAlias; folderAlias != nil {
+		folder := existsUns(*folderAlias)
 		if folder == nil {
 			errMsg = I18nUtils.GetMessage("uns.folder.not.found")
 		} else if folder.PathType != constants.PathTypeDir {
@@ -534,6 +555,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *dto.CreateTopicDto, exist
 
 	if DB_EXISTS {
 		tar := *dbPo
+		copier.CopyWithOption(&tar, newUns, copier.Option{IgnoreEmpty: true})
 		expression := newUns.Expression
 		expChanged := expression != "" && expression != dbPo.Expression
 		hasRefer := unsDto.Refers != nil || unsDto.ReferIDs != nil
@@ -647,9 +669,20 @@ func (u *unsDtoTreeNodes) Visit(visitor func(uns *dao.UnsNamespace)) {
 		visitor(node)
 	}
 }
+
+type Siblings struct {
+	names map[string][]*dto.CreateTopicDto
+}
+
+func newSiblings() *Siblings {
+	return &Siblings{names: make(map[string][]*dto.CreateTopicDto, 32)}
+}
+func (s *Siblings) add(uns *dto.CreateTopicDto) {
+	s.names[uns.Name] = append(s.names[uns.Name], uns)
+}
 func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context, paramFolders []*dto.CreateTopicDto, paramFiles []*dto.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) error {
 	changedSubTree := make([]*dao.UnsNamespace, 0, 64)
-	parentAliasSet := make(map[string]bool, 32)
+	parentAliasSet := make(map[string]*Siblings, 32)
 	scanChangedNodes(paramFolders, existsUns, parentAliasSet, &changedSubTree)
 	scanChangedNodes(paramFiles, existsUns, parentAliasSet, &changedSubTree)
 	sizeTree, sizeSiblings := len(changedSubTree), len(parentAliasSet)
@@ -668,30 +701,47 @@ func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context, p
 				return er
 			}
 			if len(children) > 0 {
-				add2Exists(children, dbFiles, existsUns)
+				for _, unsPo := range children {
+					unsPo.LayRec = "" //重置，等着重新计算
+					dbFiles[unsPo.ID] = unsPo
+					existsUns[unsPo.Alias] = unsPo
+				}
 			}
+		}
+		for _, unsPo := range changedSubTree {
+			unsPo.LayRec = "" //重置，等着重新计算
 		}
 	}
 	if sizeSiblings > 0 {
-		_, hasNull := parentAliasSet[""]
-		delete(parentAliasSet, "")
-		if hasNull {
-			children, er := u.unsMapper.ListTops(db)
+		var siblings = base.FilterAndFlatMap(base.MapValues(parentAliasSet), func(sib *Siblings) (vs []*dao.UnsNamespace, ok bool) {
+			vs = make([]*dao.UnsNamespace, len(sib.names))
+			i := 0
+			for name, cs := range sib.names {
+				vs[i] = &dao.UnsNamespace{ParentAlias: cs[0].ParentAlias, Name: name}
+				i++
+			}
+			return vs, true
+		})
+		for _, partSiblings := range base.Partition(siblings, 1000) {
+			countMap, er := u.unsMapper.CountByParentAliasAndNames(db, partSiblings)
 			if er != nil {
 				return er
 			}
-			if len(children) > 0 {
-				add2Exists(children, dbFiles, existsUns)
-			}
-		}
-		if len(parentAliasSet) > 0 {
-			for _, pAlias := range base.Partition(base.MapKeys(parentAliasSet), 500) {
-				children, er := u.unsMapper.ListByParentAlias(db, pAlias)
-				if er != nil {
-					return er
-				}
-				if len(children) > 0 {
-					add2Exists(children, dbFiles, existsUns)
+			if len(countMap) > 0 {
+				for _, cm := range countMap {
+					parentAlias := ""
+					if pa := cm.ParentAlias; pa != nil {
+						parentAlias = *pa
+					}
+					sib := parentAliasSet[parentAlias]
+					if sib != nil && len(sib.names) > 0 {
+						sameNameSiblings := sib.names[cm.Name]
+						if len(sameNameSiblings) > 0 {
+							for _, uns := range sameNameSiblings {
+								uns.CountExistsSiblings = cm.CountExistsSiblings
+							}
+						}
+					}
 				}
 			}
 		}
@@ -699,12 +749,6 @@ func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context, p
 	return nil
 }
 
-func add2Exists(fs []*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, existsUns map[string]*dao.UnsNamespace) {
-	for _, po := range fs {
-		dbFiles[po.ID] = po
-		existsUns[po.Alias] = po
-	}
-}
 func aliasToId(addFiles map[int64]*dao.UnsNamespace, aliasMap func(string) *dao.UnsNamespace) {
 	for _, file := range addFiles {
 		if modelAlias := file.ModelAlias; modelAlias != "" {
@@ -712,8 +756,8 @@ func aliasToId(addFiles map[int64]*dao.UnsNamespace, aliasMap func(string) *dao.
 				file.ModelID = &model.ID
 			}
 		}
-		if parentAlias := file.ParentAlias; parentAlias != "" {
-			if parent := aliasMap(parentAlias); parent != nil {
+		if parentAlias := file.ParentAlias; parentAlias != nil {
+			if parent := aliasMap(*parentAlias); parent != nil {
 				file.ParentID = &parent.ID
 			}
 		}

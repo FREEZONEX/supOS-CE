@@ -54,10 +54,22 @@ func Label2Uns(labelDto *dao.UnsLabel) *dto.CreateTopicDto {
 	}
 	return unsDto
 }
+func Po2Dtos(poList []*dao.UnsNamespace) []*dto.CreateTopicDto {
+	unsDtoList := make([]*dto.CreateTopicDto, len(poList))
+	// BeanUtil.copyProperties equivalent - assuming a custom copy function
+	copier.CopyWithOption(&unsDtoList, poList, copier.Option{IgnoreEmpty: true})
+	for i, p := range poList {
+		po2Dto(p, unsDtoList[i])
+	}
+	return unsDtoList
+}
 func Po2Dto(p *dao.UnsNamespace) *dto.CreateTopicDto {
 	unsDto := &dto.CreateTopicDto{}
-	// BeanUtil.copyProperties equivalent - assuming a custom copy function
 	copier.CopyWithOption(unsDto, p, copier.Option{IgnoreEmpty: true})
+	po2Dto(p, unsDto)
+	return unsDto
+}
+func po2Dto(p *dao.UnsNamespace, unsDto *dto.CreateTopicDto) {
 
 	var withFlags int32
 	if p.WithFlags != nil {
@@ -106,9 +118,7 @@ func Po2Dto(p *dao.UnsNamespace) *dto.CreateTopicDto {
 	//		dto.AlarmRuleDefine = &ruleDefine
 	//	}
 	//}
-
 	unsDto.ExtendFieldUsed = FieldUtils.ParseFlag(p.ExtendFieldFlags)
-	return unsDto
 }
 func boPt(b bool) *bool {
 	return &b
@@ -118,7 +128,8 @@ func Dto2TreeResult(unsDto bo.NodeUnsInfo) *types.TopicTreeResult {
 	result.Id = strconv.FormatInt(unsDto.GetId(), 10)
 	result.Alias = unsDto.GetAlias()
 	if pid := unsDto.GetParentId(); pid != nil {
-		result.ParentId = strconv.FormatInt(*pid, 10)
+		strId := strconv.FormatInt(*pid, 10)
+		result.ParentId = &strId
 	}
 	result.ParentAlias = unsDto.GetParentAlias()
 	result.PathType = int(unsDto.GetPathType())

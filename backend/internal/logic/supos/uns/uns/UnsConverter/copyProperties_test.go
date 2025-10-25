@@ -25,7 +25,7 @@ func TestCopyFields(t *testing.T) {
 	},
 	}
 	target := dto.CreateTopicDto{}
-	err := copier.CopyWithOption(&target, src, copier.Option{IgnoreEmpty: true, Converters: []copier.TypeConverter{
+	options := []copier.TypeConverter{
 		{
 			SrcType: copier.String,
 			DstType: enums.FieldTypeInteger,
@@ -35,8 +35,15 @@ func TestCopyFields(t *testing.T) {
 				}
 				return nil, errors.Default
 			},
-		},
-	}})
+		}}
+	err := copier.CopyWithOption(&target, src, copier.Option{IgnoreEmpty: true, Converters: options})
 	bs, _ := json.MarshalIndent(target, "", " ")
 	t.Logf("Copy:%v, rs: %s", err, string(bs))
+
+	srcList := []*types.CreateTopicDto{&src}
+	tarList := make([]*dto.CreateTopicDto, len(srcList))
+	err = copier.CopyWithOption(&tarList, srcList, copier.Option{IgnoreEmpty: true, Converters: options})
+	bs, _ = json.MarshalIndent(tarList, "", " ")
+	t.Logf("Copy:%v, rs: %s", err, string(bs))
+
 }
