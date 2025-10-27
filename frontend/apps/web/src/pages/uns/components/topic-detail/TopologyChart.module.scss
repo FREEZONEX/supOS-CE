@@ -16,6 +16,7 @@
       height: 100%;
       background-color: var(--supos-bg-color);
       border-radius: 3px;
+      border: 1px solid transparent;
       border-left: 4px solid var(--supos-mode-color, var(--supos-theme-color));
       color: var(--supos-text-color);
       display: flex;
@@ -115,6 +116,7 @@
       0% {
         transform: rotate(0deg);
       }
+
       100% {
         transform: rotate(360deg);
       }
