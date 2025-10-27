@@ -8,9 +8,9 @@ import nodeRed from '@/assets/home-icons/node-red.svg';
 import { useNavigate } from 'react-router';
 import { useTranslate } from '@/hooks';
 import styles from './TopologyChart.module.scss';
-import { goFlow, createFlow } from '@/apis/inter-api/flow';
-import { Tooltip } from 'antd';
-import { getTopologyStatus } from '@/apis/inter-api/uns';
+import { goFlow, createFlow, flowPage, bindFlowForUns } from '@/apis/inter-api/flow';
+import { App, Tooltip } from 'antd';
+import { bindDashboardForUns, getDashboardList, getTopologyStatus } from '@/apis/inter-api/uns';
 import c2 from '@/assets/uns/cw.svg';
 import error from '@/assets/uns/error.svg';
 import ReactDOM from 'react-dom/client'; // React 18 使用 'react-dom/client'
@@ -23,7 +23,9 @@ import ComFormula from '@/components/com-formula';
 import ProTable from '@/components/pro-table';
 import { getSearchParamsString } from '@/utils/url-util';
 import { useBaseStore } from '@/stores/base';
-import ComCodeSnippet from '../../../../components/com-code-snippet';
+import ComCodeSnippet from '@/components/com-code-snippet';
+import Binding from '@/pages/uns/components/topic-detail/binding/DashboardBinding.tsx';
+import { useActivate } from '@/contexts/tabs-lifecycle-context.ts';
 
 const NodeRed: FC<any> = (data) => {
   const [mounted, setMounted] = useState(false);
@@ -101,6 +103,13 @@ const NodeRed: FC<any> = (data) => {
                 <Add size={20} />
               </div>
             )}
+            <Binding
+              selectValue={data.node.data.bindId}
+              api={flowPage}
+              onBinding={(item: any) => {
+                return data.node.data.onBindingChange?.('nodeRed1', item);
+              }}
+            />
             <div className={styles['status-indicator']}>
               <span className={styles['status-dot']} style={{ background: statusColor }} />
               <span
@@ -137,7 +146,6 @@ const TDEngine = (data: any) => {
     dataBaseType: state.dataBaseType,
     systemInfo: state.systemInfo,
   }));
-  console.log(systemInfo?.containerMap?.chat2db);
   return (
     <div
       className={classNames(styles['common-node'], styles['common-node-hover'], {
@@ -191,6 +199,13 @@ const Apps = (data: any) => {
       <div className={styles['common-node-btn']} data-action="navigate">
         <Launch size={20} />
       </div>
+      <Binding
+        selectValue={data.node.data.bindId}
+        api={getDashboardList}
+        onBinding={(item: any) => {
+          return data.node.data.onBindingChange?.('apps1', item);
+        }}
+      />
     </div>
   );
 };
@@ -411,7 +426,7 @@ const ButtonError: FC<any> = () => {
 };
 register({
   shape: 'nodeRed1',
-  width: 190,
+  width: 220,
   height: 50,
   component: NodeRed,
 });
@@ -429,7 +444,7 @@ register({
 });
 register({
   shape: 'apps1',
-  width: 180,
+  width: 210,
   height: 50,
   component: Apps,
 });
@@ -469,12 +484,16 @@ const data = {
         flowId: '',
         flowStatus: '',
         flowName: '',
+        bindId: '',
+        onBindingChange: (type: string, item: any) => {
+          console.log(type, item);
+        },
       },
     },
     {
       id: 'mqtt1',
       shape: 'mqtt1',
-      x: 480,
+      x: 510,
       y: 0,
       data: {
         active: false,
@@ -483,7 +502,7 @@ const data = {
     {
       id: 'tdEngine1',
       shape: 'tdEngine1',
-      x: 680,
+      x: 700,
       y: 0,
       data: {
         dataType: 1,
@@ -494,10 +513,14 @@ const data = {
     {
       id: 'apps1',
       shape: 'apps1',
-      x: 910,
+      x: 930,
       y: 0,
       data: {
         active: false,
+        bindId: '',
+        onBindingChange: (type: string, item: any) => {
+          console.log(type, item);
+        },
       },
     },
   ],
@@ -541,8 +564,10 @@ const data = {
   ],
 };
 
-const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
+const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo, getFileDetail }: any) => {
   const graphRef = useRef<any>(null);
+  const formatMessage = useTranslate();
+  const { message } = App.useApp();
   const dashboardType = useBaseStore((state) => state.dashboardType);
   const [active, setActive] = useState<any>('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -574,7 +599,7 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
       } else {
         // 这里我要删除apps1节点
         return Object.assign({}, _data, {
-          nodes: [_data.nodes[0], _data.nodes[1], { ..._data.nodes[3], x: 680 }],
+          nodes: [_data.nodes[0], _data.nodes[1], { ..._data.nodes[3], x: 700 }],
           edges: [_data.edges[0], { ..._data.edges[1], target: 'apps1' }],
         });
       }
@@ -757,7 +782,10 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
       return;
     }
     if (cell?.id === 'apps1' && dashboardType?.includes('grafana') && launchButton) {
-      navigate('/grafana-design', { state: { url: getAppsLink(dashboardInfo), name: 'GrafanaDesign' } });
+      // navigate('/grafana-design', { state: { url: getAppsLink(dashboardInfo), name: 'GrafanaDesign' } });
+      navigate(
+        `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`
+      );
       return;
     }
     setActive((active: any) => (active === cell.id ? '' : cell.id));
@@ -801,14 +829,52 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
     try {
       const result = await goFlow(alias);
       setDatas(result || {});
+      return result;
     } catch (error) {
       console.error('Error fetching topology data:', error);
+      return null;
     }
   };
-  const getAppsLink = (data: any) => {
-    return `/grafana/home/d/${data.id}`;
-  };
+  // const getAppsLink = (data: any) => {
+  //   return `/grafana/home/d/${data.id}`;
+  // };
 
+  const onBindingChange = (type: string, item: any) => {
+    if (type === 'apps1') {
+      return bindDashboardForUns({
+        dashboardId: item.id,
+        unsAlias: instanceInfo.alias,
+      }).then(() => {
+        message.success(formatMessage('common.optsuccess'));
+        getFileDetail(instanceInfo.id).then((dashboardInfo: any) => {
+          navigate(
+            `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`
+          );
+        });
+      });
+    } else {
+      return bindFlowForUns({
+        flowId: item.id,
+        unsAlias: instanceInfo.alias,
+      }).then(() => {
+        message.success(formatMessage('common.optsuccess'));
+        getFileDetail(instanceInfo.id);
+        fetchTopologyData(instanceInfo.alias).then((datas: any) => {
+          if (datas) {
+            navigate(
+              `/collection-flow/flow-editor?${getSearchParamsString({
+                id: datas.id,
+                name: datas.flowName,
+                status: datas.flowStatus,
+                flowId: datas.flowId,
+                from: location.pathname,
+              })}`
+            );
+          }
+        });
+      });
+    }
+  };
   // 获取并更新图表数据
   const updateGraphData = (instanceInfo: any, flowList?: any) => {
     const { nodes, edges } = findDate(instanceInfo) || { nodes: [], edges: [] };
@@ -861,11 +927,16 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
             node.data.flowStatus = flowList?.flowStatus || '';
             node.data.flowId = flowList?.flowId || '';
             node.data.flowName = flowList?.flowName || '';
+            node.data.bindId = flowList?.id || '';
+            node.data.onBindingChange = onBindingChange;
             node.data.active = true;
             setActive('nodeRed1');
           } else if (node.id === 'tdEngine1') {
             node.data.dataType = instanceInfo?.dataType;
             node.data.alias = instanceInfo?.alias;
+          } else if (node.id === 'apps1') {
+            node.data.onBindingChange = onBindingChange;
+            node.data.bindId = dashboardInfo?.id;
           }
           graphRef.current.addNode(node);
         });
@@ -876,6 +947,39 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
     }, 100);
   };
 
+  useActivate(() => {
+    if (!graphRef.current) return;
+    const edges = graphRef.current.getEdges();
+
+    edges.forEach((edge: any) => {
+      // 3. 获取源节点和目标节点
+      const sourceCell = edge.getSourceCell();
+      const targetCell = edge.getTargetCell();
+
+      if (sourceCell && targetCell) {
+        const sourceBBox = sourceCell.getBBox();
+        const targetBBox = targetCell.getBBox();
+        const sourcePoint = {
+          x: sourceBBox.x + sourceBBox.width,
+          y: sourceBBox.y + sourceBBox.height / 2,
+        };
+        const targetPoint = {
+          x: targetBBox.x,
+          y: targetBBox.y + targetBBox.height / 2,
+        };
+        // 使用绝对坐标设置连接点
+        edge.setSource({
+          x: sourcePoint.x,
+          y: sourcePoint.y,
+        });
+
+        edge.setTarget({
+          x: targetPoint.x,
+          y: targetPoint.y,
+        });
+      }
+    });
+  });
   // 初始化图表
   const initGraph = () => {
     if (graphRef.current) return graphRef.current;
@@ -964,7 +1068,7 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo }: any) => {
       clearInterval(interls.current);
       interls.current = null;
     };
-  }, [instanceInfo, datas]);
+  }, [instanceInfo, datas, dashboardInfo?.id]);
 
   return (
     <div className={styles['detailTopologyWrap']}>

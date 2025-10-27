@@ -52,3 +52,6 @@ export const processList = async () =>
 // 置顶
 export const markFlow = async (id: string) => api.post('/flow/mark', { id });
 export const unmarkFlow = async (id: string) => api.delete(`/flow/unmark?id=${id}`);
+
+// 换绑
+export const bindFlowForUns = async (params: any) => api.post(`/flow/bindUns`, null, { params }); // 获取dashboard信息

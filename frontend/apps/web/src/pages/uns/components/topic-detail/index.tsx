@@ -36,6 +36,8 @@ import { useBaseStore } from '@/stores/base';
 import EditButton from '@/pages/uns/components/EditButton.tsx';
 import DashboardBinding from '@/pages/uns/components/topic-detail/dashboard-binding/DashboardBinding.tsx';
 import screenfull from 'screenfull';
+import { getSearchParamsString } from '@/utils';
+import { useNavigate } from 'react-router';
 
 const { Title } = Typography;
 
@@ -59,6 +61,7 @@ const Module: FC<FileDetailProps> = (props) => {
   } = useBaseStore((state) => ({
     systemInfo: state.systemInfo,
   }));
+  const navigate = useNavigate();
   const formatMessage = useTranslate();
   const { message } = App.useApp();
   const documentListRef = useRef(null);
@@ -185,7 +188,7 @@ const Module: FC<FileDetailProps> = (props) => {
   }, [id]);
 
   const getFileDetail = (id: string) => {
-    getInstanceInfo({ id })
+    return getInstanceInfo({ id })
       .then(async (data: any) => {
         if (data?.id) {
           data?.fields?.forEach((field: FieldItem) => {
@@ -210,8 +213,9 @@ const Module: FC<FileDetailProps> = (props) => {
             }
           }
           setInstanceInfo(data);
-          getDashboardByUns(data?.alias).then((data) => {
+          return getDashboardByUns(data?.alias).then((data) => {
             setDashboardInfo(data || { type: 0 });
+            return data;
           });
         }
       })
@@ -293,7 +297,11 @@ const Module: FC<FileDetailProps> = (props) => {
                         unsAlias: instanceInfo.alias,
                       }).then(() => {
                         message.success(formatMessage('common.optsuccess'));
-                        getFileDetail(instanceInfo.id);
+                        getFileDetail(instanceInfo.id).then((dashboardInfo) => {
+                          navigate(
+                            `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`
+                          );
+                        });
                       });
                     }}
                   />
