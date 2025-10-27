@@ -148,8 +148,8 @@ func (t *TopicDefinition) initByCreateTopicDto(createDto *dto.CreateTopicDto, in
 
 	t.CreateTopicDto = createDto
 
-	if createDto.Flags != 0 {
-		t.Save2db = constants.WithSave2db(createDto.Flags)
+	if createDto.Flags != nil && *createDto.Flags != 0 {
+		t.Save2db = constants.WithSave2db(*createDto.Flags)
 	} else if init {
 		t.Save2db = true
 	}

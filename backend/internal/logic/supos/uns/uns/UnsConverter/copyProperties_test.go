@@ -12,7 +12,8 @@ import (
 )
 
 func TestCopyFields(t *testing.T) {
-	src := types.CreateTopicDto{Id: 123, Name: "test123", PathType: 2, DataType: 1, Fields: []types.FieldDefine{
+	dataType := int(1)
+	src := types.CreateTopicDto{Id: 123, Name: "test123", PathType: 2, DataType: &dataType, Fields: []types.FieldDefine{
 		{
 			Name: "id", Type: "LONG",
 		}, {
