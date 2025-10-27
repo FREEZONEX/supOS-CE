@@ -103,13 +103,15 @@ const NodeRed: FC<any> = (data) => {
                 <Add size={20} />
               </div>
             )}
-            <Binding
-              selectValue={data.node.data.bindId}
-              api={flowPage}
-              onBinding={(item: any) => {
-                return data.node.data.onBindingChange?.('nodeRed1', item);
-              }}
-            />
+            <div data-action="noNavigate">
+              <Binding
+                selectValue={data.node.data.bindId}
+                api={flowPage}
+                onBinding={(item: any) => {
+                  return data.node.data.onBindingChange?.('nodeRed1', item);
+                }}
+              />
+            </div>
             <div className={styles['status-indicator']}>
               <span className={styles['status-dot']} style={{ background: statusColor }} />
               <span
@@ -199,13 +201,15 @@ const Apps = (data: any) => {
       <div className={styles['common-node-btn']} data-action="navigate">
         <Launch size={20} />
       </div>
-      <Binding
-        selectValue={data.node.data.bindId}
-        api={getDashboardList}
-        onBinding={(item: any) => {
-          return data.node.data.onBindingChange?.('apps1', item);
-        }}
-      />
+      <div data-action="noNavigate">
+        <Binding
+          selectValue={data.node.data.bindId}
+          api={getDashboardList}
+          onBinding={(item: any) => {
+            return data.node.data.onBindingChange?.('apps1', item);
+          }}
+        />
+      </div>
     </div>
   );
 };
@@ -709,6 +713,10 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo, getFileDetail
     const target = e.target as HTMLElement;
     const launchButton = target.closest('[data-action="navigate"]');
 
+    if (target.closest('[data-action="noNavigate"]')) {
+      e.stopPropagation();
+      return;
+    }
     if (cell?.id === 'nodeRed1' && launchButton) {
       if (cell.data.id || cell.data.flowId || cell.data.flowName) {
         navigate(
