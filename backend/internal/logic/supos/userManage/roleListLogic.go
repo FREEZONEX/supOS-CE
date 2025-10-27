@@ -1,0 +1,102 @@
+package userManage
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	authdto "backend/internal/common/dto/auth"
+	"backend/internal/common/enums"
+	"backend/internal/svc"
+	"backend/internal/types"
+	"backend/share/clients"
+
+	"gitee.com/unitedrhino/share/errors"
+)
+
+type RoleListLogic struct {
+	baseUserManageLogic
+}
+
+// List available roles
+func NewRoleListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RoleListLogic {
+	return &RoleListLogic{
+		baseUserManageLogic: newBaseUserManageLogic(ctx, svcCtx),
+	}
+}
+
+func (l *RoleListLogic) RoleList() (*types.RoleListResp, error) {
+	kc, err := l.keycloakClient()
+	if err != nil {
+		return nil, err
+	}
+
+	roles, err := kc.GetAllRoles()
+	if err != nil {
+		l.Errorf("failed to load roles from keycloak: %v", err)
+		return nil, errors.System.WithMsg("failed to load roles")
+	}
+
+	roleByName := make(map[string]*clients.KeycloakRoleInfoDto, len(roles))
+	for i := range roles {
+		role := roles[i]
+		roleByName[role.Name] = &role
+	}
+
+	repo, err := l.authRepo()
+	if err != nil {
+		l.Errorf("init keycloak repo failed: %v", err)
+		return nil, errors.System.WithMsg("failed to access keycloak repository")
+	}
+
+	var (
+		superRoles []types.RoleDetail
+		otherRoles []types.RoleDetail
+	)
+
+	for i := range roles {
+		role := roles[i]
+		if enums.IsIgnoredRoleID(role.ID) || enums.IsIgnoredRoleName(role.Name) || strings.HasPrefix(role.Name, "deny-") {
+			continue
+		}
+
+		var allowResources []*authdto.ResourceDto
+		var denyResources []*authdto.ResourceDto
+		if repo != nil {
+			allowResources, err = repo.GetRoleAllowResources(l.ctx, role.ID)
+			if err != nil {
+				l.Errorf("load allow resources for role %s failed: %v", role.ID, err)
+				return nil, errors.System.WithMsg("failed to load role resources")
+			}
+		}
+		if denyRole := roleByName[fmt.Sprintf("deny-%s", role.Name)]; denyRole != nil && repo != nil {
+			denyResources, err = repo.GetRoleDenyResources(l.ctx, denyRole.ID)
+			if err != nil {
+				l.Errorf("load deny resources for role %s failed: %v", denyRole.ID, err)
+				return nil, errors.System.WithMsg("failed to load role resources")
+			}
+		}
+
+		displayName, desc := normalizeRoleDisplay(role.ID, role.Name, role.Description)
+		detail := types.RoleDetail{
+			RoleID:           role.ID,
+			RoleName:         strings.TrimSpace(displayName),
+			ResourceList:     toRoleResourceList(allowResources),
+			DenyResourceList: toRoleResourceList(denyResources),
+		}
+		if detail.RoleName == "" {
+			detail.RoleName = strings.TrimSpace(desc)
+		}
+
+		if role.ID == enums.RoleSuperAdmin.ID {
+			superRoles = append(superRoles, detail)
+		} else {
+			otherRoles = append(otherRoles, detail)
+		}
+	}
+
+	resp := &types.RoleListResp{}
+	resp.List = append(resp.List, superRoles...)
+	resp.List = append(resp.List, otherRoles...)
+	return resp, nil
+}
