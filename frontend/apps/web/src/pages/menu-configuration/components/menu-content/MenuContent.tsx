@@ -169,6 +169,7 @@ const MenuContent = () => {
             {
               formType: 'radioGroup',
               formProps: {
+                hidden: true,
                 initialValue: 2,
                 name: 'urlType',
                 label: 'urlType',

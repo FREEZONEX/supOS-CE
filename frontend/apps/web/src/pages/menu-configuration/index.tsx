@@ -195,31 +195,35 @@ const Module: FC<PageProps> = ({ title }) => {
                         </Flex>
                       </AuthWrapper>
                     )}
-                    <AuthWrapper auth={ButtonPermission['MenuConfiguration.deleteMenu']}>
-                      <Flex
-                        title={formatMessage('common.delete')}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          modal.confirm({
-                            title: formatMessage('common.deleteConfirm'),
-                            onOk: async () => {
-                              return deleteResourceApi(node.id).then(() => {
-                                message.success(formatMessage('common.deleteSuccessfully'));
-                                requestMenu();
-                              });
-                            },
-                            okButtonProps: {
-                              title: formatMessage('common.confirm'),
-                            },
-                            cancelButtonProps: {
-                              title: formatMessage('common.cancel'),
-                            },
-                          });
-                        }}
-                      >
-                        <Close style={{ cursor: 'pointer' }} />
-                      </Flex>
-                    </AuthWrapper>
+                    {(![1, 2].includes(node?.type) ||
+                      (node?.type === 1 && !['80', '50'].includes(node.id)) ||
+                      (node?.type === 2 && node?.urlType === 2)) && (
+                      <AuthWrapper auth={ButtonPermission['MenuConfiguration.deleteMenu']}>
+                        <Flex
+                          title={formatMessage('common.delete')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            modal.confirm({
+                              title: formatMessage('common.deleteConfirm'),
+                              onOk: async () => {
+                                return deleteResourceApi(node.id).then(() => {
+                                  message.success(formatMessage('common.deleteSuccessfully'));
+                                  requestMenu();
+                                });
+                              },
+                              okButtonProps: {
+                                title: formatMessage('common.confirm'),
+                              },
+                              cancelButtonProps: {
+                                title: formatMessage('common.cancel'),
+                              },
+                            });
+                          }}
+                        >
+                          <Close style={{ cursor: 'pointer' }} />
+                        </Flex>
+                      </AuthWrapper>
+                    )}
                   </Flex>
                 );
               }}
