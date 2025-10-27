@@ -109,7 +109,7 @@ type (
         FirstName         string `json:"firstName,optional"`
         Email             string `json:"email,optional"`
         RoleName          string `json:"roleName,optional"`
-        Enabled           bool   `json:"enabled,optional"`
+        Enabled           *bool   `json:"enabled,optional"`
     }
 
     UserManagePageResp {
@@ -166,15 +166,15 @@ type (
         UserID         string        `json:"userId"`
         Username       string        `json:"username,optional"`
         Password       string        `json:"password,optional"`
-        Enabled        bool          `json:"enabled,optional"`
+        Enabled        *bool          `json:"enabled,optional"`
         Email          string        `json:"email,optional"`
         FirstName      string        `json:"firstName,optional"`
         Phone          string        `json:"phone,optional"`
-        FirstTimeLogin int           `json:"firstTimeLogin,optional"`
-        TipsEnable     int           `json:"tipsEnable,optional"`
+        FirstTimeLogin *int           `json:"firstTimeLogin,optional"`
+        TipsEnable     *int           `json:"tipsEnable,optional"`
         HomePage       string        `json:"homePage,optional"`
         RoleList       []RoleSummary `json:"roleList,optional"`
-        OperateRole    bool          `json:"operateRole,optional"`
+        OperateRole    *bool          `json:"operateRole,optional"`
         Source         string        `json:"source,optional"`
     }
 
@@ -188,7 +188,7 @@ type (
         ID        string        `json:"id,optional"`
         Username  string        `json:"username"`
         Password  string        `json:"password"`
-        Enabled   bool          `json:"enabled,optional"`
+        Enabled   *bool          `json:"enabled,optional"`
         Email     string        `json:"email,optional"`
         FirstName string        `json:"firstName,optional"`
         Phone     string        `json:"phone,optional"`

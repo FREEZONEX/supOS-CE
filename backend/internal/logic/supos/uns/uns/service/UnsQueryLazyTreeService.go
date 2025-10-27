@@ -1,0 +1,128 @@
+package service
+
+import (
+	"backend/internal/common/constants"
+	"backend/internal/logic/supos/uns/uns/UnsConverter"
+	dao "backend/internal/repo/relationDB"
+	"backend/internal/types"
+	"backend/share/base"
+	"context"
+)
+
+// LazyTree 懒加载的树查询
+func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCondition) (resp *types.PageResultDTO, err error) {
+	pageNo := params.PageNo
+	pageSize := params.PageSize
+	query := &dao.UnsTreeNextLevelQuery{UnsTreeCondition: *params}
+	pid := params.ParentId
+	db := dao.GetDb(ctx)
+	ctx = dao.SetDb(ctx, db)
+	if pid != nil && *pid != 0 {
+		var parent *dao.UnsNamespace
+		parent, err = l.unsMapper.SelectById(db, *pid)
+		if err != nil || parent == nil {
+			resp = emptyPage(params)
+			if err != nil {
+				resp.Code = 500
+			}
+			return
+		}
+		query.LayRecPrev = parent.LayRec
+		pid = params.ParentId
+	} else {
+		pid = nil
+	}
+	if params.SearchType == 1 &&
+		params.Keyword == "" &&
+		params.PathType == nil &&
+		params.DataType == nil &&
+		params.SubscribeEnable == nil {
+		// 不考虑parentId，无其他条件的简单搜索
+		return l.simpleTree(ctx, pid, query.LayRecPrev, pageNo, pageSize)
+	}
+
+	total := int64(0)
+	var treeResultList []*types.TopicTreeResult
+	if total > 0 {
+		var list []*dao.TreeNodeUns
+		list, err = l.unsMapper.NextLevelPagedQueryList(db, query, &total)
+		if err != nil {
+			resp = emptyPage(params)
+			resp.Code = 500
+			return
+		}
+
+		rsTypes := make([]int, 8)
+		treeResultList = make([]*types.TopicTreeResult, 0, len(list))
+
+		for _, po := range list {
+			result := UnsConverter.Dto2TreeResult(po)
+
+			var folderCount, fileCount int
+			if po.PathType == constants.PathTypeDir {
+				countChildren := po.CountChildren
+				parseTypeCount(countChildren, rsTypes)
+				folderCount = rsTypes[constants.PathTypeDir]
+				fileCount = rsTypes[constants.PathTypeFile]
+			}
+
+			result.CountChildren = fileCount
+			result.HasChildren = folderCount+fileCount > 0
+			treeResultList = append(treeResultList, result)
+		}
+	} else {
+		treeResultList = make([]*types.TopicTreeResult, 0)
+	}
+
+	resp = &types.PageResultDTO{
+		PageNo:   int64(pageNo),
+		PageSize: int64(pageSize),
+		Total:    total,
+		Code:     200,
+		Msg:      "Normal DB Search",
+		Data:     treeResultList,
+	}
+	return
+}
+func (l *UnsQueryService) simpleTree(ctx context.Context, parentId *int64, layRecPrev string, pageNo, pageSize int) (resp *types.PageResultDTO, err error) {
+	db := dao.GetDb(ctx)
+	countChildrenList, er := l.unsMapper.ListCountChildren(db, layRecPrev)
+	if er != nil {
+		return nil, er
+	}
+	ccMap := parseChildrenCount(countChildrenList)
+	total := int64(0)
+	pageRs, er := l.unsMapper.ParentIdPagedQueryList(db, parentId, pageNo, pageSize, &total)
+	if er != nil {
+		return nil, er
+	}
+	treeResultList := base.Map[*dao.UnsNamespace, *types.TopicTreeResult](pageRs, func(e *dao.UnsNamespace) *types.TopicTreeResult {
+		result := UnsConverter.Dto2TreeResult(e)
+		folderCount, fileCount := 0, 0
+		if e.PathType == constants.PathTypeDir {
+			if rsTypes := ccMap[e.ID]; len(rsTypes) > 2 {
+				folderCount = rsTypes[constants.PathTypeDir]
+				fileCount = rsTypes[constants.PathTypeFile]
+			}
+		}
+		result.CountChildren = fileCount
+		result.HasChildren = folderCount+fileCount > 0
+		return result
+	})
+	resp = &types.PageResultDTO{
+		PageNo:   int64(pageNo),
+		PageSize: int64(pageSize),
+		Total:    total,
+		Code:     200,
+		Msg:      "Simple DB Search",
+		Data:     treeResultList,
+	}
+	return
+}
+func emptyPage(params *types.UnsTreeCondition) *types.PageResultDTO {
+	return &types.PageResultDTO{
+		Code:     200,
+		PageNo:   int64(params.PageNo),
+		PageSize: int64(params.PageSize),
+	}
+}

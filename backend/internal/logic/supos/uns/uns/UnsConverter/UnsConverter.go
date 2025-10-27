@@ -63,6 +63,18 @@ func Po2Dtos(poList []*dao.UnsNamespace) []*dto.CreateTopicDto {
 	}
 	return unsDtoList
 }
+func Po2ApiDtos(poList []*dao.UnsNamespace) []*types.CreateTopicDto {
+	if len(poList) == 0 {
+		return nil
+	}
+	unsDtoList := make([]*types.CreateTopicDto, len(poList))
+	// BeanUtil.copyProperties equivalent - assuming a custom copy function
+	copier.CopyWithOption(&unsDtoList, poList, copier.Option{IgnoreEmpty: true})
+	for i, p := range poList {
+		Po2ApiDto(p, unsDtoList[i])
+	}
+	return unsDtoList
+}
 func Po2Dto(p *dao.UnsNamespace) *dto.CreateTopicDto {
 	unsDto := &dto.CreateTopicDto{}
 	copier.CopyWithOption(unsDto, p, copier.Option{IgnoreEmpty: true})
@@ -120,6 +132,25 @@ func po2Dto(p *dao.UnsNamespace, unsDto *dto.CreateTopicDto) {
 	//}
 	unsDto.ExtendFieldUsed = FieldUtils.ParseFlag(p.ExtendFieldFlags)
 }
+func Po2ApiDto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
+	var withFlags int32
+	if p.WithFlags != nil {
+		withFlags = *p.WithFlags
+	}
+	unsDto.Id = p.ID
+	unsDto.AddFlow = boPt(constants.WithFlow(withFlags))
+	unsDto.AddDashBoard = boPt(constants.WithDashBoard(withFlags))
+	unsDto.Save2db = boPt(constants.WithSave2db(withFlags))
+	unsDto.RetainTableWhenDeleteInstance = boPt(constants.WithRetainTableWhenDeleteInstance(withFlags))
+	unsDto.ParentAlias = p.ParentAlias
+	unsDto.ParentId = p.ParentID
+	unsDto.Name = p.Name
+	unsDto.ModelId = p.ModelID
+
+	calculationExpr := p.Expression
+	unsDto.Expression = calculationExpr
+	unsDto.ExtendFieldUsed = FieldUtils.ParseFlag(p.ExtendFieldFlags)
+}
 func boPt(b bool) *bool {
 	return &b
 }
@@ -132,12 +163,13 @@ func Dto2TreeResult(unsDto bo.NodeUnsInfo) *types.TopicTreeResult {
 		result.ParentId = &strId
 	}
 	result.ParentAlias = unsDto.GetParentAlias()
-	result.PathType = int(unsDto.GetPathType())
+	result.PathType = unsDto.GetPathType()
 	name := PathUtil.GetName(unsDto.GetPath())
 	result.Name = name
 	result.Path = unsDto.GetPath()
 	result.PathName = name
 	result.DataType = unsDto.GetDataType()
+	result.ParentDataType = unsDto.GetParentDataType()
 	result.Mount = createMountDetailVo(unsDto)
 	return result
 }
@@ -148,7 +180,7 @@ func createMountDetailVo(unsDto bo.NodeUnsInfo) *types.MountDetailVo {
 	}
 
 	mountDetailVo := &types.MountDetailVo{
-		MountType:   int(*unsDto.GetMountType()),
+		MountType:   unsDto.GetMountType(),
 		MountSource: unsDto.GetMountSource(),
 	}
 	return mountDetailVo
@@ -161,6 +193,15 @@ var apiConvertOptions = copier.Option{IgnoreEmpty: true, Converters: []copier.Ty
 		Fn: func(src interface{}) (dst interface{}, err error) {
 			if rs, ok := enums.GetFieldTypeByNameIgnoreCase(src.(string)); ok {
 				return rs, nil
+			}
+			return nil, errors.Default
+		},
+	}, {
+		SrcType: enums.FieldTypeInteger,
+		DstType: copier.String,
+		Fn: func(src interface{}) (dst interface{}, err error) {
+			if rs, ok := src.(enums.FieldType); ok {
+				return rs.Name(), nil
 			}
 			return nil, errors.Default
 		},
@@ -179,6 +220,10 @@ func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *dto.CreateTopicDto {
 }
 
 func ConvertApiDtos(apiDto []types.CreateTopicDto) (target []*dto.CreateTopicDto) {
+	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
+	return target
+}
+func ConvertFields(apiDto []*dto.FieldDefine) (target []*types.FieldDefine) {
 	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
 	return target
 }

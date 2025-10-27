@@ -4,11 +4,14 @@
 package uns
 
 import (
+	"backend/internal/logic/supos/uns/uns/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
 	"backend/internal/types"
 
+	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -27,8 +30,8 @@ func NewSearchEmptyFolderLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 	}
 }
 
-func (l *SearchEmptyFolderLogic) SearchEmptyFolder(req *types.EmptyFolderReq) (resp []types.CreateTopicDto, err error) {
-	// todo: add your logic here and delete this line
-
+func (l *SearchEmptyFolderLogic) SearchEmptyFolder(req *types.EmptyFolderReq) (resp *types.EmptyFolderResp, err error) {
+	resp, err = spring.GetBean[*service.UnsQueryService]().SearchEmptyFolder(l.ctx, req)
+	err = errors.Fmt(err)
 	return
 }

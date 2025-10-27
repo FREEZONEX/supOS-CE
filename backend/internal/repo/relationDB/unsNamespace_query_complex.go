@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (p UnsNamespaceRepo) ListByConditions(db *gorm.DB, f dto.UnsSearchCondition) (results []*UnsNamespace, err error) {
+func (p UnsNamespaceRepo) ListByConditions(db *gorm.DB, f *dto.UnsSearchCondition) (results []*UnsNamespace, err error) {
 	db = p.model(db)
 	sql := &base.StringBuilder{}
 	sql.Grow(512)
@@ -22,7 +22,7 @@ func (p UnsNamespaceRepo) ListByConditions(db *gorm.DB, f dto.UnsSearchCondition
 	err = db.Raw(sql.String()).Find(&results).Error
 	return
 }
-func (p UnsNamespaceRepo) PageListByConditions(db *gorm.DB, f dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
+func (p UnsNamespaceRepo) PageListByConditions(db *gorm.DB, f *dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
 	db = p.model(db)
 	db = page.ToGorm(db)
 	sql := &base.StringBuilder{}
@@ -49,7 +49,7 @@ func (p UnsNamespaceRepo) PageListByConditions(db *gorm.DB, f dto.UnsSearchCondi
 	pageRs.PageSize = page.Size
 	return
 }
-func (p UnsNamespaceRepo) PageListByLazy(db *gorm.DB, f dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
+func (p UnsNamespaceRepo) PageListByLazy(db *gorm.DB, f *dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
 	db = p.model(db)
 	db = page.ToGorm(db)
 	sql := &base.StringBuilder{}
@@ -104,7 +104,7 @@ func (p UnsNamespaceRepo) PageListTemplates(db *gorm.DB, f dto.TemplateQueryVo, 
 	return
 }
 
-func filterByConditions(s *base.StringBuilder, f dto.UnsSearchCondition) {
+func filterByConditions(s *base.StringBuilder, f *dto.UnsSearchCondition) {
 	s.Append("WHERE a.status = 1 AND (a.data_type != 5 OR a.data_type IS NULL)")
 
 	if f.ParentId != nil {

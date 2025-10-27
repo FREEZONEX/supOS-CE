@@ -242,9 +242,9 @@ type UnsTreeCondition struct {
 
 	SearchType int    `json:"searchType" form:"searchType"` // 查询类型：1-UNS（名称+别名） 2-含标签 3-含模板
 	Keyword    string `json:"keyword,omitzero" form:"keyword"`
-	ParentID   int64  `json:"parentId,omitzero" form:"parentId"` // 父级ID  可为空，传0查询顶级节点，空值时查询所有
-	DataType   int    `json:"dataType,omitzero" form:"dataType"` // 数据类型：1--时序，2--关系，3--计算型, 5--告警 6--聚合 7--引用
-	PathType   int    `json:"pathType,omitzero" form:"pathType"` // 路径类型: 0--文件夹，2--文件
+	ParentID   *int64 `json:"parentId,omitzero" form:"parentId"` // 父级ID  可为空，传0查询顶级节点，空值时查询所有
+	DataType   *int   `json:"dataType,omitzero" form:"dataType"` // 数据类型：1--时序，2--关系，3--计算型, 5--告警 6--聚合 7--引用
+	PathType   *int   `json:"pathType,omitzero" form:"pathType"` // 路径类型: 0--文件夹，2--文件
 }
 
 // SaveDataDto represents data saving DTO

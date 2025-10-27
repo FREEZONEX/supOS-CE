@@ -12,16 +12,16 @@ import (
 // CreateTopicDto represents UNS topic creation/update DTO
 type CreateTopicDto struct {
 	// Basic fields
-	ID          int64  `json:"id,omitzero"`
-	Batch       int    `json:"-"`
-	Index       int    `json:"-"`
-	FlagNo      string `json:"-"`
-	Name        string `json:"name" validate:"required,max=63"`
-	DisplayName string `json:"displayName,omitzero" validate:"max=128"`
-	PathType    int16  `json:"pathType" validate:"required,min=0,max=2"`
-	Path        string `json:"path,omitzero"`
-	Alias       string `json:"alias" validate:"required"`
-	Description string `json:"description,omitzero" validate:"max=255"`
+	ID          int64   `json:"id,omitzero"`
+	Batch       int     `json:"-"`
+	Index       int     `json:"-"`
+	FlagNo      string  `json:"-"`
+	Name        string  `json:"name" validate:"required,max=63"`
+	DisplayName *string `json:"displayName,omitzero" validate:"max=128"`
+	PathType    int16   `json:"pathType" validate:"required,min=0,max=2"`
+	Path        string  `json:"path,omitzero"`
+	Alias       string  `json:"alias" validate:"required"`
+	Description string  `json:"description,omitzero" validate:"max=255"`
 
 	// Model/Template fields
 	ModelID    *int64 `json:"modelId,omitzero"`
@@ -33,9 +33,10 @@ type CreateTopicDto struct {
 	ParentID    *int64  `json:"parentId,omitzero"`
 
 	// Data type and fields
-	DataType  *int16             `json:"dataType" validate:"required,min=1,max=7"`
-	Fields    []*FieldDefine     `json:"fields,omitzero"`
-	DataSrcID common.SrcJdbcType `json:"-"` // SrcJdbcType
+	DataType       *int16             `json:"dataType" validate:"min=1,max=7"`
+	ParentDataType *int16             `json:"parentDataType"`
+	Fields         []*FieldDefine     `json:"fields,omitzero"`
+	DataSrcID      common.SrcJdbcType `json:"-"` // SrcJdbcType
 
 	// Table fields
 	TableName    string   `json:"-"`
@@ -211,7 +212,7 @@ func (c *CreateTopicDto) SetFields(fields []*FieldDefine) {
 			if f.IsUnique() {
 				pkSet[f.Name] = true
 			}
-			if f.TbValueName != "" {
+			if f.TbValueName != nil {
 				c.TbFieldName = f.Name
 			}
 		}
@@ -343,8 +344,11 @@ func (t *CreateTopicDto) GetName() string {
 	return t.Name
 }
 
-func (t *CreateTopicDto) GetDisplayName() string {
-	return t.DisplayName
+func (t *CreateTopicDto) GetDisplayName() (dn string) {
+	if displayName := t.DisplayName; displayName != nil {
+		dn = *displayName
+	}
+	return dn
 }
 
 func (t *CreateTopicDto) GetPath() string {
@@ -354,7 +358,9 @@ func (t *CreateTopicDto) GetPath() string {
 func (t *CreateTopicDto) GetDataType() *int16 {
 	return t.DataType
 }
-
+func (t *CreateTopicDto) GetParentDataType() *int16 {
+	return t.ParentDataType
+}
 func (t *CreateTopicDto) GetPathType() int16 {
 	return t.PathType
 }

@@ -9,6 +9,7 @@ type NodeUnsInfo interface {
 	GetDisplayName() string
 	GetPath() string
 	GetDataType() *int16
+	GetParentDataType() *int16
 	GetPathType() int16
 	GetMountType() *int16
 	GetMountSource() string

@@ -41,20 +41,20 @@ func (p UnsNamespaceRepo) GetAliasByPath(db *gorm.DB, path string) (alias string
 }
 
 type UnsPathFilter struct {
-	TemplateId int64
 	Key        string
+	TemplateId int64
 	PathType   int
-	DataTypes  []int
+	DataTypes  []int16
 }
 
-func (p UnsNamespaceRepo) CountPaths(db *gorm.DB, filter UnsPathFilter) (count int64, er error) {
-	err := p.model(db).Count(&count).Error
-	if err != nil {
-		return -1, stores.ErrFmt(err)
-	}
-	return
+type SimpleUns struct {
+	ID       string `gorm:"column:id" json:"id"`
+	DataType int    `gorm:"column:data_type" json:"data_type"`
+	Alias    string `gorm:"column:alias;not null" json:"alias"`
+	Path     string `gorm:"column:path;not null" json:"path"`
 }
-func (p UnsNamespaceRepo) filterPath(db *gorm.DB, f UnsPathFilter) *gorm.DB {
+
+func (p UnsNamespaceRepo) ListPaths(db *gorm.DB, f *UnsPathFilter, page *stores.PageInfo, searchCount *int64) (results []*SimpleUns, er error) {
 	db = p.model(db)
 	if f.TemplateId > 0 {
 		db = db.Where("model_id = ?", f.TemplateId)
@@ -66,18 +66,12 @@ func (p UnsNamespaceRepo) filterPath(db *gorm.DB, f UnsPathFilter) *gorm.DB {
 		db = db.Where("data_type in ?", f.DataTypes).Where("data_type <> ?", constants.AlarmRuleType)
 	}
 	db = db.Where("status = 1")
-	return db
-}
-
-type SimpleUns struct {
-	ID       string `gorm:"column:id" json:"id"`
-	DataType int    `gorm:"column:data_type" json:"data_type"`
-	Alias    string `gorm:"column:alias;not null" json:"alias"`
-	Path     string `gorm:"column:path;not null" json:"path"`
-}
-
-func (p UnsNamespaceRepo) ListPaths(db *gorm.DB, filter UnsPathFilter, page *stores.PageInfo) (results []*SimpleUns, er error) {
-	db = p.model(db)
+	if searchCount != nil {
+		er = db.Count(searchCount).Error
+		if er != nil || *searchCount == 0 {
+			return
+		}
+	}
 	db = page.ToGorm(db)
 	err := db.Find(&results).Error
 	if err != nil {
@@ -160,89 +154,64 @@ func (p UnsNamespaceRepo) ListFileByTemplateId(db *gorm.DB, templateId int64) (r
 	}
 	return
 }
-func (p UnsNamespaceRepo) CountNotCalcSeqFiles(db *gorm.DB, key string, minNumFields int) (count int64, er error) {
+func (p UnsNamespaceRepo) ListNotCalcSeqFiles(db *gorm.DB, key string, minNumFields int, page *stores.PageInfo, searchCount *int64) (results []*UnsNamespace, err error) {
 	db = p.model(db)
 	db.Where("path_type = ?", 2).Where("data_type = ?", constants.TimeSequenceType)
 	if key != "" {
 		db = db.Where("path iLike ?", key)
 	}
 	if minNumFields >= 0 {
-		db = db.Where("number_fields", minNumFields)
+		db = db.Where("number_fields >= ?", minNumFields)
 	}
-	db = db.Where("status = ?", 1)
-	err := db.Count(&count).Error
-	if err != nil {
-		return -1, stores.ErrFmt(err)
+	db = db.Where("status = 1")
+	if searchCount != nil {
+		err = db.Count(searchCount).Error
+		if err != nil || *searchCount == 0 {
+			return
+		}
 	}
-	return
-}
-func (p UnsNamespaceRepo) ListNotCalcSeqFiles(db *gorm.DB, key string, minNumFields int, page *stores.PageInfo) (results []*UnsNamespace, err error) {
-	db = p.model(db)
 	db = page.ToGorm(db)
-	db.Where("path_type = ?", 2).Where("data_type = ?", constants.TimeSequenceType)
-	if key != "" {
-		db = db.Where("path iLike ?", key)
-	}
-	if minNumFields >= 0 {
-		db = db.Where("number_fields", minNumFields)
-	}
-	db = db.Where("status = ?", 1)
 	err = db.Find(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
 	return
 }
-func (p UnsNamespaceRepo) CountTimeSeriesFiles(db *gorm.DB, key string) (count int64, er error) {
+func (p UnsNamespaceRepo) ListTimeSeriesFiles(db *gorm.DB, key string, page *stores.PageInfo, searchCount *int64) (results []*UnsNamespace, err error) {
 	db = p.model(db)
 	db.Where("path_type = ?", 2).Where("data_type in ?", []int16{constants.TimeSequenceType, constants.CalculationRealType})
 	if key != "" {
 		db = db.Where("path iLike ?", key)
 	}
-	db = db.Where("number_fields > ? ", 0)
-	db = db.Where("status = ?", 1)
-	err := db.Count(&count).Error
-	if err != nil {
-		return -1, stores.ErrFmt(err)
+	db = db.Where("number_fields > 0 ")
+	db = db.Where("status = 1")
+	if searchCount != nil {
+		err = db.Count(searchCount).Error
+		if err != nil || *searchCount == 0 {
+			return
+		}
 	}
-	return
-}
-func (p UnsNamespaceRepo) ListTimeSeriesFiles(db *gorm.DB, key string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
-	db = p.model(db)
 	db = page.ToGorm(db)
-	db.Where("path_type = ?", 2).Where("data_type in ?", []int16{constants.TimeSequenceType, constants.CalculationRealType})
-	if key != "" {
-		db = db.Where("path iLike ?", key)
-	}
-	db = db.Where("number_fields > ? ", 0)
-	db = db.Where("status = ?", 1)
 	err = db.Find(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
 	return
 }
-func (p UnsNamespaceRepo) CountAlarmRules(db *gorm.DB, key string) (count int64, er error) {
+func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.PageInfo, searchCount *int64) (results []*UnsNamespace, err error) {
 	db = p.model(db)
 	db.Where("path_type = ?", 2).Where("data_type = ?", constants.AlarmRuleType)
 	if key != "" {
-		db = db.Where("(data_path iLike ? OR description like ?)", key, key)
+		db = db.Where("(data_path like ? OR description like ?)", key, key)
 	}
-	db = db.Where("status = ?", 1)
-	err := db.Count(&count).Error
-	if err != nil {
-		return -1, stores.ErrFmt(err)
+	db = db.Where("status = 1")
+	if searchCount != nil {
+		err = db.Count(searchCount).Error
+		if err != nil || *searchCount == 0 {
+			return
+		}
 	}
-	return
-}
-func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
-	db = p.model(db)
 	db = page.ToGorm(db)
-	db.Where("path_type = ?", 2).Where("data_type = ?", constants.AlarmRuleType)
-	if key != "" {
-		db = db.Where(db.Where("data_path iLike ?", key).Or("description like ?", key))
-	}
-	db = db.Where("status = ?", 1)
 	err = db.Find(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
@@ -330,4 +299,23 @@ func (p UnsNamespaceRepo) ListAllEmptyFolder(db *gorm.DB) (results []*UnsNamespa
            SELECT DISTINCT parent_id FROM ` + TableNameUnsNamespace + `  WHERE parent_id IS NOT NULL  AND status=1`)
 	err = query.Find(&results).Error
 	return results, err
+}
+
+func (p UnsNamespaceRepo) ListLabeledUnsByKeyword(db *gorm.DB, keyword string) (results []*UnsNamespace, err error) {
+	query := db.Table("uns_namespace n").
+		Joins("INNER JOIN uns_label_ref ulr ON n.id = ulr.uns_id").
+		Where("n.path_type = ?", 2).
+		Where("n.status =1") // 软删除过滤
+
+	if kw := strings.TrimSpace(keyword); kw != "" {
+		likeKeyword := "%" + strings.ToLower(kw) + "%"
+		query = query.Where("(LOWER(n.path) LIKE ? OR LOWER(n.alias) LIKE ?)", likeKeyword, likeKeyword)
+	}
+
+	err = query.Find(&results).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get uns by keyword: %w", err)
+	}
+
+	return results, nil
 }

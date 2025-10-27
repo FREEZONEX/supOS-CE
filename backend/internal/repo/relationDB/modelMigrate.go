@@ -22,6 +22,13 @@ func Migrate(c conf.Database, schema string) error {
 	//	return nil
 	//}
 	db := stores.GetCommonConn(context.TODO())
+	if c.DBType == "pgsql" && schema != "" {
+		db.Exec("create schema if not exists " + schema)
+		if err := db.Exec("SET search_path TO " + schema).Error; err != nil {
+			return err
+		}
+	}
+
 	fs.WalkDir(sqlFiles, "migrations_sqls", func(path string, d fs.DirEntry, err error) error {
 		if strings.HasSuffix(path, ".sql") && !d.IsDir() {
 			if bs, er := sqlFiles.ReadFile(path); er == nil && len(bs) > 0 {
@@ -42,6 +49,8 @@ func Migrate(c conf.Database, schema string) error {
 		}
 		return nil
 	})
+	var unsDao UnsNamespaceRepo
+	unsDao.migrate(db)
 	if !db.Migrator().HasTable(&UnsNamespace{}) {
 		//需要初始化表
 		NeedInitColumn = true
@@ -50,13 +59,6 @@ func Migrate(c conf.Database, schema string) error {
 		// &UnsNamespace{},
 		&UnsLabel{},
 	)
-	if c.DBType == "pgsql" && schema != "" {
-		db.Exec("create schema if not exists " + schema)
-		db.Exec("SET search_path TO " + schema)
-	}
-	if err != nil {
-		return err
-	}
 
 	return err
 }

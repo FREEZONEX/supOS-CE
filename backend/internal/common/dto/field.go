@@ -10,21 +10,21 @@ import (
 type FieldDefine struct {
 	Name        string          `json:"name" validate:"required"` // 字段名
 	Type        enums.FieldType `json:"type" validate:"required"` // 字段类型
-	Unique      bool            `json:"unique,omitzero"`          // 是否唯一约束
-	Index       string          `json:"index,omitzero"`           // 对应的协议字段key
-	DisplayName string          `json:"displayName,omitzero"`     // 显式名
-	Remark      string          `json:"remark,omitzero"`          // 备注
-	MaxLen      int             `json:"maxLen,omitzero"`          // 最大长度(string字段类型生效)
-	TbValueName string          `json:"-"`                        // Internal use
-	Unit        string          `json:"unit,omitzero"`            // 位号单位
-	UpperLimit  float64         `json:"upperLimit,omitzero"`      // 原始上限
-	LowerLimit  float64         `json:"lowerLimit,omitzero"`      // 原始下限
-	Decimal     int             `json:"decimal,omitzero"`         // 小数精度位数
+	Unique      *bool           `json:"unique,omitzero"`          // 是否唯一约束
+	Index       *string         `json:"index,omitzero"`           // 对应的协议字段key
+	DisplayName *string         `json:"displayName,omitzero"`     // 显式名
+	Remark      *string         `json:"remark,omitzero"`          // 备注
+	MaxLen      *int            `json:"maxLen,omitzero"`          // 最大长度(string字段类型生效)
+	TbValueName *string         `json:"-"`                        // Internal use
+	Unit        *string         `json:"unit,omitzero"`            // 位号单位
+	UpperLimit  *float64        `json:"upperLimit,omitzero"`      // 原始上限
+	LowerLimit  *float64        `json:"lowerLimit,omitzero"`      // 原始下限
+	Decimal     *int            `json:"decimal,omitzero"`         // 小数精度位数
 }
 
 // IsUnique checks if field has unique constraint
 func (f *FieldDefine) IsUnique() bool {
-	return f.Unique
+	return f.Unique != nil && *f.Unique
 }
 
 // IsSystemField checks if field is a system field
@@ -40,7 +40,10 @@ func (f *FieldDefine) SetName(name string) {
 
 // SetIndex sets and trims the field index
 func (f *FieldDefine) SetIndex(index string) {
-	f.Index = strings.TrimSpace(index)
+	index = strings.TrimSpace(index)
+	if len(index) > 0 {
+		f.Index = &index
+	}
 }
 func (f *FieldDefine) Equals(a *FieldDefine) bool {
 	return f.Name == a.Name && f.Type == a.Type
@@ -90,8 +93,8 @@ func NewFieldDefines(fields []*FieldDefine) *FieldDefines {
 				fd.UniqueKeys[f.Name] = true
 			}
 
-			if f.Index != "" {
-				fd.FieldIndexMap[f.Index] = f.Name
+			if f.Index != nil {
+				fd.FieldIndexMap[*f.Index] = f.Name
 			}
 		}
 	}
