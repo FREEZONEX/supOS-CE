@@ -1,4 +1,4 @@
-Name: backend
+﻿Name: backend
 Host: 0.0.0.0
 Port: 6547
 CpuThreshold: 0
@@ -40,3 +40,15 @@ OssConf:
   AccessKeySecret: ${ossSk}
   Location: s3.ap-southeast-1.amazonaws.com
   Region: ap-southeast-1
+OAuthKeyCloak:
+   Realm: ${OAUTH_REALM}
+   ClientName: ${OAUTH_CLIENT_NAME}
+   ClientID: ${OAUTH_CLIENT_ID}
+   ClientSecret: ${OAUTH_CLIENT_SECRET}
+   AuthorizationGrantType: ${OAUTH_GRANT_TYPE}
+   RedirectURI: ${OAUTH_REDIRECT_URI}
+   SuposHome: ${OAUTH_SUPOS_HOME}
+   IssuerURI: ${OAUTH_ISSUER_URI}
+   # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
+   RefreshTokenTime: ${OAUTH_REFRESH_TOKEN_TIME}
+

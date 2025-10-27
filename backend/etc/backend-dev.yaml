@@ -1,4 +1,4 @@
-Name: backend
+﻿Name: backend
 Host: 0.0.0.0
 Port: 8080
 CpuThreshold: 0
@@ -7,36 +7,21 @@ Timeout: 20000
 Database:
   DBType: pgsql
   DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres
+KeycloakDatabase:
+  DBType: pgsql
+  DSN: postgres://postgres:postgres@100.100.100.20:31014/keycloak2
 CacheRedis:
  - Host: localhost:6379
    Pass:
    Type: node
-#TimedJobRpc:
-#  Enable: true
-#  Mode: grpc
-#  Conf:
-#    Timeout: 1000000
-#    Etcd:
-#      Key: timedjob.rpc
-#DevLink:
-#  Mode: mqtt
-#  SubMode: emq
-#  Mqtt:
-#    ClientID: uns.rpc
-#    Pass: uns
-#    User: unssvr
-#    Brokers:
-#      - tcp://127.0.0.1:1885
-#    OpenApi:
-#      Host: http://127.0.0.1:18083
-#      ApiKey: 69b84915bc0d50db
-#      SecretKey: nzREWI29BQjrY9A1gsgczHEUhDr3kJXonkUE9A7hueCB4G
-#OssConf:
-#  OssType: aws # 如果不需要minio,可以填写local,默认存储路径为 ../oss
-#  PublicBucketName: tier0-upload-public
-#  PrivateBucketName: tier0-upload
-#  TemporaryBucketName: tier0-upload-temp
-#  AccessKeyID: ${ossAk}
-#  AccessKeySecret: ${ossSk}
-#  Location: s3.ap-southeast-1.amazonaws.com
-#  Region: ap-southeast-1
+OAuthKeyCloak:
+   Realm: ${OAUTH_REALM}
+   ClientName: ${OAUTH_CLIENT_NAME}
+   ClientID: ${OAUTH_CLIENT_ID}
+   ClientSecret: ${OAUTH_CLIENT_SECRET}
+   AuthorizationGrantType: ${OAUTH_GRANT_TYPE}
+   RedirectURI: ${OAUTH_REDIRECT_URI}
+   SuposHome: ${OAUTH_SUPOS_HOME}
+   IssuerURI: ${OAUTH_ISSUER_URI}
+   # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
+   RefreshTokenTime: ${OAUTH_REFRESH_TOKEN_TIME}

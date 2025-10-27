@@ -1,19 +1,94 @@
 package middleware
 
-import "net/http"
+import (
+	"net/http"
+	"os"
+	"strings"
+
+	"backend/internal/common/authsvc"
+	cache "backend/internal/common/cache"
+	"backend/internal/common/constants"
+	"backend/internal/common/utils/apiutil"
+	"backend/internal/common/vo"
+	"backend/share/clients"
+
+	"gitee.com/unitedrhino/share/errors"
+	"gitee.com/unitedrhino/share/result"
+	"github.com/zeromicro/go-zero/rest/httpx"
+)
 
 type CheckTokenWareMiddleware struct {
+	keycloak    *clients.KeycloakClient
+	defaultHome string
+	realm       string
 }
 
-func NewCheckTokenWareMiddleware() *CheckTokenWareMiddleware {
-	return &CheckTokenWareMiddleware{}
+func NewCheckTokenWareMiddleware(kc *clients.KeycloakClient, defaultHome, realm string) *CheckTokenWareMiddleware {
+	return &CheckTokenWareMiddleware{
+		keycloak:    kc,
+		defaultHome: defaultHome,
+		realm:       realm,
+	}
 }
 
 func (m *CheckTokenWareMiddleware) Handle(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO generate middleware implement function, delete after code implementation
+		authDisabled := func() bool {
+			flag := os.Getenv("SYS_OS_AUTH_ENABLE")
+			return flag == "" || strings.EqualFold(flag, "false")
+		}()
 
-		// Passthrough to next handler if need
+		cookieToken, err := apiutil.GetCookie(r, constants.AccessTokenKey)
+		if err != nil || cookieToken == "" {
+			if authDisabled {
+				r = apiutil.SetUserInContext(r, vo.Guest())
+				next(w, r)
+				return
+			}
+			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "not logged in"))
+			return
+		}
+
+		if cache.TokenCache == nil {
+			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "token cache not initialized"))
+			return
+		}
+
+		entry, ok := cache.TokenCache.Get(cookieToken)
+		if !ok || entry == nil || entry.Token == nil || entry.Token.AccessToken == "" {
+			if authDisabled {
+				r = apiutil.SetUserInContext(r, vo.Guest())
+				next(w, r)
+				return
+			}
+			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "token expired"))
+			return
+		}
+
+		cache.TokenCache.Refresh(cookieToken)
+
+		user, _, fetchErr := authsvc.FetchUserInfo(r.Context(), m.keycloak, entry.Token.AccessToken, true, m.defaultHome, m.realm)
+		if fetchErr != nil {
+			if authDisabled {
+				r = apiutil.SetUserInContext(r, vo.Guest())
+				next(w, r)
+				return
+			}
+			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, fetchErr.Error()))
+			return
+		}
+
+		if user == nil {
+			if authDisabled {
+				r = apiutil.SetUserInContext(r, vo.Guest())
+				next(w, r)
+				return
+			}
+			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "user not found"))
+			return
+		}
+
+		r = apiutil.SetUserInContext(r, user)
 		next(w, r)
 	}
 }
