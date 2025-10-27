@@ -284,7 +284,7 @@ const Module: FC<FileDetailProps> = (props) => {
               label: formatMessage('uns.dashboard'),
               children: <Dashboard instanceInfo={instanceInfo} dashboardInfo={dashboardInfo} />,
               style: panelStyle,
-              extra: [1, 2, 3, 8].includes(instanceInfo.dataType) && (
+              extra: (
                 <Space>
                   <DashboardBinding
                     key={instanceInfo?.id}

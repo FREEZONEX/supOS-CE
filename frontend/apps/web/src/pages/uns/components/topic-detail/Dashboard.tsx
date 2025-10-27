@@ -24,12 +24,14 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo
   useEffect(() => {
     if (instanceInfo && dashboardInfo) {
       if (!dashboardInfo?.type || dashboardInfo?.type === 1) {
-        // grafana
-        getDashboardDetail(dashboardInfo?.id).then((res: any) => {
-          if (res?.meta?.url) {
-            setIframeUrl(`${res?.meta?.url}?kiosk`);
-          }
-        });
+        if (dashboardInfo?.id) {
+          // grafana
+          getDashboardDetail(dashboardInfo?.id).then((res: any) => {
+            if (res?.meta?.url) {
+              setIframeUrl(`${res?.meta?.url}?kiosk`);
+            }
+          });
+        }
       } else if (dashboardInfo?.type === 2) {
         // fuxa
         setIframeUrl(`/fuxa/home/?id=${dashboardInfo?.id}=lab`);
