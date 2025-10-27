@@ -1,13 +1,13 @@
 package label
 
 import (
+	"backend/internal/logic/supos/uns/label/service"
+	"backend/share/spring"
 	"context"
 
-	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -27,12 +27,6 @@ func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogi
 }
 
 func (l *DeleteLogic) Delete(req *types.WithID) (resp *types.Empty, err error) {
-	if req.ID <= 0 {
-		return nil, errors.Parameter.WithMsg("id无效")
-	}
-	db := relationDB.NewUnsLabelRepo(l.ctx)
-	if err = db.Delete(l.ctx, req.ID); err != nil {
-		return nil, err
-	}
-	return &types.Empty{}, nil
+	sv := spring.GetBean[*service.UnsLabelService]()
+	return sv.Delete(l.ctx, req)
 }

@@ -12,3 +12,4 @@
 **/.vite
 .vscode/launch.json
 AGENTS.md
+backend/.env

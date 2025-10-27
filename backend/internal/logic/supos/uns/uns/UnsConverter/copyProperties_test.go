@@ -1,0 +1,50 @@
+package UnsConverter
+
+import (
+	"backend/internal/common/dto"
+	"backend/internal/common/enums"
+	"backend/internal/types"
+	"encoding/json"
+	"testing"
+
+	"gitee.com/unitedrhino/share/errors"
+	"github.com/jinzhu/copier"
+)
+
+func TestCopyFields(t *testing.T) {
+	dataType := int(1)
+	src := types.CreateTopicDto{Id: 123, Name: "test123", PathType: 2, DataType: &dataType, Fields: []types.FieldDefine{
+		{
+			Name: "id", Type: "LONG",
+		}, {
+			Name: "ts", Type: "DATETIME",
+		},
+	}, Refers: []types.InstanceField{
+		{Id: 10001, Alias: "A1-1"},
+	}, Extend: map[string]interface{}{
+		"Debug": true,
+	},
+	}
+	target := dto.CreateTopicDto{}
+	options := []copier.TypeConverter{
+		{
+			SrcType: copier.String,
+			DstType: enums.FieldTypeInteger,
+			Fn: func(src interface{}) (dst interface{}, err error) {
+				if rs, ok := enums.GetFieldTypeByNameIgnoreCase(src.(string)); ok {
+					return rs, nil
+				}
+				return nil, errors.Default
+			},
+		}}
+	err := copier.CopyWithOption(&target, src, copier.Option{IgnoreEmpty: true, Converters: options})
+	bs, _ := json.MarshalIndent(target, "", " ")
+	t.Logf("Copy:%v, rs: %s", err, string(bs))
+
+	srcList := []*types.CreateTopicDto{&src}
+	tarList := make([]*dto.CreateTopicDto, len(srcList))
+	err = copier.CopyWithOption(&tarList, srcList, copier.Option{IgnoreEmpty: true, Converters: options})
+	bs, _ = json.MarshalIndent(tarList, "", " ")
+	t.Logf("Copy:%v, rs: %s", err, string(bs))
+
+}

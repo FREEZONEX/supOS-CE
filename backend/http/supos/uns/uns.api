@@ -56,14 +56,14 @@ type (
 	TopicTreeResult {
 		Id             string                 `json:"id"`
 		Alias          string                 `json:"alias"`
-		ParentId       string                 `json:"parentId"`
-		ParentAlias    string                 `json:"parentAlias"`
+		ParentId       *string                 `json:"parentId"`
+		ParentAlias    *string                 `json:"parentAlias"`
 		Value          int64                  `json:"value"`
 		LastUpdateTime int64                  `json:"lastUpdateTime"`
 		CountChildren  int                    `json:"countChildren"`
 		PathType       int                    `json:"pathType"`
 		Type           int                    `json:"type"`
-		DataType       int                    `json:"dataType"`
+		DataType       *int16                 `json:"dataType"`
 		Name           string                 `json:"name"`
 		DisplayName    string                 `json:"displayName"`
 		Path           string                 `json:"path"`
@@ -77,7 +77,7 @@ type (
 		HasChildren    bool                   `json:"hasChildren"`
 		CreateAt       string                 `json:"createAt"`
 		UpdateAt       string                 `json:"updateAt"`
-		Mount          MountDetailVo          `json:"mount"`
+		Mount          *MountDetailVo          `json:"mount"`
 	}
 	MountDetailVo {
 		MountType   int    `json:"mountType"`
@@ -178,6 +178,13 @@ type (
 		AccessLevel      string                 `json:"accessLevel"`
 		Mount            MountDetailVo          `json:"mount"`
 	}
+    InstanceField {
+        Id    int64 `json:"id"`
+        Alias string `json:"alias"`
+        Path  string `json:"path"`
+        Field string `json:"field"`
+        Uts   bool   `json:"uts"`
+    }
 	InstanceFieldVo {
 		Id    string `json:"id"`
 		Alias string `json:"alias"`
@@ -186,8 +193,22 @@ type (
 		Uts   bool   `json:"uts"`
 	}
 	LabelVo {
-		Id   int64  `json:"id"`
-		Name string `json:"name"`
+        // 标签ID：已有标签时必传，新建标签时不需要传
+        ID string `json:"id"`
+        // 标签名称，新建标签时，必传
+        LabelName string `json:"labelName"`
+        // 创建时间
+        CreateAt string `json:"createAt"`
+        // 主题
+        Topic string `json:"topic"`
+        // 是否订阅
+        SubscribeEnable bool `json:"subscribeEnable"`
+        // 订阅频率
+        SubscribeFrequency string `json:"subscribeFrequency"`
+        // 创建时间--单位：毫秒
+        CreateTime int64 `json:"createTime"`
+        // 订阅时间
+        SubscribeAt string `json:"subscribeAt"`
 	}
 	DbFieldsInfoVo {
 		DatabaseType string            `json:"databaseType"`
@@ -244,22 +265,21 @@ type (
 		Name                          string                 `json:"name"`
 		DisplayName                   string                 `json:"displayName,optional"`
 		PathType                      int                    `json:"pathType"`
-		ReferUns                      map[int64]int          `json:"referUns,optional"`
 		ReferIds                      []int64                `json:"referIds,optional"`
 		ReferTable                    string                 `json:"referTable,optional"`
 		RefFields                     []FieldDefine          `json:"refFields,optional"`
 		ReferModelId                  string                 `json:"referModelId,optional"`
 		Alias                         string                 `json:"alias"`
 		ModelId                       int64                  `json:"modelId,optional"`
-		ModelAlias                    string                 `json:"modelAlias,optional"`
-		ParentAlias                   string                 `json:"parentAlias,optional"`
-		ParentId                      int64                  `json:"parentId,optional"`
-		DataType                      int                    `json:"dataType"`
-		Fields                        []FieldDefine          `json:"fields"`
+		ModelAlias                    *string                 `json:"modelAlias,optional"`
+		ParentAlias                   *string                 `json:"parentAlias,optional"`
+		ParentId                      *int64                  `json:"parentId,optional"`
+		DataType                      *int                    `json:"dataType,optional"`
+		Fields                        []FieldDefine          `json:"fields,optional"`
 		ExtendFieldUsed               []string               `json:"extendFieldUsed,optional"`
 		DataPath                      string                 `json:"dataPath,optional"`
 		Description                   string                 `json:"description,optional"`
-		Refers                        []InstanceFieldVo      `json:"refers,optional"`
+		Refers                        []InstanceField        `json:"refers,optional"`
 		Expression                    string                 `json:"expression,optional"`
 		StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 		AddFlow                       bool                   `json:"addFlow,optional"`
@@ -299,7 +319,7 @@ type (
 		Fields                        []FieldDefine          `json:"fields,optional"`
 		DataPath                      string                 `json:"dataPath,optional"`
 		Description                   string                 `json:"description,optional"`
-		Refers                        []InstanceFieldVo      `json:"refers,optional"`
+		Refers                        []InstanceField      `json:"refers,optional"`
 		Expression                    string                 `json:"expression,optional"`
 		StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 		AddFlow                       bool                   `json:"addFlow,optional"`
@@ -348,17 +368,17 @@ type (
 	}
 	RemoveReq {
 		Id            int64 `form:"id"`
-		WithFlow      bool  `form:"withFlow,default=true"`
-		WithDashboard bool  `form:"withDashboard,default=true"`
-		RemoveRefer   bool  `form:"cascade,optional"`
+		WithFlow      *bool  `form:"withFlow,default=true"`
+		WithDashboard *bool  `form:"withDashboard,default=true"`
+		RemoveRefer   *bool  `form:"cascade,optional"`
 	}
 	BatchRemoveUnsDto {
 		AliasList       []string `json:"aliasList"`
-		WithFlow        bool     `json:"withFlow,optional"`
-		WithDashboard   bool     `json:"withDashboard,optional"`
-		RemoveRefer     bool     `json:"removeRefer,optional"`
-		CheckMount      bool     `json:"checkMount,optional"`
-		OnlyRemoveChild bool     `json:"onlyRemoveChild,optional"`
+		WithFlow        *bool     `json:"withFlow,optional"`
+		WithDashboard   *bool     `json:"withDashboard,optional"`
+		RemoveRefer     *bool     `json:"removeRefer,optional"`
+		CheckMount      *bool     `json:"checkMount,optional"`
+		OnlyRemoveChild *bool     `json:"onlyRemoveChild,optional"`
 	}
 	CheckDuplicationNameReq {
 		Folder    string `form:"folder,optional"`
@@ -392,7 +412,7 @@ type (
 		Persistence      bool                   `json:"persistence,optional"`
 		DashBoard        bool                   `json:"dashBoard,optional"`
 		AddFlow          bool                   `json:"addFlow,optional"`
-		Refers           []InstanceFieldVo      `json:"refers,optional"`
+		Refers           []InstanceField      `json:"refers,optional"`
 		Expression       string                 `json:"expression,optional"`
 		Frequency        string                 `json:"frequency,optional"`
 		ExtendProperties map[string]interface{} `json:"extendProperties,optional"`

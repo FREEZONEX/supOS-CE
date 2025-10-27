@@ -2,13 +2,11 @@ package common
 
 import "backend/internal/common/constants"
 
-// SrcJdbcType contains information about a JDBC type
-
-type SrcJdbcType int
+type SrcJdbcType int16
 type srcJdbcTypeInfo struct {
 	dataSrcType string // Data source type
 	alias       string // alias
-	typeCode    int    // Type code (1--时序，2--关系)
+	typeCode    int16  // Type code (1--时序，2--关系)
 }
 
 const (
@@ -43,15 +41,15 @@ var srcJdbcTypes = map[SrcJdbcType]srcJdbcTypeInfo{
 }
 
 // GetByID returns SrcJdbcType by ID
-func GetSrcJdbcTypeByID(id int) SrcJdbcType {
+func GetSrcJdbcTypeByID(id int16) SrcJdbcType {
 	k := SrcJdbcType(id)
 	if _, ok := srcJdbcTypes[k]; ok {
 		return k
 	}
 	return SrcJdbcTypeNone
 }
-func (s SrcJdbcType) Id() int {
-	return int(s)
+func (s SrcJdbcType) Id() int16 {
+	return int16(s)
 }
 func (s SrcJdbcType) DataSrcType() string {
 	return srcJdbcTypes[s].dataSrcType
@@ -59,7 +57,7 @@ func (s SrcJdbcType) DataSrcType() string {
 func (s SrcJdbcType) Alias() string {
 	return srcJdbcTypes[s].alias
 }
-func (s SrcJdbcType) TypeCode() int {
+func (s SrcJdbcType) TypeCode() int16 {
 	return srcJdbcTypes[s].typeCode
 }
 

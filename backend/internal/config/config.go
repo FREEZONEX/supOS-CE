@@ -13,8 +13,8 @@ type Config struct {
 	Database       conf.Database
 	DatabaseSchema string `json:",default=supos,env=dbSchema"` //
 	//Event      conf.EventConf
-	CacheRedis       cache.ClusterConf
-	KeycloakDatabase conf.Database `json:",optional" mapstructure:"KeycloakDatabase"`
+	CacheRedis  cache.ClusterConf
+	KeycloakDSN string `json:",optional,env=KEYCLOAK_DSN" mapstructure:"KeycloakDSN"`
 
 	OAuthKeyCloak clients.KeycloakConfig `json:",optional" mapstructure:"OAuthKeyCloak"`
 	//DevLink    conf.DevLinkConf //和设备交互的设置

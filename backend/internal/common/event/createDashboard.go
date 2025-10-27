@@ -7,6 +7,7 @@ import (
 
 // CreateDashboardEvent defines an event for creating a Grafana dashboard record.
 type CreateDashboardEvent struct {
+	ApplicationEvent
 	UUID        string
 	Name        string
 	Description string

@@ -3,8 +3,8 @@ package finddatautil
 import (
 	"backend/internal/common/dto"
 	"backend/internal/common/enums"
+	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/datetimeutils"
-	"backend/internal/common/utils/jsonutil"
 	"fmt"
 	"math"
 	"reflect"
@@ -374,7 +374,7 @@ func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, 
 
 			if fd != nil && fd.Type == enums.FieldTypeString && rs.maxMatch == sc {
 				deleteKeys = append(deleteKeys, k)
-				cvtStr, err := jsonutil.ToJson(v)
+				cvtStr, err := JsonUtil.ToJson(v)
 				if err == nil {
 					if fd.MaxLen <= 0 || len(cvtStr) <= fd.MaxLen {
 						countFieldMatch++

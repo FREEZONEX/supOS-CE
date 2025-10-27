@@ -1,7 +1,10 @@
 package common
 
+import (
+	"backend/internal/common/I18nUtils"
+)
+
 // RunningStatus represents running status information
-// Corresponds to Java's RunningStatus.java
 type RunningStatus struct {
 	Module     string   `json:"module,omitempty"`     // 模块 uns sourceFlow eventFlow dashboard
 	Code       int      `json:"code"`                 // 状态码 200表示成功
@@ -31,7 +34,7 @@ func NewRunningStatusWithCode(code int, msg string) *RunningStatus {
 	finished := true
 	return &RunningStatus{
 		Code:     code,
-		Msg:      msg, // TODO: Apply I18n translation
+		Msg:      I18nUtils.GetMessage(msg),
 		Finished: &finished,
 	}
 }
@@ -41,7 +44,7 @@ func NewRunningStatusWithError(code int, msg string, errTipFile string) *Running
 	finished := true
 	return &RunningStatus{
 		Code:       code,
-		Msg:        msg, // TODO: Apply I18n translation
+		Msg:        I18nUtils.GetMessage(msg),
 		ErrTipFile: errTipFile,
 		Finished:   &finished,
 	}
@@ -53,7 +56,7 @@ func NewRunningStatusWithProgress(n, i int, task, msg string) *RunningStatus {
 		N:    &n,
 		I:    &i,
 		Task: task,
-		Msg:  msg,
+		Msg:  I18nUtils.GetMessage(msg),
 	}
 }
 

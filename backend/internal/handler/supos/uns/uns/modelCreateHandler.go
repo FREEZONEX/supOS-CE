@@ -6,9 +6,9 @@ package uns
 import (
 	"net/http"
 
-	"backend/internal/logic/supos/uns/uns"
 	"backend/internal/svc"
 	"backend/internal/types"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
@@ -21,12 +21,12 @@ func ModelCreateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		l := uns.NewModelCreateLogic(r.Context(), svcCtx)
-		resp, err := l.ModelCreate(&req)
-		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
-		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
-		}
+		//l := uns.NewModelCreateLogic(r.Context(), svcCtx)
+		//resp, err := l.ModelCreate(&req)
+		//if err != nil {
+		httpx.ErrorCtx(r.Context(), w, nil)
+		//} else {
+		//	httpx.OkJsonCtx(r.Context(), w, resp)
+		//}
 	}
 }

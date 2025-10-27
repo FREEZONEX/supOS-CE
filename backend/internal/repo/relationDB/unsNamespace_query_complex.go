@@ -3,15 +3,15 @@ package relationDB
 import (
 	"backend/internal/common/dto"
 	"backend/share/base"
-	"context"
 	"fmt"
 	"strings"
 
 	"gitee.com/unitedrhino/share/stores"
+	"gorm.io/gorm"
 )
 
-func (p UnsNamespaceRepo) ListByConditions(ctx context.Context, f dto.UnsSearchCondition) (results []*UnsNamespace, err error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) ListByConditions(db *gorm.DB, f dto.UnsSearchCondition) (results []*UnsNamespace, err error) {
+	db = p.model(db)
 	sql := &base.StringBuilder{}
 	sql.Grow(512)
 	sql.Append("SELECT a.* FROM uns_namespace a ")
@@ -22,8 +22,8 @@ func (p UnsNamespaceRepo) ListByConditions(ctx context.Context, f dto.UnsSearchC
 	err = db.Raw(sql.String()).Find(&results).Error
 	return
 }
-func (p UnsNamespaceRepo) PageListByConditions(ctx context.Context, f dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) PageListByConditions(db *gorm.DB, f dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
+	db = p.model(db)
 	db = page.ToGorm(db)
 	sql := &base.StringBuilder{}
 	sql.Grow(512)
@@ -49,8 +49,8 @@ func (p UnsNamespaceRepo) PageListByConditions(ctx context.Context, f dto.UnsSea
 	pageRs.PageSize = page.Size
 	return
 }
-func (p UnsNamespaceRepo) PageListByLazy(ctx context.Context, f dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) PageListByLazy(db *gorm.DB, f dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
+	db = p.model(db)
 	db = page.ToGorm(db)
 	sql := &base.StringBuilder{}
 	sql.Grow(512)
@@ -73,8 +73,8 @@ func (p UnsNamespaceRepo) PageListByLazy(ctx context.Context, f dto.UnsSearchCon
 	pageRs.PageSize = page.Size
 	return
 }
-func (p UnsNamespaceRepo) PageListTemplates(ctx context.Context, f dto.TemplateQueryVo, page *stores.PageInfo) (pageRs dto.PageResultDTO[*dto.TemplateSearchResult], err error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) PageListTemplates(db *gorm.DB, f dto.TemplateQueryVo, page *stores.PageInfo) (pageRs dto.PageResultDTO[*dto.TemplateSearchResult], err error) {
+	db = p.model(db)
 	db = page.ToGorm(db)
 	sql := &base.StringBuilder{}
 	sql.Grow(512)

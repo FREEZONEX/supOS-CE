@@ -15,6 +15,38 @@
     "application/json"
   ],
   "paths": {
+    "/flows/test/nodered": {
+      "get": {
+        "summary": "代理 NodeRed /flows 接口（备用路径）",
+        "operationId": "getFlowsTestNodered",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/nodered",
+          "suposNodered"
+        ]
+      }
+    },
     "/inter-api/supos/auth/logout": {
       "delete": {
         "summary": "logout current user",
@@ -713,96 +745,9 @@
         ]
       }
     },
-    "/inter-api/supos/kong/alarm/confirm": {
-      "post": {
-        "summary": "确认报警",
-        "operationId": "postInter-apiSuposKongAlarmConfirm",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
-                },
-                "msg": {
-                  "type": "string",
-                  "title": "返回的消息"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "supos/uns/kong",
-          "suposUnsKong"
-        ]
-      }
-    },
-    "/inter-api/supos/kong/alarm/pageList": {
-      "post": {
-        "summary": "查询报警列表",
-        "operationId": "postInter-apiSuposKongAlarmPageList",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
-                },
-                "msg": {
-                  "type": "string",
-                  "title": "返回的消息"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "supos/uns/kong",
-          "suposUnsKong"
-        ]
-      }
-    },
-    "/inter-api/supos/kong/alarm/rule": {
-      "put": {
-        "summary": "更新报警规则",
-        "operationId": "putInter-apiSuposKongAlarmRule",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
-                },
-                "msg": {
-                  "type": "string",
-                  "title": "返回的消息"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "supos/uns/kong",
-          "suposUnsKong"
-        ]
-      }
-    },
     "/inter-api/supos/kong/routeList": {
       "get": {
-        "summary": "获取路由",
+        "summary": "获取简化的路由列表",
         "operationId": "getInter-apiSuposKongRouteList",
         "responses": {
           "200": {
@@ -818,14 +763,17 @@
                 "msg": {
                   "type": "string",
                   "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/RouteListResp"
                 }
               }
             }
           }
         },
         "tags": [
-          "supos/uns/kong",
-          "suposUnsKong"
+          "supos/kong",
+          "suposKong"
         ]
       }
     },
@@ -3962,6 +3910,132 @@
           "suposUserManage"
         ]
       }
+    },
+    "/open-api/menu": {
+      "post": {
+        "summary": "保存菜单",
+        "operationId": "postOpen-apiMenu",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/ResultVO"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "serviceName",
+            "description": " 服务名（可选）",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "name",
+            "description": " 名称，唯一标识一个菜单",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "showName",
+            "description": " 显示名",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "description",
+            "description": " 描述（可选）",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "baseUrl",
+            "description": " baseURL",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "schema": {}
+          },
+          {
+            "name": "openType",
+            "description": " 跳转方式：0-iframe打开，1-打开新页面，2-app",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "schema": {}
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SaveMenuReq"
+            }
+          }
+        ],
+        "tags": [
+          "supos/menu",
+          "suposMenu"
+        ],
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ]
+      }
+    },
+    "/test/nodered": {
+      "get": {
+        "summary": "代理 NodeRed /flows 接口",
+        "operationId": "getTestNodered",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "default": "200",
+                  "title": "返回code"
+                },
+                "msg": {
+                  "type": "string",
+                  "title": "返回的消息"
+                },
+                "data": {
+                  "$ref": "#/definitions/string"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "supos/nodered",
+          "suposNodered"
+        ]
+      }
     }
   },
   "definitions": {
@@ -4193,7 +4267,7 @@
         "refers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/InstanceFieldVo"
+            "$ref": "#/definitions/InstanceField"
           }
         },
         "expression": {
@@ -4241,9 +4315,6 @@
         "pathType": {
           "type": "integer",
           "format": "int32"
-        },
-        "referUns": {
-          "type": "object"
         },
         "referIds": {
           "type": "array",
@@ -4306,7 +4377,7 @@
         "refers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/InstanceFieldVo"
+            "$ref": "#/definitions/InstanceField"
           }
         },
         "expression": {
@@ -4378,9 +4449,7 @@
       "required": [
         "name",
         "pathType",
-        "alias",
-        "dataType",
-        "fields"
+        "alias"
       ]
     },
     "CreateUnsNodeRedDto": {
@@ -4890,6 +4959,36 @@
         "data"
       ]
     },
+    "InstanceField": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "alias": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        },
+        "uts": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "InstanceField",
+      "required": [
+        "id",
+        "alias",
+        "path",
+        "field",
+        "uts"
+      ]
+    },
     "InstanceFieldVo": {
       "type": "object",
       "properties": {
@@ -4935,17 +5034,42 @@
       "type": "object",
       "properties": {
         "id": {
+          "type": "string"
+        },
+        "labelName": {
+          "type": "string"
+        },
+        "createAt": {
+          "type": "string"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "subscribeEnable": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "subscribeFrequency": {
+          "type": "string"
+        },
+        "createTime": {
           "type": "integer",
           "format": "int64"
         },
-        "name": {
+        "subscribeAt": {
           "type": "string"
         }
       },
       "title": "LabelVo",
       "required": [
         "id",
-        "name"
+        "labelName",
+        "createAt",
+        "topic",
+        "subscribeEnable",
+        "subscribeFrequency",
+        "createTime",
+        "subscribeAt"
       ]
     },
     "ListTypesResult": {
@@ -5600,6 +5724,67 @@
         "roleName"
       ]
     },
+    "RouteListResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SimpleRouteVO"
+          }
+        }
+      },
+      "title": "RouteListResp",
+      "required": [
+        "code",
+        "msg",
+        "data"
+      ]
+    },
+    "SaveMenuReq": {
+      "type": "object",
+      "properties": {
+        "serviceName": {
+          "type": "string",
+          "description": " 服务名（可选）"
+        },
+        "name": {
+          "type": "string",
+          "description": " 名称，唯一标识一个菜单"
+        },
+        "showName": {
+          "type": "string",
+          "description": " 显示名"
+        },
+        "description": {
+          "type": "string",
+          "description": " 描述（可选）"
+        },
+        "baseUrl": {
+          "type": "string",
+          "description": " baseURL"
+        },
+        "openType": {
+          "type": "integer",
+          "format": "int32",
+          "description": " 跳转方式：0-iframe打开，1-打开新页面，2-app"
+        }
+      },
+      "title": "SaveMenuReq",
+      "required": [
+        "name",
+        "showName",
+        "baseUrl",
+        "openType"
+      ]
+    },
     "SearchPagedReq": {
       "type": "object",
       "properties": {
@@ -5710,6 +5895,26 @@
         }
       },
       "title": "SendOption"
+    },
+    "SimpleRouteVO": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "title": "SimpleRouteVO",
+      "required": [
+        "id",
+        "name",
+        "url"
+      ]
     },
     "StreamOptions": {
       "type": "object",
@@ -5941,7 +6146,7 @@
         },
         "dataType": {
           "type": "integer",
-          "format": "int32"
+          "format": "int16"
         },
         "name": {
           "type": "string"
@@ -6376,7 +6581,7 @@
         "refers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/InstanceFieldVo"
+            "$ref": "#/definitions/InstanceField"
           }
         },
         "expression": {

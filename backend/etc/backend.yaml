@@ -6,7 +6,8 @@ Timeout: 20000
 
 Database:
   DBType: pgsql
-  DSN: postgres://postgres:password@localhost:5432/postgres
+  DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres
+KeycloakDSN: postgres://postgres:postgres@100.100.100.20:31014/keycloak
 CacheRedis:
   - Host: localhost:6379
     Pass:
@@ -41,14 +42,14 @@ OssConf:
   Location: s3.ap-southeast-1.amazonaws.com
   Region: ap-southeast-1
 OAuthKeyCloak:
-   Realm: ${OAUTH_REALM}
-   ClientName: ${OAUTH_CLIENT_NAME}
-   ClientID: ${OAUTH_CLIENT_ID}
-   ClientSecret: ${OAUTH_CLIENT_SECRET}
-   AuthorizationGrantType: ${OAUTH_GRANT_TYPE}
-   RedirectURI: ${OAUTH_REDIRECT_URI}
-   SuposHome: ${OAUTH_SUPOS_HOME}
-   IssuerURI: ${OAUTH_ISSUER_URI}
-   # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
-   RefreshTokenTime: ${OAUTH_REFRESH_TOKEN_TIME}
+    Realm: supos
+    ClientName: supos
+    ClientID: supos
+    ClientSecret: VaOS2makbDhJJsLlYPt4Wl87bo9VzXiO
+    AuthorizationGrantType: authorization_code
+    RedirectURI: http://office.unibutton.com:11488/inter-api/supos/auth/token
+    SuposHome: http://office.unibutton.com:11488/home
+    IssuerURI: http://office.unibutton.com:11488/keycloak/home/auth
+    # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
+    RefreshTokenTime: "60"
 

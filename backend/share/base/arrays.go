@@ -100,6 +100,17 @@ func Equals[T comparable](a, b []T) bool {
 	}
 	return true
 }
+func EqualsF[T comparable](a, b []T, compare func(a, b T) bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, e := range a {
+		if !compare(b[i], e) {
+			return false
+		}
+	}
+	return true
+}
 func ToString[T comparable](arr []T) string {
 	var str = strings.Builder{}
 	str.Grow(4 + len(arr)*10)
@@ -112,4 +123,26 @@ func ToString[T comparable](arr []T) string {
 	}
 	str.WriteByte(']')
 	return str.String()
+}
+
+// Partition 将切片按指定大小分割成多个子切片
+func Partition[E any](arr []E, size int) [][]E {
+	length := len(arr)
+	if length == 0 || size < 1 {
+		return [][]E{}
+	}
+
+	// 计算需要分割的子切片数量
+	result := make([][]E, 0, (length+size-1)/size)
+
+	for i := 0; i < length; i += size {
+		end := i + size
+		if end > length {
+			end = length
+		}
+		// 将原始切片的一部分添加到结果中
+		result = append(result, arr[i:end])
+	}
+
+	return result
 }

@@ -1,4 +1,4 @@
-package jsonutil
+package JsonUtil
 
 import (
 	"backend/internal/common/utils/integerutil"

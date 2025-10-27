@@ -159,7 +159,8 @@ func InitKeycloakClient(config KeycloakConfig) *KeycloakClient {
 		if kc.config.SuposClientID == "" {
 			if err := kc.resolveSuposClientID(); err != nil {
 				logx.Errorf("failed to resolve Keycloak client uuid for clientId %q: %v", kc.config.ClientID, err)
-				panic(fmt.Errorf("resolve Keycloak client uuid: %w", err))
+				// panic(fmt.Errorf("resolve Keycloak client uuid: %w", err))
+				return
 			}
 		}
 

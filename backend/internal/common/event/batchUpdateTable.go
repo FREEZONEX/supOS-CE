@@ -7,6 +7,7 @@ import (
 
 // BatchUpdateTableEvent defines an event for batch updating database tables.
 type BatchUpdateTableEvent struct {
+	ApplicationEvent
 	Topics   []*dto.UpdateFieldDto
 	JdbcType common.SrcJdbcType
 }

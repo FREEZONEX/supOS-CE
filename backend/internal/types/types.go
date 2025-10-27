@@ -25,11 +25,11 @@ type BatchQueryFileReq struct {
 
 type BatchRemoveUnsDto struct {
 	AliasList       []string `json:"aliasList"`
-	WithFlow        bool     `json:"withFlow,optional"`
-	WithDashboard   bool     `json:"withDashboard,optional"`
-	RemoveRefer     bool     `json:"removeRefer,optional"`
-	CheckMount      bool     `json:"checkMount,optional"`
-	OnlyRemoveChild bool     `json:"onlyRemoveChild,optional"`
+	WithFlow        *bool    `json:"withFlow,optional"`
+	WithDashboard   *bool    `json:"withDashboard,optional"`
+	RemoveRefer     *bool    `json:"removeRefer,optional"`
+	CheckMount      *bool    `json:"checkMount,optional"`
+	OnlyRemoveChild *bool    `json:"onlyRemoveChild,optional"`
 }
 
 type CheckDuplicationNameReq struct {
@@ -69,7 +69,7 @@ type CreateFileDto struct {
 	Persistence      bool                   `json:"persistence,optional"`
 	DashBoard        bool                   `json:"dashBoard,optional"`
 	AddFlow          bool                   `json:"addFlow,optional"`
-	Refers           []InstanceFieldVo      `json:"refers,optional"`
+	Refers           []InstanceField        `json:"refers,optional"`
 	Expression       string                 `json:"expression,optional"`
 	Frequency        string                 `json:"frequency,optional"`
 	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
@@ -86,22 +86,21 @@ type CreateTopicDto struct {
 	Name                          string                 `json:"name"`
 	DisplayName                   string                 `json:"displayName,optional"`
 	PathType                      int                    `json:"pathType"`
-	ReferUns                      map[int64]int          `json:"referUns,optional"`
 	ReferIds                      []int64                `json:"referIds,optional"`
 	ReferTable                    string                 `json:"referTable,optional"`
 	RefFields                     []FieldDefine          `json:"refFields,optional"`
 	ReferModelId                  string                 `json:"referModelId,optional"`
 	Alias                         string                 `json:"alias"`
 	ModelId                       int64                  `json:"modelId,optional"`
-	ModelAlias                    string                 `json:"modelAlias,optional"`
-	ParentAlias                   string                 `json:"parentAlias,optional"`
-	ParentId                      int64                  `json:"parentId,optional"`
-	DataType                      int                    `json:"dataType"`
-	Fields                        []FieldDefine          `json:"fields"`
+	ModelAlias                    *string                `json:"modelAlias,optional"`
+	ParentAlias                   *string                `json:"parentAlias,optional"`
+	ParentId                      *int64                 `json:"parentId,optional"`
+	DataType                      *int                   `json:"dataType,optional"`
+	Fields                        []FieldDefine          `json:"fields,optional"`
 	ExtendFieldUsed               []string               `json:"extendFieldUsed,optional"`
 	DataPath                      string                 `json:"dataPath,optional"`
 	Description                   string                 `json:"description,optional"`
-	Refers                        []InstanceFieldVo      `json:"refers,optional"`
+	Refers                        []InstanceField        `json:"refers,optional"`
 	Expression                    string                 `json:"expression,optional"`
 	StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 	AddFlow                       bool                   `json:"addFlow,optional"`
@@ -265,6 +264,14 @@ type InstanceDetailResp struct {
 	Data InstanceDetail `json:"data"`
 }
 
+type InstanceField struct {
+	Id    int64  `json:"id"`
+	Alias string `json:"alias"`
+	Path  string `json:"path"`
+	Field string `json:"field"`
+	Uts   bool   `json:"uts"`
+}
+
 type InstanceFieldVo struct {
 	Id    string `json:"id"`
 	Alias string `json:"alias"`
@@ -278,8 +285,14 @@ type JsonBodyReq struct {
 }
 
 type LabelVo struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
+	ID                 string `json:"id"`
+	LabelName          string `json:"labelName"`
+	CreateAt           string `json:"createAt"`
+	Topic              string `json:"topic"`
+	SubscribeEnable    bool   `json:"subscribeEnable"`
+	SubscribeFrequency string `json:"subscribeFrequency"`
+	CreateTime         int64  `json:"createTime"`
+	SubscribeAt        string `json:"subscribeAt"`
 }
 
 type ListTypesResult struct {
@@ -388,9 +401,9 @@ type Point struct {
 
 type RemoveReq struct {
 	Id            int64 `form:"id"`
-	WithFlow      bool  `form:"withFlow,default=true"`
-	WithDashboard bool  `form:"withDashboard,default=true"`
-	RemoveRefer   bool  `form:"cascade,optional"`
+	WithFlow      *bool `form:"withFlow,default=true"`
+	WithDashboard *bool `form:"withDashboard,default=true"`
+	RemoveRefer   *bool `form:"cascade,optional"`
 }
 
 type RemoveResult struct {
@@ -457,6 +470,20 @@ type RoleSummary struct {
 	RoleDescription string `json:"roleDescription,optional"`
 	ClientRole      bool   `json:"clientRole,optional"`
 }
+type RouteListResp struct {
+	Code int             `json:"code"`
+	Msg  string          `json:"msg"`
+	Data []SimpleRouteVO `json:"data"`
+}
+
+type SaveMenuReq struct {
+	ServiceName string `form:"serviceName,optional"` // 服务名（可选）
+	Name        string `form:"name"`                 // 名称，唯一标识一个菜单
+	ShowName    string `form:"showName"`             // 显示名
+	Description string `form:"description,optional"` // 描述（可选）
+	BaseUrl     string `form:"baseUrl"`              // baseURL
+	OpenType    int    `form:"openType"`             // 跳转方式：0-iframe打开，1-打开新页面，2-app
+}
 
 type SearchPagedReq struct {
 	Key        string   `form:"k,optional"`
@@ -486,6 +513,12 @@ type SendOption struct {
 	TimeoutToFail  int64 `json:"timeoutToFail,optional"`  //超时失败时间
 	RequestTimeout int64 `json:"requestTimeout,optional"` //请求超时,超时后会进行重试
 	RetryInterval  int64 `json:"retryInterval,optional"`  //重试间隔
+}
+
+type SimpleRouteVO struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
 }
 
 type StreamOptions struct {
@@ -545,14 +578,14 @@ type TopicPaginationSearchResult struct {
 type TopicTreeResult struct {
 	Id             string                 `json:"id"`
 	Alias          string                 `json:"alias"`
-	ParentId       string                 `json:"parentId"`
-	ParentAlias    string                 `json:"parentAlias"`
+	ParentId       *string                `json:"parentId"`
+	ParentAlias    *string                `json:"parentAlias"`
 	Value          int64                  `json:"value"`
 	LastUpdateTime int64                  `json:"lastUpdateTime"`
 	CountChildren  int                    `json:"countChildren"`
 	PathType       int                    `json:"pathType"`
 	Type           int                    `json:"type"`
-	DataType       int                    `json:"dataType"`
+	DataType       *int16                 `json:"dataType"`
 	Name           string                 `json:"name"`
 	DisplayName    string                 `json:"displayName"`
 	Path           string                 `json:"path"`
@@ -566,7 +599,7 @@ type TopicTreeResult struct {
 	HasChildren    bool                   `json:"hasChildren"`
 	CreateAt       string                 `json:"createAt"`
 	UpdateAt       string                 `json:"updateAt"`
-	Mount          MountDetailVo          `json:"mount"`
+	Mount          *MountDetailVo         `json:"mount"`
 }
 
 type TreeOuterStructureVo struct {
@@ -661,14 +694,14 @@ type UpdateUnsDto struct {
 	ReferModelId                  string                 `json:"referModelId,optional"`
 	Alias                         string                 `json:"alias"`
 	ModelId                       int64                  `json:"modelId,optional"`
-	ModelAlias                    string                 `json:"modelAlias,optional"`
-	ParentAlias                   string                 `json:"parentAlias,optional"`
-	ParentId                      int64                  `json:"parentId,optional"`
-	DataType                      int                    `json:"dataType,optional"`
+	ModelAlias                    *string                `json:"modelAlias,optional"`
+	ParentAlias                   *string                `json:"parentAlias,optional"`
+	ParentId                      *int64                 `json:"parentId,optional"`
+	DataType                      *int                   `json:"dataType,optional"`
 	Fields                        []FieldDefine          `json:"fields,optional"`
 	DataPath                      string                 `json:"dataPath,optional"`
 	Description                   string                 `json:"description,optional"`
-	Refers                        []InstanceFieldVo      `json:"refers,optional"`
+	Refers                        []InstanceField        `json:"refers,optional"`
 	Expression                    string                 `json:"expression,optional"`
 	StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
 	AddFlow                       bool                   `json:"addFlow,optional"`

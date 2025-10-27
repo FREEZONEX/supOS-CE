@@ -1,5 +1,6 @@
 package uns
 
+/*
 import (
 	"context"
 
@@ -61,3 +62,4 @@ func (l *ModelCreateLogic) ModelCreate(req *types.UnsCreateTopicDTO) (*types.Wit
 
 	return &types.WithID{ID: ns.ID}, nil
 }
+*/

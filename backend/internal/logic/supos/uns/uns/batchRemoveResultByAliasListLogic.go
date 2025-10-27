@@ -4,11 +4,14 @@
 package uns
 
 import (
+	"backend/internal/logic/supos/uns/uns/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
 	"backend/internal/types"
 
+	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -28,7 +31,7 @@ func NewBatchRemoveResultByAliasListLogic(ctx context.Context, svcCtx *svc.Servi
 }
 
 func (l *BatchRemoveResultByAliasListLogic) BatchRemoveResultByAliasList(req *types.BatchRemoveUnsDto) (resp *types.RemoveResult, err error) {
-	// todo: add your logic here and delete this line
-
+	resp, err = spring.GetBean[*service.UnsRemoveService]().BatchRemoveResultByAliasList(l.ctx, req)
+	err = errors.Fmt(err)
 	return
 }

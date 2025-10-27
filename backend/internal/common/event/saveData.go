@@ -7,6 +7,7 @@ import (
 
 // SaveDataEvent defines an event for saving data to a specified data source.
 type SaveDataEvent struct {
+	ApplicationEvent
 	JdbcType        common.SrcJdbcType
 	TopicData       []*dto.SaveDataDto
 	DuplicateIgnore *bool

@@ -1,6 +1,11 @@
 package svc
 
 import (
+	"backend/internal/common"
+	"backend/internal/middleware"
+	"backend/internal/repo/relationDB"
+
+	"gitee.com/unitedrhino/share/conf"
 	"gitee.com/unitedrhino/share/stores"
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -8,9 +13,7 @@ import (
 
 	cache "backend/internal/common/cache"
 	"backend/internal/config"
-	"backend/internal/middleware"
 	keycloakrepo "backend/internal/repo/keycloak"
-	"backend/internal/repo/relationDB"
 	"backend/share/clients"
 )
 
@@ -31,7 +34,10 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		panic(err)
 	}
 
-	dbConn, err := stores.GetConn(c.KeycloakDatabase)
+	dbConn, err := stores.GetConn(conf.Database{
+		DBType: "pgsql",
+		DSN:    c.KeycloakDSN,
+	})
 	if err != nil {
 		logx.Errorf("failed to init keycloak database: %v", err)
 	} else {
@@ -42,6 +48,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 	keycloakClient := clients.InitKeycloakClient(c.OAuthKeyCloak)
 
+	common.InitSnowflake(1)
 	return &ServiceContext{
 		Config:         c,
 		CheckTokenWare: middleware.NewCheckTokenWareMiddleware(keycloakClient, c.OAuthKeyCloak.SuposHome, c.OAuthKeyCloak.Realm).Handle,

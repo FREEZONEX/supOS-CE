@@ -1,7 +1,7 @@
 package relationDB
 
 import (
-	"context"
+	"backend/share/base"
 
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
@@ -9,40 +9,66 @@ import (
 )
 
 type UnsLabelRefRepo struct {
-	db *gorm.DB
 }
 
-func NewUnsLabelRefRepo(in any) *UnsLabelRefRepo {
-	return &UnsLabelRefRepo{db: stores.GetCommonConn(in)}
+func NewUnsLabelRefRepo() UnsLabelRefRepo {
+	return UnsLabelRefRepo{}
 }
 
 type UnsLabelRefFilter struct {
 	//todo 添加过滤字段
 }
 
-func (p UnsLabelRefRepo) fmtFilter(ctx context.Context, f UnsLabelRefFilter) *gorm.DB {
-	db := p.db.WithContext(ctx)
-	//todo 添加条件
-	return db
+func (p UnsLabelRefRepo) model(db *gorm.DB) *gorm.DB {
+	return db.Model(&UnsLabelRef{})
 }
-
-func (p UnsLabelRefRepo) Insert(ctx context.Context, data *UnsLabelRef) error {
-	result := p.db.WithContext(ctx).Create(data)
+func (p UnsLabelRefRepo) Insert(db *gorm.DB, data *UnsLabelRef) error {
+	result := p.model(db).Create(data)
 	return stores.ErrFmt(result.Error)
 }
-
-func (p UnsLabelRefRepo) FindOneByFilter(ctx context.Context, f UnsLabelRefFilter) (*UnsLabelRef, error) {
+func (p UnsLabelRefRepo) ListUnsIds(db *gorm.DB, labelId int64) (unsIds []int64, err error) {
+	var result []UnsLabelRef
+	err = p.model(db).Select("uns_id").Where("label_id=?", labelId).Find(&result).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	} else if len(result) == 0 {
+		return
+	}
+	unsIds = base.Map[UnsLabelRef, int64](result, func(e UnsLabelRef) int64 {
+		return e.UnsID
+	})
+	return
+}
+func (p UnsLabelRefRepo) ListByUnsId(db *gorm.DB, unsId int64) (result []*UnsLabelRef, err error) {
+	err = p.model(db).Where("uns_id=?", unsId).Find(&result).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return
+}
+func (p UnsLabelRefRepo) DeleteByUnsIds(db *gorm.DB, unsIds []int64) error {
+	err := p.model(db).Where("uns_id in ?", unsIds).Delete(&UnsLabelRef{}).Error
+	return stores.ErrFmt(err)
+}
+func (p UnsLabelRefRepo) DeleteByLabelIds(db *gorm.DB, labelIds []int64) error {
+	err := p.model(db).Where("label_id in ?", labelIds).Delete(&UnsLabelRef{}).Error
+	return stores.ErrFmt(err)
+}
+func (p UnsLabelRefRepo) DeleteByUnsIdAndLabelIds(db *gorm.DB, unsId int64, labelIds []int64) error {
+	err := p.model(db).Where("uns_id = ?", unsId).Where("label_id in ?", labelIds).Delete(&UnsLabelRef{}).Error
+	return stores.ErrFmt(err)
+}
+func (p UnsLabelRefRepo) FindOneByFilter(db *gorm.DB, f UnsLabelRefFilter) (*UnsLabelRef, error) {
 	var result UnsLabelRef
-	db := p.fmtFilter(ctx, f)
-	err := db.First(&result).Error
+	err := p.model(db).First(&result).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
 	return &result, nil
 }
-func (p UnsLabelRefRepo) FindByFilter(ctx context.Context, f UnsLabelRefFilter, page *stores.PageInfo) ([]*UnsLabelRef, error) {
+func (p UnsLabelRefRepo) FindByFilter(db *gorm.DB, f UnsLabelRefFilter, page *stores.PageInfo) ([]*UnsLabelRef, error) {
 	var results []*UnsLabelRef
-	db := p.fmtFilter(ctx, f).Model(&UnsLabelRef{})
+	db = p.model(db)
 	db = page.ToGorm(db)
 	err := db.Find(&results).Error
 	if err != nil {
@@ -51,27 +77,25 @@ func (p UnsLabelRefRepo) FindByFilter(ctx context.Context, f UnsLabelRefFilter, 
 	return results, nil
 }
 
-func (p UnsLabelRefRepo) CountByFilter(ctx context.Context, f UnsLabelRefFilter) (size int64, err error) {
-	db := p.fmtFilter(ctx, f).Model(&UnsLabelRef{})
-	err = db.Count(&size).Error
+func (p UnsLabelRefRepo) CountByFilter(db *gorm.DB, f UnsLabelRefFilter) (size int64, err error) {
+	err = p.model(db).Count(&size).Error
 	return size, stores.ErrFmt(err)
 }
 
-func (p UnsLabelRefRepo) Update(ctx context.Context, data *UnsLabelRef) error {
+func (p UnsLabelRefRepo) Update(db *gorm.DB, data *UnsLabelRef) error {
 	// 组合主键，直接Save
-	err := p.db.WithContext(ctx).Save(data).Error
+	err := p.model(db).Save(data).Error
 	return stores.ErrFmt(err)
 }
 
-func (p UnsLabelRefRepo) DeleteByFilter(ctx context.Context, f UnsLabelRefFilter) error {
-	db := p.fmtFilter(ctx, f)
-	err := db.Delete(&UnsLabelRef{}).Error
+func (p UnsLabelRefRepo) DeleteByFilter(db *gorm.DB, f UnsLabelRefFilter) error {
+	err := p.model(db).Delete(&UnsLabelRef{}).Error
 	return stores.ErrFmt(err)
 }
 
-func (p UnsLabelRefRepo) FindOne(ctx context.Context, labelID int64, unsID int64) (*UnsLabelRef, error) {
+func (p UnsLabelRefRepo) FindOne(db *gorm.DB, labelID int64, unsID int64) (*UnsLabelRef, error) {
 	var result UnsLabelRef
-	err := p.db.WithContext(ctx).Where("label_id = ? AND uns_id = ?", labelID, unsID).First(&result).Error
+	err := p.model(db).Where("label_id = ? AND uns_id = ?", labelID, unsID).First(&result).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
@@ -79,13 +103,16 @@ func (p UnsLabelRefRepo) FindOne(ctx context.Context, labelID int64, unsID int64
 }
 
 // 批量插入 LightStrategyDevice 记录
-func (p UnsLabelRefRepo) MultiInsert(ctx context.Context, data []*UnsLabelRef) error {
-	err := p.db.WithContext(ctx).Clauses(clause.OnConflict{UpdateAll: true}).Model(&UnsLabelRef{}).Create(data).Error
+func (p UnsLabelRefRepo) MultiInsert(db *gorm.DB, data []*UnsLabelRef) error {
+	err := p.model(db).Clauses(clause.OnConflict{UpdateAll: true}).Create(data).Error
+	return stores.ErrFmt(err)
+}
+func (p UnsLabelRefRepo) SaveOrIgnore(db *gorm.DB, data []*UnsLabelRef) error {
+	err := p.model(db).Clauses(clause.OnConflict{DoNothing: true}).Create(data).Error
 	return stores.ErrFmt(err)
 }
 
-func (d UnsLabelRefRepo) UpdateWithField(ctx context.Context, f UnsLabelRefFilter, updates map[string]any) error {
-	db := d.fmtFilter(ctx, f)
-	err := db.Model(&UnsLabelRef{}).Updates(updates).Error
+func (p UnsLabelRefRepo) UpdateWithField(db *gorm.DB, f UnsLabelRefFilter, updates map[string]any) error {
+	err := p.model(db).Updates(updates).Error
 	return stores.ErrFmt(err)
 }

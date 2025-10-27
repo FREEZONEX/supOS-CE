@@ -2,34 +2,38 @@ package relationDB
 
 import (
 	"backend/internal/common/constants"
-	"context"
+	"backend/share/base"
+	"fmt"
 	"strings"
 
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
 )
 
-func (p UnsNamespaceRepo) dbx(ctx context.Context) *gorm.DB {
-	db := p.db.WithContext(ctx).Model(&UnsNamespace{})
-	return db
-}
-func (p UnsNamespaceRepo) ListByAlias(ctx context.Context, alias []string) (results []*UnsNamespace, er error) {
-	err := p.dbx(ctx).Where("alias IN ? ", alias).Where("status = ?", 1).Find(&results).Error
+func (p UnsNamespaceRepo) ListByAlias(db *gorm.DB, alias []string) (results []*UnsNamespace, er error) {
+	err := p.model(db).Where("alias IN ? ", alias).Where("status = 1").Find(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
 	return results, nil
 }
-func (p UnsNamespaceRepo) GetByAlias(ctx context.Context, alias string) (result *UnsNamespace, err error) {
+func (p UnsNamespaceRepo) ListByIds(db *gorm.DB, ids []int64) (results []*UnsNamespace, er error) {
+	err := p.model(db).Where("id IN ? ", ids).Where("status = 1").Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
+func (p UnsNamespaceRepo) GetByAlias(db *gorm.DB, alias string) (result *UnsNamespace, err error) {
 	var po UnsNamespace
-	err = p.dbx(ctx).Where("alias = ? ", alias).Where("status = ?", 1).First(&po).Error
+	err = p.model(db).Where("alias = ? ", alias).Where("status = 1").First(&po).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
 	return &po, nil
 }
-func (p UnsNamespaceRepo) GetAliasByPath(ctx context.Context, path string) (alias string, err error) {
-	err = p.dbx(ctx).Select("alias").Where("path = ? ", path).Pluck("alias", &alias).Error
+func (p UnsNamespaceRepo) GetAliasByPath(db *gorm.DB, path string) (alias string, err error) {
+	err = p.model(db).Select("alias").Where("path = ? ", path).Where("status = 1").Pluck("alias", &alias).Error
 	if err != nil {
 		return "", stores.ErrFmt(err)
 	}
@@ -43,16 +47,15 @@ type UnsPathFilter struct {
 	DataTypes  []int
 }
 
-func (p UnsNamespaceRepo) CountPaths(ctx context.Context, filter UnsPathFilter) (count int64, er error) {
-	db := p.filterPath(ctx, filter)
-	err := db.Count(&count).Error
+func (p UnsNamespaceRepo) CountPaths(db *gorm.DB, filter UnsPathFilter) (count int64, er error) {
+	err := p.model(db).Count(&count).Error
 	if err != nil {
 		return -1, stores.ErrFmt(err)
 	}
 	return
 }
-func (p UnsNamespaceRepo) filterPath(ctx context.Context, f UnsPathFilter) *gorm.DB {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) filterPath(db *gorm.DB, f UnsPathFilter) *gorm.DB {
+	db = p.model(db)
 	if f.TemplateId > 0 {
 		db = db.Where("model_id = ?", f.TemplateId)
 	}
@@ -62,7 +65,7 @@ func (p UnsNamespaceRepo) filterPath(ctx context.Context, f UnsPathFilter) *gorm
 	if len(f.DataTypes) > 0 {
 		db = db.Where("data_type in ?", f.DataTypes).Where("data_type <> ?", constants.AlarmRuleType)
 	}
-	db = db.Where("status = ?", 1)
+	db = db.Where("status = 1")
 	return db
 }
 
@@ -73,8 +76,8 @@ type SimpleUns struct {
 	Path     string `gorm:"column:path;not null" json:"path"`
 }
 
-func (p UnsNamespaceRepo) ListPaths(ctx context.Context, filter UnsPathFilter, page *stores.PageInfo) (results []*SimpleUns, er error) {
-	db := p.filterPath(ctx, filter)
+func (p UnsNamespaceRepo) ListPaths(db *gorm.DB, filter UnsPathFilter, page *stores.PageInfo) (results []*SimpleUns, er error) {
+	db = p.model(db)
 	db = page.ToGorm(db)
 	err := db.Find(&results).Error
 	if err != nil {
@@ -82,8 +85,8 @@ func (p UnsNamespaceRepo) ListPaths(ctx context.Context, filter UnsPathFilter, p
 	}
 	return
 }
-func (p UnsNamespaceRepo) CountByDataType(ctx context.Context, key string, dataType int) (count int64, er error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) CountByDataType(db *gorm.DB, key string, dataType int) (count int64, er error) {
+	db = p.model(db)
 	db.Where("path_type = ?", 2).Where("data_type = ?", dataType)
 	if key != "" {
 		db = db.Where("path iLike ?", key)
@@ -95,8 +98,60 @@ func (p UnsNamespaceRepo) CountByDataType(ctx context.Context, key string, dataT
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListFileByIds(ctx context.Context, ids []int64) (results []*UnsNamespace, err error) {
-	err = p.dbx(ctx).Where("id in ? ", ids).
+func (p UnsNamespaceRepo) ListFileByIds(db *gorm.DB, ids []int64) (results []*UnsNamespace, err error) {
+	err = p.model(db).Where("id in ? ", ids).
+		Where("path_type = ?", 2).
+		Where("status = 1").
+		Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return
+}
+func (p UnsNamespaceRepo) ListSubTree(db *gorm.DB, layRec string) (results []*UnsNamespace, err error) {
+	err = p.model(db).Where("lay_rec like '"+layRec+"/%'").
+		Where("status = ?", 1).
+		Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return
+}
+func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAndNames []*UnsNamespace) (results []*UnsNamespace, err error) {
+	// 构建VALUES参数
+	var sql = &base.StringBuilder{}
+	sql.Grow(512)
+	sql.Append(`select  u.parent_alias, u."name",count(*) as id from (`)
+	for i, data := range parentAliasAndNames {
+		if i > 0 {
+			sql.Append(" UNION ALL ")
+		}
+		parentAlias, name := data.ParentAlias, data.Name
+		var args string
+		if parentAlias != nil {
+			args = fmt.Sprintf("select '%s' as parent_alias,'%s' as name", escapeSQL(*parentAlias), escapeSQL(name))
+		} else {
+			args = fmt.Sprintf("select null as parent_alias,'%s' as name", escapeSQL(name))
+		}
+		sql.Append(args)
+	}
+	sql.Append(`) x
+	join uns_namespace u on (x.parent_alias = u.parent_alias OR (x.parent_alias IS NULL AND u.parent_alias IS NULL)) 
+	where u.status =1 group by u.parent_alias, u."name" HAVING COUNT(*) > 1
+    `)
+	err = p.model(db).Raw(sql.String()).Scan(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	if len(results) > 0 {
+		for _, po := range results {
+			po.CountExistsSiblings = po.ID
+		}
+	}
+	return
+}
+func (p UnsNamespaceRepo) ListFileByTemplateId(db *gorm.DB, templateId int64) (results []*UnsNamespace, err error) {
+	err = p.model(db).Where("model_id = ? ", templateId).
 		Where("path_type = ?", 2).
 		Where("status = ?", 1).
 		Find(&results).Error
@@ -105,18 +160,8 @@ func (p UnsNamespaceRepo) ListFileByIds(ctx context.Context, ids []int64) (resul
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListFileByTemplateId(ctx context.Context, templateId int64) (results []*UnsNamespace, err error) {
-	err = p.dbx(ctx).Where("model_id = ? ", templateId).
-		Where("path_type = ?", 2).
-		Where("status = ?", 1).
-		Find(&results).Error
-	if err != nil {
-		return nil, stores.ErrFmt(err)
-	}
-	return
-}
-func (p UnsNamespaceRepo) CountNotCalcSeqFiles(ctx context.Context, key string, minNumFields int) (count int64, er error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) CountNotCalcSeqFiles(db *gorm.DB, key string, minNumFields int) (count int64, er error) {
+	db = p.model(db)
 	db.Where("path_type = ?", 2).Where("data_type = ?", constants.TimeSequenceType)
 	if key != "" {
 		db = db.Where("path iLike ?", key)
@@ -131,8 +176,8 @@ func (p UnsNamespaceRepo) CountNotCalcSeqFiles(ctx context.Context, key string, 
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListNotCalcSeqFiles(ctx context.Context, key string, minNumFields int, page *stores.PageInfo) (results []*UnsNamespace, err error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) ListNotCalcSeqFiles(db *gorm.DB, key string, minNumFields int, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
 	db = page.ToGorm(db)
 	db.Where("path_type = ?", 2).Where("data_type = ?", constants.TimeSequenceType)
 	if key != "" {
@@ -148,9 +193,9 @@ func (p UnsNamespaceRepo) ListNotCalcSeqFiles(ctx context.Context, key string, m
 	}
 	return
 }
-func (p UnsNamespaceRepo) CountTimeSeriesFiles(ctx context.Context, key string) (count int64, er error) {
-	db := p.dbx(ctx)
-	db.Where("path_type = ?", 2).Where("data_type in ?", []int64{constants.TimeSequenceType, constants.CalculationRealType})
+func (p UnsNamespaceRepo) CountTimeSeriesFiles(db *gorm.DB, key string) (count int64, er error) {
+	db = p.model(db)
+	db.Where("path_type = ?", 2).Where("data_type in ?", []int16{constants.TimeSequenceType, constants.CalculationRealType})
 	if key != "" {
 		db = db.Where("path iLike ?", key)
 	}
@@ -162,10 +207,10 @@ func (p UnsNamespaceRepo) CountTimeSeriesFiles(ctx context.Context, key string) 
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListTimeSeriesFiles(ctx context.Context, key string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) ListTimeSeriesFiles(db *gorm.DB, key string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
 	db = page.ToGorm(db)
-	db.Where("path_type = ?", 2).Where("data_type in ?", []int64{constants.TimeSequenceType, constants.CalculationRealType})
+	db.Where("path_type = ?", 2).Where("data_type in ?", []int16{constants.TimeSequenceType, constants.CalculationRealType})
 	if key != "" {
 		db = db.Where("path iLike ?", key)
 	}
@@ -177,8 +222,8 @@ func (p UnsNamespaceRepo) ListTimeSeriesFiles(ctx context.Context, key string, p
 	}
 	return
 }
-func (p UnsNamespaceRepo) CountAlarmRules(ctx context.Context, key string) (count int64, er error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) CountAlarmRules(db *gorm.DB, key string) (count int64, er error) {
+	db = p.model(db)
 	db.Where("path_type = ?", 2).Where("data_type = ?", constants.AlarmRuleType)
 	if key != "" {
 		db = db.Where("(data_path iLike ? OR description like ?)", key, key)
@@ -190,8 +235,8 @@ func (p UnsNamespaceRepo) CountAlarmRules(ctx context.Context, key string) (coun
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListAlarmRules(ctx context.Context, key string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
 	db = page.ToGorm(db)
 	db.Where("path_type = ?", 2).Where("data_type = ?", constants.AlarmRuleType)
 	if key != "" {
@@ -204,18 +249,48 @@ func (p UnsNamespaceRepo) ListAlarmRules(ctx context.Context, key string, page *
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListUnsByIds(ctx context.Context, ids []int64) (results []*UnsPo, err error) {
+func (p UnsNamespaceRepo) ListByLayRec(db *gorm.DB, layRec string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
+	db = page.ToGorm(db)
+	err = db.Where("lay_rec like '" + escapeSQL(layRec) + "%'").Where("status=1").Find(&results).Error
+	return
+}
+func (p UnsNamespaceRepo) ListByLayRecs(db *gorm.DB, layRecs []string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
+	db = page.ToGorm(db)
+	sql := &base.StringBuilder{}
+	sql.Grow(80 * len(layRecs))
+	sql.Append("select * from ").Append(TableNameUnsNamespace).Append(" WHERE ")
+	sql.Append("( ")
+	for i, layRec := range layRecs {
+		if i > 0 {
+			sql.Append(" OR ")
+		}
+		sql.Append("lay_rec like '").Append(layRec).Append("%'")
+	}
+	sql.Append(" ) and status=1")
+	err = db.Raw(sql.String()).Find(&results).Error
+	return
+}
+func (p UnsNamespaceRepo) ListByTemplateId(db *gorm.DB, templateId int64, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
+	db = page.ToGorm(db)
+	err = db.Where("model_id =?", templateId).Where("status=1").Find(&results).Error
+	return
+}
+func (p UnsNamespaceRepo) ListUnsByIds(db *gorm.DB, ids []int64) (results []*UnsPo, err error) {
 	query := `
         SELECT a.*, 
                (SELECT COUNT(*) FROM uns_namespace c WHERE c.parent_id = a.id) AS count_direct_children
         FROM uns_namespace a 
         WHERE a.id IN ? AND a.status = 1
     `
-	err = p.dbx(ctx).Raw(query, ids).Scan(&results).Error
+	err = p.model(db).Raw(query, ids).Scan(&results).Error
 	return results, err
 }
-func (p UnsNamespaceRepo) ListInTemplate(ctx context.Context, name string) (results []*UnsNamespace, err error) {
-	db := p.dbx(ctx)
+
+func (p UnsNamespaceRepo) ListInTemplate(db *gorm.DB, name string) (results []*UnsNamespace, err error) {
+	db = p.model(db)
 	query := db.Where("path_type in ?", []int{0, 2}).
 		Where("data_type <> ?", constants.AlarmRuleType).
 		Where("model_id IS NOT NULL")
@@ -230,8 +305,8 @@ func (p UnsNamespaceRepo) ListInTemplate(ctx context.Context, name string) (resu
 	err = query.Order("path_type ASC, id ASC").Find(&results).Error
 	return results, err
 }
-func (p UnsNamespaceRepo) CountAllChildrenByLayRec(ctx context.Context, layRec string) (count int64, er error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) CountAllChildrenByLayRec(db *gorm.DB, layRec string) (count int64, er error) {
+	db = p.model(db)
 	db.Where("path_type = ?", 2).Where("lay_rec like CONCAT('?', '/%')", layRec)
 	db = db.Where("status = ?", 1)
 	err := db.Count(&count).Error
@@ -240,8 +315,8 @@ func (p UnsNamespaceRepo) CountAllChildrenByLayRec(ctx context.Context, layRec s
 	}
 	return
 }
-func (p UnsNamespaceRepo) CountDirectChildrenByParentId(ctx context.Context, parentId int64) (count int64, er error) {
-	db := p.dbx(ctx).Where("parent_id = ?", parentId).Where("status = ?", 1)
+func (p UnsNamespaceRepo) CountDirectChildrenByParentId(db *gorm.DB, parentId int64) (count int64, er error) {
+	db = p.model(db).Where("parent_id = ?", parentId).Where("status = ?", 1)
 	err := db.Count(&count).Error
 	if err != nil {
 		return -1, stores.ErrFmt(err)
@@ -249,8 +324,8 @@ func (p UnsNamespaceRepo) CountDirectChildrenByParentId(ctx context.Context, par
 	return
 }
 
-func (p UnsNamespaceRepo) ListAllEmptyFolder(ctx context.Context) (results []*UnsNamespace, err error) {
-	db := p.dbx(ctx)
+func (p UnsNamespaceRepo) ListAllEmptyFolder(db *gorm.DB) (results []*UnsNamespace, err error) {
+	db = p.model(db)
 	query := db.Raw(`select * from ` + TableNameUnsNamespace + `WHERE path_type = 0 and status=1 and (mount_type=0 or mount_type is null) and id NOT IN (
            SELECT DISTINCT parent_id FROM ` + TableNameUnsNamespace + `  WHERE parent_id IS NOT NULL  AND status=1`)
 	err = query.Find(&results).Error
