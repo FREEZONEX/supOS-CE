@@ -85,6 +85,9 @@ const MQTT = () => {
           {formatMessage('uns.topic')}
         </ComEllipsis>
         <SearchSelect
+          apiParams={{
+            type: 2,
+          }}
           style={{
             margin: '12px 0',
             width: '100%',
