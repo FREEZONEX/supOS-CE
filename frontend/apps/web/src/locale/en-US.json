@@ -441,6 +441,7 @@
   "uns.definition": "Definition",
   "uns.payload": "Payload",
   "uns.payloadExample": "Payload Example",
+  "uns.jsonBExample": "This topic defaults to using flexible JSON structures for processing and does not enforce predefined field formats.",
   "uns.model": "Path",
   "uns.MQTTAccessPoint": "MQTT Access Point",
   "uns.MQTTAccessMethod": "MQTT Access Method",

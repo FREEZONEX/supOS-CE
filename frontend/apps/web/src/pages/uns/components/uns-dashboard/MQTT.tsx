@@ -102,8 +102,12 @@ const MQTT = () => {
                       type: item.type,
                     };
                   });
-                  const jsObj = fromPairs(map(fieldExampleList, (item: any) => [item.key, item.value]));
-                  setPayLoadInfo(JSON.stringify(jsObj, null, 2));
+                  if (data?.dataType === 8) {
+                    setPayLoadInfo(formatMessage('uns.jsonBExample'));
+                  } else {
+                    const jsObj = fromPairs(map(fieldExampleList, (item) => [item.key, item.value]));
+                    setPayLoadInfo(JSON.stringify(jsObj, null, 2));
+                  }
                 })
                 .catch(() => {
                   setTopicInfo(null);

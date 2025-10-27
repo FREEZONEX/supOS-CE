@@ -479,6 +479,7 @@ const messages = {
   'uns.definition': '定义',
   'uns.payload': '消息体',
   'uns.payloadExample': '消息体示例',
+  'uns.jsonBExample': '该topic默认使用灵活的 JSON 结构处理，不会强制预定义字段格式。',
   'uns.model': '文件夹',
   'uns.MQTTAccessPoint': 'MQTT接入点',
   'uns.MQTTAccessMethod': 'MQTT接入方式',
