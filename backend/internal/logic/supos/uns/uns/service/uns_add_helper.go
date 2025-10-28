@@ -298,10 +298,11 @@ func checkTopicDto(errTipMap map[string]string,
 
 		fields := d.Fields
 		if len(fields) == 0 && *dataType == constants.MergeType {
+			mergeMaxLen := 512 * 1024
 			mergeField := &dto.FieldDefine{
 				Name:   "data_json",
 				Type:   enums.FieldTypeString,
-				MaxLen: 512 * 1024, // 聚合的字段总长度限制改大，不能超过mqtt消息长度限制
+				MaxLen: &mergeMaxLen, // 聚合的字段总长度限制改大，不能超过mqtt消息长度限制
 			}
 			fields = []*dto.FieldDefine{mergeField}
 			d.Fields = fields

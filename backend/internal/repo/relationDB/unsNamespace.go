@@ -131,7 +131,13 @@ func (p UnsNamespaceRepo) SelectById(db *gorm.DB, id int64) (*UnsNamespace, erro
 	}
 	return &result, nil
 }
-
+func (p UnsNamespaceRepo) SelectByIds(db *gorm.DB, ids []int64) (results []*UnsNamespace, err error) {
+	err = p.model(db).Where("id IN ?", ids).First(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
 func (p UnsNamespaceRepo) FindOneByAlias(db *gorm.DB, alias string) (*UnsNamespace, error) {
 	if alias == "" {
 		return nil, stores.ErrFmt(gorm.ErrRecordNotFound)

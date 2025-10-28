@@ -25,11 +25,15 @@ type FieldDefineVo struct {
 // NewFieldDefineVo creates a FieldDefineVo from FieldDefine.
 func NewFieldDefineVo(bo *dto.FieldDefine) *FieldDefineVo {
 	vo := &FieldDefineVo{
-		Name:  bo.Name,
-		Type:  bo.Type.Name(),
-		Index: bo.Index,
+		Name: bo.Name,
+		Type: bo.Type.Name(),
 	}
-	vo.Unique = bo.Unique
+	if idx := bo.Index; idx != nil {
+		vo.Index = *idx
+	}
+	if bo.Unique != nil {
+		vo.Unique = *bo.Unique
+	}
 	return vo
 }
 
@@ -96,11 +100,11 @@ func vo2bo(vo *FieldDefineVo) *dto.FieldDefine {
 	define := &dto.FieldDefine{
 		Name:  vo.Name,
 		Type:  fieldType,
-		Index: vo.Index,
+		Index: &vo.Index,
 	}
-	define.Unique = vo.Unique
-	define.DisplayName = vo.DisplayName
-	define.Remark = vo.Remark
+	define.Unique = &vo.Unique
+	define.DisplayName = &vo.DisplayName
+	define.Remark = &vo.Remark
 	return define
 }
 

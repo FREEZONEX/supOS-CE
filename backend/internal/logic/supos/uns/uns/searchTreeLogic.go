@@ -4,11 +4,14 @@
 package uns
 
 import (
+	"backend/internal/logic/supos/uns/uns/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
 	"backend/internal/types"
 
+	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -28,7 +31,7 @@ func NewSearchTreeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Search
 }
 
 func (l *SearchTreeLogic) SearchTree(req *types.SearchTreeReq) (resp *types.SearchTreeResp, err error) {
-	// todo: add your logic here and delete this line
-
+	resp, err = spring.GetBean[*service.UnsQueryService]().SearchTree(l.ctx, req)
+	err = errors.Fmt(err)
 	return
 }

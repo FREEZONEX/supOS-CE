@@ -282,3 +282,4 @@ CREATE TABLE if not exists "uns_mount_extend" (
 "source_name" varchar(1024),
 "extend" text
 );
+alter table uns_namespace add if not exists "parent_data_type" int2 NULL;

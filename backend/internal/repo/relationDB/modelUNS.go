@@ -30,6 +30,7 @@ type UnsNamespace struct {
 	Path             string           `gorm:"column:path;not null" json:"path"`
 	PathType         int16            `gorm:"column:path_type;not null" json:"path_type"`
 	DataType         *int16           `gorm:"column:data_type" json:"data_type"`
+	ParentDataType   *int16           `gorm:"column:parent_data_type" json:"parent_data_type"`
 	Fields           Fields           `gorm:"column:fields;type:json;" json:"fields"`
 	CreateAt         time.Time        `gorm:"column:create_at;default:now()" json:"create_at"`
 	Status           int16            `gorm:"column:status;default:1" json:"status"`
@@ -48,7 +49,7 @@ type UnsNamespace struct {
 	ModelID          *int64           `gorm:"column:model_id" json:"model_id"`
 	ProtocolType     string           `gorm:"column:protocol_type" json:"protocol_type"`
 	Extend           map[string]any   `gorm:"column:extend;type:jsonb;serializer:json;" json:"extend"`
-	DisplayName      string           `gorm:"column:display_name" json:"display_name"`
+	DisplayName      *string          `gorm:"column:display_name" json:"display_name"`
 	LabelIds         map[int64]string `gorm:"column:label_ids;type:jsonb;serializer:json;" json:"label_ids"`
 	ExtendFieldFlags *int32           `gorm:"column:extend_field_flags" json:"extend_field_flags"`
 	MountType        *int16           `gorm:"column:mount_type" json:"mount_type"`
@@ -82,7 +83,10 @@ func (t *UnsNamespace) GetName() string {
 }
 
 func (t *UnsNamespace) GetDisplayName() string {
-	return t.DisplayName
+	if dn := t.DisplayName; dn != nil {
+		return *dn
+	}
+	return ""
 }
 
 func (t *UnsNamespace) GetPath() string {
@@ -92,7 +96,9 @@ func (t *UnsNamespace) GetPath() string {
 func (t *UnsNamespace) GetDataType() *int16 {
 	return t.DataType
 }
-
+func (t *UnsNamespace) GetParentDataType() *int16 {
+	return t.ParentDataType
+}
 func (t *UnsNamespace) GetPathType() int16 {
 	return t.PathType
 }
@@ -259,7 +265,9 @@ func (l *UnsLabel) GetPath() string {
 func (l *UnsLabel) GetDataType() *int16 {
 	return nil
 }
-
+func (l *UnsLabel) GetParentDataType() *int16 {
+	return nil
+}
 func (l *UnsLabel) GetPathType() int16 {
 	return constants.PathTypeLabel
 }

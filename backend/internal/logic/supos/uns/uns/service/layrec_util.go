@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 )
@@ -189,4 +190,89 @@ func escapeName(name string) string {
 }
 func isIdentifierPart(c rune) bool {
 	return unicode.IsLetter(c) || unicode.IsDigit(c) || c == '_'
+}
+
+func parseChildrenCount(layRecList []*dao.LayRecCc) map[int64][]int {
+	// 创建映射存储节点ID到其直接子节点列表
+	childrenMap := make(map[int64][]int64)
+	// 创建映射存储节点ID到其直接子节点数量
+	directChildrenCountMap := make(map[int64][]int)
+	// 存储所有节点ID
+	allNodes := make(map[int64]bool)
+
+	// 解析每个LayRecCc对象，构建树结构
+	for _, layRecCc := range layRecList {
+		pathParts := strings.Split(layRecCc.LayRec, "/")
+		nodeId, _ := strconv.ParseInt(pathParts[len(pathParts)-1], 10, 64)
+		allNodes[nodeId] = true
+
+		cc := make([]int, 8)
+		parseTypeCount(layRecCc.CountChildren, cc)
+		directChildrenCountMap[nodeId] = cc
+
+		// 如果不是根节点，添加到父节点的子节点列表
+		if len(pathParts) > 1 {
+			parentId, _ := strconv.ParseInt(pathParts[len(pathParts)-2], 10, 64)
+			if _, exists := childrenMap[parentId]; !exists {
+				childrenMap[parentId] = make([]int64, 0)
+			}
+			childrenMap[parentId] = append(childrenMap[parentId], nodeId)
+		}
+	}
+
+	// 创建结果映射
+	result := make(map[int64][]int)
+
+	// 找到所有根节点（没有父节点的节点）
+	for nodeId := range allNodes {
+		// 从根节点开始计算子孙节点总数
+		calculateDescendants(nodeId, childrenMap, directChildrenCountMap, result)
+	}
+
+	return result
+}
+
+func calculateDescendants(nodeId int64,
+	childrenMap map[int64][]int64,
+	directChildrenCountMap map[int64][]int,
+	result map[int64][]int) []int {
+
+	// 如果已经计算过，直接返回
+	if rs, exists := result[nodeId]; exists {
+		return rs
+	}
+
+	totalDescendants := directChildrenCountMap[nodeId]
+	if totalDescendants == nil {
+		totalDescendants = make([]int, 8)
+	}
+
+	// 递归计算所有子节点的子孙节点数
+	if vs, exists := childrenMap[nodeId]; exists {
+		for _, childId := range vs {
+			rs := calculateDescendants(childId, childrenMap, directChildrenCountMap, result)
+			for i := 0; i < len(totalDescendants); i++ {
+				totalDescendants[i] += rs[i]
+			}
+		}
+	}
+
+	result[nodeId] = totalDescendants
+	return totalDescendants
+}
+
+func parseTypeCount(countChildren string, rs []int) {
+	if countChildren != "" {
+		segments := strings.Split(countChildren, ",")
+		for _, kv := range segments {
+			sp := strings.Index(kv, ":")
+			if sp > 0 {
+				pathType, _ := strconv.Atoi(kv[:sp])
+				count, _ := strconv.Atoi(kv[sp+1:])
+				if pathType < len(rs) {
+					rs[pathType] = count
+				}
+			}
+		}
+	}
 }

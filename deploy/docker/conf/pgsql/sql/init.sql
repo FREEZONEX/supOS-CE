@@ -1,4 +1,6 @@
-CREATE if not exists DATABASE kong;
+-- 创建 Kong 和 Konga 数据库
+CREATE DATABASE kong;
+CREATE DATABASE konga;
 
 
 SET search_path TO public;

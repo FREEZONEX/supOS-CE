@@ -160,7 +160,7 @@ func ValidateFieldName(name string) error {
 
 // SetDefaultMaxLen sets default max length for string fields
 func SetDefaultMaxLen(field *dto.FieldDefine) {
-	if field.Type == enums.FieldTypeString && field.MaxLen == 0 {
+	if field.Type == enums.FieldTypeString && field.MaxLen == nil {
 		nameLower := strings.ToLower(field.Name)
 		defaultLen := dto.DefaultMaxStrLen
 
@@ -169,7 +169,7 @@ func SetDefaultMaxLen(field *dto.FieldDefine) {
 			defaultLen = 64
 		}
 
-		field.MaxLen = defaultLen
+		field.MaxLen = &defaultLen
 	}
 }
 
@@ -223,6 +223,9 @@ type TableFieldDefine struct {
 	Fields    []*dto.FieldDefine
 }
 
+var _True = true
+var _False = false
+
 // ProcessFieldDefines validates and processes a list of field definitions, optionally adding system fields.
 func ProcessFieldDefines(jdbcType common.SrcJdbcType, fields []*dto.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
 	if len(fields) == 0 {
@@ -272,13 +275,13 @@ func ProcessFieldDefines(jdbcType common.SrcJdbcType, fields []*dto.FieldDefine,
 			theField := nonSysFields[0]
 			theField.Name = constants.SystemSeqValue // Ensure the name is correct
 			fNews = append(fNews, theField)
-
+			var len200 = 200
 			tableValueField := &dto.FieldDefine{
 				Name:        constants.SystemSeqTag,
 				Type:        enums.FieldTypeLong,
-				Unique:      true,
-				TbValueName: theField.Name,
-				MaxLen:      200,
+				Unique:      &_True,
+				TbValueName: &theField.Name,
+				MaxLen:      &len200,
 			}
 			fNews = append(fNews, tableValueField)
 
@@ -309,7 +312,7 @@ func ProcessFieldDefines(jdbcType common.SrcJdbcType, fields []*dto.FieldDefine,
 
 		// If no unique field is defined by the user, add a system ID field.
 		if !hasId {
-			fNews = append(fNews, &dto.FieldDefine{Name: constants.SysFieldID, Type: enums.FieldTypeLong, Unique: true})
+			fNews = append(fNews, &dto.FieldDefine{Name: constants.SysFieldID, Type: enums.FieldTypeLong, Unique: &_True})
 		}
 	}
 
