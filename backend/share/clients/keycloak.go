@@ -150,6 +150,9 @@ var (
 func InitKeycloakClient(config KeycloakConfig) *KeycloakClient {
 	fmt.Println("KeycloakConfig", config)
 	config.RedirectURI = config.GetRedirectURI()
+	if config.ClientID == "" {
+		return &KeycloakClient{} //允许 mock
+	}
 	keycloakOnce.Do(func() {
 		kc := &KeycloakClient{
 			config:     config,

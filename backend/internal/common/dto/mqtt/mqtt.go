@@ -1,29 +1,28 @@
 package mqtt
 
 import (
+	"backend/internal/types"
 	"strings"
 	"sync"
 
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
-	"backend/internal/common/enums"
 	"backend/internal/common/utils/expressionutil"
 )
 
 // TopicDefinition MQTT Topic 定义
 type TopicDefinition struct {
-	FieldDefines   *dto.FieldDefines   `json:"fieldDefines,omitzero"`
-	LastMsg        map[string]any      `json:"lastMsg,omitzero"`
-	LastDt         map[string]int64    `json:"lastDt,omitzero"`
-	LastDateTime   int64               `json:"lastDateTime,omitzero"`
-	ReferCalcUns   map[int64]bool      `json:"referCalcUns,omitzero"` // 被引用的计算实例（使用 map 模拟 Set）
-	CreateTopicDto *dto.CreateTopicDto `json:"createTopicDto,omitzero"`
-	Save2db        bool                `json:"save2db"`
-	mu             sync.RWMutex        // 保护 ReferCalcUns 的并发访问
+	FieldDefines   *types.FieldDefines   `json:"fieldDefines,omitzero"`
+	LastMsg        map[string]any        `json:"lastMsg,omitzero"`
+	LastDt         map[string]int64      `json:"lastDt,omitzero"`
+	LastDateTime   int64                 `json:"lastDateTime,omitzero"`
+	ReferCalcUns   map[int64]bool        `json:"referCalcUns,omitzero"` // 被引用的计算实例（使用 map 模拟 Set）
+	CreateTopicDto *types.CreateTopicDto `json:"createTopicDto,omitzero"`
+	Save2db        bool                  `json:"save2db"`
+	mu             sync.RWMutex          // 保护 ReferCalcUns 的并发访问
 }
 
 // NewTopicDefinition 创建新的 TopicDefinition
-func NewTopicDefinition(createTopicDto *dto.CreateTopicDto) *TopicDefinition {
+func NewTopicDefinition(createTopicDto *types.CreateTopicDto) *TopicDefinition {
 	td := &TopicDefinition{}
 	td.initByCreateTopicDto(createTopicDto, true)
 	return td
@@ -91,7 +90,7 @@ func (t *TopicDefinition) GetAlarmRuleDefine() any {
 }
 
 // GetRefers 获取引用字段
-func (t *TopicDefinition) GetRefers() []*dto.InstanceField {
+func (t *TopicDefinition) GetRefers() []*types.InstanceField {
 	if t.CreateTopicDto != nil {
 		return t.CreateTopicDto.Refers
 	}
@@ -113,12 +112,12 @@ func (t *TopicDefinition) GetCompileExpression() any {
 }
 
 // SetCreateTopicDto 设置 CreateTopicDto
-func (t *TopicDefinition) SetCreateTopicDto(dto *dto.CreateTopicDto) {
+func (t *TopicDefinition) SetCreateTopicDto(dto *types.CreateTopicDto) {
 	t.initByCreateTopicDto(dto, false)
 }
 
 // initByCreateTopicDto 初始化
-func (t *TopicDefinition) initByCreateTopicDto(createDto *dto.CreateTopicDto, init bool) {
+func (t *TopicDefinition) initByCreateTopicDto(createDto *types.CreateTopicDto, init bool) {
 	if createDto == nil {
 		return
 	}
@@ -141,15 +140,15 @@ func (t *TopicDefinition) initByCreateTopicDto(createDto *dto.CreateTopicDto, in
 		}
 		t.FieldDefines = createDto.GetFieldDefines()
 	} else if init {
-		t.FieldDefines = dto.NewFieldDefines(nil)
+		t.FieldDefines = types.NewFieldDefines(nil)
 	} else if t.CreateTopicDto != nil {
 		createDto.Fields = t.CreateTopicDto.Fields
 	}
 
 	t.CreateTopicDto = createDto
 
-	if createDto.Flags != nil && *createDto.Flags != 0 {
-		t.Save2db = constants.WithSave2db(*createDto.Flags)
+	if createDto.WithFlags != nil && *createDto.WithFlags != 0 {
+		t.Save2db = constants.WithSave2db(*createDto.WithFlags)
 	} else if init {
 		t.Save2db = true
 	}
@@ -162,9 +161,9 @@ func (t *TopicDefinition) initByCreateTopicDto(createDto *dto.CreateTopicDto, in
 			rsField, exists := fieldsMap["isAlarm"] // AlarmRuleDefine.FIELD_IS_ALARM
 			if !exists {
 				// 告警表结构错误，创建默认字段
-				rsField = &dto.FieldDefine{
+				rsField = &types.FieldDefine{
 					Name: "isAlarm",
-					Type: enums.FieldTypeBoolean,
+					Type: types.FieldTypeBoolean,
 				}
 			}
 			t.FieldDefines.CalcField = rsField
@@ -175,13 +174,13 @@ func (t *TopicDefinition) initByCreateTopicDto(createDto *dto.CreateTopicDto, in
 }
 
 // getCalcField 获取计算字段
-func getCalcField(createDto *dto.CreateTopicDto) *dto.FieldDefine {
+func getCalcField(createDto *types.CreateTopicDto) *types.FieldDefine {
 	fields := createDto.Fields
 	if len(fields) == 0 {
 		return nil
 	}
 
-	var calcField *dto.FieldDefine
+	var calcField *types.FieldDefine
 	ct := createDto.GetTimestampField()
 	qos := createDto.GetQualityField()
 

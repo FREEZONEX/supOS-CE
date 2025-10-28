@@ -1,8 +1,8 @@
 package excel
 
 import (
-	"backend/internal/common/dto"
 	"backend/internal/common/utils/PathUtil"
+	"backend/internal/types"
 	"fmt"
 	"strings"
 )
@@ -10,13 +10,13 @@ import (
 // ExcelUnsWrapDto is a wrapper for UNS data during Excel processing.
 type ExcelUnsWrapDto struct {
 	CheckSuccess  bool `json:"checkSuccess"`
-	Uns           dto.CreateTopicDto
-	TemplateAlias string              `json:"templateAlias"`
-	Labels        []string            `json:"labels"`
-	Refers        []dto.InstanceField `json:"refers"`
+	Uns           types.CreateTopicDto
+	TemplateAlias string                `json:"templateAlias"`
+	Labels        []string              `json:"labels"`
+	Refers        []types.InstanceField `json:"refers"`
 }
 
-func NewExcelUnsWrapDto(uns dto.CreateTopicDto) *ExcelUnsWrapDto {
+func NewExcelUnsWrapDto(uns types.CreateTopicDto) *ExcelUnsWrapDto {
 	return &ExcelUnsWrapDto{
 		CheckSuccess: true,
 		Uns:          uns,
@@ -61,14 +61,14 @@ type ExcelNameSpaceDto struct {
 	Expression    string `json:"expression"`
 }
 
-func (e *ExcelNameSpaceDto) CreateTopic() *dto.CreateTopicDto {
-	return &dto.CreateTopicDto{
+func (e *ExcelNameSpaceDto) CreateTopic() *types.CreateTopicDto {
+	return &types.CreateTopicDto{
 		Index:       e.Index,
 		Batch:       e.Batch,
 		Path:        e.Path,
 		Name:        PathUtil.GetName(e.Path),
 		Alias:       e.Alias,
-		DisplayName: e.DisplayName,
+		DisplayName: &e.DisplayName,
 		Description: e.Description,
 	}
 }
@@ -90,14 +90,14 @@ type ExcelFolderDto struct {
 	Description   string `json:"description"`
 }
 
-func (e *ExcelFolderDto) CreateTopic() *dto.CreateTopicDto {
-	return &dto.CreateTopicDto{
+func (e *ExcelFolderDto) CreateTopic() *types.CreateTopicDto {
+	return &types.CreateTopicDto{
 		Index:       e.Index,
 		Batch:       e.Batch,
 		Path:        e.Path,
 		Name:        PathUtil.GetName(e.Path),
 		Alias:       e.Alias,
-		DisplayName: e.DisplayName,
+		DisplayName: &e.DisplayName,
 		Description: e.Description,
 	}
 }

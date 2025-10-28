@@ -5,13 +5,12 @@ import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/LeastTopNodeUtil"
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
-	"backend/internal/common/enums"
 	"backend/internal/common/event"
 	"backend/internal/common/utils/FieldUtils"
 	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
+	"backend/internal/types"
 	"backend/share/base"
 	"context"
 	"fmt"
@@ -23,15 +22,15 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-func checkInstanceFields(modelFields []*dto.FieldDefine, insFields []*dto.FieldDefine) string {
+func checkInstanceFields(modelFields []*types.FieldDefine, insFields []*types.FieldDefine) string {
 	if modelFields == nil {
-		modelFields = make([]*dto.FieldDefine, 0)
+		modelFields = make([]*types.FieldDefine, 0)
 	}
 	if insFields == nil {
-		insFields = make([]*dto.FieldDefine, 0)
+		insFields = make([]*types.FieldDefine, 0)
 	}
 
-	insMap := make(map[string]*dto.FieldDefine, len(insFields))
+	insMap := make(map[string]*types.FieldDefine, len(insFields))
 	for _, insField := range insFields {
 		name := insField.Name
 		if !insField.IsSystemField() {
@@ -65,14 +64,14 @@ func checkInstanceFields(modelFields []*dto.FieldDefine, insFields []*dto.FieldD
 	return ""
 }
 
-func initParamsUns(topicDtos []*dto.CreateTopicDto, errTipMap map[string]string, paramFiles map[string]*dto.CreateTopicDto) map[string]*dto.CreateTopicDto {
-	paramFolders := make(map[string]*dto.CreateTopicDto, 2+len(topicDtos)/2)
+func initParamsUns(topicDtos []*types.CreateTopicDto, errTipMap map[string]string, paramFiles map[string]*types.CreateTopicDto) map[string]*types.CreateTopicDto {
+	paramFolders := make(map[string]*types.CreateTopicDto, 2+len(topicDtos)/2)
 	for _, topicDto := range topicDtos {
 		checkTopicDto(errTipMap, paramFolders, paramFiles, topicDto)
 	}
 	return paramFolders
 }
-func addAlias(bos []*dto.CreateTopicDto, aliasSet map[string]bool, ids map[int64]bool) {
+func addAlias(bos []*types.CreateTopicDto, aliasSet map[string]bool, ids map[int64]bool) {
 	for _, unsDto := range bos {
 		// 添加alias
 		if alias := unsDto.Alias; alias != "" {
@@ -85,8 +84,8 @@ func addAlias(bos []*dto.CreateTopicDto, aliasSet map[string]bool, ids map[int64
 		}
 
 		// 添加modelAlias
-		if modelAlias := unsDto.ModelAlias; modelAlias != "" {
-			aliasSet[modelAlias] = true
+		if modelAlias := unsDto.ModelAlias; modelAlias != nil {
+			aliasSet[*modelAlias] = true
 		}
 
 		// 添加parentAlias
@@ -95,7 +94,7 @@ func addAlias(bos []*dto.CreateTopicDto, aliasSet map[string]bool, ids map[int64
 		}
 
 		// 处理referIds
-		if referIds := unsDto.ReferIDs; len(referIds) > 0 {
+		if referIds := unsDto.ReferIds; len(referIds) > 0 {
 			// 添加所有referIds到ids集合
 			for _, id := range referIds {
 				ids[id] = true
@@ -103,29 +102,29 @@ func addAlias(bos []*dto.CreateTopicDto, aliasSet map[string]bool, ids map[int64
 
 			// 如果refers为空，根据referIds创建InstanceField数组
 			if len(unsDto.Refers) == 0 {
-				refers := make([]*dto.InstanceField, len(referIds))
+				refers := make([]*types.InstanceField, len(referIds))
 				for i, id := range referIds {
-					refers[i] = &dto.InstanceField{ID: id, Alias: ""}
+					refers[i] = &types.InstanceField{Id: id, Alias: ""}
 				}
 				unsDto.Refers = refers
 			}
 		}
 
 		// 添加各种ID到ids集合
-		if unsId := unsDto.ID; unsId != 0 {
+		if unsId := unsDto.Id; unsId != 0 {
 			ids[unsId] = true
 		}
-		if pid := unsDto.ParentID; pid != nil {
+		if pid := unsDto.ParentId; pid != nil {
 			ids[*pid] = true
 		}
-		if mid := unsDto.ModelID; mid != nil {
+		if mid := unsDto.ModelId; mid != nil {
 			ids[*mid] = true
 		}
 
 		// 处理refers中的字段
 		if refers := unsDto.Refers; len(refers) > 0 {
 			for _, field := range refers {
-				if id := field.ID; id != 0 {
+				if id := field.Id; id != 0 {
 					ids[id] = true
 				}
 				if alias := field.Alias; alias != "" {
@@ -136,7 +135,7 @@ func addAlias(bos []*dto.CreateTopicDto, aliasSet map[string]bool, ids map[int64
 	}
 }
 
-func scanChangedNodes(files []*dto.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, siblings map[string]*Siblings, changedSubTree *[]*dao.UnsNamespace) {
+func scanChangedNodes(files []*types.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, siblings map[string]*Siblings, changedSubTree *[]*dao.UnsNamespace) {
 	for _, bo := range files {
 		alias := bo.Alias
 		dbo := existsUns[alias]
@@ -165,10 +164,10 @@ func eqStrP(s1, s2 *string) bool {
 	}
 	return *s1 == *s2
 }
-func tryFillIdOrAlias(paramFiles map[string]*dto.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, errTipMap map[string]string) {
+func tryFillIdOrAlias(paramFiles map[string]*types.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, errTipMap map[string]string) {
 	for key, topicDto := range paramFiles {
 		// 处理主对象的ID和Alias
-		id := topicDto.ID
+		id := topicDto.Id
 		alias := topicDto.Alias
 		if id != 0 && alias == "" {
 			if po, exists := dbFiles[id]; exists {
@@ -176,16 +175,16 @@ func tryFillIdOrAlias(paramFiles map[string]*dto.CreateTopicDto, existsUns map[s
 			}
 		} else if id == 0 && alias != "" {
 			if po, exists := existsUns[alias]; exists {
-				topicDto.ID = po.ID
+				topicDto.Id = po.Id
 			}
 		}
 
 		// 处理父级ID和ParentAlias
-		pid := topicDto.ParentID
+		pid := topicDto.ParentId
 		parentAlias := topicDto.ParentAlias
 		if pid == nil && parentAlias != nil {
 			if parent, exists := existsUns[*parentAlias]; exists {
-				topicDto.ParentID = &parent.ID
+				topicDto.ParentId = &parent.Id
 			}
 		} else if parentAlias == nil && pid != nil {
 			if parent, exists := dbFiles[*pid]; exists {
@@ -197,11 +196,11 @@ func tryFillIdOrAlias(paramFiles map[string]*dto.CreateTopicDto, existsUns map[s
 		refers := topicDto.Refers
 		if len(refers) > 0 {
 			for _, field := range refers {
-				refID := field.ID
+				refID := field.Id
 				refAlias := field.Alias
 				if refID == 0 && refAlias != "" {
 					if refPo, exists := existsUns[refAlias]; exists {
-						field.ID = refPo.ID
+						field.Id = refPo.Id
 					} else {
 						// 删除当前元素并记录错误
 						delete(paramFiles, key)
@@ -240,7 +239,7 @@ func putTemp(dbFiles map[int64]*dao.UnsNamespace, aliasMap map[string]*dao.UnsNa
 	if po.Status == LOGIC_REMOVED {
 		// 创建新的PO对象，只保留ID和Alias
 		newPo := &dao.UnsNamespace{
-			ID:     po.ID,
+			Id:     po.Id,
 			Alias:  po.Alias,
 			Status: LOGIC_REMOVED,
 		}
@@ -250,13 +249,13 @@ func putTemp(dbFiles map[int64]*dao.UnsNamespace, aliasMap map[string]*dao.UnsNa
 
 	// 添加到映射
 	aliasMap[po.Alias] = po
-	dbFiles[po.ID] = po
+	dbFiles[po.Id] = po
 }
 
 func checkTopicDto(errTipMap map[string]string,
-	paramFolders map[string]*dto.CreateTopicDto,
-	paramFiles map[string]*dto.CreateTopicDto,
-	d *dto.CreateTopicDto) {
+	paramFolders map[string]*types.CreateTopicDto,
+	paramFiles map[string]*types.CreateTopicDto,
+	d *types.CreateTopicDto) {
 	pathType := d.PathType
 	if pathType == constants.PathTypeDir {
 		d.DataType = nil
@@ -299,12 +298,12 @@ func checkTopicDto(errTipMap map[string]string,
 		fields := d.Fields
 		if len(fields) == 0 && *dataType == constants.MergeType {
 			mergeMaxLen := 512 * 1024
-			mergeField := &dto.FieldDefine{
+			mergeField := &types.FieldDefine{
 				Name:   "data_json",
-				Type:   enums.FieldTypeString,
+				Type:   types.FieldTypeString,
 				MaxLen: &mergeMaxLen, // 聚合的字段总长度限制改大，不能超过mqtt消息长度限制
 			}
-			fields = []*dto.FieldDefine{mergeField}
+			fields = []*types.FieldDefine{mergeField}
 			d.Fields = fields
 		}
 		paramFiles[alias] = d
@@ -322,25 +321,25 @@ func checkTopicDto(errTipMap map[string]string,
 	}
 }
 
-func setJdbcType(unsDto *dto.CreateTopicDto) {
+func setJdbcType(unsDto *types.CreateTopicDto) {
 	dataType := unsDto.DataType
 	jdbcType := unsDto.DataSrcID
 	if jdbcType == 0 && dataType != nil && unsDto.PathType == constants.PathTypeFile {
 		switch *dataType {
 		case constants.CalculationHistType, constants.CalculationRealType, constants.TimeSequenceType:
-			jdbcType = common.SrcJdbcTypeTimeScaleDB
+			jdbcType = types.SrcJdbcTypeTimeScaleDB.TypeCode()
 		case constants.AlarmRuleType, constants.RelationType, constants.MergeType:
-			jdbcType = common.SrcJdbcTypePostgresql
+			jdbcType = types.SrcJdbcTypePostgresql.TypeCode()
 		default:
-			jdbcType = common.SrcJdbcTypeNone
+			jdbcType = types.SrcJdbcTypeNone.TypeCode()
 		}
 		unsDto.DataSrcID = jdbcType
 	}
 }
-func newUnsFile(unsDto *dto.CreateTopicDto) *dao.UnsNamespace {
+func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 	alias := unsDto.Alias
 	instance := &dao.UnsNamespace{
-		ID:                  unsDto.ID,
+		Id:                  unsDto.Id,
 		Alias:               alias,
 		Name:                unsDto.Name,
 		PathType:            unsDto.PathType,
@@ -349,7 +348,7 @@ func newUnsFile(unsDto *dto.CreateTopicDto) *dao.UnsNamespace {
 	}
 
 	if jdbcType := unsDto.DataSrcID; jdbcType != 0 {
-		instance.DataSrcID = jdbcType.Id()
+		instance.DataSrcId = jdbcType
 	}
 
 	instance.DisplayName = unsDto.DisplayName
@@ -358,9 +357,11 @@ func newUnsFile(unsDto *dto.CreateTopicDto) *dao.UnsNamespace {
 	instance.Name = unsDto.Name
 	instance.ParentAlias = unsDto.ParentAlias
 	instance.TableName_ = unsDto.TableName
-	instance.WithFlags = unsDto.Flags
-	instance.ModelID = unsDto.ModelID
-	instance.ModelAlias = unsDto.ModelAlias
+	instance.WithFlags = unsDto.WithFlags
+	instance.ModelId = unsDto.ModelId
+	if unsDto.ModelAlias != nil {
+		instance.ModelAlias = *unsDto.ModelAlias
+	}
 
 	if unsDto.PathType == constants.PathTypeFile {
 		if dataType := unsDto.DataType; dataType != nil {
@@ -405,8 +406,8 @@ func newUnsFile(unsDto *dto.CreateTopicDto) *dao.UnsNamespace {
 
 	return instance
 }
-func getTemplate(topicDto *dto.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) (template *dao.UnsNamespace, errMsg string) {
-	modelId := topicDto.ModelID
+func getTemplate(topicDto *types.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) (template *dao.UnsNamespace, errMsg string) {
+	modelId := topicDto.ModelId
 	modelAlias := topicDto.ModelAlias
 	var folderAlias *string
 
@@ -418,8 +419,8 @@ func getTemplate(topicDto *dto.CreateTopicDto, existsUns func(string) *dao.UnsNa
 				I18nUtils.GetMessage("uns.type.1"),
 			)
 		}
-	} else if modelAlias != "" {
-		template = existsUns(modelAlias)
+	} else if modelAlias != nil {
+		template = existsUns(*modelAlias)
 		if template != nil && template.PathType != 1 {
 			errMsg = I18nUtils.GetMessage("uns.alias.has.exist.type",
 				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(template.PathType))),
@@ -441,9 +442,9 @@ func getTemplate(topicDto *dto.CreateTopicDto, existsUns func(string) *dao.UnsNa
 	}
 	return template, errMsg
 }
-func setFieldsErr(unsDto *dto.CreateTopicDto, errTipMap map[string]string, batchIndex string, instance *dao.UnsNamespace, template *dao.UnsNamespace) bool {
+func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, batchIndex string, instance *dao.UnsNamespace, template *dao.UnsNamespace) bool {
 	insFs := unsDto.Fields
-	jdbcType := unsDto.DataSrcID
+	jdbcType := types.SrcJdbcType(unsDto.DataSrcID)
 
 	addSystemField := jdbcType != 0 && unsDto.PathType == constants.PathTypeFile && (unsDto.DataType != nil && *unsDto.DataType != constants.AlarmRuleType)
 
@@ -500,7 +501,7 @@ func setFieldsErr(unsDto *dto.CreateTopicDto, errTipMap map[string]string, batch
 
 	return false
 }
-func (u *UnsAddService) trySetId(ct time.Time, unsDto *dto.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, errTipMap map[string]string) *dao.UnsNamespace {
+func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, errTipMap map[string]string) *dao.UnsNamespace {
 	batchIndex := unsDto.GainBatchIndex()
 	template, errMsg := getTemplate(unsDto, existsUns, dbFiles)
 	if errMsg != "" {
@@ -519,16 +520,16 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *dto.CreateTopicDto, exist
 			errTipMap[batchIndex] = msg
 			return nil
 		}
-		unsDto.ID = dbPo.ID
+		unsDto.Id = dbPo.Id
 	} else {
-		unsDto.ID = common.NextId()
+		unsDto.Id = common.NextId()
 	}
 
 	DB_EXISTS := dbPo != nil && dbPo.Status == OK
 
 	// 创建关系型文件, 不允许新增系统字段
 	if !DB_EXISTS && len(unsDto.Fields) > 0 &&
-		unsDto.DataSrcID != 0 && unsDto.DataSrcID.TypeCode() != constants.TimeSequenceType {
+		unsDto.DataSrcID != 0 && unsDto.DataSrcID != constants.TimeSequenceType {
 		for _, fd := range unsDto.Fields {
 			if fd.IsSystemField() {
 				errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.keyword", fd.Name)
@@ -549,7 +550,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *dto.CreateTopicDto, exist
 	}
 
 	if dataType == constants.CitingType && unsDto.Fields != nil {
-		EMPTY := make([]*dto.FieldDefine, 0)
+		EMPTY := make([]*types.FieldDefine, 0)
 		unsDto.Fields = EMPTY
 		newUns.Fields = EMPTY
 	}
@@ -559,7 +560,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *dto.CreateTopicDto, exist
 		copier.CopyWithOption(&tar, newUns, copier.Option{IgnoreEmpty: true})
 		expression := newUns.Expression
 		expChanged := expression != "" && expression != dbPo.Expression
-		hasRefer := unsDto.Refers != nil || unsDto.ReferIDs != nil
+		hasRefer := unsDto.Refers != nil || unsDto.ReferIds != nil
 
 		checkFileFieldError := u.unsCalcService.CheckFileField(unsDto)
 		if checkFileFieldError != "" {
@@ -589,8 +590,8 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *dto.CreateTopicDto, exist
 		newUns.Refers = unsDto.Refers
 		newUns.Expression = unsDto.Expression
 	} else {
-		if unsDto.Flags == nil {
-			flag := generateFlag(unsDto.AddFlow, unsDto.Save2DB, unsDto.AddDashBoard,
+		if unsDto.WithFlags == nil {
+			flag := generateFlag(unsDto.AddFlow, unsDto.Save2Db, unsDto.AddDashBoard,
 				unsDto.RetainTableWhenDeleteInstance, unsDto.SubscribeEnable, unsDto.AccessLevel)
 			newUns.WithFlags = &flag
 		}
@@ -672,16 +673,16 @@ func (u *unsDtoTreeNodes) Visit(visitor func(uns *dao.UnsNamespace)) {
 }
 
 type Siblings struct {
-	names map[string][]*dto.CreateTopicDto
+	names map[string][]*types.CreateTopicDto
 }
 
 func newSiblings() *Siblings {
-	return &Siblings{names: make(map[string][]*dto.CreateTopicDto, 32)}
+	return &Siblings{names: make(map[string][]*types.CreateTopicDto, 32)}
 }
-func (s *Siblings) add(uns *dto.CreateTopicDto) {
+func (s *Siblings) add(uns *types.CreateTopicDto) {
 	s.names[uns.Name] = append(s.names[uns.Name], uns)
 }
-func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context, paramFolders []*dto.CreateTopicDto, paramFiles []*dto.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) error {
+func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context, paramFolders []*types.CreateTopicDto, paramFiles []*types.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) error {
 	changedSubTree := make([]*dao.UnsNamespace, 0, 64)
 	parentAliasSet := make(map[string]*Siblings, 32)
 	scanChangedNodes(paramFolders, existsUns, parentAliasSet, &changedSubTree)
@@ -704,7 +705,7 @@ func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context, p
 			if len(children) > 0 {
 				for _, unsPo := range children {
 					unsPo.LayRec = "" //重置，等着重新计算
-					dbFiles[unsPo.ID] = unsPo
+					dbFiles[unsPo.Id] = unsPo
 					existsUns[unsPo.Alias] = unsPo
 				}
 			}
@@ -754,19 +755,19 @@ func aliasToId(addFiles map[int64]*dao.UnsNamespace, aliasMap func(string) *dao.
 	for _, file := range addFiles {
 		if modelAlias := file.ModelAlias; modelAlias != "" {
 			if model := aliasMap(modelAlias); model != nil {
-				file.ModelID = &model.ID
+				file.ModelId = &model.Id
 			}
 		}
 		if parentAlias := file.ParentAlias; parentAlias != nil {
 			if parent := aliasMap(*parentAlias); parent != nil {
-				file.ParentID = &parent.ID
+				file.ParentId = &parent.Id
 			}
 		}
 	}
 }
 
 type unsLevel struct {
-	uns      []*dto.CreateTopicDto
+	uns      []*types.CreateTopicDto
 	levelMap map[string]int
 }
 

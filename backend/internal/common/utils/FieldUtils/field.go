@@ -1,11 +1,9 @@
 package FieldUtils
 
 import (
-	"backend/internal/common"
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
-	"backend/internal/common/enums"
 	"backend/internal/common/utils/PathUtil"
+	"backend/internal/types"
 	"fmt"
 	"strings"
 )
@@ -17,9 +15,9 @@ var ExtendFields = []string{"unit", "upperLimit", "lowerLimit", "decimal"}
 var ExtendFlags = []int32{1 << 0, 1 << 1, 1 << 2, 1 << 3}
 
 // GetTimestampField finds the timestamp field in field definitions
-func GetTimestampField(fields []*dto.FieldDefine) *dto.FieldDefine {
+func GetTimestampField(fields []*types.FieldDefine) *types.FieldDefine {
 	for _, f := range fields {
-		if f.Type == enums.FieldTypeDatetime {
+		if f.Type == types.FieldTypeDatetime {
 			return f
 		}
 	}
@@ -27,14 +25,14 @@ func GetTimestampField(fields []*dto.FieldDefine) *dto.FieldDefine {
 }
 
 // GetQualityField finds the quality field in field definitions
-func GetQualityField(fields []*dto.FieldDefine, dataType int16) *dto.FieldDefine {
+func GetQualityField(fields []*types.FieldDefine, dataType int16) *types.FieldDefine {
 	if dataType == constants.TimeSequenceType && fields != nil && len(fields) > 2 {
 		// Quality field is usually the last or second-to-last field
 		lastIdx := len(fields) - 1
-		if fields[lastIdx].Type == enums.FieldTypeLong {
+		if fields[lastIdx].Type == types.FieldTypeLong {
 			return fields[lastIdx]
 		}
-		if lastIdx > 0 && fields[lastIdx-1].Type == enums.FieldTypeLong {
+		if lastIdx > 0 && fields[lastIdx-1].Type == types.FieldTypeLong {
 			return fields[lastIdx-1]
 		}
 	}
@@ -42,7 +40,7 @@ func GetQualityField(fields []*dto.FieldDefine, dataType int16) *dto.FieldDefine
 }
 
 // ValidateFields validates a slice of field definitions
-func ValidateFields(fields []*dto.FieldDefine, checkSysField bool) error {
+func ValidateFields(fields []*types.FieldDefine, checkSysField bool) error {
 	seen := make(map[string]bool)
 	for _, f := range fields {
 		name := strings.TrimSpace(f.Name)
@@ -76,7 +74,7 @@ func ValidateFields(fields []*dto.FieldDefine, checkSysField bool) error {
 	}
 
 	createTimeField := FindFieldByName(fields, constants.SysFieldCreateTime)
-	if createTimeField != nil && createTimeField.Type != enums.FieldTypeDatetime {
+	if createTimeField != nil && createTimeField.Type != types.FieldTypeDatetime {
 		return fmt.Errorf("field '%s' must be of type DATETIME", constants.SysFieldCreateTime)
 	}
 
@@ -84,10 +82,10 @@ func ValidateFields(fields []*dto.FieldDefine, checkSysField bool) error {
 }
 
 // CountNumericFields counts the number of numeric fields
-func CountNumericFields(fields []*dto.FieldDefine) int {
+func CountNumericFields(fields []*types.FieldDefine) int {
 	total := 0
 	for _, f := range fields {
-		if f.Type.IsNumber() {
+		if types.FieldType(f.Type).IsNumber() {
 			total++
 		}
 	}
@@ -159,10 +157,10 @@ func ValidateFieldName(name string) error {
 }
 
 // SetDefaultMaxLen sets default max length for string fields
-func SetDefaultMaxLen(field *dto.FieldDefine) {
-	if field.Type == enums.FieldTypeString && field.MaxLen == nil {
+func SetDefaultMaxLen(field *types.FieldDefine) {
+	if field.Type == types.FieldTypeString && field.MaxLen == nil {
 		nameLower := strings.ToLower(field.Name)
-		defaultLen := dto.DefaultMaxStrLen
+		defaultLen := types.DefaultMaxStrLen
 
 		// Set shorter default for name/tag fields
 		if strings.Contains(nameLower, "name") || strings.Contains(nameLower, "tag") {
@@ -174,10 +172,10 @@ func SetDefaultMaxLen(field *dto.FieldDefine) {
 }
 
 // CountNumberFields counts the number of numeric fields
-func CountNumberFields(fields []*dto.FieldDefine) int {
+func CountNumberFields(fields []*types.FieldDefine) int {
 	count := 0
 	for _, f := range fields {
-		if f.Type.IsNumber() && !f.IsSystemField() {
+		if types.FieldType(f.Type).IsNumber() && !f.IsSystemField() {
 			count++
 		}
 	}
@@ -185,10 +183,10 @@ func CountNumberFields(fields []*dto.FieldDefine) int {
 }
 
 // FilterBlobFields filters all BLOB and LBLOB fields
-func FilterBlobFields(fields []*dto.FieldDefine) []*dto.FieldDefine {
-	result := make([]*dto.FieldDefine, 0)
+func FilterBlobFields(fields []*types.FieldDefine) []*types.FieldDefine {
+	result := make([]*types.FieldDefine, 0)
 	for _, f := range fields {
-		if f.Type == enums.FieldTypeBlob || f.Type == enums.FieldTypeLBlob {
+		if f.Type == types.FieldTypeBlob || f.Type == types.FieldTypeLBlob {
 			result = append(result, f)
 		}
 	}
@@ -196,7 +194,7 @@ func FilterBlobFields(fields []*dto.FieldDefine) []*dto.FieldDefine {
 }
 
 // FindFieldByName finds field by name
-func FindFieldByName(fields []*dto.FieldDefine, name string) *dto.FieldDefine {
+func FindFieldByName(fields []*types.FieldDefine, name string) *types.FieldDefine {
 	for _, f := range fields {
 		if f.Name == name {
 			return f
@@ -206,7 +204,7 @@ func FindFieldByName(fields []*dto.FieldDefine, name string) *dto.FieldDefine {
 }
 
 // HasDuplicateFieldNames checks for duplicate field names
-func HasDuplicateFieldNames(fields []*dto.FieldDefine) (string, bool) {
+func HasDuplicateFieldNames(fields []*types.FieldDefine) (string, bool) {
 	seen := make(map[string]bool)
 	for _, f := range fields {
 		if seen[f.Name] {
@@ -220,20 +218,20 @@ func HasDuplicateFieldNames(fields []*dto.FieldDefine) (string, bool) {
 // TableFieldDefine holds a table name and its field definitions.
 type TableFieldDefine struct {
 	TableName string
-	Fields    []*dto.FieldDefine
+	Fields    []*types.FieldDefine
 }
 
 var _True = true
 var _False = false
 
 // ProcessFieldDefines validates and processes a list of field definitions, optionally adding system fields.
-func ProcessFieldDefines(jdbcType common.SrcJdbcType, fields []*dto.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
+func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
 	if len(fields) == 0 {
 		return nil, nil
 	}
 
 	// Create a deep copy to avoid modifying the original slice and its elements
-	processedFields := make([]*dto.FieldDefine, len(fields))
+	processedFields := make([]*types.FieldDefine, len(fields))
 	for i, f := range fields {
 		clone := *f
 		processedFields[i] = &clone
@@ -256,14 +254,14 @@ func ProcessFieldDefines(jdbcType common.SrcJdbcType, fields []*dto.FieldDefine,
 	}
 
 	var tableName string
-	var fNews []*dto.FieldDefine
+	var fNews []*types.FieldDefine
 
 	if jdbcType.TypeCode() == constants.TimeSequenceType {
 		// Time-series data
-		fNews = make([]*dto.FieldDefine, 0, len(processedFields)+2)
-		fNews = append(fNews, &dto.FieldDefine{Name: constants.SysFieldCreateTime, Type: enums.FieldTypeDatetime})
+		fNews = make([]*types.FieldDefine, 0, len(processedFields)+2)
+		fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime})
 
-		var nonSysFields []*dto.FieldDefine
+		var nonSysFields []*types.FieldDefine
 		for _, f := range processedFields {
 			if !f.IsSystemField() {
 				nonSysFields = append(nonSysFields, f)
@@ -271,35 +269,35 @@ func ProcessFieldDefines(jdbcType common.SrcJdbcType, fields []*dto.FieldDefine,
 		}
 
 		// Special handling for TimeScaleDB when there is only one non-system field named "value".
-		if jdbcType == common.SrcJdbcTypeTimeScaleDB && len(nonSysFields) == 1 && nonSysFields[0].Name == constants.SystemSeqValue {
+		if jdbcType == types.SrcJdbcTypeTimeScaleDB && len(nonSysFields) == 1 && nonSysFields[0].Name == constants.SystemSeqValue {
 			theField := nonSysFields[0]
 			theField.Name = constants.SystemSeqValue // Ensure the name is correct
 			fNews = append(fNews, theField)
 			var len200 = 200
-			tableValueField := &dto.FieldDefine{
+			tableValueField := &types.FieldDefine{
 				Name:        constants.SystemSeqTag,
-				Type:        enums.FieldTypeLong,
+				Type:        types.FieldTypeLong,
 				Unique:      &_True,
 				TbValueName: &theField.Name,
 				MaxLen:      &len200,
 			}
 			fNews = append(fNews, tableValueField)
 
-			tableName = "supos_timeserial_" + strings.ToLower(theField.Type.String())
+			tableName = "supos_timeserial_" + strings.ToLower(theField.Type)
 		} else {
 			// Default behavior for other time-series data
 			tableName = ""
 			fNews = append(fNews, nonSysFields...)
 		}
 
-		fNews = append(fNews, &dto.FieldDefine{Name: constants.QosField, Type: enums.FieldTypeLong})
+		fNews = append(fNews, &types.FieldDefine{Name: constants.QosField, Type: types.FieldTypeLong})
 	} else {
 		// Relational data
 		tableName = ""
-		fNews = make([]*dto.FieldDefine, 0, len(processedFields)+2)
+		fNews = make([]*types.FieldDefine, 0, len(processedFields)+2)
 		hasId := false
 
-		fNews = append(fNews, &dto.FieldDefine{Name: constants.SysFieldCreateTime, Type: enums.FieldTypeDatetime})
+		fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime})
 
 		for _, f := range processedFields {
 			if !f.IsSystemField() {
@@ -310,9 +308,9 @@ func ProcessFieldDefines(jdbcType common.SrcJdbcType, fields []*dto.FieldDefine,
 			}
 		}
 
-		// If no unique field is defined by the user, add a system ID field.
+		// If no unique field is defined by the user, add a system Id field.
 		if !hasId {
-			fNews = append(fNews, &dto.FieldDefine{Name: constants.SysFieldID, Type: enums.FieldTypeLong, Unique: &_True})
+			fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldID, Type: types.FieldTypeLong, Unique: &_True})
 		}
 	}
 

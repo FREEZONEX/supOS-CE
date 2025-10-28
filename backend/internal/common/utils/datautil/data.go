@@ -2,9 +2,8 @@ package datautil
 
 import (
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
-	"backend/internal/common/enums"
 	"backend/internal/common/utils/idutil"
+	"backend/internal/types"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -18,26 +17,26 @@ import (
 
 // GetBlobTagFromFieldDefine is a helper for GetBlobTag using a FieldDefine object.
 // Corresponds to DataUtils.getBlobTag(String fileName, FieldDefine blobField)
-func GetBlobTagFromFieldDefine(fileName string, blobField *dto.FieldDefine) string {
-	return GetBlobTag(fileName, blobField.Name, blobField.Type)
+func GetBlobTagFromFieldDefine(fileName string, blobField *types.FieldDefine) string {
+	return GetBlobTag(fileName, blobField.Name, types.FieldType(blobField.Type))
 }
 
 // GetBlobTag generates a unique tag for a BLOB.
 // Corresponds to DataUtils.getBlobTag(String fileName, String fieldName, FieldType fieldType)
-func GetBlobTag(fileName, fieldName string, fieldType enums.FieldType) string {
+func GetBlobTag(fileName, fieldName string, fieldType types.FieldType) string {
 	return fmt.Sprintf("%s---%s-%s-%d", fieldType.String(), fileName, fieldName, idutil.NextID())
 }
 
 // SaveBlobDataFromFieldDefine is a helper for SaveBlobData using a FieldDefine object.
 // Corresponds to DataUtils.saveBlobData(String fileAlias, FieldDefine fieldDefine, Object blobData)
-func SaveBlobDataFromFieldDefine(fileAlias string, fieldDefine *dto.FieldDefine, blobData any) (string, error) {
-	return SaveBlobData(fileAlias, fieldDefine.Name, fieldDefine.Type, blobData)
+func SaveBlobDataFromFieldDefine(fileAlias string, fieldDefine *types.FieldDefine, blobData any) (string, error) {
+	return SaveBlobData(fileAlias, fieldDefine.Name, types.FieldType(fieldDefine.Type), blobData)
 }
 
 // SaveBlobData saves BLOB data (either base64 string or []byte) to a file.
 // The file is named with a unique blob tag, which is returned.
 // Corresponds to DataUtils.saveBlobData(String fileAlias, String fieldName, FieldType fieldType, Object blobData)
-func SaveBlobData(fileAlias, fieldName string, fieldType enums.FieldType, blobData any) (string, error) {
+func SaveBlobData(fileAlias, fieldName string, fieldType types.FieldType, blobData any) (string, error) {
 	if blobData == nil {
 		return "", nil
 	}
@@ -101,7 +100,7 @@ func GetBlobData(blobTag string) (string, error) {
 
 // HandleBlobMsg processes a JSON message, replacing blob tags with their base64 encoded data.
 // Corresponds to DataUtils.handleBolb (typo in Java)
-func HandleBlobMsg(msg string, def *dto.CreateTopicDto) (string, error) {
+func HandleBlobMsg(msg string, def *types.CreateTopicDto) (string, error) {
 	if msg == "" || def == nil || !def.HasBlobField {
 		return msg, nil
 	}
@@ -135,7 +134,7 @@ func HandleBlobMsg(msg string, def *dto.CreateTopicDto) (string, error) {
 			continue
 		}
 
-		if strings.HasPrefix(valueStr, enums.FieldTypeBlob.String()+"---") {
+		if strings.HasPrefix(valueStr, types.FieldTypeBlob+"---") {
 			blobValue, err := GetBlobData(valueStr)
 			if err != nil {
 				// Log the error but continue, matching Java's behavior of not stopping.
@@ -147,7 +146,7 @@ func HandleBlobMsg(msg string, def *dto.CreateTopicDto) (string, error) {
 				payload = strings.Replace(payload, valueStr, blobValue, 1)
 			}
 			modified = true
-		} else if strings.HasPrefix(valueStr, enums.FieldTypeLBlob.String()+"---") {
+		} else if strings.HasPrefix(valueStr, types.FieldTypeLBlob+"---") {
 			data[blobField.Name] = ""
 			if payloadOk {
 				payload = strings.Replace(payload, valueStr, "", 1)
@@ -175,17 +174,17 @@ func HandleBlobMsg(msg string, def *dto.CreateTopicDto) (string, error) {
 
 // GetDefaultValue returns the default value for a given field type.
 // Corresponds to DataUtils.getDefaultValue
-func GetDefaultValue(fieldType enums.FieldType) any {
+func GetDefaultValue(fieldType types.FieldType) any {
 	switch fieldType {
-	case enums.FieldTypeString, enums.FieldTypeBlob:
+	case types.FieldTypeString, types.FieldTypeBlob:
 		return ""
-	case enums.FieldTypeLBlob:
+	case types.FieldTypeLBlob:
 		return "-"
-	case enums.FieldTypeInteger, enums.FieldTypeLong, enums.FieldTypeFloat, enums.FieldTypeDouble:
+	case types.FieldTypeInteger, types.FieldTypeLong, types.FieldTypeFloat, types.FieldTypeDouble:
 		return 0
-	case enums.FieldTypeBoolean:
+	case types.FieldTypeBoolean:
 		return false
-	case enums.FieldTypeDatetime:
+	case types.FieldTypeDatetime:
 		return 0
 	default:
 		return nil
@@ -194,7 +193,7 @@ func GetDefaultValue(fieldType enums.FieldType) any {
 
 // TransformEmptyValue creates a JSON-like map with default values for a given UNS definition.
 // Corresponds to DataUtils.transEmptyValue
-func TransformEmptyValue(uns *dto.CreateTopicDto, strTypeQos bool) map[string]any {
+func TransformEmptyValue(uns *types.CreateTopicDto, strTypeQos bool) map[string]any {
 	data := make(map[string]any)
 	if uns == nil || uns.Fields == nil {
 		return data
@@ -204,7 +203,7 @@ func TransformEmptyValue(uns *dto.CreateTopicDto, strTypeQos bool) map[string]an
 		if field.Name != constants.QosField &&
 			field.Name != constants.SysFieldCreateTime &&
 			field.Name != constants.SysSaveTime {
-			data[field.Name] = GetDefaultValue(field.Type)
+			data[field.Name] = GetDefaultValue(types.FieldType(field.Type))
 		}
 	}
 

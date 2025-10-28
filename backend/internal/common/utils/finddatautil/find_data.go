@@ -1,10 +1,9 @@
 package finddatautil
 
 import (
-	"backend/internal/common/dto"
-	"backend/internal/common/enums"
 	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/datetimeutils"
+	"backend/internal/types"
 	"fmt"
 	"math"
 	"reflect"
@@ -81,7 +80,7 @@ const (
 
 // TypeMatchScore calculates a score based on how well the value `v` matches the `fieldType`.
 // It may modify the value in `vHolder` to the converted type.
-func TypeMatchScore(vHolder *any, fieldType enums.FieldType, maxStrLen int) int {
+func TypeMatchScore(vHolder *any, fieldType types.FieldType, maxStrLen int) int {
 	if vHolder == nil || *vHolder == nil {
 		return 98
 	}
@@ -99,25 +98,25 @@ func TypeMatchScore(vHolder *any, fieldType enums.FieldType, maxStrLen int) int 
 		score = 99
 
 		switch fieldType {
-		case enums.FieldTypeInteger:
+		case types.FieldTypeInteger:
 			if f < math.MinInt32 || f > math.MaxInt32 {
 				return errOutOfRange
 			}
 			*vHolder = int32(f)
-		case enums.FieldTypeLong:
+		case types.FieldTypeLong:
 			if f < math.MinInt64 || f > math.MaxInt64 {
 				return errOutOfRange
 			}
 			*vHolder = int64(f)
-		case enums.FieldTypeFloat:
+		case types.FieldTypeFloat:
 			if f < -math.MaxFloat32 || f > math.MaxFloat32 {
 				return errOutOfRange
 			}
 			*vHolder = float32(f)
-		case enums.FieldTypeDouble:
+		case types.FieldTypeDouble:
 			*vHolder = f
 		}
-	} else if fieldType == enums.FieldTypeString {
+	} else if fieldType == types.FieldTypeString {
 		s := fmt.Sprintf("%v", obj)
 		if maxStrLen > 0 && len(s) > maxStrLen {
 			score = errOutOfRange
@@ -126,13 +125,13 @@ func TypeMatchScore(vHolder *any, fieldType enums.FieldType, maxStrLen int) int 
 		} else {
 			score = 97
 		}
-	} else if fieldType == enums.FieldTypeDatetime {
+	} else if fieldType == types.FieldTypeDatetime {
 		if isNumber(val.Kind()) {
 			score = 97
 		} else if _, err := datetimeutils.ParseDate(fmt.Sprintf("%v", obj)); err == nil {
 			score = 98
 		}
-	} else if fieldType == enums.FieldTypeBoolean {
+	} else if fieldType == types.FieldTypeBoolean {
 		switch val.Kind() {
 		case reflect.Bool:
 			score = 100
@@ -155,7 +154,7 @@ func TypeMatchScore(vHolder *any, fieldType enums.FieldType, maxStrLen int) int 
 				*vHolder = true // Java version logic
 			}
 		}
-	} else if fieldType == enums.FieldTypeBlob || fieldType == enums.FieldTypeLBlob {
+	} else if fieldType == types.FieldTypeBlob || fieldType == types.FieldTypeLBlob {
 		if val.Kind() == reflect.String {
 			score = 100
 		}
@@ -188,7 +187,7 @@ func isNumber(kind reflect.Kind) bool {
 }
 
 // findDataListRecursive is the main recursive function.
-func findDataListRecursive(parent any, size int, obj any, fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string) bool {
+func findDataListRecursive(parent any, size int, obj any, fieldDefines *types.FieldDefines, rs *SearchResult, dataPath string) bool {
 	if obj == nil {
 		return false
 	}
@@ -204,7 +203,11 @@ func findDataListRecursive(parent any, size int, obj any, fieldDefines *dto.Fiel
 			for _, f := range fieldDefines.FieldsMap {
 				if !f.IsSystemField() {
 					tempV := vHolder
-					matchScore := TypeMatchScore(&tempV, f.Type, f.MaxLen)
+					msize := 0
+					if maxL := f.MaxLen; maxL != nil {
+						msize = *maxL
+					}
+					matchScore := TypeMatchScore(&tempV, types.FieldType(f.Type), msize)
 					if matchScore > score {
 						score = matchScore
 						bestField = f.Name
@@ -228,8 +231,8 @@ func findDataListRecursive(parent any, size int, obj any, fieldDefines *dto.Fiel
 			if isSimpleType(reflect.TypeOf(firstElem).Kind()) {
 				bean := make(map[string]any)
 				for _, fieldDefine := range fieldDefines.FieldsMap {
-					if fieldDefine.Index != "" {
-						idx, err := strconv.Atoi(strings.TrimSpace(fieldDefine.Index))
+					if fieldDefine.Index != nil && len(*fieldDefine.Index) > 0 {
+						idx, err := strconv.Atoi(strings.TrimSpace(*fieldDefine.Index))
 						if err == nil && idx < val.Len() {
 							bean[fieldDefine.Name] = val.Index(idx).Interface()
 						}
@@ -293,7 +296,7 @@ func findDataListRecursive(parent any, size int, obj any, fieldDefines *dto.Fiel
 	return false
 }
 
-func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, m map[string]any) int {
+func procMap(fieldDefines *types.FieldDefines, rs *SearchResult, dataPath string, m map[string]any) int {
 	countFieldMatch := 0
 	addKvList := make([][2]any, 0)
 	deleteKeys := make([]string, 0)
@@ -304,13 +307,13 @@ func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, 
 
 		if v == nil || isSimpleType(kind) {
 			vHolder := v
-			var fd1, fdIdx *dto.FieldDefine
+			var fd1, fdIdx *types.FieldDefine
 			var ecA, ecB int
 
 			fd1 = fieldDefines.FieldsMap[k]
 			ecA = -2
 			if fd1 != nil {
-				ecA = TypeMatchScore(&vHolder, fd1.Type, fd1.MaxLen)
+				ecA = TypeMatchScore(&vHolder, types.FieldType(fd1.Type), fd1.GetMaxLen())
 			}
 
 			if ecA > 0 {
@@ -325,7 +328,7 @@ func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, 
 				}
 				ecB = -2
 				if fdIdx != nil {
-					ecB = TypeMatchScore(&vHolder, fdIdx.Type, fdIdx.MaxLen)
+					ecB = TypeMatchScore(&vHolder, types.FieldType(fdIdx.Type), fdIdx.GetMaxLen())
 				}
 
 				if ecB > 0 {
@@ -333,7 +336,7 @@ func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, 
 					deleteKeys = append(deleteKeys, k)
 					addKvList = append(addKvList, [2]any{fieldName, vHolder})
 				} else if fd1 != nil || fdIdx != nil {
-					var fd *dto.FieldDefine
+					var fd *types.FieldDefine
 					var errCode int
 					if fd1 != nil {
 						fd = fd1
@@ -351,7 +354,7 @@ func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, 
 				}
 			}
 		} else {
-			var fd *dto.FieldDefine
+			var fd *types.FieldDefine
 			fd = fieldDefines.FieldsMap[k]
 			if fd == nil {
 				fieldName := fieldDefines.FieldIndexMap[k]
@@ -360,7 +363,7 @@ func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, 
 				}
 			}
 
-			if fd != nil && fd.Type != enums.FieldTypeString {
+			if fd != nil && fd.Type != types.FieldTypeString {
 				rs.ErrorField = fd.Name
 				return -1
 			}
@@ -372,11 +375,12 @@ func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, 
 			}
 			findDataListRecursive(m, 0, v, fieldDefines, rs, newPath)
 
-			if fd != nil && fd.Type == enums.FieldTypeString && rs.maxMatch == sc {
+			if fd != nil && fd.Type == types.FieldTypeString && rs.maxMatch == sc {
 				deleteKeys = append(deleteKeys, k)
 				cvtStr, err := JsonUtil.ToJson(v)
 				if err == nil {
-					if fd.MaxLen <= 0 || len(cvtStr) <= fd.MaxLen {
+					maxLen := fd.GetMaxLen()
+					if maxLen <= 0 || len(cvtStr) <= maxLen {
 						countFieldMatch++
 						addKvList = append(addKvList, [2]any{fd.Name, cvtStr})
 					} else {
@@ -398,9 +402,9 @@ func procMap(fieldDefines *dto.FieldDefines, rs *SearchResult, dataPath string, 
 }
 
 // FindDataList is the main entry point for a single result search.
-func FindDataList(obj any, minMatchField int, fieldDefines *dto.FieldDefines) *SearchResult {
+func FindDataList(obj any, minMatchField int, fieldDefines *types.FieldDefines) *SearchResult {
 	if fieldDefines == nil {
-		fieldDefines = dto.NewFieldDefines(nil)
+		fieldDefines = types.NewFieldDefines(nil)
 	}
 	rs := NewSearchResult(minMatchField, false)
 	findDataListRecursive(nil, 0, obj, fieldDefines, rs, "")
@@ -408,9 +412,9 @@ func FindDataList(obj any, minMatchField int, fieldDefines *dto.FieldDefines) *S
 }
 
 // FindMultiDataList is the main entry point for finding all possible results.
-func FindMultiDataList(obj any, fieldDefines *dto.FieldDefines) *SearchResult {
+func FindMultiDataList(obj any, fieldDefines *types.FieldDefines) *SearchResult {
 	if fieldDefines == nil {
-		fieldDefines = dto.NewFieldDefines(nil)
+		fieldDefines = types.NewFieldDefines(nil)
 	}
 	rs := NewSearchResult(0, true)
 	findDataListRecursive(nil, 0, obj, fieldDefines, rs, "")

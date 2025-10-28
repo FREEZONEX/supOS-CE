@@ -41,7 +41,7 @@ func (l *ModelCreateLogic) ModelCreate(req *types.UnsCreateTopicDTO) (*types.Wit
 			return nil, err
 		}
 		if template != nil {
-			req.ModelID = template.ID
+			req.ModelId = template.Id
 			templateName = template.Name
 		}
 	}
@@ -60,6 +60,6 @@ func (l *ModelCreateLogic) ModelCreate(req *types.UnsCreateTopicDTO) (*types.Wit
 		l.Logger.Infof("目录[%s]已同步生成模板[%s]", ns.Name, templateName)
 	}
 
-	return &types.WithID{ID: ns.ID}, nil
+	return &types.WithID{Id: ns.Id}, nil
 }
 */

@@ -651,6 +651,7 @@
                       "id",
                       "alias",
                       "path",
+                      "path",
                       "field",
                       "uts"
                     ],
@@ -832,7 +833,7 @@
                               "type": "integer"
                             },
                             "createAt": {
-                              "type": "string"
+                              "type": "integer"
                             },
                             "dataType": {
                               "type": "integer"
@@ -896,7 +897,7 @@
                               "type": "integer"
                             },
                             "updateAt": {
-                              "type": "string"
+                              "type": "integer"
                             },
                             "value": {
                               "type": "integer"
@@ -908,7 +909,7 @@
                         "type": "integer"
                       },
                       "createAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "dataType": {
                         "type": "integer"
@@ -1030,7 +1031,7 @@
                         "type": "integer"
                       },
                       "updateAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "value": {
                         "type": "integer"
@@ -1888,12 +1889,39 @@
                   "items": {
                     "type": "object",
                     "required": [
+                      "-",
+                      "-",
+                      "-",
                       "name",
                       "pathType",
-                      "alias"
+                      "alias",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "accessLevel": {
+                        "description": "Access level",
                         "type": "string"
                       },
                       "addDashBoard": {
@@ -1905,6 +1933,9 @@
                       "alias": {
                         "type": "string"
                       },
+                      "createAt": {
+                        "type": "integer"
+                      },
                       "createTemplate": {
                         "type": "boolean"
                       },
@@ -1912,6 +1943,7 @@
                         "type": "string"
                       },
                       "dataType": {
+                        "description": "Data type and fields",
                         "type": "integer"
                       },
                       "description": {
@@ -1924,6 +1956,7 @@
                         "type": "string"
                       },
                       "extend": {
+                        "description": "Extended fields",
                         "type": "object",
                         "additionalProperties": {}
                       },
@@ -1982,6 +2015,7 @@
                         }
                       },
                       "frequency": {
+                        "description": "Frequency for merge type",
                         "type": "string"
                       },
                       "id": {
@@ -2004,6 +2038,7 @@
                         "type": "string"
                       },
                       "mountType": {
+                        "description": "Mount fields",
                         "type": "integer"
                       },
                       "name": {
@@ -2017,6 +2052,9 @@
                       },
                       "parentId": {
                         "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
                       },
                       "pathType": {
                         "type": "integer"
@@ -2077,7 +2115,14 @@
                         }
                       },
                       "refSource": {
+                        "description": "Pride specific fields",
                         "type": "string"
+                      },
+                      "refUns": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "integer"
+                        }
                       },
                       "referIds": {
                         "type": "array",
@@ -2091,13 +2136,19 @@
                       "referTable": {
                         "type": "string"
                       },
+                      "referUns": {
+                        "description": "Reference fields",
+                        "type": "string"
+                      },
                       "refers": {
+                        "description": "Calculation fields",
                         "type": "array",
                         "items": {
                           "type": "object",
                           "required": [
                             "id",
                             "alias",
+                            "path",
                             "path",
                             "field",
                             "uts"
@@ -2133,11 +2184,19 @@
                       "streamOptions": {
                         "type": "object"
                       },
+                      "subscribeEnable": {
+                        "type": "boolean"
+                      },
                       "updateAt": {
-                        "type": "string"
+                        "description": "Update metadata",
+                        "type": "integer"
                       },
                       "valueType": {
                         "type": "string"
+                      },
+                      "withFlags": {
+                        "description": "Flags and options",
+                        "type": "integer"
                       }
                     }
                   }
@@ -2398,7 +2457,7 @@
                               "type": "integer"
                             },
                             "createAt": {
-                              "type": "string"
+                              "type": "integer"
                             },
                             "dataType": {
                               "type": "integer"
@@ -2462,7 +2521,7 @@
                               "type": "integer"
                             },
                             "updateAt": {
-                              "type": "string"
+                              "type": "integer"
                             },
                             "value": {
                               "type": "integer"
@@ -2474,7 +2533,7 @@
                         "type": "integer"
                       },
                       "createAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "dataType": {
                         "type": "integer"
@@ -2596,7 +2655,7 @@
                         "type": "integer"
                       },
                       "updateAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "value": {
                         "type": "integer"
@@ -3070,6 +3129,7 @@
                       "id",
                       "alias",
                       "path",
+                      "path",
                       "field",
                       "uts"
                     ],
@@ -3539,12 +3599,39 @@
                   "items": {
                     "type": "object",
                     "required": [
+                      "-",
+                      "-",
+                      "-",
                       "name",
                       "pathType",
-                      "alias"
+                      "alias",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "accessLevel": {
+                        "description": "Access level",
                         "type": "string"
                       },
                       "addDashBoard": {
@@ -3556,6 +3643,9 @@
                       "alias": {
                         "type": "string"
                       },
+                      "createAt": {
+                        "type": "integer"
+                      },
                       "createTemplate": {
                         "type": "boolean"
                       },
@@ -3563,6 +3653,7 @@
                         "type": "string"
                       },
                       "dataType": {
+                        "description": "Data type and fields",
                         "type": "integer"
                       },
                       "description": {
@@ -3575,6 +3666,7 @@
                         "type": "string"
                       },
                       "extend": {
+                        "description": "Extended fields",
                         "type": "object",
                         "additionalProperties": {}
                       },
@@ -3633,6 +3725,7 @@
                         }
                       },
                       "frequency": {
+                        "description": "Frequency for merge type",
                         "type": "string"
                       },
                       "id": {
@@ -3655,6 +3748,7 @@
                         "type": "string"
                       },
                       "mountType": {
+                        "description": "Mount fields",
                         "type": "integer"
                       },
                       "name": {
@@ -3668,6 +3762,9 @@
                       },
                       "parentId": {
                         "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
                       },
                       "pathType": {
                         "type": "integer"
@@ -3728,7 +3825,14 @@
                         }
                       },
                       "refSource": {
+                        "description": "Pride specific fields",
                         "type": "string"
+                      },
+                      "refUns": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "integer"
+                        }
                       },
                       "referIds": {
                         "type": "array",
@@ -3742,13 +3846,19 @@
                       "referTable": {
                         "type": "string"
                       },
+                      "referUns": {
+                        "description": "Reference fields",
+                        "type": "string"
+                      },
                       "refers": {
+                        "description": "Calculation fields",
                         "type": "array",
                         "items": {
                           "type": "object",
                           "required": [
                             "id",
                             "alias",
+                            "path",
                             "path",
                             "field",
                             "uts"
@@ -3784,11 +3894,19 @@
                       "streamOptions": {
                         "type": "object"
                       },
+                      "subscribeEnable": {
+                        "type": "boolean"
+                      },
                       "updateAt": {
-                        "type": "string"
+                        "description": "Update metadata",
+                        "type": "integer"
                       },
                       "valueType": {
                         "type": "string"
+                      },
+                      "withFlags": {
+                        "description": "Flags and options",
+                        "type": "integer"
                       }
                     }
                   }
@@ -3955,6 +4073,7 @@
                     "parentAlias",
                     "path",
                     "dataType",
+                    "parentDataType",
                     "dataPath",
                     "pathType",
                     "fields",
@@ -3967,6 +4086,7 @@
                     "withDashboard",
                     "withSave2db",
                     "save2db",
+                    "subscribeEnable",
                     "expression",
                     "showExpression",
                     "refers",
@@ -4079,19 +4199,19 @@
                         ],
                         "properties": {
                           "createAt": {
-                            "type": "string"
+                            "type": "integer"
                           },
                           "createTime": {
                             "type": "integer"
                           },
                           "id": {
-                            "type": "string"
+                            "type": "integer"
                           },
                           "labelName": {
                             "type": "string"
                           },
                           "subscribeAt": {
-                            "type": "string"
+                            "type": "integer"
                           },
                           "subscribeEnable": {
                             "type": "boolean"
@@ -4139,6 +4259,9 @@
                     "parentAlias": {
                       "type": "string"
                     },
+                    "parentDataType": {
+                      "type": "integer"
+                    },
                     "path": {
                       "type": "string"
                     },
@@ -4163,6 +4286,7 @@
                           "id",
                           "alias",
                           "path",
+                          "path",
                           "field",
                           "uts"
                         ],
@@ -4174,7 +4298,7 @@
                             "type": "string"
                           },
                           "id": {
-                            "type": "string"
+                            "type": "integer"
                           },
                           "path": {
                             "type": "string"
@@ -4190,6 +4314,9 @@
                     },
                     "showExpression": {
                       "type": "string"
+                    },
+                    "subscribeEnable": {
+                      "type": "boolean"
                     },
                     "templateAlias": {
                       "type": "string"
@@ -4701,6 +4828,8 @@
                   "required": [
                     "id",
                     "topic",
+                    "subscribeEnable",
+                    "subscribeFrequency",
                     "alias",
                     "parentAlias",
                     "path",
@@ -4826,6 +4955,12 @@
                     "pathName": {
                       "type": "string"
                     },
+                    "subscribeEnable": {
+                      "type": "boolean"
+                    },
+                    "subscribeFrequency": {
+                      "type": "string"
+                    },
                     "templateAlias": {
                       "type": "string"
                     },
@@ -4865,12 +5000,39 @@
             "schema": {
               "type": "object",
               "required": [
+                "-",
+                "-",
+                "-",
                 "name",
                 "pathType",
-                "alias"
+                "alias",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-"
               ],
               "properties": {
+                "-": {
+                  "type": "integer"
+                },
                 "accessLevel": {
+                  "description": "Access level",
                   "type": "string"
                 },
                 "addDashBoard": {
@@ -4882,6 +5044,9 @@
                 "alias": {
                   "type": "string"
                 },
+                "createAt": {
+                  "type": "integer"
+                },
                 "createTemplate": {
                   "type": "boolean"
                 },
@@ -4889,6 +5054,7 @@
                   "type": "string"
                 },
                 "dataType": {
+                  "description": "Data type and fields",
                   "type": "integer"
                 },
                 "description": {
@@ -4901,6 +5067,7 @@
                   "type": "string"
                 },
                 "extend": {
+                  "description": "Extended fields",
                   "type": "object",
                   "additionalProperties": {}
                 },
@@ -4959,6 +5126,7 @@
                   }
                 },
                 "frequency": {
+                  "description": "Frequency for merge type",
                   "type": "string"
                 },
                 "id": {
@@ -4981,6 +5149,7 @@
                   "type": "string"
                 },
                 "mountType": {
+                  "description": "Mount fields",
                   "type": "integer"
                 },
                 "name": {
@@ -4994,6 +5163,9 @@
                 },
                 "parentId": {
                   "type": "integer"
+                },
+                "path": {
+                  "type": "string"
                 },
                 "pathType": {
                   "type": "integer"
@@ -5054,7 +5226,14 @@
                   }
                 },
                 "refSource": {
+                  "description": "Pride specific fields",
                   "type": "string"
+                },
+                "refUns": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  }
                 },
                 "referIds": {
                   "type": "array",
@@ -5068,13 +5247,19 @@
                 "referTable": {
                   "type": "string"
                 },
+                "referUns": {
+                  "description": "Reference fields",
+                  "type": "string"
+                },
                 "refers": {
+                  "description": "Calculation fields",
                   "type": "array",
                   "items": {
                     "type": "object",
                     "required": [
                       "id",
                       "alias",
+                      "path",
                       "path",
                       "field",
                       "uts"
@@ -5110,11 +5295,19 @@
                 "streamOptions": {
                   "type": "object"
                 },
+                "subscribeEnable": {
+                  "type": "boolean"
+                },
                 "updateAt": {
-                  "type": "string"
+                  "description": "Update metadata",
+                  "type": "integer"
                 },
                 "valueType": {
                   "type": "string"
+                },
+                "withFlags": {
+                  "description": "Flags and options",
+                  "type": "integer"
                 }
               }
             }
@@ -5978,7 +6171,7 @@
                               "type": "integer"
                             },
                             "createAt": {
-                              "type": "string"
+                              "type": "integer"
                             },
                             "dataType": {
                               "type": "integer"
@@ -6042,7 +6235,7 @@
                               "type": "integer"
                             },
                             "updateAt": {
-                              "type": "string"
+                              "type": "integer"
                             },
                             "value": {
                               "type": "integer"
@@ -6054,7 +6247,7 @@
                         "type": "integer"
                       },
                       "createAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "dataType": {
                         "type": "integer"
@@ -6176,7 +6369,7 @@
                         "type": "integer"
                       },
                       "updateAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "value": {
                         "type": "integer"
@@ -7111,7 +7304,7 @@
       }
     }
   },
-  "x-date": "2025-10-27 21:35:39",
+  "x-date": "2025-10-28 16:18:44",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

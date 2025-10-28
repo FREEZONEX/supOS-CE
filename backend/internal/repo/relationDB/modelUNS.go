@@ -2,7 +2,7 @@ package relationDB
 
 import (
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
+	"backend/internal/types"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -22,7 +22,7 @@ const TableNameUnsNamespace = "uns_namespace"
 
 // UnsNamespace mapped from table <uns_namespace>
 type UnsNamespace struct {
-	ID               int64            `gorm:"column:id;primaryKey" json:"id"`
+	Id               int64            `gorm:"column:id;primaryKey" json:"id"`
 	LayRec           string           `gorm:"column:lay_rec;not null" json:"lay_rec"`
 	Alias            string           `gorm:"column:alias;not null" json:"alias"`
 	ParentAlias      *string          `gorm:"column:parent_alias" json:"parent_alias"`
@@ -39,14 +39,14 @@ type UnsNamespace struct {
 	Protocol         string           `gorm:"column:protocol" json:"protocol"`
 	DataPath         string           `gorm:"column:data_path" json:"data_path"`
 	WithFlags        *int32           `gorm:"column:with_flags" json:"with_flags"`
-	DataSrcID        int16            `gorm:"column:data_src_id" json:"data_src_id"`
+	DataSrcId        int16            `gorm:"column:data_src_id" json:"data_src_id"`
 	RefUns           RefUns           `gorm:"column:ref_uns;default:{};type:jsonb;" json:"ref_uns"`
 	Refers           Refers           `gorm:"column:refers;type:json;" json:"refers"`
 	Expression       string           `gorm:"column:expression" json:"expression"`
 	TableName_       string           `gorm:"column:table_name" json:"table_name"`
 	NumberFields     int16            `gorm:"column:number_fields" json:"number_fields"`
-	ParentID         *int64           `gorm:"column:parent_id" json:"parent_id"`
-	ModelID          *int64           `gorm:"column:model_id" json:"model_id"`
+	ParentId         *int64           `gorm:"column:parent_id" json:"parent_id"`
+	ModelId          *int64           `gorm:"column:model_id" json:"model_id"`
 	ProtocolType     string           `gorm:"column:protocol_type" json:"protocol_type"`
 	Extend           map[string]any   `gorm:"column:extend;type:jsonb;serializer:json;" json:"extend"`
 	DisplayName      *string          `gorm:"column:display_name" json:"display_name"`
@@ -63,11 +63,11 @@ type UnsNamespace struct {
 }
 
 func (t *UnsNamespace) GetId() int64 {
-	return t.ID
+	return t.Id
 }
 
 func (t *UnsNamespace) GetParentId() *int64 {
-	return t.ParentID
+	return t.ParentId
 }
 
 func (t *UnsNamespace) GetAlias() string {
@@ -122,7 +122,7 @@ type UnsPo struct {
 	CountDirectChildren int    `gorm:"->;<-:false;column:count_direct_children" json:"countDirectChildren"`
 	Labels              string `gorm:"->;<-:false;column:labels" json:"labels"`
 }
-type Fields []*dto.FieldDefine
+type Fields []*types.FieldDefine
 
 func (f *Fields) Scan(value interface{}) error {
 	if value == nil {
@@ -164,7 +164,7 @@ func (f RefUns) Value() (driver.Value, error) {
 	return json.Marshal(f)
 }
 
-type Refers []*dto.InstanceField
+type Refers []*types.InstanceField
 
 func (f *Refers) Scan(value interface{}) error {
 	if value == nil {
@@ -211,10 +211,10 @@ func (*UnsNamespace) TableName() string {
 	return TableNameUnsNamespace
 }
 func (u *UnsNamespace) GetID() int64 {
-	return u.ID
+	return u.Id
 }
 func (u *UnsNamespace) GetParentID() *int64 {
-	return u.ParentID
+	return u.ParentId
 }
 
 const TableNameUnsLabel = "uns_label"

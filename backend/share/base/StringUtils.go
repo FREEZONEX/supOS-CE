@@ -49,3 +49,9 @@ func Join[T fmt.Stringer](elems []T, sep string) string {
 	}
 	return b.String()
 }
+func StrByPoint(str *string) string {
+	if str != nil {
+		return *str
+	}
+	return ""
+}

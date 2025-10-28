@@ -2,6 +2,7 @@ package ctxs
 
 import (
 	"context"
+
 	ztrace "github.com/zeromicro/go-zero/core/trace"
 	otletrace "go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"

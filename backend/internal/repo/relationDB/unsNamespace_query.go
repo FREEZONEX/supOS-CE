@@ -139,7 +139,7 @@ func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAnd
 	}
 	if len(results) > 0 {
 		for _, po := range results {
-			po.CountExistsSiblings = po.ID
+			po.CountExistsSiblings = po.Id
 		}
 	}
 	return

@@ -108,7 +108,7 @@ func (p UnsNamespaceRepo) CountByFilter(db *gorm.DB, f UnsNamespaceFilter) (size
 }
 
 func (p UnsNamespaceRepo) Update(db *gorm.DB, data *UnsNamespace) error {
-	err := p.model(db).Where("id = ?", data.ID).Save(data).Error
+	err := p.model(db).Where("id = ?", data.Id).Save(data).Error
 	return stores.ErrFmt(err)
 }
 
@@ -126,7 +126,7 @@ func (p UnsNamespaceRepo) SelectById(db *gorm.DB, id int64) (*UnsNamespace, erro
 	err := p.model(db).Where("id = ?", id).First(&result).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
-	} else if result.ID == 0 {
+	} else if result.Id == 0 {
 		return nil, nil
 	}
 	return &result, nil

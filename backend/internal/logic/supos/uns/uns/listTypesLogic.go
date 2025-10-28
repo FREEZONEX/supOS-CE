@@ -4,7 +4,6 @@
 package uns
 
 import (
-	"backend/internal/common/enums"
 	"backend/share/base"
 	"context"
 
@@ -32,7 +31,7 @@ func NewListTypesLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ListTyp
 func (l *ListTypesLogic) ListTypes() (resp *types.ListTypesResult, err error) {
 	return &types.ListTypesResult{
 		BaseResult: types.BaseResult{Code: 200, Msg: "ok"},
-		Data: base.Map[enums.FieldType, string](enums.FieldTypes(), func(e enums.FieldType) string {
+		Data: base.Map[types.FieldType, string](types.FieldTypes(), func(e types.FieldType) string {
 			return e.Name()
 		}),
 	}, nil

@@ -3,6 +3,7 @@ package dto
 import (
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
+	"backend/internal/types"
 	"strings"
 )
 
@@ -26,27 +27,27 @@ type UpdateUnsDto struct {
 	ParentID    int64  `json:"parentId,omitzero"`
 
 	// Data type and fields
-	DataType  int            `json:"dataType,omitzero" validate:"omitzero,min=1,max=7"`
-	DataSrcID any            `json:"-"`
-	Fields    []*FieldDefine `json:"fields,omitzero"`
+	DataType  int                  `json:"dataType,omitzero" validate:"omitzero,min=1,max=7"`
+	DataSrcID any                  `json:"-"`
+	Fields    []*types.FieldDefine `json:"fields,omitzero"`
 
 	// Table fields
 	TableName string `json:"-"`
 	DataPath  string `json:"-"`
 
 	// Reference fields
-	ReferUns     string         `json:"referUns,omitzero"`
-	ReferIDs     []int64        `json:"referIds,omitzero"`
-	ReferTable   string         `json:"referTable,omitzero"`
-	RefFields    []*FieldDefine `json:"refFields,omitzero"`
-	ReferModelID string         `json:"referModelId,omitzero"`
-	Cited        map[int64]bool `json:"-"`
+	ReferUns     string               `json:"referUns,omitzero"`
+	ReferIDs     []int64              `json:"referIds,omitzero"`
+	ReferTable   string               `json:"referTable,omitzero"`
+	RefFields    []*types.FieldDefine `json:"refFields,omitzero"`
+	ReferModelID string               `json:"referModelId,omitzero"`
+	Cited        map[int64]bool       `json:"-"`
 
 	// Calculation fields
-	Refers            []*InstanceField `json:"refers,omitzero"`
-	Expression        string           `json:"expression,omitzero" validate:"max=255"`
-	CompileExpression any              `json:"-"`
-	StreamOptions     *StreamOptions   `json:"streamOptions,omitzero"`
+	Refers            []*types.InstanceField `json:"refers,omitzero"`
+	Expression        string                 `json:"expression,omitzero" validate:"max=255"`
+	CompileExpression any                    `json:"-"`
+	StreamOptions     *StreamOptions         `json:"streamOptions,omitzero"`
 
 	// Protocol fields
 	Protocol     map[string]any `json:"-"`
@@ -134,7 +135,7 @@ func (u *UpdateUnsDto) SetDataPath(dataPath string) *UpdateUnsDto {
 }
 
 // SetCalculation sets calculation parameters for UpdateUnsDto
-func (u *UpdateUnsDto) SetCalculation(refers []*InstanceField, expression string) *UpdateUnsDto {
+func (u *UpdateUnsDto) SetCalculation(refers []*types.InstanceField, expression string) *UpdateUnsDto {
 	u.Refers = refers
 	u.Expression = expression
 	return u
@@ -154,7 +155,7 @@ func (u *UpdateUnsDto) CountNumberFields() int {
 	}
 	count := 0
 	for _, f := range u.Fields {
-		if f.Type.IsNumber() && !f.IsSystemField() {
+		if types.FieldType(f.Type).IsNumber() && !f.IsSystemField() {
 			count++
 		}
 	}
@@ -168,7 +169,7 @@ func (u *UpdateUnsDto) FilterBlobField() []string {
 	}
 	result := make([]string, 0)
 	for _, f := range u.Fields {
-		if f.Type == enums.FieldTypeBlob || f.Type == enums.FieldTypeLBlob {
+		if f.Type == types.FieldTypeBlob || f.Type == types.FieldTypeLBlob {
 			result = append(result, f.Name)
 		}
 	}
@@ -177,29 +178,29 @@ func (u *UpdateUnsDto) FilterBlobField() []string {
 
 // SimpleUnsInfo interface for basic UNS information
 type SimpleUnsInfo interface {
-	GetID() *int64
+	GetId() int64
 	GetAlias() string
 	GetName() string
 	GetTableName() string
 	GetPath() string
-	GetDataType() int
-	GetFields() []*FieldDefine
+	GetDataType() *int16
+	GetFields() []*types.FieldDefine
 }
 
 // SimpleUnsInstance represents a simple UNS instance
 type SimpleUnsInstance struct {
-	ID                            int64          `json:"id,omitzero"`
-	Name                          string         `json:"name,omitzero"`
-	Path                          string         `json:"path,omitzero"`
-	Alias                         string         `json:"alias,omitzero"`
-	TableName                     string         `json:"tableName,omitzero"`
-	DataType                      int            `json:"dataType,omitzero"`
-	ParentID                      int64          `json:"parentId,omitzero"`
-	Fields                        []*FieldDefine `json:"fields,omitzero"`
-	RemoveDashboard               bool           `json:"removeDashboard"`
-	RemoveTableWhenDeleteInstance bool           `json:"removeTableWhenDeleteInstance"`
-	LabelIDs                      map[int64]bool `json:"labelIds,omitzero"`
-	Flags                         int            `json:"flags,omitzero"`
+	ID                            int64                `json:"id,omitzero"`
+	Name                          string               `json:"name,omitzero"`
+	Path                          string               `json:"path,omitzero"`
+	Alias                         string               `json:"alias,omitzero"`
+	TableName                     string               `json:"tableName,omitzero"`
+	DataType                      int16                `json:"dataType,omitzero"`
+	ParentID                      int64                `json:"parentId,omitzero"`
+	Fields                        []*types.FieldDefine `json:"fields,omitzero"`
+	RemoveDashboard               bool                 `json:"removeDashboard"`
+	RemoveTableWhenDeleteInstance bool                 `json:"removeTableWhenDeleteInstance"`
+	LabelIDs                      map[int64]bool       `json:"labelIds,omitzero"`
+	Flags                         int                  `json:"flags,omitzero"`
 }
 
 // GetTopic returns the topic based on configuration
@@ -227,12 +228,12 @@ func (s *SimpleUnsInstance) GetTableName() string {
 }
 
 // Implement SimpleUnsInfo interface
-func (s *SimpleUnsInstance) GetID() int64              { return s.ID }
-func (s *SimpleUnsInstance) GetAlias() string          { return s.Alias }
-func (s *SimpleUnsInstance) GetName() string           { return s.Name }
-func (s *SimpleUnsInstance) GetPath() string           { return s.Path }
-func (s *SimpleUnsInstance) GetDataType() int          { return s.DataType }
-func (s *SimpleUnsInstance) GetFields() []*FieldDefine { return s.Fields }
+func (s *SimpleUnsInstance) GetId() int64                    { return s.ID }
+func (s *SimpleUnsInstance) GetAlias() string                { return s.Alias }
+func (s *SimpleUnsInstance) GetName() string                 { return s.Name }
+func (s *SimpleUnsInstance) GetPath() string                 { return s.Path }
+func (s *SimpleUnsInstance) GetDataType() *int16             { return &s.DataType }
+func (s *SimpleUnsInstance) GetFields() []*types.FieldDefine { return s.Fields }
 
 // UnsSearchCondition represents UNS search conditions
 
@@ -249,12 +250,12 @@ type UnsTreeCondition struct {
 
 // SaveDataDto represents data saving DTO
 type SaveDataDto struct {
-	ID             int64            `json:"id,omitzero"`
-	Table          string           `json:"table,omitzero"`
-	FieldDefines   *FieldDefines    `json:"-"`
-	CreateTopicDto *CreateTopicDto  `json:"-"`
-	List           []map[string]any `json:"list" validate:"required"`
-	Tables         map[string]bool  `json:"-"`
+	ID             int64                 `json:"id,omitzero"`
+	Table          string                `json:"table,omitzero"`
+	FieldDefines   *types.FieldDefines   `json:"-"`
+	CreateTopicDto *types.CreateTopicDto `json:"-"`
+	List           []map[string]any      `json:"list" validate:"required"`
+	Tables         map[string]bool       `json:"-"`
 }
 
 // Clone creates a deep copy of SaveDataDto
@@ -294,8 +295,8 @@ type UpdateFileDTO struct {
 }
 
 type UnsResultDto struct {
-	AllDefinitions []CreateTopicDto `json:"allDefinitions"`
-	MatchResults   []CreateTopicDto `json:"matchResults"`
+	AllDefinitions []types.CreateTopicDto `json:"allDefinitions"`
+	MatchResults   []types.CreateTopicDto `json:"matchResults"`
 }
 
 type UnsCountDTO struct {

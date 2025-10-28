@@ -19,7 +19,7 @@ func TestSnowId(t *testing.T) {
 	// 生成多个ID
 	for i := 0; i < 5; i++ {
 		id := node.Generate()
-		fmt.Printf("ID: %d\n", id)
+		fmt.Printf("Id: %d\n", id)
 		fmt.Printf("  时间戳: %d\n", id.Time())
 		fmt.Printf("  节点ID: %d\n", id.Node())
 		fmt.Printf("  序列号: %d\n", id.Step())

@@ -1,7 +1,7 @@
 package event
 
 import (
-	"backend/internal/common/dto"
+	"backend/internal/types"
 	"context"
 	"time"
 )
@@ -9,7 +9,7 @@ import (
 // TopicMessageEvent defines an event carrying a message from a topic.
 type TopicMessageEvent struct {
 	ApplicationEvent
-	Def          *dto.CreateTopicDto
+	Def          *types.CreateTopicDto
 	UnsID        int64
 	DataType     int
 	Topic        string
@@ -18,13 +18,13 @@ type TopicMessageEvent struct {
 	Data         map[string]any
 	LastData     map[string]any
 	LastDataTime map[string]int64
-	FieldsMap    map[string]*dto.FieldDefine
+	FieldsMap    map[string]*types.FieldDefine
 	NowInMills   int64
 	Err          string
 }
 
 // NewTopicMessageEventSimple creates a new TopicMessageEvent with basic info.
-func NewTopicMessageEventSimple(ctx context.Context, def *dto.CreateTopicDto, unsID int64, dataType int, topic, payload string) *TopicMessageEvent {
+func NewTopicMessageEventSimple(ctx context.Context, def *types.CreateTopicDto, unsID int64, dataType int, topic, payload string) *TopicMessageEvent {
 	return &TopicMessageEvent{
 		ApplicationEvent: ApplicationEvent{Context: ctx},
 		Def:              def,

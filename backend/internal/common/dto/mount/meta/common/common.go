@@ -1,6 +1,6 @@
 package common
 
-import "backend/internal/common/dto"
+import "backend/internal/types"
 
 type CommonMountSourceDto struct {
 	Alias      string `json:"alias"`
@@ -17,11 +17,11 @@ type CommonFolderMetaDto struct {
 }
 
 type CommonFileMetaDto struct {
-	Alias         string            `json:"alias"`
-	Name          string            `json:"name"`
-	DisplayName   string            `json:"displayName"`
-	Description   string            `json:"description"`
-	SaveToDB      *bool             `json:"save2db"`
-	OriginalAlias string            `json:"originalAlias"`
-	Fields        []dto.FieldDefine `json:"fields"`
+	Alias         string              `json:"alias"`
+	Name          string              `json:"name"`
+	DisplayName   string              `json:"displayName"`
+	Description   string              `json:"description"`
+	SaveToDB      *bool               `json:"save2db"`
+	OriginalAlias string              `json:"originalAlias"`
+	Fields        []types.FieldDefine `json:"fields"`
 }

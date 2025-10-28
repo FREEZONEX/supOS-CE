@@ -4,7 +4,6 @@ import (
 	"backend/internal/common"
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
 	"backend/internal/common/event"
 	"backend/internal/logic/supos/uns/label/service"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
@@ -42,7 +41,7 @@ func init() {
 func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args bo.CreateModelInstancesArgs) (errTipMap map[string]string) {
 	topicDtos := args.Topics
 	errTipMap = make(map[string]string, len(topicDtos))
-	paramFiles := make(map[string]*dto.CreateTopicDto)
+	paramFiles := make(map[string]*types.CreateTopicDto)
 	paramFolders := initParamsUns(topicDtos, errTipMap, paramFiles)
 	if len(paramFolders) == 0 && len(paramFiles) == 0 {
 		u.log.Info("不存在任何文件夹或文件, 无法继续保存")
@@ -72,9 +71,9 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	aliasMap := make(map[string]*dao.UnsNamespace)
 	folders := base.MapValues(paramFolders)
 	if len(folders) > 1 {
-		reverseGraph := base.BuildReverseGraph(folders, func(t *dto.CreateTopicDto) string {
+		reverseGraph := base.BuildReverseGraph(folders, func(t *types.CreateTopicDto) string {
 			return t.Alias
-		}, func(t *dto.CreateTopicDto) string {
+		}, func(t *types.CreateTopicDto) string {
 			parentAlias := ""
 			if pa := t.ParentAlias; pa != nil {
 				parentAlias = *pa
@@ -101,7 +100,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	for _, folder := range folders {
 		po := u.trySetId(createTime, folder, allUns, dbFiles, errTipMap)
 		if po != nil {
-			addFiles[po.ID] = po
+			addFiles[po.Id] = po
 			aliasMap[po.Alias] = po
 		}
 	}
@@ -110,19 +109,19 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	for _, unsFile := range paramFiles {
 		po := u.trySetId(createTime, unsFile, allUns, dbFiles, errTipMap)
 		if po != nil {
-			addFiles[po.ID] = po
+			addFiles[po.Id] = po
 			aliasMap[po.Alias] = po
 			if unsFile.LabelNames != nil {
-				_, exists := dbFiles[po.ID]
-				unsPoLabels[po.ID] = bo.NewUnsPoLabels(po, exists, unsFile.LabelNames)
+				_, exists := dbFiles[po.Id]
+				unsPoLabels[po.Id] = bo.NewUnsPoLabels(po, exists, unsFile.LabelNames)
 			}
 		}
 	}
 	//TODO 计算，引用，聚合等类型的 校验和处理
 	aliasToId(addFiles, allUns)
 	rs := setLayRecAndPath(createTime, addFiles, dbFiles)
-	createList := make([]*dto.CreateTopicDto, 0, len(addFiles))
-	dtoUpdateList := make([]*dto.CreateTopicDto, 0, len(addFiles))
+	createList := make([]*types.CreateTopicDto, 0, len(addFiles))
+	dtoUpdateList := make([]*types.CreateTopicDto, 0, len(addFiles))
 
 	u.log.Infof("addFiles:%d,db:%d, createList.size=%d, updateList.size=%d\n", len(addFiles), len(dbFiles), len(rs.insertList), len(rs.updateList))
 	for _, file := range addFiles {
@@ -130,19 +129,19 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		createTopicDto := UnsConverter.Po2Dto(file)
 
 		var dbF *dao.UnsNamespace
-		if temp, exists := dbFiles[file.ID]; exists {
+		if temp, exists := dbFiles[file.Id]; exists {
 			dbF = temp
 		} else {
 			dbF = existsUns[file.Alias]
 		}
 
-		if labels, exists := unsPoLabels[file.ID]; exists {
+		if labels, exists := unsPoLabels[file.Id]; exists {
 			labels.SetDto(createTopicDto)
 		}
 		if dbF != nil && dbF.Status == OK {
 			switch file.PathType {
 			case constants.PathTypeFile:
-				createTopicDto.FieldsChanged = !base.EqualsF(file.Fields, dbF.Fields, func(a, b *dto.FieldDefine) bool {
+				createTopicDto.FieldsChanged = !base.EqualsF(file.Fields, dbF.Fields, func(a, b *types.FieldDefine) bool {
 					return a.Name == b.Name && a.Type == b.Type
 				})
 			case constants.PathTypeDir:
@@ -185,14 +184,14 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			}
 			file.CreateAt = createTime
 			file.UpdateAt = createTime
-			createTopicDto.CreateAt = createTime
-			createTopicDto.UpdateAt = createTime
+			createTopicDto.CreateAt = createTime.UnixMilli()
+			createTopicDto.UpdateAt = createTopicDto.CreateAt
 			createList = append(createList, createTopicDto)
 		}
 	}
 
 	for _, po := range rs.updateList {
-		id := po.ID
+		id := po.Id
 		po.Status = 1
 		if _, exists := addFiles[id]; !exists {
 			dtoUpdateList = append(dtoUpdateList, UnsConverter.Po2Dto(po))
@@ -201,7 +200,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 
 	/*	if refUpdates != nil && len(refUpdates) > 0 {
 		for _, refPo := range refUpdates {
-			id := refPo.ID
+			id := refPo.Id
 			if po, exists := dbFiles[id]; exists {
 				po.Status = 1
 				rs.UpdateList = append(rs.UpdateList, po)
@@ -227,12 +226,12 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 	args *bo.CreateModelInstancesArgs,
 	insertList []*dao.UnsNamespace,
 	updateList []*dao.UnsNamespace,
-	notifyCreateList []*dto.CreateTopicDto,
-	notifyUpdateList []*dto.CreateTopicDto,
+	notifyCreateList []*types.CreateTopicDto,
+	notifyUpdateList []*types.CreateTopicDto,
 	unsLabels []bo.UnsLabels) error {
 
-	dataSrcFiles := base.GroupBy(notifyCreateList, func(e *dto.CreateTopicDto) common.SrcJdbcType {
-		return e.DataSrcID
+	dataSrcFiles := base.GroupBy(notifyCreateList, func(e *types.CreateTopicDto) types.SrcJdbcType {
+		return types.SrcJdbcType(e.DataSrcID)
 	})
 	tx := dao.GetDb(ctx).Begin()
 	ctx = dao.SetDb(ctx, tx)
@@ -272,12 +271,12 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 	}
 	return err
 }
-func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *dto.CreateTopicDto) *types.StringResult {
+func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types.CreateTopicDto) *types.StringResult {
 	result := &types.StringResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
 	db := dao.GetDb(ctx)
 	// 处理父文件夹ID
-	if topicDto.ParentID != nil && *topicDto.ParentID != 0 && topicDto.ParentAlias == nil {
-		folder, err := u.unsMapper.SelectById(db, *topicDto.ParentID)
+	if topicDto.ParentId != nil && *topicDto.ParentId != 0 && topicDto.ParentAlias == nil {
+		folder, err := u.unsMapper.SelectById(db, *topicDto.ParentId)
 		if err != nil || folder == nil {
 			result.Code = 400
 			result.Msg = I18nUtils.GetMessage("uns.folder.not.found")
@@ -309,7 +308,7 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *dto.C
 	topicDto.Index = 0
 
 	args := bo.CreateModelInstancesArgs{
-		Topics:              []*dto.CreateTopicDto{topicDto},
+		Topics:              []*types.CreateTopicDto{topicDto},
 		FromImport:          false,
 		ThrowModelExistsErr: true,
 	}
@@ -329,14 +328,14 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *dto.C
 		result.Code = 400
 		result.Msg = strings.Join(errorMessages, ", ")
 	} else {
-		if topicDto.ID > 0 {
-			result.Data = strconv.FormatInt(topicDto.ID, 10)
+		if topicDto.Id > 0 {
+			result.Data = strconv.FormatInt(topicDto.Id, 10)
 		}
 	}
 
 	return result
 }
-func (u *UnsAddService) CreateModelAndInstance(ctx context.Context, topicDtos []*dto.CreateTopicDto, fromImport bool) map[string]string {
+func (u *UnsAddService) CreateModelAndInstance(ctx context.Context, topicDtos []*types.CreateTopicDto, fromImport bool) map[string]string {
 	taskID := fmt.Sprintf("%p_%d", &topicDtos, len(topicDtos)) // 使用指针地址作为任务ID
 
 	args := bo.CreateModelInstancesArgs{

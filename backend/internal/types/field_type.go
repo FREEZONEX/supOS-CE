@@ -1,4 +1,4 @@
-package enums
+package types
 
 import (
 	"encoding/json"
@@ -8,50 +8,46 @@ import (
 )
 
 // FieldType represents the data type of a field.
-type FieldType int
+type FieldType string
 
 const (
-	FieldTypeInteger FieldType = iota + 1
-	FieldTypeLong
-	FieldTypeFloat
-	FieldTypeDouble
-	FieldTypeBoolean
-	FieldTypeDatetime
-	FieldTypeString
-	FieldTypeBlob
-	FieldTypeLBlob
+	FieldTypeInteger  = "INTEGER"
+	FieldTypeLong     = "LONG"
+	FieldTypeFloat    = "FLOAT"
+	FieldTypeDouble   = "DOUBLE"
+	FieldTypeBoolean  = "BOOLEAN"
+	FieldTypeDatetime = "DATETIME"
+	FieldTypeString   = "STRING"
+	FieldTypeBlob     = "BLOB"
+	FieldTypeLBlob    = "LBLOB"
 )
 
 // fieldTypeInfo holds the metadata for each FieldType constant.
 type fieldTypeInfo struct {
-	name         string
 	isNumber     bool
 	defaultValue any
 }
 
 // fieldTypeDetails maps each FieldType constant to its metadata.
 var fieldTypeDetails = map[FieldType]fieldTypeInfo{
-	FieldTypeInteger:  {"INTEGER", true, 0},
-	FieldTypeLong:     {"LONG", true, int64(0)},
-	FieldTypeFloat:    {"FLOAT", true, float32(0.0)},
-	FieldTypeDouble:   {"DOUBLE", true, float64(0.0)},
-	FieldTypeBoolean:  {"BOOLEAN", false, false},
-	FieldTypeDatetime: {"DATETIME", false, nil},
-	FieldTypeString:   {"STRING", false, nil},
-	FieldTypeBlob:     {"BLOB", false, nil},
-	FieldTypeLBlob:    {"LBLOB", false, nil},
+	FieldTypeInteger:  {true, 0},
+	FieldTypeLong:     {true, int64(0)},
+	FieldTypeFloat:    {true, float32(0.0)},
+	FieldTypeDouble:   {true, float64(0.0)},
+	FieldTypeBoolean:  {false, false},
+	FieldTypeDatetime: {false, nil},
+	FieldTypeString:   {false, nil},
+	FieldTypeBlob:     {false, nil},
+	FieldTypeLBlob:    {false, nil},
 }
 
-// nameMap provides a fast, case-insensitive lookup from a string name to a FieldType.
-var nameMap = make(map[string]FieldType)
 var fieldTypes []FieldType
 
 // init populates the nameMap for fast lookups.
 func init() {
 	fieldTypes = make([]FieldType, 0, len(fieldTypeDetails))
-	for ft, info := range fieldTypeDetails {
+	for ft := range fieldTypeDetails {
 		fieldTypes = append(fieldTypes, ft)
-		nameMap[strings.ToUpper(info.name)] = ft
 	}
 	sort.Slice(fieldTypes, func(i, j int) bool {
 		return fieldTypes[i] < fieldTypes[j]
@@ -60,12 +56,16 @@ func init() {
 
 // Name returns the canonical string name of the field type.
 func (f FieldType) Name() string {
-	return fieldTypeDetails[f].name
+	return string(f)
 }
 
 // IsNumber returns true if the field type is numeric.
 func (f FieldType) IsNumber() bool {
-	return fieldTypeDetails[f].isNumber
+	switch f {
+	case FieldTypeInteger, FieldTypeLong, FieldTypeFloat, FieldTypeDouble:
+		return true
+	}
+	return false
 }
 
 // DefaultValue returns the default value for the field type.
@@ -89,7 +89,8 @@ func GetFieldTypeByName(name string) (FieldType, bool) {
 // GetFieldTypeByNameIgnoreCase finds a FieldType by its name, case-insensitively.
 // It includes a special case to handle "int" as an alias for Integer.
 func GetFieldTypeByNameIgnoreCase(name string) (FieldType, bool) {
-	ft, ok := nameMap[strings.ToUpper(name)]
+	ft := FieldType(strings.ToUpper(name))
+	_, ok := fieldTypeDetails[ft]
 	if ok {
 		return ft, true
 	}
@@ -98,7 +99,7 @@ func GetFieldTypeByNameIgnoreCase(name string) (FieldType, bool) {
 		return FieldTypeInteger, true
 	}
 
-	return 0, false
+	return "", false
 }
 
 // MarshalJSON implements the json.Marshaler interface, serializing the FieldType to its string name.

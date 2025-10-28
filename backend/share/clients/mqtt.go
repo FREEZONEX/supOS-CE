@@ -3,13 +3,14 @@ package clients
 import (
 	"crypto/tls"
 	"fmt"
-	"gitee.com/unitedrhino/share/errors"
-	"github.com/google/uuid"
 	"math/rand"
 	"net/url"
 	"os"
 	"sync"
 	"time"
+
+	"gitee.com/unitedrhino/share/errors"
+	"github.com/google/uuid"
 
 	"gitee.com/unitedrhino/share/conf"
 	"gitee.com/unitedrhino/share/utils"

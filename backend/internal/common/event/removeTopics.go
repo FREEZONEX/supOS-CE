@@ -1,7 +1,7 @@
 package event
 
 import (
-	"backend/internal/common/dto"
+	"backend/internal/types"
 	"context"
 	"time"
 )
@@ -12,21 +12,21 @@ type RemoveTopicsEvent struct {
 	DeleteTime    time.Time
 	WithFlow      bool
 	WithDashboard bool
-	Topics        []*dto.CreateTopicDto
-	Templates     []*dto.CreateTopicDto
-	Folders       []*dto.CreateTopicDto
+	Topics        []*types.CreateTopicDto
+	Templates     []*types.CreateTopicDto
+	Folders       []*types.CreateTopicDto
 }
 
 // NewRemoveTopicsEvent creates a new RemoveTopicsEvent.
-func NewRemoveTopicsEvent(ctx context.Context, deleteTime time.Time, withFlow, withDashboard bool, topics, templates, folders []*dto.CreateTopicDto) *RemoveTopicsEvent {
+func NewRemoveTopicsEvent(ctx context.Context, deleteTime time.Time, withFlow, withDashboard bool, topics, templates, folders []*types.CreateTopicDto) *RemoveTopicsEvent {
 	if topics == nil {
-		topics = make([]*dto.CreateTopicDto, 0)
+		topics = make([]*types.CreateTopicDto, 0)
 	}
 	if templates == nil {
-		templates = make([]*dto.CreateTopicDto, 0)
+		templates = make([]*types.CreateTopicDto, 0)
 	}
 	if folders == nil {
-		folders = make([]*dto.CreateTopicDto, 0)
+		folders = make([]*types.CreateTopicDto, 0)
 	}
 	return &RemoveTopicsEvent{
 		ApplicationEvent: ApplicationEvent{Context: ctx},

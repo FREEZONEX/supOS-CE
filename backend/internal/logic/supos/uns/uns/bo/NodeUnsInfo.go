@@ -1,5 +1,10 @@
 package bo
 
+import (
+	dao "backend/internal/repo/relationDB"
+	"backend/internal/types"
+)
+
 type NodeUnsInfo interface {
 	GetId() int64
 	GetParentId() *int64
@@ -14,3 +19,8 @@ type NodeUnsInfo interface {
 	GetMountType() *int16
 	GetMountSource() string
 }
+
+var _ NodeUnsInfo = &types.CreateTopicDto{}
+var _ NodeUnsInfo = &dao.UnsNamespace{}
+var _ NodeUnsInfo = &dao.TreeNodeUns{}
+var _ NodeUnsInfo = &dao.UnsLabel{}
