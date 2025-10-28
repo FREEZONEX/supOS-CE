@@ -8,12 +8,6 @@ import (
 	"strings"
 )
 
-// ExtendField names
-var ExtendFields = []string{"unit", "upperLimit", "lowerLimit", "decimal"}
-
-// ExtendFlags for extended fields
-var ExtendFlags = []int32{1 << 0, 1 << 1, 1 << 2, 1 << 3}
-
 // GetTimestampField finds the timestamp field in field definitions
 func GetTimestampField(fields []*types.FieldDefine) *types.FieldDefine {
 	for _, f := range fields {
@@ -90,45 +84,6 @@ func CountNumericFields(fields []*types.FieldDefine) int {
 		}
 	}
 	return total
-}
-
-// GenerateFlag generates a bitmask flag from a list of used field names
-func GenerateFlag(extendFieldUsed []string) int32 {
-	flags := int32(0)
-	if len(extendFieldUsed) == 0 {
-		return flags
-	}
-	used := make(map[string]struct{}, len(extendFieldUsed))
-	for _, field := range extendFieldUsed {
-		used[field] = struct{}{}
-	}
-
-	for i, field := range ExtendFields {
-		if _, ok := used[field]; ok {
-			flags |= ExtendFlags[i]
-		}
-	}
-	return flags
-}
-
-// ParseFlag parses a bitmask flag into a list of used field names
-func ParseFlag(flag *int32) []string {
-	if flag == nil || *flag == 0 {
-		return nil
-	}
-	var used []string
-	for i, field := range ExtendFields {
-		baseFlag := ExtendFlags[i]
-		if (*flag & baseFlag) == baseFlag {
-			used = append(used, field)
-		}
-	}
-	return used
-}
-
-// GetExtendFields returns the list of extendable field names
-func GetExtendFields() []string {
-	return ExtendFields
 }
 
 // ValidateFieldName is deprecated, use ValidateFields instead

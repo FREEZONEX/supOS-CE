@@ -6,6 +6,7 @@ import (
 	"backend/internal/common/LeastTopNodeUtil"
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
+	"backend/internal/common/utils/FieldFlags"
 	"backend/internal/common/utils/FieldUtils"
 	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
@@ -400,7 +401,7 @@ func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 	//}
 
 	if unsDto.ExtendFieldUsed != nil {
-		extTag := FieldUtils.GenerateFlag(unsDto.ExtendFieldUsed)
+		extTag := FieldFlags.GenerateFlag(unsDto.ExtendFieldUsed)
 		instance.ExtendFieldFlags = &extTag
 	}
 
@@ -600,7 +601,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, exi
 		//	unsDto.ReadWriteMode = newUns.ReadWriteMode
 		//}
 		if newUns.ExtendFieldFlags == nil {
-			extFlag := FieldUtils.GenerateFlag(unsDto.ExtendFieldUsed)
+			extFlag := FieldFlags.GenerateFlag(unsDto.ExtendFieldUsed)
 			newUns.ExtendFieldFlags = &extFlag
 		}
 

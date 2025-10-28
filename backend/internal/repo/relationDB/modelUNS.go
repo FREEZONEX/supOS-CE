@@ -2,10 +2,13 @@ package relationDB
 
 import (
 	"backend/internal/common/constants"
+	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/types"
+	"backend/share/base"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -62,6 +65,77 @@ type UnsNamespace struct {
 	CountExistsSiblings int64  `gorm:"-" json:"countExistsSiblings"`
 }
 
+func (u *UnsNamespace) GetLayRec() string {
+	return u.LayRec
+}
+
+func (u *UnsNamespace) GetDataPath() string {
+	return u.DataPath
+}
+
+func (u *UnsNamespace) GetProtocolMap() (pmap map[string]interface{}) {
+	if protocol := u.Protocol; strings.HasPrefix(protocol, "{") {
+		JsonUtil.FromJson(protocol, &pmap)
+	}
+	return pmap
+}
+
+func (u *UnsNamespace) GetDescription() string {
+	return u.Description
+}
+
+func (u *UnsNamespace) GetExpression() string {
+	return u.Expression
+}
+
+func (u *UnsNamespace) GetExtend() map[string]interface{} {
+	return u.Extend
+}
+
+func (u *UnsNamespace) GetLabelIds() map[int64]string {
+	return u.LabelIds
+}
+
+func (u *UnsNamespace) GetModelId() *int64 {
+	return u.ModelId
+}
+
+func (u *UnsNamespace) GetRefers() []*types.InstanceField {
+	return u.Refers
+}
+
+func (u *UnsNamespace) GetFields() []*types.FieldDefine {
+	return u.Fields
+}
+
+func (u *UnsNamespace) GetRefUns() map[int64]int {
+	return u.RefUns
+}
+
+func (u *UnsNamespace) GetCreateAt() int64 {
+	return u.CreateAt.UnixMilli()
+}
+
+func (u *UnsNamespace) GetUpdateAt() int64 {
+	return u.UpdateAt.UnixMilli()
+}
+
+func (u *UnsNamespace) GetFlags() *int32 {
+	return u.WithFlags
+}
+
+func (u *UnsNamespace) GetExtendFieldFlags() *int32 {
+	return u.ExtendFieldFlags
+}
+
+func (u *UnsNamespace) GetSrcJdbcType() types.SrcJdbcType {
+	return types.SrcJdbcType(u.DataSrcId)
+}
+
+func (u *UnsNamespace) GetStatus() *int16 {
+	return &u.Status
+}
+
 func (t *UnsNamespace) GetId() int64 {
 	return t.Id
 }
@@ -83,10 +157,7 @@ func (t *UnsNamespace) GetName() string {
 }
 
 func (t *UnsNamespace) GetDisplayName() string {
-	if dn := t.DisplayName; dn != nil {
-		return *dn
-	}
-	return ""
+	return base.StrByPoint(t.DisplayName)
 }
 
 func (t *UnsNamespace) GetPath() string {

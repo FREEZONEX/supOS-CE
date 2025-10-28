@@ -101,7 +101,7 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 	if templateId := po.ModelId; templateId != nil {
 		if template, er := l.unsMapper.SelectById(db, *templateId); er == nil && template != nil {
 			dto.ModelId = strconv.FormatInt(*templateId, 10)
-			dto.ModelId = template.Name
+			dto.ModelName = template.Name
 			dto.TemplateAlias = template.Alias
 		}
 	}

@@ -3,6 +3,7 @@ package types
 import (
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
+	"backend/internal/common/utils/FieldFlags"
 	"fmt"
 	"strings"
 )
@@ -419,4 +420,45 @@ func (c *CreateTopicDto) SetStreamCalculation(referTopic string, streamOptions *
 func (c *CreateTopicDto) SetDataPath(dataPath string) *CreateTopicDto {
 	c.DataPath = dataPath
 	return c
+}
+
+func (c *CreateTopicDto) GetLayRec() string {
+	return c.LayRec
+}
+
+func (c *CreateTopicDto) GetProtocolMap() map[string]interface{} {
+	return c.Protocol
+}
+
+//func (c *CreateTopicDto) GetCalculationType() *int {
+//	return c.ca
+//}
+
+//func (c *CreateTopicDto) GetReadWriteMode() string {
+//	return c.readWriteMode
+//}
+
+func (c *CreateTopicDto) GetLabelIds() map[int64]string {
+	return c.LabelIDs
+}
+
+func (c *CreateTopicDto) GetRefUns() map[int64]int {
+	return c.RefUns
+}
+
+func (c *CreateTopicDto) GetFlags() *int32 {
+	return c.WithFlags
+}
+
+func (c *CreateTopicDto) GetExtendFieldFlags() *int32 {
+	flag := FieldFlags.GenerateFlag(c.ExtendFieldUsed)
+	return &flag
+}
+
+func (c *CreateTopicDto) GetSrcJdbcType() SrcJdbcType {
+	return SrcJdbcType(c.DataSrcID)
+}
+
+func (c *CreateTopicDto) GetStatus() *int16 {
+	return &c.Status
 }

@@ -3,7 +3,7 @@ package UnsConverter
 import (
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
-	"backend/internal/common/utils/FieldUtils"
+	"backend/internal/common/utils/FieldFlags"
 	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/bo"
@@ -127,7 +127,7 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 	//		dto.AlarmRuleDefine = &ruleDefine
 	//	}
 	//}
-	unsDto.ExtendFieldUsed = FieldUtils.ParseFlag(p.ExtendFieldFlags)
+	unsDto.ExtendFieldUsed = FieldFlags.ParseFlag(p.ExtendFieldFlags)
 }
 func Po2ApiDto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 	var withFlags int32
@@ -146,7 +146,7 @@ func Po2ApiDto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 
 	calculationExpr := p.Expression
 	unsDto.Expression = calculationExpr
-	unsDto.ExtendFieldUsed = FieldUtils.ParseFlag(p.ExtendFieldFlags)
+	unsDto.ExtendFieldUsed = FieldFlags.ParseFlag(p.ExtendFieldFlags)
 }
 func boPt(b bool) *bool {
 	return &b

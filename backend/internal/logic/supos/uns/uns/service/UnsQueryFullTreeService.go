@@ -162,7 +162,7 @@ func (l *UnsQueryService) getTopicTreeResults(all []*dao.UnsNamespace, list []*d
 		}
 
 		rs := &types.TopicTreeResult{
-			Name: po.Name, Path: path, Type: po.PathType, PathType: po.PathType, Protocol: po.Protocol,
+			Name: po.Name, Path: path, Type: po.PathType, PathType: po.PathType, Protocol: po.ProtocolType,
 		}
 
 		rs.ParentDataType = po.ParentDataType
