@@ -14,9 +14,9 @@ type BaseResult struct {
 }
 
 type BatchCreateReq struct {
-	Flags      int              `form:"flags,optional"`
-	FromImport bool             `form:"fromImport,optional,default=false"`
-	List       []CreateTopicDto `json:"list"`
+	Flags      int               `form:"flags,optional"`
+	FromImport bool              `form:"fromImport,optional,default=false"`
+	List       []*CreateTopicDto `json:"list"`
 }
 
 type BatchQueryFileReq struct {
@@ -233,6 +233,7 @@ type FieldDefine struct {
 	LowerLimit  *float64 `json:"lowerLimit,optional"`
 	Decimal     *int     `json:"decimal,optional"`
 }
+
 type FieldDefines struct {
 	FieldsMap     map[string]*FieldDefine // Field name -> FieldDefine  // Field name -> FieldDefine
 	FieldIndexMap map[string]string       // Index -> Field name  // Index -> Field name

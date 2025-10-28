@@ -4,7 +4,6 @@
 package uns
 
 import (
-	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	"backend/internal/logic/supos/uns/uns/service"
 	"backend/share/spring"
 	"context"
@@ -31,6 +30,6 @@ func NewCreateModelInstanceLogic(ctx context.Context, svcCtx *svc.ServiceContext
 }
 
 func (l *CreateModelInstanceLogic) CreateModelInstance(req *types.CreateTopicDto) (resp *types.StringResult, err error) {
-	resp = spring.GetBean[*service.UnsAddService]().CreateModelInstance(l.ctx, UnsConverter.ConvertApiDto(*req))
+	resp = spring.GetBean[*service.UnsAddService]().CreateModelInstance(l.ctx, req)
 	return
 }

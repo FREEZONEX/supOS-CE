@@ -4,7 +4,6 @@
 package uns
 
 import (
-	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	"backend/internal/logic/supos/uns/uns/service"
 	"backend/share/spring"
 	"context"
@@ -31,7 +30,7 @@ func NewCreateModelInstancesLogic(ctx context.Context, svcCtx *svc.ServiceContex
 }
 
 func (l *CreateModelInstancesLogic) CreateModelInstances(req *types.BatchCreateReq) (resp *types.ResultVO, err error) {
-	errTipMap := spring.GetBean[*service.UnsAddService]().CreateModelAndInstance(l.ctx, UnsConverter.ConvertApiDtos(req.List), req.FromImport)
+	errTipMap := spring.GetBean[*service.UnsAddService]().CreateModelAndInstance(l.ctx, req.List, req.FromImport)
 	if len(errTipMap) == 0 {
 		return &types.ResultVO{Code: 200, Msg: "ok"}, nil
 	}

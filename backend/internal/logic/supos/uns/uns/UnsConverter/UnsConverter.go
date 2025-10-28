@@ -232,25 +232,12 @@ var apiConvertOptions = copier.Option{IgnoreEmpty: true, Converters: []copier.Ty
 	},
 }}
 
-func ConvertApiDto(apiDto types.CreateTopicDto) *types.CreateTopicDto {
-	var target types.CreateTopicDto
-	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
-	return &target
-}
 func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *types.CreateTopicDto {
 	var target types.CreateTopicDto
 	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
 	return &target
 }
 
-func ConvertApiDtos(apiDto []types.CreateTopicDto) (target []*types.CreateTopicDto) {
-	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
-	return target
-}
-func ConvertFields(apiDto []*types.FieldDefine) (target []*types.FieldDefine) {
-	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
-	return target
-}
 func CopyProperties(from any, to any) {
 	copier.CopyWithOption(to, from, apiConvertOptions)
 }

@@ -423,7 +423,7 @@ type (
 	BatchCreateReq {
 		Flags      int              `form:"flags,optional"`
 		FromImport bool             `form:"fromImport,optional,default=false"`
-		List       []CreateTopicDto `json:"list"`
+		List       []*CreateTopicDto `json:"list"`
 	}
 	CreateUnsNodeRedDto {
 		Path      string `json:"path"`

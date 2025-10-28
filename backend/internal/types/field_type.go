@@ -104,7 +104,7 @@ func GetFieldTypeByNameIgnoreCase(name string) (FieldType, bool) {
 
 // MarshalJSON implements the json.Marshaler interface, serializing the FieldType to its string name.
 func (f FieldType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(f.Name())
+	return []byte("\"" + string(f) + "\""), nil
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface, deserializing a string into a FieldType.
