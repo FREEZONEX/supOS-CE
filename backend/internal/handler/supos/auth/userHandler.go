@@ -7,7 +7,7 @@ import (
 	authlogic "backend/internal/logic/supos/auth"
 	"backend/internal/svc"
 
-	"github.com/zeromicro/go-zero/rest/httpx"
+	"gitee.com/unitedrhino/share/result"
 )
 
 // user
@@ -20,10 +20,6 @@ func UserHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 		l := authlogic.NewUserLogic(r.Context(), svcCtx)
 		resp, err := l.User(token)
-		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
-		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
-		}
+		result.Http(w, r, resp, err)
 	}
 }

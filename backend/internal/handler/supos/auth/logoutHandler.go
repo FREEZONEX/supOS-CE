@@ -7,7 +7,7 @@ import (
 	authlogic "backend/internal/logic/supos/auth"
 	"backend/internal/svc"
 
-	"github.com/zeromicro/go-zero/rest/httpx"
+	"gitee.com/unitedrhino/share/result"
 )
 
 // logout
@@ -20,10 +20,6 @@ func LogoutHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 		l := authlogic.NewLogoutLogic(r.Context(), svcCtx)
 		err := l.Logout(token)
-		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
-		} else {
-			httpx.OkJsonCtx(r.Context(), w, nil)
-		}
+		result.Http(w, r, nil, err)
 	}
 }

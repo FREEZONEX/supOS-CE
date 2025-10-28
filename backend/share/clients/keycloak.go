@@ -148,6 +148,7 @@ var (
 )
 
 func InitKeycloakClient(config KeycloakConfig) *KeycloakClient {
+	fmt.Println("KeycloakConfig", config)
 	config.RedirectURI = config.GetRedirectURI()
 	keycloakOnce.Do(func() {
 		kc := &KeycloakClient{
@@ -159,13 +160,13 @@ func InitKeycloakClient(config KeycloakConfig) *KeycloakClient {
 		if kc.config.SuposClientID == "" {
 			if err := kc.resolveSuposClientID(); err != nil {
 				logx.Errorf("failed to resolve Keycloak client uuid for clientId %q: %v", kc.config.ClientID, err)
-				// panic(fmt.Errorf("resolve Keycloak client uuid: %w", err))
-				return
+				panic(fmt.Errorf("resolve Keycloak client uuid: %w", err))
 			}
 		}
 
 		keycloakClient = kc
 	})
+	fmt.Println("KeycloakConfig init success!!!")
 	return keycloakClient
 }
 
