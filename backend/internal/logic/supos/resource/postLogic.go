@@ -60,6 +60,7 @@ func (l *PostLogic) saveResource(tx *gorm.DB, dto *types.SaveResourceReq) (int64
 		if count > 0 {
 			return 0, errors.Duplicate.WithMsg(i18ns.LocalizeMsg("resource.code.duplicate")).AddDetail(dto.Code)
 		}
+		flag := true
 		res := &relationDB.SuposResource{
 			ParentID:        parentID,
 			Type:            dto.Type,
@@ -73,10 +74,10 @@ func (l *PostLogic) saveResource(tx *gorm.DB, dto *types.SaveResourceReq) (int64
 			Icon:            icon,
 			DescriptionCode: descCode,
 			Sort:            intPtr(dto.Sort),
-			EditEnable:      boolPtr(dto.EditEnable),
+			EditEnable:      &flag,
 			HomeEnable:      boolPtr(dto.HomeEnable),
 			Fixed:           boolPtr(dto.Fixed),
-			Enable:          boolPtr(dto.Enable),
+			Enable:          &flag,
 			CreateAt:        now,
 			UpdateAt:        now,
 		}
@@ -115,10 +116,8 @@ func (l *PostLogic) saveResource(tx *gorm.DB, dto *types.SaveResourceReq) (int64
 		"icon":             stringValueForUpdate(icon),
 		"description_code": stringValueForUpdate(descCode),
 		"sort":             dto.Sort,
-		"edit_enable":      dto.EditEnable,
 		"home_enable":      dto.HomeEnable,
 		"fixed":            dto.Fixed,
-		"enable":           dto.Enable,
 		"update_at":        now,
 	}
 	if parentID == nil {
