@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"backend/internal/common"
+	"backend/internal/types"
 	"math/rand"
 	"os"
 	"time"
@@ -124,10 +124,10 @@ func NewMockDemoDTO() *MockDemoDTO {
 }
 
 // ConvertOrderToParams converts the DTO to a slice of any for database operations.
-func (m *MockDemoDTO) ConvertOrderToParams(srcJdbcType *common.SrcJdbcType) []any {
-	if srcJdbcType.TypeCode() == common.SrcJdbcTypeTdEngine.TypeCode() {
+func (m *MockDemoDTO) ConvertOrderToParams(srcJdbcType *types.SrcJdbcType) []any {
+	if srcJdbcType.TypeCode() == types.SrcJdbcTypeTdEngine.TypeCode() {
 		return []any{m.TimeStamp, m.ID, m.Name, m.InstalledCapacity, m.DailyPowerGeneration, m.Owner}
-	} else if srcJdbcType.TypeCode() == common.SrcJdbcTypeTimeScaleDB.TypeCode() {
+	} else if srcJdbcType.TypeCode() == types.SrcJdbcTypeTimeScaleDB.TypeCode() {
 		return []any{time.UnixMilli(m.TimeStamp), m.ID, m.Name, m.InstalledCapacity, m.DailyPowerGeneration, m.Owner}
 	}
 	return nil

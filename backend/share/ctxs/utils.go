@@ -2,10 +2,11 @@ package ctxs
 
 import (
 	"context"
-	"gitee.com/unitedrhino/share/utils"
-	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"time"
+
+	"gitee.com/unitedrhino/share/utils"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var ContextKeys = []string{UserTokenKey, UserSetTokenKey, UserWorkspaceKey}

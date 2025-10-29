@@ -1,21 +1,21 @@
 package service
 
 import (
-	"backend/internal/common/dto"
 	authdto "backend/internal/common/dto/auth"
 	"backend/internal/common/dto/resource"
+	"backend/internal/types"
 )
 
 type IUnsDefinitionService interface {
-	GetDefinitionByAlias(alias string) *dto.CreateTopicDto
-	GetDefinitionByPath(path string) *dto.CreateTopicDto
-	GetDefinitionById(id int64) *dto.CreateTopicDto
+	GetDefinitionByAlias(alias string) *types.CreateTopicDto
+	GetDefinitionByPath(path string) *types.CreateTopicDto
+	GetDefinitionById(id int64) *types.CreateTopicDto
 
 	DeleteByIds(ids []int64) error
-	InitSaveBatch(list []*dto.CreateTopicDto, ver int64) error
-	InitDeleteBatch(list []*dto.CreateTopicDto, ver int64) error
-	SaveBatch(list []*dto.CreateTopicDto, ver int64) error
-	DeleteBatch(list []*dto.CreateTopicDto, ver int64) error
+	InitSaveBatch(list []*types.CreateTopicDto, ver int64) error
+	InitDeleteBatch(list []*types.CreateTopicDto, ver int64) error
+	SaveBatch(list []*types.CreateTopicDto, ver int64) error
+	DeleteBatch(list []*types.CreateTopicDto, ver int64) error
 }
 
 type IResourceService interface {
@@ -29,5 +29,5 @@ type IRoleService interface {
 }
 
 type IUnsManagerService interface {
-	CreateModelAndInstance(topicDtos []*dto.CreateTopicDto, fromImport bool) (map[string]string, error)
+	CreateModelAndInstance(topicDtos []*types.CreateTopicDto, fromImport bool) (map[string]string, error)
 }

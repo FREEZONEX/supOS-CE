@@ -2,12 +2,12 @@ package bo
 
 import (
 	"backend/internal/common"
-	"backend/internal/common/dto"
+	"backend/internal/types"
 	"encoding/json"
 )
 
 type CreateModelInstancesArgs struct {
-	Topics                        []*dto.CreateTopicDto       `json:"topics"`
+	Topics                        []*types.CreateTopicDto     `json:"topics"`
 	FromImport                    bool                        `json:"fromImport"`
 	RetainTableWhenDeleteInstance bool                        `json:"retainTableWhenDeleteInstance"`
 	ThrowModelExistsErr           bool                        `json:"throwModelExistsErr"`

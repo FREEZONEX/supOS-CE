@@ -257,6 +257,12 @@ func WithHasData(flags *int32) bool {
 	}
 	return (*flags & UnsFlagHasData) == UnsFlagHasData
 }
+func WithSubscribeEnable(flags *int32) bool {
+	if flags == nil {
+		return false
+	}
+	return (*flags & UnsFlagWithSubscribeEnable) == UnsFlagWithSubscribeEnable
+}
 
 func IsValidDataType(dataType int16) bool {
 	return dataType >= TimeSequenceType && dataType <= CitingType

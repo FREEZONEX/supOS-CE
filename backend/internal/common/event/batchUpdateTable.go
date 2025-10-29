@@ -1,13 +1,12 @@
 package event
 
 import (
-	"backend/internal/common"
-	"backend/internal/common/dto"
+	"backend/internal/types"
 )
 
 // BatchUpdateTableEvent defines an event for batch updating database tables.
 type BatchUpdateTableEvent struct {
 	ApplicationEvent
-	Topics   []*dto.UpdateFieldDto
-	JdbcType common.SrcJdbcType
+	Topics   []*types.UpdateFieldDto
+	JdbcType types.SrcJdbcType
 }

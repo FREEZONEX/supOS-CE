@@ -27,7 +27,7 @@ type CreateUNSResult struct {
 	Namespace *relationDB.UnsNamespace
 }
 
-// CreateTemplate 如果需要模板，需先调用该函数，返回模板ID写回 dto.ModelID
+// CreateTemplate 如果需要模板，需先调用该函数，返回模板ID写回 dto.ModelId
 func CreateTemplate(ctx context.Context, svcCtx *svc.ServiceContext, req *types.UnsCreateTopicDTO) (*relationDB.UnsNamespace, error) {
 	templateName := strings.TrimSpace(req.Name)
 	if templateName == "" {
@@ -50,12 +50,12 @@ func CreateTemplate(ctx context.Context, svcCtx *svc.ServiceContext, req *types.
 	}
 
 	template := &relationDB.UnsNamespace{
-		ID:           svcCtx.SnowFlake.GetSnowflakeId(),
+		Id:           svcCtx.SnowFlake.GetSnowflakeId(),
 		Name:         templateName,
 		DisplayName:  templateName,
 		Alias_:       templateAlias,
 		ParentAlias:  templateRootAlias,
-		ParentID:     templateRootID,
+		ParentId:     templateRootID,
 		PathType:     constants.PathTypeTemplate,
 		DataType:     0,
 		Path:         fmt.Sprintf("%s/%s", templateRootPath, templateAlias),
@@ -116,8 +116,8 @@ func createSingle(ctx context.Context, svcCtx *svc.ServiceContext, repo *relatio
 		err         error
 	)
 
-	if req.ParentID != 0 {
-		parent, err = repo.FindOne(ctx, req.ParentID)
+	if req.ParentId != 0 {
+		parent, err = repo.FindOne(ctx, req.ParentId)
 		if err != nil {
 			if shareerrors.Is(err, shareerrors.NotFind) {
 				return nil, shareerrors.Parameter.WithMsg("父节点不存在")
@@ -134,7 +134,7 @@ func createSingle(ctx context.Context, svcCtx *svc.ServiceContext, repo *relatio
 			return nil, err
 		}
 		if parent != nil {
-			req.ParentID = parent.ID
+			req.ParentId = parent.Id
 		}
 	}
 
@@ -165,12 +165,12 @@ func createSingle(ctx context.Context, svcCtx *svc.ServiceContext, repo *relatio
 
 	withFlags := calcUnsFlags(req)
 	entity := &relationDB.UnsNamespace{
-		ID:           svcCtx.SnowFlake.GetSnowflakeId(),
+		Id:           svcCtx.SnowFlake.GetSnowflakeId(),
 		Name:         name,
 		DisplayName:  name,
 		Alias_:       alias,
 		ParentAlias:  parentAlias,
-		ParentID:     req.ParentID,
+		ParentId:     req.ParentId,
 		PathType:     int16(req.PathType),
 		DataType:     int16(dataType16),
 		Path:         path,
@@ -178,16 +178,16 @@ func createSingle(ctx context.Context, svcCtx *svc.ServiceContext, repo *relatio
 		Description:  strings.TrimSpace(req.Description),
 		Protocol:     strings.TrimSpace(req.Protocol),
 		ProtocolType: strings.TrimSpace(req.ProtocolType),
-		DataSrcID:    int16(dataSrcID16),
+		DataSrcId:    int16(dataSrcID16),
 		Extend:       req.Extend,
 		NumberFields: int16(numberFields16),
 		WithFlags:    withFlags,
 		Status:       1,
-		ModelID:      req.ModelID,
+		ModelId:      req.ModelId,
 	}
 
 	if parent != nil {
-		entity.ParentID = parent.ID
+		entity.ParentId = parent.Id
 		entity.ParentAlias = parent.Alias_
 	}
 

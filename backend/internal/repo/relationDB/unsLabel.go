@@ -46,6 +46,16 @@ func (p UnsLabelRepo) ListByIds(db *gorm.DB, ids []int64) ([]*UnsLabel, error) {
 	}
 	return results, nil
 }
+func (p UnsLabelRepo) ListByUnsId(db *gorm.DB, unsId int64) (result []*UnsLabel, err error) {
+	err = db.Model(&UnsLabel{}).Raw(`
+       select ul.id ,ul.label_name from uns_label ul join  uns_label_ref rf on ul.id = rf.label_id where rf.uns_id =? 
+       `, unsId).
+		Find(&result).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return
+}
 func (p UnsLabelRepo) Insert(db *gorm.DB, data *UnsLabel) error {
 	result := db.Model(&UnsLabel{}).Create(data)
 	return stores.ErrFmt(result.Error)

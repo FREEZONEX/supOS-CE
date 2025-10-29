@@ -3,7 +3,6 @@ package service
 import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
 	"backend/internal/common/event"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
@@ -92,12 +91,12 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 					break
 				}
 				page.Page++
-				unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, *dto.CreateTopicDto, int16](rs, func(e *dao.UnsNamespace) (int16, *dto.CreateTopicDto) {
+				unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, *types.CreateTopicDto, int16](rs, func(e *dao.UnsNamespace) (int16, *types.CreateTopicDto) {
 					return e.PathType, UnsConverter.Po2Dto(e)
 				})
 				err = db.Transaction(func(tx *gorm.DB) error {
 					er = r.unsMapper.LogicDeleteByIds(tx, base.Map[*dao.UnsNamespace, int64](rs, func(e *dao.UnsNamespace) int64 {
-						return e.ID
+						return e.Id
 					}))
 					if er == nil {
 						delEvent := event.NewRemoveTopicsEvent(dao.SetDb(ctx, tx), time.Now(), withFlow, withDashboard,
@@ -130,7 +129,7 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 		for _, fs := range base.Partition(files, 1000) {
 			err = db.Transaction(func(tx *gorm.DB) error {
 				er := r.unsMapper.LogicDeleteByIds(tx, base.Map[*dao.UnsNamespace, int64](fs, func(e *dao.UnsNamespace) int64 {
-					return e.ID
+					return e.Id
 				}))
 				if er == nil {
 					delEvent := event.NewRemoveTopicsEvent(dao.SetDb(ctx, tx), time.Now(), withFlow, withDashboard,

@@ -100,7 +100,7 @@ func (l *UnsQueryService) simpleTree(ctx context.Context, parentId *int64, layRe
 		result := UnsConverter.Dto2TreeResult(e)
 		folderCount, fileCount := 0, 0
 		if e.PathType == constants.PathTypeDir {
-			if rsTypes := ccMap[e.ID]; len(rsTypes) > 2 {
+			if rsTypes := ccMap[e.Id]; len(rsTypes) > 2 {
 				folderCount = rsTypes[constants.PathTypeDir]
 				fileCount = rsTypes[constants.PathTypeFile]
 			}

@@ -1,8 +1,7 @@
 package event
 
 import (
-	"backend/internal/common"
-	"backend/internal/common/dto"
+	"backend/internal/types"
 )
 
 // BatchCreateTableEvent defines an event for batch creating database tables.
@@ -10,11 +9,11 @@ type BatchCreateTableEvent struct {
 	ApplicationEvent
 	FromImport    bool
 	FlowName      string
-	Topics        map[common.SrcJdbcType][]*dto.CreateTopicDto
-	Updates       []*dto.CreateTopicDto
-	Folders       []*dto.CreateTopicDto
-	Templates     []*dto.CreateTopicDto
-	Labels        []*dto.CreateTopicDto
+	Topics        map[types.SrcJdbcType][]*types.CreateTopicDto
+	Updates       []*types.CreateTopicDto
+	Folders       []*types.CreateTopicDto
+	Templates     []*types.CreateTopicDto
+	Labels        []*types.CreateTopicDto
 	DelegateAware EventStatusAware
 }
 

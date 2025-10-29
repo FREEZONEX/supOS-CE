@@ -1,6 +1,7 @@
 package grafanautil
 
 import (
+	"backend/internal/types"
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
@@ -10,11 +11,8 @@ import (
 	"net/http"
 	"strings"
 
-	"backend/internal/common"
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
 	grafanadto "backend/internal/common/dto/grafana"
-	"backend/internal/common/enums"
 	"backend/internal/common/utils/runtimeutil"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -79,7 +77,7 @@ func DeleteDatasource(uid string) error {
 }
 
 // CreateDatasource creates a Grafana datasource.
-func CreateDatasource(jdbcType *common.SrcJdbcType, username, password string, reCreate bool) (bool, error) {
+func CreateDatasource(jdbcType *types.SrcJdbcType, username, password string, reCreate bool) (bool, error) {
 	title := jdbcType.Alias()
 	datasource := &grafanadto.GrafanaDataSourceDto{
 		User:     username,
@@ -95,13 +93,13 @@ func CreateDatasource(jdbcType *common.SrcJdbcType, username, password string, r
 
 	var dsTemplate string
 	switch jdbcType.Id() {
-	case common.SrcJdbcTypePostgresql.Id():
+	case types.SrcJdbcTypePostgresql.Id():
 		dsTemplate = loadTemplate("templates/pg-datasource.json")
 		datasource.URL = constants.PGJDBCURL
-	case common.SrcJdbcTypeTimeScaleDB.Id():
+	case types.SrcJdbcTypeTimeScaleDB.Id():
 		dsTemplate = loadTemplate("templates/pg-datasource.json")
 		datasource.URL = constants.TSDBJDBCURL
-	case common.SrcJdbcTypeTdEngine.Id():
+	case types.SrcJdbcTypeTdEngine.Id():
 		datasource.URL = constants.TDJDBCURL
 		datasource.CreateBasicAuth()
 		dsTemplate = loadTemplate("templates/td-datasource.json")
@@ -159,13 +157,13 @@ func CreateDatasourceByBody(name, body string, reCreate bool) (string, error) {
 }
 
 // CreateDashboard creates a Grafana dashboard.
-func CreateDashboard(table, tagNameCondition string, jdbcType *common.SrcJdbcType, schema, title, columns, ct string) (string, error) {
+func CreateDashboard(table, tagNameCondition string, jdbcType *types.SrcJdbcType, schema, title, columns, ct string) (string, error) {
 	uid := GetDashboardUUIDByAlias(title)
 	var template string
 	var dbParams map[string]any
 
 	switch jdbcType.Id() {
-	case common.SrcJdbcTypePostgresql.Id():
+	case types.SrcJdbcTypePostgresql.Id():
 		template = loadTemplate("templates/pg-dashboard.json")
 		dbParams = map[string]any{
 			"title":          title,
@@ -176,7 +174,7 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *common.SrcJdbcTyp
 			"tableName":      table,
 			"columns":        columns,
 		}
-	case common.SrcJdbcTypeTdEngine.Id():
+	case types.SrcJdbcTypeTdEngine.Id():
 		template = loadTemplate("templates/td-dashboard.json")
 		dbParams = map[string]any{
 			"title":            title,
@@ -188,7 +186,7 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *common.SrcJdbcTyp
 			"tagNameCondition": tagNameCondition,
 			"columns":          columns,
 		}
-	case common.SrcJdbcTypeTimeScaleDB.Id():
+	case types.SrcJdbcTypeTimeScaleDB.Id():
 		template = loadTemplate("templates/ts-dashboard.json")
 		dbParams = map[string]any{
 			"title":            title,
@@ -298,23 +296,23 @@ func GetDataSourceByName(name string) (string, error) {
 }
 
 // GetDatasourceUUIDByJDBC generates a datasource UUID from JDBC type.
-func GetDatasourceUUIDByJDBC(jdbcType *common.SrcJdbcType) string {
+func GetDatasourceUUIDByJDBC(jdbcType *types.SrcJdbcType) string {
 	hash := md5.Sum([]byte(jdbcType.Alias()))
 	return hex.EncodeToString(hash[:])
 }
 
 // Fields2Columns converts field definitions to column string for Grafana.
-func Fields2Columns(jdbcType *common.SrcJdbcType, fields []*dto.FieldDefine) string {
+func Fields2Columns(jdbcType *types.SrcJdbcType, fields []*types.FieldDefine) string {
 	// TDengine uses `, PostgreSQL and TimescaleDB use "
 	flag := "`"
-	if jdbcType.Id() != common.SrcJdbcTypeTdEngine.Id() {
+	if jdbcType.Id() != types.SrcJdbcTypeTdEngine.Id() {
 		flag = `\"`
 	}
 
 	var fieldNames []string
 	for _, field := range fields {
 		// Filter out BLOB types and specific system fields
-		if field.Type == enums.FieldTypeBlob || field.Type == enums.FieldTypeLBlob {
+		if field.Type == types.FieldTypeBlob || field.Type == types.FieldTypeLBlob {
 			continue
 		}
 		if field.Name == constants.QosField ||
@@ -330,11 +328,11 @@ func Fields2Columns(jdbcType *common.SrcJdbcType, fields []*dto.FieldDefine) str
 }
 
 // CreateTimeSeriesListDashboard creates a time series list dashboard with multiple panels.
-func CreateTimeSeriesListDashboard(srcJdbcType *common.SrcJdbcType, topics []*dto.CreateTopicDto, dashboardName string) (string, error) {
+func CreateTimeSeriesListDashboard(srcJdbcType *types.SrcJdbcType, topics []*types.CreateTopicDto, dashboardName string) (string, error) {
 	logx.Infof("调用 创建时序组合Dashboard: %s", dashboardName)
 
 	var panelTemplate string
-	if srcJdbcType.Id() == common.SrcJdbcTypeTimeScaleDB.Id() {
+	if srcJdbcType.Id() == types.SrcJdbcTypeTimeScaleDB.Id() {
 		panelTemplate = loadTemplate("templates/ts-panel.json")
 	} else {
 		panelTemplate = loadTemplate("templates/td-panel.json")

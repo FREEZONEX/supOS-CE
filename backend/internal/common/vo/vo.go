@@ -1,11 +1,11 @@
 package vo
 
 import (
+	"backend/internal/types"
 	"fmt"
 	"time"
 
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
 	authdto "backend/internal/common/dto/auth"
 	"backend/internal/common/enums"
 )
@@ -23,10 +23,10 @@ type FieldDefineVo struct {
 }
 
 // NewFieldDefineVo creates a FieldDefineVo from FieldDefine.
-func NewFieldDefineVo(bo *dto.FieldDefine) *FieldDefineVo {
+func NewFieldDefineVo(bo *types.FieldDefine) *FieldDefineVo {
 	vo := &FieldDefineVo{
 		Name: bo.Name,
-		Type: bo.Type.Name(),
+		Type: bo.Type,
 	}
 	if idx := bo.Index; idx != nil {
 		vo.Index = *idx
@@ -79,27 +79,27 @@ func (v *FieldDefineVo) IsUnique() bool {
 }
 
 // Convert converts the VO to FieldDefine DTO.
-func (v *FieldDefineVo) Convert() *dto.FieldDefine {
+func (v *FieldDefineVo) Convert() *types.FieldDefine {
 	return vo2bo(v)
 }
 
 // ConvertArray converts an array of FieldDefineVo to FieldDefine array.
-func ConvertArray(vfs []*FieldDefineVo) []*dto.FieldDefine {
+func ConvertArray(vfs []*FieldDefineVo) []*types.FieldDefine {
 	if len(vfs) == 0 {
 		return nil
 	}
-	fs := make([]*dto.FieldDefine, len(vfs))
+	fs := make([]*types.FieldDefine, len(vfs))
 	for i, vo := range vfs {
 		fs[i] = vo2bo(vo)
 	}
 	return fs
 }
 
-func vo2bo(vo *FieldDefineVo) *dto.FieldDefine {
-	fieldType, _ := enums.GetFieldTypeByName(vo.Type)
-	define := &dto.FieldDefine{
+func vo2bo(vo *FieldDefineVo) *types.FieldDefine {
+	fieldType, _ := types.GetFieldTypeByName(vo.Type)
+	define := &types.FieldDefine{
 		Name:  vo.Name,
-		Type:  fieldType,
+		Type:  fieldType.Name(),
 		Index: &vo.Index,
 	}
 	define.Unique = &vo.Unique

@@ -2,8 +2,6 @@ package service
 
 import (
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
-	"backend/internal/common/enums"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
@@ -93,10 +91,10 @@ func (l *UnsQueryService) SearchPaged(ctx context.Context, req *types.SearchPage
 
 func (l *UnsQueryService) po2TopicInfo(list []*dao.UnsNamespace) []types.TopicInfo {
 	return base.FilterAndMap[*dao.UnsNamespace, types.TopicInfo](list, func(e *dao.UnsNamespace) (v types.TopicInfo, ok bool) {
-		var fs = base.FilterAndMap[*dto.FieldDefine, *types.FieldDefine](e.Fields, func(e *dto.FieldDefine) (v *types.FieldDefine, ok bool) {
-			if !e.IsSystemField() && (e.Type.IsNumber() || e.Type == enums.FieldTypeBoolean) {
+		var fs = base.FilterAndMap[*types.FieldDefine, *types.FieldDefine](e.Fields, func(e *types.FieldDefine) (v *types.FieldDefine, ok bool) {
+			if !e.IsSystemField() && (types.FieldType(e.Type).IsNumber() || e.Type == types.FieldTypeBoolean) {
 				ok = true
-				v = &types.FieldDefine{Name: e.Name, Type: e.Type.Name()}
+				v = &types.FieldDefine{Name: e.Name, Type: e.Type}
 			}
 			return
 		})
@@ -105,7 +103,7 @@ func (l *UnsQueryService) po2TopicInfo(list []*dao.UnsNamespace) []types.TopicIn
 		}
 		ok = true
 		v = types.TopicInfo{
-			Id: strconv.FormatInt(e.ID, 10),
+			Id: strconv.FormatInt(e.Id, 10),
 			DataType: base.SanA(e.DataType == nil, 0, func() int {
 				return int(*e.DataType)
 			}),

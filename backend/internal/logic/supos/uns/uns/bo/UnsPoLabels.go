@@ -1,15 +1,15 @@
 package bo
 
 import (
-	"backend/internal/common/dto"
 	"backend/internal/repo/relationDB"
+	"backend/internal/types"
 )
 
 type UnsPoLabels struct {
 	unsPo       *relationDB.UnsNamespace
 	labels      []string
 	resetLabels bool
-	dto         *dto.CreateTopicDto
+	dto         *types.CreateTopicDto
 	labelIds    map[int64]string
 }
 
@@ -24,7 +24,7 @@ func NewUnsPoLabels(unsPo *relationDB.UnsNamespace, resetLabels bool, labels []s
 	}
 }
 func (u *UnsPoLabels) UnsId() int64 {
-	return u.unsPo.ID
+	return u.unsPo.Id
 }
 func (u *UnsPoLabels) LabelNames() []string {
 	return u.labels
@@ -35,7 +35,7 @@ func (u *UnsPoLabels) IsResetLabels() bool {
 func (u *UnsPoLabels) SetLabelId(label string, id int64) {
 	u.labelIds[id] = label
 }
-func (u *UnsPoLabels) SetDto(d *dto.CreateTopicDto) {
+func (u *UnsPoLabels) SetDto(d *types.CreateTopicDto) {
 	u.dto = d
 	d.LabelIDs = u.labelIds
 }

@@ -36,13 +36,13 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 	rootNodes := make([]*dao.UnsNamespace, 0)
 
 	for _, node := range allNodes {
-		if node.ParentID == nil {
+		if node.ParentId == nil {
 			if node.Path == "" && node.Name != "" {
 				node.Path = node.Name
 			}
 			rootNodes = append(rootNodes, node)
 		} else {
-			childrenMap[*node.ParentID] = append(childrenMap[*node.ParentID], node)
+			childrenMap[*node.ParentId] = append(childrenMap[*node.ParentId], node)
 		}
 	}
 
@@ -58,23 +58,23 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 
 	// 分类节点
 	recorder := func(po *dao.UnsNamespace) bool {
-		id := po.ID
+		id := po.Id
 		if _, inDB := dbFiles[id]; !inDB {
 			// 新增节点
-			return base.PutIfAbsent(nodesToInsert, po.ID, po)
+			return base.PutIfAbsent(nodesToInsert, po.Id, po)
 		} else {
 			// 更新节点
 			po.UpdateAt = updateTime
-			return base.PutIfAbsent(nodesToUpdate, po.ID, po)
+			return base.PutIfAbsent(nodesToUpdate, po.Id, po)
 		}
 	}
 
 	// 处理所有节点
 	for _, node := range allNodes {
-		id := node.ID
+		id := node.Id
 		proc := addFiles[id] != nil
 		if !proc {
-			if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentID, dbPo.ParentID)) {
+			if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentId, dbPo.ParentId)) {
 				proc = true
 			}
 		}
@@ -99,13 +99,13 @@ func equalsInt64(a, b *int64) bool {
 
 // generatePath 生成单个节点的层级路径（递归向上查找）
 func generatePath(node *dao.UnsNamespace, allNodes map[int64]*dao.UnsNamespace) {
-	if node.ParentID == nil { // 根节点
-		node.LayRec = strconv.FormatInt(node.ID, 10)
+	if node.ParentId == nil { // 根节点
+		node.LayRec = strconv.FormatInt(node.Id, 10)
 		node.Path = node.PathName
 	} else {
-		parent := allNodes[*node.ParentID]
+		parent := allNodes[*node.ParentId]
 		if parent == nil { // 处理异常情况
-			node.LayRec = strconv.FormatInt(node.ID, 10)
+			node.LayRec = strconv.FormatInt(node.Id, 10)
 			node.Path = node.Name
 			return
 		}
@@ -115,7 +115,7 @@ func generatePath(node *dao.UnsNamespace, allNodes map[int64]*dao.UnsNamespace) 
 			generatePath(parent, allNodes)
 		}
 
-		node.LayRec = parent.LayRec + "/" + strconv.FormatInt(node.ID, 10)
+		node.LayRec = parent.LayRec + "/" + strconv.FormatInt(node.Id, 10)
 		node.Path = parent.Path + "/" + node.PathName
 	}
 }
@@ -131,7 +131,7 @@ func collectAffectedNodes(changedNode *dao.UnsNamespace, childrenMap map[int64][
 		queue = queue[1:]
 
 		// 查找所有子节点
-		if children, exists := childrenMap[current.ID]; exists {
+		if children, exists := childrenMap[current.Id]; exists {
 			for _, node := range children {
 				if result(node) { // 避免重复处理
 					queue = append(queue, node)
@@ -160,11 +160,11 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 	for name, group := range nameGroup {
 		if len(group) > 1 {
 			sort.Slice(group, func(i, j int) bool {
-				return group[i].ID < group[j].ID
+				return group[i].Id < group[j].Id
 			})
 		}
 		for i, node := range group {
-			if base.MapContainsKey(addFiles, node.ID) && node.CountExistsSiblings > 0 {
+			if base.MapContainsKey(addFiles, node.Id) && node.CountExistsSiblings > 0 {
 				node.PathName = name + "-" + strconv.FormatInt(node.CountExistsSiblings+int64(i), 10)
 			} else {
 				node.PathName = name

@@ -3,7 +3,6 @@ package service
 import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
 	"backend/internal/common/enums"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
@@ -54,10 +53,10 @@ func (s *UnsUpdateService) UpdateDetail(ctx context.Context, unsDto *types.Updat
 	var flags *int32
 	dash := createTopicDto.AddDashBoard
 	flow := createTopicDto.AddFlow
-	save2db := createTopicDto.Save2DB
+	save2db := createTopicDto.Save2Db
 	accessLevel := unsDto.AccessLevel
 
-	if createTopicDto.Flags == nil && (dash != nil || flow != nil || save2db != nil || accessLevel != "") {
+	if createTopicDto.WithFlags == nil && (dash != nil || flow != nil || save2db != nil || accessLevel != "") {
 		// 使用原有的flags或默认值
 		if unsPo.WithFlags != nil {
 			flags = unsPo.WithFlags
@@ -100,7 +99,7 @@ func (s *UnsUpdateService) UpdateDetail(ctx context.Context, unsDto *types.Updat
 		flags = unsPo.WithFlags
 	}
 
-	createTopicDto.Flags = flags
+	createTopicDto.WithFlags = flags
 	createTopicDto.ParentAlias = unsPo.ParentAlias
 	createTopicDto.DataType = unsPo.DataType
 
@@ -118,9 +117,9 @@ func (s *UnsUpdateService) UpdateName(ctx context.Context, req *types.UpdateName
 		return
 	}
 
-	createTopicDto := &dto.CreateTopicDto{
+	createTopicDto := &types.CreateTopicDto{
 		Name:        req.Name,
-		Flags:       unsPo.WithFlags,
+		WithFlags:   unsPo.WithFlags,
 		PathType:    unsPo.PathType,
 		Alias:       unsPo.Alias,
 		ParentAlias: unsPo.ParentAlias,

@@ -1,11 +1,13 @@
 package event
 
-import "backend/internal/common/dto"
+import (
+	"backend/internal/types"
+)
 
 // UpdateInstanceEvent defines an event for updating UNS instances, folders, or templates.
 type UpdateInstanceEvent struct {
 	ApplicationEvent
-	Topics    []*dto.CreateTopicDto
-	Folder    []*dto.CreateTopicDto
-	Templates []*dto.CreateTopicDto
+	Topics    []*types.CreateTopicDto
+	Folder    []*types.CreateTopicDto
+	Templates []*types.CreateTopicDto
 }

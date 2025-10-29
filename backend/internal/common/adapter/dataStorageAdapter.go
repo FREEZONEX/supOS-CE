@@ -1,14 +1,14 @@
 package adapter
 
 import (
-	"backend/internal/common"
+	"backend/internal/types"
 	"database/sql"
 )
 
 type DataStorageAdapter interface {
 	Adapter
 
-	GetJdbcType() common.SrcJdbcType
+	GetJdbcType() types.SrcJdbcType
 	GetJdbcTemplate() *sql.DB
 	GetDataSourceProperties() DataSourceProperties
 }

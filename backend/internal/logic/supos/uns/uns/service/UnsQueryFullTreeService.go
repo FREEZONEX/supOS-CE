@@ -3,7 +3,6 @@ package service
 import (
 	"backend/internal/common/dto"
 	"backend/internal/common/utils/PathUtil"
-	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
@@ -123,7 +122,7 @@ func (l *UnsQueryService) uns2treeList(req *types.SearchTreeReq, list []*dao.Uns
 		}
 		if match {
 			v = &types.TopicTreeResult{
-				Id:             strconv.FormatInt(uns.ID, 10),
+				Id:             strconv.FormatInt(uns.Id, 10),
 				PathType:       2,
 				Protocol:       uns.ProtocolType,
 				ParentDataType: uns.ParentDataType,
@@ -163,15 +162,15 @@ func (l *UnsQueryService) getTopicTreeResults(all []*dao.UnsNamespace, list []*d
 		}
 
 		rs := &types.TopicTreeResult{
-			Name: po.Name, Path: path, Type: po.PathType, PathType: po.PathType, Protocol: po.Protocol,
+			Name: po.Name, Path: path, Type: po.PathType, PathType: po.PathType, Protocol: po.ProtocolType,
 		}
 
 		rs.ParentDataType = po.ParentDataType
-		rs.Id = strconv.FormatInt(po.ID, 10)
+		rs.Id = strconv.FormatInt(po.Id, 10)
 		rs.Alias = po.Alias
 
-		if po.ParentID != nil {
-			pidStr := strconv.FormatInt(*po.ParentID, 10)
+		if po.ParentId != nil {
+			pidStr := strconv.FormatInt(*po.ParentId, 10)
 			rs.ParentId = &pidStr
 			rs.ParentAlias = po.ParentAlias
 		}
@@ -193,11 +192,9 @@ func (l *UnsQueryService) getTopicTreeResults(all []*dao.UnsNamespace, list []*d
 
 		// 处理字段
 		if po.Fields != nil {
-			fields := UnsConverter.ConvertFields(po.Fields)
-			for i := range fields {
-				if fields[i] != nil {
-					fields[i].Index = nil
-				}
+			fields := po.Fields
+			for _, f := range fields {
+				f.Index = nil
 			}
 			rs.Fields = fields
 		}

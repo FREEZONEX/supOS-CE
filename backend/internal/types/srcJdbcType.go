@@ -1,4 +1,4 @@
-package common
+package types
 
 import "backend/internal/common/constants"
 
@@ -40,7 +40,7 @@ var srcJdbcTypes = map[SrcJdbcType]srcJdbcTypeInfo{
 	},
 }
 
-// GetByID returns SrcJdbcType by ID
+// GetByID returns SrcJdbcType by Id
 func GetSrcJdbcTypeByID(id int16) SrcJdbcType {
 	k := SrcJdbcType(id)
 	if _, ok := srcJdbcTypes[k]; ok {

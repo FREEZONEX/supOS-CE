@@ -1,7 +1,7 @@
 package layrecutil
 
 import (
-	"backend/internal/common/dto"
+	"backend/internal/types"
 	"strings"
 )
 
@@ -30,8 +30,8 @@ func GetParentLayRec(layRec string) string {
 
 // BuildParentToChildrenMap builds an index mapping parent paths to all their descendant nodes.
 // This implementation correctly mirrors the logic of the performant `buildParentToChildrenMap2` from the Java version.
-func BuildParentToChildrenMap(allNodes []*dto.CreateTopicDto) map[string][]*dto.CreateTopicDto {
-	parentToChildrenMap := make(map[string][]*dto.CreateTopicDto, len(allNodes)*2)
+func BuildParentToChildrenMap(allNodes []*types.CreateTopicDto) map[string][]*types.CreateTopicDto {
+	parentToChildrenMap := make(map[string][]*types.CreateTopicDto, len(allNodes)*2)
 
 	for _, node := range allNodes {
 		layRec := node.LayRec
@@ -49,7 +49,7 @@ func BuildParentToChildrenMap(allNodes []*dto.CreateTopicDto) map[string][]*dto.
 			parentPath := layRec[:index]
 			list, ok := parentToChildrenMap[parentPath]
 			if !ok {
-				list = make([]*dto.CreateTopicDto, 0, 4)
+				list = make([]*types.CreateTopicDto, 0, 4)
 			}
 			parentToChildrenMap[parentPath] = append(list, node)
 
@@ -59,7 +59,7 @@ func BuildParentToChildrenMap(allNodes []*dto.CreateTopicDto) map[string][]*dto.
 		}
 	}
 	// The above implementation was incorrect. Let's do it correctly.
-	parentToChildrenMap = make(map[string][]*dto.CreateTopicDto, len(allNodes)*2) // Reset the map
+	parentToChildrenMap = make(map[string][]*types.CreateTopicDto, len(allNodes)*2) // Reset the map
 	for _, node := range allNodes {
 		layRec := node.LayRec
 		if layRec == "" {
@@ -76,7 +76,7 @@ func BuildParentToChildrenMap(allNodes []*dto.CreateTopicDto) map[string][]*dto.
 			parentPath := tempPath[:index]
 			list, ok := parentToChildrenMap[parentPath]
 			if !ok {
-				list = make([]*dto.CreateTopicDto, 0, 4)
+				list = make([]*types.CreateTopicDto, 0, 4)
 			}
 			parentToChildrenMap[parentPath] = append(list, node)
 			tempPath = parentPath

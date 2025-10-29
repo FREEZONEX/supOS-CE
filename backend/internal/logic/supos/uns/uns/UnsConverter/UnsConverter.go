@@ -1,11 +1,9 @@
 package UnsConverter
 
 import (
-	"backend/internal/common"
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
 	"backend/internal/common/enums"
-	"backend/internal/common/utils/FieldUtils"
+	"backend/internal/common/utils/FieldFlags"
 	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/bo"
@@ -27,13 +25,13 @@ func GetFrequencySeconds(frequency string) *int64 {
 	}
 	return nil
 }
-func Label2Uns(labelDto *dao.UnsLabel) *dto.CreateTopicDto {
-	unsDto := &dto.CreateTopicDto{}
+func Label2Uns(labelDto *dao.UnsLabel) *types.CreateTopicDto {
+	unsDto := &types.CreateTopicDto{}
 
-	unsDto.ID = labelDto.ID
-	unsDto.CreateAt = labelDto.CreateAt
-	unsDto.UpdateAt = labelDto.UpdateAt
-	unsDto.Flags = labelDto.WithFlags
+	unsDto.Id = labelDto.ID
+	unsDto.CreateAt = labelDto.CreateAt.UnixMilli()
+	unsDto.UpdateAt = labelDto.UpdateAt.UnixMilli()
+	unsDto.WithFlags = labelDto.WithFlags
 	unsDto.Name = labelDto.LabelName
 	unsDto.Path = "label/" + labelDto.LabelName
 	unsDto.PathType = constants.PathTypeLabel
@@ -54,8 +52,8 @@ func Label2Uns(labelDto *dao.UnsLabel) *dto.CreateTopicDto {
 	}
 	return unsDto
 }
-func Po2Dtos(poList []*dao.UnsNamespace) []*dto.CreateTopicDto {
-	unsDtoList := make([]*dto.CreateTopicDto, len(poList))
+func Po2Dtos(poList []*dao.UnsNamespace) []*types.CreateTopicDto {
+	unsDtoList := make([]*types.CreateTopicDto, len(poList))
 	// BeanUtil.copyProperties equivalent - assuming a custom copy function
 	copier.CopyWithOption(&unsDtoList, poList, copier.Option{IgnoreEmpty: true})
 	for i, p := range poList {
@@ -75,29 +73,29 @@ func Po2ApiDtos(poList []*dao.UnsNamespace) []*types.CreateTopicDto {
 	}
 	return unsDtoList
 }
-func Po2Dto(p *dao.UnsNamespace) *dto.CreateTopicDto {
-	unsDto := &dto.CreateTopicDto{}
+func Po2Dto(p *dao.UnsNamespace) *types.CreateTopicDto {
+	unsDto := &types.CreateTopicDto{}
 	copier.CopyWithOption(unsDto, p, copier.Option{IgnoreEmpty: true})
 	po2Dto(p, unsDto)
 	return unsDto
 }
-func po2Dto(p *dao.UnsNamespace, unsDto *dto.CreateTopicDto) {
+func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 
 	var withFlags int32
 	if p.WithFlags != nil {
 		withFlags = *p.WithFlags
 	}
-	unsDto.ID = p.ID
-	unsDto.Flags = p.WithFlags
+	unsDto.Id = p.Id
+	unsDto.WithFlags = p.WithFlags
 	unsDto.AddFlow = boPt(constants.WithFlow(withFlags))
 	unsDto.AddDashBoard = boPt(constants.WithDashBoard(withFlags))
-	unsDto.Save2DB = boPt(constants.WithSave2db(withFlags))
+	unsDto.Save2Db = boPt(constants.WithSave2db(withFlags))
 	unsDto.RetainTableWhenDeleteInstance = boPt(constants.WithRetainTableWhenDeleteInstance(withFlags))
 	unsDto.ParentAlias = p.ParentAlias
-	unsDto.ParentID = p.ParentID
+	unsDto.ParentId = p.ParentId
 	unsDto.Name = p.Name
 	unsDto.LayRec = p.LayRec
-	unsDto.ModelID = p.ModelID
+	unsDto.ModelId = p.ModelId
 	unsDto.ProtocolType = p.ProtocolType
 
 	protocolStr := p.Protocol
@@ -111,8 +109,7 @@ func po2Dto(p *dao.UnsNamespace, unsDto *dto.CreateTopicDto) {
 		}
 	}
 
-	jdbcType := common.GetSrcJdbcTypeByID(p.DataSrcID)
-	unsDto.DataSrcID = jdbcType
+	unsDto.DataSrcID = p.DataSrcId
 	unsDto.Refers = p.Refers
 
 	calculationExpr := p.Expression
@@ -130,26 +127,26 @@ func po2Dto(p *dao.UnsNamespace, unsDto *dto.CreateTopicDto) {
 	//		dto.AlarmRuleDefine = &ruleDefine
 	//	}
 	//}
-	unsDto.ExtendFieldUsed = FieldUtils.ParseFlag(p.ExtendFieldFlags)
+	unsDto.ExtendFieldUsed = FieldFlags.ParseFlag(p.ExtendFieldFlags)
 }
 func Po2ApiDto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 	var withFlags int32
 	if p.WithFlags != nil {
 		withFlags = *p.WithFlags
 	}
-	unsDto.Id = p.ID
+	unsDto.Id = p.Id
 	unsDto.AddFlow = boPt(constants.WithFlow(withFlags))
 	unsDto.AddDashBoard = boPt(constants.WithDashBoard(withFlags))
-	unsDto.Save2db = boPt(constants.WithSave2db(withFlags))
+	unsDto.Save2Db = boPt(constants.WithSave2db(withFlags))
 	unsDto.RetainTableWhenDeleteInstance = boPt(constants.WithRetainTableWhenDeleteInstance(withFlags))
 	unsDto.ParentAlias = p.ParentAlias
-	unsDto.ParentId = p.ParentID
+	unsDto.ParentId = p.ParentId
 	unsDto.Name = p.Name
-	unsDto.ModelId = p.ModelID
+	unsDto.ModelId = p.ModelId
 
 	calculationExpr := p.Expression
 	unsDto.Expression = calculationExpr
-	unsDto.ExtendFieldUsed = FieldUtils.ParseFlag(p.ExtendFieldFlags)
+	unsDto.ExtendFieldUsed = FieldFlags.ParseFlag(p.ExtendFieldFlags)
 }
 func boPt(b bool) *bool {
 	return &b
@@ -189,41 +186,58 @@ func createMountDetailVo(unsDto bo.NodeUnsInfo) *types.MountDetailVo {
 var apiConvertOptions = copier.Option{IgnoreEmpty: true, Converters: []copier.TypeConverter{
 	{
 		SrcType: copier.String,
-		DstType: enums.FieldTypeInteger,
+		DstType: types.FieldTypeInteger,
 		Fn: func(src interface{}) (dst interface{}, err error) {
-			if rs, ok := enums.GetFieldTypeByNameIgnoreCase(src.(string)); ok {
+			if rs, ok := types.GetFieldTypeByNameIgnoreCase(src.(string)); ok {
 				return rs, nil
 			}
 			return nil, errors.Default
 		},
 	}, {
-		SrcType: enums.FieldTypeInteger,
+		SrcType: types.FieldTypeInteger,
 		DstType: copier.String,
 		Fn: func(src interface{}) (dst interface{}, err error) {
-			if rs, ok := src.(enums.FieldType); ok {
+			if rs, ok := src.(types.FieldType); ok {
 				return rs.Name(), nil
+			}
+			return nil, errors.Default
+		},
+	}, {
+		SrcType: time.Time{},
+		DstType: int64(0),
+		Fn: func(src interface{}) (dst interface{}, err error) {
+			if rs, ok := src.(time.Time); ok {
+				return rs.UnixMilli(), nil
+			}
+			return nil, errors.Default
+		},
+	}, {
+		SrcType: int64(0),
+		DstType: copier.String,
+		Fn: func(src interface{}) (dst interface{}, err error) {
+			if rs, ok := src.(int64); ok {
+				return strconv.FormatInt(rs, 10), nil
+			}
+			return nil, errors.Default
+		},
+	}, {
+		SrcType: copier.String,
+		DstType: int64(0),
+		Fn: func(src interface{}) (dst interface{}, err error) {
+			if rs, ok := src.(string); ok {
+				return strconv.ParseInt(rs, 10, 64)
 			}
 			return nil, errors.Default
 		},
 	},
 }}
 
-func ConvertApiDto(apiDto types.CreateTopicDto) *dto.CreateTopicDto {
-	var target dto.CreateTopicDto
-	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
-	return &target
-}
-func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *dto.CreateTopicDto {
-	var target dto.CreateTopicDto
+func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *types.CreateTopicDto {
+	var target types.CreateTopicDto
 	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
 	return &target
 }
 
-func ConvertApiDtos(apiDto []types.CreateTopicDto) (target []*dto.CreateTopicDto) {
-	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
-	return target
-}
-func ConvertFields(apiDto []*dto.FieldDefine) (target []*types.FieldDefine) {
-	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
-	return target
+func CopyProperties(from any, to any) {
+	copier.CopyWithOption(to, from, apiConvertOptions)
 }
