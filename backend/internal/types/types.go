@@ -8,6 +8,10 @@ type AdminResetPwdReq struct {
 	Password string `json:"password"`
 }
 
+type AliasRequest struct {
+	Alias string `path:"alias"`
+}
+
 type BaseResult struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
@@ -110,10 +114,6 @@ type CreateFileDto struct {
 	LabelNames       []string               `json:"labelNames,optional"`
 }
 
-type CreateGrafanaByUnsReq struct {
-	Alias string `path:"alias"`
-}
-
 type CreateTopicDto struct {
 	Id                            int64                     `json:"id,string,optional,omitzero"`
 	Batch                         int                       `json:"-"`
@@ -194,6 +194,23 @@ type CreateUnsNodeRedDto struct {
 	Tag       string `json:"tag,optional"`
 }
 
+type DashboardDto struct {
+	ID          string `json:"id,omitzero"`
+	Name        string `json:"name"`
+	Type        int    `json:"type"` // 1-grafana 2-fuxa
+	NeedInit    bool   `json:"needInit"`
+	Description string `json:"description,omitzero"`
+	JsonContent string `json:"jsonContent,omitzero"`
+	Creator     string `json:"creator,omitzero"`
+	UpdateTime  string `json:"updateTime,omitzero"`
+	CreateTime  string `json:"createTime,omitzero"`
+}
+
+type DashboardRefDto struct {
+	DashboardID string `json:"dashboardId"`
+	UnsAlias    string `json:"unsAlias"`
+}
+
 type DateRange struct {
 	Start string `json:"start,optional"` //开始时间 格式：yyyy-mm-dd
 	End   string `json:"end,optional"`   //结束时间 格式：yyyy-mm-dd
@@ -215,6 +232,10 @@ type DbFieldsInfoVo struct {
 type DbFieldsInfoVoResp struct {
 	BaseResult
 	Data []FieldDefine `json:"data"`
+}
+
+type DetailRequest struct {
+	ID string `form:"id"`
 }
 
 type DetectRemoveReq struct {
@@ -272,6 +293,10 @@ type FieldDefines struct {
 	FieldIndexMap map[string]string       // Index -> Field name  // Index -> Field name
 	UniqueKeys    map[string]bool         // Set of unique field names  // Set of unique field names
 	CalcField     *FieldDefine            // Calculation field  // Calculation field
+}
+
+type GetByUnsRequest struct {
+	UnsAlias string `form:"unsAlias"`
 }
 
 type GetLastMsgReq struct {
@@ -352,8 +377,18 @@ type InstanceField struct {
 	Uts   bool   `json:"uts"`
 }
 
+type IsExistRequest struct {
+	Alias string `form:"alias"`
+}
+
 type JsonBodyReq struct {
 	Json string `json:"json"`
+}
+
+type JsonResult struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg,omitzero"`
+	Data interface{} `json:"data,omitzero"`
 }
 
 type LabelVo struct {
@@ -370,6 +405,10 @@ type LabelVo struct {
 type ListTypesResult struct {
 	BaseResult
 	Data []string `json:"data"`
+}
+
+type MarkTopRequest struct {
+	ID string `json:"id"`
 }
 
 type ModelDetail struct {
@@ -430,6 +469,15 @@ type PageInfo struct {
 	Orders []*OrderBy `json:"orders,optional"`                    //排序
 }
 
+type PageListRequest struct {
+	K         string `form:"k,optional"`         // 关键字
+	Type      int    `form:"type,optional"`      // Dashboard 类型
+	OrderCode string `form:"orderCode,optional"` // 排序字段
+	IsAsc     string `form:"isAsc,optional"`     // 是否升序
+	PageNum   int    `form:"pageNum,default=1"`
+	PageSize  int    `form:"pageSize,default=10"`
+}
+
 type PageResp struct {
 	Page     int64 `json:"page,optional"`     // 页码
 	PageSize int64 `json:"pageSize,optional"` // 每页大小
@@ -443,6 +491,13 @@ type PageResultDTO struct {
 	Code     int64              `json:"code"`
 	Msg      string             `json:"msg,omitempty"`
 	Data     []*TopicTreeResult `json:"data,omitempty,optional"`
+}
+
+type PageResultDto struct {
+	Total    int64          `json:"total"`
+	PageNum  int            `json:"pageNum"`
+	PageSize int            `json:"pageSize"`
+	Data     []DashboardDto `json:"data"`
 }
 
 type ParseJson2TreeUnsResp struct {
@@ -758,6 +813,10 @@ type TreeOuterStructureVo struct {
 	Children []TreeOuterStructureVo `json:"children"`
 }
 
+type UnmarkRequest struct {
+	ID string `form:"id"`
+}
+
 type UnsCreateTopicDTO struct {
 	ParentAlias    string                 `json:"parentAlias,optional"`
 	ParentID       int64                  `json:"parentId,optional"`
@@ -958,6 +1017,10 @@ type UserUpdateReq struct {
 	RoleList       []RoleSummary `json:"roleList,optional"`
 	OperateRole    *bool         `json:"operateRole,optional"`
 	Source         string        `json:"source,optional"`
+}
+
+type UuidRequest struct {
+	Uid string `path:"uid"`
 }
 
 type WithCode struct {

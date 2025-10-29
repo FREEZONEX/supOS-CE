@@ -305,76 +305,76 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
-					// createGrafanaByUns
+					// 分页查询 Dashboard
+					Method:  http.MethodGet,
+					Path:    "/",
+					Handler: suposunsdashboard.PageListHandler(serverCtx),
+				},
+				{
+					// 创建 Dashboard
+					Method:  http.MethodPost,
+					Path:    "/",
+					Handler: suposunsdashboard.CreateHandler(serverCtx),
+				},
+				{
+					// 编辑 Dashboard
+					Method:  http.MethodPut,
+					Path:    "/",
+					Handler: suposunsdashboard.EditHandler(serverCtx),
+				},
+				{
+					// 根据 UID 获取 Dashboard
+					Method:  http.MethodGet,
+					Path:    "/:uid",
+					Handler: suposunsdashboard.GetByUuidHandler(serverCtx),
+				},
+				{
+					// 删除 Dashboard
+					Method:  http.MethodDelete,
+					Path:    "/:uid",
+					Handler: suposunsdashboard.DeleteHandler(serverCtx),
+				},
+				{
+					// 绑定 UNS
+					Method:  http.MethodPost,
+					Path:    "/bindUns",
+					Handler: suposunsdashboard.BindUnsHandler(serverCtx),
+				},
+				{
+					// 基于 UNS 创建 Grafana Dashboard
 					Method:  http.MethodPost,
 					Path:    "/createGrafanaByUns/:alias",
 					Handler: suposunsdashboard.CreateGrafanaByUnsHandler(serverCtx),
 				},
 				{
-					// 获取列表
+					// 获取 Dashboard 详情
 					Method:  http.MethodGet,
-					Path:    "/dashboard",
-					Handler: suposunsdashboard.PageListHandler(serverCtx),
+					Path:    "/detail",
+					Handler: suposunsdashboard.GetDetailHandler(serverCtx),
 				},
 				{
-					// 创建
-					Method:  http.MethodPost,
-					Path:    "/dashboard",
-					Handler: suposunsdashboard.CreateHandler(serverCtx),
-				},
-				{
-					// edit
-					Method:  http.MethodPut,
-					Path:    "/dashboard",
-					Handler: suposunsdashboard.EditHandler(serverCtx),
-				},
-				{
-					// delete
-					Method:  http.MethodDelete,
-					Path:    "/dashboard/:uid",
-					Handler: suposunsdashboard.DeleteHandler(serverCtx),
-				},
-				{
-					// get
+					// 根据 UNS 获取 Dashboard
 					Method:  http.MethodGet,
-					Path:    "/dashboard/:uid",
-					Handler: suposunsdashboard.GetHandler(serverCtx),
-				},
-				{
-					// bindUns
-					Method:  http.MethodPost,
-					Path:    "/dashboard/bindUns",
-					Handler: suposunsdashboard.BindUnsHandler(serverCtx),
-				},
-				{
-					// 获取详情
-					Method:  http.MethodPost,
-					Path:    "/dashboard/detail",
-					Handler: suposunsdashboard.DetailHandler(serverCtx),
-				},
-				{
-					// getByUns
-					Method:  http.MethodGet,
-					Path:    "/dashboard/getByUns",
+					Path:    "/getByUns",
 					Handler: suposunsdashboard.GetByUnsHandler(serverCtx),
 				},
 				{
-					// isExist
+					// 检查 Dashboard 是否存在
 					Method:  http.MethodGet,
-					Path:    "/dashboard/isExist",
+					Path:    "/isExist",
 					Handler: suposunsdashboard.IsExistHandler(serverCtx),
 				},
 				{
-					// 置顶
+					// 置顶 Dashboard
 					Method:  http.MethodPost,
-					Path:    "/dashboard/mark",
-					Handler: suposunsdashboard.MarkHandler(serverCtx),
+					Path:    "/mark",
+					Handler: suposunsdashboard.MarkTopHandler(serverCtx),
 				},
 				{
-					// 取消置顶
+					// 取消置顶 Dashboard
 					Method:  http.MethodDelete,
-					Path:    "/dashboard/unmark",
-					Handler: suposunsdashboard.UnmarkHandler(serverCtx),
+					Path:    "/unmark",
+					Handler: suposunsdashboard.UnmarkTopHandler(serverCtx),
 				},
 			}...,
 		),
