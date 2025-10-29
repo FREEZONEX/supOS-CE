@@ -3,8 +3,11 @@ package service
 import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
+	"backend/internal/common/utils/FieldUtils"
 	"backend/internal/common/utils/JsonUtil"
+	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
+	"backend/internal/logic/supos/uns/uns/bo"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
@@ -32,33 +35,7 @@ func (l *UnsQueryService) GetInstanceDetail(ctx context.Context, req *types.Inst
 		resp.Msg = I18nUtils.GetMessage("uns.file.not.found")
 		return
 	}
-	detail.SubscribeEnable = constants.WithSubscribeEnable(po.WithFlags)
-	protocol := po.Protocol
-	if detail.SubscribeEnable && strings.HasPrefix(protocol, "{") {
-		var pMap = make(map[string]string)
-		JsonUtil.FromJson(protocol, &pMap)
-		//if freq, has := pMap["frequency"]; has {
-		//	detail.SubscribeFrequency = freq
-		//}
-	}
-	detail.Id = strconv.FormatInt(po.Id, 10)
-	UnsConverter.CopyProperties(po, detail)
-	detail.Topic = base.SanYuan(constants.UseAliasAsTopic, po.Alias, po.Path)
-	if fs := detail.Fields; len(fs) > 0 {
-		for _, f := range fs {
-			f.Index = nil
-		}
-	}
-	if templateId := po.ModelId; templateId != nil {
-		if template, er := l.unsMapper.SelectById(db, *templateId); er == nil && template != nil {
-			detail.ModelId = strconv.FormatInt(*templateId, 10)
-			detail.ModelId = template.Name
-			detail.TemplateAlias = template.Alias
-		}
-	}
-	if ms := l.mountService; ms != nil {
-		detail.Mount = ms.ParseMountDetail(po, false)
-	}
+	l.setDetailInfo(ctx, po, detail, true)
 	resp.Data = detail
 	return
 }
@@ -81,7 +58,7 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 		resp.Msg = I18nUtils.GetMessage("uns.model.not.found")
 		return
 	}
-	dto.SubscribeEnable = constants.WithSubscribeEnable(po.WithFlags)
+	dto.SubscribeEnable = constants.WithSubscribeEnable(base.P2v(po.WithFlags))
 	protocol := po.Protocol
 	if dto.SubscribeEnable && strings.HasPrefix(protocol, "{") {
 		var pMap = make(map[string]string)
@@ -98,13 +75,6 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 			f.Index = nil
 		}
 	}
-	if templateId := po.ModelId; templateId != nil {
-		if template, er := l.unsMapper.SelectById(db, *templateId); er == nil && template != nil {
-			dto.ModelId = strconv.FormatInt(*templateId, 10)
-			dto.ModelName = template.Name
-			dto.TemplateAlias = template.Alias
-		}
-	}
 	if ms := l.mountService; ms != nil {
 		dto.Mount = ms.ParseMountDetail(po, false)
 	}
@@ -112,16 +82,17 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 	return
 }
 
-/*func (l *UnsQueryService) setDetailInfo(file bo.UnsInfo, dto *types.InstanceDetail, setMount bool) {
-	fs := file.Refers
-	var origPo *CreateTopicDto
-
+func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dto *types.InstanceDetail, setMount bool) {
+	fs := file.GetRefers()
+	var origPo *types.CreateTopicDto
+	db := dao.GetDb(ctx)
+	ctx = dao.SetDb(ctx, db)
 	if len(fs) > 0 {
-		if file.DataType != nil && *file.DataType == Constants.CITING_TYPE {
-			if len(fs) > 0 && fs[0].ID != nil {
-				orig := l.unsDefinitionService.GetDefinitionById(*fs[0].ID)
+		if dataType := file.GetDataType(); dataType != nil && *dataType == constants.CitingType {
+			if len(fs) > 0 && fs[0].Id > 0 {
+				orig, _ := l.unsMapper.SelectById(db, fs[0].Id)
 				if orig != nil {
-					origPo = orig
+					origPo = UnsConverter.Po2Dto(orig)
 				}
 			}
 		}
@@ -135,7 +106,7 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 
 	// 设置字段
 	if fields := unsTarget.GetFields(); fields != nil {
-		fieldDefines := l.getDisplayFields(unsTarget, unsTarget.Fields)
+		fieldDefines := getDisplayFields(unsTarget, unsTarget.GetFields())
 		dto.Fields = fieldDefines
 	}
 
@@ -146,81 +117,115 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 	dto.DataType = file.GetDataType()
 	dto.Alias = file.GetAlias()
 	dto.Path = file.GetPath()
-
 	if constants.UseAliasAsTopic {
-		dto.Topic = file.Alias
+		dto.Topic = file.GetAlias()
 	} else {
-		dto.Topic = file.Path
+		dto.Topic = file.GetPath()
 	}
-
-	dto.DataPath = file.DataPath
-	dto.Protocol = file.ProtocolMap
+	dPath := file.GetDataPath()
+	dto.DataPath = &dPath
+	dto.Protocol = file.GetProtocolMap()
 
 	// 设置引用和表达式
 	if len(fs) > 0 {
-		l.setRefersAndExpression(fs, unsTarget.Expression, unsTarget.CalculationType, dto.Protocol, dto)
+		l.calcService.setRefersAndExpression(fs, unsTarget.GetExpression(), unsTarget.GetCalculationType(), dto.Protocol, dto)
 	}
 
-	dto.CalculationType = unsTarget.CalculationType
-	dto.Description = file.Description
-	dto.CreateTime = l.getDatetime(file.CreateAt)
-	dto.UpdateTime = l.getDatetime(file.UpdateAt)
-	dto.Alias = file.Alias
-	dto.Name = file.Name
-	dto.DisplayName = file.DisplayName
-	dto.PathName = PathUtil.GetName(file.Path)
-	dto.Extend = file.Extend
+	//dto.CalculationType = unsTarget.CalculationType
+	dto.Description = file.GetDescription()
+	dto.CreateTime = file.GetCreateAt()
+	dto.UpdateTime = file.GetUpdateAt()
+	dto.Alias = file.GetAlias()
+	dto.Name = file.GetName()
+	dto.DisplayName = file.GetDisplayName()
+	dto.PathName = PathUtil.GetName(file.GetPath())
+	dto.Extend = file.GetExtend()
 
 	// 设置读写模式、保存到数据库、扩展字段使用、挂载信息
-	dto.ReadWriteMode = unsTarget.ReadWriteMode
-	dto.ExtendFieldUsed = FieldUtils.ParseFlag(unsTarget.ExtendFieldFlags)
+	//dto.ReadWriteMode = unsTarget.ReadWriteMode
+	//dto.ExtendFieldUsed = FieldFlags.ParseFlag(unsTarget.GetExtendFieldFlags())
 
-	if setMount {
-		dto.Mount = l.mountService.ParseMountDetail(unsTarget, false)
+	if mc := l.mountService; setMount && mc != nil {
+		dto.Mount = mc.ParseMountDetail(unsTarget, false)
 	}
 
 	// 设置标志位
-	if unsTarget.Flags != nil {
-		flags := *unsTarget.Flags
-		dto.WithFlow = Constants.WithFlow(flags)
-		dto.WithDashboard = Constants.WithDashBoard(flags)
-		dto.WithSave2db = Constants.WithSave2db(flags)
-		dto.Save2db = Constants.WithSave2db(flags)
-		dto.SubscribeEnable = Constants.WithSubscribeEnable(flags)
+	if flagsP := unsTarget.GetFlags(); flagsP != nil {
+		flags := *flagsP
+		dto.WithFlow = constants.WithFlow(flags)
+		dto.WithDashboard = constants.WithDashBoard(flags)
+		dto.WithSave2db = constants.WithSave2db(flags)
+		dto.Save2db = constants.WithSave2db(flags)
+		dto.SubscribeEnable = constants.WithSubscribeEnable(flags)
 	}
 
 	// 设置标签列表
-	if file.LabelIds != nil && len(file.LabelIds) > 0 {
-		labelIds := make([]int64, 0, len(file.LabelIds))
-		for id := range file.LabelIds {
-			labelIds = append(labelIds, id)
-		}
-
-		labelPos, err := l.labelMapper.SelectByIds(labelIds)
-		if err == nil {
-			labelList := make([]*UnsLabelVo, 0, len(labelPos))
-			for _, p := range labelPos {
-				vo := &UnsLabelVo{}
-				// BeanUtils.copyProperties equivalent
-				l.copyProperties(p, vo)
-				if p.ID != nil {
-					vo.ID = *p.ID
-				}
-				labelList = append(labelList, vo)
-			}
-			dto.LabelList = labelList
+	if labelIds := file.GetLabelIds(); len(labelIds) > 0 {
+		labelPos, _ := l.labelMapper.ListByIds(db, base.MapKeys(labelIds))
+		if len(labelPos) > 0 {
+			dto.LabelList = base.Map[*dao.UnsLabel, types.LabelVo](labelPos, func(e *dao.UnsLabel) (rs types.LabelVo) {
+				UnsConverter.CopyProperties(e, &rs)
+				return rs
+			})
 		}
 	}
 
 	// 设置模板信息
-	if file.ModelId != nil {
-		template := l.unsDefinitionService.GetDefinitionById(*file.ModelId)
-		if template != nil {
-			dto.ModelId = strconv.FormatInt(*file.ModelId, 10)
-			dto.ModelName = template.Name
+	if templateId := file.GetModelId(); templateId != nil {
+		if template, er := l.unsMapper.SelectById(db, *templateId); er == nil && template != nil {
+			dto.ModelId = strconv.FormatInt(*templateId, 10)
+			dto.ModelId = template.Name
 			dto.TemplateName = template.Name
 			dto.TemplateAlias = template.Alias
 		}
 	}
 }
-*/
+func getDisplayFields(unsInfo bo.UnsInfo, fields []*types.FieldDefine) []*types.FieldDefine {
+	dataType := unsInfo.GetDataType()
+	if dataType == nil {
+		return fields
+	}
+	if *dataType == constants.TimeSequenceType || *dataType == constants.CalculationRealType {
+		return filterFieldsForTimeSequence(fields)
+	} else {
+		return filterFieldsForOtherTypes(unsInfo, fields)
+	}
+}
+
+func filterFieldsForTimeSequence(fields []*types.FieldDefine) []*types.FieldDefine {
+	result := make([]*types.FieldDefine, 0, len(fields))
+
+	for _, fd := range fields {
+		name := fd.GetName()
+		tbValueName := fd.GetTbValueName()
+
+		// 保留不包含系统字段前缀且没有表值名称的字段
+		if !strings.HasPrefix(name, constants.SystemFieldPrev) && tbValueName == nil {
+			result = append(result, fd)
+		}
+	}
+
+	return result
+}
+
+func filterFieldsForOtherTypes(unsInfo bo.UnsInfo, fields []*types.FieldDefine) []*types.FieldDefine {
+	jdbcType := unsInfo.GetSrcJdbcType()
+	if jdbcType == 0 {
+		return fields
+	}
+
+	ct := FieldUtils.GetTimestampField(fields)
+	qos := FieldUtils.GetQualityField(fields, jdbcType.TypeCode())
+
+	result := make([]*types.FieldDefine, 0, len(fields))
+
+	for _, fd := range fields {
+		// 跳过时间戳字段、质量字段和系统字段
+		if fd == ct || fd == qos || strings.HasPrefix(fd.GetName(), constants.SystemFieldPrev) {
+			continue
+		}
+		result = append(result, fd)
+	}
+
+	return result
+}

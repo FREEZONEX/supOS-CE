@@ -7,23 +7,35 @@ import (
 )
 
 func (p UnsNamespaceRepo) migrate(db *gorm.DB) {
-	createFunction_nextId(db)
-	createFunction_nextIdLong(db)
-	createFunction_extractFieldsText(db)
-	createFunc_pathHash(db)
-	er := createTrigger_extractFieldsText(db)
-	if er == nil {
+	err := createFunction_nextId(db)
+	if err != nil {
+		log.Println("ERR: createFunction_nextId", err.Error())
+	}
+	err = createFunction_nextIdLong(db)
+	if err != nil {
+		log.Println("ERR: createFunction_nextIdLong", err.Error())
+	}
+	err = createFunction_extractFieldsText(db)
+	if err != nil {
+		log.Println("ERR: createFunction_extractFieldsText", err.Error())
+	}
+	err = createFunc_pathHash(db)
+	if err != nil {
+		log.Println("ERR: createFunc_pathHash", err.Error())
+	}
+	err = createTrigger_extractFieldsText(db)
+	if err == nil {
 		refreshFieldsText(db)
 		log.Println("刷新 FieldsText")
 	}
-	er = createTrigger_pathHash(db)
-	if er == nil {
+	err = createTrigger_pathHash(db)
+	if err == nil {
 		refreshPathHash(db)
 		log.Println("刷新 PathHash")
 	}
 }
 func createFunction_nextIdLong(db *gorm.DB) error {
-	return db.Raw(`CREATE OR REPLACE FUNCTION "nextIdLong"(prev TEXT, layRec TEXT)
+	return db.Exec(`CREATE OR REPLACE FUNCTION "nextIdLong"(prev TEXT, layRec TEXT)
         RETURNS int8 AS $$
         DECLARE
         result TEXT;
@@ -39,7 +51,7 @@ func createFunction_nextIdLong(db *gorm.DB) error {
         $$ LANGUAGE plpgsql IMMUTABLE`).Error
 }
 func createFunction_nextId(db *gorm.DB) error {
-	return db.Raw(`
+	return db.Exec(`
         CREATE OR REPLACE FUNCTION "nextId" (prev TEXT, layRec TEXT)
         RETURNS TEXT AS $$
         DECLARE
@@ -81,7 +93,7 @@ func createFunction_nextId(db *gorm.DB) error {
         $$ LANGUAGE plpgsql IMMUTABLE`).Error
 }
 func createFunction_extractFieldsText(db *gorm.DB) error {
-	return db.Raw(`
+	return db.Exec(`
         CREATE OR REPLACE FUNCTION extract_fields_text()
         RETURNS TRIGGER AS $$
         DECLARE
@@ -118,7 +130,7 @@ func createFunction_extractFieldsText(db *gorm.DB) error {
    `).Error
 }
 func createTrigger_extractFieldsText(db *gorm.DB) error {
-	return db.Raw(`
+	return db.Exec(`
         CREATE TRIGGER trigger_extract_fields_text
         BEFORE INSERT OR UPDATE OF fields ON uns_namespace
         FOR EACH ROW
@@ -126,7 +138,7 @@ func createTrigger_extractFieldsText(db *gorm.DB) error {
     `).Error
 }
 func createFunc_pathHash(db *gorm.DB) error {
-	return db.Raw(`
+	return db.Exec(`
         CREATE OR REPLACE FUNCTION update_pathash()
         RETURNS TRIGGER AS $$
         BEGIN
@@ -137,7 +149,7 @@ func createFunc_pathHash(db *gorm.DB) error {
     `).Error
 }
 func createTrigger_pathHash(db *gorm.DB) error {
-	return db.Raw(`
+	return db.Exec(`
         CREATE TRIGGER trigger_update_pathash
         BEFORE INSERT OR UPDATE OF path ON uns_namespace
         FOR EACH ROW
@@ -145,8 +157,8 @@ func createTrigger_pathHash(db *gorm.DB) error {
     `).Error
 }
 func refreshFieldsText(db *gorm.DB) error {
-	return db.Raw(`UPDATE uns_namespace SET fields = fields WHERE fields IS NOT NULL`).Error
+	return db.Exec(`UPDATE uns_namespace SET fields = fields WHERE fields IS NOT NULL`).Error
 }
 func refreshPathHash(db *gorm.DB) error {
-	return db.Raw(`UPDATE uns_namespace SET path=path WHERE fields IS NOT NULL`).Error
+	return db.Exec(`UPDATE uns_namespace SET path=path WHERE fields IS NOT NULL`).Error
 }

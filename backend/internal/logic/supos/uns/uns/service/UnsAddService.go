@@ -277,7 +277,11 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 	// 处理父文件夹ID
 	if topicDto.ParentId != nil && *topicDto.ParentId != 0 && topicDto.ParentAlias == nil {
 		folder, err := u.unsMapper.SelectById(db, *topicDto.ParentId)
-		if err != nil || folder == nil {
+		if err != nil {
+			result.Code = 500
+			result.Msg = err.Error()
+			return result
+		} else if folder == nil {
 			result.Code = 400
 			result.Msg = I18nUtils.GetMessage("uns.folder.not.found")
 			return result

@@ -11,7 +11,6 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -32,6 +31,5 @@ func NewDetectIfRemoveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *De
 
 func (l *DetectIfRemoveLogic) DetectIfRemove(req *types.DetectRemoveReq) (resp *types.RemoveResult, err error) {
 	resp, err = spring.GetBean[*service.UnsRemoveService]().DetectIfRemove(l.ctx, req)
-	err = errors.Fmt(err)
 	return
 }

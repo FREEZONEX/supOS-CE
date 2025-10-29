@@ -1,10 +1,10 @@
 package service
 
 import (
-	dao "backend/internal/repo/relationDB"
+	"backend/internal/logic/supos/uns/uns/bo"
 	"backend/internal/types"
 )
 
 type UnsMountService interface {
-	ParseMountDetail(po *dao.UnsNamespace, simple bool) *types.MountDetailVo
+	ParseMountDetail(po bo.UnsInfo, simple bool) *types.MountDetailVo
 }

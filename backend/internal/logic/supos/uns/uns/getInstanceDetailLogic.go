@@ -11,7 +11,6 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -32,6 +31,5 @@ func NewGetInstanceDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 
 func (l *GetInstanceDetailLogic) GetInstanceDetail(req *types.InstanceDetailReq) (resp *types.InstanceDetailResp, err error) {
 	resp, err = spring.GetBean[*service.UnsQueryService]().GetInstanceDetail(l.ctx, req, "")
-	err = errors.Fmt(err)
 	return
 }

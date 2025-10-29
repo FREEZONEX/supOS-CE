@@ -430,9 +430,9 @@ func (c *CreateTopicDto) GetProtocolMap() map[string]interface{} {
 	return c.Protocol
 }
 
-//func (c *CreateTopicDto) GetCalculationType() *int {
-//	return c.ca
-//}
+func (c *CreateTopicDto) GetCalculationType() *int32 {
+	return nil //TODO
+}
 
 //func (c *CreateTopicDto) GetReadWriteMode() string {
 //	return c.readWriteMode

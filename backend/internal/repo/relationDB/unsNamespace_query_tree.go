@@ -45,7 +45,7 @@ func (p UnsNamespaceRepo) ParentIdPagedQueryList(db *gorm.DB, parentId *int64, p
 	} else {
 		db = db.Where(`parent_id =?`, *parentId)
 	}
-	db = db.Where(`status=1 AND path_type in(0,2)`)
+	db = db.Where(`status=1 AND path_type in(0,2) AND id>1000`)
 	if searchCount != nil {
 		err = db.Count(searchCount).Error
 		if err != nil || *searchCount == 0 {
@@ -63,9 +63,9 @@ func (p UnsNamespaceRepo) ListCountChildren(db *gorm.DB, layRecPrev string) (res
 	sql.Grow(1024)
 	sql.Append(` select a.lay_rec, b.count_children from
         ( select parent_id, STRING_AGG( path_type::text || ':' || cc::text, ',') as count_children FROM (
-        select parent_id ,path_type,count(*) as cc from uns_namespace where`)
+        select parent_id ,path_type,count(*) as cc from uns_namespace where `)
 	if len(layRecPrev) > 0 {
-		sql.Append(`lay_rec like '`).Append(escapeSQL(layRecPrev)).Append(`/%' and status = 1 `)
+		sql.Append(` lay_rec like '`).Append(escapeSQL(layRecPrev)).Append(`/%' and status = 1 `)
 	} else {
 		sql.Append(" status = 1 ")
 	}
@@ -122,12 +122,13 @@ func unsTreeNextLevelFilter(q *UnsTreeNextLevelQuery, sql *base.StringBuilder) {
 			}
 		}
 	case 2:
-		sql.Append(`AND label_ids IS NOT null and label_ids !='{}'::jsonb`)
+		sql.Append(`AND label_ids IS NOT null and label_ids !='{}'::jsonb `)
 	case 3:
-		sql.Append(`AND model_id is not null`)
+		sql.Append(`AND model_id is not null `)
 	}
 	if keyword := q.Keyword; len(keyword) > 0 {
 		keyword = "'%" + escapeSQL(keyword) + "%'"
-		sql.Append(` AND (path ILIKE `).Append(keyword).Append(`) OR alias LIKE `).Append(keyword).Append(`))`)
+		sql.Append(` AND (path ILIKE `).Append(keyword).Append(` OR alias LIKE `).Append(keyword).Append(`)`)
 	}
+	sql.Append(` AND id>1000`) //排除系统数据
 }

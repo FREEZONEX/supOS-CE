@@ -28,7 +28,15 @@ func (l *UnsQueryService) SearchTree(ctx context.Context, req *types.SearchTreeR
 }
 func (l *UnsQueryService) searchTree(ctx context.Context, req *types.SearchTreeReq) (resp *types.SearchTreeResp, err error) {
 	db := dao.GetDb(ctx)
-	pageRs, er := l.unsMapper.PageListByConditions(db, &dto.UnsSearchCondition{},
+	pid, pType := req.ParentId, req.PathType
+	query := &dto.UnsSearchCondition{Keyword: req.Keyword, SearchType: req.SearchType}
+	if pid > 0 {
+		query.ParentId = &pid
+	}
+	if pType >= 0 {
+		query.PathType = &pType
+	}
+	pageRs, er := l.unsMapper.PageListByConditions(db, query,
 		&stores.PageInfo{Page: 1, Size: math.MaxInt64, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}},
 	)
 	resp = &types.SearchTreeResp{}
@@ -162,7 +170,7 @@ func (l *UnsQueryService) getTopicTreeResults(all []*dao.UnsNamespace, list []*d
 		}
 
 		rs := &types.TopicTreeResult{
-			Name: po.Name, Path: path, Type: po.PathType, PathType: po.PathType, Protocol: po.ProtocolType,
+			Name: po.Name, Path: path, PathType: po.PathType, Protocol: po.ProtocolType,
 		}
 
 		rs.ParentDataType = po.ParentDataType

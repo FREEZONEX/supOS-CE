@@ -72,7 +72,9 @@ func (u *UnsNamespace) GetLayRec() string {
 func (u *UnsNamespace) GetDataPath() string {
 	return u.DataPath
 }
-
+func (c *UnsNamespace) GetCalculationType() *int32 {
+	return nil //TODO
+}
 func (u *UnsNamespace) GetProtocolMap() (pmap map[string]interface{}) {
 	if protocol := u.Protocol; strings.HasPrefix(protocol, "{") {
 		JsonUtil.FromJson(protocol, &pmap)
@@ -157,7 +159,7 @@ func (t *UnsNamespace) GetName() string {
 }
 
 func (t *UnsNamespace) GetDisplayName() string {
-	return base.StrByPoint(t.DisplayName)
+	return base.P2v(t.DisplayName)
 }
 
 func (t *UnsNamespace) GetPath() string {

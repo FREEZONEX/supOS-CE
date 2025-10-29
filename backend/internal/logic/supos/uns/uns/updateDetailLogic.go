@@ -11,7 +11,6 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -32,6 +31,5 @@ func NewUpdateDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upda
 
 func (l *UpdateDetailLogic) UpdateDetail(req *types.UpdateUnsDto) (resp *types.StringResult, err error) {
 	resp, err = spring.GetBean[*service.UnsUpdateService]().UpdateDetail(l.ctx, req)
-	err = errors.Fmt(err)
 	return
 }
