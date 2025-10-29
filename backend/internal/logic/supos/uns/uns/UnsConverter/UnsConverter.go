@@ -161,6 +161,7 @@ func Dto2TreeResult(unsDto bo.NodeUnsInfo) *types.TopicTreeResult {
 	}
 	result.ParentAlias = unsDto.GetParentAlias()
 	result.PathType = unsDto.GetPathType()
+	//result.Type = result.PathType
 	name := PathUtil.GetName(unsDto.GetPath())
 	result.Name = name
 	result.Path = unsDto.GetPath()
@@ -172,12 +173,13 @@ func Dto2TreeResult(unsDto bo.NodeUnsInfo) *types.TopicTreeResult {
 }
 
 func createMountDetailVo(unsDto bo.NodeUnsInfo) *types.MountDetailVo {
-	if unsDto.GetMountType() == nil {
+	mt := unsDto.GetMountType()
+	if mt == nil || *mt == 0 {
 		return nil
 	}
 
 	mountDetailVo := &types.MountDetailVo{
-		MountType:   unsDto.GetMountType(),
+		MountType:   mt,
 		MountSource: unsDto.GetMountSource(),
 	}
 	return mountDetailVo

@@ -18,7 +18,7 @@ type UnsInfo interface {
 	GetProtocolMap() map[string]interface{}
 	GetDescription() string
 	GetExpression() string
-	//GetCalculationType() *int
+	GetCalculationType() *int32
 	//GetReadWriteMode() string
 	GetExtend() map[string]interface{}
 	GetLabelIds() map[int64]string

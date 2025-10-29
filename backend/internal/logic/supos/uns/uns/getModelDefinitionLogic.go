@@ -11,7 +11,6 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -32,6 +31,5 @@ func NewGetModelDefinitionLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 
 func (l *GetModelDefinitionLogic) GetModelDefinition(req *types.ModelDetailReq) (resp *types.ModelDetailResp, err error) {
 	resp, err = spring.GetBean[*service.UnsQueryService]().GetModelDefinition(l.ctx, req, "")
-	err = errors.Fmt(err)
 	return
 }

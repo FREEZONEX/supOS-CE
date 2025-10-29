@@ -200,6 +200,8 @@ func init() {
 		"alias":     true,
 		"name":      true,
 		"path_type": true,
+		"path":      true,
+		"lay_rec":   true,
 		"status":    true,
 	}
 	columnFields := getValidColumns(&UnsNamespace{})

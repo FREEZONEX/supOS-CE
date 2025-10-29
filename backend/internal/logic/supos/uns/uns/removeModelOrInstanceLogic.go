@@ -11,7 +11,6 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -32,6 +31,5 @@ func NewRemoveModelOrInstanceLogic(ctx context.Context, svcCtx *svc.ServiceConte
 
 func (l *RemoveModelOrInstanceLogic) RemoveModelOrInstance(req *types.RemoveReq) (resp *types.RemoveResult, err error) {
 	resp, err = spring.GetBean[*service.UnsRemoveService]().RemoveModelOrInstance(l.ctx, req)
-	err = errors.Fmt(err)
 	return
 }

@@ -11,6 +11,12 @@ import (
 
 // LazyTree 懒加载的树查询
 func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCondition) (resp *types.PageResultDTO, err error) {
+	if params.PageNo < 1 {
+		params.PageNo = 1
+	}
+	if params.PageSize < 1 || params.PageSize > 1000 {
+		params.PageSize = constants.MaxPageSize
+	}
 	pageNo := params.PageNo
 	pageSize := params.PageSize
 	query := &dao.UnsTreeNextLevelQuery{UnsTreeCondition: *params}
@@ -43,15 +49,14 @@ func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCon
 
 	total := int64(0)
 	var treeResultList []*types.TopicTreeResult
-	if total > 0 {
-		var list []*dao.TreeNodeUns
-		list, err = l.unsMapper.NextLevelPagedQueryList(db, query, &total)
-		if err != nil {
-			resp = emptyPage(params)
-			resp.Code = 500
-			return
-		}
-
+	var list []*dao.TreeNodeUns
+	list, err = l.unsMapper.NextLevelPagedQueryList(db, query, &total)
+	if err != nil {
+		resp = emptyPage(params)
+		resp.Code = 500
+		return
+	}
+	if len(list) > 0 {
 		rsTypes := make([]int, 8)
 		treeResultList = make([]*types.TopicTreeResult, 0, len(list))
 
@@ -70,8 +75,6 @@ func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCon
 			result.HasChildren = folderCount+fileCount > 0
 			treeResultList = append(treeResultList, result)
 		}
-	} else {
-		treeResultList = make([]*types.TopicTreeResult, 0)
 	}
 
 	resp = &types.PageResultDTO{

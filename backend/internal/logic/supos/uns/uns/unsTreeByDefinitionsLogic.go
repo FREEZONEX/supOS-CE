@@ -11,7 +11,6 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -32,6 +31,5 @@ func NewUnsTreeByDefinitionsLogic(ctx context.Context, svcCtx *svc.ServiceContex
 
 func (l *UnsTreeByDefinitionsLogic) UnsTreeByDefinitions(req *types.UnsTreeCondition) (resp *types.PageResultDTO, err error) {
 	resp, err = spring.GetBean[*service.UnsQueryService]().LazyTree(l.ctx, req)
-	err = errors.Fmt(err)
 	return
 }

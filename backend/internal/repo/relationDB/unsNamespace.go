@@ -3,6 +3,7 @@ package relationDB
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
@@ -53,67 +54,39 @@ func (p UnsNamespaceRepo) MultiInsert(db *gorm.DB, data []*UnsNamespace) error {
 	err := p.model(db).Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(data, 1000).Error
 	return stores.ErrFmt(err)
 }
+
+var updateColumnsInit sync.Once
+var updateColumns []string
+
 func (p UnsNamespaceRepo) MultiUpdate(db *gorm.DB, data []*UnsNamespace) (err error) {
-	err = p.model(db).Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(data, 1000).Error
-	return stores.ErrFmt(err)
-	/*	_, isTransaction := db.Statement.ConnPool.(gorm.TxCommitter)
-		db = p.model(db)
-		if isTransaction {
-			for _, item := range data {
-				if item.ID == 0 {
+	if len(updateColumns) == 0 {
+		// 获取模型的所有字段（除了主键）
+		updateColumnsInit.Do(func() {
+			var model UnsNamespace
+			stmt := db.Model(&model).Statement
+			stmt.Parse(&model)
+			for _, field := range stmt.Schema.Fields {
+				// 跳过主键字段
+				if field.PrimaryKey {
 					continue
 				}
-				err = db.Omit("id", "created_at").Updates(item).Error
-				if err != nil {
-					break
+				if len(field.DBName) > 0 {
+					updateColumns = append(updateColumns, field.DBName)
 				}
 			}
-		} else {
-			err = db.Transaction(func(tx *gorm.DB) error {
-				for _, item := range data {
-					if item.ID == 0 {
-						continue // 记录日志或返回错误
-					}
-					if dbErr := tx.Model(&UnsNamespace{}).Omit("id", "created_at").Updates(item).Error; dbErr != nil {
-						return fmt.Errorf("failed to update record ID %d: %w", item.ID, dbErr)
-					}
-				}
-				return nil
-			})
-		}
-		return stores.ErrFmt(err)*/
-}
-func (p UnsNamespaceRepo) FindOneByFilter(db *gorm.DB, f UnsNamespaceFilter) (*UnsNamespace, error) {
-	var result UnsNamespace
-	err := p.model(db).First(&result).Error
-	if err != nil {
-		return nil, stores.ErrFmt(err)
+		})
 	}
-	return &result, nil
-}
-func (p UnsNamespaceRepo) FindByFilter(db *gorm.DB, f UnsNamespaceFilter, page *stores.PageInfo) ([]*UnsNamespace, error) {
-	var results []*UnsNamespace
-	db = p.model(db)
-	db = page.ToGorm(db)
-	err := db.Find(&results).Error
-	if err != nil {
-		return nil, stores.ErrFmt(err)
-	}
-	return results, nil
-}
+	err = p.model(db).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns(updateColumns),
+	}, clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		CreateInBatches(data, 1000).Error
 
-func (p UnsNamespaceRepo) CountByFilter(db *gorm.DB, f UnsNamespaceFilter) (size int64, err error) {
-	err = p.model(db).Count(&size).Error
-	return size, stores.ErrFmt(err)
+	return stores.ErrFmt(err)
 }
 
 func (p UnsNamespaceRepo) Update(db *gorm.DB, data *UnsNamespace) error {
-	err := p.model(db).Where("id = ?", data.Id).Save(data).Error
-	return stores.ErrFmt(err)
-}
-
-func (p UnsNamespaceRepo) DeleteByFilter(db *gorm.DB, f UnsNamespaceFilter) error {
-	err := p.model(db).Delete(&UnsNamespace{}).Error
+	err := p.model(db).Where("id = ?", data.Id).Where("status=1").Save(data).Error
 	return stores.ErrFmt(err)
 }
 
@@ -123,7 +96,7 @@ func (p UnsNamespaceRepo) Delete(db *gorm.DB, id int64) error {
 }
 func (p UnsNamespaceRepo) SelectById(db *gorm.DB, id int64) (*UnsNamespace, error) {
 	var result UnsNamespace
-	err := p.model(db).Where("id = ?", id).First(&result).Error
+	err := p.model(db).Where("id = ?", id).Where("status=1").First(&result).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	} else if result.Id == 0 {
@@ -132,7 +105,7 @@ func (p UnsNamespaceRepo) SelectById(db *gorm.DB, id int64) (*UnsNamespace, erro
 	return &result, nil
 }
 func (p UnsNamespaceRepo) SelectByIds(db *gorm.DB, ids []int64) (results []*UnsNamespace, err error) {
-	err = p.model(db).Where("id IN ?", ids).First(&results).Error
+	err = p.model(db).Where("id IN ?", ids).Where("status=1").First(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
@@ -143,16 +116,11 @@ func (p UnsNamespaceRepo) FindOneByAlias(db *gorm.DB, alias string) (*UnsNamespa
 		return nil, stores.ErrFmt(gorm.ErrRecordNotFound)
 	}
 	var result UnsNamespace
-	err := p.model(db).Where("alias = ?", alias).First(&result).Error
+	err := p.model(db).Where("alias = ?", alias).Where("status=1").First(&result).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
 	return &result, nil
-}
-
-func (p UnsNamespaceRepo) UpdateWithField(db *gorm.DB, f UnsNamespaceFilter, updates map[string]any) error {
-	err := p.model(db).Updates(updates).Error
-	return stores.ErrFmt(err)
 }
 
 func escapeLikePattern(input string) string {

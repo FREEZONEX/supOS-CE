@@ -20,6 +20,7 @@ type UnsQueryService struct {
 	unsMapper    dao.UnsNamespaceRepo
 	labelMapper  dao.UnsLabelRepo
 	mountService UnsMountService
+	calcService  UnsCalcService
 }
 
 func init() {

@@ -4,6 +4,7 @@ import (
 	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/datetimeutils"
 	"backend/internal/types"
+	"backend/share/base"
 	"fmt"
 	"math"
 	"reflect"
@@ -203,11 +204,7 @@ func findDataListRecursive(parent any, size int, obj any, fieldDefines *types.Fi
 			for _, f := range fieldDefines.FieldsMap {
 				if !f.IsSystemField() {
 					tempV := vHolder
-					msize := 0
-					if maxL := f.MaxLen; maxL != nil {
-						msize = *maxL
-					}
-					matchScore := TypeMatchScore(&tempV, types.FieldType(f.Type), msize)
+					matchScore := TypeMatchScore(&tempV, types.FieldType(f.Type), base.P2v(f.MaxLen))
 					if matchScore > score {
 						score = matchScore
 						bestField = f.Name

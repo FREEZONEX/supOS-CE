@@ -6,7 +6,7 @@ type UnsSearchCondition struct {
 	SearchType       int                    `json:"searchType"`
 	Deep             *int                   `json:"deep,omitempty"`
 	ParentId         *int64                 `json:"parentId,omitempty"`
-	PathType         *int                   `json:"pathType,omitempty"`
+	PathType         *int16                 `json:"pathType,omitempty"`
 	Keyword          string                 `json:"keyword,omitempty"`
 	Alias            string                 `json:"alias,omitempty"`
 	ParentAlias      string                 `json:"parentAlias,omitempty"`

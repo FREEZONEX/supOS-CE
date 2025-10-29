@@ -116,7 +116,7 @@ func filterByConditions(s *base.StringBuilder, f *dto.UnsSearchCondition) {
 	}
 
 	if f.PathType != nil {
-		s.Append("AND a.path_type =").Int(*f.PathType)
+		s.Append("AND a.path_type =").Int(int(*f.PathType))
 	} else {
 		s.Append(" AND (a.path_type = 0 OR a.path_type = 2)")
 	}
@@ -129,10 +129,10 @@ func filterByConditions(s *base.StringBuilder, f *dto.UnsSearchCondition) {
 	if f.Alias != "" {
 		s.Append(" AND a.alias = '").Append(escapeSQL(f.Alias)).Append("'")
 	}
-	if f.ParentAlias != "" {
-		s.Append(" AND a.parent_alias = '").Append(fmt.Sprintf("'%s'", escapeSQL(f.ParentAlias))).Append("'")
-	} else {
+	if f.ParentAlias == "NULL" {
 		s.Append(" AND (a.parent_alias IS NULL OR a.parent_alias = '')")
+	} else if f.ParentAlias != "" {
+		s.Append(" AND a.parent_alias = '").Append(fmt.Sprintf("'%s'", escapeSQL(f.ParentAlias))).Append("'")
 	}
 	if len(f.ParentAliasList) > 0 {
 		s.Append(" AND a.parent_alias IN (")

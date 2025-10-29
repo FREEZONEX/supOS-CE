@@ -169,10 +169,12 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 				if file.MountType == nil {
 					zero := int16(0)
 					file.MountType = &zero
+					createTopicDto.MountType = file.MountType
 				}
 				if file.WithFlags == nil {
 					zero := int32(0)
 					file.WithFlags = &zero
+					createTopicDto.WithFlags = file.WithFlags
 				}
 				if file.ExtendFieldFlags == nil {
 					zero := int32(0)
@@ -277,7 +279,11 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 	// 处理父文件夹ID
 	if topicDto.ParentId != nil && *topicDto.ParentId != 0 && topicDto.ParentAlias == nil {
 		folder, err := u.unsMapper.SelectById(db, *topicDto.ParentId)
-		if err != nil || folder == nil {
+		if err != nil {
+			result.Code = 500
+			result.Msg = err.Error()
+			return result
+		} else if folder == nil {
 			result.Code = 400
 			result.Msg = I18nUtils.GetMessage("uns.folder.not.found")
 			return result
