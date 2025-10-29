@@ -437,7 +437,7 @@ type (
 	}
 	RemoveResult {
 		BaseResult
-		Data RemoveTip `json:"data"`
+		Data *RemoveTip `json:"data,omitempty"`
 	}
 	RemoveTip {
 		Refs int `json:"refs"`

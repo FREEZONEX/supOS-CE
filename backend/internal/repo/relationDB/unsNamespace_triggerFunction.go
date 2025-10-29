@@ -27,11 +27,15 @@ func (p UnsNamespaceRepo) migrate(db *gorm.DB) {
 	if err == nil {
 		refreshFieldsText(db)
 		log.Println("刷新 FieldsText")
+	} else {
+		log.Println("触发器 FieldsText：", err)
 	}
 	err = createTrigger_pathHash(db)
 	if err == nil {
 		refreshPathHash(db)
 		log.Println("刷新 PathHash")
+	} else {
+		log.Println("触发器 pathHash：", err)
 	}
 }
 func createFunction_nextIdLong(db *gorm.DB) error {
@@ -134,7 +138,7 @@ func createTrigger_extractFieldsText(db *gorm.DB) error {
         CREATE TRIGGER trigger_extract_fields_text
         BEFORE INSERT OR UPDATE OF fields ON uns_namespace
         FOR EACH ROW
-        EXECUTE FUNCTION extract_fields_text(
+        EXECUTE FUNCTION extract_fields_text()
     `).Error
 }
 func createFunc_pathHash(db *gorm.DB) error {

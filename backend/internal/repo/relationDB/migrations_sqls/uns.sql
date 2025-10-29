@@ -35,6 +35,18 @@ ALTER TABLE uns_namespace ALTER COLUMN "label_ids" TYPE jsonb USING label_ids::j
 ALTER TABLE uns_namespace ADD IF NOT EXISTS "subscribe_at" timestamptz NULL;
 CREATE UNIQUE INDEX if not exists idx_uns_spacex_alias ON uns_namespace (alias);
 
+ALTER TABLE uns_namespace ALTER COLUMN update_at SET DEFAULT now();
+CREATE INDEX CONCURRENTLY if not exists idx_uns_namespace_update_at ON uns_namespace (update_at);
+update uns_namespace set update_at=create_at where update_at is null;
+CREATE INDEX if not exists idx_uns_namespace_parent_id ON uns_namespace(parent_id);
+ALTER TABLE uns_namespace ADD IF NOT EXISTS pathash INTEGER;
+CREATE INDEX if not exists idx_path_hash ON uns_namespace (pathash);
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+ALTER TABLE uns_namespace ADD COLUMN IF NOT EXISTS fields_text TEXT;
+CREATE INDEX IF NOT EXISTS idx_namespace_fields_text ON uns_namespace USING GIN (fields_text gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idxgin_namespace_alias ON uns_namespace USING GIN (alias gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idxgin_namespace_path ON uns_namespace USING GIN (path gin_trgm_ops);
+
 insert into uns_namespace("id","path_type","lay_rec","alias","name","path","description")values(1,1,'1','__templates__','tmplt','tmplt','模板顶级目录')ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE if not exists uns_dashboard (

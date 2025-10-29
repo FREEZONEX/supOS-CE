@@ -457,7 +457,7 @@ type RemoveReq struct {
 
 type RemoveResult struct {
 	BaseResult
-	Data RemoveTip `json:"data"`
+	Data *RemoveTip `json:"data,omitempty"`
 }
 
 type RemoveTip struct {

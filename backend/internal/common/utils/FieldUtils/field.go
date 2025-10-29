@@ -1,9 +1,11 @@
 package FieldUtils
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/types"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -37,6 +39,11 @@ func GetQualityField(fields []*types.FieldDefine, dataType int16) *types.FieldDe
 func ValidateFields(fields []*types.FieldDefine, checkSysField bool) error {
 	seen := make(map[string]bool)
 	for _, f := range fields {
+		if fieldType, ok := types.GetFieldTypeByName(f.Type); ok {
+			f.Type = fieldType.Name()
+		} else {
+			return errors.New(I18nUtils.GetMessage("uns.invalid.type", f.Type))
+		}
 		name := strings.TrimSpace(f.Name)
 		if name == "" {
 			return fmt.Errorf("field name cannot be empty")
@@ -214,7 +221,7 @@ func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine
 	if jdbcType.TypeCode() == constants.TimeSequenceType {
 		// Time-series data
 		fNews = make([]*types.FieldDefine, 0, len(processedFields)+2)
-		fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime})
+		fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime, Unique: &_True})
 
 		var nonSysFields []*types.FieldDefine
 		for _, f := range processedFields {

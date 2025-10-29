@@ -24,6 +24,24 @@ func (p UnsNamespaceRepo) ListByIds(db *gorm.DB, ids []int64) (results []*UnsNam
 	}
 	return results, nil
 }
+
+// AllByAlias 忽略逻辑删除标志的按alias查询
+func (p UnsNamespaceRepo) AllByAlias(db *gorm.DB, alias []string) (results []*UnsNamespace, er error) {
+	err := p.model(db).Where("alias IN ? ", alias).Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
+
+// AllByIds 忽略逻辑删除标志的按Id查询
+func (p UnsNamespaceRepo) AllByIds(db *gorm.DB, ids []int64) (results []*UnsNamespace, er error) {
+	err := p.model(db).Where("id IN ? ", ids).Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
 func (p UnsNamespaceRepo) GetByAlias(db *gorm.DB, alias string) (result *UnsNamespace, err error) {
 	var po UnsNamespace
 	err = p.model(db).Where("alias = ? ", alias).Where("status = 1").First(&po).Error
@@ -131,7 +149,7 @@ func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAnd
 	}
 	sql.Append(`) x
 	join uns_namespace u on (x.parent_alias = u.parent_alias OR (x.parent_alias IS NULL AND u.parent_alias IS NULL)) 
-	where u.status =1 group by u.parent_alias, u."name" HAVING COUNT(*) > 1
+	where u.status =1 group by u.parent_alias, u."name" HAVING COUNT(*) > 0
     `)
 	err = p.model(db).Raw(sql.String()).Scan(&results).Error
 	if err != nil {

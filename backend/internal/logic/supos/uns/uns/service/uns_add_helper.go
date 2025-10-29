@@ -328,11 +328,11 @@ func setJdbcType(unsDto *types.CreateTopicDto) {
 	if jdbcType == 0 && dataType != nil && unsDto.PathType == constants.PathTypeFile {
 		switch *dataType {
 		case constants.CalculationHistType, constants.CalculationRealType, constants.TimeSequenceType:
-			jdbcType = types.SrcJdbcTypeTimeScaleDB.TypeCode()
+			jdbcType = types.SrcJdbcTypeTimeScaleDB.Id()
 		case constants.AlarmRuleType, constants.RelationType, constants.MergeType:
-			jdbcType = types.SrcJdbcTypePostgresql.TypeCode()
+			jdbcType = types.SrcJdbcTypePostgresql.Id()
 		default:
-			jdbcType = types.SrcJdbcTypeNone.TypeCode()
+			jdbcType = types.SrcJdbcTypeNone.Id()
 		}
 		unsDto.DataSrcID = jdbcType
 	}
@@ -513,7 +513,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, exi
 
 	dbPo := existsUns(unsDto.Alias)
 	if dbPo != nil {
-		if dbPo.PathType != unsDto.PathType {
+		if dbPo.Status == OK && dbPo.PathType != unsDto.PathType {
 			msg := I18nUtils.GetMessage("uns.alias.has.exist.type",
 				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(dbPo.PathType))),
 				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(unsDto.PathType))),
@@ -530,7 +530,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, exi
 
 	// 创建关系型文件, 不允许新增系统字段
 	if !DB_EXISTS && len(unsDto.Fields) > 0 &&
-		unsDto.DataSrcID != 0 && unsDto.DataSrcID != constants.TimeSequenceType {
+		unsDto.DataSrcID != 0 && types.SrcJdbcType(unsDto.DataSrcID).TypeCode() != constants.TimeSequenceType {
 		for _, fd := range unsDto.Fields {
 			if fd.IsSystemField() {
 				errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.keyword", fd.Name)
@@ -783,7 +783,7 @@ func (u *UnsAddService) listUnsByAliasAndIds(ctx context.Context, alias []string
 	aliasMap = make(map[string]*dao.UnsNamespace, len(alias)+len(ids))
 	db := dao.GetDb(ctx)
 	for _, aliasList := range base.Partition(alias, constants.SQLBatchSize) {
-		unsPos, er := u.unsMapper.ListByAlias(db, aliasList)
+		unsPos, er := u.unsMapper.AllByAlias(db, aliasList)
 		if er != nil {
 			return nil, er
 		}
@@ -791,7 +791,7 @@ func (u *UnsAddService) listUnsByAliasAndIds(ctx context.Context, alias []string
 	}
 	if len(ids) > 0 {
 		for _, idList := range base.Partition(ids, constants.SQLBatchSize) {
-			unsPos, er := u.unsMapper.ListByIds(db, idList)
+			unsPos, er := u.unsMapper.AllByIds(db, idList)
 			if er != nil {
 				return nil, er
 			}

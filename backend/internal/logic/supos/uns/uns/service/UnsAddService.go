@@ -169,10 +169,12 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 				if file.MountType == nil {
 					zero := int16(0)
 					file.MountType = &zero
+					createTopicDto.MountType = file.MountType
 				}
 				if file.WithFlags == nil {
 					zero := int32(0)
 					file.WithFlags = &zero
+					createTopicDto.WithFlags = file.WithFlags
 				}
 				if file.ExtendFieldFlags == nil {
 					zero := int32(0)
