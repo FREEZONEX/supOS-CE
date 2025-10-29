@@ -21,5 +21,11 @@ func UserHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := authlogic.NewUserLogic(r.Context(), svcCtx)
 		resp, err := l.User(token)
 		result.Http(w, r, resp, err)
+		// if err != nil {
+		// 	httpx.ErrorCtx(r.Context(), w, err)
+		// } else {
+		// 	httpx.OkJsonCtx(r.Context(), w, resp)
+		// }
+
 	}
 }

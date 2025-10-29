@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -24,6 +25,8 @@ type CheckTokenWareMiddleware struct {
 }
 
 func NewCheckTokenWareMiddleware(kc *clients.KeycloakClient, defaultHome, realm string) *CheckTokenWareMiddleware {
+	flag := os.Getenv("SYS_OS_AUTH_ENABLE")
+	fmt.Println("SYS_OS_AUTH_ENABLE:", flag)
 	return &CheckTokenWareMiddleware{
 		keycloak:    kc,
 		defaultHome: defaultHome,

@@ -91,15 +91,15 @@ const (
 
 // OAuthKeyCloakConfig represents Keycloak OAuth configuration values loaded from yaml/env.
 type KeycloakConfig struct {
-	Realm string `json:",optional,env=OAUTH_REALM"`
+	Realm string `json:",optional,env=OAUTH_REALM,default=supos"`
 	// YAML: OAuthKeyCloak.client-name
-	ClientName string `json:",optional,env=OAUTH_CLIENT_NAME"`
+	ClientName string `json:",optional,env=OAUTH_CLIENT_NAME,default=supos"`
 	// YAML: OAuthKeyCloak.client-id
-	ClientID string `json:",optional,env=OAUTH_CLIENT_ID"`
+	ClientID string `json:",optional,env=OAUTH_CLIENT_ID,default=supos"`
 	// YAML: OAuthKeyCloak.client-secret
-	ClientSecret string `json:",optional,env=OAUTH_CLIENT_SECRET"`
+	ClientSecret string `json:",optional,env=OAUTH_CLIENT_SECRET,default=VaOS2makbDhJJsLlYPt4Wl87bo9VzXiO"`
 	// YAML: OAuthKeyCloak.authorization-grant-type
-	AuthorizationGrantType string `json:",optional,env=OAUTH_GRANT_TYPE"`
+	AuthorizationGrantType string `json:",optional,env=OAUTH_GRANT_TYPE,default=authorization_code"`
 	// YAML: OAuthKeyCloak.redirect-uri
 	RedirectURI string `json:",optional,env=OAUTH_REDIRECT_URI"`
 	// YAML: OAuthKeyCloak.issuer-uri
