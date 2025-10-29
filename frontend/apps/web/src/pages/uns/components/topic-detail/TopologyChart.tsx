@@ -64,6 +64,9 @@ const NodeRed: FC<any> = (data) => {
           open={data.node && !configured}
           placement="topRight"
           color="var(--supos-bg-color)"
+          align={{
+            offset: [-33, -10],
+          }}
           styles={{
             body: {
               position: 'relative',
