@@ -16,7 +16,7 @@ import { useTranslate } from '@/hooks';
 import type { CSSProperties } from 'react';
 import type { CollapseProps } from 'antd';
 import Details from './Details';
-import TopologyChart from './TopologyChart';
+import TopologyChart from './topology/TopologyChart';
 import Definition from './Definition';
 import Payload from './Payload';
 import Dashboard from './Dashboard';
@@ -331,10 +331,11 @@ const Module: FC<FileDetailProps> = (props) => {
               label: formatMessage('uns.topology'),
               children: (
                 <TopologyChart
+                  getFileDetail={getFileDetail}
                   instanceInfo={instanceInfo}
                   dashboardInfo={dashboardInfo}
-                  payload={websocketData?.data}
-                  dt={websocketData?.dt || {}}
+                  // payload={websocketData?.data}
+                  // dt={websocketData?.dt || {}}
                 />
               ),
               style: panelStyle,
