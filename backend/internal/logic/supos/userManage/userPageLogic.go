@@ -166,6 +166,7 @@ func (l *UserPageLogic) UserPage(req *types.UserManagePageReq) (*types.UserManag
 	}
 
 	return &types.UserManagePageResp{
+		Code:     0,
 		PageNo:   pageNo,
 		PageSize: pageSize,
 		Total:    total,

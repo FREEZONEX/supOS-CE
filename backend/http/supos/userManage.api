@@ -13,7 +13,7 @@ info(
 service backend {
     @doc "List available roles"
     @handler roleList
-    get /userManage/roleList () returns (RoleListResp)
+    get /userManage/roleList () returns ([]RoleDetail)
 
     @doc "Create a new role"
     @handler createRole
@@ -73,9 +73,6 @@ service backend {
 }
 
 type (
-    RoleListResp {
-        List []RoleDetail `json:"list"`
-    }
 
     RoleDetail {
         RoleID          string         `json:"roleId"`
@@ -113,6 +110,7 @@ type (
     }
 
     UserManagePageResp {
+        Code     int64             `json:"code"`
         PageNo   int64             `json:"pageNo"`
         PageSize int64             `json:"pageSize"`
         Total    int64             `json:"total"`

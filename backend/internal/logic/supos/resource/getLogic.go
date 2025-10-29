@@ -67,10 +67,12 @@ func toResourceVO(res *relationDB.SuposResource) types.ResourceVO {
 	if showName == "" {
 		showName = stringValue(res.NameCode)
 	}
+	showName = transI18nSTR(showName)
 	showDesc := I18nUtils.GetMessage(stringValue(res.DescriptionCode))
 	if showDesc == "" {
 		showDesc = stringValue(res.DescriptionCode)
 	}
+	showDesc = transI18nSTR(showDesc)
 	return types.ResourceVO{
 		ID:              strconv.FormatInt(res.ID, 10),
 		ParentID:        parentID,
@@ -93,6 +95,14 @@ func toResourceVO(res *relationDB.SuposResource) types.ResourceVO {
 		UpdateAt:        formatTime(res.UpdateAt),
 		CreateAt:        formatTime(res.CreateAt),
 	}
+}
+
+func transI18nSTR(str string) string {
+	indent := "%!(EXTRA []interface {}=[])"
+	if strings.Contains(str, indent) {
+		return strings.ReplaceAll(str, indent, "")
+	}
+	return str
 }
 
 func derefInt(ptr *int) int {

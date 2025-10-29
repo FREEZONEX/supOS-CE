@@ -25,7 +25,7 @@ func NewRoleListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RoleList
 	}
 }
 
-func (l *RoleListLogic) RoleList() (*types.RoleListResp, error) {
+func (l *RoleListLogic) RoleList() ([]types.RoleDetail, error) {
 	kc, err := l.keycloakClient()
 	if err != nil {
 		return nil, err
@@ -94,9 +94,6 @@ func (l *RoleListLogic) RoleList() (*types.RoleListResp, error) {
 			otherRoles = append(otherRoles, detail)
 		}
 	}
-
-	resp := &types.RoleListResp{}
-	resp.List = append(resp.List, superRoles...)
-	resp.List = append(resp.List, otherRoles...)
+	resp := append(otherRoles, superRoles...)
 	return resp, nil
 }

@@ -33,29 +33,29 @@ type BatchRemoveUnsDto struct {
 }
 
 type BatchUpdateResource struct {
-	ID              int64  `json:"id,optional"`
-	Code            string `json:"code"`
-	Name            string `json:"name"`
-	NameCode        string `json:"nameCode,optional"`
-	DescriptionCode string `json:"descriptionCode,optional"`
-	ParentID        int64  `json:"parentId,optional"`
-	Type            int    `json:"type"`
-	Source          string `json:"source,optional"`
-	RouteSource     int    `json:"routeSource,optional"`
-	URL             string `json:"url,optional"`
-	URLType         int    `json:"urlType,optional"`
-	OpenType        int    `json:"openType"`
-	Icon            string `json:"icon,optional"`
-	Description     string `json:"description,optional"`
-	Sort            int    `json:"sort,optional"`
-	EditEnable      bool   `json:"editEnable,optional"`
-	HomeEnable      bool   `json:"homeEnable,optional"`
-	Fixed           bool   `json:"fixed,optional"`
-	Enable          bool   `json:"enable,optional"`
+	ID              int64   `json:"id,string,optional"` // 同上
+	Code            *string `json:"code,optional"`
+	Name            *string `json:"name,optional"`
+	NameCode        *string `json:"nameCode,optional"`
+	DescriptionCode *string `json:"descriptionCode,optional"`
+	ParentID        *int64  `json:"parentId,string,optional"` // 如有需要
+	Type            *int    `json:"type,optional"`
+	Source          *string `json:"source,optional"`
+	RouteSource     *int    `json:"routeSource,optional"`
+	URL             *string `json:"url,optional"`
+	URLType         *int    `json:"urlType,optional"`
+	OpenType        *int    `json:"openType,optional"`
+	Icon            *string `json:"icon,optional"`
+	Description     *string `json:"description,optional"`
+	Sort            *int    `json:"sort,optional"`
+	EditEnable      *bool   `json:"editEnable,optional"`
+	HomeEnable      *bool   `json:"homeEnable,optional"`
+	Fixed           *bool   `json:"fixed,optional"`
+	Enable          *bool   `json:"enable,optional"`
 }
 
 type BatchUpdateResourceReq struct {
-	Items []BatchUpdateResource `json:"items"`
+	Items []BatchUpdateResource
 }
 
 type CheckDuplicationNameReq struct {
@@ -491,7 +491,7 @@ type RemoveTip struct {
 }
 
 type ResourceBatchDeleteReq struct {
-	IDs []int64 `json:"ids"`
+	IDs []int64 `json:"ids"` // 注意：如果前端传 ["1","2"] 这种字符串数组，这里不能用 ,string；见下方说明
 }
 
 type ResourceIDReq struct {
@@ -557,10 +557,6 @@ type RoleInfo struct {
 	ClientRole      bool   `json:"clientRole,optional"`
 }
 
-type RoleListResp struct {
-	List []RoleDetail `json:"list"`
-}
-
 type RoleResource struct {
 	PolicyID   string   `json:"policyId,optional"`
 	ResourceID string   `json:"resourceId,optional"`
@@ -598,16 +594,16 @@ type SaveMenuReq struct {
 }
 
 type SaveResourceReq struct {
-	ID          int64             `json:"id,optional"`
-	Code        string            `json:"code"`
-	Name        string            `json:"name"`
-	ParentID    int64             `json:"parentId,optional"`
-	Type        int               `json:"type"`
+	ID          int64             `json:"id,string,optional"` // 关键：允许 "123" 绑定到 int64
+	Code        string            `json:"code,optional"`
+	Name        string            `json:"name,optional"`
+	ParentID    int64             `json:"parentId,string,optional"` // 如果前端也把 parentId 当字符串传，建议一并加上
+	Type        int               `json:"type,optional"`
 	Source      string            `json:"source,optional"`
 	RouteSource int               `json:"routeSource,optional"`
 	URL         string            `json:"url,optional"`
 	URLType     int               `json:"urlType,optional"`
-	OpenType    int               `json:"openType"`
+	OpenType    int               `json:"openType,optional"`
 	Icon        string            `json:"icon,optional"`
 	Description string            `json:"description,optional"`
 	Sort        int               `json:"sort,optional"`
@@ -929,6 +925,7 @@ type UserManagePageReq struct {
 }
 
 type UserManagePageResp struct {
+	Code     int64            `json:"code"`
 	PageNo   int64            `json:"pageNo"`
 	PageSize int64            `json:"pageSize"`
 	Total    int64            `json:"total"`

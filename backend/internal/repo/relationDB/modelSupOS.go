@@ -26,5 +26,5 @@ type SuposResource struct {
 }
 
 func (SuposResource) TableName() string {
-	return "supos.supos_resource"
+	return "supos_resource"
 }

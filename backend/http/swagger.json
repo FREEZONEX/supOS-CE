@@ -978,7 +978,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/BatchUpdateResourceReq"
+              "$ref": "#/definitions/BatchUpdateResource"
             }
           }
         ],
@@ -3771,7 +3771,10 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "type": "object",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RoleDetail"
+              },
               "properties": {
                 "code": {
                   "type": "integer",
@@ -3781,9 +3784,6 @@
                 "msg": {
                   "type": "string",
                   "title": "返回的消息"
-                },
-                "data": {
-                  "$ref": "#/definitions/RoleListResp"
                 }
               }
             }
@@ -4204,8 +4204,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "integer",
-          "format": "int64"
+          "type": "string",
+          "description": " 同上"
         },
         "code": {
           "type": "string"
@@ -4220,8 +4220,8 @@
           "type": "string"
         },
         "parentId": {
-          "type": "integer",
-          "format": "int64"
+          "type": "string",
+          "description": " 如有需要"
         },
         "type": {
           "type": "integer",
@@ -4272,28 +4272,19 @@
           "format": "boolean"
         }
       },
-      "title": "BatchUpdateResource",
-      "required": [
-        "code",
-        "name",
-        "type",
-        "openType"
-      ]
+      "title": "BatchUpdateResource"
     },
     "BatchUpdateResourceReq": {
       "type": "object",
       "properties": {
-        "items": {
+        "Items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/BatchUpdateResource"
           }
         }
       },
-      "title": "BatchUpdateResourceReq",
-      "required": [
-        "items"
-      ]
+      "title": "BatchUpdateResourceReq"
     },
     "CheckDuplicationNameReq": {
       "type": "object",
@@ -5894,7 +5885,8 @@
           "items": {
             "type": "integer",
             "format": "int64"
-          }
+          },
+          "description": " 注意：如果前端传 [\"1\",\"2\"] 这种字符串数组，这里不能用 ,string；见下方说明"
         }
       },
       "title": "ResourceBatchDeleteReq",
@@ -6096,21 +6088,6 @@
         "roleName"
       ]
     },
-    "RoleListResp": {
-      "type": "object",
-      "properties": {
-        "list": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/RoleDetail"
-          }
-        }
-      },
-      "title": "RoleListResp",
-      "required": [
-        "list"
-      ]
-    },
     "RoleResource": {
       "type": "object",
       "properties": {
@@ -6250,8 +6227,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "integer",
-          "format": "int64"
+          "type": "string",
+          "description": " 关键：允许 \"123\" 绑定到 int64"
         },
         "code": {
           "type": "string"
@@ -6260,8 +6237,8 @@
           "type": "string"
         },
         "parentId": {
-          "type": "integer",
-          "format": "int64"
+          "type": "string",
+          "description": " 如果前端也把 parentId 当字符串传，建议一并加上"
         },
         "type": {
           "type": "integer",
@@ -6318,13 +6295,7 @@
           }
         }
       },
-      "title": "SaveResourceReq",
-      "required": [
-        "code",
-        "name",
-        "type",
-        "openType"
-      ]
+      "title": "SaveResourceReq"
     },
     "SearchPagedReq": {
       "type": "object",
@@ -7441,6 +7412,10 @@
     "UserManagePageResp": {
       "type": "object",
       "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
         "pageNo": {
           "type": "integer",
           "format": "int64"
@@ -7462,6 +7437,7 @@
       },
       "title": "UserManagePageResp",
       "required": [
+        "code",
         "pageNo",
         "pageSize",
         "total",

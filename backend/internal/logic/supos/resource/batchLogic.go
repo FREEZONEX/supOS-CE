@@ -30,45 +30,80 @@ func NewBatchLogic(ctx context.Context, svcCtx *svc.ServiceContext) *BatchLogic 
 	}
 }
 
-func (l *BatchLogic) Batch(req *types.BatchUpdateResourceReq) error {
-	if req == nil || len(req.Items) == 0 {
+func (l *BatchLogic) Batch(req *[]types.BatchUpdateResource) error {
+	if req == nil || len(*req) == 0 {
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("resource.batch.empty"))
 	}
 	db := stores.GetCommonConn(l.ctx)
 	return db.WithContext(l.ctx).Transaction(func(tx *gorm.DB) error {
-		for _, item := range req.Items {
+		for _, item := range *req {
 			if item.ID == 0 {
 				return errors.Parameter.WithMsg(i18ns.LocalizeMsg("resource.id.not.found"))
 			}
-			source := stringPtr(item.Source)
-			nameCode := stringPtr(item.Name)
-			descCode := stringPtr(item.Description)
-			url := stringPtr(item.URL)
-			icon := stringPtr(item.Icon)
+			updates := make(map[string]any)
 
-			updates := map[string]any{
-				"type":             item.Type,
-				"source":           stringValueForUpdate(source),
-				"code":             item.Code,
-				"name_code":        stringValueForUpdate(nameCode),
-				"route_source":     item.RouteSource,
-				"url":              stringValueForUpdate(url),
-				"url_type":         item.URLType,
-				"open_type":        item.OpenType,
-				"icon":             stringValueForUpdate(icon),
-				"description_code": stringValueForUpdate(descCode),
-				"sort":             item.Sort,
-				"edit_enable":      item.EditEnable,
-				"home_enable":      item.HomeEnable,
-				"fixed":            item.Fixed,
-				"enable":           item.Enable,
-				"update_at":        time.Now(),
+			if item.Type != nil {
+				updates["type"] = *item.Type
 			}
-			if item.ParentID <= 0 {
-				updates["parent_id"] = nil
-			} else {
-				updates["parent_id"] = item.ParentID
+			if item.Source != nil {
+				updates["source"] = stringValueForUpdate(item.Source)
 			}
+			if item.Code != nil {
+				updates["code"] = stringValueForUpdate(item.Code)
+			}
+			if item.NameCode != nil {
+				updates["name_code"] = stringValueForUpdate(item.NameCode)
+			}
+			if item.Name != nil {
+				updates["name"] = stringValueForUpdate(item.Name)
+			}
+			if item.RouteSource != nil {
+				updates["route_source"] = *item.RouteSource
+			}
+			if item.URL != nil {
+				updates["url"] = stringValueForUpdate(item.URL)
+			}
+			if item.URLType != nil {
+				updates["url_type"] = *item.URLType
+			}
+			if item.OpenType != nil {
+				updates["open_type"] = *item.OpenType
+			}
+			if item.Icon != nil {
+				updates["icon"] = stringValueForUpdate(item.Icon)
+			}
+			if item.DescriptionCode != nil {
+				updates["description_code"] = stringValueForUpdate(item.DescriptionCode)
+			} else if item.Description != nil {
+				updates["description_code"] = stringValueForUpdate(item.Description)
+			}
+			if item.Sort != nil {
+				updates["sort"] = *item.Sort
+			}
+			if item.EditEnable != nil {
+				updates["edit_enable"] = *item.EditEnable
+			}
+			if item.HomeEnable != nil {
+				updates["home_enable"] = *item.HomeEnable
+			}
+			if item.Fixed != nil {
+				updates["fixed"] = *item.Fixed
+			}
+			if item.Enable != nil {
+				updates["enable"] = *item.Enable
+			}
+			if item.ParentID != nil {
+				if *item.ParentID <= 0 {
+					updates["parent_id"] = nil
+				} else {
+					updates["parent_id"] = *item.ParentID
+				}
+			}
+
+			if len(updates) == 0 {
+				continue
+			}
+			updates["update_at"] = time.Now()
 
 			if err := tx.Model(&relationDB.SuposResource{}).Where("id = ?", item.ID).Updates(updates).Error; err != nil {
 				l.Errorf("batch update resource %d failed: %v", item.ID, err)
