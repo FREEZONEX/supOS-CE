@@ -25,6 +25,7 @@ func main() {
 	var confFile = "etc/backend.yaml"
 	utils.ConfMustLoad(confFile, &c)
 	i18ns.InitWithFS("etc/i18n")
+
 	/* 下面是使用示例
 	msg := i18ns.LocalizeMsg("nodered.protocol.unsupported", "vewwrfw3")
 	logx.Info(msg) // 输出:  Unsupported protocol: vewwrfw3.

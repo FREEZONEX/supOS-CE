@@ -32,6 +32,32 @@ type BatchRemoveUnsDto struct {
 	OnlyRemoveChild *bool    `json:"onlyRemoveChild,optional"`
 }
 
+type BatchUpdateResource struct {
+	ID              int64  `json:"id,optional"`
+	Code            string `json:"code"`
+	Name            string `json:"name"`
+	NameCode        string `json:"nameCode,optional"`
+	DescriptionCode string `json:"descriptionCode,optional"`
+	ParentID        int64  `json:"parentId,optional"`
+	Type            int    `json:"type"`
+	Source          string `json:"source,optional"`
+	RouteSource     int    `json:"routeSource,optional"`
+	URL             string `json:"url,optional"`
+	URLType         int    `json:"urlType,optional"`
+	OpenType        int    `json:"openType"`
+	Icon            string `json:"icon,optional"`
+	Description     string `json:"description,optional"`
+	Sort            int    `json:"sort,optional"`
+	EditEnable      bool   `json:"editEnable,optional"`
+	HomeEnable      bool   `json:"homeEnable,optional"`
+	Fixed           bool   `json:"fixed,optional"`
+	Enable          bool   `json:"enable,optional"`
+}
+
+type BatchUpdateResourceReq struct {
+	Items []BatchUpdateResource `json:"items"`
+}
+
 type CheckDuplicationNameReq struct {
 	Folder    string `form:"folder,optional"`
 	Name      string `form:"name"`
@@ -464,11 +490,47 @@ type RemoveTip struct {
 	Refs int `json:"refs"`
 }
 
+type ResourceBatchDeleteReq struct {
+	IDs []int64 `json:"ids"`
+}
+
+type ResourceIDReq struct {
+	ID int64 `path:"id"`
+}
+
 type ResourceInfo struct {
 	PolicyID   string   `json:"policyId,optional"`
 	ResourceID string   `json:"resourceId,optional"`
 	URI        string   `json:"uri"`
 	Methods    []string `json:"methods,optional"`
+}
+
+type ResourceQuery struct {
+	ParentID int64 `form:"parentId,optional"`
+	Type     int   `form:"type,optional"`
+}
+
+type ResourceVO struct {
+	ID              string `json:"id,optional"`
+	ParentID        string `json:"parentId,optional"`
+	Type            int    `json:"type,optional"`
+	Code            string `json:"code,optional"`
+	NameCode        string `json:"nameCode,optional"`
+	ShowName        string `json:"showName,optional"`
+	RouteSource     int    `json:"routeSource,optional"`
+	URL             string `json:"url,optional"`
+	URLType         int    `json:"urlType,optional"`
+	OpenType        int    `json:"openType,optional"`
+	Icon            string `json:"icon,optional"`
+	DescriptionCode string `json:"descriptionCode,optional"`
+	ShowDescription string `json:"showDescription,optional"`
+	Sort            int    `json:"sort,optional"`
+	EditEnable      bool   `json:"editEnable,optional"`
+	HomeEnable      bool   `json:"homeEnable,optional"`
+	Fixed           bool   `json:"fixed,optional"`
+	Enable          bool   `json:"enable,optional"`
+	UpdateAt        string `json:"updateAt,optional"`
+	CreateAt        string `json:"createAt,optional"`
 }
 
 type ResultVO struct {
@@ -533,6 +595,27 @@ type SaveMenuReq struct {
 	Description string `form:"description,optional"` // 描述（可选）
 	BaseUrl     string `form:"baseUrl"`              // baseURL
 	OpenType    int    `form:"openType"`             // 跳转方式：0-iframe打开，1-打开新页面，2-app
+}
+
+type SaveResourceReq struct {
+	ID          int64             `json:"id,optional"`
+	Code        string            `json:"code"`
+	Name        string            `json:"name"`
+	ParentID    int64             `json:"parentId,optional"`
+	Type        int               `json:"type"`
+	Source      string            `json:"source,optional"`
+	RouteSource int               `json:"routeSource,optional"`
+	URL         string            `json:"url,optional"`
+	URLType     int               `json:"urlType,optional"`
+	OpenType    int               `json:"openType"`
+	Icon        string            `json:"icon,optional"`
+	Description string            `json:"description,optional"`
+	Sort        int               `json:"sort,optional"`
+	EditEnable  bool              `json:"editEnable,optional"`
+	HomeEnable  bool              `json:"homeEnable,optional"`
+	Fixed       bool              `json:"fixed,optional"`
+	Enable      bool              `json:"enable,optional"`
+	Children    []SaveResourceReq `json:"children,optional"`
 }
 
 type SearchPagedReq struct {

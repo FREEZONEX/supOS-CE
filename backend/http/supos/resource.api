@@ -1,34 +1,120 @@
 info(
-    title: "uns模板"
-    desc: "uns模板"
-    author: "杨磊"
-    email: "603685348@qq.com"
+    title: "Resource Management"
+    desc: "Manage platform resources (menus, buttons, routes)"
+    author: "Yang Lei"
     version: "v1"
 )
 
 @server(
     group: supos/resource
     prefix: /inter-api/supos/resource
-    middleware:  CheckTokenWare,InitCtxsWare
+    middleware: CheckTokenWare,InitCtxsWare
 )
 service backend {
-    @doc "get"
+    @doc "List resources"
     @handler get
-    get / () returns ()
-    @doc "post"
+    get / (ResourceQuery) returns ([]ResourceVO)
+
+    @doc "Create or update resource and its children"
     @handler post
-    post / () returns ()
-    @doc "batch"
+    post / (SaveResourceReq) returns ()
+
+    @doc "Batch update resources"
     @handler batch
-    post /batch () returns ()
-    @doc "delete"
+    put /batch (BatchUpdateResourceReq) returns ()
+
+    @doc "Delete resource by id"
     @handler delete
-    delete /:id () returns ()
-    @doc "batch"
+    delete /:id (ResourceIDReq) returns ()
+
+    @doc "Batch delete resources"
     @handler batchDelete
-    delete /batch () returns ()
+    delete /batch (ResourceBatchDeleteReq) returns ()
 }
 
 type (
+    ResourceQuery {
+        ParentID int64 `form:"parentId,optional"`
+        Type     int   `form:"type,optional"`
+    }
 
+    // ResourceListResp []ResourceVO
+
+    ResourceVO {
+        ID               string `json:"id,optional"`
+        ParentID         string `json:"parentId,optional"`
+        Type             int    `json:"type,optional"`
+        Code             string `json:"code,optional"`
+        NameCode         string `json:"nameCode,optional"`
+        ShowName         string `json:"showName,optional"`
+        RouteSource      int    `json:"routeSource,optional"`
+        URL              string `json:"url,optional"`
+        URLType          int    `json:"urlType,optional"`
+        OpenType         int    `json:"openType,optional"`
+        Icon             string `json:"icon,optional"`
+        DescriptionCode  string `json:"descriptionCode,optional"`
+        ShowDescription  string `json:"showDescription,optional"`
+        Sort             int    `json:"sort,optional"`
+        EditEnable       bool   `json:"editEnable,optional"`
+        HomeEnable       bool   `json:"homeEnable,optional"`
+        Fixed            bool   `json:"fixed,optional"`
+        Enable           bool   `json:"enable,optional"`
+        UpdateAt         string `json:"updateAt,optional"`
+        CreateAt         string `json:"createAt,optional"`
+    }
+
+    SaveResourceReq {
+        ID          int64            `json:"id,optional"`
+        Code        string           `json:"code"`
+        Name        string           `json:"name"`
+        ParentID    int64            `json:"parentId,optional"`
+        Type        int              `json:"type"`
+        Source      string           `json:"source,optional"`
+        RouteSource int              `json:"routeSource,optional"`
+        URL         string           `json:"url,optional"`
+        URLType     int              `json:"urlType,optional"`
+        OpenType    int              `json:"openType"`
+        Icon        string           `json:"icon,optional"`
+        Description string           `json:"description,optional"`
+        Sort        int              `json:"sort,optional"`
+        EditEnable  bool             `json:"editEnable,optional"`
+        HomeEnable  bool             `json:"homeEnable,optional"`
+        Fixed       bool             `json:"fixed,optional"`
+        Enable      bool             `json:"enable,optional"`
+        Children    []SaveResourceReq `json:"children,optional"`
+    }
+
+    BatchUpdateResourceReq {
+        Items []BatchUpdateResource `json:"items"`
+    }
+
+    BatchUpdateResource {
+        ID              int64  `json:"id,optional"`
+        Code            string `json:"code"`
+        Name            string `json:"name"`
+        NameCode        string `json:"nameCode,optional"`
+        DescriptionCode string `json:"descriptionCode,optional"`
+        ParentID        int64  `json:"parentId,optional"`
+        Type            int    `json:"type"`
+        Source          string `json:"source,optional"`
+        RouteSource     int    `json:"routeSource,optional"`
+        URL             string `json:"url,optional"`
+        URLType         int    `json:"urlType,optional"`
+        OpenType        int    `json:"openType"`
+        Icon            string `json:"icon,optional"`
+        Description     string `json:"description,optional"`
+        Sort            int    `json:"sort,optional"`
+        EditEnable      bool   `json:"editEnable,optional"`
+        HomeEnable      bool   `json:"homeEnable,optional"`
+        Fixed           bool   `json:"fixed,optional"`
+        Enable          bool   `json:"enable,optional"`
+    }
+
+    ResourceIDReq {
+        ID int64 `path:"id"`
+    }
+
+    ResourceBatchDeleteReq {
+        IDs []int64 `json:"ids"`
+    }
 )

@@ -233,31 +233,31 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
-					// get
+					// List resources
 					Method:  http.MethodGet,
 					Path:    "/",
 					Handler: suposresource.GetHandler(serverCtx),
 				},
 				{
-					// post
+					// Create or update resource and its children
 					Method:  http.MethodPost,
 					Path:    "/",
 					Handler: suposresource.PostHandler(serverCtx),
 				},
 				{
-					// delete
+					// Delete resource by id
 					Method:  http.MethodDelete,
 					Path:    "/:id",
 					Handler: suposresource.DeleteHandler(serverCtx),
 				},
 				{
-					// batch
-					Method:  http.MethodPost,
+					// Batch update resources
+					Method:  http.MethodPut,
 					Path:    "/batch",
 					Handler: suposresource.BatchHandler(serverCtx),
 				},
 				{
-					// batch
+					// Batch delete resources
 					Method:  http.MethodDelete,
 					Path:    "/batch",
 					Handler: suposresource.BatchDeleteHandler(serverCtx),

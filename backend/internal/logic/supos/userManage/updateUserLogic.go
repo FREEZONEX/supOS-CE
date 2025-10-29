@@ -9,6 +9,7 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gitee.com/unitedrhino/share/i18ns"
 )
 
 type UpdateUserLogic struct {
@@ -32,7 +33,7 @@ func (l *UpdateUserLogic) UpdateUser(req *types.UserUpdateReq) (*types.Operation
 		return nil, err
 	}
 	if user == nil {
-		return nil, errors.Parameter.WithMsg("user.not.exist")
+		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("user.not.exist"))
 	}
 
 	db, err := l.keycloakDB()
@@ -53,7 +54,7 @@ func (l *UpdateUserLogic) UpdateUser(req *types.UserUpdateReq) (*types.Operation
 			return nil, errors.System.WithMsg("failed to check email")
 		}
 		if existing != nil && existing.ID != user.ID {
-			return nil, errors.Parameter.WithMsg("user.email.already.exists")
+			return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("user.email.already.exists"))
 		}
 		email = v
 	}

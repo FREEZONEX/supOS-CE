@@ -34,16 +34,13 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		panic(err)
 	}
 
-	dbConn, err := stores.GetConn(conf.Database{
+	if dbConn, err := stores.GetConn(conf.Database{
 		DBType: "pgsql",
 		DSN:    c.KeycloakDSN,
-	})
-	if err != nil {
+	}); err != nil {
 		logx.Errorf("failed to init keycloak database: %v", err)
 	} else {
-		if err := keycloakrepo.InitWithDB(dbConn); err != nil {
-			logx.Errorf("failed to register keycloak database: %v", err)
-		}
+		keycloakrepo.InitWithDB(dbConn)
 	}
 
 	keycloakClient := clients.InitKeycloakClient(c.OAuthKeyCloak)

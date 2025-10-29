@@ -8,6 +8,7 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gitee.com/unitedrhino/share/i18ns"
 )
 
 type UserResetPasswordLogic struct {
@@ -33,7 +34,7 @@ func (l *UserResetPasswordLogic) UserResetPassword(req *types.UserResetPwdReq) (
 	}
 
 	if _, err := kc.Login(strings.TrimSpace(req.Username), strings.TrimSpace(req.Password)); err != nil {
-		return nil, errors.Parameter.WithMsg("user.login.password.error")
+		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("user.login.password.error"))
 	}
 
 	if err := kc.ResetPassword(strings.TrimSpace(req.UserID), strings.TrimSpace(req.NewPassword)); err != nil {
