@@ -12,7 +12,7 @@ const EmptyDetail = () => {
         <li className="detailInfo-list-item">
           <Tag>{formatMessage('uns.guideSwitchTabs')}</Tag>
           <ArrowRight className="icon-arrow" size={12} />
-          {formatMessage('uns.guideBuild')} <span className="tag-info">{formatMessage('uns.namespace')}</span>/
+          {formatMessage('uns.guideBuild')} <span className="tag-info">{formatMessage('uns.treeList')}</span>/
           <span className="tag-info">{formatMessage('common.template')}</span>/
           <span className="tag-info">{formatMessage('common.label')}</span>
         </li>
@@ -24,7 +24,7 @@ const EmptyDetail = () => {
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
           {formatMessage('uns.guideBuildUnsWay', {
-            namespace: <span className="tag-info">{formatMessage('uns.namespace')}</span>,
+            namespace: <span className="tag-info">{formatMessage('uns.treeList')}</span>,
           })}
         </li>
         <li className="detailInfo-list-item">
@@ -34,7 +34,7 @@ const EmptyDetail = () => {
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
           {formatMessage('uns.guideBrowseUns', {
-            namespace: <span className="tag-info">{formatMessage('uns.namespace')}</span>,
+            namespace: <span className="tag-info">{formatMessage('uns.treeList')}</span>,
           })}
         </li>
         <li className="detailInfo-list-item">
@@ -44,7 +44,7 @@ const EmptyDetail = () => {
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
           {formatMessage('uns.guideManageUns', {
-            namespace: <span className="tag-info">{formatMessage('uns.namespace')}</span>,
+            namespace: <span className="tag-info">{formatMessage('uns.treeList')}</span>,
           })}
         </li>
       </ul>
