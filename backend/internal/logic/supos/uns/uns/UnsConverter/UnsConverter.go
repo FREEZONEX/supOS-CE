@@ -185,6 +185,7 @@ func createMountDetailVo(unsDto bo.NodeUnsInfo) *types.MountDetailVo {
 	return mountDetailVo
 }
 
+var int64Temp = int64(0)
 var apiConvertOptions = copier.Option{IgnoreEmpty: true, Converters: []copier.TypeConverter{
 	{
 		SrcType: copier.String,
@@ -231,6 +232,17 @@ var apiConvertOptions = copier.Option{IgnoreEmpty: true, Converters: []copier.Ty
 			}
 			return nil, errors.Default
 		},
+	}, {
+		SrcType: copier.String,
+		DstType: &int64Temp,
+		Fn: func(src interface{}) (dst interface{}, err error) {
+			if rs, ok := src.(string); ok {
+				var num int64
+				num, err = strconv.ParseInt(rs, 10, 64)
+				dst = num
+			}
+			return nil, errors.Default
+		},
 	},
 }}
 
@@ -240,6 +252,6 @@ func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *types.CreateTopicDto {
 	return &target
 }
 
-func CopyProperties(from any, to any) {
-	copier.CopyWithOption(to, from, apiConvertOptions)
+func CopyProperties(from any, to any) error {
+	return copier.CopyWithOption(to, from, apiConvertOptions)
 }

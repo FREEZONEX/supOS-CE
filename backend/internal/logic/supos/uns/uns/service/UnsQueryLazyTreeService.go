@@ -20,12 +20,13 @@ func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCon
 	pageNo := params.PageNo
 	pageSize := params.PageSize
 	query := &dao.UnsTreeNextLevelQuery{UnsTreeCondition: *params}
-	pid := params.ParentId
+
 	db := dao.GetDb(ctx)
 	ctx = dao.SetDb(ctx, db)
-	if pid != nil && *pid != 0 {
+	var parentId = params.ParentId
+	if parentId != nil && *parentId != 0 {
 		var parent *dao.UnsNamespace
-		parent, err = l.unsMapper.SelectById(db, *pid)
+		parent, err = l.unsMapper.SelectById(db, *parentId)
 		if err != nil || parent == nil {
 			resp = emptyPage(params)
 			if err != nil {
@@ -34,9 +35,6 @@ func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCon
 			return
 		}
 		query.LayRecPrev = parent.LayRec
-		pid = params.ParentId
-	} else {
-		pid = nil
 	}
 	if params.SearchType == 1 &&
 		params.Keyword == "" &&
@@ -44,7 +42,7 @@ func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCon
 		params.DataType == nil &&
 		params.SubscribeEnable == nil {
 		// 不考虑parentId，无其他条件的简单搜索
-		return l.simpleTree(ctx, pid, query.LayRecPrev, pageNo, pageSize)
+		return l.simpleTree(ctx, parentId, query.LayRecPrev, pageNo, pageSize)
 	}
 
 	total := int64(0)

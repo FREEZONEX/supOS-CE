@@ -120,18 +120,18 @@ type CreateTopicDto struct {
 	Index                         int                       `json:"-"`
 	FlagNo                        string                    `json:"-"`
 	Name                          string                    `json:"name" validate:"required,max=63"`
-	DisplayName                   *string                   `json:"displayName,optional,omitzero" validate:"max=128"`
+	DisplayName                   *string                   `json:"displayName,optional,omitempty" validate:"max=128"`
 	PathType                      int16                     `json:"pathType" validate:"required,min=0,max=2"`
 	Path                          string                    `json:"path,optional,omitzero"`
 	Alias                         string                    `json:"alias" validate:"required"`
 	Description                   string                    `json:"description,optional,omitzero" validate:"max=255"`
-	ModelId                       *int64                    `json:"modelId,string,optional,omitzero"`
-	ModelAlias                    *string                   `json:"modelAlias,optional,omitzero"`
+	ModelId                       *int64                    `json:"modelId,string,optional,omitempty"`
+	ModelAlias                    *string                   `json:"modelAlias,optional,omitempty"`
 	Template                      string                    `json:"-"`
-	ParentAlias                   *string                   `json:"parentAlias,optional,omitzero"`
-	ParentId                      *int64                    `json:"parentId,string,optional,omitzero"`
-	DataType                      *int16                    `json:"dataType,optional" validate:"min=1,max=7"` // Data type and fields
-	ParentDataType                *int16                    `json:"parentDataType,optional"`
+	ParentAlias                   *string                   `json:"parentAlias,optional,omitempty"`
+	ParentId                      *int64                    `json:"parentId,string,optional,omitempty"`
+	DataType                      *int16                    `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"` // Data type and fields
+	ParentDataType                *int16                    `json:"parentDataType,optional,string,omitempty"`
 	Fields                        []*FieldDefine            `json:"fields,optional"`
 	DataSrcID                     int16                     `json:"-"`
 	TableName                     string                    `json:"-"` // Table fields
@@ -154,13 +154,13 @@ type CreateTopicDto struct {
 	Protocol                      map[string]interface{}    `json:"protocol,optional"`
 	ProtocolType                  string                    `json:"protocolType,optional"`
 	ProtocolBean                  interface{}               `json:"-"`
-	WithFlags                     *int32                    `json:"withFlags,optional"` // Flags and options
-	AddFlow                       *bool                     `json:"addFlow,optional"`
-	AddDashBoard                  *bool                     `json:"addDashBoard,optional"`
-	Save2Db                       *bool                     `json:"save2db,optional"`
-	RetainTableWhenDeleteInstance *bool                     `json:"retainTableWhenDeleteInstance,optional"`
-	CreateTemplate                *bool                     `json:"createTemplate,optional"`
-	SubscribeEnable               *bool                     `json:"subscribeEnable,optional"`
+	WithFlags                     *int32                    `json:"withFlags,optional,string,omitempty"` // Flags and options
+	AddFlow                       *bool                     `json:"addFlow,optional,string,omitempty"`
+	AddDashBoard                  *bool                     `json:"addDashBoard,optional,string,omitempty"`
+	Save2Db                       *bool                     `json:"save2db,optional,string",omitempty`
+	RetainTableWhenDeleteInstance *bool                     `json:"retainTableWhenDeleteInstance,optional,string,omitempty"`
+	CreateTemplate                *bool                     `json:"createTemplate,optional,string,omitempty"`
+	SubscribeEnable               *bool                     `json:"subscribeEnable,optional,string,omitempty"`
 	Frequency                     string                    `json:"frequency,optional,omitzero"` // Frequency for merge type
 	FrequencySeconds              *int64                    `json:"-"`
 	AlarmRuleDefine               interface{}               `json:"-"`                                         // AlarmRuleDefine type
@@ -173,8 +173,8 @@ type CreateTopicDto struct {
 	ValueType                     string                    `json:"valueType,optional,omitzero"`
 	InitValue                     interface{}               `json:"initValue,optional,omitzero"`
 	StrMaxLen                     int                       `json:"strMaxLen,optional,omitzero"`
-	AccessLevel                   string                    `json:"accessLevel,optional,omitzero"` // Access level
-	MountType                     *int16                    `json:"mountType,optional,omitzero"`   // Mount fields
+	AccessLevel                   string                    `json:"accessLevel,optional,omitzero"`       // Access level
+	MountType                     *int16                    `json:"mountType,optional,omitempty,string"` // Mount fields
 	MountSource                   string                    `json:"mountSource,optional,omitzero"`
 	UpdateAt                      int64                     `json:"updateAt,optional,omitzero"` // Update metadata
 	CreateAt                      int64                     `json:"createAt,optional,omitzero"`
@@ -869,10 +869,10 @@ type UnsTreeCondition struct {
 	PageSize        int    `json:"pageSize,optional,default=10" validate:"min=1"`
 	SearchType      int    `json:"searchType,optional,default=1" validate:"min=1,max=3"`
 	Keyword         string `json:"keyword,optional"`
-	ParentId        *int64 `json:"parentId,optional"`
-	DataType        *int   `json:"dataType,optional"`
-	PathType        *int   `json:"pathType,optional"`
-	SubscribeEnable *bool  `json:"subscribeEnable,optional"`
+	ParentId        *int64 `json:"parentId,optional,string"`
+	DataType        *int   `json:"dataType,optional,string"`
+	PathType        *int   `json:"pathType,optional,string"`
+	SubscribeEnable *bool  `json:"subscribeEnable,optional,string"`
 }
 
 type UpdateFileDTO struct {

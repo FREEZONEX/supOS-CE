@@ -15,24 +15,24 @@ type (
         Index       int     `json:"-"`
         FlagNo      string  `json:"-"`
         Name        string  `json:"name" validate:"required,max=63"`
-        DisplayName *string `json:"displayName,optional,omitzero" validate:"max=128"`
+        DisplayName *string `json:"displayName,optional,omitempty" validate:"max=128"`
         PathType    int16   `json:"pathType" validate:"required,min=0,max=2"`
         Path        string  `json:"path,optional,omitzero"`
         Alias       string  `json:"alias" validate:"required"`
         Description string  `json:"description,optional,omitzero" validate:"max=255"`
 
         // Model/Template fields
-        ModelId    *int64 `json:"modelId,string,optional,omitzero"`
-        ModelAlias *string `json:"modelAlias,optional,omitzero"`
+        ModelId    *int64 `json:"modelId,string,optional,omitempty"`
+        ModelAlias *string `json:"modelAlias,optional,omitempty"`
         Template   string `json:"-"`
 
         // Parent fields
-        ParentAlias *string `json:"parentAlias,optional,omitzero"`
-        ParentId    *int64  `json:"parentId,string,optional,omitzero"`
+        ParentAlias *string `json:"parentAlias,optional,omitempty"`
+        ParentId    *int64  `json:"parentId,string,optional,omitempty"`
 
 
-        DataType       *int16            `json:"dataType,optional" validate:"min=1,max=7"`// Data type and fields
-        ParentDataType *int16            `json:"parentDataType,optional"`
+        DataType       *int16            `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"`// Data type and fields
+        ParentDataType *int16            `json:"parentDataType,optional,string,omitempty"`
         Fields         []*FieldDefine    `json:"fields,optional"`
         // SrcJdbcType 数据类型
         DataSrcID      int16       `json:"-"`
@@ -66,13 +66,13 @@ type (
         ProtocolBean interface{}            `json:"-"`
 
 
-        WithFlags                     *int32 `json:"withFlags,optional"` // Flags and options
-        AddFlow                       *bool  `json:"addFlow,optional"`
-        AddDashBoard                  *bool  `json:"addDashBoard,optional"`
-        Save2Db                       *bool  `json:"save2db,optional"`
-        RetainTableWhenDeleteInstance *bool  `json:"retainTableWhenDeleteInstance,optional"`
-        CreateTemplate                *bool  `json:"createTemplate,optional"`
-        SubscribeEnable               *bool  `json:"subscribeEnable,optional"`
+        WithFlags                     *int32 `json:"withFlags,optional,string,omitempty"` // Flags and options
+        AddFlow                       *bool  `json:"addFlow,optional,string,omitempty"`
+        AddDashBoard                  *bool  `json:"addDashBoard,optional,string,omitempty"`
+        Save2Db                       *bool  `json:"save2db,optional,string",omitempty`
+        RetainTableWhenDeleteInstance *bool  `json:"retainTableWhenDeleteInstance,optional,string,omitempty"`
+        CreateTemplate                *bool  `json:"createTemplate,optional,string,omitempty"`
+        SubscribeEnable               *bool  `json:"subscribeEnable,optional,string,omitempty"`
 
 
         Frequency        string `json:"frequency,optional,omitzero"`// Frequency for merge type
@@ -98,7 +98,7 @@ type (
         AccessLevel string `json:"accessLevel,optional,omitzero"` // Access level
 
 
-        MountType   *int16 `json:"mountType,optional,omitzero"` // Mount fields
+        MountType   *int16 `json:"mountType,optional,omitempty,string"` // Mount fields
         MountSource string `json:"mountSource,optional,omitzero"`
 
 
@@ -207,7 +207,7 @@ type (
 		Mount          *MountDetailVo          `json:"mount,omitempty"`
 	}
 	MountDetailVo {
-		MountType   *int16    `json:"mountType,omitempty"`
+		MountType   *int16    `json:"mountType,omitempty,string"`
 		MountSource string `json:"mountSource,omitempty"`
 		DisplayName string `json:"displayName,omitempty"`
 	}
@@ -216,10 +216,10 @@ type (
 		PageSize   int     `json:"pageSize,optional,default=10" validate:"min=1"`
 		SearchType int     `json:"searchType,optional,default=1" validate:"min=1,max=3"`
 		Keyword    string  `json:"keyword,optional"`
-		ParentId   *int64  `json:"parentId,optional"`
-		DataType   *int    `json:"dataType,optional"`
-		PathType   *int    `json:"pathType,optional"`
-		SubscribeEnable *bool `json:"subscribeEnable,optional"`
+		ParentId   *int64  `json:"parentId,optional,string"`
+		DataType   *int    `json:"dataType,optional,string"`
+		PathType   *int    `json:"pathType,optional,string"`
+		SubscribeEnable *bool `json:"subscribeEnable,optional,string"`
 	}
 	PageResultDTO {
 		PageNo   int64             `json:"pageNo"`
@@ -387,11 +387,11 @@ type (
 		RefFields                     []FieldDefine          `json:"refFields,optional"`
 		ReferModelId                  string                 `json:"referModelId,optional"`
 		Alias                         string                 `json:"alias"`
-		ModelId                       *int64                  `json:"modelId,optional"`
+		ModelId                       *int64                  `json:"modelId,optional,string"`
 		ModelAlias                    *string                 `json:"modelAlias,optional"`
 		ParentAlias                   *string                 `json:"parentAlias,optional"`
-		ParentId                      *int64                  `json:"parentId,optional"`
-		DataType                      *int16                    `json:"dataType,optional"`
+		ParentId                      *int64                  `json:"parentId,optional,string"`
+		DataType                      *int16                    `json:"dataType,optional,string"`
 		Fields                        []FieldDefine          `json:"fields,optional"`
 		DataPath                      string                 `json:"dataPath,optional"`
 		Description                   string                 `json:"description,optional"`
@@ -408,7 +408,7 @@ type (
 		RefSource                     string                 `json:"refSource,optional"`
 		ValueType                     string                 `json:"valueType,optional"`
 		InitValue                     interface{}            `json:"initValue,optional"`
-		StrMaxLen                     *int                    `json:"strMaxLen,optional"`
+		StrMaxLen                     *int                    `json:"strMaxLen,optional,string"`
 		AccessLevel                   string                 `json:"accessLevel,optional"`
 	}
 	UpdateNameVo {

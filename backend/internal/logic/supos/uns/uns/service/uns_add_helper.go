@@ -368,9 +368,6 @@ func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 		if dataType := unsDto.DataType; dataType != nil {
 			instance.DataType = dataType
 		}
-		if len(unsDto.Fields) > 0 {
-			instance.NumberFields = unsDto.CountNumberFields()
-		}
 	}
 
 	instance.Extend = unsDto.Extend
@@ -549,7 +546,9 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, exi
 			return nil
 		}
 	}
-
+	if newUns.PathType == constants.PathTypeFile && len(unsDto.Fields) > 0 {
+		newUns.NumberFields = unsDto.CountNumberFields()
+	}
 	if dataType == constants.CitingType && unsDto.Fields != nil {
 		EMPTY := make([]*types.FieldDefine, 0)
 		unsDto.Fields = EMPTY

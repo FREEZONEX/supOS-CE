@@ -149,7 +149,7 @@ func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAnd
 	}
 	sql.Append(`) x
 	join uns_namespace u on (x.parent_alias = u.parent_alias OR (x.parent_alias IS NULL AND u.parent_alias IS NULL)) 
-	where u.status =1 group by u.parent_alias, u."name" HAVING COUNT(*) > 0
+	where u.status =1 group by u.parent_alias, u."name"
     `)
 	err = p.model(db).Raw(sql.String()).Scan(&results).Error
 	if err != nil {

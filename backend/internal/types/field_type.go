@@ -1,6 +1,7 @@
 package types
 
 import (
+	"backend/share/base"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -22,36 +23,16 @@ const (
 	FieldTypeLBlob    = "LBLOB"
 )
 
+var fieldTypes = []FieldType{
+	FieldTypeInteger, FieldTypeLong, FieldTypeFloat, FieldTypeDouble,
+	FieldTypeBoolean, FieldTypeDatetime,
+	FieldTypeString, FieldTypeBlob, FieldTypeLBlob,
+}
+
 // fieldTypeInfo holds the metadata for each FieldType constant.
 type fieldTypeInfo struct {
 	isNumber     bool
 	defaultValue any
-}
-
-// fieldTypeDetails maps each FieldType constant to its metadata.
-var fieldTypeDetails = map[FieldType]fieldTypeInfo{
-	FieldTypeInteger:  {true, 0},
-	FieldTypeLong:     {true, int64(0)},
-	FieldTypeFloat:    {true, float32(0.0)},
-	FieldTypeDouble:   {true, float64(0.0)},
-	FieldTypeBoolean:  {false, false},
-	FieldTypeDatetime: {false, nil},
-	FieldTypeString:   {false, nil},
-	FieldTypeBlob:     {false, nil},
-	FieldTypeLBlob:    {false, nil},
-}
-
-var fieldTypes []FieldType
-
-// init populates the nameMap for fast lookups.
-func init() {
-	fieldTypes = make([]FieldType, 0, len(fieldTypeDetails))
-	for ft := range fieldTypeDetails {
-		fieldTypes = append(fieldTypes, ft)
-	}
-	sort.Slice(fieldTypes, func(i, j int) bool {
-		return fieldTypes[i] < fieldTypes[j]
-	})
 }
 
 // Name returns the canonical string name of the field type.
@@ -70,7 +51,19 @@ func (f FieldType) IsNumber() bool {
 
 // DefaultValue returns the default value for the field type.
 func (f FieldType) DefaultValue() any {
-	return fieldTypeDetails[f].defaultValue
+	switch f {
+	case FieldTypeInteger:
+		return 0
+	case FieldTypeLong:
+		return int64(0)
+	case FieldTypeFloat:
+		return float32(0)
+	case FieldTypeDouble:
+		return float64(0)
+	case FieldTypeBoolean:
+		return false
+	}
+	return nil
 }
 
 // String implements the fmt.Stringer interface for easy printing.
@@ -86,20 +79,31 @@ func GetFieldTypeByName(name string) (FieldType, bool) {
 	return GetFieldTypeByNameIgnoreCase(name)
 }
 
+var sortedFieldTypes []FieldType
+
+type fieldTypeSlice []FieldType
+
+func (x fieldTypeSlice) Len() int           { return len(x) }
+func (x fieldTypeSlice) Less(i, j int) bool { return x[i] < x[j] }
+func (x fieldTypeSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func init() {
+	sortedFieldTypes = make([]FieldType, len(fieldTypes))
+	for i, v := range fieldTypes {
+		sortedFieldTypes[i] = v
+	}
+	sort.Sort(fieldTypeSlice(sortedFieldTypes))
+}
+
 // GetFieldTypeByNameIgnoreCase finds a FieldType by its name, case-insensitively.
 // It includes a special case to handle "int" as an alias for Integer.
-func GetFieldTypeByNameIgnoreCase(name string) (FieldType, bool) {
-	ft := FieldType(strings.ToUpper(name))
-	_, ok := fieldTypeDetails[ft]
-	if ok {
-		return ft, true
-	}
-
-	if strings.EqualFold(name, "int") {
+func GetFieldTypeByNameIgnoreCase(name string) (rs FieldType, ok bool) {
+	name = strings.ToUpper(name)
+	if name == "INT" {
 		return FieldTypeInteger, true
 	}
-
-	return "", false
+	k := FieldType(name)
+	i := base.BinarySearchCmp(sortedFieldTypes, k)
+	return k, i >= 0
 }
 
 // MarshalJSON implements the json.Marshaler interface, serializing the FieldType to its string name.

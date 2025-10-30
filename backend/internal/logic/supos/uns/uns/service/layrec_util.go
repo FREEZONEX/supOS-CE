@@ -164,8 +164,16 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 			})
 		}
 		for i, node := range group {
-			if base.MapContainsKey(addFiles, node.Id) && node.CountExistsSiblings > 0 {
-				node.PathName = name + "-" + strconv.FormatInt(node.CountExistsSiblings+int64(i), 10)
+			if base.MapContainsKey(addFiles, node.Id) {
+				xp := strings.LastIndex(name, "-")
+				if xp > 0 && xp < len(name)-1 && unicode.IsDigit(rune(name[xp+1])) {
+					name = name[:xp+1] + "0" + name[xp+1:]
+				}
+				if node.CountExistsSiblings > 0 {
+					node.PathName = name + "-" + strconv.FormatInt(node.CountExistsSiblings+int64(i), 10)
+				} else {
+					node.PathName = name
+				}
 			} else {
 				node.PathName = name
 			}
@@ -178,7 +186,7 @@ func escapeName(name string) string {
 	cs := []rune(name)
 	changed := false
 	for i, c := range cs {
-		if c == '-' || !isIdentifierPart(c) || c == '$' {
+		if (c != '-' && !isIdentifierPart(c)) || c == '$' {
 			changed = true
 			cs[i] = '_'
 		}

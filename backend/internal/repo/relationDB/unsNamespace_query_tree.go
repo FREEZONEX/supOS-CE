@@ -40,10 +40,12 @@ func (p UnsNamespaceRepo) NextLevelPagedQueryList(db *gorm.DB, q *UnsTreeNextLev
 }
 func (p UnsNamespaceRepo) ParentIdPagedQueryList(db *gorm.DB, parentId *int64, pageNo, pageSize int, searchCount *int64) (results []*UnsNamespace, err error) {
 	db = p.model(db)
-	if parentId == nil {
-		db = db.Where(`parent_id is null`)
-	} else {
-		db = db.Where(`parent_id =?`, *parentId)
+	if parentId != nil {
+		if *parentId == 0 {
+			db = db.Where(`parent_id is null`)
+		} else {
+			db = db.Where(`parent_id =?`, *parentId)
+		}
 	}
 	db = db.Where(`status=1 AND path_type in(0,2) AND id>1000`)
 	if searchCount != nil {
