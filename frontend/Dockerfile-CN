@@ -37,8 +37,6 @@ RUN npm install -g serve concurrently pnpm
 # Copy web build artifacts
 COPY --from=web-builder /app/apps/web/dist ./web-dist
 COPY --from=web-builder /app/apps/services-express/dist ./services-express-dist
-COPY --from=web-builder /app/apps/services-express/package.json ./services-express-dist/
-COPY --from=web-builder /app/apps/services-express/node_modules ./services-express-dist/node_modules
 
 # Expose ports (web:3000, services:4000)
 EXPOSE 3000 4000
@@ -46,4 +44,4 @@ EXPOSE 3000 4000
 # Start both services concurrently
 CMD ["concurrently", \
     "serve -s /app/web-dist -l 3000", \
-    "node /app/services-express-dist/index.js"]
+    "node /app/services-express-dist/dist/index.js"]
