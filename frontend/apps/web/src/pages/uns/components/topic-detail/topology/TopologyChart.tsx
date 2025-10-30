@@ -16,7 +16,7 @@ import {
 } from './Components.tsx';
 import ReactDOM from 'react-dom/client'; // React 18 使用 'react-dom/client'
 import { Graph } from '@antv/x6';
-import { debounce } from 'lodash';
+import { debounce } from 'lodash-es';
 import { data, findDate, markupLine } from '@/pages/uns/components/topic-detail/topology/data.ts';
 import { useBaseStore } from '@/stores/base';
 import { bindDashboardForUns, getTopologyStatus } from '@/apis/inter-api';
