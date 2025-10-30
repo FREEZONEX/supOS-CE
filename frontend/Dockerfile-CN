@@ -38,7 +38,7 @@ RUN npm install -g serve concurrently pnpm
 COPY --from=web-builder /app/apps/web/dist ./web-dist
 COPY --from=web-builder /app/apps/services-express/dist ./services-express-dist
 COPY --from=web-builder /app/apps/services-express/package.json ./services-express-dist/
-COPY --from=web-builder /app/pnpm-workspace.yaml ./
+COPY --from=web-builder /app/pnpm-workspace.yaml ./services-express-dist/
 
 WORKDIR /app/services-express-dist
 RUN pnpm install --production
