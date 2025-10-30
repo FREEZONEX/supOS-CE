@@ -47,9 +47,25 @@ func (p UnsNamespaceRepo) UpdateDescByAlia(db *gorm.DB, alias string, descriptio
 	}
 	return result.RowsAffected, nil
 }
+
+func (p UnsNamespaceRepo) LinkLabelOnUns(db *gorm.DB, unsID, labelID int64, labelName string, updateAt time.Time) error {
+	// 使用原生 SQL 片段
+	sql := fmt.Sprintf(
+		` jsonb_set(CASE WHEN label_ids IS NULL THEN '{}' ELSE label_ids END, '{"%d"}', '"%s"')`,
+		labelID, labelName,
+	)
+	result := p.model(db).
+		Where("id = ?", unsID).
+		Updates(map[string]interface{}{
+			"label_ids": gorm.Expr(sql),
+			"update_at": updateAt,
+		})
+
+	return result.Error
+}
 func (p UnsNamespaceRepo) UnlinkLabelsByIds(db *gorm.DB, labelId int64, unsIds []int64, updateAt time.Time) (int64, error) {
 	db = p.model(db)
-	jsonRemoveOp := gorm.Expr("jsonb_remove(label_ids, ?)", labelId)
+	jsonRemoveOp := gorm.Expr(fmt.Sprintf("label_ids - '%d' ", labelId))
 	// 执行更新操作
 	result := db.
 		Where("id IN (?) AND label_ids IS NOT NULL", unsIds).
@@ -79,6 +95,20 @@ func (p UnsNamespaceRepo) UpdateNamespaceLabel(db *gorm.DB, id int64, labelId st
 			"label_ids": jsonSetOp,
 			"update_at": updateAt,
 		})
+
+	return result.Error
+}
+func (p UnsNamespaceRepo) UpdateUnsLabelNames(db *gorm.DB, labelID int64, labelName string) error {
+	// 构建 JSONB 路径和值
+	jsonPath := fmt.Sprintf(`{"%d"}`, labelID)
+	jsonValue := fmt.Sprintf(`"%s"`, escapeSQL(labelName))
+
+	// 使用原生 SQL 表达式
+	result := p.model(db).
+		Where(fmt.Sprintf("jsonb_exists(label_ids ,'%d') ", labelID)). // PostgreSQL JSONB 存在操作符 ??
+		Update("label_ids",
+			gorm.Expr("jsonb_set(label_ids, ?, ?)", jsonPath, jsonValue),
+		)
 
 	return result.Error
 }

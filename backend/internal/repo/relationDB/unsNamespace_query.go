@@ -337,3 +337,29 @@ func (p UnsNamespaceRepo) ListLabeledUnsByKeyword(db *gorm.DB, keyword string) (
 
 	return results, nil
 }
+func (p UnsNamespaceRepo) PageListByLabel(db *gorm.DB, labelID int64, pageNo, pageSize int64, searchCount *int64) (unsList []*UnsNamespace, err error) {
+	db = p.model(db)
+	page := &stores.PageInfo{Page: pageNo, Size: pageSize, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
+
+	// 基础查询
+	baseQuery := db.
+		Joins("JOIN uns_label_ref rf ON uns_namespace.id = rf.uns_id").
+		Where("rf.label_id = ?", labelID)
+
+	// COUNT 查询（不包含 SELECT 子句）
+	if searchCount != nil {
+		countQuery := baseQuery.Session(&gorm.Session{})
+		err = countQuery.Count(searchCount).Error
+		if err != nil || *searchCount == 0 {
+			return
+		}
+	}
+
+	// 数据查询（包含 SELECT 子句）
+	dataQuery := baseQuery.
+		Select("uns_namespace.*").
+		Scopes(page.ToGorm)
+
+	err = dataQuery.Find(&unsList).Error
+	return unsList, err
+}

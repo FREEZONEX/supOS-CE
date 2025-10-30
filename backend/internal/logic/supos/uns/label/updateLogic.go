@@ -26,7 +26,7 @@ func NewUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UpdateLogi
 	}
 }
 
-func (l *UpdateLogic) Update(req *types.UnsLabel) (resp *types.Empty, err error) {
+func (l *UpdateLogic) Update(req *types.UpdateLabelReq) (resp *types.BaseResult, err error) {
 	sv := spring.GetBean[*service.UnsLabelService]()
 	return sv.Update(l.ctx, req)
 }

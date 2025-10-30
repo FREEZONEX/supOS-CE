@@ -102,17 +102,8 @@ func (p UnsLabelRefRepo) FindOne(db *gorm.DB, labelID int64, unsID int64) (*UnsL
 	return &result, nil
 }
 
-// 批量插入 LightStrategyDevice 记录
-func (p UnsLabelRefRepo) MultiInsert(db *gorm.DB, data []*UnsLabelRef) error {
-	err := p.model(db).Clauses(clause.OnConflict{UpdateAll: true}).Create(data).Error
-	return stores.ErrFmt(err)
-}
+// 批量插入记录
 func (p UnsLabelRefRepo) SaveOrIgnore(db *gorm.DB, data []*UnsLabelRef) error {
-	err := p.model(db).Clauses(clause.OnConflict{DoNothing: true}).Create(data).Error
-	return stores.ErrFmt(err)
-}
-
-func (p UnsLabelRefRepo) UpdateWithField(db *gorm.DB, f UnsLabelRefFilter, updates map[string]any) error {
-	err := p.model(db).Updates(updates).Error
+	err := p.model(db).Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(data, 1000).Error
 	return stores.ErrFmt(err)
 }

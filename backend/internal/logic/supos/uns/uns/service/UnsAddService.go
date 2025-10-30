@@ -125,7 +125,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 
 	u.log.Infof("addFiles:%d,db:%d, createList.size=%d, updateList.size=%d\n", len(addFiles), len(dbFiles), len(rs.insertList), len(rs.updateList))
 	for _, file := range addFiles {
-		file.Status = 1
+		file.Status = &OK
 		createTopicDto := UnsConverter.Po2Dto(file)
 
 		var dbF *dao.UnsNamespace
@@ -138,7 +138,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		if labels, exists := unsPoLabels[file.Id]; exists {
 			labels.SetDto(createTopicDto)
 		}
-		if dbF != nil && dbF.Status == OK {
+		if dbF != nil && base.P2v(dbF.Status) == OK {
 			switch file.PathType {
 			case constants.PathTypeFile:
 				createTopicDto.FieldsChanged = !base.EqualsF(file.Fields, dbF.Fields, func(a, b *types.FieldDefine) bool {
@@ -194,7 +194,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 
 	for _, po := range rs.updateList {
 		id := po.Id
-		po.Status = 1
+		po.Status = &OK
 		if _, exists := addFiles[id]; !exists {
 			dtoUpdateList = append(dtoUpdateList, UnsConverter.Po2Dto(po))
 		}

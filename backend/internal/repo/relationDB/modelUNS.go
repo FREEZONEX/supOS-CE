@@ -36,7 +36,7 @@ type UnsNamespace struct {
 	ParentDataType   *int16           `gorm:"column:parent_data_type" json:"parent_data_type"`
 	Fields           Fields           `gorm:"column:fields;type:json;" json:"fields"`
 	CreateAt         time.Time        `gorm:"column:create_at;default:now()" json:"create_at"`
-	Status           int16            `gorm:"column:status;default:1" json:"status"`
+	Status           *int16           `gorm:"column:status;default:1" json:"status"`
 	Description      string           `gorm:"column:description" json:"description"`
 	UpdateAt         time.Time        `gorm:"column:update_at" json:"update_at"`
 	Protocol         string           `gorm:"column:protocol" json:"protocol"`
@@ -47,7 +47,7 @@ type UnsNamespace struct {
 	Refers           Refers           `gorm:"column:refers;type:json;" json:"refers"`
 	Expression       string           `gorm:"column:expression" json:"expression"`
 	TableName_       string           `gorm:"column:table_name" json:"table_name"`
-	NumberFields     int16            `gorm:"column:number_fields" json:"number_fields"`
+	NumberFields     *int16           `gorm:"column:number_fields" json:"number_fields"`
 	ParentId         *int64           `gorm:"column:parent_id" json:"parent_id"`
 	ModelId          *int64           `gorm:"column:model_id" json:"model_id"`
 	ProtocolType     string           `gorm:"column:protocol_type" json:"protocol_type"`
@@ -135,7 +135,7 @@ func (u *UnsNamespace) GetSrcJdbcType() types.SrcJdbcType {
 }
 
 func (u *UnsNamespace) GetStatus() *int16 {
-	return &u.Status
+	return u.Status
 }
 
 func (t *UnsNamespace) GetId() int64 {
@@ -294,13 +294,13 @@ const TableNameUnsLabel = "uns_label"
 
 // UnsLabel mapped from table <uns_label>
 type UnsLabel struct {
-	ID                 int64     `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
-	LabelName          string    `gorm:"column:label_name" json:"label_name"`
-	CreateAt           time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
-	WithFlags          *int32    `gorm:"column:with_flags" json:"with_flags"`
-	SubscribeFrequency string    `gorm:"column:subscribe_frequency" json:"subscribe_frequency"`
-	SubscribeAt        time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
-	UpdateAt           time.Time `gorm:"column:update_at;default:now()" json:"update_at"`
+	ID                 int64      `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	LabelName          string     `gorm:"column:label_name" json:"label_name"`
+	CreateAt           time.Time  `gorm:"column:create_at;default:now()" json:"create_at"`
+	WithFlags          *int32     `gorm:"column:with_flags" json:"with_flags"`
+	SubscribeFrequency string     `gorm:"column:subscribe_frequency" json:"subscribe_frequency"`
+	SubscribeAt        *time.Time `gorm:"column:subscribe_at" json:"subscribe_at"`
+	UpdateAt           time.Time  `gorm:"column:update_at;default:now()" json:"update_at"`
 }
 
 // TableName UnsLabel's table name

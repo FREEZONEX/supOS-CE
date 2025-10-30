@@ -164,7 +164,7 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dt
 		labelPos, _ := l.labelMapper.ListByIds(db, base.MapKeys(labelIds))
 		if len(labelPos) > 0 {
 			dto.LabelList = base.Map[*dao.UnsLabel, types.LabelVo](labelPos, func(e *dao.UnsLabel) (rs types.LabelVo) {
-				UnsConverter.CopyProperties(e, &rs)
+				rs = *UnsConverter.LabelPo2Vo(e)
 				return rs
 			})
 		}

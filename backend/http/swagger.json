@@ -2636,16 +2636,28 @@
             "schema": {
               "type": "object",
               "properties": {
-                "list": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
                   "type": "array",
                   "items": {
                     "type": "object",
                     "required": [
                       "id",
-                      "labelName"
+                      "labelName",
+                      "createAt",
+                      "topic",
+                      "subscribeEnable",
+                      "subscribeFrequency",
+                      "createTime",
+                      "subscribeAt"
                     ],
                     "properties": {
                       "createAt": {
+                        "type": "integer"
+                      },
+                      "createTime": {
                         "type": "integer"
                       },
                       "id": {
@@ -2653,9 +2665,24 @@
                       },
                       "labelName": {
                         "type": "string"
+                      },
+                      "subscribeAt": {
+                        "type": "integer"
+                      },
+                      "subscribeEnable": {
+                        "type": "boolean"
+                      },
+                      "subscribeFrequency": {
+                        "type": "string"
+                      },
+                      "topic": {
+                        "type": "string"
                       }
                     }
                   }
+                },
+                "msg": {
+                  "type": "string"
                 }
               }
             }
@@ -3163,6 +3190,64 @@
                   "type": "integer"
                 },
                 "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/cancelLabel": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "文件取消标签",
+        "operationId": "supos/Uns/LabelCancelLabel",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "unsId",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "labelIds"
+              ],
+              "properties": {
+                "labelIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
                 "msg": {
                   "type": "string"
                 }
@@ -5396,13 +5481,16 @@
                 "labelName"
               ],
               "properties": {
-                "createAt": {
-                  "type": "integer"
-                },
                 "id": {
                   "type": "integer"
                 },
                 "labelName": {
+                  "type": "string"
+                },
+                "subscribeEnable": {
+                  "type": "boolean"
+                },
+                "subscribeFrequency": {
                   "type": "string"
                 }
               }
@@ -5413,14 +5501,22 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
       },
       "post": {
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "produces": [
           "application/json"
@@ -5432,27 +5528,64 @@
         "operationId": "supos/Uns/LabelCreate",
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "labelName"
-              ],
-              "properties": {
-                "labelName": {
-                  "type": "string"
-                }
-              }
-            }
+            "type": "string",
+            "name": "name",
+            "in": "formData",
+            "required": true
           }
         ],
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "labelName",
+                    "createAt",
+                    "topic",
+                    "subscribeEnable",
+                    "subscribeFrequency",
+                    "createTime",
+                    "subscribeAt"
+                  ],
+                  "properties": {
+                    "createAt": {
+                      "type": "integer"
+                    },
+                    "createTime": {
+                      "type": "integer"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "labelName": {
+                      "type": "string"
+                    },
+                    "subscribeAt": {
+                      "type": "integer"
+                    },
+                    "subscribeEnable": {
+                      "type": "boolean"
+                    },
+                    "subscribeFrequency": {
+                      "type": "string"
+                    },
+                    "topic": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -5496,7 +5629,15 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object"
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -5510,7 +5651,7 @@
         "schemes": [
           "https"
         ],
-        "summary": "查询详情",
+        "summary": "标签详情",
         "operationId": "supos/Uns/LabelDetail",
         "parameters": [
           {
@@ -5541,13 +5682,321 @@
             "schema": {
               "type": "object",
               "properties": {
-                "createAt": {
+                "code": {
                   "type": "integer"
                 },
-                "id": {
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "labelName",
+                    "createAt",
+                    "topic",
+                    "subscribeEnable",
+                    "subscribeFrequency",
+                    "createTime",
+                    "subscribeAt"
+                  ],
+                  "properties": {
+                    "createAt": {
+                      "type": "integer"
+                    },
+                    "createTime": {
+                      "type": "integer"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "labelName": {
+                      "type": "string"
+                    },
+                    "subscribeAt": {
+                      "type": "integer"
+                    },
+                    "subscribeEnable": {
+                      "type": "boolean"
+                    },
+                    "subscribeFrequency": {
+                      "type": "string"
+                    },
+                    "topic": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/label/pageListUnsByLabel": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "分页获取标签下的文件列表",
+        "operationId": "supos/Uns/LabelPageListUnsByLabel",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "labelId",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 20,
+            "name": "pageSize",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
                   "type": "integer"
                 },
-                "labelName": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "unsId",
+                      "name",
+                      "path",
+                      "pathType"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "pathType": {
+                        "type": "integer"
+                      },
+                      "unsId": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/label/subscribe": {
+      "put": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "修改标签订阅",
+        "operationId": "supos/Uns/LabelUpdateSubscribe",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "id",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "name": "enable",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "frequency",
+            "in": "formData",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/makeLabel": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "文件打标签",
+        "operationId": "supos/Uns/LabelMakeLabel",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "unsId",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "labelList": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "labelName",
+                      "createAt",
+                      "topic",
+                      "subscribeEnable",
+                      "subscribeFrequency",
+                      "createTime",
+                      "subscribeAt"
+                    ],
+                    "properties": {
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "createTime": {
+                        "type": "integer"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "labelName": {
+                        "type": "string"
+                      },
+                      "subscribeAt": {
+                        "type": "integer"
+                      },
+                      "subscribeEnable": {
+                        "type": "boolean"
+                      },
+                      "subscribeFrequency": {
+                        "type": "string"
+                      },
+                      "topic": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/makeSingleLabel": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "文件打单个标签",
+        "operationId": "supos/Uns/LabelMakeSingleLabel",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "unsId",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "labelId",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
                   "type": "string"
                 }
               }
@@ -8260,7 +8709,7 @@
       }
     }
   },
-  "x-date": "2025-10-30 08:41:18",
+  "x-date": "2025-10-30 20:36:02",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

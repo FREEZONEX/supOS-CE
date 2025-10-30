@@ -9,6 +9,7 @@ import (
 	"backend/internal/logic/supos/uns/uns/bo"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
+	"backend/share/base"
 	"strconv"
 	"time"
 
@@ -215,6 +216,17 @@ var apiConvertOptions = copier.Option{IgnoreEmpty: true, Converters: []copier.Ty
 			return nil, errors.Default
 		},
 	}, {
+		SrcType: &time.Time{},
+		DstType: int64(0),
+		Fn: func(src interface{}) (dst interface{}, err error) {
+			if rs, ok := src.(*time.Time); ok && rs != nil {
+				return rs.UnixMilli(), nil
+			} else if ok && rs == nil {
+				return int64(0), nil
+			}
+			return nil, errors.Default
+		},
+	}, {
 		SrcType: int64(0),
 		DstType: copier.String,
 		Fn: func(src interface{}) (dst interface{}, err error) {
@@ -254,4 +266,24 @@ func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *types.CreateTopicDto {
 
 func CopyProperties(from any, to any) error {
 	return copier.CopyWithOption(to, from, apiConvertOptions)
+}
+func LabelPo2Vo(po *dao.UnsLabel) (vo *types.LabelVo) {
+	vo = &types.LabelVo{}
+	err := CopyProperties(po, vo)
+	if err != nil {
+		vo.LabelName = po.LabelName
+		vo.CreateTime = po.CreateAt.UnixMilli()
+		if po.SubscribeAt != nil && !po.SubscribeAt.IsZero() {
+			vo.SubscribeAt = po.SubscribeAt.UnixMilli()
+		}
+	}
+	vo.Topic = "label/" + po.LabelName
+	if flags := base.P2v(po.WithFlags); flags > 0 {
+		enable := constants.WithSubscribeEnable(flags)
+		vo.SubscribeEnable = &enable
+		if enable {
+			vo.SubscribeFrequency = po.SubscribeFrequency
+		}
+	}
+	return vo
 }

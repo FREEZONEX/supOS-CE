@@ -14,7 +14,7 @@ import (
 // 创建标签
 func CreateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.UnsLabelCreateReq
+		var req types.CreateLabelReq
 		if err := httpx.Parse(r, &req); err != nil {
 			result.Http(w, r, nil, errors.Parameter.WithMsg("入参不正确:"+err.Error()))
 			return
@@ -22,6 +22,10 @@ func CreateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		l := label.NewCreateLogic(r.Context(), svcCtx)
 		resp, err := l.Create(&req)
-		result.Http(w, r, resp, err)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
 	}
 }

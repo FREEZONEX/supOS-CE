@@ -14,7 +14,9 @@ func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCon
 	if params.PageNo < 1 {
 		params.PageNo = 1
 	}
-	if params.PageSize < 1 || params.PageSize > 1000 {
+	if params.PageSize < 1 {
+		params.PageSize = constants.DefaultPageSize
+	} else if params.PageSize > 1000 {
 		params.PageSize = constants.MaxPageSize
 	}
 	pageNo := params.PageNo

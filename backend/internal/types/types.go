@@ -62,6 +62,11 @@ type BatchUpdateResourceReq struct {
 	Items []BatchUpdateResource
 }
 
+type CancelLabelReq struct {
+	UnsId    int64   `form:"unsId"`
+	LabelIds []int64 `json:"labelIds"`
+}
+
 type CheckDuplicationNameReq struct {
 	Folder    string `form:"folder,optional"`
 	Name      string `form:"name"`
@@ -112,6 +117,15 @@ type CreateFileDto struct {
 	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
 	TemplateAlias    string                 `json:"templateAlias,optional"`
 	LabelNames       []string               `json:"labelNames,optional"`
+}
+
+type CreateLabelReq struct {
+	Name string `form:"name"`
+}
+
+type CreateLabelResp struct {
+	BaseResult
+	Data *LabelVo `json:"data"`
 }
 
 type CreateTopicDto struct {
@@ -295,6 +309,13 @@ type FieldDefines struct {
 	CalcField     *FieldDefine            // Calculation field  // Calculation field
 }
 
+type FileVo struct {
+	UnsId    string `json:"unsId"`
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	PathType int16  `json:"pathType"`
+}
+
 type GetByUnsRequest struct {
 	UnsAlias string `form:"unsAlias"`
 }
@@ -391,20 +412,41 @@ type JsonResult struct {
 	Data interface{} `json:"data,omitzero"`
 }
 
+type LabelDetailResult struct {
+	BaseResult
+	Data *LabelVo `json:"data"`
+}
+
+type LabelPageReq struct {
+	LabelId  int64 `form:"labelId"`
+	PageNo   int64 `form:"pageNo,optional,default=1"`
+	PageSize int64 `form:"pageSize,optional,default=20"`
+}
+
 type LabelVo struct {
 	ID                 int64  `json:"id,string"`
-	LabelName          string `json:"labelName"`
-	CreateAt           int64  `json:"createAt"`
-	Topic              string `json:"topic"`
-	SubscribeEnable    bool   `json:"subscribeEnable"`
-	SubscribeFrequency string `json:"subscribeFrequency"`
-	CreateTime         int64  `json:"createTime"`
-	SubscribeAt        int64  `json:"subscribeAt"`
+	LabelName          string `json:"labelName,omitempty"`
+	CreateAt           int64  `json:"createAt,omitzero"`
+	Topic              string `json:"topic,omitempty"`
+	SubscribeEnable    *bool  `json:"subscribeEnable,omitempty"`
+	SubscribeFrequency string `json:"subscribeFrequency,omitempty"`
+	CreateTime         int64  `json:"createTime,omitzero"`
+	SubscribeAt        int64  `json:"subscribeAt,omitzero"`
 }
 
 type ListTypesResult struct {
 	BaseResult
 	Data []string `json:"data"`
+}
+
+type MakeLabelReq struct {
+	UnsId     int64      `form:"unsId"`
+	LabelList []*LabelVo `json:"labelList,optional"`
+}
+
+type MakeSingleLabelReq struct {
+	UnsId   int64 `form:"unsId"`
+	LabelId int64 `form:"labelId"`
 }
 
 type MarkTopRequest struct {
@@ -444,7 +486,7 @@ type ModelDetailResp struct {
 }
 
 type MountDetailVo struct {
-	MountType   *int16 `json:"mountType,omitempty"`
+	MountType   *int16 `json:"mountType,omitempty,string"`
 	MountSource string `json:"mountSource,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`
 }
@@ -817,6 +859,14 @@ type UnmarkRequest struct {
 	ID string `form:"id"`
 }
 
+type UnsByLabelPageResp struct {
+	BaseResult
+	PageNo   int64    `json:"pageNo"`
+	PageSize int64    `json:"pageSize"`
+	Total    int64    `json:"total"`
+	Data     []FileVo `json:"data"`
+}
+
 type UnsCreateTopicDTO struct {
 	ParentAlias    string                 `json:"parentAlias,optional"`
 	ParentID       int64                  `json:"parentId,optional"`
@@ -846,22 +896,13 @@ type UnsDataResponseVo struct {
 type UnsHistoryQueryResult struct {
 }
 
-type UnsLabel struct {
-	ID        int64  `json:"id"`
-	LabelName string `json:"labelName"`
-	CreateAt  int64  `json:"createAt,optional"`
-}
-
-type UnsLabelCreateReq struct {
-	LabelName string `json:"labelName"`
-}
-
 type UnsLabelListReq struct {
 	Key string `form:"key,optional"`
 }
 
 type UnsLabelListResp struct {
-	List []*UnsLabel `json:"list"`
+	BaseResult
+	Data []*LabelVo `json:"data"`
 }
 
 type UnsTreeCondition struct {
@@ -878,6 +919,19 @@ type UnsTreeCondition struct {
 type UpdateFileDTO struct {
 	Alias string                 `json:"alias"`
 	Data  map[string]interface{} `json:"data"`
+}
+
+type UpdateLabelReq struct {
+	ID                 int64  `json:"id,string"`
+	LabelName          string `json:"labelName" validate:"required,max=63"`
+	SubscribeEnable    *bool  `json:"subscribeEnable,optional,string"`
+	SubscribeFrequency string `json:"subscribeFrequency,optional"`
+}
+
+type UpdateLabelSubscribeReq struct {
+	ID                 int64  `form:"id,string"`
+	SubscribeEnable    *bool  `form:"enable,optional,string"`
+	SubscribeFrequency string `form:"frequency,optional"`
 }
 
 type UpdateModeRequestVo struct {
@@ -902,11 +956,11 @@ type UpdateUnsDto struct {
 	RefFields                     []FieldDefine          `json:"refFields,optional"`
 	ReferModelId                  string                 `json:"referModelId,optional"`
 	Alias                         string                 `json:"alias"`
-	ModelId                       *int64                 `json:"modelId,optional"`
+	ModelId                       *int64                 `json:"modelId,optional,string"`
 	ModelAlias                    *string                `json:"modelAlias,optional"`
 	ParentAlias                   *string                `json:"parentAlias,optional"`
-	ParentId                      *int64                 `json:"parentId,optional"`
-	DataType                      *int16                 `json:"dataType,optional"`
+	ParentId                      *int64                 `json:"parentId,optional,string"`
+	DataType                      *int16                 `json:"dataType,optional,string"`
 	Fields                        []FieldDefine          `json:"fields,optional"`
 	DataPath                      string                 `json:"dataPath,optional"`
 	Description                   string                 `json:"description,optional"`
@@ -923,7 +977,7 @@ type UpdateUnsDto struct {
 	RefSource                     string                 `json:"refSource,optional"`
 	ValueType                     string                 `json:"valueType,optional"`
 	InitValue                     interface{}            `json:"initValue,optional"`
-	StrMaxLen                     *int                   `json:"strMaxLen,optional"`
+	StrMaxLen                     *int                   `json:"strMaxLen,optional,string"`
 	AccessLevel                   string                 `json:"accessLevel,optional"`
 }
 

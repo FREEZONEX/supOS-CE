@@ -323,19 +323,19 @@ type (
         // 标签ID：已有标签时必传，新建标签时不需要传
         ID int64 `json:"id,string"`
         // 标签名称，新建标签时，必传
-        LabelName string `json:"labelName"`
+        LabelName string `json:"labelName,omitempty"`
         // 创建时间
-        CreateAt int64 `json:"createAt"`
+        CreateAt int64 `json:"createAt,omitzero"`
         // 主题
-        Topic string `json:"topic"`
+        Topic string `json:"topic,omitempty"`
         // 是否订阅
-        SubscribeEnable bool `json:"subscribeEnable"`
+        SubscribeEnable *bool `json:"subscribeEnable,omitempty"`
         // 订阅频率
-        SubscribeFrequency string `json:"subscribeFrequency"`
+        SubscribeFrequency string `json:"subscribeFrequency,omitempty"`
         // 创建时间--单位：毫秒
-        CreateTime int64 `json:"createTime"`
+        CreateTime int64 `json:"createTime,omitzero"`
         // 订阅时间
-        SubscribeAt int64 `json:"subscribeAt"`
+        SubscribeAt int64 `json:"subscribeAt,omitzero"`
 	}
 	DbFieldsInfoVo {
 		DatabaseType string            `json:"databaseType"`

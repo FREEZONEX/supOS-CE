@@ -26,7 +26,7 @@ func NewDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DetailLogi
 	}
 }
 
-func (l *DetailLogic) Detail(req *types.WithID) (resp *types.UnsLabel, err error) {
+func (l *DetailLogic) Detail(req *types.WithID) (resp *types.LabelDetailResult, err error) {
 	sv := spring.GetBean[*service.UnsLabelService]()
 	return sv.Detail(l.ctx, req)
 }

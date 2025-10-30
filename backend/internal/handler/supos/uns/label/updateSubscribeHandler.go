@@ -1,27 +1,28 @@
+// Code scaffolded by goctl. Safe to edit.
+// goctl 1.9.2
+
 package label
 
 import (
+	"net/http"
+
 	"backend/internal/logic/supos/uns/label"
 	"backend/internal/svc"
 	"backend/internal/types"
-	"net/http"
-
-	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/result"
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 查询详情
-func DetailHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// 修改标签订阅
+func UpdateSubscribeHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.WithID
+		var req types.UpdateLabelSubscribeReq
 		if err := httpx.Parse(r, &req); err != nil {
-			result.Http(w, r, nil, errors.Parameter.WithMsg("入参不正确:"+err.Error()))
+			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := label.NewDetailLogic(r.Context(), svcCtx)
-		resp, err := l.Detail(&req)
+		l := label.NewUpdateSubscribeLogic(r.Context(), svcCtx)
+		resp, err := l.UpdateSubscribe(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

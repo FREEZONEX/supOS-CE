@@ -14,7 +14,7 @@ import (
 // 修改标签
 func UpdateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.UnsLabel
+		var req types.UpdateLabelReq
 		if err := httpx.Parse(r, &req); err != nil {
 			result.Http(w, r, nil, errors.Parameter.WithMsg("入参不正确:"+err.Error()))
 			return
@@ -22,6 +22,10 @@ func UpdateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		l := label.NewUpdateLogic(r.Context(), svcCtx)
 		resp, err := l.Update(&req)
-		result.Http(w, r, resp, err)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
 	}
 }

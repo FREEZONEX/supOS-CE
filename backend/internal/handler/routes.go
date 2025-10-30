@@ -434,6 +434,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: suposunslabel.AllLabelHandler(serverCtx),
 				},
 				{
+					// 文件取消标签
+					Method:  http.MethodDelete,
+					Path:    "/cancelLabel",
+					Handler: suposunslabel.CancelLabelHandler(serverCtx),
+				},
+				{
 					// 创建标签
 					Method:  http.MethodPost,
 					Path:    "/label",
@@ -452,10 +458,34 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: suposunslabel.UpdateHandler(serverCtx),
 				},
 				{
-					// 查询详情
+					// 标签详情
 					Method:  http.MethodGet,
 					Path:    "/label/detail",
 					Handler: suposunslabel.DetailHandler(serverCtx),
+				},
+				{
+					// 分页获取标签下的文件列表
+					Method:  http.MethodGet,
+					Path:    "/label/pageListUnsByLabel",
+					Handler: suposunslabel.PageListUnsByLabelHandler(serverCtx),
+				},
+				{
+					// 修改标签订阅
+					Method:  http.MethodPut,
+					Path:    "/label/subscribe",
+					Handler: suposunslabel.UpdateSubscribeHandler(serverCtx),
+				},
+				{
+					// 文件打标签
+					Method:  http.MethodPost,
+					Path:    "/makeLabel",
+					Handler: suposunslabel.MakeLabelHandler(serverCtx),
+				},
+				{
+					// 文件打单个标签
+					Method:  http.MethodPost,
+					Path:    "/makeSingleLabel",
+					Handler: suposunslabel.MakeSingleLabelHandler(serverCtx),
 				},
 			}...,
 		),
