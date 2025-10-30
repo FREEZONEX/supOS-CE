@@ -32,7 +32,7 @@ RUN npm config set registry https://registry.npmmirror.com/
 WORKDIR /app
 
 # Install serve for static file serving
-RUN npm install -g serve
+RUN npm install -g serve concurrently pnpm
 
 # Copy web build artifacts
 COPY --from=web-builder /app/apps/web/dist ./web-dist
