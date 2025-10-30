@@ -25,7 +25,7 @@ healthRouter.get('/health', async (_: Request, res: Response) => {
     port: config.dockerPort,
     ca: fs.readFileSync('/certs/ca.pem'),
     cert: fs.readFileSync('/certs/cert.pem'),
-    key: fs.readFileSync('/certs/cert.pem'),
+    key: fs.readFileSync('/certs/key.pem'),
     version: 'v1.47', // 根据 Docker 版本调整
   });
 
