@@ -19,4 +19,6 @@ type Config struct {
 	OAuthKeyCloak clients.KeycloakConfig `json:",optional" mapstructure:"OAuthKeyCloak"`
 	//DevLink    conf.DevLinkConf //和设备交互的设置
 	//OssConf    conf.OssConf     `json:",optional"`
+
+	Kong clients.KongConfig `json:",optional" mapstructure:"Kong"`
 }

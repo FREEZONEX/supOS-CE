@@ -6,6 +6,7 @@ package kong
 import (
 	"context"
 
+	"backend/internal/adapters/kong/logic"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -28,7 +29,23 @@ func NewRouteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RouteLi
 }
 
 func (l *RouteListLogic) RouteList() (resp *types.RouteListResp, err error) {
-	// todo: add your logic here and delete this line
-
+	kongLogic := logic.GetKongLogic(l.svcCtx.Config.Kong.Host, l.svcCtx.Config.Kong.Port)
+	routes, err := kongLogic.RouteList()
+	if err != nil {
+		return nil, err
+	}
+	var data []types.SimpleRouteVO
+	for _, route := range routes {
+		data = append(data, types.SimpleRouteVO{
+			Id:   route.ID,
+			Name: route.Name,
+			Url:  route.URL,
+		})
+	}
+	resp = &types.RouteListResp{
+		Code: 0,
+		Msg:  "success",
+		Data: data,
+	}
 	return
 }

@@ -4,7 +4,6 @@ import (
 	"backend/internal/adapters/kong/dto"
 	"backend/internal/common/constants"
 	"backend/internal/common/errors"
-	"context"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -22,17 +21,13 @@ var iconRootPath = filepath.Join(constants.RootPath, "system", "resource", "supo
 
 // MenuLogic 封装了菜单和路由相关的核心业务逻辑
 type MenuLogic struct {
-	ctx context.Context
-	logx.Logger
 	kongLogic *KongLogic
 }
 
 // NewMenuLogic 创建 MenuLogic 实例
-func NewMenuLogic(ctx context.Context, kongLogic *KongLogic) *MenuLogic {
+func NewMenuLogic(host string, port int) *MenuLogic {
 	return &MenuLogic{
-		ctx:       ctx,
-		Logger:    logx.WithContext(ctx),
-		kongLogic: kongLogic,
+		kongLogic: GetKongLogic(host, port),
 	}
 }
 
@@ -71,7 +66,7 @@ func (l *MenuLogic) createOrUpdateRoute(serviceID, routeName, path string, tags 
 	}
 
 	if err != nil {
-		l.Logger.Errorf("failed to save route: %v", err)
+		logx.Errorf("failed to save route: %v", err)
 		return errors.NewBuzError(500, "menu.save.failed")
 	}
 	return nil
@@ -146,7 +141,7 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 
 	// 校验 host 是否可达
 	if _, err := net.LookupHost(host); err != nil {
-		l.Logger.Errorf("menu creation error, unknown host: %v", err)
+		logx.Errorf("menu creation error, unknown host: %v", err)
 		return errors.NewBuzError(500, "menu creation error: UnknownHost")
 	}
 
@@ -214,7 +209,7 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 	}
 
 	if err != nil {
-		l.Logger.Errorf("failed to save route: %v", err)
+		logx.Errorf("failed to save route: %v", err)
 		return errors.NewBuzError(500, "menu.save.failed")
 	}
 
@@ -225,7 +220,7 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 func (l *MenuLogic) DeleteMenu(name string) error {
 	existRoute, err := l.kongLogic.FetchRoute(name)
 	if err != nil {
-		l.Logger.Errorf("failed to check route %s before deletion: %v", name, err)
+		logx.Errorf("failed to check route %s before deletion: %v", name, err)
 	}
 	if existRoute != nil {
 		return l.kongLogic.DeleteRoute(name)
@@ -244,19 +239,19 @@ func (l *MenuLogic) saveIconFile(fileHeader *multipart.FileHeader, iconName stri
 
 	// 确保目录存在
 	if err := os.MkdirAll(iconRootPath, 0755); err != nil {
-		l.Logger.Errorf("failed to create icon directory: %v", err)
+		logx.Errorf("failed to create icon directory: %v", err)
 		return errors.NewBuzError(500, "menu.icon.save.failed")
 	}
 
 	dst, err := os.Create(filepath.Join(iconRootPath, iconName))
 	if err != nil {
-		l.Logger.Errorf("failed to create icon file: %v", err)
+		logx.Errorf("failed to create icon file: %v", err)
 		return errors.NewBuzError(500, "menu.icon.save.failed")
 	}
 	defer dst.Close()
 
 	if _, err = io.Copy(dst, src); err != nil {
-		l.Logger.Errorf("failed to write icon file: %v", err)
+		logx.Errorf("failed to write icon file: %v", err)
 		return errors.NewBuzError(500, "menu.icon.save.failed")
 	}
 	return nil
