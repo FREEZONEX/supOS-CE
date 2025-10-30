@@ -21,7 +21,7 @@ createRoot(document.getElementById('root')!).render(
     //     endpoint: 'your_mcp_sse_url',
     //   },
     // ]}
-    agent="sample_agent"
+    // agent="sample_agent"
     showDevConsole={false}
   >
     <App />
