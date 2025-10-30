@@ -29,16 +29,9 @@ func NewSaveMenuLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SaveMenu
 	}
 }
 
-func (l *SaveMenuLogic) SaveMenu(req *types.SaveMenuReq) (resp *types.ResultVO, err error) {
+func (l *SaveMenuLogic) SaveMenu(menuDto *dto.MenuDto) (resp *types.ResultVO, err error) {
 	menuLogic := logic.NewMenuLogic(l.svcCtx.Config.Kong.Host, l.svcCtx.Config.Kong.Port)
-	err = menuLogic.CreateRoute(&dto.MenuDto{
-		ServiceName: req.ServiceName,
-		Name:        req.Name,
-		BaseURL:     req.BaseUrl,
-		ShowName:    req.ShowName,
-		Description: req.Description,
-		OpenType:    req.OpenType,
-	}, false, false)
+	err = menuLogic.CreateRoute(menuDto, false, false)
 	if err != nil {
 		return nil, err
 	}
