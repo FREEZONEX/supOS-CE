@@ -5,7 +5,7 @@ import { openApiRouter } from './open-api';
 // 路由注册模块
 export function registerRoutes(app: Express) {
   // 注册健康检查路由
-  app.use('/', openApiRouter);
+  app.use('/open-api', openApiRouter);
 
   // 根路径
   app.get('/', (_, res) => {

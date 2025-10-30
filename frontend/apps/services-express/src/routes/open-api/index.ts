@@ -3,6 +3,6 @@ import { healthRouter } from './health';
 
 const openApiRouter = express.Router();
 
-openApiRouter.use('/open-api', healthRouter);
+openApiRouter.use('/', healthRouter);
 
 export { openApiRouter };
