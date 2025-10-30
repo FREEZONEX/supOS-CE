@@ -5,11 +5,9 @@ import type { DataItem, ResourceProps, UserInfoProps } from '@/stores/types.ts';
 import { storageOpt } from '@/utils/storage';
 import { APP_TITLE, SUPOS_LANG, SUPOS_UNS_TREE, SUPOS_USER_TIPS_ENABLE } from '@/common-types/constans.ts';
 import { getPersonConfigApi } from '@/apis/inter-api/uns.ts';
-import { getSystemConfig, getAllThemeConfig } from '@/apis/inter-api/system-config.ts';
+import { getSystemConfig } from '@/apis/inter-api/system-config.ts';
 import { getUserInfo } from '@/apis/inter-api/auth';
-import { getPluginListApi } from '@/apis/inter-api/plugin.ts';
 
-import { preloadPluginLang } from '@/utils/plugin.ts';
 import type { TBaseStore } from '@/stores/base/type.ts';
 import { initI18n, defaultLanguage, useI18nStore } from '../i18n-store.ts';
 import { getRoutesResourceApi } from '@/apis/inter-api/resource.ts';
@@ -117,18 +115,11 @@ const updateBaseStore = async (isFirst: boolean = false) => {
   if (isFirst) {
     try {
       // 首次需要同时拿到用户信息的url和路由
-      const [{ value: resource, reason }, { value: info }, { value: systemInfo }, { value: pluginList }]: any =
-        await Promise.allSettled([getRoutesResourceApi(), getUserInfo(), getSystemConfig(), getPluginListApi()]);
-      // 加载登录页主题
-      try {
-        const themePlugin = pluginList?.find((e: any) => e?.plugInfoYml?.route?.name === 'ThemeManagement');
-        if (themePlugin?.installStatus === 'installed') {
-          const themeConfig = await getAllThemeConfig();
-          systemInfo.themeConfig = themeConfig;
-        }
-      } catch (err) {
-        console.error(err);
-      }
+      const [{ value: resource, reason }, { value: info }, { value: systemInfo }]: any = await Promise.allSettled([
+        getRoutesResourceApi(),
+        getUserInfo(),
+        getSystemConfig(),
+      ]);
 
       // 国际化语言包list
       await getLangList();
@@ -185,7 +176,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
         menuTree,
         originMenu: resource,
         allButtonGroup,
-        pluginList,
+        // pluginList,
         routesStatus: reason?.status,
         currentUserInfo,
         systemInfo: {
@@ -216,16 +207,8 @@ const updateBaseStore = async (isFirst: boolean = false) => {
         userId: currentUserInfo?.sub,
         lang: systemInfo?.lang,
       });
-      // 预加载插件国际化
-      const pluginLang = await preloadPluginLang(
-        pluginList
-          ?.filter((f: any) => f.installStatus === 'installed')
-          ?.filter((f: any) => f?.plugInfoYml?.route?.name)
-          ?.map((m: any) => ({ name: `/${m?.plugInfoYml?.route?.name}`, backendName: m.name })) || [],
-        _lang
-      );
       // 首次需要初始化语言包
-      return await initI18n(_lang, pluginLang);
+      return await initI18n(_lang);
     } catch (_) {
       console.log(_);
       // 首次需要初始化语言包
