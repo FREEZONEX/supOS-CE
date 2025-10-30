@@ -36,7 +36,13 @@ RUN npm install -g serve concurrently pnpm
 
 # Copy web build artifacts
 COPY --from=web-builder /app/apps/web/dist ./web-dist
-COPY --from=web-builder /app/apps/services-express ./services-express-dist
+COPY --from=web-builder /app/apps/services-express/dist ./services-express-dist
+COPY --from=web-builder /app/apps/services-express/package.json ./services-express-dist/
+COPY --from=web-builder /app/pnpm-workspace.yaml ./
+
+WORKDIR /app/services-express-dist
+RUN pnpm install --production
+WORKDIR /app
 
 # Expose ports (web:3000, services:4000)
 EXPOSE 3000 4000
