@@ -19,7 +19,7 @@ healthRouter.get('/health/server/detailed', (_: Request, res: Response) => {
 });
 
 // 健康检查 - Docker容器监控
-healthRouter.get('/health', async (_: Request, res: Response) => {
+healthRouter.get('/health', (_: Request, res: Response) => {
   const docker = new Docker({
     host: config.dockerHost,
     port: config.dockerPort,
@@ -32,20 +32,12 @@ healthRouter.get('/health', async (_: Request, res: Response) => {
   const filters = {
     network: ['supos_default_network'], // 网络名称或 ID
   };
-
-  try {
-    const containers: any = await new Promise((resolve, reject) => {
-      docker.listContainers({ all: true, filters: filters }, (err, containers) => {
-        if (err) reject(err);
-        else resolve(containers);
-      });
-    });
-
+  docker.listContainers({ all: true, filters: filters }, (err, containers: any) => {
+    if (err) throw err;
     const total = [];
     const running = [];
     const stopped = [];
     let platformStatus = 'running';
-
     for (const k in containers) {
       const containerName = containers[k].Names[0].substring(1);
       total.push(containerName);
@@ -58,7 +50,6 @@ healthRouter.get('/health', async (_: Request, res: Response) => {
         }
       }
     }
-
     const data = {
       status: platformStatus,
       overview: {
@@ -72,12 +63,53 @@ healthRouter.get('/health', async (_: Request, res: Response) => {
       },
     };
     res.status(200).json({ data: data });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to get docker information',
-      message: error,
-    });
-  }
+  });
+
+  // try {
+  //   const containers: any = await new Promise((resolve, reject) => {
+  //     docker.listContainers({ all: true, filters: filters }, (err, containers) => {
+  //       if (err) reject(err);
+  //       else resolve(containers);
+  //     });
+  //   });
+
+  //   const total = [];
+  //   const running = [];
+  //   const stopped = [];
+  //   let platformStatus = 'running';
+
+  //   for (const k in containers) {
+  //     const containerName = containers[k].Names[0].substring(1);
+  //     total.push(containerName);
+  //     if ('running' === containers[k].State) {
+  //       running.push(containerName);
+  //     } else {
+  //       stopped.push(containerName);
+  //       if (containerName === 'backend') {
+  //         platformStatus = 'stop';
+  //       }
+  //     }
+  //   }
+
+  //   const data = {
+  //     status: platformStatus,
+  //     overview: {
+  //       total: total.length,
+  //       running: running.length,
+  //       stop: stopped.length,
+  //     },
+  //     container: {
+  //       running: running,
+  //       stop: stopped,
+  //     },
+  //   };
+  //   res.status(200).json({ data: data });
+  // } catch (error) {
+  //   res.status(500).json({
+  //     error: 'Failed to get docker information',
+  //     message: error,
+  //   });
+  // }
 });
 
 export { healthRouter };
