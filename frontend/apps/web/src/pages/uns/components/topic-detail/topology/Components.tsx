@@ -1,8 +1,8 @@
-import { FC, ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 import { Flex, Tooltip } from 'antd';
 import Binding from '../binding/DashboardBinding.tsx';
 import { flowPage } from '@/apis/inter-api/flow.ts';
-import { NodeDataType } from '@/pages/uns/components/topic-detail/topology/types.ts';
+import type { NodeDataType } from './types.ts';
 import { useTranslate } from '@/hooks';
 import { Add, ApplicationWeb, InformationFilled, Launch } from '@carbon/icons-react';
 import classNames from 'classnames';
@@ -14,8 +14,8 @@ import timescaleDB from '@/assets/home-icons/timescaleDB.svg';
 import { getDashboardList } from '@/apis/inter-api';
 import nodeRed from '@/assets/home-icons/node-red.svg';
 import ProTable from '@/components/pro-table';
-import ComCodeSnippet from '../../../../../components/com-code-snippet';
-import ComFormula from '../../../../../components/com-formula';
+import ComCodeSnippet from '@/components/com-code-snippet';
+import ComFormula from '@/components/com-formula';
 import c2 from '@/assets/uns/cw.svg';
 
 export const CommonNode = ({

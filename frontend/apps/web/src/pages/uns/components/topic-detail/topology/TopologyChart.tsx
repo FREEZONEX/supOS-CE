@@ -22,7 +22,7 @@ import { useBaseStore } from '@/stores/base';
 import { bindDashboardForUns, getTopologyStatus } from '@/apis/inter-api';
 import { getSearchParamsString } from '@/utils';
 import { bindFlowForUns, createFlow, goFlow } from '@/apis/inter-api/flow.ts';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslate } from '@/hooks';
 import { useDeepCompareEffect } from 'ahooks';
 import { getRefreshList, getSourceList } from '@/apis/chat2db';
