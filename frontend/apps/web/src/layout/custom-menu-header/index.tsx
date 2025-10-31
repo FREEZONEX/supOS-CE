@@ -144,9 +144,9 @@ const CustomMenuHeader = () => {
               }}
             />
           </div>
-          <span className="title" title={currentMenuInfo?.showName}>
-            {currentMenuInfo?.showName}
-          </span>
+          {/*<span className="title" title={currentMenuInfo?.showName}>*/}
+          {/*  {currentMenuInfo?.showName}*/}
+          {/*</span>*/}
           <Divider style={{ height: 24 }} type="vertical" />
         </div>
         <div className="content" style={{ display: !isH5 ? 'flex' : 'none' }}>
