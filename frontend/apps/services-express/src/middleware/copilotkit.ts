@@ -86,7 +86,6 @@ export const copilotkitHandler = (req: Request, res: Response, next: NextFunctio
     //     }),
     //   ],
     // });
-    console.log(config);
     const runtime = new CopilotRuntime();
     const handler = copilotRuntimeNodeHttpEndpoint({
       endpoint: '/copilotkit',
