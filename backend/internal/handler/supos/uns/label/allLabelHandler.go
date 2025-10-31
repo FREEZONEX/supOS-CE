@@ -22,6 +22,10 @@ func AllLabelHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		l := label.NewAllLabelLogic(r.Context(), svcCtx)
 		resp, err := l.AllLabel(&req)
-		result.Http(w, r, resp, err)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
 	}
 }

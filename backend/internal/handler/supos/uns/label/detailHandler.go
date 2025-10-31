@@ -22,6 +22,10 @@ func DetailHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		l := label.NewDetailLogic(r.Context(), svcCtx)
 		resp, err := l.Detail(&req)
-		result.Http(w, r, resp, err)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
 	}
 }

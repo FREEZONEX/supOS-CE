@@ -1,9 +1,13 @@
+// Code scaffolded by goctl. Safe to edit.
+// goctl 1.9.2
+
 package template
 
 import (
 	"context"
 
 	"backend/internal/svc"
+	"backend/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -23,8 +27,8 @@ func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageList
 	}
 }
 
-func (l *PageListLogic) PageList() error {
+func (l *PageListLogic) PageList(req *types.TemplateQueryVo) (resp *types.TemplatePageResp, err error) {
 	// todo: add your logic here and delete this line
 
-	return nil
+	return
 }

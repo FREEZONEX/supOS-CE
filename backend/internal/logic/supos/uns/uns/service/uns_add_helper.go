@@ -229,20 +229,17 @@ func addDbPo(unsPos []*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, al
 	}
 }
 
-// 常量定义
-const (
-	LOGIC_REMOVED = 0
-	OK            = 1
-)
+var LOGIC_REMOVED = int16(0)
+var OK = int16(1)
 
 // 临时处理PO
 func putTemp(dbFiles map[int64]*dao.UnsNamespace, aliasMap map[string]*dao.UnsNamespace, po *dao.UnsNamespace) {
-	if po.Status == LOGIC_REMOVED {
+	if base.P2v(po.Status) == LOGIC_REMOVED {
 		// 创建新的PO对象，只保留ID和Alias
 		newPo := &dao.UnsNamespace{
 			Id:     po.Id,
 			Alias:  po.Alias,
-			Status: LOGIC_REMOVED,
+			Status: &LOGIC_REMOVED,
 		}
 		// 使用新对象替换原对象
 		po = newPo
@@ -367,9 +364,6 @@ func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 	if unsDto.PathType == constants.PathTypeFile {
 		if dataType := unsDto.DataType; dataType != nil {
 			instance.DataType = dataType
-		}
-		if len(unsDto.Fields) > 0 {
-			instance.NumberFields = unsDto.CountNumberFields()
 		}
 	}
 
@@ -513,7 +507,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, exi
 
 	dbPo := existsUns(unsDto.Alias)
 	if dbPo != nil {
-		if dbPo.Status == OK && dbPo.PathType != unsDto.PathType {
+		if base.P2v(dbPo.Status) == OK && dbPo.PathType != unsDto.PathType {
 			msg := I18nUtils.GetMessage("uns.alias.has.exist.type",
 				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(dbPo.PathType))),
 				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(unsDto.PathType))),
@@ -526,7 +520,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, exi
 		unsDto.Id = common.NextId()
 	}
 
-	DB_EXISTS := dbPo != nil && dbPo.Status == OK
+	DB_EXISTS := dbPo != nil && base.P2v(dbPo.Status) == OK
 
 	// 创建关系型文件, 不允许新增系统字段
 	if !DB_EXISTS && len(unsDto.Fields) > 0 &&
@@ -549,7 +543,9 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, exi
 			return nil
 		}
 	}
-
+	if newUns.PathType == constants.PathTypeFile && len(unsDto.Fields) > 0 {
+		newUns.NumberFields = base.V2p(unsDto.CountNumberFields())
+	}
 	if dataType == constants.CitingType && unsDto.Fields != nil {
 		EMPTY := make([]*types.FieldDefine, 0)
 		unsDto.Fields = EMPTY
@@ -625,7 +621,7 @@ func (u *UnsAddService) trySetId(ct time.Time, unsDto *types.CreateTopicDto, exi
 
 	if newUns != nil {
 		unsDto.Status = 1
-		newUns.Status = 1
+		newUns.Status = &OK
 	}
 	return newUns
 }

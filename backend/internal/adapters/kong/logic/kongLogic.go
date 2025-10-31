@@ -4,12 +4,12 @@ import (
 	"backend/internal/adapters/kong/listener"
 	"backend/internal/adapters/kong/vo"
 	"backend/internal/common/dto/protocol"
-	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"gitee.com/unitedrhino/share/i18ns"
@@ -27,8 +27,6 @@ const (
 type (
 	// KongLogic 封装了对 Kong Admin API 的直接调用和部分业务逻辑
 	KongLogic struct {
-		ctx context.Context
-		logx.Logger
 		baseURL string
 		client  *resty.Client
 	}
@@ -77,17 +75,23 @@ type (
 	}
 )
 
-// NewKongLogic 创建 KongLogic 实例
-func NewKongLogic(ctx context.Context, host string, port int) *KongLogic {
-	return &KongLogic{
-		ctx:     ctx,
-		Logger:  logx.WithContext(ctx),
-		baseURL: fmt.Sprintf("http://%s:%d", host, port),
-		client: resty.New().
-			SetTimeout(30 * time.Second).
-			SetRetryCount(3).
-			SetRetryWaitTime(1 * time.Second),
-	}
+var (
+	kongLogic *KongLogic
+	once      sync.Once
+)
+
+// GetKongLogic 创建 KongLogic 实例
+func GetKongLogic(host string, port int) *KongLogic {
+	once.Do(func() {
+		kongLogic = &KongLogic{
+			baseURL: fmt.Sprintf("http://%s:%d", host, port),
+			client: resty.New().
+				SetTimeout(30 * time.Second).
+				SetRetryCount(3).
+				SetRetryWaitTime(1 * time.Second),
+		}
+	})
+	return kongLogic
 }
 
 // getRawRoutes 获取原始的路由列表
@@ -97,12 +101,12 @@ func (l *KongLogic) getRawRoutes() ([]InternalKongVO, error) {
 		Get(l.baseURL + "/" + routesPath)
 
 	if err != nil {
-		l.Errorf("request kong failed, error: %v", err)
+		logx.Errorf("request kong failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		l.Errorf("request kong failed, response: %s", resp.Body())
+		logx.Errorf("request kong failed, response: %s", resp.Body())
 		return nil, fmt.Errorf("kong API error: %d", resp.StatusCode())
 	}
 
@@ -210,12 +214,12 @@ func (l *KongLogic) queryServiceById(serviceId string) (*vo.ServiceResponseVO, e
 		Get(url)
 
 	if err != nil {
-		l.Errorf("request kong service failed, error: %v", err)
+		logx.Errorf("request kong service failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		l.Errorf("request kong service failed, response: %s", resp.Body())
+		logx.Errorf("request kong service failed, response: %s", resp.Body())
 		return nil, nil
 	}
 	return result, nil
@@ -229,12 +233,12 @@ func (l *KongLogic) QueryServiceJsonById(serviceId string) (map[string]any, erro
 		SetResult(&result).
 		Get(url)
 	if err != nil {
-		l.Errorf("request kong service failed, error: %v", err)
+		logx.Errorf("request kong service failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		l.Errorf("request kong service failed, response: %s", resp.Body())
+		logx.Errorf("request kong service failed, response: %s", resp.Body())
 		return nil, nil
 	}
 	return result, nil
@@ -260,14 +264,14 @@ func (l *KongLogic) CreateService(req *KongServiceRequest) (*vo.ServiceResponseV
 		SetResult(result).
 		Post(url)
 
-	l.Infof(">>>>>>>>>>>>kong create service URL： %s, params: %+v", url, req)
+	logx.Infof(">>>>>>>>>>>>kong create service URL： %s, params: %+v", url, req)
 	if err != nil {
-		l.Errorf("request kong service failed, error: %v", err)
+		logx.Errorf("request kong service failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK && resp.StatusCode() != http.StatusCreated {
-		l.Errorf("request kong service failed, response: %s", resp.Body())
+		logx.Errorf("request kong service failed, response: %s", resp.Body())
 		return nil, fmt.Errorf("create service error, status: %d", resp.StatusCode())
 	}
 	return result, nil
@@ -287,27 +291,27 @@ func (l *KongLogic) MarkMenu(routes []vo.MarkRouteRequestVO) error {
 	// 3. 确保目录存在
 	dir := filepath.Dir(listener.LocalMenuCheckedStoragePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		l.Errorf("failed to create directory %s: %v", dir, err)
+		logx.Errorf("failed to create directory %s: %v", dir, err)
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
 	// 4. 写入文件
 	file, err := os.Create(listener.LocalMenuCheckedStoragePath)
 	if err != nil {
-		l.Errorf("failed to create file %s: %v", listener.LocalMenuCheckedStoragePath, err)
+		logx.Errorf("failed to create file %s: %v", listener.LocalMenuCheckedStoragePath, err)
 		return fmt.Errorf("failed to create file: %w", err)
 	}
 	defer file.Close()
 
 	if _, err := props.Write(file, properties.UTF8); err != nil {
-		l.Errorf("failed to write properties to file: %v", err)
+		logx.Errorf("failed to write properties to file: %v", err)
 		return fmt.Errorf("failed to write properties: %w", err)
 	}
 
 	// 5. 更新内存缓存
 	listener.UpdateLocalMenus(newLocalMenus)
 
-	l.Info("update menu cache success")
+	logx.Info("update menu cache success")
 	return nil
 }
 
@@ -322,12 +326,12 @@ func (l *KongLogic) UpdateService(id string, service map[string]any) (*vo.Servic
 		Put(url)
 
 	if err != nil {
-		l.Errorf("request kong service failed, error: %v", err)
+		logx.Errorf("request kong service failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK && resp.StatusCode() != http.StatusCreated {
-		l.Errorf("request kong service failed, response: %s", resp.Body())
+		logx.Errorf("request kong service failed, response: %s", resp.Body())
 		return nil, fmt.Errorf("update service error")
 	}
 	return result, nil
@@ -342,12 +346,12 @@ func (l *KongLogic) FetchRoute(name string) (*vo.RoutResponseVO, error) {
 		Get(url)
 
 	if err != nil {
-		l.Errorf("kong fetch route failed, error: %v", err)
+		logx.Errorf("kong fetch route failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		l.Errorf("kong fetch route failed, response: %s", resp.Body())
+		logx.Errorf("kong fetch route failed, response: %s", resp.Body())
 		return nil, nil
 	}
 	return result, nil
@@ -365,12 +369,12 @@ func (l *KongLogic) SearchRoute(tags []string) ([]vo.RoutResponseVO, error) {
 		Get(url)
 
 	if err != nil {
-		l.Errorf("kong search route failed, error: %v", err)
+		logx.Errorf("kong search route failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK {
-		l.Errorf("kong search route failed, response: %s", resp.Body())
+		logx.Errorf("kong search route failed, response: %s", resp.Body())
 		return nil, nil
 	}
 
@@ -391,14 +395,14 @@ func (l *KongLogic) CreateRoute(req *KongRouteRequest) (*vo.RoutResponseVO, erro
 		SetResult(result).
 		Post(url)
 
-	l.Infof(">>>>>>>>>>>>kong create route URL： %s, params: %+v", url, req)
+	logx.Infof(">>>>>>>>>>>>kong create route URL： %s, params: %+v", url, req)
 	if err != nil {
-		l.Errorf("kong create route failed, error: %v", err)
+		logx.Errorf("kong create route failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK && resp.StatusCode() != http.StatusCreated {
-		l.Errorf("kong create route failed, response: %s", resp.Body())
+		logx.Errorf("kong create route failed, response: %s", resp.Body())
 		return nil, fmt.Errorf("create route error, status: %d", resp.StatusCode())
 	}
 	return result, nil
@@ -407,16 +411,16 @@ func (l *KongLogic) CreateRoute(req *KongRouteRequest) (*vo.RoutResponseVO, erro
 // DeleteRoute 删除 Kong Route，对应 public void deleteRoute(String name)
 func (l *KongLogic) DeleteRoute(name string) error {
 	url := fmt.Sprintf("%s/%s/%s", l.baseURL, routesPath, name)
-	l.Infof(">>>>>>>>>>>>kong delete route URL： %s", url)
+	logx.Infof(">>>>>>>>>>>>kong delete route URL： %s", url)
 	resp, err := l.client.R().Delete(url)
 
 	if err != nil {
-		l.Errorf("kong delete route failed, error: %v", err)
+		logx.Errorf("kong delete route failed, error: %v", err)
 		return err
 	}
 
 	if resp.StatusCode() != http.StatusNoContent {
-		l.Errorf("kong delete route failed, response: %s", resp.Body())
+		logx.Errorf("kong delete route failed, response: %s", resp.Body())
 		return fmt.Errorf("kong API error: %d", resp.StatusCode())
 	}
 	return nil
@@ -432,14 +436,14 @@ func (l *KongLogic) UpdateRoute(name string, req *KongRouteRequest) (*vo.RoutRes
 		SetResult(result).
 		Put(url)
 
-	l.Infof(">>>>>>>>>>>>kong update route URL： %s, params: %+v", url, req)
+	logx.Infof(">>>>>>>>>>>>kong update route URL： %s, params: %+v", url, req)
 	if err != nil {
-		l.Errorf("kong update route failed, error: %v", err)
+		logx.Errorf("kong update route failed, error: %v", err)
 		return nil, err
 	}
 
 	if resp.StatusCode() != http.StatusOK && resp.StatusCode() != http.StatusCreated {
-		l.Errorf("kong update route failed, response: %s", resp.Body())
+		logx.Errorf("kong update route failed, response: %s", resp.Body())
 		return nil, fmt.Errorf("update route error, status: %d", resp.StatusCode())
 	}
 	return result, nil
@@ -469,14 +473,14 @@ func (l *KongLogic) AddAPIKey(name string) error {
 		SetBody(pluginReq).
 		Post(url)
 
-	l.Infof(">>>>>>>>>>>>kong addApiKey URL： %s, params: %+v", url, pluginReq)
+	logx.Infof(">>>>>>>>>>>>kong addApiKey URL： %s, params: %+v", url, pluginReq)
 	if err != nil {
-		l.Errorf("kong addApiKey failed, error: %v", err)
+		logx.Errorf("kong addApiKey failed, error: %v", err)
 		return err
 	}
 
 	if resp.StatusCode() != http.StatusOK && resp.StatusCode() != http.StatusCreated {
-		l.Errorf("kong addApiKey failed, response: %s", resp.Body())
+		logx.Errorf("kong addApiKey failed, response: %s", resp.Body())
 		return fmt.Errorf("add api key error, status: %d", resp.StatusCode())
 	}
 	return nil

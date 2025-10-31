@@ -357,7 +357,7 @@ func (c *CreateTopicDto) CountNumberFields() int16 {
 
 	count := int16(0)
 	for _, f := range c.Fields {
-		if FieldType(f.Type).IsNumber() && !f.IsSystemField() {
+		if FieldType(strings.ToUpper(f.Type)).IsNumber() && !f.IsSystemField() {
 			count++
 		}
 	}

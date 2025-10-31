@@ -30,6 +30,9 @@ type(
     WithID{
         ID int64 `json:"id,optional" form:"id,optional"`         // id
     }
+    WithAlias {
+        Alias string `json:"alias" form:"alias"`         // 别名
+    }
     WithUid{
         Uid string  `path:"uid"`
     }

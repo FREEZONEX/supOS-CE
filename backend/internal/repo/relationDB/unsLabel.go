@@ -69,10 +69,12 @@ func (p UnsLabelRepo) FindOneByFilter(db *gorm.DB, f UnsLabelFilter) (*UnsLabel,
 	}
 	return &result, nil
 }
-func (p UnsLabelRepo) FindByFilter(db *gorm.DB, f UnsLabelFilter, page *stores.PageInfo) ([]*UnsLabel, error) {
+func (p UnsLabelRepo) LikeName(db *gorm.DB, key string) ([]*UnsLabel, error) {
 	var results []*UnsLabel
 	db = db.Model(&UnsLabel{})
-	db = page.ToGorm(db)
+	if len(key) > 0 {
+		db = db.Where("label_name like '%" + escapeSQL(key) + "%' ")
+	}
 	err := db.Find(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
@@ -91,20 +93,27 @@ func (p UnsLabelRepo) FindByNames(db *gorm.DB, names []string) ([]*UnsLabel, err
 func (p UnsLabelRepo) FindByName(db *gorm.DB, name string) (*UnsLabel, error) {
 	var label UnsLabel
 	db = db.Where("label_name = ? ", name).Model(&UnsLabel{})
-	err := db.Find(&label).Error
+	err := db.First(&label).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}
 	return &label, nil
 }
-
+func (p UnsLabelRepo) CountByName(db *gorm.DB, name string) (count int64, err error) {
+	db = db.Where("label_name = ? ", name).Model(&UnsLabel{})
+	err = db.Count(&count).Error
+	if err != nil {
+		return count, stores.ErrFmt(err)
+	}
+	return
+}
 func (p UnsLabelRepo) CountByFilter(db *gorm.DB, f UnsLabelFilter) (size int64, err error) {
 	err = db.Model(&UnsLabel{}).Count(&size).Error
 	return size, stores.ErrFmt(err)
 }
 
 func (p UnsLabelRepo) Update(db *gorm.DB, data *UnsLabel) error {
-	err := db.Model(&UnsLabel{}).Where("id = ?", data.ID).Save(data).Error
+	err := db.Model(&UnsLabel{}).Where("id = ?", data.ID).Omit("id").Updates(data).Error
 	return stores.ErrFmt(err)
 }
 
@@ -118,11 +127,11 @@ func (p UnsLabelRepo) Delete(db *gorm.DB, id int64) error {
 	return stores.ErrFmt(err)
 }
 func (p UnsLabelRepo) DeleteRefByLabelId(db *gorm.DB, id int64) error {
-	err := db.Model(&UnsLabel{}).Where("label_id = ?", id).Delete(&UnsLabel{}).Error
+	err := db.Model(&UnsLabelRef{}).Where("label_id = ?", id).Delete(&UnsLabelRef{}).Error
 	return stores.ErrFmt(err)
 }
 func (p UnsLabelRepo) DeleteRefByUnsId(db *gorm.DB, unsId int64) error {
-	err := db.Model(&UnsLabel{}).Where("uns_id = ?", unsId).Delete(&UnsLabel{}).Error
+	err := db.Model(&UnsLabelRef{}).Where("uns_id = ?", unsId).Delete(&UnsLabelRef{}).Error
 	return stores.ErrFmt(err)
 }
 func (p UnsLabelRepo) FindOne(db *gorm.DB, id int64) (*UnsLabel, error) {

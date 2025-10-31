@@ -1,6 +1,7 @@
 package base
 
 import (
+	"cmp"
 	"fmt"
 	"strings"
 )
@@ -49,6 +50,23 @@ func BinarySearch(n int, f func(int) int) int {
 	}
 	return -(low + 1) // key not found. 返回 负的插入位置
 }
+func BinarySearchCmp[T cmp.Ordered](arr []T, key T) int {
+	low, high := 0, len(arr)-1
+
+	for low <= high {
+		var mid = int(uint(low+high) >> 1)
+		var cmRs = cmp.Compare(arr[mid], key)
+
+		if cmRs < 0 {
+			low = mid + 1
+		} else if cmRs > 0 {
+			high = mid - 1
+		} else {
+			return mid // key found
+		}
+	}
+	return -(low + 1) // key not found. 返回 负的插入位置
+}
 
 // BinarySearchArray in java style
 func BinarySearchArray[T any](arr []T, key T, comparator func(a, b T) int) int {
@@ -56,11 +74,11 @@ func BinarySearchArray[T any](arr []T, key T, comparator func(a, b T) int) int {
 
 	for low <= high {
 		var mid = int(uint(low+high) >> 1)
-		var cmp = comparator(arr[mid], key)
+		var cmRs = comparator(arr[mid], key)
 
-		if cmp < 0 {
+		if cmRs < 0 {
 			low = mid + 1
-		} else if cmp > 0 {
+		} else if cmRs > 0 {
 			high = mid - 1
 		} else {
 			return mid // key found
@@ -75,11 +93,11 @@ func BinarySearchLowHigh(n int, f func(int) int) (min, max int) {
 
 	for low < high {
 		var mid = int(uint(low+high+1) >> 1)
-		var cmp = f(mid)
+		var cmRs = f(mid)
 
-		if cmp < 0 {
+		if cmRs < 0 {
 			low = mid
-		} else if cmp > 0 {
+		} else if cmRs > 0 {
 			high = mid - 1
 		} else {
 			return mid, mid // key found

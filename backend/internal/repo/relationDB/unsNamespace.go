@@ -86,7 +86,8 @@ func (p UnsNamespaceRepo) MultiUpdate(db *gorm.DB, data []*UnsNamespace) (err er
 }
 
 func (p UnsNamespaceRepo) Update(db *gorm.DB, data *UnsNamespace) error {
-	err := p.model(db).Where("id = ?", data.Id).Where("status=1").Save(data).Error
+	// 使用 Updates 方法（自动忽略 nil 字段）
+	err := p.model(db).Where("id = ?", data.Id).Where("status=1").Omit("id").Updates(data).Error
 	return stores.ErrFmt(err)
 }
 

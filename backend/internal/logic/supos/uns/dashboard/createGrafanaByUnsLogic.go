@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"backend/internal/svc"
-	"backend/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -24,7 +23,7 @@ func NewCreateGrafanaByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 
-func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(req *types.CreateGrafanaByUnsReq) error {
+func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns() error {
 	// todo: add your logic here and delete this line
 
 	return nil

@@ -1,3 +1,6 @@
+// Code scaffolded by goctl. Safe to edit.
+// goctl 1.9.2
+
 package template
 
 import (
@@ -9,23 +12,23 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type AliasLogic struct {
+type CreateLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 根据别名查询模板详情
-func NewAliasLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AliasLogic {
-	return &AliasLogic{
+// 新增模板
+func NewCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateLogic {
+	return &CreateLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *AliasLogic) Alias(req *types.WithID) error {
+func (l *CreateLogic) Create(req *types.CreateTemplateReq) (resp *types.CreateTemplateResp, err error) {
 	// todo: add your logic here and delete this line
 
-	return nil
+	return
 }

@@ -23,9 +23,9 @@ import (
 	suposunsexternal "backend/internal/handler/supos/uns/external"
 	suposunsfile "backend/internal/handler/supos/uns/file"
 	suposunslabel "backend/internal/handler/supos/uns/label"
-	suposunsmodel "backend/internal/handler/supos/uns/model"
 	suposunsperson "backend/internal/handler/supos/uns/person"
 	suposunssystem "backend/internal/handler/supos/uns/system"
+	suposunstemplate "backend/internal/handler/supos/uns/template"
 	suposunsuns "backend/internal/handler/supos/uns/uns"
 	suposuserManage "backend/internal/handler/supos/userManage"
 	"backend/internal/svc"
@@ -458,80 +458,80 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
-					// createGrafanaByUns
+					// 分页查询 Dashboard
+					Method:  http.MethodGet,
+					Path:    "/",
+					Handler: suposunsdashboard.PageListHandler(serverCtx),
+				},
+				{
+					// 创建 Dashboard
+					Method:  http.MethodPost,
+					Path:    "/",
+					Handler: suposunsdashboard.CreateHandler(serverCtx),
+				},
+				{
+					// 编辑 Dashboard
+					Method:  http.MethodPut,
+					Path:    "/",
+					Handler: suposunsdashboard.EditHandler(serverCtx),
+				},
+				{
+					// 根据 UID 获取 Dashboard
+					Method:  http.MethodGet,
+					Path:    "/:uid",
+					Handler: suposunsdashboard.GetByUuidHandler(serverCtx),
+				},
+				{
+					// 删除 Dashboard
+					Method:  http.MethodDelete,
+					Path:    "/:uid",
+					Handler: suposunsdashboard.DeleteHandler(serverCtx),
+				},
+				{
+					// 绑定 UNS
+					Method:  http.MethodPost,
+					Path:    "/bindUns",
+					Handler: suposunsdashboard.BindUnsHandler(serverCtx),
+				},
+				{
+					// 基于 UNS 创建 Grafana Dashboard
 					Method:  http.MethodPost,
 					Path:    "/createGrafanaByUns/:alias",
 					Handler: suposunsdashboard.CreateGrafanaByUnsHandler(serverCtx),
 				},
 				{
-					// 获取列表
+					// 获取 Dashboard 详情
 					Method:  http.MethodGet,
-					Path:    "/dashboard",
-					Handler: suposunsdashboard.PageListHandler(serverCtx),
+					Path:    "/detail",
+					Handler: suposunsdashboard.GetDetailHandler(serverCtx),
 				},
 				{
-					// 创建
-					Method:  http.MethodPost,
-					Path:    "/dashboard",
-					Handler: suposunsdashboard.CreateHandler(serverCtx),
-				},
-				{
-					// edit
-					Method:  http.MethodPut,
-					Path:    "/dashboard",
-					Handler: suposunsdashboard.EditHandler(serverCtx),
-				},
-				{
-					// delete
-					Method:  http.MethodDelete,
-					Path:    "/dashboard/:uid",
-					Handler: suposunsdashboard.DeleteHandler(serverCtx),
-				},
-				{
-					// get
+					// 根据 UNS 获取 Dashboard
 					Method:  http.MethodGet,
-					Path:    "/dashboard/:uid",
-					Handler: suposunsdashboard.GetHandler(serverCtx),
-				},
-				{
-					// bindUns
-					Method:  http.MethodPost,
-					Path:    "/dashboard/bindUns",
-					Handler: suposunsdashboard.BindUnsHandler(serverCtx),
-				},
-				{
-					// 获取详情
-					Method:  http.MethodPost,
-					Path:    "/dashboard/detail",
-					Handler: suposunsdashboard.DetailHandler(serverCtx),
-				},
-				{
-					// getByUns
-					Method:  http.MethodGet,
-					Path:    "/dashboard/getByUns",
+					Path:    "/getByUns",
 					Handler: suposunsdashboard.GetByUnsHandler(serverCtx),
 				},
 				{
-					// isExist
+					// 检查 Dashboard 是否存在
 					Method:  http.MethodGet,
-					Path:    "/dashboard/isExist",
+					Path:    "/isExist",
 					Handler: suposunsdashboard.IsExistHandler(serverCtx),
 				},
 				{
-					// 置顶
+					// 置顶 Dashboard
 					Method:  http.MethodPost,
-					Path:    "/dashboard/mark",
-					Handler: suposunsdashboard.MarkHandler(serverCtx),
+					Path:    "/mark",
+					Handler: suposunsdashboard.MarkTopHandler(serverCtx),
 				},
 				{
-					// 取消置顶
+					// 取消置顶 Dashboard
 					Method:  http.MethodDelete,
-					Path:    "/dashboard/unmark",
-					Handler: suposunsdashboard.UnmarkHandler(serverCtx),
+					Path:    "/unmark",
+					Handler: suposunsdashboard.UnmarkTopHandler(serverCtx),
 				},
 			}...,
 		),
-		rest.WithPrefix("/inter-api/supos/uns"),
+		rest.WithPrefix("/inter-api/supos/uns/dashboard"),
 	)
 
 	server.AddRoutes(
@@ -587,6 +587,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: suposunslabel.AllLabelHandler(serverCtx),
 				},
 				{
+					// 文件取消标签
+					Method:  http.MethodDelete,
+					Path:    "/cancelLabel",
+					Handler: suposunslabel.CancelLabelHandler(serverCtx),
+				},
+				{
 					// 创建标签
 					Method:  http.MethodPost,
 					Path:    "/label",
@@ -605,25 +611,34 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: suposunslabel.UpdateHandler(serverCtx),
 				},
 				{
-					// 查询详情
+					// 标签详情
 					Method:  http.MethodGet,
 					Path:    "/label/detail",
 					Handler: suposunslabel.DetailHandler(serverCtx),
 				},
-			}...,
-		),
-		rest.WithPrefix("/inter-api/supos/uns"),
-	)
-
-	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
-			[]rest.Route{
 				{
-					// 查询模板列表
+					// 分页获取标签下的文件列表
+					Method:  http.MethodGet,
+					Path:    "/label/pageListUnsByLabel",
+					Handler: suposunslabel.PageListUnsByLabelHandler(serverCtx),
+				},
+				{
+					// 修改标签订阅
+					Method:  http.MethodPut,
+					Path:    "/label/subscribe",
+					Handler: suposunslabel.UpdateSubscribeHandler(serverCtx),
+				},
+				{
+					// 文件打标签
 					Method:  http.MethodPost,
-					Path:    "/model/pageList",
-					Handler: suposunsmodel.PageListHandler(serverCtx),
+					Path:    "/makeLabel",
+					Handler: suposunslabel.MakeLabelHandler(serverCtx),
+				},
+				{
+					// 文件打单个标签
+					Method:  http.MethodPost,
+					Path:    "/makeSingleLabel",
+					Handler: suposunslabel.MakeSingleLabelHandler(serverCtx),
 				},
 			}...,
 		),
@@ -664,6 +679,69 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 分页获取模板下的文件列表
+					Method:  http.MethodGet,
+					Path:    "/label/pageListUnsByTemplate",
+					Handler: suposunstemplate.PageListUnsByTemplateHandler(serverCtx),
+				},
+				{
+					// 修改模板字段（只支持删除和新增）和描述
+					Method:  http.MethodPut,
+					Path:    "/model",
+					Handler: suposunstemplate.UpdateFieldsAndDescHandler(serverCtx),
+				},
+				{
+					// 根据ID查询模板详情
+					Method:  http.MethodGet,
+					Path:    "/template",
+					Handler: suposunstemplate.DetailByIdHandler(serverCtx),
+				},
+				{
+					// 新增模板
+					Method:  http.MethodPost,
+					Path:    "/template",
+					Handler: suposunstemplate.CreateHandler(serverCtx),
+				},
+				{
+					// 修改模板基本信息
+					Method:  http.MethodPut,
+					Path:    "/template",
+					Handler: suposunstemplate.UpdateBaseInfoHandler(serverCtx),
+				},
+				{
+					// 删除模板
+					Method:  http.MethodDelete,
+					Path:    "/template",
+					Handler: suposunstemplate.DeleteHandler(serverCtx),
+				},
+				{
+					// 根据别名查询模板详情
+					Method:  http.MethodGet,
+					Path:    "/template/alias",
+					Handler: suposunstemplate.DetailByAliasHandler(serverCtx),
+				},
+				{
+					// 查询模板列表
+					Method:  http.MethodPost,
+					Path:    "/template/pageList",
+					Handler: suposunstemplate.PageListHandler(serverCtx),
+				},
+				{
+					// 修改模板订阅
+					Method:  http.MethodPut,
+					Path:    "/template/subscribe",
+					Handler: suposunstemplate.UpdateSubscribeHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/uns"),
 	)
 
 	server.AddRoutes(

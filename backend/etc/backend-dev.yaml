@@ -31,3 +31,6 @@ NodeRed:
   Event:
     Host: "localhost"
     Port: "1889"
+Kong:
+  Host: 100.100.100.20
+  Port: 8001

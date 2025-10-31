@@ -26,7 +26,7 @@ func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogi
 	}
 }
 
-func (l *DeleteLogic) Delete(req *types.WithID) (resp *types.Empty, err error) {
+func (l *DeleteLogic) Delete(req *types.WithID) (resp *types.BaseResult, err error) {
 	sv := spring.GetBean[*service.UnsLabelService]()
 	return sv.Delete(l.ctx, req)
 }

@@ -26,7 +26,7 @@ func NewCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateLogi
 	}
 }
 
-func (l *CreateLogic) Create(req *types.UnsLabelCreateReq) (resp *types.WithID, err error) {
+func (l *CreateLogic) Create(req *types.CreateLabelReq) (resp *types.CreateLabelResp, err error) {
 	sv := spring.GetBean[*service.UnsLabelService]()
 	return sv.Create(l.ctx, req)
 }

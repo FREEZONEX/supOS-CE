@@ -6,6 +6,8 @@ package menu
 import (
 	"context"
 
+	"backend/internal/adapters/kong/dto"
+	"backend/internal/adapters/kong/logic"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -27,8 +29,15 @@ func NewSaveMenuLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SaveMenu
 	}
 }
 
-func (l *SaveMenuLogic) SaveMenu(req *types.SaveMenuReq) (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
-
+func (l *SaveMenuLogic) SaveMenu(menuDto *dto.MenuDto) (resp *types.ResultVO, err error) {
+	menuLogic := logic.NewMenuLogic(l.svcCtx.Config.Kong.Host, l.svcCtx.Config.Kong.Port)
+	err = menuLogic.CreateRoute(menuDto, false, false)
+	if err != nil {
+		return nil, err
+	}
+	resp = &types.ResultVO{
+		Code: 0,
+		Msg:  "success",
+	}
 	return
 }
