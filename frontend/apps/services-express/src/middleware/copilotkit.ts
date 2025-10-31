@@ -90,5 +90,8 @@ export const copilotkitHandler = (req: Request, res: Response, next: NextFunctio
       serviceAdapter: llmType?.[config.llmType],
     });
     return handler(req, res);
-  })().catch(next);
+  })().catch((e) => {
+    console.log(e);
+    next(e);
+  });
 };
