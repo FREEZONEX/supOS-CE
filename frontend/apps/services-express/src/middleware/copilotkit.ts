@@ -56,7 +56,11 @@ const serviceAdapterByAnthropic = new LangChainAdapter({
   },
 });
 
-const serviceAdapterByTongyi = new OpenAIAdapter({ openai: alibabaTongyiModel, model: config.tongyiModal });
+const serviceAdapterByTongyi = new OpenAIAdapter({
+  openai: alibabaTongyiModel,
+  model: config.tongyiModal,
+  keepSystemRole: true,
+});
 
 const llmType: any = {
   ollama: serviceAdapterByllama,
