@@ -29,7 +29,7 @@ func NewUnsTreeByDefinitionsLogic(ctx context.Context, svcCtx *svc.ServiceContex
 	}
 }
 
-func (l *UnsTreeByDefinitionsLogic) UnsTreeByDefinitions(req *types.UnsTreeCondition) (resp *types.PageResultDTO, err error) {
+func (l *UnsTreeByDefinitionsLogic) UnsTreeByDefinitions(req *types.UnsTreeCondition) (resp *types.UnsTreePageResp, err error) {
 	resp, err = spring.GetBean[*service.UnsQueryService]().LazyTree(l.ctx, req)
 	return
 }

@@ -1,3 +1,6 @@
+// Code scaffolded by goctl. Safe to edit.
+// goctl 1.9.2
+
 package template
 
 import (
@@ -9,23 +12,23 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type UpdateLogic struct {
+type UpdateBaseInfoLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
 // 修改模板基本信息
-func NewUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UpdateLogic {
-	return &UpdateLogic{
+func NewUpdateBaseInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UpdateBaseInfoLogic {
+	return &UpdateBaseInfoLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *UpdateLogic) Update(req *types.WithID) error {
+func (l *UpdateBaseInfoLogic) UpdateBaseInfo(req *types.UpdateTemplateBaseInfoReq) (resp *types.BaseResult, err error) {
 	// todo: add your logic here and delete this line
 
-	return nil
+	return
 }

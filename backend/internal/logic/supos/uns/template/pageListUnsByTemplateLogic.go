@@ -12,22 +12,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type PageListLogic struct {
+type PageListUnsByTemplateLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 查询模板列表
-func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageListLogic {
-	return &PageListLogic{
+// 分页获取模板下的文件列表
+func NewPageListUnsByTemplateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageListUnsByTemplateLogic {
+	return &PageListUnsByTemplateLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *PageListLogic) PageList(req *types.TemplateQueryVo) (resp *types.TemplatePageResp, err error) {
+func (l *PageListUnsByTemplateLogic) PageListUnsByTemplate(req *types.PageListUnsByTemplateReq) (resp *types.PageListUnsByTemplateResp, err error) {
 	// todo: add your logic here and delete this line
 
 	return

@@ -12,24 +12,165 @@ info(
     middleware:  CheckTokenWare,InitCtxsWare
 )
 service backend {
+
     @doc "查询模板列表"
     @handler pageList
-    post /template/pageList () returns ()
-    @doc "根据ID查询模板详情"
-    @handler read
-    get /template (WithID) returns ()
-    @doc "根据别名查询模板详情"
-    @handler alias
-    post /alias (WithID) returns ()
-    @doc "新增模板"
+    post /template/pageList (TemplateQueryVo) returns (TemplatePageResp)
 
-    @handler add
-    post /template (WithID) returns ()
+    @doc "根据ID查询模板详情"
+    @handler detailById
+    get /template (WithID) returns (TemplateDetailResp)
+
+    @doc "根据别名查询模板详情"
+    @handler detailByAlias
+    get /template/alias (WithAlias) returns (TemplateDetailResp)
+
+    @doc "新增模板"
+    @handler create
+    post /template (CreateTemplateReq) returns (CreateTemplateResp)
+
     @doc "修改模板基本信息"
-    @handler update
-    put /template (WithID) returns ()
+    @handler updateBaseInfo
+    put /template (UpdateTemplateBaseInfoReq) returns (BaseResult)
+
+    @doc "修改模板订阅"
+    @handler updateSubscribe
+    put /template/subscribe (UpdateTemplateSubscribeReq) returns (BaseResult)
+
+    @doc "修改模板字段（只支持删除和新增）和描述"
+    @handler updateFieldsAndDesc
+    put /model (UpdateTemplateFieldsAndDescReq) returns (BaseResult)
+
+    @doc "删除模板"
+    @handler delete
+    delete /template (WithID) returns (BaseResult)
+
+    @doc "分页获取模板下的文件列表"
+    @handler pageListUnsByTemplate
+    get /label/pageListUnsByTemplate (PageListUnsByTemplateReq) returns (PageListUnsByTemplateResp)
 }
 
 type (
+   PaginationDTO {
+   	PageNo   int64 `json:"pageNo,default=1" form:"pageNo,default=1"`     // 当前页数，默认为1
+   	PageSize int64 `json:"pageSize,default=20" form:"pageSize,default=20"` // 每页记录数，默认为20，最大支持1000
+   }
+   // TemplateQueryVo 模板查询参数
+   TemplateQueryVo {
+    PaginationDTO
+   	// Key 关键字查询，模版名称模糊匹配
+   	Key string `json:"key" schema:"关键字查询，模版名称模糊匹配"`
+   	// SubscribeEnable 是否订阅
+   	SubscribeEnable *bool `json:"subscribeEnable" schema:"是否订阅"`
+   }
+    // TemplateSearchResult 模板搜索结果
+   TemplateSearchResult {
+       // ID
+       ID string `json:"id"`
 
+       // 模板名称
+       Name string `json:"name"`
+
+       // 模型描述
+       Description string `json:"description,optional"`
+
+       // 别名
+       Alias string `json:"alias,optional"`
+   }
+   TemplatePageResp {
+      PageResultDTO
+      Data []*TemplateSearchResult `json:"data,optional,omitempty"`
+   }
+    // TemplateVo 模板信息
+    TemplateVo {
+        // 模板ID
+        ID string `json:"id"`
+
+        // 模板名称
+        Name string `json:"name"`
+
+        // 别名
+        Alias string `json:"alias,optional"`
+
+        // 字段定义
+        Fields []*FieldDefine `json:"fields,optional,omitempty"`
+
+        // 创建时间--单位：毫秒
+        CreateTime int64 `json:"createTime,optional,omitzero"`
+
+        // 模板描述
+        Description string `json:"description,optional,omitempty"`
+
+        // 主题
+        Topic string `json:"topic,optional,omitempty"`
+
+        // 是否订阅
+        SubscribeEnable *bool `json:"subscribeEnable,optional,omitempty"`
+
+        // 订阅频率
+        SubscribeFrequency string `json:"subscribeFrequency,optional,omitempty"`
+    }
+    TemplateDetailResp {
+       BaseResult
+       Data *TemplateVo `json:"data,optional,omitempty"`
+    }
+    // 创建模板请求
+    CreateTemplateReq {
+        batch int `json:"batch,optional" swaggerignore:"true"`
+        index int `json:"index,optional" swaggerignore:"true"`
+        flagNo string `json:"flagNo,optional" swaggerignore:"true"`
+
+        // 模板名称
+        Name string `json:"name" validate:"required,max=63"`
+        // 别名，唯一，最长63，可用字符：a-zA-Z0-9_
+        Alias string `json:"alias,optional" validate:"omitempty,max=63,alias"`
+        // 字段定义
+        Fields []*FieldDefine `json:"fields" validate:"required,min=1"`
+        // 模板描述
+        Description string `json:"description,optional" validate:"omitempty,max=255"`
+    }
+   CreateTemplateResp {
+     BaseResult
+     Id string `json:"data,optional,omitempty"`
+   }
+   // 修改模板基本信息请求
+   UpdateTemplateBaseInfoReq {
+       // 模板ID
+       ID int64 `form:"id,string" json:"id,string"`
+       // 模板名称
+       Name string `form:"name,string" json:"name,optional" validate:"max=63"`
+       // 模板描述
+       Description string `form:"description,string" json:"description,optional" validate:"max=255"`
+   }
+   // 修改模板订阅
+   UpdateTemplateSubscribeReq {
+       ID int64 `form:"id,string"`
+
+       // 是否订阅
+       SubscribeEnable *bool `form:"enable,optional,string"`
+
+       // 订阅频率
+       SubscribeFrequency string `form:"frequency,optional"`
+   }
+   // 修改模板字段（只支持删除和新增）和描述
+   UpdateTemplateFieldsAndDescReq {
+        // 别名，唯一，最长63，可用字符：a-zA-Z0-9_
+        Alias string `json:"alias" validate:"omitempty,max=63,alias"`
+        // 字段定义
+        Fields []*FieldDefine `json:"fields,optional" validate:"min=1"`
+        // 模板描述
+        Description string `json:"modelDescription,optional" validate:"omitempty,max=255"`
+   }
+   //分页获取模板下的文件列表--请求
+   PageListUnsByTemplateReq {
+        // 模板ID
+        ID       int64 `form:"templateId,string" json:"id,string"`
+        PageNo   int64 `form:"pageNo,optional,default=1" json:"pageNo,optional,default=1" `     // 当前页数，默认为1
+        PageSize int64 `form:"pageSize,optional,default=20" json:"pageSize,optional,default=20" ` // 每页记录数，默认为20，最大支持1000
+   }
+   //分页获取模板下的文件列表--结果
+   PageListUnsByTemplateResp {
+      PageResultDTO
+      Data []*FileVo `json:"data,optional,omitempty"`
+   }
 )

@@ -128,6 +128,21 @@ type CreateLabelResp struct {
 	Data *LabelVo `json:"data"`
 }
 
+type CreateTemplateReq struct {
+	Batch       int            `json:"batch,optional" swaggerignore:"true"`
+	Index       int            `json:"index,optional" swaggerignore:"true"`
+	FlagNo      string         `json:"flagNo,optional" swaggerignore:"true"`
+	Name        string         `json:"name" validate:"required,max=63"`
+	Alias       string         `json:"alias,optional" validate:"omitempty,max=63,alias"`
+	Fields      []*FieldDefine `json:"fields" validate:"required,min=1"`
+	Description string         `json:"description,optional" validate:"omitempty,max=255"`
+}
+
+type CreateTemplateResp struct {
+	BaseResult
+	Id string `json:"data,optional,omitempty"`
+}
+
 type CreateTopicDto struct {
 	Id                            int64                     `json:"id,string,optional,omitzero"`
 	Batch                         int                       `json:"-"`
@@ -218,6 +233,11 @@ type DashboardDto struct {
 	Creator     string `json:"creator,omitzero"`
 	UpdateTime  string `json:"updateTime,omitzero"`
 	CreateTime  string `json:"createTime,omitzero"`
+}
+
+type DashboardPageResp struct {
+	PageResultDTO
+	Data []DashboardDto `json:"data"`
 }
 
 type DashboardRefDto struct {
@@ -520,6 +540,17 @@ type PageListRequest struct {
 	PageSize  int    `form:"pageSize,default=10"`
 }
 
+type PageListUnsByTemplateReq struct {
+	ID       int64 `form:"templateId,string" json:"id,string"`
+	PageNo   int64 `form:"pageNo,optional,default=1" json:"pageNo,optional,default=1" `       // 当前页数，默认为1
+	PageSize int64 `form:"pageSize,optional,default=20" json:"pageSize,optional,default=20" ` // 每页记录数，默认为20，最大支持1000
+}
+
+type PageListUnsByTemplateResp struct {
+	PageResultDTO
+	Data []*FileVo `json:"data,optional,omitempty"`
+}
+
 type PageResp struct {
 	Page     int64 `json:"page,optional"`     // 页码
 	PageSize int64 `json:"pageSize,optional"` // 每页大小
@@ -527,19 +558,16 @@ type PageResp struct {
 }
 
 type PageResultDTO struct {
-	PageNo   int64              `json:"pageNo"`
-	PageSize int64              `json:"pageSize"`
-	Total    int64              `json:"total"`
-	Code     int64              `json:"code"`
-	Msg      string             `json:"msg,omitempty"`
-	Data     []*TopicTreeResult `json:"data,omitempty,optional"`
+	PageNo   int64  `json:"pageNo"`
+	PageSize int64  `json:"pageSize"`
+	Total    int64  `json:"total"`
+	Code     int64  `json:"code"`
+	Msg      string `json:"msg,omitempty"`
 }
 
-type PageResultDto struct {
-	Total    int64          `json:"total"`
-	PageNum  int            `json:"pageNum"`
-	PageSize int            `json:"pageSize"`
-	Data     []DashboardDto `json:"data"`
+type PaginationDTO struct {
+	PageNo   int64 `json:"pageNo,default=1" form:"pageNo,default=1"`       // 当前页数，默认为1
+	PageSize int64 `json:"pageSize,default=20" form:"pageSize,default=20"` // 每页记录数，默认为20，最大支持1000
 }
 
 type ParseJson2TreeUnsResp struct {
@@ -786,6 +814,41 @@ type Tag struct {
 	Value string `json:"value"`
 }
 
+type TemplateDetailResp struct {
+	BaseResult
+	Data *TemplateVo `json:"data,optional,omitempty"`
+}
+
+type TemplatePageResp struct {
+	PageResultDTO
+	Data []*TemplateSearchResult `json:"data,optional,omitempty"`
+}
+
+type TemplateQueryVo struct {
+	PaginationDTO
+	Key             string `json:"key" schema:"关键字查询，模版名称模糊匹配"`
+	SubscribeEnable *bool  `json:"subscribeEnable" schema:"是否订阅"`
+}
+
+type TemplateSearchResult struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Alias       string `json:"alias,optional"`
+}
+
+type TemplateVo struct {
+	ID                 string         `json:"id"`
+	Name               string         `json:"name"`
+	Alias              string         `json:"alias,optional"`
+	Fields             []*FieldDefine `json:"fields,optional,omitempty"`
+	CreateTime         int64          `json:"createTime,optional,omitzero"`
+	Description        string         `json:"description,optional,omitempty"`
+	Topic              string         `json:"topic,optional,omitempty"`
+	SubscribeEnable    *bool          `json:"subscribeEnable,optional,omitempty"`
+	SubscribeFrequency string         `json:"subscribeFrequency,optional,omitempty"`
+}
+
 type TimeRange struct {
 	Start int64 `json:"start,optional"` //开始时间 unix时间戳
 	End   int64 `json:"end,optional"`   //结束时间 unix时间戳
@@ -916,6 +979,11 @@ type UnsTreeCondition struct {
 	SubscribeEnable *bool  `json:"subscribeEnable,optional,string"`
 }
 
+type UnsTreePageResp struct {
+	PageResultDTO
+	Data []*TopicTreeResult `json:"data,omitempty,optional"`
+}
+
 type UpdateFileDTO struct {
 	Alias string                 `json:"alias"`
 	Data  map[string]interface{} `json:"data"`
@@ -943,6 +1011,24 @@ type UpdateModeRequestVo struct {
 type UpdateNameVo struct {
 	Id   int64  `json:"id"`
 	Name string `json:"name"`
+}
+
+type UpdateTemplateBaseInfoReq struct {
+	ID          int64  `form:"id,string" json:"id,string"`
+	Name        string `form:"name,string" json:"name,optional" validate:"max=63"`
+	Description string `form:"description,string" json:"description,optional" validate:"max=255"`
+}
+
+type UpdateTemplateFieldsAndDescReq struct {
+	Alias       string         `json:"alias" validate:"omitempty,max=63,alias"`
+	Fields      []*FieldDefine `json:"fields,optional" validate:"min=1"`
+	Description string         `json:"modelDescription,optional" validate:"omitempty,max=255"`
+}
+
+type UpdateTemplateSubscribeReq struct {
+	ID                 int64  `form:"id,string"`
+	SubscribeEnable    *bool  `form:"enable,optional,string"`
+	SubscribeFrequency string `form:"frequency,optional"`
 }
 
 type UpdateUnsDto struct {
@@ -1075,6 +1161,10 @@ type UserUpdateReq struct {
 
 type UuidRequest struct {
 	Uid string `path:"uid"`
+}
+
+type WithAlias struct {
+	Alias string `json:"alias" form:"alias"` // 别名
 }
 
 type WithCode struct {

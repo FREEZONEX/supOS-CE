@@ -2191,288 +2191,6 @@
       }
     },
     "/inter-api/supos/uns": {
-      "get": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "分页查询 Dashboard",
-        "operationId": "supos/Uns/DashboardPageList",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "关键字",
-            "name": "k",
-            "in": "query",
-            "allowEmptyValue": true
-          },
-          {
-            "type": "integer",
-            "description": "Dashboard 类型",
-            "name": "type",
-            "in": "query",
-            "allowEmptyValue": true
-          },
-          {
-            "type": "string",
-            "description": "排序字段",
-            "name": "orderCode",
-            "in": "query",
-            "allowEmptyValue": true
-          },
-          {
-            "type": "string",
-            "description": "是否升序",
-            "name": "isAsc",
-            "in": "query",
-            "allowEmptyValue": true
-          },
-          {
-            "type": "integer",
-            "default": 1,
-            "name": "pageNum",
-            "in": "query",
-            "required": true
-          },
-          {
-            "type": "integer",
-            "default": 10,
-            "name": "pageSize",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "required": [
-                      "id",
-                      "name",
-                      "type",
-                      "needInit",
-                      "description",
-                      "jsonContent",
-                      "creator",
-                      "updateTime",
-                      "createTime"
-                    ],
-                    "properties": {
-                      "createTime": {
-                        "type": "string"
-                      },
-                      "creator": {
-                        "type": "string"
-                      },
-                      "description": {
-                        "type": "string"
-                      },
-                      "id": {
-                        "type": "string"
-                      },
-                      "jsonContent": {
-                        "type": "string"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "needInit": {
-                        "type": "boolean"
-                      },
-                      "type": {
-                        "description": "1-grafana 2-fuxa",
-                        "type": "integer"
-                      },
-                      "updateTime": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                },
-                "pageNum": {
-                  "type": "integer"
-                },
-                "pageSize": {
-                  "type": "integer"
-                },
-                "total": {
-                  "type": "integer"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "编辑 Dashboard",
-        "operationId": "supos/Uns/DashboardEdit",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "id",
-                "name",
-                "type",
-                "needInit",
-                "description",
-                "jsonContent",
-                "creator",
-                "updateTime",
-                "createTime"
-              ],
-              "properties": {
-                "createTime": {
-                  "type": "string"
-                },
-                "creator": {
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "string"
-                },
-                "jsonContent": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "needInit": {
-                  "type": "boolean"
-                },
-                "type": {
-                  "description": "1-grafana 2-fuxa",
-                  "type": "integer"
-                },
-                "updateTime": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "创建 Dashboard",
-        "operationId": "supos/Uns/DashboardCreate",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "id",
-                "name",
-                "type",
-                "needInit",
-                "description",
-                "jsonContent",
-                "creator",
-                "updateTime",
-                "createTime"
-              ],
-              "properties": {
-                "createTime": {
-                  "type": "string"
-                },
-                "creator": {
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "string"
-                },
-                "jsonContent": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "needInit": {
-                  "type": "boolean"
-                },
-                "type": {
-                  "description": "1-grafana 2-fuxa",
-                  "type": "integer"
-                },
-                "updateTime": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
       "delete": {
         "consumes": [
           "application/x-www-form-urlencoded"
@@ -3145,60 +2863,6 @@
         }
       }
     },
-    "/inter-api/supos/uns/bindUns": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "绑定 UNS",
-        "operationId": "supos/Uns/DashboardBindUns",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "dashboardId",
-                "unsAlias"
-              ],
-              "properties": {
-                "dashboardId": {
-                  "type": "string"
-                },
-                "unsAlias": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/inter-api/supos/uns/cancelLabel": {
       "delete": {
         "consumes": [
@@ -3617,7 +3281,351 @@
         }
       }
     },
-    "/inter-api/supos/uns/createGrafanaByUns/{alias}": {
+    "/inter-api/supos/uns/dashboard": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "分页查询 Dashboard",
+        "operationId": "supos/Uns/DashboardPageList",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "关键字",
+            "name": "k",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "Dashboard 类型",
+            "name": "type",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "排序字段",
+            "name": "orderCode",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "是否升序",
+            "name": "isAsc",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNum",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name",
+                      "type",
+                      "needInit",
+                      "description",
+                      "jsonContent",
+                      "creator",
+                      "updateTime",
+                      "createTime"
+                    ],
+                    "properties": {
+                      "createTime": {
+                        "type": "string"
+                      },
+                      "creator": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "jsonContent": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "needInit": {
+                        "type": "boolean"
+                      },
+                      "type": {
+                        "description": "1-grafana 2-fuxa",
+                        "type": "integer"
+                      },
+                      "updateTime": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "编辑 Dashboard",
+        "operationId": "supos/Uns/DashboardEdit",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "type",
+                "needInit",
+                "description",
+                "jsonContent",
+                "creator",
+                "updateTime",
+                "createTime"
+              ],
+              "properties": {
+                "createTime": {
+                  "type": "string"
+                },
+                "creator": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "jsonContent": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "needInit": {
+                  "type": "boolean"
+                },
+                "type": {
+                  "description": "1-grafana 2-fuxa",
+                  "type": "integer"
+                },
+                "updateTime": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建 Dashboard",
+        "operationId": "supos/Uns/DashboardCreate",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "type",
+                "needInit",
+                "description",
+                "jsonContent",
+                "creator",
+                "updateTime",
+                "createTime"
+              ],
+              "properties": {
+                "createTime": {
+                  "type": "string"
+                },
+                "creator": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "jsonContent": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "needInit": {
+                  "type": "boolean"
+                },
+                "type": {
+                  "description": "1-grafana 2-fuxa",
+                  "type": "integer"
+                },
+                "updateTime": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/bindUns": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "绑定 UNS",
+        "operationId": "supos/Uns/DashboardBindUns",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "dashboardId",
+                "unsAlias"
+              ],
+              "properties": {
+                "dashboardId": {
+                  "type": "string"
+                },
+                "unsAlias": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/createGrafanaByUns/{alias}": {
       "post": {
         "consumes": [
           "application/x-www-form-urlencoded"
@@ -3657,7 +3665,7 @@
         }
       }
     },
-    "/inter-api/supos/uns/detail": {
+    "/inter-api/supos/uns/dashboard/detail": {
       "get": {
         "produces": [
           "application/json"
@@ -3692,7 +3700,248 @@
             }
           }
         }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/getByUns": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "根据 UNS 获取 Dashboard",
+        "operationId": "supos/Uns/DashboardGetByUns",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "unsAlias",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/isExist": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "检查 Dashboard 是否存在",
+        "operationId": "supos/Uns/DashboardIsExist",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "alias",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/mark": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "置顶 Dashboard",
+        "operationId": "supos/Uns/DashboardMarkTop",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/unmark": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "取消置顶 Dashboard",
+        "operationId": "supos/Uns/DashboardUnmarkTop",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/{uid}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "根据 UID 获取 Dashboard",
+        "operationId": "supos/Uns/DashboardGetByUuid",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "uid",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       },
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "删除 Dashboard",
+        "operationId": "supos/Uns/DashboardDelete",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "uid",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/detail": {
       "put": {
         "consumes": [
           "application/json"
@@ -4753,43 +5002,6 @@
         }
       }
     },
-    "/inter-api/supos/uns/getByUns": {
-      "get": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "根据 UNS 获取 Dashboard",
-        "operationId": "supos/Uns/DashboardGetByUns",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "unsAlias",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/inter-api/supos/uns/getLastMsg": {
       "get": {
         "produces": [
@@ -5149,43 +5361,6 @@
                     }
                   }
                 },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/inter-api/supos/uns/isExist": {
-      "get": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "检查 Dashboard 是否存在",
-        "operationId": "supos/Uns/DashboardIsExist",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "alias",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
                 "msg": {
                   "type": "string"
                 }
@@ -5818,6 +5993,121 @@
         }
       }
     },
+    "/inter-api/supos/uns/label/pageListUnsByTemplate": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "分页获取模板下的文件列表",
+        "operationId": "supos/Uns/TemplatePageListUnsByTemplate",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "templateId",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "description": "当前页数，默认为1",
+            "name": "pageNo",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 20,
+            "description": "每页记录数，默认为20，最大支持1000",
+            "name": "pageSize",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "pageNo": {
+                  "description": "当前页数，默认为1",
+                  "type": "integer",
+                  "default": 1,
+                  "example": 1
+                },
+                "pageSize": {
+                  "description": "每页记录数，默认为20，最大支持1000",
+                  "type": "integer",
+                  "default": 20,
+                  "example": 20
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "unsId",
+                      "name",
+                      "path",
+                      "pathType"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "pathType": {
+                        "type": "integer"
+                      },
+                      "unsId": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inter-api/supos/uns/label/subscribe": {
       "put": {
         "consumes": [
@@ -6005,56 +6295,6 @@
         }
       }
     },
-    "/inter-api/supos/uns/mark": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "置顶 Dashboard",
-        "operationId": "supos/Uns/DashboardMarkTop",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "id"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/inter-api/supos/uns/model": {
       "get": {
         "produces": [
@@ -6230,6 +6470,104 @@
                       "type": "integer"
                     }
                   }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "修改模板字段（只支持删除和新增）和描述",
+        "operationId": "supos/Uns/TemplateUpdateFieldsAndDesc",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "alias"
+              ],
+              "properties": {
+                "alias": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "modelDescription": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
                 },
                 "msg": {
                   "type": "string"
@@ -6687,24 +7025,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/inter-api/supos/uns/model/pageList": {
-      "post": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "查询模板列表",
-        "operationId": "supos/Uns/ModelPageList",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
           }
         }
       }
@@ -7276,6 +7596,677 @@
         }
       }
     },
+    "/inter-api/supos/uns/template": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "根据ID查询模板详情",
+        "operationId": "supos/Uns/TemplateDetailById",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "id",
+            "name": "id",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "id",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "alias": {
+                      "type": "string"
+                    },
+                    "createTime": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "type"
+                        ],
+                        "properties": {
+                          "decimal": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "index": {
+                            "type": "string"
+                          },
+                          "lowerLimit": {
+                            "type": "number"
+                          },
+                          "maxLen": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "remark": {
+                            "type": "string"
+                          },
+                          "tbValueName": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "unique": {
+                            "type": "boolean"
+                          },
+                          "unit": {
+                            "type": "string"
+                          },
+                          "upperLimit": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "subscribeEnable": {
+                      "type": "boolean"
+                    },
+                    "subscribeFrequency": {
+                      "type": "string"
+                    },
+                    "topic": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "修改模板基本信息",
+        "operationId": "supos/Uns/TemplateUpdateBaseInfo",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "id",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "name",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "description",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "新增模板",
+        "operationId": "supos/Uns/TemplateCreate",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "name",
+                "fields"
+              ],
+              "properties": {
+                "alias": {
+                  "type": "string"
+                },
+                "batch": {
+                  "type": "integer"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "flagNo": {
+                  "type": "string"
+                },
+                "index": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "删除模板",
+        "operationId": "supos/Uns/TemplateDelete",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "id",
+            "name": "id",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "id",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/template/alias": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "根据别名查询模板详情",
+        "operationId": "supos/Uns/TemplateDetailByAlias",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "别名",
+            "name": "alias",
+            "in": "query",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "alias"
+              ],
+              "properties": {
+                "alias": {
+                  "description": "别名",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "alias": {
+                      "type": "string"
+                    },
+                    "createTime": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "type"
+                        ],
+                        "properties": {
+                          "decimal": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "index": {
+                            "type": "string"
+                          },
+                          "lowerLimit": {
+                            "type": "number"
+                          },
+                          "maxLen": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "remark": {
+                            "type": "string"
+                          },
+                          "tbValueName": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "unique": {
+                            "type": "boolean"
+                          },
+                          "unit": {
+                            "type": "string"
+                          },
+                          "upperLimit": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "subscribeEnable": {
+                      "type": "boolean"
+                    },
+                    "subscribeFrequency": {
+                      "type": "string"
+                    },
+                    "topic": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/template/pageList": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询模板列表",
+        "operationId": "supos/Uns/TemplatePageList",
+        "parameters": [
+          {
+            "type": "integer",
+            "default": 1,
+            "description": "当前页数，默认为1",
+            "name": "pageNo",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 20,
+            "description": "每页记录数，默认为20，最大支持1000",
+            "name": "pageSize",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "pageNo",
+                "pageSize",
+                "key",
+                "subscribeEnable"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "description": "当前页数，默认为1",
+                  "type": "integer",
+                  "default": 1,
+                  "example": 1
+                },
+                "pageSize": {
+                  "description": "每页记录数，默认为20，最大支持1000",
+                  "type": "integer",
+                  "default": 20,
+                  "example": 20
+                },
+                "subscribeEnable": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/template/subscribe": {
+      "put": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "修改模板订阅",
+        "operationId": "supos/Uns/TemplateUpdateSubscribe",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "id",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "name": "enable",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "frequency",
+            "in": "formData",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inter-api/supos/uns/tree": {
       "get": {
         "produces": [
@@ -7643,121 +8634,6 @@
                     "type": "string"
                   }
                 },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/inter-api/supos/uns/unmark": {
-      "delete": {
-        "consumes": [
-          "application/x-www-form-urlencoded"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "取消置顶 Dashboard",
-        "operationId": "supos/Uns/DashboardUnmarkTop",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "id",
-            "in": "formData",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/inter-api/supos/uns/{uid}": {
-      "get": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "根据 UID 获取 Dashboard",
-        "operationId": "supos/Uns/DashboardGetByUuid",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "uid",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "consumes": [
-          "application/x-www-form-urlencoded"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "删除 Dashboard",
-        "operationId": "supos/Uns/DashboardDelete",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "uid",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
                 "msg": {
                   "type": "string"
                 }
@@ -8709,7 +9585,7 @@
       }
     }
   },
-  "x-date": "2025-10-30 20:36:02",
+  "x-date": "2025-10-31 09:19:12",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

@@ -37,14 +37,10 @@ type PageListRequest {
 	PageSize  int    `form:"pageSize,default=10"`
 }
 
-// PageResultDto 分页响应
-type PageResultDto {
-	Total    int64          `json:"total"`
-	PageNum  int            `json:"pageNum"`
-	PageSize int            `json:"pageSize"`
-	Data     []DashboardDto `json:"data"`
+type DashboardPageResp {
+    PageResultDTO
+    Data     []DashboardDto `json:"data"`
 }
-
 // JsonResult 通用 JSON 响应
 type JsonResult {
 	Code int         `json:"code"`
@@ -61,13 +57,13 @@ type MarkTopRequest {
 
 @server(
     group: supos/uns/dashboard
-    prefix: /inter-api/supos/uns
+    prefix: /inter-api/supos/uns/dashboard
     middleware:  CheckTokenWare,InitCtxsWare
 )
 service backend {
     @doc "分页查询 Dashboard"
     @handler PageList
-    get / (PageListRequest) returns (PageResultDto)
+    get / (PageListRequest) returns (DashboardPageResp)
     
     @doc "获取 Dashboard 详情"
     @handler GetDetail

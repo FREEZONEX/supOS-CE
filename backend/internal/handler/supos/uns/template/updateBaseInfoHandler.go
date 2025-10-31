@@ -9,21 +9,20 @@ import (
 	"backend/internal/logic/supos/uns/template"
 	"backend/internal/svc"
 	"backend/internal/types"
-
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 查询模板列表
-func PageListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// 修改模板基本信息
+func UpdateBaseInfoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.TemplateQueryVo
+		var req types.UpdateTemplateBaseInfoReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := template.NewPageListLogic(r.Context(), svcCtx)
-		resp, err := l.PageList(&req)
+		l := template.NewUpdateBaseInfoLogic(r.Context(), svcCtx)
+		resp, err := l.UpdateBaseInfo(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

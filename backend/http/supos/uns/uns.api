@@ -8,6 +8,12 @@ info (
 )
 
 type (
+    FileVo {
+        UnsId    string `json:"unsId"`
+        Name     string `json:"name"`
+        Path     string `json:"path"`
+        PathType int16  `json:"pathType"`
+    }
 	CreateTopicDto {
         // Basic fields
         Id          int64   `json:"id,string,optional,omitzero"`
@@ -227,7 +233,10 @@ type (
 		Total    int64             `json:"total"`
 		Code     int64             `json:"code"`
 		Msg      string            `json:"msg,omitempty"`
-		Data     []*TopicTreeResult `json:"data,omitempty,optional"`
+	}
+	UnsTreePageResp {
+	   PageResultDTO
+	   Data     []*TopicTreeResult `json:"data,omitempty,optional"`
 	}
 	GetLastMsgReq {
 		Paths []string `form:"path,optional"`
@@ -626,7 +635,7 @@ service backend {
 		summary: "多条件分页查询树结构"
 	)
 	@handler unsTreeByDefinitions
-	post /uns/condition/tree (UnsTreeCondition) returns (PageResultDTO)
+	post /uns/condition/tree (UnsTreeCondition) returns (UnsTreePageResp)
 
 	@doc (
 		summary: "枚举数据类型"

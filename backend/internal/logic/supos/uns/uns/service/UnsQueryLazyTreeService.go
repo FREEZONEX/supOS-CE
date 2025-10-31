@@ -10,7 +10,7 @@ import (
 )
 
 // LazyTree 懒加载的树查询
-func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCondition) (resp *types.PageResultDTO, err error) {
+func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCondition) (resp *types.UnsTreePageResp, err error) {
 	if params.PageNo < 1 {
 		params.PageNo = 1
 	}
@@ -77,17 +77,16 @@ func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCon
 		}
 	}
 
-	resp = &types.PageResultDTO{
+	resp = &types.UnsTreePageResp{PageResultDTO: types.PageResultDTO{
 		PageNo:   int64(pageNo),
 		PageSize: int64(pageSize),
 		Total:    total,
 		Code:     200,
 		Msg:      "Normal DB Search",
-		Data:     treeResultList,
-	}
+	}, Data: treeResultList}
 	return
 }
-func (l *UnsQueryService) simpleTree(ctx context.Context, parentId *int64, layRecPrev string, pageNo, pageSize int) (resp *types.PageResultDTO, err error) {
+func (l *UnsQueryService) simpleTree(ctx context.Context, parentId *int64, layRecPrev string, pageNo, pageSize int) (resp *types.UnsTreePageResp, err error) {
 	db := dao.GetDb(ctx)
 	countChildrenList, er := l.unsMapper.ListCountChildren(db, layRecPrev)
 	if er != nil {
@@ -112,20 +111,22 @@ func (l *UnsQueryService) simpleTree(ctx context.Context, parentId *int64, layRe
 		result.HasChildren = folderCount+fileCount > 0
 		return result
 	})
-	resp = &types.PageResultDTO{
-		PageNo:   int64(pageNo),
-		PageSize: int64(pageSize),
-		Total:    total,
-		Code:     200,
-		Msg:      "Simple DB Search",
-		Data:     treeResultList,
-	}
+	resp = &types.UnsTreePageResp{
+		PageResultDTO: types.PageResultDTO{
+			PageNo:   int64(pageNo),
+			PageSize: int64(pageSize),
+			Total:    total,
+			Code:     200,
+			Msg:      "Simple DB Search",
+		}, Data: treeResultList}
 	return
 }
-func emptyPage(params *types.UnsTreeCondition) *types.PageResultDTO {
-	return &types.PageResultDTO{
-		Code:     200,
-		PageNo:   int64(params.PageNo),
-		PageSize: int64(params.PageSize),
+func emptyPage(params *types.UnsTreeCondition) *types.UnsTreePageResp {
+	return &types.UnsTreePageResp{
+		PageResultDTO: types.PageResultDTO{
+			Code:     200,
+			PageNo:   int64(params.PageNo),
+			PageSize: int64(params.PageSize),
+		},
 	}
 }

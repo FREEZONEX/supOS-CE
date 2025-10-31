@@ -9,13 +9,6 @@ info (
 
 type (
 
-    FileVo {
-        UnsId    string `json:"unsId"`
-        Name     string `json:"name"`
-        Path     string `json:"path"`
-        PathType int16  `json:"pathType"`
-    }
-
     UnsLabelListReq {
         Key string `form:"key,optional"`
     }

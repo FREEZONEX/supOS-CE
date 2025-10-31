@@ -12,22 +12,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type PageListLogic struct {
+type UpdateFieldsAndDescLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 查询模板列表
-func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageListLogic {
-	return &PageListLogic{
+// 修改模板字段（只支持删除和新增）和描述
+func NewUpdateFieldsAndDescLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UpdateFieldsAndDescLogic {
+	return &UpdateFieldsAndDescLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *PageListLogic) PageList(req *types.TemplateQueryVo) (resp *types.TemplatePageResp, err error) {
+func (l *UpdateFieldsAndDescLogic) UpdateFieldsAndDesc(req *types.UpdateTemplateFieldsAndDescReq) (resp *types.BaseResult, err error) {
 	// todo: add your logic here and delete this line
 
 	return

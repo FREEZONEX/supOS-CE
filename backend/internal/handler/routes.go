@@ -20,9 +20,9 @@ import (
 	suposunsexternal "backend/internal/handler/supos/uns/external"
 	suposunsfile "backend/internal/handler/supos/uns/file"
 	suposunslabel "backend/internal/handler/supos/uns/label"
-	suposunsmodel "backend/internal/handler/supos/uns/model"
 	suposunsperson "backend/internal/handler/supos/uns/person"
 	suposunssystem "backend/internal/handler/supos/uns/system"
+	suposunstemplate "backend/internal/handler/supos/uns/template"
 	suposunsuns "backend/internal/handler/supos/uns/uns"
 	suposuserManage "backend/internal/handler/supos/userManage"
 	"backend/internal/svc"
@@ -378,7 +378,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				},
 			}...,
 		),
-		rest.WithPrefix("/inter-api/supos/uns"),
+		rest.WithPrefix("/inter-api/supos/uns/dashboard"),
 	)
 
 	server.AddRoutes(
@@ -497,21 +497,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
-					// 查询模板列表
-					Method:  http.MethodPost,
-					Path:    "/model/pageList",
-					Handler: suposunsmodel.PageListHandler(serverCtx),
-				},
-			}...,
-		),
-		rest.WithPrefix("/inter-api/supos/uns"),
-	)
-
-	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
-			[]rest.Route{
-				{
 					// 获取个人配置
 					Method:  http.MethodGet,
 					Path:    "/config",
@@ -541,6 +526,69 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 分页获取模板下的文件列表
+					Method:  http.MethodGet,
+					Path:    "/label/pageListUnsByTemplate",
+					Handler: suposunstemplate.PageListUnsByTemplateHandler(serverCtx),
+				},
+				{
+					// 修改模板字段（只支持删除和新增）和描述
+					Method:  http.MethodPut,
+					Path:    "/model",
+					Handler: suposunstemplate.UpdateFieldsAndDescHandler(serverCtx),
+				},
+				{
+					// 根据ID查询模板详情
+					Method:  http.MethodGet,
+					Path:    "/template",
+					Handler: suposunstemplate.DetailByIdHandler(serverCtx),
+				},
+				{
+					// 新增模板
+					Method:  http.MethodPost,
+					Path:    "/template",
+					Handler: suposunstemplate.CreateHandler(serverCtx),
+				},
+				{
+					// 修改模板基本信息
+					Method:  http.MethodPut,
+					Path:    "/template",
+					Handler: suposunstemplate.UpdateBaseInfoHandler(serverCtx),
+				},
+				{
+					// 删除模板
+					Method:  http.MethodDelete,
+					Path:    "/template",
+					Handler: suposunstemplate.DeleteHandler(serverCtx),
+				},
+				{
+					// 根据别名查询模板详情
+					Method:  http.MethodGet,
+					Path:    "/template/alias",
+					Handler: suposunstemplate.DetailByAliasHandler(serverCtx),
+				},
+				{
+					// 查询模板列表
+					Method:  http.MethodPost,
+					Path:    "/template/pageList",
+					Handler: suposunstemplate.PageListHandler(serverCtx),
+				},
+				{
+					// 修改模板订阅
+					Method:  http.MethodPut,
+					Path:    "/template/subscribe",
+					Handler: suposunstemplate.UpdateSubscribeHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/uns"),
 	)
 
 	server.AddRoutes(
