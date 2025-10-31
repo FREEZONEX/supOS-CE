@@ -15,6 +15,7 @@ import (
 	"backend/internal/config"
 	keycloakrepo "backend/internal/repo/keycloak"
 	"backend/share/clients"
+	noderedclient "backend/share/clients/nodered"
 )
 
 type ServiceContext struct {
@@ -23,9 +24,12 @@ type ServiceContext struct {
 	CheckTokenWare rest.Middleware
 	SnowFlake      *utils.SnowFlake
 	Keycloak       *clients.KeycloakClient
+	SourceNodeRed  *noderedclient.Client
+	EventNodeRed   *noderedclient.Client
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
+
 	stores.InitConn(c.Database)
 	relationDB.Migrate(c.Database, c.DatabaseSchema)
 
@@ -46,11 +50,14 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	keycloakClient := clients.InitKeycloakClient(c.OAuthKeyCloak)
 
 	common.InitSnowflake(1)
+
 	return &ServiceContext{
 		Config:         c,
 		CheckTokenWare: middleware.NewCheckTokenWareMiddleware(keycloakClient, c.OAuthKeyCloak.SuposHome, c.OAuthKeyCloak.Realm).Handle,
 		InitCtxsWare:   middleware.NewInitCtxsWareMiddleware().Handle,
 		SnowFlake:      utils.NewSnowFlake(1),
 		Keycloak:       keycloakClient,
+		SourceNodeRed:  noderedclient.NewClient(c.NodeRed.Source.Host, c.NodeRed.Source.Port, ""),
+		EventNodeRed:   noderedclient.NewClient(c.NodeRed.Event.Host, c.NodeRed.Event.Port, ""),
 	}
 }

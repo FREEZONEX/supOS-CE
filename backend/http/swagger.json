@@ -334,6 +334,446 @@
         }
       }
     },
+    "/inter-api/supos/event/flow": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Update event flow metadata",
+        "operationId": "supos/EventflowUpdateEventFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "flowName"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "flowName": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Create a new event flow",
+        "operationId": "supos/EventflowCreateEventFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "flowName"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "flowName": {
+                  "type": "string"
+                },
+                "template": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Delete an event flow by id",
+        "operationId": "supos/EventflowDeleteEventFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/event/flow/copy": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Copy an existing event flow",
+        "operationId": "supos/EventflowCopyEventFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "sourceId",
+                "flowName"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "flowName": {
+                  "type": "string"
+                },
+                "sourceId": {
+                  "type": "string"
+                },
+                "template": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/event/flow/deploy": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Deploy an event flow",
+        "operationId": "supos/EventflowDeployEventFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "flows": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/event/flow/save": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Persist Node-RED event flow JSON",
+        "operationId": "supos/EventflowSaveEventFlowJson",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "flows": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/event/flow/version": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Query current event flow version",
+        "operationId": "supos/EventflowGetEventFlowVersion",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/event/flows": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "List event flows with optional fuzzy search",
+        "operationId": "supos/EventflowListEventFlows",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "k",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "name": "pageNo",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "flowId": {
+                        "type": "string"
+                      },
+                      "flowName": {
+                        "type": "string"
+                      },
+                      "flowStatus": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "template": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inter-api/supos/example/install": {
       "post": {
         "produces": [
@@ -547,7 +987,137 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/CreateFileDto"
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "addFlow": {
+                  "type": "boolean"
+                },
+                "alias": {
+                  "type": "string"
+                },
+                "dashBoard": {
+                  "type": "boolean"
+                },
+                "dataType": {
+                  "type": "integer"
+                },
+                "definition": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "description": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "expression": {
+                  "type": "string"
+                },
+                "extendProperties": {
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "frequency": {
+                  "type": "string"
+                },
+                "labelNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "name": {
+                  "type": "string"
+                },
+                "parentAlias": {
+                  "type": "string"
+                },
+                "persistence": {
+                  "type": "boolean"
+                },
+                "refers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "alias",
+                      "path",
+                      "path",
+                      "field",
+                      "uts"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "field": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "uts": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "templateAlias": {
+                  "type": "string"
+                }
+              }
             }
           }
         ],
@@ -912,6 +1482,589 @@
         }
       }
     },
+    "/inter-api/supos/flow": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Update flow metadata",
+        "operationId": "supos/SourceflowUpdateSourceFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "flowName"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "flowName": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Create a new source flow",
+        "operationId": "supos/SourceflowCreateSourceFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "flowName"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "flowName": {
+                  "type": "string"
+                },
+                "template": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Delete a source flow by id",
+        "operationId": "supos/SourceflowDeleteSourceFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/copy": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Copy an existing source flow",
+        "operationId": "supos/SourceflowCopySourceFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "sourceId",
+                "flowName"
+              ],
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "flowName": {
+                  "type": "string"
+                },
+                "sourceId": {
+                  "type": "string"
+                },
+                "template": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/create": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Create a mock flow from UNS path",
+        "operationId": "supos/SourceflowCreateSourceMockFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "unsAlias",
+                "path"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "unsAlias": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "flowId": {
+                      "type": "string"
+                    },
+                    "flowName": {
+                      "type": "string"
+                    },
+                    "flowStatus": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "template": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/deploy": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Deploy a source flow",
+        "operationId": "supos/SourceflowDeploySourceFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "flows": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "flowId": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/save": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Persist Node-RED flow JSON",
+        "operationId": "supos/SourceflowSaveSourceFlowJson",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "flows": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                },
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/uns/alias": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Fetch flow information by UNS alias",
+        "operationId": "supos/SourceflowGetSourceFlowByAlias",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "alias",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "flowId": {
+                      "type": "string"
+                    },
+                    "flowName": {
+                      "type": "string"
+                    },
+                    "flowStatus": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "template": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/version": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Query current Node-RED flow version",
+        "operationId": "supos/SourceflowGetSourceFlowVersion",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flows": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "List source flows with optional fuzzy search",
+        "operationId": "supos/SourceflowListSourceFlows",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "k",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "name": "pageNo",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "flowId": {
+                        "type": "string"
+                      },
+                      "flowName": {
+                        "type": "string"
+                      },
+                      "flowStatus": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "template": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inter-api/supos/global/data/export": {
       "post": {
         "produces": [
@@ -1096,24 +2249,363 @@
         "schemes": [
           "https"
         ],
-        "summary": "get",
+        "summary": "List resources",
         "operationId": "supos/ResourceGet",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "parentId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "name": "type",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "createAt": {
+                    "type": "string"
+                  },
+                  "descriptionCode": {
+                    "type": "string"
+                  },
+                  "editEnable": {
+                    "type": "boolean"
+                  },
+                  "enable": {
+                    "type": "boolean"
+                  },
+                  "fixed": {
+                    "type": "boolean"
+                  },
+                  "homeEnable": {
+                    "type": "boolean"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "nameCode": {
+                    "type": "string"
+                  },
+                  "openType": {
+                    "type": "integer"
+                  },
+                  "parentId": {
+                    "type": "string"
+                  },
+                  "routeSource": {
+                    "type": "integer"
+                  },
+                  "showDescription": {
+                    "type": "string"
+                  },
+                  "showName": {
+                    "type": "string"
+                  },
+                  "sort": {
+                    "type": "integer"
+                  },
+                  "type": {
+                    "type": "integer"
+                  },
+                  "updateAt": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "urlType": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "createAt": {
+                  "type": "string"
+                },
+                "descriptionCode": {
+                  "type": "string"
+                },
+                "editEnable": {
+                  "type": "boolean"
+                },
+                "enable": {
+                  "type": "boolean"
+                },
+                "fixed": {
+                  "type": "boolean"
+                },
+                "homeEnable": {
+                  "type": "boolean"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "nameCode": {
+                  "type": "string"
+                },
+                "openType": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "type": "string"
+                },
+                "routeSource": {
+                  "type": "integer"
+                },
+                "showDescription": {
+                  "type": "string"
+                },
+                "showName": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                },
+                "updateAt": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "urlType": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         }
       },
       "post": {
+        "consumes": [
+          "application/json"
+        ],
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "post",
+        "summary": "Create or update resource and its children",
         "operationId": "supos/ResourcePost",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "children": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "children": {
+                              "type": "array",
+                              "items": {
+                                "type": "object"
+                              }
+                            },
+                            "code": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "editEnable": {
+                              "type": "boolean"
+                            },
+                            "enable": {
+                              "type": "boolean"
+                            },
+                            "fixed": {
+                              "type": "boolean"
+                            },
+                            "homeEnable": {
+                              "type": "boolean"
+                            },
+                            "icon": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "description": "关键：允许 \"123\" 绑定到 int64",
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "openType": {
+                              "type": "integer"
+                            },
+                            "parentId": {
+                              "description": "如果前端也把 parentId 当字符串传，建议一并加上",
+                              "type": "integer"
+                            },
+                            "routeSource": {
+                              "type": "integer"
+                            },
+                            "sort": {
+                              "type": "integer"
+                            },
+                            "source": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "integer"
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "urlType": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "editEnable": {
+                        "type": "boolean"
+                      },
+                      "enable": {
+                        "type": "boolean"
+                      },
+                      "fixed": {
+                        "type": "boolean"
+                      },
+                      "homeEnable": {
+                        "type": "boolean"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "description": "关键：允许 \"123\" 绑定到 int64",
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "openType": {
+                        "type": "integer"
+                      },
+                      "parentId": {
+                        "description": "如果前端也把 parentId 当字符串传，建议一并加上",
+                        "type": "integer"
+                      },
+                      "routeSource": {
+                        "type": "integer"
+                      },
+                      "sort": {
+                        "type": "integer"
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "integer"
+                      },
+                      "url": {
+                        "type": "string"
+                      },
+                      "urlType": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "code": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "editEnable": {
+                  "type": "boolean"
+                },
+                "enable": {
+                  "type": "boolean"
+                },
+                "fixed": {
+                  "type": "boolean"
+                },
+                "homeEnable": {
+                  "type": "boolean"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "id": {
+                  "description": "关键：允许 \"123\" 绑定到 int64",
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "openType": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "description": "如果前端也把 parentId 当字符串传，建议一并加上",
+                  "type": "integer"
+                },
+                "routeSource": {
+                  "type": "integer"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "integer"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "urlType": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -1123,15 +2615,89 @@
       }
     },
     "/inter-api/supos/resource/batch": {
-      "post": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "batch",
+        "summary": "Batch update resources",
         "operationId": "supos/ResourceBatch",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "descriptionCode": {
+                  "type": "string"
+                },
+                "editEnable": {
+                  "type": "boolean"
+                },
+                "enable": {
+                  "type": "boolean"
+                },
+                "fixed": {
+                  "type": "boolean"
+                },
+                "homeEnable": {
+                  "type": "boolean"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "id": {
+                  "description": "同上",
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "nameCode": {
+                  "type": "string"
+                },
+                "openType": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "description": "如有需要",
+                  "type": "integer"
+                },
+                "routeSource": {
+                  "type": "integer"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "integer"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "urlType": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -1140,14 +2706,39 @@
         }
       },
       "delete": {
+        "consumes": [
+          "application/json"
+        ],
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "batch",
+        "summary": "Batch delete resources",
         "operationId": "supos/ResourceBatchDelete",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "ids"
+              ],
+              "properties": {
+                "ids": {
+                  "description": "注意：如果前端传 [\"1\",\"2\"] 这种字符串数组，这里不能用 ,string；见下方说明",
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -1158,14 +2749,25 @@
     },
     "/inter-api/supos/resource/{id}": {
       "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "delete",
+        "summary": "Delete resource by id",
         "operationId": "supos/ResourceDelete",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -1834,7 +3436,329 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/BatchCreateReq"
+              "type": "object",
+              "required": [
+                "list"
+              ],
+              "properties": {
+                "list": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "-",
+                      "-",
+                      "-",
+                      "name",
+                      "pathType",
+                      "alias",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
+                      "accessLevel": {
+                        "description": "Access level",
+                        "type": "string"
+                      },
+                      "addDashBoard": {
+                        "type": "boolean"
+                      },
+                      "addFlow": {
+                        "type": "boolean"
+                      },
+                      "alias": {
+                        "type": "string"
+                      },
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "createTemplate": {
+                        "type": "boolean"
+                      },
+                      "dataPath": {
+                        "type": "string"
+                      },
+                      "dataType": {
+                        "description": "Data type and fields",
+                        "type": "integer"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "expression": {
+                        "type": "string"
+                      },
+                      "extend": {
+                        "description": "Extended fields",
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "extendFieldUsed": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "fields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "name",
+                            "type"
+                          ],
+                          "properties": {
+                            "decimal": {
+                              "type": "integer"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "index": {
+                              "type": "string"
+                            },
+                            "lowerLimit": {
+                              "type": "number"
+                            },
+                            "maxLen": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "remark": {
+                              "type": "string"
+                            },
+                            "tbValueName": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "unique": {
+                              "type": "boolean"
+                            },
+                            "unit": {
+                              "type": "string"
+                            },
+                            "upperLimit": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "frequency": {
+                        "description": "Frequency for merge type",
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "initValue": {},
+                      "labelNames": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "modelAlias": {
+                        "type": "string"
+                      },
+                      "modelId": {
+                        "type": "integer"
+                      },
+                      "mountSource": {
+                        "type": "string"
+                      },
+                      "mountType": {
+                        "description": "Mount fields",
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "parentAlias": {
+                        "type": "string"
+                      },
+                      "parentDataType": {
+                        "type": "integer"
+                      },
+                      "parentId": {
+                        "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "pathType": {
+                        "type": "integer"
+                      },
+                      "protocol": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "protocolType": {
+                        "type": "string"
+                      },
+                      "refFields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "name",
+                            "type"
+                          ],
+                          "properties": {
+                            "decimal": {
+                              "type": "integer"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "index": {
+                              "type": "string"
+                            },
+                            "lowerLimit": {
+                              "type": "number"
+                            },
+                            "maxLen": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "remark": {
+                              "type": "string"
+                            },
+                            "tbValueName": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "unique": {
+                              "type": "boolean"
+                            },
+                            "unit": {
+                              "type": "string"
+                            },
+                            "upperLimit": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "refSource": {
+                        "description": "Pride specific fields",
+                        "type": "string"
+                      },
+                      "refUns": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "integer"
+                        }
+                      },
+                      "referIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      "referModelId": {
+                        "type": "string"
+                      },
+                      "referTable": {
+                        "type": "string"
+                      },
+                      "referUns": {
+                        "description": "Reference fields",
+                        "type": "string"
+                      },
+                      "refers": {
+                        "description": "Calculation fields",
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "alias",
+                            "path",
+                            "path",
+                            "field",
+                            "uts"
+                          ],
+                          "properties": {
+                            "alias": {
+                              "type": "string"
+                            },
+                            "field": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "integer"
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "uts": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      },
+                      "retainTableWhenDeleteInstance": {
+                        "type": "boolean"
+                      },
+                      "save2db": {
+                        "type": "boolean"
+                      },
+                      "strMaxLen": {
+                        "type": "integer"
+                      },
+                      "streamOptions": {
+                        "type": "object"
+                      },
+                      "subscribeEnable": {
+                        "type": "boolean"
+                      },
+                      "updateAt": {
+                        "description": "Update metadata",
+                        "type": "integer"
+                      },
+                      "valueType": {
+                        "type": "string"
+                      },
+                      "withFlags": {
+                        "description": "Flags and options",
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         ],
@@ -2554,7 +4478,234 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/UpdateUnsDto"
+              "type": "object",
+              "required": [
+                "alias"
+              ],
+              "properties": {
+                "accessLevel": {
+                  "type": "string"
+                },
+                "addDashBoard": {
+                  "type": "boolean"
+                },
+                "addFlow": {
+                  "type": "boolean"
+                },
+                "alias": {
+                  "type": "string"
+                },
+                "dataPath": {
+                  "type": "string"
+                },
+                "dataType": {
+                  "type": "integer"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "expression": {
+                  "type": "string"
+                },
+                "extend": {
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "frequency": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "initValue": {},
+                "labelNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "modelAlias": {
+                  "type": "string"
+                },
+                "modelId": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "parentAlias": {
+                  "type": "string"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "pathType": {
+                  "type": "integer"
+                },
+                "refFields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "refSource": {
+                  "type": "string"
+                },
+                "referIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "referModelId": {
+                  "type": "string"
+                },
+                "referTable": {
+                  "type": "string"
+                },
+                "referUns": {
+                  "type": "string"
+                },
+                "refers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "alias",
+                      "path",
+                      "path",
+                      "field",
+                      "uts"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "field": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "uts": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "retainTableWhenDeleteInstance": {
+                  "type": "boolean"
+                },
+                "save2db": {
+                  "type": "boolean"
+                },
+                "strMaxLen": {
+                  "type": "integer"
+                },
+                "streamOptions": {
+                  "type": "object"
+                },
+                "valueType": {
+                  "type": "string"
+                }
+              }
             }
           }
         ],
@@ -2979,9 +5130,324 @@
               "type": "object",
               "properties": {
                 "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "-",
+                      "-",
+                      "-",
+                      "name",
+                      "pathType",
+                      "alias",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
+                      "accessLevel": {
+                        "description": "Access level",
+                        "type": "string"
+                      },
+                      "addDashBoard": {
+                        "type": "boolean"
+                      },
+                      "addFlow": {
+                        "type": "boolean"
+                      },
+                      "alias": {
+                        "type": "string"
+                      },
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "createTemplate": {
+                        "type": "boolean"
+                      },
+                      "dataPath": {
+                        "type": "string"
+                      },
+                      "dataType": {
+                        "description": "Data type and fields",
+                        "type": "integer"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "expression": {
+                        "type": "string"
+                      },
+                      "extend": {
+                        "description": "Extended fields",
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "extendFieldUsed": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "fields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "name",
+                            "type"
+                          ],
+                          "properties": {
+                            "decimal": {
+                              "type": "integer"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "index": {
+                              "type": "string"
+                            },
+                            "lowerLimit": {
+                              "type": "number"
+                            },
+                            "maxLen": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "remark": {
+                              "type": "string"
+                            },
+                            "tbValueName": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "unique": {
+                              "type": "boolean"
+                            },
+                            "unit": {
+                              "type": "string"
+                            },
+                            "upperLimit": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "frequency": {
+                        "description": "Frequency for merge type",
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "initValue": {},
+                      "labelNames": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "modelAlias": {
+                        "type": "string"
+                      },
+                      "modelId": {
+                        "type": "integer"
+                      },
+                      "mountSource": {
+                        "type": "string"
+                      },
+                      "mountType": {
+                        "description": "Mount fields",
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "parentAlias": {
+                        "type": "string"
+                      },
+                      "parentDataType": {
+                        "type": "integer"
+                      },
+                      "parentId": {
+                        "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "pathType": {
+                        "type": "integer"
+                      },
+                      "protocol": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "protocolType": {
+                        "type": "string"
+                      },
+                      "refFields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "name",
+                            "type"
+                          ],
+                          "properties": {
+                            "decimal": {
+                              "type": "integer"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "index": {
+                              "type": "string"
+                            },
+                            "lowerLimit": {
+                              "type": "number"
+                            },
+                            "maxLen": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "remark": {
+                              "type": "string"
+                            },
+                            "tbValueName": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "unique": {
+                              "type": "boolean"
+                            },
+                            "unit": {
+                              "type": "string"
+                            },
+                            "upperLimit": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "refSource": {
+                        "description": "Pride specific fields",
+                        "type": "string"
+                      },
+                      "refUns": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "integer"
+                        }
+                      },
+                      "referIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      "referModelId": {
+                        "type": "string"
+                      },
+                      "referTable": {
+                        "type": "string"
+                      },
+                      "referUns": {
+                        "description": "Reference fields",
+                        "type": "string"
+                      },
+                      "refers": {
+                        "description": "Calculation fields",
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "alias",
+                            "path",
+                            "path",
+                            "field",
+                            "uts"
+                          ],
+                          "properties": {
+                            "alias": {
+                              "type": "string"
+                            },
+                            "field": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "integer"
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "uts": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      },
+                      "retainTableWhenDeleteInstance": {
+                        "type": "boolean"
+                      },
+                      "save2db": {
+                        "type": "boolean"
+                      },
+                      "strMaxLen": {
+                        "type": "integer"
+                      },
+                      "streamOptions": {
+                        "type": "object"
+                      },
+                      "subscribeEnable": {
+                        "type": "boolean"
+                      },
+                      "updateAt": {
+                        "description": "Update metadata",
+                        "type": "integer"
+                      },
+                      "valueType": {
+                        "type": "string"
+                      },
+                      "withFlags": {
+                        "description": "Flags and options",
+                        "type": "integer"
+                      }
+                    }
+                  }
                 },
                 "msg": {
                   "type": "string"
@@ -3134,9 +5600,284 @@
               "type": "object",
               "properties": {
                 "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "topic",
+                    "alias",
+                    "parentAlias",
+                    "path",
+                    "dataType",
+                    "parentDataType",
+                    "dataPath",
+                    "pathType",
+                    "fields",
+                    "createTime",
+                    "updateTime",
+                    "protocol",
+                    "modelDescription",
+                    "description",
+                    "withFlow",
+                    "withDashboard",
+                    "withSave2db",
+                    "save2db",
+                    "subscribeEnable",
+                    "expression",
+                    "showExpression",
+                    "refers",
+                    "labelList",
+                    "name",
+                    "displayName",
+                    "pathName",
+                    "modelId",
+                    "modelName",
+                    "extend",
+                    "payload",
+                    "templateName",
+                    "templateAlias",
+                    "accessLevel",
+                    "mount"
+                  ],
+                  "properties": {
+                    "accessLevel": {
+                      "type": "string"
+                    },
+                    "alias": {
+                      "type": "string"
+                    },
+                    "createTime": {
+                      "type": "integer"
+                    },
+                    "dataPath": {
+                      "type": "string"
+                    },
+                    "dataType": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "expression": {
+                      "type": "string"
+                    },
+                    "extend": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "type"
+                        ],
+                        "properties": {
+                          "decimal": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "index": {
+                            "type": "string"
+                          },
+                          "lowerLimit": {
+                            "type": "number"
+                          },
+                          "maxLen": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "remark": {
+                            "type": "string"
+                          },
+                          "tbValueName": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "unique": {
+                            "type": "boolean"
+                          },
+                          "unit": {
+                            "type": "string"
+                          },
+                          "upperLimit": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "labelList": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "labelName",
+                          "createAt",
+                          "topic",
+                          "subscribeEnable",
+                          "subscribeFrequency",
+                          "createTime",
+                          "subscribeAt"
+                        ],
+                        "properties": {
+                          "createAt": {
+                            "type": "integer"
+                          },
+                          "createTime": {
+                            "type": "integer"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "labelName": {
+                            "type": "string"
+                          },
+                          "subscribeAt": {
+                            "type": "integer"
+                          },
+                          "subscribeEnable": {
+                            "type": "boolean"
+                          },
+                          "subscribeFrequency": {
+                            "type": "string"
+                          },
+                          "topic": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "modelDescription": {
+                      "type": "string"
+                    },
+                    "modelId": {
+                      "type": "string"
+                    },
+                    "modelName": {
+                      "type": "string"
+                    },
+                    "mount": {
+                      "type": "object",
+                      "required": [
+                        "mountType",
+                        "mountSource",
+                        "displayName"
+                      ],
+                      "properties": {
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "mountSource": {
+                          "type": "string"
+                        },
+                        "mountType": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "parentAlias": {
+                      "type": "string"
+                    },
+                    "parentDataType": {
+                      "type": "integer"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "pathName": {
+                      "type": "string"
+                    },
+                    "pathType": {
+                      "type": "integer"
+                    },
+                    "payload": {
+                      "type": "string"
+                    },
+                    "protocol": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "refers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "alias",
+                          "path",
+                          "path",
+                          "field",
+                          "uts"
+                        ],
+                        "properties": {
+                          "alias": {
+                            "type": "string"
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "uts": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "save2db": {
+                      "type": "boolean"
+                    },
+                    "showExpression": {
+                      "type": "string"
+                    },
+                    "subscribeEnable": {
+                      "type": "boolean"
+                    },
+                    "templateAlias": {
+                      "type": "string"
+                    },
+                    "templateName": {
+                      "type": "string"
+                    },
+                    "topic": {
+                      "type": "string"
+                    },
+                    "updateTime": {
+                      "type": "integer"
+                    },
+                    "withDashboard": {
+                      "type": "boolean"
+                    },
+                    "withFlow": {
+                      "type": "boolean"
+                    },
+                    "withSave2db": {
+                      "type": "boolean"
+                    }
+                  }
                 },
                 "msg": {
                   "type": "string"
@@ -3618,9 +6359,156 @@
               "type": "object",
               "properties": {
                 "code": {
-                  "type": "integer",
-                  "default": "200",
-                  "title": "返回code"
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "topic",
+                    "subscribeEnable",
+                    "subscribeFrequency",
+                    "alias",
+                    "parentAlias",
+                    "path",
+                    "dataType",
+                    "fields",
+                    "createTime",
+                    "updateTime",
+                    "description",
+                    "name",
+                    "displayName",
+                    "pathName",
+                    "modelId",
+                    "modelName",
+                    "extend",
+                    "templateAlias",
+                    "mount"
+                  ],
+                  "properties": {
+                    "alias": {
+                      "type": "string"
+                    },
+                    "createTime": {
+                      "type": "integer"
+                    },
+                    "dataType": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "type": "string"
+                    },
+                    "extend": {
+                      "type": "object",
+                      "additionalProperties": {}
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "type"
+                        ],
+                        "properties": {
+                          "decimal": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "index": {
+                            "type": "string"
+                          },
+                          "lowerLimit": {
+                            "type": "number"
+                          },
+                          "maxLen": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "remark": {
+                            "type": "string"
+                          },
+                          "tbValueName": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "unique": {
+                            "type": "boolean"
+                          },
+                          "unit": {
+                            "type": "string"
+                          },
+                          "upperLimit": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "modelId": {
+                      "type": "string"
+                    },
+                    "modelName": {
+                      "type": "string"
+                    },
+                    "mount": {
+                      "type": "object",
+                      "required": [
+                        "mountType",
+                        "mountSource",
+                        "displayName"
+                      ],
+                      "properties": {
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "mountSource": {
+                          "type": "string"
+                        },
+                        "mountType": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "parentAlias": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "pathName": {
+                      "type": "string"
+                    },
+                    "subscribeEnable": {
+                      "type": "boolean"
+                    },
+                    "subscribeFrequency": {
+                      "type": "string"
+                    },
+                    "templateAlias": {
+                      "type": "string"
+                    },
+                    "topic": {
+                      "type": "string"
+                    },
+                    "updateTime": {
+                      "type": "integer"
+                    }
+                  }
                 },
                 "msg": {
                   "type": "string"
@@ -3648,7 +6536,318 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/CreateTopicDto"
+              "type": "object",
+              "required": [
+                "-",
+                "-",
+                "-",
+                "name",
+                "pathType",
+                "alias",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-",
+                "-"
+              ],
+              "properties": {
+                "-": {
+                  "type": "integer"
+                },
+                "accessLevel": {
+                  "description": "Access level",
+                  "type": "string"
+                },
+                "addDashBoard": {
+                  "type": "boolean"
+                },
+                "addFlow": {
+                  "type": "boolean"
+                },
+                "alias": {
+                  "type": "string"
+                },
+                "createAt": {
+                  "type": "integer"
+                },
+                "createTemplate": {
+                  "type": "boolean"
+                },
+                "dataPath": {
+                  "type": "string"
+                },
+                "dataType": {
+                  "description": "Data type and fields",
+                  "type": "integer"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "expression": {
+                  "type": "string"
+                },
+                "extend": {
+                  "description": "Extended fields",
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "extendFieldUsed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "frequency": {
+                  "description": "Frequency for merge type",
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "initValue": {},
+                "labelNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "modelAlias": {
+                  "type": "string"
+                },
+                "modelId": {
+                  "type": "integer"
+                },
+                "mountSource": {
+                  "type": "string"
+                },
+                "mountType": {
+                  "description": "Mount fields",
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "parentAlias": {
+                  "type": "string"
+                },
+                "parentDataType": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "pathType": {
+                  "type": "integer"
+                },
+                "protocol": {
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "protocolType": {
+                  "type": "string"
+                },
+                "refFields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "refSource": {
+                  "description": "Pride specific fields",
+                  "type": "string"
+                },
+                "refUns": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  }
+                },
+                "referIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "referModelId": {
+                  "type": "string"
+                },
+                "referTable": {
+                  "type": "string"
+                },
+                "referUns": {
+                  "description": "Reference fields",
+                  "type": "string"
+                },
+                "refers": {
+                  "description": "Calculation fields",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "alias",
+                      "path",
+                      "path",
+                      "field",
+                      "uts"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "field": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "uts": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "retainTableWhenDeleteInstance": {
+                  "type": "boolean"
+                },
+                "save2db": {
+                  "type": "boolean"
+                },
+                "strMaxLen": {
+                  "type": "integer"
+                },
+                "streamOptions": {
+                  "type": "object"
+                },
+                "subscribeEnable": {
+                  "type": "boolean"
+                },
+                "updateAt": {
+                  "description": "Update metadata",
+                  "type": "integer"
+                },
+                "valueType": {
+                  "type": "string"
+                },
+                "withFlags": {
+                  "description": "Flags and options",
+                  "type": "integer"
+                }
+              }
             }
           }
         ],
@@ -4987,6 +8186,9 @@
             "schema": {
               "type": "object",
               "properties": {
+                "code": {
+                  "type": "integer"
+                },
                 "data": {
                   "type": "array",
                   "items": {
@@ -5176,78 +8378,130 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/RoleDetail"
+                "type": "object",
+                "required": [
+                  "roleId",
+                  "roleName"
+                ],
+                "properties": {
+                  "denyResourceList": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "uri"
+                      ],
+                      "properties": {
+                        "methods": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "policyId": {
+                          "type": "string"
+                        },
+                        "resourceId": {
+                          "type": "string"
+                        },
+                        "uri": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "resourceList": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "uri"
+                      ],
+                      "properties": {
+                        "methods": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "policyId": {
+                          "type": "string"
+                        },
+                        "resourceId": {
+                          "type": "string"
+                        },
+                        "uri": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "roleId": {
+                    "type": "string"
+                  },
+                  "roleName": {
+                    "type": "string"
+                  }
+                }
               },
               "properties": {
-                "list": {
+                "denyResourceList": {
                   "type": "array",
                   "items": {
                     "type": "object",
                     "required": [
-                      "roleId",
-                      "roleName"
+                      "uri"
                     ],
                     "properties": {
-                      "denyResourceList": {
+                      "methods": {
                         "type": "array",
                         "items": {
-                          "type": "object",
-                          "required": [
-                            "uri"
-                          ],
-                          "properties": {
-                            "methods": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "policyId": {
-                              "type": "string"
-                            },
-                            "resourceId": {
-                              "type": "string"
-                            },
-                            "uri": {
-                              "type": "string"
-                            }
-                          }
+                          "type": "string"
                         }
                       },
-                      "resourceList": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "required": [
-                            "uri"
-                          ],
-                          "properties": {
-                            "methods": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            },
-                            "policyId": {
-                              "type": "string"
-                            },
-                            "resourceId": {
-                              "type": "string"
-                            },
-                            "uri": {
-                              "type": "string"
-                            }
-                          }
-                        }
-                      },
-                      "roleId": {
+                      "policyId": {
                         "type": "string"
                       },
-                      "roleName": {
+                      "resourceId": {
+                        "type": "string"
+                      },
+                      "uri": {
                         "type": "string"
                       }
                     }
                   }
+                },
+                "resourceList": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "uri"
+                    ],
+                    "properties": {
+                      "methods": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "policyId": {
+                        "type": "string"
+                      },
+                      "resourceId": {
+                        "type": "string"
+                      },
+                      "uri": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "roleId": {
+                  "type": "string"
+                },
+                "roleName": {
+                  "type": "string"
                 }
               }
             }
@@ -5601,6 +8855,124 @@
         }
       }
     },
+    "/service-api/supos/flow/by/aliases": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Batch query flows by UNS aliases",
+        "operationId": "supos/Sourceflow/ServiceBatchSourceFlowByAliases",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "aliases"
+              ],
+              "properties": {
+                "aliases": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "flowId": {
+                        "type": "string"
+                      },
+                      "flowName": {
+                        "type": "string"
+                      },
+                      "flowStatus": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "template": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service-api/supos/proxy/event/flows": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Proxy Node-RED event /flows endpoint using cookie scoped id",
+        "operationId": "supos/Eventflow/ProxyProxyEventFlows",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/service-api/supos/proxy/flows": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Proxy Node-RED /flows endpoint using cookie scoped id",
+        "operationId": "supos/Sourceflow/ServiceProxySourceFlows",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/test/nodered": {
       "get": {
         "produces": [
@@ -5622,7 +8994,7 @@
       }
     }
   },
-  "x-date": "2025-10-29 14:53:20",
+  "x-date": "2025-10-30 14:35:23",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

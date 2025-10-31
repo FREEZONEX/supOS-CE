@@ -23,3 +23,11 @@ OAuthKeyCloak:
    IssuerURI: http://office.unibutton.com:11488/keycloak/home/auth
    # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
    RefreshTokenTime: "60"
+
+NodeRed:
+  Source:
+    Host: ${NODE_RED_HOST}
+    Port: ${NODE_RED_PORT}
+  Event:
+    Host: "localhost"
+    Port: "1889"

@@ -2,6 +2,7 @@ package config
 
 import (
 	"backend/share/clients"
+	"backend/share/clients/nodered"
 
 	"gitee.com/unitedrhino/share/conf"
 	"github.com/zeromicro/go-zero/core/stores/cache"
@@ -14,9 +15,8 @@ type Config struct {
 	DatabaseSchema string `json:",default=supos,env=dbSchema"` //
 	//Event      conf.EventConf
 	CacheRedis  cache.ClusterConf
-	KeycloakDSN string `json:",optional,env=KEYCLOAK_DSN,default=postgresql://postgresql:5432/keycloak" mapstructure:"KeycloakDSN"`
+	KeycloakDSN string `json:",optional,env=KEYCLOAK_DSN,default=postgresql://postgresql:5432/keycloak" `
 
-	OAuthKeyCloak clients.KeycloakConfig `json:",optional" mapstructure:"OAuthKeyCloak"`
-	//DevLink    conf.DevLinkConf //和设备交互的设置
-	//OssConf    conf.OssConf     `json:",optional"`
+	OAuthKeyCloak clients.KeycloakConfig `json:",optional" `
+	NodeRed       nodered.NodeRedConfig  `json:",optional" `
 }

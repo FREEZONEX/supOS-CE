@@ -236,6 +236,63 @@ type EmptyFolderResp struct {
 	Data []*CreateTopicDto `json:"data"`
 }
 
+type EventFlowCopyReq struct {
+	SourceID    string `json:"sourceId"`
+	FlowName    string `json:"flowName"`
+	Description string `json:"description,optional"`
+	Template    string `json:"template,optional"`
+}
+
+type EventFlowCreateReq struct {
+	FlowName    string `json:"flowName"`
+	Description string `json:"description,optional"`
+	Template    string `json:"template,optional"`
+}
+
+type EventFlowDeleteReq struct {
+	ID string `form:"id"`
+}
+
+type EventFlowDeployReq struct {
+	ID    string                   `json:"id"`
+	Flows []map[string]interface{} `json:"flows,optional"`
+}
+
+type EventFlowInfo struct {
+	ID          string `json:"id,optional"`
+	FlowName    string `json:"flowName,optional"`
+	FlowID      string `json:"flowId,optional"`
+	Description string `json:"description,optional"`
+	FlowStatus  string `json:"flowStatus,optional"`
+	Template    string `json:"template,optional"`
+}
+
+type EventFlowListQuery struct {
+	Keyword  string `form:"k,optional"`
+	PageNo   int64  `form:"pageNo,optional,default=1"`
+	PageSize int64  `form:"pageSize,optional,default=10"`
+}
+
+type EventFlowPageResult struct {
+	Code     int             `json:"code"`
+	Msg      string          `json:"msg,optional"`
+	PageNo   int64           `json:"pageNo"`
+	PageSize int64           `json:"pageSize"`
+	Total    int64           `json:"total"`
+	Data     []EventFlowInfo `json:"data,optional"`
+}
+
+type EventFlowSaveReq struct {
+	ID    string                   `json:"id"`
+	Flows []map[string]interface{} `json:"flows,optional"`
+}
+
+type EventFlowUpdateReq struct {
+	ID          string `json:"id"`
+	FlowName    string `json:"flowName"`
+	Description string `json:"description,optional"`
+}
+
 type Field struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
@@ -648,6 +705,86 @@ type SimpleRouteVO struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 	Url  string `json:"url"`
+}
+
+type SourceFlowAliasQuery struct {
+	Alias string `form:"alias"`
+}
+
+type SourceFlowBatchAliasReq struct {
+	Aliases []string `json:"aliases"`
+}
+
+type SourceFlowCopyReq struct {
+	SourceID    string `json:"sourceId"`
+	FlowName    string `json:"flowName"`
+	Description string `json:"description,optional"`
+	Template    string `json:"template,optional"`
+}
+
+type SourceFlowCreateReq struct {
+	FlowName    string `json:"flowName"`
+	Description string `json:"description,optional"`
+	Template    string `json:"template,optional"`
+}
+
+type SourceFlowDeleteReq struct {
+	ID string `form:"id"`
+}
+
+type SourceFlowDeployReq struct {
+	ID    string                   `json:"id"`
+	Flows []map[string]interface{} `json:"flows,optional"`
+}
+
+type SourceFlowDeployResult struct {
+	FlowID  string `json:"flowId,optional"`
+	Version string `json:"version,optional"`
+}
+
+type SourceFlowInfo struct {
+	ID          string `json:"id,optional"`
+	FlowName    string `json:"flowName,optional"`
+	FlowID      string `json:"flowId,optional"`
+	Description string `json:"description,optional"`
+	FlowStatus  string `json:"flowStatus,optional"`
+	Template    string `json:"template,optional"`
+}
+
+type SourceFlowListQuery struct {
+	Keyword  string `form:"k,optional"`
+	PageNo   int64  `form:"pageNo,optional,default=1"`
+	PageSize int64  `form:"pageSize,optional,default=10"`
+}
+
+type SourceFlowListResult struct {
+	Code int              `json:"code"`
+	Msg  string           `json:"msg,optional"`
+	Data []SourceFlowInfo `json:"data,optional"`
+}
+
+type SourceFlowMockReq struct {
+	UnsAlias string `json:"unsAlias"`
+	Path     string `json:"path"`
+}
+
+type SourceFlowPageResult struct {
+	Code     int              `json:"code"`
+	PageNo   int64            `json:"pageNo"`
+	PageSize int64            `json:"pageSize"`
+	Total    int64            `json:"total"`
+	Data     []SourceFlowInfo `json:"data,optional"`
+}
+
+type SourceFlowSaveReq struct {
+	ID    string                   `json:"id"`
+	Flows []map[string]interface{} `json:"flows,optional"`
+}
+
+type SourceFlowUpdateReq struct {
+	ID          string `json:"id"`
+	FlowName    string `json:"flowName"`
+	Description string `json:"description,optional"`
 }
 
 type StreamOptions struct {

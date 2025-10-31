@@ -37,11 +37,7 @@ func GetTag(nodeID, nodeRedHost, nodeRedPort string) (string, error) {
 // SaveTags saves tags to Node-RED.
 func SaveTags(nodeID string, tags [][]string, nodeRedHost, nodeRedPort string) error {
 	var url string
-	if nodeRedPort != "" {
-		url = fmt.Sprintf("http://%s:%s/nodered-api/save/tags", nodeRedHost, nodeRedPort)
-	} else {
-		url = "http://100.100.100.22:33893/nodered-api/save/tags"
-	}
+	url = fmt.Sprintf("http://%s:%s/nodered-api/save/tags", nodeRedHost, nodeRedPort)
 
 	requestBody := map[string]any{
 		"nodeId": nodeID,

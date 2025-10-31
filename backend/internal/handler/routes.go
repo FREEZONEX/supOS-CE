@@ -8,6 +8,7 @@ import (
 
 	suposauth "backend/internal/handler/supos/auth"
 	suposdevtools "backend/internal/handler/supos/devtools"
+	suposeventflow "backend/internal/handler/supos/eventflow"
 	suposexample "backend/internal/handler/supos/example"
 	suposglobal "backend/internal/handler/supos/global"
 	suposkong "backend/internal/handler/supos/kong"
@@ -15,6 +16,8 @@ import (
 	suposmount "backend/internal/handler/supos/mount"
 	suposnodered "backend/internal/handler/supos/nodered"
 	suposresource "backend/internal/handler/supos/resource"
+	supossourceflow "backend/internal/handler/supos/sourceflow"
+	supossourceflowservice_api "backend/internal/handler/supos/sourceflow/service_api"
 	suposunsalarm "backend/internal/handler/supos/uns/alarm"
 	suposunsdashboard "backend/internal/handler/supos/uns/dashboard"
 	suposunsexternal "backend/internal/handler/supos/uns/external"
@@ -74,6 +77,69 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/dev"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// Create a new event flow
+					Method:  http.MethodPost,
+					Path:    "/event/flow",
+					Handler: suposeventflow.CreateEventFlowHandler(serverCtx),
+				},
+				{
+					// Update event flow metadata
+					Method:  http.MethodPut,
+					Path:    "/event/flow",
+					Handler: suposeventflow.UpdateEventFlowHandler(serverCtx),
+				},
+				{
+					// Delete an event flow by id
+					Method:  http.MethodDelete,
+					Path:    "/event/flow",
+					Handler: suposeventflow.DeleteEventFlowHandler(serverCtx),
+				},
+				{
+					// Copy an existing event flow
+					Method:  http.MethodPost,
+					Path:    "/event/flow/copy",
+					Handler: suposeventflow.CopyEventFlowHandler(serverCtx),
+				},
+				{
+					// Deploy an event flow
+					Method:  http.MethodPost,
+					Path:    "/event/flow/deploy",
+					Handler: suposeventflow.DeployEventFlowHandler(serverCtx),
+				},
+				{
+					// Persist Node-RED event flow JSON
+					Method:  http.MethodPut,
+					Path:    "/event/flow/save",
+					Handler: suposeventflow.SaveEventFlowJsonHandler(serverCtx),
+				},
+				{
+					// Query current event flow version
+					Method:  http.MethodGet,
+					Path:    "/event/flow/version",
+					Handler: suposeventflow.GetEventFlowVersionHandler(serverCtx),
+				},
+				{
+					// List event flows with optional fuzzy search
+					Method:  http.MethodGet,
+					Path:    "/event/flows",
+					Handler: suposeventflow.ListEventFlowsHandler(serverCtx),
+				},
+				{
+					// Proxy Node-RED event /flows endpoint using cookie scoped id
+					Method:  http.MethodGet,
+					Path:    "/proxy/event/flows",
+					Handler: suposeventflow.ProxyEventFlowsHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos"),
 	)
 
 	server.AddRoutes(
@@ -265,6 +331,93 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/resource"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// Create a new source flow
+					Method:  http.MethodPost,
+					Path:    "/flow",
+					Handler: supossourceflow.CreateSourceFlowHandler(serverCtx),
+				},
+				{
+					// Update flow metadata
+					Method:  http.MethodPut,
+					Path:    "/flow",
+					Handler: supossourceflow.UpdateSourceFlowHandler(serverCtx),
+				},
+				{
+					// Delete a source flow by id
+					Method:  http.MethodDelete,
+					Path:    "/flow",
+					Handler: supossourceflow.DeleteSourceFlowHandler(serverCtx),
+				},
+				{
+					// Copy an existing source flow
+					Method:  http.MethodPost,
+					Path:    "/flow/copy",
+					Handler: supossourceflow.CopySourceFlowHandler(serverCtx),
+				},
+				{
+					// Create a mock flow from UNS path
+					Method:  http.MethodPost,
+					Path:    "/flow/create",
+					Handler: supossourceflow.CreateSourceMockFlowHandler(serverCtx),
+				},
+				{
+					// Deploy a source flow
+					Method:  http.MethodPost,
+					Path:    "/flow/deploy",
+					Handler: supossourceflow.DeploySourceFlowHandler(serverCtx),
+				},
+				{
+					// Persist Node-RED flow JSON
+					Method:  http.MethodPut,
+					Path:    "/flow/save",
+					Handler: supossourceflow.SaveSourceFlowJsonHandler(serverCtx),
+				},
+				{
+					// Fetch flow information by UNS alias
+					Method:  http.MethodGet,
+					Path:    "/flow/uns/alias",
+					Handler: supossourceflow.GetSourceFlowByAliasHandler(serverCtx),
+				},
+				{
+					// Query current Node-RED flow version
+					Method:  http.MethodGet,
+					Path:    "/flow/version",
+					Handler: supossourceflow.GetSourceFlowVersionHandler(serverCtx),
+				},
+				{
+					// List source flows with optional fuzzy search
+					Method:  http.MethodGet,
+					Path:    "/flows",
+					Handler: supossourceflow.ListSourceFlowsHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// Batch query flows by UNS aliases
+				Method:  http.MethodPost,
+				Path:    "/flow/by/aliases",
+				Handler: supossourceflowservice_api.BatchSourceFlowByAliasesHandler(serverCtx),
+			},
+			{
+				// Proxy Node-RED /flows endpoint using cookie scoped id
+				Method:  http.MethodGet,
+				Path:    "/proxy/flows",
+				Handler: supossourceflowservice_api.ProxySourceFlowsHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/service-api/supos"),
 	)
 
 	server.AddRoutes(
