@@ -1,5 +1,6 @@
 import { config as envConfig } from 'dotenv';
 
+console.log('process', process.env);
 // 加载环境
 envConfig();
 
