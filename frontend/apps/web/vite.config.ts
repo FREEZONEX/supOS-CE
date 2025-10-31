@@ -62,6 +62,16 @@ export default defineConfig({
     },
   },
   build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router'],
+          antd: ['antd', '@ant-design/icons'],
+          charts: ['@antv/x6'],
+          utils: ['ahooks', 'lodash-es', 'dayjs'],
+        },
+      },
+    },
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
   },
 });
