@@ -32,6 +32,7 @@ type NoderedSourceFlowFilter struct {
 	Name     string
 	NameLike string
 	// FlowType int32
+	FlowID string
 }
 
 func (p NoderedSourceFlowRepo) fmtFilter(ctx context.Context, f NoderedSourceFlowFilter) *gorm.DB {
@@ -46,9 +47,9 @@ func (p NoderedSourceFlowRepo) fmtFilter(ctx context.Context, f NoderedSourceFlo
 	if f.NameLike != "" {
 		db = db.Where("flow_name LIKE ?", "%"+f.NameLike+"%")
 	}
-	// if f.FlowType != 0 {
-	// 	db = db.Where("flow_type = ?", f.FlowType)
-	// }
+	if f.FlowID != "" {
+		db = db.Where("flow_id = ?", f.FlowID)
+	}
 	return db
 }
 

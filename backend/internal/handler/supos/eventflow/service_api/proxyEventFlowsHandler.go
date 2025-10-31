@@ -1,17 +1,18 @@
 // Code scaffolded by goctl. Safe to edit.
 // goctl 1.9.2
 
-package eventflow
+package service_api
 
 import (
 	"net/http"
 
 	"backend/internal/logic/supos/eventflow"
 	"backend/internal/svc"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// Proxy Node-RED event /flows endpoint using cookie scoped id
+// Proxy Node-RED /flows endpoint using cookie scoped id
 func ProxyEventFlowsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookieID := ""

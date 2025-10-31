@@ -9,6 +9,7 @@ import (
 	suposauth "backend/internal/handler/supos/auth"
 	suposdevtools "backend/internal/handler/supos/devtools"
 	suposeventflow "backend/internal/handler/supos/eventflow"
+	suposeventflowservice_api "backend/internal/handler/supos/eventflow/service_api"
 	suposexample "backend/internal/handler/supos/example"
 	suposglobal "backend/internal/handler/supos/global"
 	suposkong "backend/internal/handler/supos/kong"
@@ -131,15 +132,21 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/event/flows",
 					Handler: suposeventflow.ListEventFlowsHandler(serverCtx),
 				},
-				{
-					// Proxy Node-RED event /flows endpoint using cookie scoped id
-					Method:  http.MethodGet,
-					Path:    "/proxy/event/flows",
-					Handler: suposeventflow.ProxyEventFlowsHandler(serverCtx),
-				},
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// Proxy Node-RED /flows endpoint using cookie scoped id
+				Method:  http.MethodGet,
+				Path:    "/proxy/event/flows",
+				Handler: suposeventflowservice_api.ProxyEventFlowsHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/service-api/supos"),
 	)
 
 	server.AddRoutes(

@@ -171,14 +171,14 @@ func DeployFlow[T relationDB.FlowEntity](
 		}
 	}
 
-	merged := append(flowNodes, globalNodes...)
-	newFlowData, err := json.Marshal(merged)
-	if err != nil {
-		return "", errors.System.WithMsg(err.Error())
-	}
+	// merged := append(flowNodes, globalNodes...)
+	// newFlowData, err := json.Marshal(merged)
+	// if err != nil {
+	// 	return "", errors.System.WithMsg(err.Error())
+	// }
 
 	rec.SetFlowID(flowID)
-	rec.SetFlowData(string(newFlowData))
+	rec.SetFlowData("")
 	rec.SetFlowStatus(FlowStatusRunning)
 
 	if err := repo.Update(ctx, rec); err != nil {

@@ -218,12 +218,21 @@ func buildContainerMap() (map[string]*sysconfig.ContainerInfo, error) {
 }
 
 func loadComposeFile() ([]byte, error) {
-	if custom := "/data/system/"; custom != "" {
-		data, err := os.ReadFile(custom)
+	candidates := []string{
+		// strings.TrimSpace(os.Getenv("SYS_OS_COMPOSE_PATH")),
+		"/data/system",
+	}
+	for _, candidate := range candidates {
+		if candidate == "" {
+			continue
+		}
+		data, err := readComposeCandidate(candidate)
 		if err != nil {
 			return nil, err
 		}
-		return data, nil
+		if len(data) > 0 {
+			return data, nil
+		}
 	}
 
 	if runtimeutil.IsLocalEnv() {
@@ -242,27 +251,11 @@ func loadComposeFile() ([]byte, error) {
 	}
 
 	systemDir := filepath.Join(fileutil.GetFileRootPath(), strings.Trim(constants.SystemRoot, "/"))
-	entries, err := os.ReadDir(systemDir)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		name := entry.Name()
-		if strings.HasPrefix(name, defaultComposePattern) {
-			return os.ReadFile(filepath.Join(systemDir, name))
-		}
-	}
-	return nil, nil
+	return readComposeCandidate(systemDir)
 }
 
 func loadActiveServicesLine() (string, error) {
-	if custom := strings.TrimSpace(os.Getenv("SYS_OS_ACTIVE_SERVICES_FILE")); custom != "" {
+	if custom := strings.TrimSpace("/data/system/active-services.txt"); custom != "" {
 		data, err := os.ReadFile(custom)
 		if err != nil {
 			return "", err
@@ -295,6 +288,38 @@ func loadActiveServicesLine() (string, error) {
 		return "", err
 	}
 	return firstLine(data), nil
+}
+
+func readComposeCandidate(target string) ([]byte, error) {
+	target = strings.TrimSpace(target)
+	if target == "" {
+		return nil, nil
+	}
+
+	info, err := os.Stat(target)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if info.IsDir() {
+		entries, err := os.ReadDir(target)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			name := entry.Name()
+			if strings.HasPrefix(name, defaultComposePattern) {
+				return os.ReadFile(filepath.Join(target, name))
+			}
+		}
+		return nil, nil
+	}
+	return os.ReadFile(target)
 }
 
 func firstLine(data []byte) string {

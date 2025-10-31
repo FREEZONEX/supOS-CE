@@ -44,8 +44,14 @@ service backend {
     @doc "Delete an event flow by id"
     @handler deleteEventFlow
     delete /event/flow (EventFlowDeleteReq) returns ()
+}
 
-    @doc "Proxy Node-RED event /flows endpoint using cookie scoped id"
+@server(
+    group: supos/eventflow/service_api
+    prefix: /service-api/supos
+)
+service backend {
+    @doc "Proxy Node-RED /flows endpoint using cookie scoped id"
     @handler proxyEventFlows
     get /proxy/event/flows returns (string)
 }

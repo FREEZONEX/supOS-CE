@@ -54,8 +54,11 @@ OAuthKeyCloak:
     RefreshTokenTime: "60"
 NodeRed:
   Source:
-    Host: ${NODE_RED_HOST}
-    Port: ${NODE_RED_PORT}
+    Host: nodered
+    Port: "1880"
+  Event:
+    Host: eventflow
+    Port: "1889"
 Kong:
   Host: 100.100.100.20
   Port: 8001
