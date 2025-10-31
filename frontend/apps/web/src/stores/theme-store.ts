@@ -1,5 +1,5 @@
 import { createWithEqualityFn, type UseBoundStoreWithEqualityFn } from 'zustand/traditional';
-import type { StoreApi } from 'zustand/index';
+import type { StoreApi } from 'zustand';
 import { shallow } from 'zustand/vanilla/shallow';
 import { storageOpt } from '@/utils';
 import {
@@ -78,7 +78,7 @@ const setThemeRoot = (theme: string, primaryColor: string) => {
  * primary-color: polar-blue,polar-green
  * theme light dark  darkDimmed
  * */
-const setCha2dbTheme = (theme: string = ThemeType.Light, primaryColor: string = PrimaryColorType.Blue) => {
+const setCha2dbTheme = (theme: string = ThemeType.Light, primaryColor: string = PrimaryColorType.Chartreuse) => {
   const _primaryColor = primaryColor === PrimaryColorType.Blue ? 'polar-blue' : 'polar-green';
   storageOpt.setOrigin('theme', theme);
   storageOpt.setOrigin('primary-color', _primaryColor);
@@ -86,7 +86,7 @@ const setCha2dbTheme = (theme: string = ThemeType.Light, primaryColor: string = 
 
 export const useThemeStore: UseBoundStoreWithEqualityFn<StoreApi<TThemeStore>> = createWithEqualityFn(() => {
   const theme = storageOpt.getOrigin(SUPOS_THEME) || ThemeType.Light;
-  const primaryColor = storageOpt.getOrigin(SUPOS_PRIMARY_COLOR) || PrimaryColorType.Blue;
+  const primaryColor = storageOpt.getOrigin(SUPOS_PRIMARY_COLOR) || PrimaryColorType.Chartreuse;
   const menuType = storageOpt.get(SUPOS_STORAGE_MENU_TYPE) || MenuTypeEnum.Top;
   setCha2dbTheme(theme);
   // 主题初始化
@@ -135,7 +135,7 @@ export const setTheme = (newTheme: ThemeType = ThemeType.Light) => {
 };
 
 // 设置主题色
-export const setPrimaryColor = (newPrimaryColor: PrimaryColorType = PrimaryColorType.Blue) => {
+export const setPrimaryColor = (newPrimaryColor: PrimaryColorType = PrimaryColorType.Chartreuse) => {
   const oldTheme = useThemeStore.getState().theme;
   storageOpt.setOrigin(SUPOS_PRIMARY_COLOR, newPrimaryColor);
   useThemeStore.setState({

@@ -1,7 +1,7 @@
 import { Image as AntImage, type ImageProps } from 'antd';
 import { type FC, useEffect, useState } from 'react';
-import logoBlackWhite from '@/assets/custom-nav/logo-white.png';
-import logoBlack from '@/assets/custom-nav/logo-black.png';
+import logoBlackWhite from '@/assets/custom-nav/logo-white.svg';
+import logoBlack from '@/assets/custom-nav/logo-black.svg';
 import LoadingDots from '@/layout/custom-menu-header/components/LoadingDots.tsx';
 import { MENU_TARGET_PATH, STORAGE_PATH } from '@/common-types/constans';
 import { checkImageExists, getBaseUrl } from '@/utils/url-util';
@@ -22,7 +22,7 @@ const LogoImg: FC<IconImgProps> = ({ isDark, onClick, ...props }) => {
       const baseUrl = `${getBaseUrl()}${STORAGE_PATH}${MENU_TARGET_PATH}`;
       const themeLogoUrl = systemInfo?.themeConfig?.navigationIcon
         ? `${getBaseUrl()}${systemInfo.themeConfig.navigationIcon}?t=${new Date().getTime()}`
-        : `${baseUrl}/logo-${isDark ? 'dark' : 'light'}.png`;
+        : `${baseUrl}/logo-${isDark ? 'dark' : 'light'}.svg`;
       const themeExists = await checkImageExists(themeLogoUrl);
       if (themeExists) {
         setImageSrc(themeLogoUrl); // 如果主题图片存在
@@ -39,21 +39,13 @@ const LogoImg: FC<IconImgProps> = ({ isDark, onClick, ...props }) => {
         cursor: 'pointer',
         minWidth: 60,
         overflow: 'hidden',
+        marginRight: 8,
       }}
     >
       {!imageSrc ? (
         <LoadingDots color={isDark ? 'white' : '#333'} />
       ) : (
-        <AntImage
-          src={imageSrc}
-          preview={false}
-          fallback={isDark ? logoBlackWhite : logoBlack}
-          style={{
-            height: 20,
-            width: 50.5,
-          }}
-          {...props}
-        />
+        <AntImage src={imageSrc} preview={false} fallback={isDark ? logoBlackWhite : logoBlack} {...props} />
       )}
     </div>
   );
