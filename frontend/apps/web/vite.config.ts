@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import legacy from '@vitejs/plugin-legacy';
-import { federation } from '@module-federation/vite';
+// import { federation } from '@module-federation/vite';
 import path from 'path';
 import packageJson from './package.json';
 import { getDevInfo, getProxy, logBuildTime, logDevInfo } from './config/supos.dev';
-import { mfConfig } from './config/mfConfig.ts';
+// import { mfConfig } from './config/mfConfig.ts';
 
 const devInfo = getDevInfo();
 const proxy = getProxy(devInfo.API_PROXY_URL, devInfo.SINGLE_API_PROXY_LIST, devInfo.SINGLE_API_PROXY_URL);
@@ -28,7 +28,7 @@ export default defineConfig({
       targets: ['chrome>=89', 'safari>=15', 'firefox>=89', 'edge>=89'],
       modernPolyfills: true,
     }),
-    federation(mfConfig),
+    // federation(mfConfig),
   ],
   resolve: {
     alias: {
@@ -48,6 +48,7 @@ export default defineConfig({
     proxy: {
       ...proxy,
       // '/copilotkit': 'http://localhost:4000',
+      // '/open-api': 'http://localhost:4000',
       ...(devInfo.VITE_ASSET_PREFIX !== '1'
         ? {
             '/plugin/': {

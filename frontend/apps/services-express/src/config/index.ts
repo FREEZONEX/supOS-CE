@@ -19,7 +19,7 @@ export const config = {
   anthropicAiKey: process.env.LLM_API_KEY || 'anthropicAiKey',
   anthropicAiModel: process.env.LLM_MODEL || 'claude-3-7-sonnet-thinking',
   tongyiAiKey: process.env.LLM_API_KEY || 'tongyiAiKey',
-  tongyiModal: process.env.LLM_MODEL || 'qwen-plus',
+  tongyiModal: process.env.LLM_MODEL || 'gpt-4o',
   tongyiBaseurl: process.env.LLM_BASEURL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
   agentDeploymentUrl: process.env.AGENT_DEPLOYMENT_URL || 'http://localhost:8123',
   langsmithAiKey: process.env.LANGSMITH_API_KEY || 'langsmithAiKey',
