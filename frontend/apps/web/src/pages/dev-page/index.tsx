@@ -6,6 +6,7 @@ import { Flex } from 'antd';
 
 const DevPage = () => {
   useEffect(() => {}, []);
+  console.log('ces');
   return (
     <ComLayout>
       <ComContent title="test" hasBack={false}>
