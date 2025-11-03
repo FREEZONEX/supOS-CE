@@ -103,7 +103,7 @@ func (t *TopicDefinition) GetCompileExpression() any {
 		return nil
 	}
 
-	calculationExpr := t.CreateTopicDto.Expression
+	calculationExpr := *t.CreateTopicDto.Expression
 	if calculationExpr != "" && t.CreateTopicDto.CompileExpression == nil {
 		compiled, _ := expressionutil.CompileExpression(calculationExpr)
 		t.CreateTopicDto.CompileExpression = compiled
