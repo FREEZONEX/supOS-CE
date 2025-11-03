@@ -30,7 +30,7 @@ func NewListEventFlowsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Li
 	}
 }
 
-func (l *ListEventFlowsLogic) ListEventFlows(req *types.EventFlowListQuery) (*types.EventFlowPageResult, error) {
+func (l *ListEventFlowsLogic) ListEventFlows(req *types.EventFlowListQuery) (*types.SourceFlowPageResult, error) {
 	if req == nil {
 		return nil, errors.Parameter.WithMsg("request is nil")
 	}
@@ -46,23 +46,5 @@ func (l *ListEventFlowsLogic) ListEventFlows(req *types.EventFlowListQuery) (*ty
 	if err != nil {
 		return nil, err
 	}
-	items := make([]types.EventFlowInfo, 0, len(srcResp.Data))
-	for _, v := range srcResp.Data {
-		items = append(items, types.EventFlowInfo{
-			ID:          v.ID,
-			FlowName:    v.FlowName,
-			FlowID:      v.FlowID,
-			Description: v.Description,
-			FlowStatus:  v.FlowStatus,
-			Template:    v.Template,
-			Mark:        v.Mark,
-		})
-	}
-	return &types.EventFlowPageResult{
-		Code:     srcResp.Code,
-		PageNo:   srcResp.PageNo,
-		PageSize: srcResp.PageSize,
-		Total:    srcResp.Total,
-		Data:     items,
-	}, nil
+	return srcResp, nil
 }

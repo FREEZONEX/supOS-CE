@@ -65,7 +65,7 @@ func (l *ListSourceFlowsLogic) ListFlowsWithType(req *types.SourceFlowListQuery,
 
 	db := stores.GetCommonConn(l.ctx)
 	query := db.Table("supos_node_flows AS f").
-		Select("f.id, f.flow_id, f.flow_name, f.flow_status, f.template, f.description, f.create_time, f.update_time, COALESCE(t.mark, 0) AS mark, t.mark_time").
+		Select("f.id, f.flow_id, f.flow_name, f.flow_status, f.template, f.description, f.create_time,f.creator, f.update_time, COALESCE(t.mark, 0) AS mark, t.mark_time").
 		Joins("LEFT JOIN supos_node_flow_top_recodes AS t ON f.id = t.id AND t.user_id = ?", userID).
 		Where("f.template = ?", template)
 	if keyword != "" {
@@ -98,6 +98,8 @@ func (l *ListSourceFlowsLogic) ListFlowsWithType(req *types.SourceFlowListQuery,
 			FlowStatus:  row.FlowStatus,
 			Template:    row.Template,
 			Mark:        mark,
+			Creator:     row.Creator,
+			CreateTime:  int(row.CreateTime.UnixMilli()),
 		})
 	}
 	return &types.SourceFlowPageResult{
@@ -120,6 +122,7 @@ type flowListItem struct {
 	UpdateTime  time.Time     `gorm:"column:update_time"`
 	Mark        sql.NullInt64 `gorm:"column:mark"`
 	MarkTime    *time.Time    `gorm:"column:mark_time"`
+	Creator     string        `gorm:"column:creator"`
 }
 
 func applyFlowOrdering(db *gorm.DB, orderCode, isAsc string) *gorm.DB {

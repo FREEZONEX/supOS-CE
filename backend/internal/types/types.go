@@ -321,6 +321,8 @@ type EventFlowInfo struct {
 	FlowStatus  string `json:"flowStatus,optional"`
 	Template    string `json:"template,optional"`
 	Mark        int    `json:"mark,optional"`
+	Creator     string `json:"creator,optional"`
+	CreateTime  int    `json:"createTime,optional"`
 }
 
 type EventFlowListQuery struct {
@@ -886,6 +888,8 @@ type SourceFlowInfo struct {
 	FlowStatus  string `json:"flowStatus,optional"`
 	Template    string `json:"template,optional"`
 	Mark        int    `json:"mark,optional"`
+	Creator     string `json:"creator,optional"`
+	CreateTime  int    `json:"createTime,optional"`
 }
 
 type SourceFlowListQuery struct {

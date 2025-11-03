@@ -69,6 +69,10 @@ func (l *CreateSourceFlowLogic) createFlow(req *types.SourceFlowCreateReq, flowT
 		Template:    template,
 		FlowStatus:  flowcommon.FlowStatusDraft,
 	}
+	userVo := resolveUser(l.ctx)
+	if userVo != nil {
+		rec.Creator = userVo.PreferredUsername
+	}
 	if err := repo.Insert(l.ctx, rec); err != nil {
 		return "", err
 	}

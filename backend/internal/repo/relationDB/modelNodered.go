@@ -18,6 +18,7 @@ type NoderedFlow struct {
 	Nodes      []UnsNamespace `gorm:"many2many:supos_node_flow_models;foreignKey:ID;joinForeignKey:ParentID;References:Alias;joinReferences:Alias"`
 	CreateTime time.Time      `gorm:"column:create_time;default:now()" json:"create_time"`
 	UpdateTime time.Time      `gorm:"column:update_time" json:"update_time"`
+	Creator    string         `gorm:"column:creator;comment:创建者"`
 }
 
 func (NoderedFlow) TableName() string {

@@ -40,3 +40,15 @@ func resolveUserID(ctx context.Context) string {
 	}
 	return "guest"
 }
+
+func resolveUser(ctx context.Context) *vo.UserInfoVo {
+	if ctx == nil {
+		return nil
+	}
+	if v := ctx.Value(apiutil.UserKey); v != nil {
+		if user, ok := v.(*vo.UserInfoVo); ok && user != nil {
+			return user
+		}
+	}
+	return nil
+}
