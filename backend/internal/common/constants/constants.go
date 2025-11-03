@@ -118,6 +118,10 @@ const (
 
 	PlugPrefix = "PLUGIN"
 	AppPrefix  = "APP"
+
+	// nodered
+	FlowTypeNODERED   = "node-red"
+	FlowTypeEVENTFLOW = "event-flow"
 )
 
 const (

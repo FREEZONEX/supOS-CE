@@ -9,10 +9,12 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/logic/supos/flowcommon"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+	noderedclient "backend/share/clients/nodered"
 
 	"gitee.com/unitedrhino/share/errors"
 	"gitee.com/unitedrhino/share/i18ns"
@@ -35,6 +37,11 @@ func NewDeploySourceFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *DeploySourceFlowLogic) DeploySourceFlow(req *types.SourceFlowDeployReq) (*types.SourceFlowDeployResult, error) {
+	return l.DeployFlowWithType(req, constants.FlowTypeNODERED, l.svcCtx.SourceNodeRed)
+}
+
+// DeployFlowWithType deploys a flow definition using the provided Node-RED client.
+func (l *DeploySourceFlowLogic) DeployFlowWithType(req *types.SourceFlowDeployReq, flowType string, client *noderedclient.Client) (*types.SourceFlowDeployResult, error) {
 	if req == nil {
 		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
@@ -52,7 +59,10 @@ func (l *DeploySourceFlowLogic) DeploySourceFlow(req *types.SourceFlowDeployReq)
 		override = string(data)
 	}
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
-	newFlowID, err := flowcommon.DeployFlow(l.ctx, repo, flowID, override, l.svcCtx.SourceNodeRed, flowcommon.ExtractAliases)
+	if _, err := LoadFlowByType(l.ctx, repo, flowID, flowType); err != nil {
+		return nil, err
+	}
+	newFlowID, err := flowcommon.DeployFlow(l.ctx, repo, flowID, override, client, flowcommon.ExtractAliases)
 	if err != nil {
 		return nil, err
 	}

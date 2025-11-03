@@ -8,10 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/logic/supos/flowcommon"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+	noderedclient "backend/share/clients/nodered"
 
 	"gitee.com/unitedrhino/share/errors"
 	"gitee.com/unitedrhino/share/i18ns"
@@ -34,6 +36,11 @@ func NewCopySourceFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Co
 }
 
 func (l *CopySourceFlowLogic) CopySourceFlow(req *types.SourceFlowCopyReq) (string, error) {
+	return l.CopyFlowWithType(req, constants.FlowTypeNODERED, l.svcCtx.SourceNodeRed)
+}
+
+// CopyFlowWithType duplicates a flow for the specified template/flow type.
+func (l *CopySourceFlowLogic) CopyFlowWithType(req *types.SourceFlowCopyReq, flowType string, client *noderedclient.Client) (string, error) {
 	if req == nil {
 		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
@@ -45,18 +52,19 @@ func (l *CopySourceFlowLogic) CopySourceFlow(req *types.SourceFlowCopyReq) (stri
 	if name == "" {
 		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
-	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
-	factory := func() *relationDB.NoderedSourceFlow {
-		return &relationDB.NoderedSourceFlow{}
+	template := strings.TrimSpace(req.Template)
+	if template == "" {
+		template = strings.TrimSpace(flowType)
 	}
+	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
 	input := flowcommon.FlowCopyInput{
 		FlowName:    name,
 		Description: strings.TrimSpace(req.Description),
-		Template:    strings.TrimSpace(req.Template),
+		Template:    template,
 	}
-	record, err := flowcommon.CopyFlow(l.ctx, l.svcCtx, repo, factory, srcID, input, l.svcCtx.SourceNodeRed)
+	record, err := flowcommon.CopyFlow(l.ctx, l.svcCtx, repo, srcID, input, client)
 	if err != nil {
 		return "", err
 	}
-	return strconv.FormatInt(record.GetID(), 10), nil
+	return strconv.FormatInt(record.ID, 10), nil
 }

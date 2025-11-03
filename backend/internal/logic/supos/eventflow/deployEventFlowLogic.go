@@ -5,12 +5,9 @@ package eventflow
 
 import (
 	"context"
-	"encoding/json"
-	"strconv"
-	"strings"
 
-	"backend/internal/logic/supos/flowcommon"
-	"backend/internal/repo/relationDB"
+	"backend/internal/common/constants"
+	"backend/internal/logic/supos/sourceflow"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -38,25 +35,16 @@ func (l *DeployEventFlowLogic) DeployEventFlow(req *types.EventFlowDeployReq) (m
 	if req == nil {
 		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
-	idStr := strings.TrimSpace(req.ID)
-	flowID, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil || flowID <= 0 {
-		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.flowId.empty"))
+	srcReq := &types.SourceFlowDeployReq{
+		ID:    req.ID,
+		Flows: req.Flows,
 	}
-	var override string
-	if len(req.Flows) > 0 {
-		data, err := json.Marshal(req.Flows)
-		if err != nil {
-			return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.invalid.parameter"))
-		}
-		override = string(data)
-	}
-	repo := relationDB.NewNoderedEventFlowRepo(l.ctx)
-	newFlowID, err := flowcommon.DeployFlow(l.ctx, repo, flowID, override, l.svcCtx.EventNodeRed, flowcommon.ExtractAliases)
+	result, err := sourceflow.NewDeploySourceFlowLogic(l.ctx, l.svcCtx).
+		DeployFlowWithType(srcReq, constants.FlowTypeEVENTFLOW, l.svcCtx.EventNodeRed)
 	if err != nil {
 		return nil, err
 	}
 	return map[string]string{
-		"flowId": newFlowID,
+		"flowId": result.FlowID,
 	}, nil
 }

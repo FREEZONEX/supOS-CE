@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/logic/supos/flowcommon"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
@@ -34,6 +35,15 @@ func NewCreateSourceFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *CreateSourceFlowLogic) CreateSourceFlow(req *types.SourceFlowCreateReq) (string, error) {
+	return l.CreateFlowWithType(req, constants.FlowTypeNODERED)
+}
+
+// CreateFlowWithType creates a flow for the given template/flow type.
+func (l *CreateSourceFlowLogic) CreateFlowWithType(req *types.SourceFlowCreateReq, flowType string) (string, error) {
+	return l.createFlow(req, strings.TrimSpace(flowType))
+}
+
+func (l *CreateSourceFlowLogic) createFlow(req *types.SourceFlowCreateReq, flowType string) (string, error) {
 	if req == nil {
 		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
@@ -41,10 +51,11 @@ func (l *CreateSourceFlowLogic) CreateSourceFlow(req *types.SourceFlowCreateReq)
 	if name == "" {
 		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
+	template := flowType
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
 	filter := relationDB.NoderedSourceFlowFilter{
-		Name: name,
-		// FlowType: sourceFlowType,
+		Name:     name,
+		Template: template,
 	}
 	if exist, err := repo.FindOneByFilter(l.ctx, filter); err == nil && exist != nil {
 		return "", errors.Duplicate.WithMsg(i18ns.LocalizeMsg("nodered.flowName.has.used"))
@@ -55,9 +66,8 @@ func (l *CreateSourceFlowLogic) CreateSourceFlow(req *types.SourceFlowCreateReq)
 		ID:          l.svcCtx.SnowFlake.GetSnowflakeId(),
 		FlowName:    name,
 		Description: strings.TrimSpace(req.Description),
-		Template:    strings.TrimSpace(req.Template),
-		// FlowType:    sourceFlowType,
-		FlowStatus: flowcommon.FlowStatusDraft,
+		Template:    template,
+		FlowStatus:  flowcommon.FlowStatusDraft,
 	}
 	if err := repo.Insert(l.ctx, rec); err != nil {
 		return "", err

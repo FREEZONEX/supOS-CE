@@ -132,6 +132,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/event/flows",
 					Handler: suposeventflow.ListEventFlowsHandler(serverCtx),
 				},
+				{
+					// Mark a  flow by id
+					Method:  http.MethodPost,
+					Path:    "/event/mark",
+					Handler: suposeventflow.MarkEventFlowHandler(serverCtx),
+				},
+				{
+					// delete Mark a  flow by id
+					Method:  http.MethodDelete,
+					Path:    "/event/unmark",
+					Handler: suposeventflow.UnmarkEventFlowHandler(serverCtx),
+				},
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos"),
@@ -381,10 +393,22 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: supossourceflow.DeploySourceFlowHandler(serverCtx),
 				},
 				{
+					// Mark a source flow by id
+					Method:  http.MethodPost,
+					Path:    "/flow/mark",
+					Handler: supossourceflow.MarkSourceFlowHandler(serverCtx),
+				},
+				{
 					// Persist Node-RED flow JSON
 					Method:  http.MethodPut,
 					Path:    "/flow/save",
 					Handler: supossourceflow.SaveSourceFlowJsonHandler(serverCtx),
+				},
+				{
+					// delete Mark a source flow by id
+					Method:  http.MethodDelete,
+					Path:    "/flow/unmark",
+					Handler: supossourceflow.UnmarkSourceFlowHandler(serverCtx),
 				},
 				{
 					// Fetch flow information by UNS alias

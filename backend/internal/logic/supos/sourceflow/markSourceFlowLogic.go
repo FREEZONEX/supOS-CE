@@ -18,27 +18,27 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DeleteSourceFlowLogic struct {
+type MarkSourceFlowLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// Delete a source flow by id
-func NewDeleteSourceFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteSourceFlowLogic {
-	return &DeleteSourceFlowLogic{
+// Mark a source flow by id
+func NewMarkSourceFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MarkSourceFlowLogic {
+	return &MarkSourceFlowLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DeleteSourceFlowLogic) DeleteSourceFlow(req *types.SourceFlowDeleteReq) error {
-	return l.DeleteFlowWithType(req, constants.FlowTypeNODERED)
+func (l *MarkSourceFlowLogic) MarkSourceFlow(req *types.FlowMarkReq) error {
+	return l.MarkFlowWithType(req, constants.FlowTypeNODERED)
 }
 
-// DeleteFlowWithType deletes the flow ensuring it belongs to the given template type.
-func (l *DeleteSourceFlowLogic) DeleteFlowWithType(req *types.SourceFlowDeleteReq, flowType string) error {
+// MarkFlowWithType pins a flow for the specified flow type.
+func (l *MarkSourceFlowLogic) MarkFlowWithType(req *types.FlowMarkReq, flowType string) error {
 	if req == nil {
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
@@ -47,15 +47,14 @@ func (l *DeleteSourceFlowLogic) DeleteFlowWithType(req *types.SourceFlowDeleteRe
 	if err != nil || flowID <= 0 {
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.flowId.empty"))
 	}
+	userID := resolveUserID(l.ctx)
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
-	template := strings.TrimSpace(flowType)
-	if template != "" {
-		if _, err := LoadFlowByType(l.ctx, repo, flowID, template); err != nil {
-			return err
-		}
-	}
-	if err := repo.ReplaceModels(l.ctx, flowID, nil); err != nil {
+	if _, err := LoadFlowByType(l.ctx, repo, flowID, flowType); err != nil {
 		return err
 	}
-	return repo.Delete(l.ctx, flowID)
+	topRepo := relationDB.NewNoderedFlowTopRepo(l.ctx)
+	if err := topRepo.Upsert(l.ctx, flowID, userID, 1); err != nil {
+		return err
+	}
+	return nil
 }

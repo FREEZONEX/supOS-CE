@@ -5,11 +5,9 @@ package eventflow
 
 import (
 	"context"
-	"strconv"
-	"strings"
 
-	"backend/internal/logic/supos/flowcommon"
-	"backend/internal/repo/relationDB"
+	"backend/internal/common/constants"
+	"backend/internal/logic/supos/sourceflow"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -37,26 +35,12 @@ func (l *CopyEventFlowLogic) CopyEventFlow(req *types.EventFlowCopyReq) (string,
 	if req == nil {
 		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
-	srcID, err := strconv.ParseInt(strings.TrimSpace(req.SourceID), 10, 64)
-	if err != nil || srcID <= 0 {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+	srcReq := &types.SourceFlowCopyReq{
+		SourceID:    req.SourceID,
+		FlowName:    req.FlowName,
+		Description: req.Description,
+		Template:    req.Template,
 	}
-	name := strings.TrimSpace(req.FlowName)
-	if name == "" {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
-	}
-	repo := relationDB.NewNoderedEventFlowRepo(l.ctx)
-	factory := func() *relationDB.NoderedEventFlow {
-		return &relationDB.NoderedEventFlow{}
-	}
-	input := flowcommon.FlowCopyInput{
-		FlowName:    name,
-		Description: strings.TrimSpace(req.Description),
-		Template:    strings.TrimSpace(req.Template),
-	}
-	record, err := flowcommon.CopyFlow(l.ctx, l.svcCtx, repo, factory, srcID, input, l.svcCtx.EventNodeRed)
-	if err != nil {
-		return "", err
-	}
-	return strconv.FormatInt(record.GetID(), 10), nil
+	return sourceflow.NewCopySourceFlowLogic(l.ctx, l.svcCtx).
+		CopyFlowWithType(srcReq, constants.FlowTypeEVENTFLOW, l.svcCtx.EventNodeRed)
 }

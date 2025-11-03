@@ -52,6 +52,14 @@ service backend {
     @doc "Delete a source flow by id"
     @handler deleteSourceFlow
     delete /flow (SourceFlowDeleteReq) returns ()
+    
+    @doc "Mark a source flow by id"
+    @handler markSourceFlow
+    post /flow/mark (FlowMarkReq) returns ()
+
+    @doc "delete Mark a source flow by id"
+    @handler unmarkSourceFlow
+    delete /flow/unmark (FlowUNMarkReq) returns ()
 }
 
 @server(
@@ -84,6 +92,8 @@ type (
 
     SourceFlowListQuery {
         Keyword  string `form:"k,optional"`
+        OrderCode  string `form:"orderCode,optional"`
+        IsAsc  string `form:"isAsc,optional"`
         PageNo   int64  `form:"pageNo,optional,default=1"`
         PageSize int64  `form:"pageSize,optional,default=10"`
     }
@@ -128,6 +138,7 @@ type (
         Description string `json:"description,optional"`
         FlowStatus  string `json:"flowStatus,optional"`
         Template    string `json:"template,optional"`
+        Mark        int    `json:"mark,optional"`
     }
 
     SourceFlowDeployResult {
@@ -148,5 +159,12 @@ type (
         PageSize int64              `json:"pageSize"`
         Total    int64              `json:"total"`
         Data     []SourceFlowInfo   `json:"data,optional"`
+    }
+
+    FlowMarkReq {
+        ID  string `json:"id,optional"`
+    }
+    FlowUNMarkReq {
+        ID  string `form:"id,optional"`
     }
 )

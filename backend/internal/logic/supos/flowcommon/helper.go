@@ -23,11 +23,11 @@ const (
 	FlowStatusRunning = "RUNNING"
 )
 
-// FlowRepo declares the repository behaviour shared by Node-RED source/event flows.
-type FlowRepo[T relationDB.FlowEntity] interface {
-	FindOne(ctx context.Context, id int64) (T, error)
-	Insert(ctx context.Context, data T) error
-	Update(ctx context.Context, data T) error
+// FlowRepo declares the repository behaviour shared by Node-RED flows.
+type FlowRepo interface {
+	FindOne(ctx context.Context, id int64) (*relationDB.NoderedFlow, error)
+	Insert(ctx context.Context, data *relationDB.NoderedFlow) error
+	Update(ctx context.Context, data *relationDB.NoderedFlow) error
 	ReplaceModels(ctx context.Context, parentID int64, aliases []string) error
 }
 
@@ -38,54 +38,53 @@ type FlowCopyInput struct {
 	Template    string
 }
 
-// CopyFlow clones the given source flow and returns the brand new record.
-func CopyFlow[T relationDB.FlowEntity](
+// CopyFlow clones the given flow and returns the created record.
+func CopyFlow(
 	ctx context.Context,
 	svcCtx *svc.ServiceContext,
-	repo FlowRepo[T],
-	factory func() T,
+	repo FlowRepo,
 	sourceID int64,
 	input FlowCopyInput,
 	client *noderedclient.Client,
-) (T, error) {
+) (*relationDB.NoderedFlow, error) {
 	src, err := repo.FindOne(ctx, sourceID)
 	if err != nil {
-		return zero[T](), err
+		return nil, err
 	}
-	if isNil(src) {
-		return zero[T](), errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
+	if src == nil {
+		return nil, errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
 	}
 
-	dst := factory()
-	dst.SetID(svcCtx.SnowFlake.GetSnowflakeId())
-	dst.SetFlowName(strings.TrimSpace(input.FlowName))
-	dst.SetDescription(strings.TrimSpace(input.Description))
-	dst.SetTemplate(strings.TrimSpace(input.Template))
-	// dst.SetFlowType(src.GetFlowType())
-	dst.SetFlowStatus(FlowStatusDraft)
+	dst := &relationDB.NoderedFlow{
+		ID:          svcCtx.SnowFlake.GetSnowflakeId(),
+		FlowName:    strings.TrimSpace(input.FlowName),
+		Description: strings.TrimSpace(input.Description),
+		Template:    strings.TrimSpace(input.Template),
+		FlowStatus:  FlowStatusDraft,
+	}
 
 	sourceJSON, _, err := ResolveNodesJSON(ctx, client, "", src)
 	if err != nil {
-		return zero[T](), err
+		return nil, err
 	}
 	if strings.TrimSpace(sourceJSON) != "" {
 		newJSON, err := regenerateNodeIDs(sourceJSON)
 		if err != nil {
-			return zero[T](), err
+			return nil, err
 		}
-		dst.SetFlowData(newJSON)
+		dst.FlowData = newJSON
 	}
 
 	if err := repo.Insert(ctx, dst); err != nil {
-		return zero[T](), err
+		return nil, err
 	}
 	return dst, nil
 }
 
 // DeployFlow pushes the flow definition to Node-RED and persists the latest state.
-func DeployFlow[T relationDB.FlowEntity](
+func DeployFlow(
 	ctx context.Context,
-	repo FlowRepo[T],
+	repo FlowRepo,
 	entityID int64,
 	overrideJSON string,
 	client *noderedclient.Client,
@@ -99,7 +98,7 @@ func DeployFlow[T relationDB.FlowEntity](
 	if err != nil {
 		return "", err
 	}
-	if isNil(rec) {
+	if rec == nil {
 		return "", errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
 	}
 
@@ -119,15 +118,15 @@ func DeployFlow[T relationDB.FlowEntity](
 
 	flowNodes, globalNodes := splitGlobalNodes(rawNodes)
 
-	flowID := strings.TrimSpace(rec.GetFlowID())
+	flowID := strings.TrimSpace(rec.FlowID)
 	// create flow if absent
 	if flowID == "" {
 		req := map[string]any{
 			"id":       "",
 			"nodes":    []any{},
 			"disabled": false,
-			"label":    rec.GetFlowName(),
-			"info":     rec.GetDescription(),
+			"label":    rec.FlowName,
+			"info":     rec.Description,
 		}
 		var out map[string]any
 		code, body, errs := client.DoJSON(ctx, "POST", "/flow", req, &out)
@@ -148,8 +147,8 @@ func DeployFlow[T relationDB.FlowEntity](
 		"id":       flowID,
 		"nodes":    toInterfaceSlice(flowNodes),
 		"disabled": false,
-		"label":    rec.GetFlowName(),
-		"info":     rec.GetDescription(),
+		"label":    rec.FlowName,
+		"info":     rec.Description,
 	}
 	var upd map[string]any
 	code, body, errs := client.DoJSON(ctx, "PUT", "/flow/"+flowID, flowBody, &upd)
@@ -171,44 +170,37 @@ func DeployFlow[T relationDB.FlowEntity](
 		}
 	}
 
-	// merged := append(flowNodes, globalNodes...)
-	// newFlowData, err := json.Marshal(merged)
-	// if err != nil {
-	// 	return "", errors.System.WithMsg(err.Error())
-	// }
-
-	rec.SetFlowID(flowID)
-	rec.SetFlowData("")
-	rec.SetFlowStatus(FlowStatusRunning)
-
-	if err := repo.Update(ctx, rec); err != nil {
-		return "", err
-	}
-
-	if aliasExtractor != nil {
-		aliases := aliasExtractor(rawNodes)
-		if err := repo.ReplaceModels(ctx, rec.GetID(), aliases); err != nil {
+	if len(flowNodes) > 0 {
+		aliases := aliasExtractor(flowNodes)
+		if err := repo.ReplaceModels(ctx, entityID, aliases); err != nil {
 			return "", err
 		}
-	} else {
-		_ = repo.ReplaceModels(ctx, rec.GetID(), nil)
+	}
+
+	rec.FlowID = flowID
+	rec.FlowStatus = FlowStatusRunning
+	rec.FlowData = strings.TrimSpace(overrideJSON)
+	if err := repo.Update(ctx, rec); err != nil {
+		return "", err
 	}
 
 	return flowID, nil
 }
 
-// ResolveNodesJSON resolves the JSON array describing the Node-RED nodes with the precedence:
-// override > draft(FlowData) > Node-RED runtime.
-func ResolveNodesJSON(ctx context.Context, client *noderedclient.Client, override string, entity relationDB.FlowEntity) (string, string, error) {
-	if strings.TrimSpace(override) != "" {
-		return override, "override", nil
+// ResolveNodesJSON resolves the nodes JSON string that should be used for deploy/save operations.
+func ResolveNodesJSON(ctx context.Context, client *noderedclient.Client, override string, entity *relationDB.NoderedFlow) (string, string, error) {
+	override = strings.TrimSpace(override)
+	if override != "" {
+		return override, "client", nil
 	}
-	if data := strings.TrimSpace(entity.GetFlowData()); data != "" {
-		return data, "draft", nil
+	raw := strings.TrimSpace(entity.FlowData)
+	if raw != "" {
+		return raw, "draft", nil
 	}
-	if client != nil && strings.TrimSpace(entity.GetFlowID()) != "" {
+	// fetch from node-red runtime
+	if client != nil && strings.TrimSpace(entity.FlowID) != "" {
 		var out map[string]any
-		code, body, errs := client.GetFlowNodesV1(ctx, entity.GetFlowID(), &out)
+		code, body, errs := client.GetFlowNodesV1(ctx, entity.FlowID, &out)
 		if len(errs) > 0 || (code != 200 && code != 204) {
 			logx.WithContext(ctx).Errorf("fetch nodes from node-red failed: code=%d err=%v body=%s", code, errs, string(body))
 			return "", "", errors.System.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
@@ -297,15 +289,6 @@ func toInterfaceSlice(nodes []map[string]any) []any {
 		}
 	}
 	return out
-}
-
-func zero[T any]() T {
-	var v T
-	return v
-}
-
-func isNil[T relationDB.FlowEntity](v T) bool {
-	return any(v) == nil
 }
 
 // ExtractAliases parses possible UNS aliases from Node-RED node definitions.

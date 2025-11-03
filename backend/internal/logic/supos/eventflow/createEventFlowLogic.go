@@ -5,11 +5,9 @@ package eventflow
 
 import (
 	"context"
-	"strconv"
-	"strings"
 
-	"backend/internal/logic/supos/flowcommon"
-	"backend/internal/repo/relationDB"
+	"backend/internal/common/constants"
+	"backend/internal/logic/supos/sourceflow"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -37,30 +35,11 @@ func (l *CreateEventFlowLogic) CreateEventFlow(req *types.EventFlowCreateReq) (s
 	if req == nil {
 		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
-	name := strings.TrimSpace(req.FlowName)
-	if name == "" {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+	srcReq := &types.SourceFlowCreateReq{
+		FlowName:    req.FlowName,
+		Description: req.Description,
+		Template:    req.Template,
 	}
-	repo := relationDB.NewNoderedEventFlowRepo(l.ctx)
-	filter := relationDB.NoderedEventFlowFilter{
-		Name: name,
-		// FlowType: eventFlowType,
-	}
-	if exist, err := repo.FindOneByFilter(l.ctx, filter); err == nil && exist != nil {
-		return "", errors.Duplicate.WithMsg(i18ns.LocalizeMsg("nodered.flowName.has.used"))
-	} else if err != nil && !errors.Cmp(err, errors.NotFind) {
-		return "", err
-	}
-	rec := &relationDB.NoderedEventFlow{
-		ID:          l.svcCtx.SnowFlake.GetSnowflakeId(),
-		FlowName:    name,
-		Description: strings.TrimSpace(req.Description),
-		Template:    strings.TrimSpace(req.Template),
-		// FlowType:    eventFlowType,
-		FlowStatus: flowcommon.FlowStatusDraft,
-	}
-	if err := repo.Insert(l.ctx, rec); err != nil {
-		return "", err
-	}
-	return strconv.FormatInt(rec.ID, 10), nil
+	return sourceflow.NewCreateSourceFlowLogic(l.ctx, l.svcCtx).
+		CreateFlowWithType(srcReq, constants.FlowTypeEVENTFLOW)
 }

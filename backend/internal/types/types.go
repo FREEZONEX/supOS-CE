@@ -320,12 +320,15 @@ type EventFlowInfo struct {
 	Description string `json:"description,optional"`
 	FlowStatus  string `json:"flowStatus,optional"`
 	Template    string `json:"template,optional"`
+	Mark        int    `json:"mark,optional"`
 }
 
 type EventFlowListQuery struct {
-	Keyword  string `form:"k,optional"`
-	PageNo   int64  `form:"pageNo,optional,default=1"`
-	PageSize int64  `form:"pageSize,optional,default=10"`
+	Keyword   string `form:"k,optional"`
+	OrderCode string `form:"orderCode,optional"`
+	IsAsc     string `form:"isAsc,optional"`
+	PageNo    int64  `form:"pageNo,optional,default=1"`
+	PageSize  int64  `form:"pageSize,optional,default=10"`
 }
 
 type EventFlowPageResult struct {
@@ -391,6 +394,14 @@ type FileVo struct {
 	Name     string `json:"name"`
 	Path     string `json:"path"`
 	PathType int16  `json:"pathType"`
+}
+
+type FlowMarkReq struct {
+	ID string `json:"id,optional"`
+}
+
+type FlowUNMarkReq struct {
+	ID string `form:"id,optional"`
 }
 
 type GetByUnsRequest struct {
@@ -874,12 +885,15 @@ type SourceFlowInfo struct {
 	Description string `json:"description,optional"`
 	FlowStatus  string `json:"flowStatus,optional"`
 	Template    string `json:"template,optional"`
+	Mark        int    `json:"mark,optional"`
 }
 
 type SourceFlowListQuery struct {
-	Keyword  string `form:"k,optional"`
-	PageNo   int64  `form:"pageNo,optional,default=1"`
-	PageSize int64  `form:"pageSize,optional,default=10"`
+	Keyword   string `form:"k,optional"`
+	OrderCode string `form:"orderCode,optional"`
+	IsAsc     string `form:"isAsc,optional"`
+	PageNo    int64  `form:"pageNo,optional,default=1"`
+	PageSize  int64  `form:"pageSize,optional,default=10"`
 }
 
 type SourceFlowListResult struct {

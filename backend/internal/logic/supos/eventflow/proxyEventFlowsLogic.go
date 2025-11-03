@@ -9,7 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/logic/supos/flowcommon"
+	"backend/internal/logic/supos/sourceflow"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 
@@ -44,13 +46,10 @@ func (l *ProxyEventFlowsLogic) ProxyEventFlows(flowID string) (string, error) {
 		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.invalid.parameter"))
 	}
 
-	repo := relationDB.NewNoderedEventFlowRepo(l.ctx)
-	flow, err := repo.FindOne(l.ctx, id)
+	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
+	flow, err := sourceflow.LoadFlowByType(l.ctx, repo, id, constants.FlowTypeEVENTFLOW)
 	if err != nil {
 		return "", err
-	}
-	if flow == nil {
-		return "", errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
 	}
 
 	nodes, err := l.resolveFlowNodes(flow)
@@ -72,7 +71,7 @@ func (l *ProxyEventFlowsLogic) ProxyEventFlows(flowID string) (string, error) {
 	return string(data), nil
 }
 
-func (l *ProxyEventFlowsLogic) resolveFlowNodes(flow *relationDB.NoderedEventFlow) ([]map[string]any, error) {
+func (l *ProxyEventFlowsLogic) resolveFlowNodes(flow *relationDB.NoderedSourceFlow) ([]map[string]any, error) {
 	draft := strings.TrimSpace(flow.FlowData)
 	if draft != "" {
 		var nodes []map[string]any
@@ -112,7 +111,7 @@ func (l *ProxyEventFlowsLogic) resolveFlowNodes(flow *relationDB.NoderedEventFlo
 	return nodes, nil
 }
 
-func (l *ProxyEventFlowsLogic) ensureLabelNode(nodes []map[string]any, flow *relationDB.NoderedEventFlow) []map[string]any {
+func (l *ProxyEventFlowsLogic) ensureLabelNode(nodes []map[string]any, flow *relationDB.NoderedSourceFlow) []map[string]any {
 	if nodes == nil {
 		nodes = make([]map[string]any, 0)
 	}

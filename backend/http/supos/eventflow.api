@@ -44,6 +44,14 @@ service backend {
     @doc "Delete an event flow by id"
     @handler deleteEventFlow
     delete /event/flow (EventFlowDeleteReq) returns ()
+
+    @doc "Mark a  flow by id"
+    @handler markEventFlow
+    post /event/mark (FlowMarkReq) returns ()
+
+    @doc "delete Mark a  flow by id"
+    @handler unmarkEventFlow
+    delete /event/unmark (FlowUNMarkReq) returns ()
 }
 
 @server(
@@ -72,9 +80,11 @@ type (
     }
 
     EventFlowListQuery {
-        Keyword  string `form:"k,optional"`
-        PageNo   int64  `form:"pageNo,optional,default=1"`
-        PageSize int64  `form:"pageSize,optional,default=10"`
+        Keyword   string `form:"k,optional"`
+        OrderCode string `form:"orderCode,optional"`
+        IsAsc     string `form:"isAsc,optional"`
+        PageNo    int64  `form:"pageNo,optional,default=1"`
+        PageSize  int64  `form:"pageSize,optional,default=10"`
     }
 
     EventFlowDeployReq {
@@ -104,15 +114,17 @@ type (
         Description string `json:"description,optional"`
         FlowStatus  string `json:"flowStatus,optional"`
         Template    string `json:"template,optional"`
+        Mark        int    `json:"mark,optional"`
     }
-
 
     EventFlowPageResult {
-        Code     int              `json:"code"`
-        Msg      string           `json:"msg,optional"`
-        PageNo   int64            `json:"pageNo"`
-        PageSize int64            `json:"pageSize"`
-        Total    int64            `json:"total"`
-        Data     []EventFlowInfo  `json:"data,optional"`
+        Code     int             `json:"code"`
+        Msg      string          `json:"msg,optional"`
+        PageNo   int64           `json:"pageNo"`
+        PageSize int64           `json:"pageSize"`
+        Total    int64           `json:"total"`
+        Data     []EventFlowInfo `json:"data,optional"`
     }
+
+    
 )

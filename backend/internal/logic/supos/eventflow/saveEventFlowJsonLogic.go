@@ -5,12 +5,9 @@ package eventflow
 
 import (
 	"context"
-	"encoding/json"
-	"strconv"
-	"strings"
 
-	"backend/internal/logic/supos/flowcommon"
-	"backend/internal/repo/relationDB"
+	"backend/internal/common/constants"
+	"backend/internal/logic/supos/sourceflow"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -38,29 +35,10 @@ func (l *SaveEventFlowJsonLogic) SaveEventFlowJson(req *types.EventFlowSaveReq) 
 	if req == nil {
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
-	idStr := strings.TrimSpace(req.ID)
-	flowID, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil || flowID <= 0 {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.flowId.empty"))
+	srcReq := &types.SourceFlowSaveReq{
+		ID:    req.ID,
+		Flows: req.Flows,
 	}
-	var flowData string
-	if len(req.Flows) > 0 {
-		data, err := json.Marshal(req.Flows)
-		if err != nil {
-			return errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.invalid.parameter"))
-		}
-		flowData = string(data)
-	}
-	repo := relationDB.NewNoderedEventFlowRepo(l.ctx)
-	rec, err := repo.FindOne(l.ctx, flowID)
-	if err != nil {
-		return err
-	}
-	rec.SetFlowData(flowData)
-	if strings.TrimSpace(rec.GetFlowID()) != "" {
-		rec.SetFlowStatus(flowcommon.FlowStatusPending)
-	} else {
-		rec.SetFlowStatus(flowcommon.FlowStatusDraft)
-	}
-	return repo.Update(l.ctx, rec)
+	return sourceflow.NewSaveSourceFlowJsonLogic(l.ctx, l.svcCtx).
+		SaveFlowJsonWithType(srcReq, constants.FlowTypeEVENTFLOW)
 }

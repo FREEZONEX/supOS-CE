@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -33,6 +34,11 @@ func NewUpdateSourceFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *UpdateSourceFlowLogic) UpdateSourceFlow(req *types.SourceFlowUpdateReq) error {
+	return l.UpdateFlowWithType(req, constants.FlowTypeNODERED)
+}
+
+// UpdateFlowWithType updates the flow metadata for the specified template.
+func (l *UpdateSourceFlowLogic) UpdateFlowWithType(req *types.SourceFlowUpdateReq, flowType string) error {
 	if req == nil {
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
@@ -46,14 +52,15 @@ func (l *UpdateSourceFlowLogic) UpdateSourceFlow(req *types.SourceFlowUpdateReq)
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
-	rec, err := repo.FindOne(l.ctx, flowID)
+	template := strings.TrimSpace(flowType)
+	rec, err := LoadFlowByType(l.ctx, repo, flowID, template)
 	if err != nil {
 		return err
 	}
 	if !strings.EqualFold(rec.FlowName, name) {
 		filter := relationDB.NoderedSourceFlowFilter{
-			Name: name,
-			// FlowType: sourceFlowType,
+			Name:     name,
+			Template: template,
 		}
 		if exist, err := repo.FindOneByFilter(l.ctx, filter); err == nil && exist != nil && exist.ID != flowID {
 			return errors.Duplicate.WithMsg(i18ns.LocalizeMsg("nodered.flowName.has.used"))

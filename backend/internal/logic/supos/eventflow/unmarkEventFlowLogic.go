@@ -16,26 +16,25 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DeleteEventFlowLogic struct {
+type UnmarkEventFlowLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// Delete an event flow by id
-func NewDeleteEventFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteEventFlowLogic {
-	return &DeleteEventFlowLogic{
+// delete Mark a  flow by id
+func NewUnmarkEventFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UnmarkEventFlowLogic {
+	return &UnmarkEventFlowLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DeleteEventFlowLogic) DeleteEventFlow(req *types.EventFlowDeleteReq) error {
+func (l *UnmarkEventFlowLogic) UnmarkEventFlow(req *types.FlowUNMarkReq) error {
 	if req == nil {
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
-	srcReq := &types.SourceFlowDeleteReq{ID: req.ID}
-	return sourceflow.NewDeleteSourceFlowLogic(l.ctx, l.svcCtx).
-		DeleteFlowWithType(srcReq, constants.FlowTypeEVENTFLOW)
+	return sourceflow.NewUnmarkSourceFlowLogic(l.ctx, l.svcCtx).
+		UnmarkFlowWithType(req, constants.FlowTypeEVENTFLOW)
 }

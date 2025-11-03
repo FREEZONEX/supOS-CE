@@ -28,9 +28,11 @@ func NewNoderedSourceFlowRepo(in any) *NoderedSourceFlowRepo {
 
 type NoderedSourceFlowFilter struct {
 	//todo 添加过滤字段
-	ID       int64
-	Name     string
-	NameLike string
+	ID        int64
+	Name      string
+	NameLike  string
+	Template  string
+	Templates []string
 	// FlowType int32
 	FlowID string
 }
@@ -40,6 +42,12 @@ func (p NoderedSourceFlowRepo) fmtFilter(ctx context.Context, f NoderedSourceFlo
 	//todo 添加条件
 	if f.ID != 0 {
 		db = db.Where("id = ?", f.ID)
+	}
+	if len(f.Templates) > 0 {
+		db = db.Where("template IN ?", f.Templates)
+	}
+	if f.Template != "" {
+		db = db.Where("template = ?", f.Template)
 	}
 	if f.Name != "" {
 		db = db.Where("flow_name = ?", f.Name)
@@ -213,15 +221,19 @@ func (r NoderedSourceFlowRepo) FindLatestByAlias(ctx context.Context, alias stri
 	return &flow, nil
 }
 
-// FindAvailableFlowName ensures flow_name uniqueness by appending -N suffix when needed, scoped by flow_type.
-func (r NoderedSourceFlowRepo) FindAvailableFlowName(ctx context.Context, base string, flowType int32) (string, int, error) {
+// FindAvailableFlowName ensures flow_name uniqueness by appending -N suffix when needed, scoped by template(flow type).
+func (r NoderedSourceFlowRepo) FindAvailableFlowName(ctx context.Context, base string, flowType string) (string, int, error) {
 	base = strings.TrimSpace(base)
 	if base == "" {
 		return "", 0, fmt.Errorf("flow name empty")
 	}
 	var rows []NoderedSourceFlow
 	like := base + "%"
-	if err := r.db.WithContext(ctx).Where(" flow_name LIKE ?", flowType, like).Find(&rows).Error; err != nil {
+	db := r.db.WithContext(ctx).Where("flow_name LIKE ?", like)
+	if strings.TrimSpace(flowType) != "" {
+		db = db.Where("template = ?", strings.TrimSpace(flowType))
+	}
+	if err := db.Find(&rows).Error; err != nil {
 		return "", 0, stores.ErrFmt(err)
 	}
 	suffixRe := regexp.MustCompile(`^(.*?)-(\d+)$`)

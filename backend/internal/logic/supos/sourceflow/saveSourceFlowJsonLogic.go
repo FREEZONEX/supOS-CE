@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/logic/supos/flowcommon"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
@@ -35,6 +36,11 @@ func NewSaveSourceFlowJsonLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *SaveSourceFlowJsonLogic) SaveSourceFlowJson(req *types.SourceFlowSaveReq) error {
+	return l.SaveFlowJsonWithType(req, constants.FlowTypeNODERED)
+}
+
+// SaveFlowJsonWithType persists flow JSON for the specified flow type.
+func (l *SaveSourceFlowJsonLogic) SaveFlowJsonWithType(req *types.SourceFlowSaveReq, flowType string) error {
 	if req == nil {
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
 	}
@@ -52,15 +58,15 @@ func (l *SaveSourceFlowJsonLogic) SaveSourceFlowJson(req *types.SourceFlowSaveRe
 		flowData = string(data)
 	}
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
-	rec, err := repo.FindOne(l.ctx, flowID)
+	rec, err := LoadFlowByType(l.ctx, repo, flowID, flowType)
 	if err != nil {
 		return err
 	}
-	rec.SetFlowData(flowData)
-	if strings.TrimSpace(rec.GetFlowID()) != "" {
-		rec.SetFlowStatus(flowcommon.FlowStatusPending)
+	rec.FlowData = flowData
+	if strings.TrimSpace(rec.FlowID) != "" {
+		rec.FlowStatus = flowcommon.FlowStatusPending
 	} else {
-		rec.SetFlowStatus(flowcommon.FlowStatusDraft)
+		rec.FlowStatus = flowcommon.FlowStatusDraft
 	}
 	return repo.Update(l.ctx, rec)
 }

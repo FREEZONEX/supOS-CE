@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/logic/supos/flowcommon"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
@@ -58,7 +59,7 @@ func (l *CreateSourceMockFlowLogic) CreateSourceMockFlow(req *types.SourceFlowMo
 	}, flowcommon.GenerateNodeID)
 
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
-	flowName, _, err := repo.FindAvailableFlowName(l.ctx, alias, sourceFlowType)
+	flowName, _, err := repo.FindAvailableFlowName(l.ctx, alias, constants.FlowTypeNODERED)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (l *CreateSourceMockFlowLogic) CreateSourceMockFlow(req *types.SourceFlowMo
 		ID:          l.svcCtx.SnowFlake.GetSnowflakeId(),
 		FlowName:    flowName,
 		Description: fmt.Sprintf("auto mock for %s", alias),
-		Template:    "node-red",
+		Template:    constants.FlowTypeNODERED,
 		// FlowType:    sourceFlowType,
 		FlowStatus: flowcommon.FlowStatusDraft,
 		FlowData:   rendered,

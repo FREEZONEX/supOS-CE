@@ -5,15 +5,13 @@ package eventflow
 
 import (
 	"context"
-	"strconv"
-	"strings"
 
-	"backend/internal/repo/relationDB"
+	"backend/internal/common/constants"
+	"backend/internal/logic/supos/sourceflow"
 	"backend/internal/svc"
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -36,47 +34,35 @@ func (l *ListEventFlowsLogic) ListEventFlows(req *types.EventFlowListQuery) (*ty
 	if req == nil {
 		return nil, errors.Parameter.WithMsg("request is nil")
 	}
-	pageNo := req.PageNo
-	if pageNo <= 0 {
-		pageNo = 1
+	srcReq := &types.SourceFlowListQuery{
+		Keyword:   req.Keyword,
+		OrderCode: req.OrderCode,
+		IsAsc:     req.IsAsc,
+		PageNo:    req.PageNo,
+		PageSize:  req.PageSize,
 	}
-	pageSize := req.PageSize
-	if pageSize <= 0 {
-		pageSize = 10
-	}
-	page := &stores.PageInfo{Page: pageNo, Size: pageSize}
-	filter := relationDB.NoderedEventFlowFilter{
-		NameLike: strings.TrimSpace(req.Keyword),
-		// FlowType: eventFlowType,
-	}
-	repo := relationDB.NewNoderedEventFlowRepo(l.ctx)
-	list, err := repo.FindByFilter(l.ctx, filter, page)
+	srcResp, err := sourceflow.NewListSourceFlowsLogic(l.ctx, l.svcCtx).
+		ListFlowsWithType(srcReq, constants.FlowTypeEVENTFLOW)
 	if err != nil {
 		return nil, err
 	}
-	total, err := repo.CountByFilter(l.ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	items := make([]types.EventFlowInfo, 0, len(list))
-	for _, v := range list {
-		if v == nil {
-			continue
-		}
+	items := make([]types.EventFlowInfo, 0, len(srcResp.Data))
+	for _, v := range srcResp.Data {
 		items = append(items, types.EventFlowInfo{
-			ID:          strconv.FormatInt(v.ID, 10),
+			ID:          v.ID,
 			FlowName:    v.FlowName,
 			FlowID:      v.FlowID,
 			Description: v.Description,
 			FlowStatus:  v.FlowStatus,
 			Template:    v.Template,
+			Mark:        v.Mark,
 		})
 	}
 	return &types.EventFlowPageResult{
-		Code:     0,
-		PageNo:   pageNo,
-		PageSize: pageSize,
-		Total:    total,
+		Code:     srcResp.Code,
+		PageNo:   srcResp.PageNo,
+		PageSize: srcResp.PageSize,
+		Total:    srcResp.Total,
 		Data:     items,
 	}, nil
 }
