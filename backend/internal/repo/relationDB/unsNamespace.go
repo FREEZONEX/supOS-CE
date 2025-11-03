@@ -24,6 +24,8 @@ func NewUnsNamespaceRepo() UnsNamespaceRepo {
 	return UnsNamespaceRepo{}
 }
 
+const NULL_PARENT_ID = int64(-1)
+
 func GetDb(ctx context.Context) *gorm.DB {
 	if connObj := ctx.Value("db"); connObj != nil {
 		if db, is := connObj.(*gorm.DB); is {

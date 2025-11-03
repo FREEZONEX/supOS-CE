@@ -3,6 +3,7 @@ package excel
 import (
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/types"
+	"backend/share/base"
 	"fmt"
 	"strings"
 )
@@ -49,16 +50,16 @@ func (e *ExcelTemplateDto) GainBatchIndex() string {
 // ExcelNameSpaceDto
 // TODO: Custom validation for path (@TopicNameValidator) and alias (@AliasValidator) needs to be implemented in the service layer.
 type ExcelNameSpaceDto struct {
-	Batch         int    `json:"batch"`
-	Index         int    `json:"index"`
-	Path          string `json:"path" validate:"required"`
-	Alias         string `json:"alias"`
-	DisplayName   string `json:"displayName"`
-	TemplateAlias string `json:"templateAlias"`
-	Fields        string `json:"fields"` // JSON string of FieldDefine array
-	Description   string `json:"description"`
-	Refers        string `json:"refers"`
-	Expression    string `json:"expression"`
+	Batch         int     `json:"batch"`
+	Index         int     `json:"index"`
+	Path          string  `json:"path" validate:"required"`
+	Alias         string  `json:"alias"`
+	DisplayName   string  `json:"displayName"`
+	TemplateAlias string  `json:"templateAlias"`
+	Fields        string  `json:"fields"` // JSON string of FieldDefine array
+	Description   *string `json:"description"`
+	Refers        string  `json:"refers"`
+	Expression    string  `json:"expression"`
 }
 
 func (e *ExcelNameSpaceDto) CreateTopic() *types.CreateTopicDto {
@@ -80,14 +81,14 @@ func (e *ExcelNameSpaceDto) GainBatchIndex() string {
 // ExcelFolderDto
 // TODO: Custom validation for path (@TopicNameValidator) and alias (@AliasValidator) needs to be implemented in the service layer.
 type ExcelFolderDto struct {
-	Batch         int    `json:"batch"`
-	Index         int    `json:"index"`
-	Path          string `json:"path" validate:"required"`
-	Alias         string `json:"alias"`
-	DisplayName   string `json:"displayName"`
-	TemplateAlias string `json:"templateAlias"`
-	Fields        string `json:"fields"` // JSON string of FieldDefine array
-	Description   string `json:"description"`
+	Batch         int     `json:"batch"`
+	Index         int     `json:"index"`
+	Path          string  `json:"path" validate:"required"`
+	Alias         string  `json:"alias"`
+	DisplayName   string  `json:"displayName"`
+	TemplateAlias string  `json:"templateAlias"`
+	Fields        string  `json:"fields"` // JSON string of FieldDefine array
+	Description   *string `json:"description"`
 }
 
 func (e *ExcelFolderDto) CreateTopic() *types.CreateTopicDto {
@@ -111,7 +112,9 @@ func (e *ExcelFolderDto) Trim() {
 	e.Alias = strings.TrimSpace(e.Alias)
 	e.DisplayName = strings.TrimSpace(e.DisplayName)
 	e.TemplateAlias = strings.TrimSpace(e.TemplateAlias)
-	e.Description = strings.TrimSpace(e.Description)
+	if e.Description != nil {
+		e.Description = base.V2p(strings.TrimSpace(*e.Description))
+	}
 }
 
 // ExcelNamespaceBaseDto represents the base DTO for Excel namespace operations

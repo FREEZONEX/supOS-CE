@@ -133,23 +133,23 @@ func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAnd
 	// 构建VALUES参数
 	var sql = &base.StringBuilder{}
 	sql.Grow(512)
-	sql.Append(`select  u.parent_alias, u."name",count(*) as id from (`)
+	sql.Append(`select  u.parent_id, u."name",max(getIndex(u."path"))+1 as id from (`)
 	for i, data := range parentAliasAndNames {
 		if i > 0 {
 			sql.Append(" UNION ALL ")
 		}
-		parentAlias, name := data.ParentAlias, data.Name
+		parentId, name := data.ParentId, data.Name
 		var args string
-		if parentAlias != nil {
-			args = fmt.Sprintf("select '%s' as parent_alias,'%s' as name", escapeSQL(*parentAlias), escapeSQL(name))
+		if parentId != nil {
+			args = fmt.Sprintf("select %d as parent_id,'%s' as name", *parentId, escapeSQL(name))
 		} else {
-			args = fmt.Sprintf("select null as parent_alias,'%s' as name", escapeSQL(name))
+			args = fmt.Sprintf("select null as parent_id,'%s' as name", escapeSQL(name))
 		}
 		sql.Append(args)
 	}
 	sql.Append(`) x
-	join uns_namespace u on (x.parent_alias = u.parent_alias OR (x.parent_alias IS NULL AND u.parent_alias IS NULL)) 
-	where u.status =1 group by u.parent_alias, u."name"
+	join uns_namespace u on (x.parent_id = u.parent_id OR (x.parent_id IS NULL AND u.parent_id IS NULL)) AND x.name =u.name 
+	where u.status =1 group by u.parent_id, u."name"
     `)
 	err = p.model(db).Raw(sql.String()).Scan(&results).Error
 	if err != nil {
@@ -261,7 +261,9 @@ func (p UnsNamespaceRepo) ListByLayRecs(db *gorm.DB, layRecs []string, page *sto
 }
 func (p UnsNamespaceRepo) ListByTemplateId(db *gorm.DB, templateId int64, page *stores.PageInfo) (results []*UnsNamespace, err error) {
 	db = p.model(db)
-	db = page.ToGorm(db)
+	if page != nil {
+		db = page.ToGorm(db)
+	}
 	err = db.Where("model_id =?", templateId).Where("status=1").Find(&results).Error
 	return
 }

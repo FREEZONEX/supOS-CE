@@ -60,9 +60,9 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 	}
 	dto.SubscribeEnable = constants.WithSubscribeEnable(base.P2v(po.WithFlags))
 	protocol := po.Protocol
-	if dto.SubscribeEnable && strings.HasPrefix(protocol, "{") {
+	if dto.SubscribeEnable && protocol != nil && strings.HasPrefix(*protocol, "{") {
 		var pMap = make(map[string]string)
-		JsonUtil.FromJson(protocol, &pMap)
+		JsonUtil.FromJson(*protocol, &pMap)
 		if freq, has := pMap["frequency"]; has {
 			dto.SubscribeFrequency = freq
 		}
@@ -122,8 +122,9 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dt
 	} else {
 		dto.Topic = file.GetPath()
 	}
-	dPath := file.GetDataPath()
-	dto.DataPath = &dPath
+	if dp := file.GetDataPath(); len(dp) > 0 {
+		dto.DataPath = &dp
+	}
 	dto.Protocol = file.GetProtocolMap()
 
 	// 设置引用和表达式

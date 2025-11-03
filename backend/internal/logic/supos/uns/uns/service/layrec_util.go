@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backend/internal/common/utils/PathUtil"
 	dao "backend/internal/repo/relationDB"
 	"backend/share/base"
 	"fmt"
@@ -51,9 +52,9 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 	nodesToUpdate := make(map[int64]*dao.UnsNamespace)
 
 	// 处理路径和名称
-	processPathName(rootNodes, addFiles)
+	processPathName(rootNodes, addFiles, dbFiles)
 	for _, children := range childrenMap {
-		processPathName(children, addFiles)
+		processPathName(children, addFiles, dbFiles)
 	}
 
 	// 分类节点
@@ -144,7 +145,7 @@ func collectAffectedNodes(changedNode *dao.UnsNamespace, childrenMap map[int64][
 }
 
 // processPathName 处理同名兄弟节点的路径
-func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNamespace) {
+func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) {
 	if len(siblings) == 0 {
 		return
 	}
@@ -165,17 +166,20 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 		}
 		for i, node := range group {
 			if base.MapContainsKey(addFiles, node.Id) {
-				xp := strings.LastIndex(name, "-")
-				if xp > 0 && xp < len(name)-1 && unicode.IsDigit(rune(name[xp+1])) {
-					name = name[:xp+1] + "0" + name[xp+1:]
-				}
-				if node.CountExistsSiblings > 0 {
-					node.PathName = name + "-" + strconv.FormatInt(node.CountExistsSiblings+int64(i), 10)
+				dbPo := dbFiles[node.Id]
+				if dbPo != nil && dbPo.Name == node.Name {
+					node.PathName = PathUtil.GetName(dbPo.Path)
 				} else {
-					node.PathName = name
+					xp := strings.LastIndex(name, "-")
+					if xp > 0 && xp < len(name)-1 && unicode.IsDigit(rune(name[xp+1])) {
+						name = name[:xp+1] + "0" + name[xp+1:]
+					}
+					if ces := node.CountExistsSiblings; ces > 0 {
+						node.PathName = name + "-" + strconv.FormatInt(ces+int64(i), 10)
+					} else {
+						node.PathName = name
+					}
 				}
-			} else {
-				node.PathName = name
 			}
 		}
 	}

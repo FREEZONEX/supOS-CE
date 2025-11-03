@@ -47,7 +47,7 @@ CREATE INDEX IF NOT EXISTS idx_namespace_fields_text ON uns_namespace USING GIN 
 CREATE INDEX IF NOT EXISTS idxgin_namespace_alias ON uns_namespace USING GIN (alias gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idxgin_namespace_path ON uns_namespace USING GIN (path gin_trgm_ops);
 
-insert into uns_namespace("id","path_type","lay_rec","alias","name","path","description")values(1,1,'1','__templates__','tmplt','tmplt','模板顶级目录')ON CONFLICT (id) DO NOTHING;
+insert into uns_namespace("id","path_type","lay_rec","alias","name","path","description")values(0,1,'0','__templates__','tmplt','tmplt','模板顶级目录')ON CONFLICT (id) DO UPDATE set lay_rec=EXCLUDED.lay_rec,path=EXCLUDED.path,name=EXCLUDED.name;
 
 CREATE TABLE if not exists uns_dashboard (
 	id varchar(64) PRIMARY KEY NOT NULL,

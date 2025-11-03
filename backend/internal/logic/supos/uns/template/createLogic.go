@@ -4,6 +4,8 @@
 package template
 
 import (
+	"backend/internal/logic/supos/uns/template/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
@@ -28,7 +30,5 @@ func NewCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateLogi
 }
 
 func (l *CreateLogic) Create(req *types.CreateTemplateReq) (resp *types.CreateTemplateResp, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	return spring.GetBean[*service.UnsTemplateService]().Create(l.ctx, req)
 }

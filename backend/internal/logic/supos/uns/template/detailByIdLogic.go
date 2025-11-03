@@ -4,6 +4,8 @@
 package template
 
 import (
+	"backend/internal/logic/supos/uns/template/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
@@ -28,7 +30,5 @@ func NewDetailByIdLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Detail
 }
 
 func (l *DetailByIdLogic) DetailById(req *types.WithID) (resp *types.TemplateDetailResp, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	return spring.GetBean[*service.UnsTemplateService]().DetailById(l.ctx, req)
 }

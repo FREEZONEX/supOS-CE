@@ -1,6 +1,10 @@
 package service
 
-import "backend/internal/types"
+import (
+	dao "backend/internal/repo/relationDB"
+	"backend/internal/types"
+	"context"
+)
 
 // 实时计算服务（占位）
 type UnsCalcService struct {
@@ -23,4 +27,8 @@ func (s UnsCalcService) setRefersAndExpression(fs []*types.InstanceField,
 	protocolMap map[string]interface{},
 	dto *types.InstanceDetail) {
 
+}
+func (s UnsCalcService) detectReferencedCalcInstance(ctx context.Context, files []*dao.UnsNamespace, modelPath string, delFields []*types.FieldDefine) (affectedFiles []*dao.UnsNamespace) {
+
+	return
 }

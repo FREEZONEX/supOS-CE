@@ -37,26 +37,26 @@ type UnsNamespace struct {
 	Fields           Fields           `gorm:"column:fields;type:json;" json:"fields"`
 	CreateAt         time.Time        `gorm:"column:create_at;default:now()" json:"create_at"`
 	Status           *int16           `gorm:"column:status;default:1" json:"status"`
-	Description      string           `gorm:"column:description" json:"description"`
+	Description      *string          `gorm:"column:description" json:"description"`
 	UpdateAt         time.Time        `gorm:"column:update_at" json:"update_at"`
-	Protocol         string           `gorm:"column:protocol" json:"protocol"`
-	DataPath         string           `gorm:"column:data_path" json:"data_path"`
+	Protocol         *string          `gorm:"column:protocol" json:"protocol"`
+	DataPath         *string          `gorm:"column:data_path" json:"data_path"`
 	WithFlags        *int32           `gorm:"column:with_flags" json:"with_flags"`
 	DataSrcId        int16            `gorm:"column:data_src_id" json:"data_src_id"`
 	RefUns           RefUns           `gorm:"column:ref_uns;default:{};type:jsonb;" json:"ref_uns"`
 	Refers           Refers           `gorm:"column:refers;type:json;" json:"refers"`
-	Expression       string           `gorm:"column:expression" json:"expression"`
-	TableName_       string           `gorm:"column:table_name" json:"table_name"`
+	Expression       *string          `gorm:"column:expression" json:"expression"`
+	TableName_       *string          `gorm:"column:table_name" json:"table_name"`
 	NumberFields     *int16           `gorm:"column:number_fields" json:"number_fields"`
 	ParentId         *int64           `gorm:"column:parent_id" json:"parent_id"`
 	ModelId          *int64           `gorm:"column:model_id" json:"model_id"`
-	ProtocolType     string           `gorm:"column:protocol_type" json:"protocol_type"`
+	ProtocolType     *string          `gorm:"column:protocol_type" json:"protocol_type"`
 	Extend           map[string]any   `gorm:"column:extend;type:jsonb;serializer:json;" json:"extend"`
 	DisplayName      *string          `gorm:"column:display_name" json:"display_name"`
 	LabelIds         map[int64]string `gorm:"column:label_ids;type:jsonb;serializer:json;" json:"label_ids"`
 	ExtendFieldFlags *int32           `gorm:"column:extend_field_flags" json:"extend_field_flags"`
 	MountType        *int16           `gorm:"column:mount_type" json:"mount_type"`
-	MountSource      string           `gorm:"column:mount_source" json:"mount_source"`
+	MountSource      *string          `gorm:"column:mount_source" json:"mount_source"`
 	SubscribeAt      time.Time        `gorm:"column:subscribe_at" json:"subscribe_at"`
 
 	ModelAlias          string `gorm:"-" json:"modelAlias"`
@@ -70,24 +70,24 @@ func (u *UnsNamespace) GetLayRec() string {
 }
 
 func (u *UnsNamespace) GetDataPath() string {
-	return u.DataPath
+	return base.P2v(u.DataPath)
 }
 func (c *UnsNamespace) GetCalculationType() *int32 {
 	return nil //TODO
 }
 func (u *UnsNamespace) GetProtocolMap() (pmap map[string]interface{}) {
-	if protocol := u.Protocol; strings.HasPrefix(protocol, "{") {
-		JsonUtil.FromJson(protocol, &pmap)
+	if protocol := u.Protocol; protocol != nil && strings.HasPrefix(*protocol, "{") {
+		JsonUtil.FromJson(*protocol, &pmap)
 	}
 	return pmap
 }
 
 func (u *UnsNamespace) GetDescription() string {
-	return u.Description
+	return base.P2v(u.Description)
 }
 
 func (u *UnsNamespace) GetExpression() string {
-	return u.Expression
+	return base.P2v(u.Expression)
 }
 
 func (u *UnsNamespace) GetExtend() map[string]interface{} {
@@ -181,7 +181,7 @@ func (t *UnsNamespace) GetMountType() *int16 {
 }
 
 func (t *UnsNamespace) GetMountSource() string {
-	return t.MountSource
+	return base.P2v(t.MountSource)
 }
 
 type UnsPo struct {

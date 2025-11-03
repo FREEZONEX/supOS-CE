@@ -4,6 +4,8 @@
 package template
 
 import (
+	"backend/internal/logic/supos/uns/template/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
@@ -28,7 +30,6 @@ func NewPageListUnsByTemplateLogic(ctx context.Context, svcCtx *svc.ServiceConte
 }
 
 func (l *PageListUnsByTemplateLogic) PageListUnsByTemplate(req *types.PageListUnsByTemplateReq) (resp *types.PageListUnsByTemplateResp, err error) {
-	// todo: add your logic here and delete this line
+	return spring.GetBean[*service.UnsTemplateService]().PageListUnsByTemplate(l.ctx, req)
 
-	return
 }

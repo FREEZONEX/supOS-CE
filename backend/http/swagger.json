@@ -3504,9 +3504,6 @@
                       "-": {
                         "type": "integer"
                       },
-                      "Save2Db": {
-                        "type": "boolean"
-                      },
                       "accessLevel": {
                         "description": "Access level",
                         "type": "string"
@@ -3760,6 +3757,9 @@
                         }
                       },
                       "retainTableWhenDeleteInstance": {
+                        "type": "boolean"
+                      },
+                      "save2db": {
                         "type": "boolean"
                       },
                       "strMaxLen": {
@@ -5673,9 +5673,6 @@
                       "-": {
                         "type": "integer"
                       },
-                      "Save2Db": {
-                        "type": "boolean"
-                      },
                       "accessLevel": {
                         "description": "Access level",
                         "type": "string"
@@ -5929,6 +5926,9 @@
                         }
                       },
                       "retainTableWhenDeleteInstance": {
+                        "type": "boolean"
+                      },
+                      "save2db": {
                         "type": "boolean"
                       },
                       "strMaxLen": {
@@ -7906,6 +7906,9 @@
                 "retainTableWhenDeleteInstance": {
                   "type": "boolean"
                 },
+                "save2db": {
+                  "type": "boolean"
+                },
                 "strMaxLen": {
                   "type": "integer"
                 },
@@ -8752,7 +8755,7 @@
       },
       "put": {
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "produces": [
           "application/json"
@@ -8780,28 +8783,6 @@
             "name": "description",
             "in": "formData",
             "allowEmptyValue": true
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "id"
-              ],
-              "properties": {
-                "description": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "integer"
-                },
-                "name": {
-                  "type": "string"
-                }
-              }
-            }
           }
         ],
         "responses": {
@@ -9161,9 +9142,7 @@
               "type": "object",
               "required": [
                 "pageNo",
-                "pageSize",
-                "key",
-                "subscribeEnable"
+                "pageSize"
               ],
               "properties": {
                 "key": {
@@ -9260,7 +9239,7 @@
             "required": true
           },
           {
-            "type": "boolean",
+            "type": "string",
             "name": "enable",
             "in": "formData",
             "allowEmptyValue": true
@@ -10726,7 +10705,7 @@
       }
     }
   },
-  "x-date": "2025-10-31 09:19:12",
+  "x-date": "2025-11-03 16:38:22",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

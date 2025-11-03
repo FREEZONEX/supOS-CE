@@ -1,11 +1,11 @@
 package base
 
-func P2v[T int | int8 | int16 | int32 | float32 | float64 | string](p *T) (rs T) {
+func P2v[T int | int8 | int16 | int32 | float32 | float64 | string | bool](p *T) (rs T) {
 	if p != nil {
 		rs = *p
 	}
 	return
 }
-func V2p[T int | int8 | int16 | int32 | float32 | float64 | string](p T) (rs *T) {
+func V2p[T int | int8 | int16 | int32 | float32 | float64 | string | bool](p T) (rs *T) {
 	return &p
 }

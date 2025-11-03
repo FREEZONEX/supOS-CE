@@ -4,6 +4,8 @@
 package template
 
 import (
+	"backend/internal/logic/supos/uns/template/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
@@ -28,7 +30,5 @@ func NewUpdateSubscribeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *U
 }
 
 func (l *UpdateSubscribeLogic) UpdateSubscribe(req *types.UpdateTemplateSubscribeReq) (resp *types.BaseResult, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	return spring.GetBean[*service.UnsTemplateService]().UpdateSubscribe(l.ctx, req)
 }

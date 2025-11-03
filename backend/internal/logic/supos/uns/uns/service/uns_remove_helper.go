@@ -4,7 +4,7 @@ import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
-	"backend/internal/logic/supos/uns/uns/UnsConverter"
+	"backend/internal/logic/supos/uns/uns/bo"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
@@ -27,7 +27,6 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 	db := dao.GetDb(ctx)
 	resp = &types.RemoveResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
 	var unsPos []*dao.UnsNamespace
-	withFlow, withDashboard := defaultFalse(req.WithFlow), defaultFalse(req.WithDashboard)
 	if singleId > 0 {
 		tar, err := r.unsMapper.SelectById(db, singleId)
 		if err != nil {
@@ -60,7 +59,16 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 			return resp, err
 		}
 	}
-	paramGroups := base.GroupBy[*dao.UnsNamespace, int16](unsPos, func(e *dao.UnsNamespace) int16 {
+	ctx = dao.SetDb(ctx, db)
+	return r.Remove(ctx, req.RemoveUnsOptions, unsPos)
+}
+func (r *UnsRemoveService) Remove(ctx context.Context, req types.RemoveUnsOptions, unsList []*dao.UnsNamespace) (resp *types.RemoveResult, err error) {
+	withFlow, withDashboard := defaultFalse(req.WithFlow), defaultFalse(req.WithDashboard)
+	resp = &types.RemoveResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
+
+	db := dao.GetDb(ctx)
+
+	paramGroups := base.GroupBy(unsList, func(e *dao.UnsNamespace) int16 {
 		return e.PathType
 	})
 	folders := paramGroups[constants.PathTypeDir]
@@ -71,19 +79,18 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 		}
 		var layRecs []string
 		if onlyRemoveChild {
-			layRecs = base.Map[*dao.UnsNamespace, string](folders, func(e *dao.UnsNamespace) string {
+			layRecs = base.Map(folders, func(e *dao.UnsNamespace) string {
 				return e.LayRec + "/"
 			})
 		} else {
-			layRecs = base.Map[*dao.UnsNamespace, string](folders, func(e *dao.UnsNamespace) string {
+			layRecs = base.Map(folders, func(e *dao.UnsNamespace) string {
 				return e.LayRec
 			})
 		}
-		loop := true
 		for _, lay := range base.Partition(layRecs, 500) {
 			page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
 
-			for loop {
+			for {
 				rs, er := r.unsMapper.ListByLayRecs(db, lay, page)
 				if er != nil {
 					return nil, er
@@ -91,64 +98,58 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 					break
 				}
 				page.Page++
-				unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, *types.CreateTopicDto, int16](rs, func(e *dao.UnsNamespace) (int16, *types.CreateTopicDto) {
-					return e.PathType, UnsConverter.Po2Dto(e)
-				})
-				err = db.Transaction(func(tx *gorm.DB) error {
-					er = r.unsMapper.LogicDeleteByIds(tx, base.Map[*dao.UnsNamespace, int64](rs, func(e *dao.UnsNamespace) int64 {
-						return e.Id
-					}))
-					if er == nil {
-						delEvent := event.NewRemoveTopicsEvent(dao.SetDb(ctx, tx), time.Now(), withFlow, withDashboard,
-							unsGroups[constants.PathTypeFile],
-							unsGroups[constants.PathTypeTemplate],
-							unsGroups[constants.PathTypeDir],
-						)
-						er = spring.PublishEvent(delEvent)
-						if er != nil {
-							resp.Msg = "RemoveEventErr"
-						}
-					} else {
-						resp.Msg = "DbErr"
-					}
-					return er
-				})
-				if err != nil {
+				errMsg := r.deleteAndSendEvent(ctx, db, rs, withFlow, withDashboard)
+				if len(errMsg) > 0 {
 					resp.Code = 500
-					loop = false
-					break
+					resp.Msg = errMsg
+					return
 				}
-			}
-			if !loop {
-				break
 			}
 		}
 	}
 	files := paramGroups[constants.PathTypeFile]
-	if len(files) > 0 && err == nil {
+	if len(files) > 0 {
 		for _, fs := range base.Partition(files, 1000) {
-			err = db.Transaction(func(tx *gorm.DB) error {
-				er := r.unsMapper.LogicDeleteByIds(tx, base.Map[*dao.UnsNamespace, int64](fs, func(e *dao.UnsNamespace) int64 {
-					return e.Id
-				}))
-				if er == nil {
-					delEvent := event.NewRemoveTopicsEvent(dao.SetDb(ctx, tx), time.Now(), withFlow, withDashboard,
-						UnsConverter.Po2Dtos(fs), nil, nil,
-					)
-					er = spring.PublishEvent(delEvent)
-					if er != nil {
-						resp.Msg = "RemoveEventErr"
-					}
-				} else {
-					resp.Msg = "DbErr"
-				}
-				return er
-			})
-			if err != nil {
+			errMsg := r.deleteAndSendEvent(ctx, db, fs, withFlow, withDashboard)
+			if len(errMsg) > 0 {
 				resp.Code = 500
-				break
+				resp.Msg = errMsg
+				return
 			}
 		}
 	}
 	return
+}
+
+func (r *UnsRemoveService) deleteAndSendEvent(ctx context.Context, db *gorm.DB, rs []*dao.UnsNamespace, withFlow bool, withDashboard bool) (erMsg string) {
+	unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, bo.UnsInfo, int16](rs, func(e *dao.UnsNamespace) (int16, bo.UnsInfo) {
+		return e.PathType, e
+	})
+
+	tx := db.Begin()
+	er := r.unsMapper.LogicDeleteByIds(tx, base.Map[*dao.UnsNamespace, int64](rs, func(e *dao.UnsNamespace) int64 {
+		return e.Id
+	}))
+	if er == nil {
+		delEvent := event.NewRemoveTopicsEvent(dao.SetDb(ctx, tx), time.Now(), withFlow, withDashboard,
+			unsGroups[constants.PathTypeFile],
+			unsGroups[constants.PathTypeTemplate],
+			unsGroups[constants.PathTypeDir],
+		)
+		er = spring.PublishEvent(delEvent)
+		if er != nil {
+			erMsg = "RemoveEventErr:" + er.Error()
+		}
+	} else {
+		erMsg = "DbErr"
+	}
+	if er == nil {
+		tx.Commit()
+	} else {
+		if len(erMsg) == 0 {
+			erMsg = er.Error()
+		}
+		tx.Rollback()
+	}
+	return erMsg
 }

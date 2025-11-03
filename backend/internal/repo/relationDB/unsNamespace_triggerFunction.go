@@ -37,6 +37,18 @@ func (p UnsNamespaceRepo) migrate(db *gorm.DB) {
 	} else {
 		log.Println("触发器 pathHash：", err)
 	}
+	err = createFunction_getIndex(db)
+	if err != nil {
+		log.Println("ERR: createFunction_getIndex", err)
+	}
+	var countOldTemplate = int64(0)
+	if er := db.Model(&UnsNamespace{}).Select("id").Where("id=1").Count(&countOldTemplate).Error; er == nil {
+		if countOldTemplate == 1 { //  处理id=1的模板历史数据，以及它的子节点
+			er = db.Model(&UnsNamespace{}).Where("parent_id=1").UpdateColumn("parent_id", 0).Error
+			er = db.Model(&UnsNamespace{}).Where("id=1").Delete(&UnsNamespace{}).Error
+		}
+	}
+
 }
 func createFunction_nextIdLong(db *gorm.DB) error {
 	return db.Exec(`CREATE OR REPLACE FUNCTION "nextIdLong"(prev TEXT, layRec TEXT)
@@ -165,4 +177,22 @@ func refreshFieldsText(db *gorm.DB) error {
 }
 func refreshPathHash(db *gorm.DB) error {
 	return db.Exec(`UPDATE uns_namespace SET path=path WHERE fields IS NOT NULL`).Error
+}
+func createFunction_getIndex(db *gorm.DB) error {
+	return db.Exec(`
+		CREATE OR REPLACE FUNCTION getIndex(name TEXT) 
+		RETURNS BIGINT AS $$
+		DECLARE
+			last_part TEXT;
+		BEGIN
+			-- 提取最后一个/之后的部分，然后提取末尾的数字
+			last_part := substring(name from '([^/]+)$');
+			
+			RETURN COALESCE(
+				(substring(last_part from '-([0-9]+)$'))::BIGINT, 
+				0
+			);
+		END;
+		$$ LANGUAGE plpgsql IMMUTABLE;
+     `).Error
 }

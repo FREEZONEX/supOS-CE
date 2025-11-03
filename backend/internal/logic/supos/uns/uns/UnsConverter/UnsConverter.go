@@ -99,8 +99,11 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 	unsDto.ModelId = p.ModelId
 	unsDto.ProtocolType = p.ProtocolType
 
-	protocolStr := p.Protocol
-	if protocolStr != "" && len(protocolStr) > 0 && protocolStr[0] == '{' {
+	protocolStr := ""
+	if p.Protocol != nil {
+		protocolStr = *p.Protocol
+	}
+	if len(protocolStr) > 2 && protocolStr[0] == '{' {
 		var protocol map[string]interface{}
 		if err := JsonUtil.FromJson(protocolStr, &protocol); err == nil {
 			if frequency, ok := protocol["frequency"].(string); ok {
