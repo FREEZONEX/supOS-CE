@@ -4,6 +4,8 @@ import (
 	"backend/internal/logic/supos/uns/dashboard/dao"
 	"backend/internal/logic/supos/uns/dashboard/handler"
 	"backend/internal/logic/supos/uns/dashboard/service"
+	unsservice "backend/internal/logic/supos/uns/uns/service"
+	"backend/share/spring"
 	"context"
 
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -19,8 +21,11 @@ func RegisterHandlers(server *rest.Server, sqlConn sqlx.SqlConn) {
 	dashboardRefMapper := dao.NewDashboardRefMapper(sqlConn, ctx)
 	dashboardMarkMapper := dao.NewDashboardMarkedMapper(sqlConn, ctx)
 
+	unsQueryService := spring.GetBean[*unsservice.UnsQueryService]()
+	unsUpdateService := spring.GetBean[*unsservice.UnsUpdateService]()
+
 	// 创建 Logic 层实例
-	dashboardLogic := service.NewDashboardService(ctx, dashboardMapper, dashboardRefMapper, dashboardMarkMapper)
+	dashboardLogic := service.NewDashboardService(ctx, dashboardMapper, dashboardRefMapper, dashboardMarkMapper, unsQueryService, unsUpdateService)
 
 	// 创建 Handler 层实例
 	dashboardHandler := handler.NewDashboardHandler(dashboardLogic)

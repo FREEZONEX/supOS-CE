@@ -10,6 +10,8 @@ import (
 	"backend/internal/logic/supos/uns/dashboard/exporter"
 	"backend/internal/logic/supos/uns/dashboard/importer"
 	"backend/internal/logic/supos/uns/dashboard/model"
+	unsservice "backend/internal/logic/supos/uns/uns/service"
+	"backend/internal/types"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -30,6 +32,8 @@ type DashboardService struct {
 	dashboardMapper     *dao.DashboardMapper
 	dashboardRefMapper  *dao.DashboardRefMapper
 	dashboardMarkMapper *dao.DashboardMarkedMapper
+	unsQueryService     *unsservice.UnsQueryService
+	unsUpdateService    *unsservice.UnsUpdateService
 	fileRootPath        string // 文件根路径，用于导入导出
 }
 
@@ -39,6 +43,8 @@ func NewDashboardService(
 	dashboardMapper *dao.DashboardMapper,
 	dashboardRefMapper *dao.DashboardRefMapper,
 	dashboardMarkMapper *dao.DashboardMarkedMapper,
+	unsQueryService *unsservice.UnsQueryService,
+	unsUpdateService *unsservice.UnsUpdateService,
 ) *DashboardService {
 	s := &DashboardService{
 		ctx:                 ctx,
@@ -46,6 +52,8 @@ func NewDashboardService(
 		dashboardMapper:     dashboardMapper,
 		dashboardRefMapper:  dashboardRefMapper,
 		dashboardMarkMapper: dashboardMarkMapper,
+		unsQueryService:     unsQueryService,
+		unsUpdateService:    unsUpdateService,
 		fileRootPath:        "data", // 暂定根路径，后续可从配置中读取
 	}
 	s.InitDashboardsOnStartup() // 应用启动时初始化
@@ -72,7 +80,7 @@ func (s *DashboardService) InitDashboardsOnStartup() {
 				continue
 			}
 
-			var dashboardData map[string]interface{}
+			var dashboardData map[string]any
 			if err := json.Unmarshal([]byte(db.JsonContent), &dashboardData); err != nil {
 				s.logger.Errorf("failed to unmarshal dashboard json content for %s: %v", db.Name, err)
 				continue
@@ -403,11 +411,15 @@ func (s *DashboardService) BindUns(dashboardID string, unsAlias string) error {
 		return errors.NewBuzError(400, "uns.dashboard.not.exit")
 	}
 
-	// TODO: 检查 UNS 是否存在
-	// uns := l.unsDefinitionService.GetDefinitionByAlias(unsAlias)
-	// if uns == nil {
-	//     return errors.NewBuzError(400, "uns.file.not.exist")
-	// }
+	// 检查 UNS 是否存在
+	unsResp, err := s.unsQueryService.GetModelDefinition(s.ctx, &types.ModelDetailReq{}, unsAlias)
+	if err != nil {
+		s.logger.Errorf("failed to get uns definition for alias %s: %v", unsAlias, err)
+		return errors.NewBuzError(500, "uns.file.not.exist")
+	}
+	if unsResp == nil || unsResp.Data == nil || unsResp.Data.Id == "" {
+		return errors.NewBuzError(400, "uns.file.not.exist")
+	}
 
 	// 删除旧的绑定关系
 	err = s.dashboardRefMapper.DeleteByDashboardId(dashboardID)
@@ -426,13 +438,23 @@ func (s *DashboardService) BindUns(dashboardID string, unsAlias string) error {
 
 // GetByUns 根据 UNS 别名获取 Dashboard
 func (s *DashboardService) GetByUns(unsAlias string) (*model.DashboardModel, error) {
-	// TODO: 处理引用类型 UNS
-	// uns := l.unsDefinitionService.GetDefinitionByAlias(unsAlias)
-	// if uns != nil && uns.DataType == CITING_TYPE {
-	//     refUns := l.unsDefinitionService.GetDefinitionById(uns.Refers[0].ID)
-	//     if refUns != nil {
-	//         unsAlias = refUns.Alias
-	//     }
+	// TODO: 当前的 unsQueryService.GetModelDefinition 返回的 DTO 中不包含 Refers 字段，
+	// 无法直接判断 UNS 是否为引用类型。此处的逻辑暂时简化为直接查询，
+	// 后续如果 uns service 提供了更详细的接口，需要回来完善引用类型的处理逻辑。
+
+	// unsResp, err := s.unsQueryService.GetModelDefinition(s.ctx, &types.ModelDetailReq{}, unsAlias)
+	// if err != nil {
+	// 	s.logger.Errorf("could not find uns definition for alias %s: %v", unsAlias, err)
+	// 	// 即使找不到定义，也继续尝试查询，保持旧逻辑兼容性
+	// 	return s.dashboardRefMapper.GetByUns(unsAlias)
+	// }
+
+	// if unsResp != nil && unsResp.Data != nil {
+	// 	unsDef := unsResp.Data
+	// 	// 检查是否是引用类型
+	// 	if unsDef.DataType == constants.CitingType {
+	// 		// DTO 中没有 Refers 字段，无法实现
+	// 	}
 	// }
 
 	return s.dashboardRefMapper.GetByUns(unsAlias)
@@ -440,15 +462,139 @@ func (s *DashboardService) GetByUns(unsAlias string) (*model.DashboardModel, err
 
 // CreateGrafanaByUns 基于 UNS 创建 Grafana Dashboard
 func (s *DashboardService) CreateGrafanaByUns(alias string) (string, error) {
-	// TODO: 实现基于 UNS 创建 Grafana Dashboard 的完整逻辑
 	// 1. 获取 UNS 定义
-	// 2. 根据 UNS 字段构建 Grafana Dashboard JSON
-	// 3. 调用 Grafana API 创建 Dashboard
-	// 4. 保存 Dashboard 记录
-	// 5. 创建 Dashboard 和 UNS 的绑定关系
-	// 6. 更新 UNS 的 flags
+	unsResp, err := s.unsQueryService.GetModelDefinition(s.ctx, &types.ModelDetailReq{}, alias)
+	if err != nil || unsResp == nil || unsResp.Data == nil {
+		return "", errors.NewBuzError(400, "uns.file.not.exist")
+	}
+	unsDef := unsResp.Data
 
-	return "", errors.NewBuzError(500, "not implemented")
+	// 2. 检查是否已有关联的 Dashboard
+	existingDashboard, err := s.GetByUns(alias)
+	if err != nil {
+		s.logger.Errorf("error checking for existing dashboard for uns %s: %v", alias, err)
+		// Fall through, but log the error
+	}
+	if existingDashboard != nil {
+		return "", errors.NewBuzError(400, "uns.dashboard.already.exists")
+	}
+
+	// 3. 根据 UNS 字段构建 Grafana Dashboard JSON
+	dashboardUID := uuid.New().String()
+	dashboardJSON, err := s.buildGrafanaJSONFromUns(unsDef, dashboardUID)
+	if err != nil {
+		s.logger.Errorf("failed to build grafana json for uns %s: %v", alias, err)
+		return "", errors.NewBuzError(500, "uns.dashboard.create.failed")
+	}
+
+	// 4. 调用 Grafana API 创建 Dashboard
+	_, err = grafanautil.CreateDashboardByBody(dashboardUID, "", dashboardJSON)
+	if err != nil {
+		s.logger.Errorf("failed to create grafana dashboard for uns %s: %v", alias, err)
+		return "", errors.NewBuzError(500, "uns.dashboard.create.failed")
+	}
+
+	// 5. 保存 Dashboard 记录到数据库
+	now := time.Now()
+	dashboard := &model.DashboardModel{
+		ID:          dashboardUID,
+		Name:        unsDef.Name,
+		Creator:     "system", // 系统自动创建
+		CreateTime:  now,
+		UpdateTime:  now,
+		Type:        1, // 1 for Grafana
+		JsonContent: dashboardJSON,
+		NeedInit:    false, // 已在 Grafana 中创建
+	}
+	if err = s.dashboardMapper.Insert(dashboard); err != nil {
+		s.logger.Errorf("failed to save dashboard record for uns %s: %v", alias, err)
+		// 尝试回滚 Grafana 的创建操作
+		_ = grafanautil.DeleteDashboard(dashboardUID)
+		return "", err
+	}
+
+	// 6. 创建 Dashboard 和 UNS 的绑定关系
+	ref := &model.DashboardRefModel{
+		DashboardID: dashboardUID,
+		UnsAlias:    alias,
+		CreateAt:    now,
+	}
+	if err = s.dashboardRefMapper.Insert(ref); err != nil {
+		// 此处为非关键路径，只记录日志
+		s.logger.Errorf("failed to bind dashboard %s to uns %s: %v", dashboardUID, alias, err)
+	}
+
+	// 7. 更新 UNS 的 flags
+	addDashboard := true
+	updateDto := &types.UpdateUnsDto{
+		Alias:        alias,
+		AddDashBoard: &addDashboard,
+	}
+	_, updateErr := s.unsUpdateService.UpdateDetail(s.ctx, updateDto)
+	if updateErr != nil {
+		// 此处为非关键路径，只记录日志
+		s.logger.Errorf("failed to update uns flags for %s after creating dashboard: %v", alias, updateErr)
+	}
+
+	// 8. 返回新创建的 Dashboard UID
+	return dashboardUID, nil
+}
+
+// buildGrafanaJSONFromUns 根据 UNS 定义构建 Grafana Dashboard JSON
+func (s *DashboardService) buildGrafanaJSONFromUns(unsDef *types.ModelDetail, uid string) (string, error) {
+	// 筛选出数值类型的字段用于创建图表
+	numericFields := make([]*types.FieldDefine, 0)
+	for _, field := range unsDef.Fields {
+		if types.FieldType(field.Type).IsNumber() && !field.IsSystemField() {
+			numericFields = append(numericFields, field)
+		}
+	}
+
+	panels := make([]map[string]any, 0, len(numericFields))
+	for i, field := range numericFields {
+		panel := map[string]any{
+			"id":    i + 1,
+			"title": field.Name,
+			"type":  "timeseries",
+			"gridPos": map[string]int{
+				"h": 8,
+				"w": 12,
+				"x": (i % 2) * 12,
+				"y": (i / 2) * 8,
+			},
+			"targets": []map[string]any{
+				{
+					"refId": "A",
+					// 这里的表达式需要根据实际的数据源和查询逻辑来确定
+					// 暂时使用一个 placeholder
+					"expr": fmt.Sprintf(`iot_data{topic="%s", field="%s"}`, unsDef.Topic, field.Name),
+				},
+			},
+		}
+		panels = append(panels, panel)
+	}
+
+	dashboard := map[string]any{
+		"dashboard": map[string]any{
+			"uid":         uid,
+			"title":       unsDef.Name,
+			"description": "Auto-generated by supos-edge for UNS: " + unsDef.Alias,
+			"panels":      panels,
+			"time": map[string]string{
+				"from": "now-6h",
+				"to":   "now",
+			},
+			"timezone": "browser",
+		},
+		"folderUid": "", // 可以指定一个 folder
+		"overwrite": false,
+	}
+
+	jsonBytes, err := json.Marshal(dashboard)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonBytes), nil
 }
 
 // DataExport 导出 Dashboard 数据
