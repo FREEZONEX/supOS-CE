@@ -1,13 +1,15 @@
 import { type FC, useEffect, useRef, useState, useCallback } from 'react';
 import { ResizableBox } from 'react-resizable';
 import '@/components/resizable-container/index.scss';
-import { Result } from 'antd';
-import { Empty } from 'antd';
+import { Flex, DatePicker, Button, Empty, Result, type TimeRangePickerProps } from 'antd';
+import { Renew } from '@carbon/icons-react';
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import { useTranslate } from '@/hooks';
 import IframeMask from '@/components/iframe-mask';
 import { useBaseStore } from '@/stores/base';
-import { useSize } from 'ahooks';
-import { getDashboardDetail } from '@/apis/inter-api';
+
+const { RangePicker } = DatePicker;
 
 interface DetailDashboardProps {
   instanceInfo: { [key: string]: any };
@@ -15,22 +17,22 @@ interface DetailDashboardProps {
 }
 
 const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo }) => {
+  const { dataType } = instanceInfo;
+
   const formatMessage = useTranslate();
   const hasDashboards = useBaseStore((state) => state.menuGroup?.some((f) => f.url === '/dashboards'));
   const observer = useRef<MutationObserver | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const [iframeUrl, setIframeUrl] = useState('');
+
+  const [dates, setDates] = useState<any>(null);
   useEffect(() => {
+    handleDefaultTime();
     if (instanceInfo && dashboardInfo) {
       if (!dashboardInfo?.type || dashboardInfo?.type === 1) {
         if (dashboardInfo?.id) {
           // grafana
-          getDashboardDetail(dashboardInfo?.id).then((res: any) => {
-            if (res?.meta?.url) {
-              setIframeUrl(`${res?.meta?.url}?kiosk`);
-            }
-          });
+          setIframeUrl(`/grafana/home/d-solo/${dashboardInfo?.id}?orgId=1&panelId=1&__feature.dashboardSceneSolo`);
         }
       } else if (dashboardInfo?.type === 2) {
         // fuxa
@@ -38,8 +40,6 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo
       }
     }
   }, [instanceInfo, dashboardInfo]);
-
-  const containerSize = useSize(containerRef);
 
   const iframeCallbackRef = useCallback(
     (iframe: HTMLIFrameElement | null) => {
@@ -133,33 +133,109 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo
     [iframeUrl, dashboardInfo]
   ); // 依赖 iframeUrl，确保 URL 变化时重新绑定
 
+  useEffect(() => {
+    if (!dashboardInfo?.type || dashboardInfo?.type === 1) {
+      const timeFrame = dates ? `&from=${dayjs(dates[0]).valueOf()}&to=${dayjs(dates[1]).valueOf()}` : '';
+      setIframeUrl(
+        `/grafana/home/d-solo/${dashboardInfo?.id}?orgId=1&panelId=1&__feature.dashboardSceneSolo${timeFrame}`
+      );
+    }
+  }, [dates, dashboardInfo]);
+
   const [isResizing, setIsResizing] = useState(false);
+
+  const rangePresets: TimeRangePickerProps['presets'] = [
+    {
+      label: <span title={formatMessage('uns.last5minutes')}>{formatMessage('uns.last5minutes')}</span>,
+      value: [dayjs().add(-5, 'm'), dayjs()],
+    },
+    {
+      label: <span title={formatMessage('uns.last30minutes')}>{formatMessage('uns.last30minutes')}</span>,
+      value: [dayjs().add(-30, 'm'), dayjs()],
+    },
+    {
+      label: <span title={formatMessage('uns.last1hour')}>{formatMessage('uns.last1hour')}</span>,
+      value: [dayjs().add(-1, 'h'), dayjs()],
+    },
+    {
+      label: <span title={formatMessage('uns.last6hours')}>{formatMessage('uns.last6hours')}</span>,
+      value: [dayjs().add(-6, 'h'), dayjs()],
+    },
+    {
+      label: <span title={formatMessage('uns.last24hours')}>{formatMessage('uns.last24hours')}</span>,
+      value: [dayjs().add(-24, 'h'), dayjs()],
+    },
+    {
+      label: <span title={formatMessage('uns.last1week')}>{formatMessage('uns.last1week')}</span>,
+      value: [dayjs().add(-1, 'w'), dayjs()],
+    },
+    {
+      label: <span title={formatMessage('uns.last6weeks')}>{formatMessage('uns.last6weeks')}</span>,
+      value: [dayjs().add(-6, 'w'), dayjs()],
+    },
+    {
+      label: <span title={formatMessage('uns.last1year')}>{formatMessage('uns.last1year')}</span>,
+      value: [dayjs().add(-1, 'y'), dayjs()],
+    },
+  ];
+
+  const handleDefaultTime = () => {
+    setDates([dataType === 2 ? dayjs().add(-6, 'h') : dayjs().add(-5, 'm'), dayjs()]);
+  };
+
+  const onRangeChange = (dates: null | (Dayjs | null)[]) => {
+    setDates(dates);
+  };
 
   if (!instanceInfo?.withDashboard) {
     return <Empty />;
   }
   return hasDashboards ? (
     <>
-      <div ref={containerRef}>
-        {containerSize?.width && (
-          <ResizableBox
-            className="resizable-container resizable-hover-handles"
-            width={containerSize?.width}
-            height={300}
-            minConstraints={[200, 200]}
-            maxConstraints={[containerSize?.width, 500]}
-            axis="both"
-            resizeHandles={['se']} // 只允许右下角拖拽
-            onResizeStart={() => setIsResizing(true)}
-            onResizeStop={() => setIsResizing(false)}
-          >
-            <>
-              <iframe ref={iframeCallbackRef} height="100%" width="100%" id="dashboardIframe" src={iframeUrl} />
-              <IframeMask style={{ display: isResizing ? 'block' : 'none' }} />
-            </>
-          </ResizableBox>
-        )}
-      </div>
+      {dashboardInfo?.type !== 2 && (
+        <Flex gap={10} style={{ marginBottom: '10px' }}>
+          <RangePicker
+            showTime
+            format="YYYY-MM-DD HH:mm:ss"
+            value={dates}
+            onChange={onRangeChange}
+            presets={rangePresets}
+          />
+          <Button
+            color="default"
+            variant="filled"
+            icon={<Renew />}
+            onClick={() => {
+              if (dates) {
+                setDates([dayjs().add(dates[0] - dates[1], 'ms'), dayjs()]);
+              } else {
+                handleDefaultTime();
+              }
+            }}
+            style={{
+              border: '1px solid #CBD5E1',
+              color: 'var(--supos-text-color)',
+              backgroundColor: 'var(--supos-uns-button-color)',
+            }}
+          />
+        </Flex>
+      )}
+      <ResizableBox
+        className="resizable-container resizable-hover-handles"
+        width={900}
+        height={300}
+        minConstraints={[200, 200]}
+        maxConstraints={[1280, 500]}
+        axis="both"
+        resizeHandles={['se']} // 只允许右下角拖拽
+        onResizeStart={() => setIsResizing(true)}
+        onResizeStop={() => setIsResizing(false)}
+      >
+        <>
+          <iframe ref={iframeCallbackRef} height="100%" width="100%" id="dashboardIframe" src={iframeUrl} />
+          <IframeMask style={{ display: isResizing ? 'block' : 'none' }} />
+        </>
+      </ResizableBox>
     </>
   ) : (
     <Result
