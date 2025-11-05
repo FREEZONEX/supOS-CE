@@ -165,7 +165,7 @@ func Dto2TreeResult(unsDto bo.NodeUnsInfo) *types.TopicTreeResult {
 	}
 	result.ParentAlias = unsDto.GetParentAlias()
 	result.PathType = unsDto.GetPathType()
-	//result.Type = result.PathType
+	result.Type = result.PathType
 	name := PathUtil.GetName(unsDto.GetPath())
 	result.Name = name
 	result.Path = unsDto.GetPath()

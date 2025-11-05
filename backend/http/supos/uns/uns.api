@@ -194,7 +194,7 @@ type (
 		LastUpdateTime int64                  `json:"lastUpdateTime,omitempty"`
 		CountChildren  int                    `json:"countChildren,omitempty"`
 		PathType       int16                    `json:"pathType"`
-		//Type           int16                    `json:"type"`
+		Type           int16                    `json:"type"`
 		DataType       *int16                 `json:"dataType,omitempty"`
 		ParentDataType *int16                 `json:"parentDataType,omitempty"`
 		Name           string                 `json:"name"`

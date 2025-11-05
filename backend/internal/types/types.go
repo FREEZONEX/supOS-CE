@@ -1052,6 +1052,7 @@ type TopicTreeResult struct {
 	LastUpdateTime int64                  `json:"lastUpdateTime,omitempty"`
 	CountChildren  int                    `json:"countChildren,omitempty"`
 	PathType       int16                  `json:"pathType"`
+	Type           int16                  `json:"type"`
 	DataType       *int16                 `json:"dataType,omitempty"`
 	ParentDataType *int16                 `json:"parentDataType,omitempty"`
 	Name           string                 `json:"name"`
@@ -1175,7 +1176,7 @@ type UpdateNameVo struct {
 type UpdateTemplateBaseInfoReq struct {
 	ID          int64  `form:"id"`
 	Name        string `form:"name,string,optional"`
-	Description string `form:"description,string,optional"`
+	Description string `form:"description,string,optional,default=NULL"`
 }
 
 type UpdateTemplateFieldsAndDescReq struct {
@@ -1350,21 +1351,4 @@ type WithIDStr struct {
 
 type WithUid struct {
 	Uid string `path:"uid"`
-}
-
-type BindUnsReq struct {
-	DashboardID string `json:"dashboardId"`
-	UnsAlias    string `json:"unsAlias"`
-}
-
-type GetByUnsReq struct {
-	UnsAlias string `form:"unsAlias"`
-}
-
-type IsExistReq struct {
-	Alias string `form:"alias"`
-}
-
-type AliasPathReq struct {
-	Alias string `path:"alias"`
 }

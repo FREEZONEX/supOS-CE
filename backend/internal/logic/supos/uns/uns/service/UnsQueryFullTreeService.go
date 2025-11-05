@@ -135,6 +135,7 @@ func (l *UnsQueryService) uns2treeList(req *types.SearchTreeReq, list []*dao.Uns
 			v = &types.TopicTreeResult{
 				Id:             strconv.FormatInt(uns.Id, 10),
 				PathType:       2,
+				Type:           2,
 				Protocol:       uns.ProtocolType,
 				ParentDataType: uns.ParentDataType,
 				Path:           uns.Path,
@@ -173,7 +174,7 @@ func (l *UnsQueryService) getTopicTreeResults(all []*dao.UnsNamespace, list []*d
 		}
 
 		rs := &types.TopicTreeResult{
-			Name: po.Name, Path: path, PathType: po.PathType, Protocol: po.ProtocolType,
+			Name: po.Name, Path: path, PathType: po.PathType, Type: po.PathType, Protocol: po.ProtocolType,
 		}
 
 		rs.ParentDataType = po.ParentDataType
