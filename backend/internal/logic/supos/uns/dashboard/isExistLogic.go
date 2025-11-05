@@ -1,9 +1,10 @@
 package dashboard
 
 import (
-	"context"
-
+	"backend/internal/common/errors"
+	"backend/internal/common/utils/grafanautil"
 	"backend/internal/svc"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -14,7 +15,6 @@ type IsExistLogic struct {
 	svcCtx *svc.ServiceContext
 }
 
-// isExist
 func NewIsExistLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsExistLogic {
 	return &IsExistLogic{
 		Logger: logx.WithContext(ctx),
@@ -23,8 +23,11 @@ func NewIsExistLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsExistLo
 	}
 }
 
-func (l *IsExistLogic) IsExist() error {
-	// todo: add your logic here and delete this line
-
-	return nil
+func (l *IsExistLogic) IsExist(alias string) (map[string]any, error) {
+	uuid := grafanautil.GetDashboardUUIDByAlias(alias)
+	dbJSON, err := grafanautil.GetDashboardByUUID(uuid)
+	if err != nil || dbJSON == nil {
+		return nil, errors.NewBuzError(400, "uns.dashboard.not.exit")
+	}
+	return dbJSON, nil
 }

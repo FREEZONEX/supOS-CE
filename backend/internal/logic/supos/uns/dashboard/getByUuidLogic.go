@@ -4,10 +4,10 @@
 package dashboard
 
 import (
-	"context"
-
+	"backend/internal/common/errors"
+	"backend/internal/common/utils/grafanautil"
 	"backend/internal/svc"
-	"backend/internal/types"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -18,7 +18,6 @@ type GetByUuidLogic struct {
 	svcCtx *svc.ServiceContext
 }
 
-// 根据 UID 获取 Dashboard
 func NewGetByUuidLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetByUuidLogic {
 	return &GetByUuidLogic{
 		Logger: logx.WithContext(ctx),
@@ -27,8 +26,10 @@ func NewGetByUuidLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetByUu
 	}
 }
 
-func (l *GetByUuidLogic) GetByUuid(req *types.UuidRequest) (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+func (l *GetByUuidLogic) GetByUuid(uuid string) (map[string]any, error) {
+	dbJSON, err := grafanautil.GetDashboardByUUID(uuid)
+	if err != nil || dbJSON == nil {
+		return nil, errors.NewBuzError(400, "uns.dashboard.not.exit")
+	}
+	return dbJSON, nil
 }

@@ -4,23 +4,23 @@ import (
 	"backend/internal/logic/supos/uns/dashboard/model"
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // DashboardMapper Dashboard 数据访问对象
 type DashboardMapper struct {
-	conn   sqlx.SqlConn
+	db     *gorm.DB
 	ctx    context.Context
 	logger logx.Logger
 }
 
 // NewDashboardMapper 创建 DashboardMapper 实例
-func NewDashboardMapper(conn sqlx.SqlConn, ctx context.Context) *DashboardMapper {
+func NewDashboardMapper(db *gorm.DB, ctx context.Context) *DashboardMapper {
 	return &DashboardMapper{
-		conn:   conn,
+		db:     db,
 		ctx:    ctx,
 		logger: logx.WithContext(ctx),
 	}
@@ -28,13 +28,10 @@ func NewDashboardMapper(conn sqlx.SqlConn, ctx context.Context) *DashboardMapper
 
 // SelectById 根据 ID 查询 Dashboard
 func (m *DashboardMapper) SelectById(id string) (*model.DashboardModel, error) {
-	query := `SELECT id, name, type, need_init, description, json_content, creator, update_time, create_time 
-              FROM uns_dashboard WHERE id = $1`
-
 	var dashboard model.DashboardModel
-	err := m.conn.QueryRowCtx(m.ctx, &dashboard, query, id)
+	err := m.db.WithContext(m.ctx).Where("id = ?", id).First(&dashboard).Error
 	if err != nil {
-		if err == sqlx.ErrNotFound {
+		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
 		m.logger.Errorf("failed to select dashboard by id: %v", err)
@@ -45,18 +42,7 @@ func (m *DashboardMapper) SelectById(id string) (*model.DashboardModel, error) {
 
 // Insert 插入 Dashboard
 func (m *DashboardMapper) Insert(dashboard *model.DashboardModel) error {
-	query := `INSERT INTO uns_dashboard (id, name, type, need_init, description, json_content, creator, update_time, create_time) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
-
-	_, err := m.conn.ExecCtx(m.ctx, query,
-		dashboard.ID,
-		dashboard.Name,
-		dashboard.Type,
-		dashboard.NeedInit,
-		dashboard.Description,
-		dashboard.JsonContent,
-		dashboard.Creator,
-	)
+	err := m.db.WithContext(m.ctx).Create(dashboard).Error
 	if err != nil {
 		m.logger.Errorf("failed to insert dashboard: %v", err)
 		return err
@@ -66,17 +52,9 @@ func (m *DashboardMapper) Insert(dashboard *model.DashboardModel) error {
 
 // UpdateById 根据 ID 更新 Dashboard
 func (m *DashboardMapper) UpdateById(dashboard *model.DashboardModel) error {
-	query := `UPDATE uns_dashboard SET name = $1, type = $2, need_init = $3, description = $4, 
-              json_content = $5, update_time = CURRENT_TIMESTAMP WHERE id = $6`
-
-	_, err := m.conn.ExecCtx(m.ctx, query,
-		dashboard.Name,
-		dashboard.Type,
-		dashboard.NeedInit,
-		dashboard.Description,
-		dashboard.JsonContent,
-		dashboard.ID,
-	)
+	// 使用 map 更新非零值字段，避免gorm默认的“忽略零值”行为
+	// 这里假设所有字段都需要更新
+	err := m.db.WithContext(m.ctx).Model(&model.DashboardModel{}).Where("id = ?", dashboard.ID).Updates(dashboard).Error
 	if err != nil {
 		m.logger.Errorf("failed to update dashboard: %v", err)
 		return err
@@ -86,9 +64,7 @@ func (m *DashboardMapper) UpdateById(dashboard *model.DashboardModel) error {
 
 // DeleteById 根据 ID 删除 Dashboard
 func (m *DashboardMapper) DeleteById(id string) error {
-	query := `DELETE FROM uns_dashboard WHERE id = $1`
-
-	_, err := m.conn.ExecCtx(m.ctx, query, id)
+	err := m.db.WithContext(m.ctx).Where("id = ?", id).Delete(&model.DashboardModel{}).Error
 	if err != nil {
 		m.logger.Errorf("failed to delete dashboard: %v", err)
 		return err
@@ -101,19 +77,8 @@ func (m *DashboardMapper) SelectByFlowNames(names []string) ([]*model.DashboardM
 	if len(names) == 0 {
 		return []*model.DashboardModel{}, nil
 	}
-
-	placeholders := make([]string, len(names))
-	args := make([]interface{}, len(names))
-	for i, name := range names {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
-		args[i] = name
-	}
-
-	query := fmt.Sprintf(`SELECT id, name, type, need_init, description, json_content, creator, update_time, create_time 
-                          FROM uns_dashboard WHERE name IN (%s)`, strings.Join(placeholders, ","))
-
 	var dashboards []*model.DashboardModel
-	err := m.conn.QueryRowsCtx(m.ctx, &dashboards, query, args...)
+	err := m.db.WithContext(m.ctx).Where("name IN ?", names).Find(&dashboards).Error
 	if err != nil {
 		m.logger.Errorf("failed to select dashboards by names: %v", err)
 		return nil, err
@@ -126,23 +91,8 @@ func (m *DashboardMapper) SaveOrIgnoreBatch(dashboards []*model.DashboardModel) 
 	if len(dashboards) == 0 {
 		return nil
 	}
-
-	// 构建批量插入 SQL
-	valuePlaceholders := make([]string, len(dashboards))
-	args := make([]interface{}, 0, len(dashboards)*5)
-	argIndex := 1
-
-	for i, db := range dashboards {
-		valuePlaceholders[i] = fmt.Sprintf("($%d, $%d, $%d, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-			argIndex, argIndex+1, argIndex+2)
-		args = append(args, db.ID, db.Name, db.Description)
-		argIndex += 3
-	}
-
-	query := fmt.Sprintf(`INSERT INTO uns_dashboard (id, name, description, update_time, create_time) 
-                          VALUES %s ON CONFLICT (id) DO NOTHING`, strings.Join(valuePlaceholders, ","))
-
-	_, err := m.conn.ExecCtx(m.ctx, query, args...)
+	// GORM v2 的 Clauses(clause.OnConflict{DoNothing: true}) 提供了优雅的方式
+	err := m.db.WithContext(m.ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&dashboards).Error
 	if err != nil {
 		m.logger.Errorf("failed to batch save or ignore dashboards: %v", err)
 		return err
@@ -167,43 +117,33 @@ func (m *DashboardMapper) SelectDashboard(
 	pageNo int64,
 	pageSize int64,
 ) ([]*DashboardExtends, error) {
-	// 构建动态 SQL
-	var conditions []string
-	args := []interface{}{userID}
-	argIndex := 2
-
-	baseQuery := `SELECT a.*, b.mark, b.mark_time 
-                  FROM uns_dashboard a 
-                  LEFT JOIN uns_dashboard_top_recodes b ON a.id = b.id AND b.user_id = $1 
-                  WHERE 1=1`
+	var dashboards []*DashboardExtends
+	query := m.db.WithContext(m.ctx).
+		Table("uns_dashboard a").
+		Select("a.*, b.mark, b.mark_time").
+		Joins("LEFT JOIN uns_dashboard_top_recodes b ON a.id = b.id AND b.user_id = ?", userID)
 
 	if fuzzyName != "" {
-		conditions = append(conditions, fmt.Sprintf(" AND (a.name LIKE $%d OR a.description LIKE $%d)", argIndex, argIndex))
-		args = append(args, "%"+fuzzyName+"%")
-		argIndex++
+		searchPattern := "%" + fuzzyName + "%"
+		query = query.Where("a.name LIKE ? OR a.description LIKE ?", searchPattern, searchPattern)
 	}
 
 	if typ != nil {
-		conditions = append(conditions, fmt.Sprintf(" AND a.type = $%d", argIndex))
-		args = append(args, *typ)
-		argIndex++
+		query = query.Where("a.type = ?", *typ)
 	}
-
-	query := baseQuery + strings.Join(conditions, "")
 
 	// 排序
 	if orderCode == "" {
-		query += " ORDER BY b.mark ASC, b.mark_time DESC, a.create_time DESC"
+		query = query.Order("b.mark ASC, b.mark_time DESC, a.create_time DESC")
 	} else {
-		query += fmt.Sprintf(" ORDER BY %s %s", orderCode, descOrAsc)
+		query = query.Order(fmt.Sprintf("%s %s", orderCode, descOrAsc))
 	}
 
 	// 分页
-	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
-	args = append(args, pageSize, (pageNo-1)*pageSize)
+	offset := (pageNo - 1) * pageSize
+	query = query.Limit(int(pageSize)).Offset(int(offset))
 
-	var dashboards []*DashboardExtends
-	err := m.conn.QueryRowsCtx(m.ctx, &dashboards, query, args...)
+	err := query.Find(&dashboards).Error
 	if err != nil {
 		m.logger.Errorf("failed to select dashboards: %v", err)
 		return nil, err
@@ -213,28 +153,19 @@ func (m *DashboardMapper) SelectDashboard(
 
 // SelectDashboardCount 查询 Dashboard 总数
 func (m *DashboardMapper) SelectDashboardCount(fuzzyName string, typ *int) (int64, error) {
-	var conditions []string
-	var args []interface{}
-	argIndex := 1
-
-	query := `SELECT COUNT(*) FROM uns_dashboard WHERE 1=1`
+	var count int64
+	query := m.db.WithContext(m.ctx).Model(&model.DashboardModel{})
 
 	if fuzzyName != "" {
-		conditions = append(conditions, fmt.Sprintf(" AND (name LIKE $%d OR description LIKE $%d)", argIndex, argIndex))
-		args = append(args, "%"+fuzzyName+"%")
-		argIndex++
+		searchPattern := "%" + fuzzyName + "%"
+		query = query.Where("name LIKE ? OR description LIKE ?", searchPattern, searchPattern)
 	}
 
 	if typ != nil {
-		conditions = append(conditions, fmt.Sprintf(" AND type = $%d", argIndex))
-		args = append(args, *typ)
-		argIndex++
+		query = query.Where("type = ?", *typ)
 	}
 
-	query += strings.Join(conditions, "")
-
-	var count int64
-	err := m.conn.QueryRowCtx(m.ctx, &count, query, args...)
+	err := query.Count(&count).Error
 	if err != nil {
 		m.logger.Errorf("failed to count dashboards: %v", err)
 		return 0, err
@@ -245,10 +176,9 @@ func (m *DashboardMapper) SelectDashboardCount(fuzzyName string, typ *int) (int6
 // SelectAll selects all DashboardModel from the database.
 func (m *DashboardMapper) SelectAll() ([]*model.DashboardModel, error) {
 	var dashboards []*model.DashboardModel
-	query := "SELECT id, name, type, need_init, description, json_content, creator, update_time, create_time FROM uns_dashboard"
-	err := m.conn.QueryRowsCtx(m.ctx, &dashboards, query)
+	err := m.db.WithContext(m.ctx).Find(&dashboards).Error
 	if err != nil {
-		if err == sqlx.ErrNotFound {
+		if err == gorm.ErrRecordNotFound {
 			return []*model.DashboardModel{}, nil
 		}
 		m.logger.Errorf("failed to select all dashboards: %v", err)
@@ -262,19 +192,8 @@ func (m *DashboardMapper) SelectByIds(ids []string) ([]*model.DashboardModel, er
 	if len(ids) == 0 {
 		return []*model.DashboardModel{}, nil
 	}
-
-	placeholders := make([]string, len(ids))
-	args := make([]interface{}, len(ids))
-	for i, id := range ids {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
-		args[i] = id
-	}
-
-	query := fmt.Sprintf(`SELECT id, name, type, need_init, description, json_content, creator, update_time, create_time 
-                          FROM uns_dashboard WHERE id IN (%s)`, strings.Join(placeholders, ","))
-
 	var dashboards []*model.DashboardModel
-	err := m.conn.QueryRowsCtx(m.ctx, &dashboards, query, args...)
+	err := m.db.WithContext(m.ctx).Where("id IN ?", ids).Find(&dashboards).Error
 	if err != nil {
 		m.logger.Errorf("failed to select dashboards by ids: %v", err)
 		return nil, err
@@ -287,17 +206,7 @@ func (m *DashboardMapper) DeleteBatchIds(ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
-
-	placeholders := make([]string, len(ids))
-	args := make([]interface{}, len(ids))
-	for i, id := range ids {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
-		args[i] = id
-	}
-
-	query := fmt.Sprintf(`DELETE FROM uns_dashboard WHERE id IN (%s)`, strings.Join(placeholders, ","))
-
-	_, err := m.conn.ExecCtx(m.ctx, query, args...)
+	err := m.db.WithContext(m.ctx).Where("id IN ?", ids).Delete(&model.DashboardModel{}).Error
 	if err != nil {
 		m.logger.Errorf("failed to delete dashboards by ids: %v", err)
 		return err
@@ -307,13 +216,13 @@ func (m *DashboardMapper) DeleteBatchIds(ids []string) error {
 
 // SelectDashboardsToInit selects dashboards that need to be initialized.
 func (m *DashboardMapper) SelectDashboardsToInit() ([]*model.DashboardModel, error) {
-	query := `SELECT id, name, type, need_init, description, json_content, creator, update_time, create_time 
-              FROM uns_dashboard WHERE need_init = true AND type = 1 AND json_content IS NOT NULL AND json_content != ''`
-
 	var dashboards []*model.DashboardModel
-	err := m.conn.QueryRowsCtx(m.ctx, &dashboards, query)
+	err := m.db.WithContext(m.ctx).
+		Where("need_init = ? AND type = ? AND json_content IS NOT NULL AND json_content != ?", true, 1, "").
+		Find(&dashboards).Error
+
 	if err != nil {
-		if err == sqlx.ErrNotFound {
+		if err == gorm.ErrRecordNotFound {
 			return []*model.DashboardModel{}, nil
 		}
 		m.logger.Errorf("failed to select dashboards to init: %v", err)

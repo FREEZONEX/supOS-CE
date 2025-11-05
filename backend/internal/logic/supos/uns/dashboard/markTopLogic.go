@@ -4,31 +4,36 @@
 package dashboard
 
 import (
-	"context"
-
+	"backend/internal/logic/supos/uns/dashboard/dao"
+	"backend/internal/logic/supos/uns/dashboard/model"
+	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
-	"backend/internal/types"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type MarkTopLogic struct {
 	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
+	ctx                 context.Context
+	svcCtx              *svc.ServiceContext
+	dashboardMarkMapper *dao.DashboardMarkedMapper
 }
 
-// 置顶 Dashboard
 func NewMarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MarkTopLogic {
+	db := relationDB.GetDb(ctx)
 	return &MarkTopLogic{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
+		Logger:              logx.WithContext(ctx),
+		ctx:                 ctx,
+		svcCtx:              svcCtx,
+		dashboardMarkMapper: dao.NewDashboardMarkedMapper(db, ctx),
 	}
 }
 
-func (l *MarkTopLogic) MarkTop(req *types.MarkTopRequest) (resp *types.JsonResult, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+func (l *MarkTopLogic) MarkTop(id string, userID string) error {
+	mark := &model.DashboardMarkModel{
+		ID:     id,
+		UserID: userID,
+	}
+	return l.dashboardMarkMapper.Insert(mark)
 }

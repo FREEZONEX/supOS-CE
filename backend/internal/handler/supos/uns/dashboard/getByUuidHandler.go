@@ -22,7 +22,7 @@ func GetByUuidHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := dashboard.NewGetByUuidLogic(r.Context(), svcCtx)
-		resp, err := l.GetByUuid(&req)
+		resp, err := l.GetByUuid(req.Uid)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

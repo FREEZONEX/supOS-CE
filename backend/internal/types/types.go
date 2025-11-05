@@ -1351,3 +1351,20 @@ type WithIDStr struct {
 type WithUid struct {
 	Uid string `path:"uid"`
 }
+
+type BindUnsReq struct {
+	DashboardID string `json:"dashboardId"`
+	UnsAlias    string `json:"unsAlias"`
+}
+
+type GetByUnsReq struct {
+	UnsAlias string `form:"unsAlias"`
+}
+
+type IsExistReq struct {
+	Alias string `form:"alias"`
+}
+
+type AliasPathReq struct {
+	Alias string `path:"alias"`
+}
