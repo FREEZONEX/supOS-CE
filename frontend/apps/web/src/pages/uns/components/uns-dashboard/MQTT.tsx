@@ -24,7 +24,6 @@ const Item = ({ item }: any) => {
         {item?.extra && <div style={{ flexShrink: 0 }}>{item?.extra}</div>}
       </Flex>
       <Flex
-        title={item.text}
         style={{
           background: 'var(--supos-bg-color)',
           padding: '4px 12px',
@@ -45,9 +44,9 @@ const Item = ({ item }: any) => {
             maxHeight: 150,
           }}
         >
-          {item.text}
+          {item.text || formatMessage('uns.selectTopic')}
         </pre>
-        <ComCopy textToCopy={item.text} />
+        <ComCopy textToCopy={item.text || formatMessage('uns.selectTopic')} />
       </Flex>
     </div>
   );
@@ -57,7 +56,7 @@ const MQTT = () => {
   const systemInfo = useBaseStore((state) => state.systemInfo);
   const wsPort = systemInfo?.mqttTcpPort ?? window.location.port;
   const formatMessage = useTranslate();
-  const [payloadInfo, setPayLoadInfo] = useState<any>(formatMessage('uns.selectTopic'));
+  const [payloadInfo, setPayLoadInfo] = useState<any>(null);
   const modalRef = useRef<ModalRef>(null);
   const [topicInfo, setTopicInfo] = useState<any>(null);
   const mqttList = [
@@ -117,7 +116,7 @@ const MQTT = () => {
                 });
             } else {
               setTopicInfo(null);
-              setPayLoadInfo(formatMessage('uns.selectTopic'));
+              setPayLoadInfo(null);
             }
           }}
           labelInValue
