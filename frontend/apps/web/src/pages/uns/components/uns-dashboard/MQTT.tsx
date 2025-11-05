@@ -24,6 +24,7 @@ const Item = ({ item }: any) => {
         {item?.extra && <div style={{ flexShrink: 0 }}>{item?.extra}</div>}
       </Flex>
       <Flex
+        title={item.text || formatMessage('uns.selectTopic')}
         style={{
           background: 'var(--supos-bg-color)',
           padding: '4px 12px',
