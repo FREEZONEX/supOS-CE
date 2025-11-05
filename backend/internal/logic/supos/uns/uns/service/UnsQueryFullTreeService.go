@@ -45,6 +45,9 @@ func (l *UnsQueryService) searchTree(ctx context.Context, req *types.SearchTreeR
 		err = er
 		if er != nil {
 			resp.Msg = er.Error()
+		} else {
+			resp.Code = 200
+			resp.Msg = "NoData"
 		}
 		return
 	}
