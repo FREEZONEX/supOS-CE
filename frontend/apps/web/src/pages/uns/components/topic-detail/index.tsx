@@ -6,7 +6,6 @@ import {
   // updateModelSubscribe,
   checkDashboardIsExist,
   getDashboardByUns,
-  bindDashboardForUns,
 } from '@/apis/inter-api/uns';
 import { useWebSocket } from 'ahooks';
 import { Button, Collapse, Flex, theme, Typography, App, Space } from 'antd';
@@ -34,10 +33,7 @@ import { isJsonString } from '@/utils/common';
 import { useBaseStore } from '@/stores/base';
 // import Subscribe from '@/pages/uns/components/subscribe';
 import EditButton from '@/pages/uns/components/EditButton.tsx';
-import DashboardBinding from '@/pages/uns/components/topic-detail/dashboard-binding/DashboardBinding.tsx';
 import screenfull from 'screenfull';
-import { getSearchParamsString } from '@/utils';
-import { useNavigate } from 'react-router';
 
 const { Title } = Typography;
 
@@ -61,7 +57,7 @@ const Module: FC<FileDetailProps> = (props) => {
   } = useBaseStore((state) => ({
     systemInfo: state.systemInfo,
   }));
-  const navigate = useNavigate();
+  const [createLoading, setCreateLoading] = useState(false);
   const formatMessage = useTranslate();
   const { message } = App.useApp();
   const documentListRef = useRef(null);
@@ -282,29 +278,56 @@ const Module: FC<FileDetailProps> = (props) => {
             {
               key: instanceInfo.dataType !== 6 ? 'dashboard' : '',
               label: formatMessage('uns.dashboard'),
-              children: <Dashboard instanceInfo={instanceInfo} dashboardInfo={dashboardInfo} />,
+              children: <Dashboard instanceInfo={instanceInfo} />,
               style: panelStyle,
-              extra: (
-                <Space>
-                  <DashboardBinding
-                    key={instanceInfo?.id}
-                    selectValue={dashboardInfo?.id}
-                    isCreated={instanceInfo.withDashboard || instanceInfo.dashboardIsExist}
-                    onCreated={handleCreateDashboard}
-                    onBinding={(item: any) => {
-                      return bindDashboardForUns({
-                        dashboardId: item.id,
-                        unsAlias: instanceInfo.alias,
-                      }).then(() => {
-                        message.success(formatMessage('common.optsuccess'));
-                        getFileDetail(instanceInfo.id).then((dashboardInfo) => {
-                          navigate(
-                            `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`
-                          );
-                        });
-                      });
-                    }}
-                  />
+              // extra: (
+              //   <Space>
+              //     <DashboardBinding
+              //       key={instanceInfo?.id}
+              //       selectValue={dashboardInfo?.id}
+              //       isCreated={instanceInfo.withDashboard || instanceInfo.dashboardIsExist}
+              //       onCreated={handleCreateDashboard}
+              //       onBinding={(item: any) => {
+              //         return bindDashboardForUns({
+              //           dashboardId: item.id,
+              //           unsAlias: instanceInfo.alias,
+              //         }).then(() => {
+              //           message.success(formatMessage('common.optsuccess'));
+              //           getFileDetail(instanceInfo.id).then((dashboardInfo) => {
+              //             navigate(
+              //               `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`
+              //             );
+              //           });
+              //         });
+              //       }}
+              //     />
+              //     {(instanceInfo.withDashboard || instanceInfo.dashboardIsExist) && (
+              //       <Button
+              //         title={formatMessage('common.fullScreen')}
+              //         icon={<FullscreenOutlined />}
+              //         onClick={() => {
+              //           if (screenfull.isEnabled) {
+              //             const el = document.getElementById('dashboardIframe');
+              //             if (el) {
+              //               screenfull.request(el);
+              //             } else {
+              //               message.error('未找到全屏元素');
+              //             }
+              //           } else {
+              //             message.error('该浏览器,不支持全屏功能');
+              //           }
+              //         }}
+              //       />
+              //     )}
+              //   </Space>
+              // ),
+              extra: instanceInfo.dataType !== 7 && (
+                <Space.Compact block>
+                  {(!instanceInfo.withDashboard || !instanceInfo.dashboardIsExist) && (
+                    <Button loading={createLoading} onClick={handleCreateDashboard}>
+                      {formatMessage('common.create')}
+                    </Button>
+                  )}
                   {(instanceInfo.withDashboard || instanceInfo.dashboardIsExist) && (
                     <Button
                       title={formatMessage('common.fullScreen')}
@@ -323,7 +346,7 @@ const Module: FC<FileDetailProps> = (props) => {
                       }}
                     />
                   )}
-                </Space>
+                </Space.Compact>
               ),
             },
             {
@@ -372,10 +395,15 @@ const Module: FC<FileDetailProps> = (props) => {
   };
 
   const handleCreateDashboard = () => {
-    return createDashboard(instanceInfo.alias).then(() => {
-      message.success(formatMessage('common.optsuccess'));
-      getFileDetail(instanceInfo.id);
-    });
+    setCreateLoading(true);
+    return createDashboard(instanceInfo.alias)
+      .then(() => {
+        message.success(formatMessage('common.optsuccess'));
+        getFileDetail(instanceInfo.id);
+      })
+      .finally(() => {
+        setCreateLoading(false);
+      });
   };
   // const handleChangeSubscribe = async (enable: boolean, frequency?: string) => {
   //   await updateModelSubscribe({ id, enable, frequency });

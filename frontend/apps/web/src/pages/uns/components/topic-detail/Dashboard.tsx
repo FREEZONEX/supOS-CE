@@ -1,7 +1,9 @@
 import { type FC, useEffect, useRef, useState, useCallback } from 'react';
+import md5 from 'blueimp-md5';
 import { ResizableBox } from 'react-resizable';
 import '@/components/resizable-container/index.scss';
-import { Flex, DatePicker, Button, Empty, Result, type TimeRangePickerProps } from 'antd';
+import { Result, type TimeRangePickerProps } from 'antd';
+import { Flex, DatePicker, Button, Empty } from 'antd';
 import { Renew } from '@carbon/icons-react';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
@@ -13,33 +15,33 @@ const { RangePicker } = DatePicker;
 
 interface DetailDashboardProps {
   instanceInfo: { [key: string]: any };
-  dashboardInfo: any;
 }
 
-const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo }) => {
-  const { dataType } = instanceInfo;
+const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo }) => {
+  const { dataType, refers, alias } = instanceInfo;
 
   const formatMessage = useTranslate();
   const hasDashboards = useBaseStore((state) => state.menuGroup?.some((f) => f.url === '/dashboards'));
   const observer = useRef<MutationObserver | null>(null);
+  const newAlias = dataType === 7 ? refers?.[0]?.alias : alias;
+  const aliasHash = md5(newAlias).slice(8, 24);
+  const iframeName = `${newAlias?.replaceAll('_', '-')}`;
 
-  const [iframeUrl, setIframeUrl] = useState('');
-
+  const [iframeUrl, setIframeUrl] = useState(
+    `/grafana/home/d-solo/${aliasHash}/${iframeName}?orgId=1&panelId=1&__feature.dashboardSceneSolo`
+  );
   const [dates, setDates] = useState<any>(null);
+
   useEffect(() => {
     handleDefaultTime();
-    if (instanceInfo && dashboardInfo) {
-      if (!dashboardInfo?.type || dashboardInfo?.type === 1) {
-        if (dashboardInfo?.id) {
-          // grafana
-          setIframeUrl(`/grafana/home/d-solo/${dashboardInfo?.id}?orgId=1&panelId=1&__feature.dashboardSceneSolo`);
-        }
-      } else if (dashboardInfo?.type === 2) {
-        // fuxa
-        setIframeUrl(`/fuxa/home/?id=${dashboardInfo?.id}=lab`);
-      }
-    }
-  }, [instanceInfo, dashboardInfo]);
+  }, [instanceInfo]);
+
+  useEffect(() => {
+    const timeFrame = dates ? `&from=${dayjs(dates[0]).valueOf()}&to=${dayjs(dates[1]).valueOf()}` : '';
+    setIframeUrl(
+      `/grafana/home/d-solo/${aliasHash}/${iframeName}?orgId=1&panelId=1&__feature.dashboardSceneSolo${timeFrame}`
+    );
+  }, [dates]);
 
   const iframeCallbackRef = useCallback(
     (iframe: HTMLIFrameElement | null) => {
@@ -51,7 +53,6 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo
 
       // ===== 挂载阶段 =====
       if (!iframe) return;
-      if (dashboardInfo?.type === 2) return;
       const handleMutation = (mutationsList: MutationRecord[]) => {
         const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
         if (!iframeDoc) return;
@@ -130,17 +131,8 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo
         setTimeout(onLoad, 0); // 确保在下一 tick 执行
       }
     },
-    [iframeUrl, dashboardInfo]
+    [iframeUrl]
   ); // 依赖 iframeUrl，确保 URL 变化时重新绑定
-
-  useEffect(() => {
-    if (!dashboardInfo?.type || dashboardInfo?.type === 1) {
-      const timeFrame = dates ? `&from=${dayjs(dates[0]).valueOf()}&to=${dayjs(dates[1]).valueOf()}` : '';
-      setIframeUrl(
-        `/grafana/home/d-solo/${dashboardInfo?.id}?orgId=1&panelId=1&__feature.dashboardSceneSolo${timeFrame}`
-      );
-    }
-  }, [dates, dashboardInfo]);
 
   const [isResizing, setIsResizing] = useState(false);
 
@@ -186,40 +178,38 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo, dashboardInfo
   const onRangeChange = (dates: null | (Dayjs | null)[]) => {
     setDates(dates);
   };
-
   if (!instanceInfo?.withDashboard) {
     return <Empty />;
   }
   return hasDashboards ? (
     <>
-      {dashboardInfo?.type !== 2 && (
-        <Flex gap={10} style={{ marginBottom: '10px' }}>
-          <RangePicker
-            showTime
-            format="YYYY-MM-DD HH:mm:ss"
-            value={dates}
-            onChange={onRangeChange}
-            presets={rangePresets}
-          />
-          <Button
-            color="default"
-            variant="filled"
-            icon={<Renew />}
-            onClick={() => {
-              if (dates) {
-                setDates([dayjs().add(dates[0] - dates[1], 'ms'), dayjs()]);
-              } else {
-                handleDefaultTime();
-              }
-            }}
-            style={{
-              border: '1px solid #CBD5E1',
-              color: 'var(--supos-text-color)',
-              backgroundColor: 'var(--supos-uns-button-color)',
-            }}
-          />
-        </Flex>
-      )}
+      <Flex gap={10} style={{ marginBottom: '10px' }}>
+        <RangePicker
+          showTime
+          format="YYYY-MM-DD HH:mm:ss"
+          value={dates}
+          onChange={onRangeChange}
+          presets={rangePresets}
+        />
+        <Button
+          color="default"
+          variant="filled"
+          icon={<Renew />}
+          onClick={() => {
+            if (dates) {
+              setDates([dayjs().add(dates[0] - dates[1], 'ms'), dayjs()]);
+            } else {
+              handleDefaultTime();
+            }
+          }}
+          style={{
+            border: '1px solid #CBD5E1',
+            color: 'var(--supos-text-color)',
+            backgroundColor: 'var(--supos-uns-button-color)',
+          }}
+        />
+      </Flex>
+
       <ResizableBox
         className="resizable-container resizable-hover-handles"
         width={900}

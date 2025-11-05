@@ -105,6 +105,7 @@ catalogs:
     '@langchain/anthropic': '^0.3.33'
     '@langchain/ollama': '^1.0.0'
     '@langchain/openai': '^1.0.0'
+    '@modelcontextprotocol/sdk': '^1.21.0'
   # 类型
   server:
     '@hono/node-server': '^1.19.5'
