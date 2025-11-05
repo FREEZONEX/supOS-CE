@@ -67,11 +67,24 @@ func checkInstanceFields(modelFields []*types.FieldDefine, insFields []*types.Fi
 
 func initParamsUns(topicDtos []*types.CreateTopicDto, errTipMap map[string]string) (pathMap map[int16]map[string]*types.CreateTopicDto) {
 	pathMap = make(map[int16]map[string]*types.CreateTopicDto, 4)
-	pathMap[constants.PathTypeDir] = make(map[string]*types.CreateTopicDto, 32)
-	pathMap[constants.PathTypeFile] = make(map[string]*types.CreateTopicDto, len(topicDtos))
-	pathMap[constants.PathTypeTemplate] = make(map[string]*types.CreateTopicDto, 64)
 	for _, topicDto := range topicDtos {
-		checkTopicDto(errTipMap, pathMap, topicDto)
+		checkTopicDto(errTipMap, pathMap, func(dto *types.CreateTopicDto) {
+			vMap, has := pathMap[dto.PathType]
+			if !has {
+				var initSize = 16
+				switch dto.PathType {
+				case constants.PathTypeFile:
+					initSize = len(topicDtos)
+				case constants.PathTypeDir:
+					initSize = 32
+				case constants.PathTypeTemplate:
+					initSize = 65
+				}
+				vMap = make(map[string]*types.CreateTopicDto, initSize)
+				pathMap[dto.PathType] = vMap
+			}
+			vMap[dto.Alias] = dto
+		}, topicDto)
 	}
 	return pathMap
 }
@@ -238,12 +251,12 @@ func putTemp(dbFiles map[int64]*dao.UnsNamespace, aliasMap map[string]*dao.UnsNa
 
 func checkTopicDto(errTipMap map[string]string,
 	pathMap map[int16]map[string]*types.CreateTopicDto,
+	put func(*types.CreateTopicDto),
 	d *types.CreateTopicDto) {
 	pathType := d.PathType
 	if pathType == constants.PathTypeDir {
 		d.DataType = nil
 	}
-	paramFolders, paramFiles, paramTemplates := pathMap[constants.PathTypeDir], pathMap[constants.PathTypeFile], pathMap[constants.PathTypeTemplate]
 	//TODO 假设 validator 在 Go 中已实现
 	//violations := validator.Validate(dto)
 	batchIndex := d.GainBatchIndex()
@@ -267,7 +280,7 @@ func checkTopicDto(errTipMap map[string]string,
 
 	if pathType == constants.PathTypeDir { // 当前是文件夹
 		d.DataType = nil
-		paramFolders[alias] = d
+		put(d)
 	} else if pathType == constants.PathTypeFile { // 当前是文件
 		dataType := d.DataType
 		if dataType == nil {
@@ -291,12 +304,12 @@ func checkTopicDto(errTipMap map[string]string,
 			fields = []*types.FieldDefine{mergeField}
 			d.Fields = fields
 		}
-		paramFiles[alias] = d
+		put(d)
 	} else if pathType == constants.PathTypeTemplate { // 当前是模版
 		d.DataType = &_ZERO
 		d.ParentId = &templateRootID
 		d.ParentAlias = &templateRootAlias
-		paramTemplates[alias] = d
+		put(d)
 	}
 
 	if d.Frequency != "" {
@@ -332,23 +345,22 @@ func setJdbcType(unsDto *types.CreateTopicDto) {
 func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 	alias := unsDto.Alias
 	instance := &dao.UnsNamespace{
-		Id:                  unsDto.Id,
-		Alias:               alias,
-		Name:                unsDto.Name,
-		Fields:              unsDto.Fields,
-		PathType:            unsDto.PathType,
-		DataType:            unsDto.DataType,
-		Description:         unsDto.Description,
-		CountExistsSiblings: unsDto.CountExistsSiblings,
-		DataPath:            unsDto.DataPath,
-		DisplayName:         unsDto.DisplayName,
-		ParentAlias:         unsDto.ParentAlias,
-		Expression:          unsDto.Expression,
-		Extend:              unsDto.Extend,
-		ModelId:             unsDto.ModelId,
-		WithFlags:           unsDto.WithFlags,
-		MountType:           unsDto.MountType,
-		MountSource:         unsDto.MountSource,
+		Id:          unsDto.Id,
+		Alias:       alias,
+		Name:        unsDto.Name,
+		Fields:      unsDto.Fields,
+		PathType:    unsDto.PathType,
+		DataType:    unsDto.DataType,
+		Description: unsDto.Description,
+		DataPath:    unsDto.DataPath,
+		DisplayName: unsDto.DisplayName,
+		ParentAlias: unsDto.ParentAlias,
+		Expression:  unsDto.Expression,
+		Extend:      unsDto.Extend,
+		ModelId:     unsDto.ModelId,
+		WithFlags:   unsDto.WithFlags,
+		MountType:   unsDto.MountType,
+		MountSource: unsDto.MountSource,
 	}
 
 	if jdbcType := unsDto.DataSrcID; jdbcType != 0 {
@@ -405,13 +417,14 @@ func getTemplate(topicDto *types.CreateTopicDto, existsUns func(string) *dao.Uns
 		}
 	} else if modelAlias != nil {
 		template = existsUns(*modelAlias)
-		if template != nil && template.PathType != 1 {
+		if template == nil || base.P2v(template.Status) == LOGIC_REMOVED {
+			errMsg = I18nUtils.GetMessage("uns.template.not.exists")
+			template = nil
+		} else if template.PathType != 1 {
 			errMsg = I18nUtils.GetMessage("uns.alias.has.exist.type",
 				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(template.PathType))),
 				I18nUtils.GetMessage("uns.type.1"),
 			)
-		} else if template == nil {
-			errMsg = I18nUtils.GetMessage("uns.template.not.exists")
 		}
 	} else if folderAlias = topicDto.ParentAlias; folderAlias != nil {
 		folder := existsUns(*folderAlias)
@@ -502,6 +515,7 @@ func (u *UnsAddService) trySetId(
 	unsDto *types.CreateTopicDto,
 	existsUns func(string) *dao.UnsNamespace,
 	dbFiles map[int64]*dao.UnsNamespace,
+	deleteFiles *[]*dao.UnsNamespace,
 	errTipMap map[string]string) *dao.UnsNamespace {
 
 	batchIndex := unsDto.GainBatchIndex()
@@ -633,12 +647,9 @@ func (u *UnsAddService) trySetId(
 				}
 			}
 			if len(delFields) > 0 && len(affected) > 0 {
-				deleteFiles := u.unsCalcService.detectReferencedCalcInstance(ctx, affected, newUns.Path, delFields)
-				if len(deleteFiles) > 0 {
-					for _, f := range affected {
-						f.Status = &LOGIC_REMOVED
-						dbFiles[f.Id] = f
-					}
+				affectedDeleteFiles := u.unsCalcService.detectReferencedCalcInstance(ctx, affected, newUns.Path, delFields)
+				if len(affectedDeleteFiles) > 0 {
+					*deleteFiles = append(*deleteFiles, affectedDeleteFiles...)
 				}
 			}
 		}
@@ -736,17 +747,20 @@ func (u *unsDtoTreeNodes) Visit(visitor func(uns *dao.UnsNamespace)) {
 }
 
 type Siblings struct {
-	names map[string][]*types.CreateTopicDto
+	names map[string][]*dao.UnsNamespace
 }
 
 func newSiblings() *Siblings {
-	return &Siblings{names: make(map[string][]*types.CreateTopicDto, 32)}
+	return &Siblings{names: make(map[string][]*dao.UnsNamespace, 32)}
 }
-func (s *Siblings) add(uns *types.CreateTopicDto) {
+func (s *Siblings) add(uns *dao.UnsNamespace) {
 	s.names[uns.Name] = append(s.names[uns.Name], uns)
 }
-func scanChangedNodes(files []*types.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, siblings map[string]*Siblings, changedSubTree *[]*dao.UnsNamespace) {
-	for _, bo := range files {
+
+const _NullParentId = int64(-1)
+
+func scanChangedNodes(addFiles map[int64]*dao.UnsNamespace, existsUns map[string]*dao.UnsNamespace, siblings map[int64]*Siblings, changedSubTree *[]*dao.UnsNamespace) {
+	for _, bo := range addFiles {
 		alias := bo.Alias
 		dbo := existsUns[alias]
 		parentAlias := bo.ParentAlias
@@ -760,32 +774,25 @@ func scanChangedNodes(files []*types.CreateTopicDto, existsUns map[string]*dao.U
 			}
 		}
 		if scanSiblings {
-			pAlias := ""
-			if parentAlias != nil {
-				pAlias = *parentAlias
-			}
-			sib, has := siblings[pAlias]
+			parentId := base.P2vWithDefault(bo.ParentId, _NullParentId)
+			sib, has := siblings[parentId]
 			if !has {
 				sib = newSiblings()
-				siblings[pAlias] = sib
+				siblings[parentId] = sib
 			}
 			sib.add(bo)
 		}
 	}
 }
 func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context,
-	paramFolders []*types.CreateTopicDto,
-	paramFiles []*types.CreateTopicDto,
-	paramTemplates []*types.CreateTopicDto,
+	addFiles map[int64]*dao.UnsNamespace,
+	dbFiles map[int64]*dao.UnsNamespace,
 	existsUns map[string]*dao.UnsNamespace,
-	dbFiles map[int64]*dao.UnsNamespace) error {
-
+) error {
 	changedSubTree := make([]*dao.UnsNamespace, 0, 64)
-	parentAliasSet := make(map[string]*Siblings, 32)
-	scanChangedNodes(paramFolders, existsUns, parentAliasSet, &changedSubTree)
-	scanChangedNodes(paramFiles, existsUns, parentAliasSet, &changedSubTree)
-	scanChangedNodes(paramTemplates, existsUns, parentAliasSet, &changedSubTree)
-	sizeTree, sizeSiblings := len(changedSubTree), len(parentAliasSet)
+	parentIdSet := make(map[int64]*Siblings, 32)
+	scanChangedNodes(addFiles, existsUns, parentIdSet, &changedSubTree)
+	sizeTree, sizeSiblings := len(changedSubTree), len(parentIdSet)
 	if sizeTree+sizeSiblings == 0 {
 		return nil
 	}
@@ -813,7 +820,7 @@ func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context,
 		}
 	}
 	if sizeSiblings > 0 {
-		var siblings = base.FilterAndFlatMap(base.MapValues(parentAliasSet), func(sib *Siblings) (vs []*dao.UnsNamespace, ok bool) {
+		var siblings = base.FilterAndFlatMap(base.MapValues(parentIdSet), func(sib *Siblings) (vs []*dao.UnsNamespace, ok bool) {
 			vs = make([]*dao.UnsNamespace, len(sib.names))
 			i := 0
 			for name, cs := range sib.names {
@@ -829,11 +836,8 @@ func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context,
 			}
 			if len(countMap) > 0 {
 				for _, cm := range countMap {
-					parentAlias := ""
-					if cm.ParentAlias != nil {
-						parentAlias = *cm.ParentAlias
-					}
-					sib := parentAliasSet[parentAlias]
+					parentId := base.P2vWithDefault(cm.ParentId, _NullParentId)
+					sib := parentIdSet[parentId]
 					if sib != nil && len(sib.names) > 0 {
 						sameNameSiblings := sib.names[cm.Name]
 						if len(sameNameSiblings) > 0 {

@@ -132,23 +132,21 @@ func (p UnsNamespaceRepo) ListSubTree(db *gorm.DB, layRec string) (results []*Un
 func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAndNames []*UnsNamespace) (results []*UnsNamespace, err error) {
 	// 构建VALUES参数
 	var sql = &base.StringBuilder{}
-	sql.Grow(512)
-	sql.Append(`select  u.parent_id, u."name",max(getIndex(u."path"))+1 as id from (`)
+	sql.Grow(300 + 80*len(parentAliasAndNames))
+	sql.Append(`select  u.parent_id, u."name",max(getIndex(u."path"))+1 as id from (VALUES`)
 	for i, data := range parentAliasAndNames {
 		if i > 0 {
-			sql.Append(" UNION ALL ")
+			sql.Append(",")
 		}
-		parentId, name := data.ParentId, data.Name
-		var args string
-		if parentId != nil {
-			args = fmt.Sprintf("select %d as parent_id,'%s' as name", *parentId, escapeSQL(name))
+		if parentId := data.ParentId; parentId != nil {
+			sql.Append(`(`).Long(*parentId)
 		} else {
-			args = fmt.Sprintf("select null as parent_id,'%s' as name", escapeSQL(name))
+			sql.Append(`(-1`)
 		}
-		sql.Append(args)
+		sql.Append(`,'`).Append(escapeSQL(data.Name)).Append(`')`)
 	}
-	sql.Append(`) x
-	join uns_namespace u on (x.parent_id = u.parent_id OR (x.parent_id IS NULL AND u.parent_id IS NULL)) AND x.name =u.name 
+	sql.Append(`) AS x(parent_id, name)
+	join uns_namespace u on (x.parent_id = u.parent_id or (x.parent_id=-1 and u.parent_id is null)) AND x.name =u.name 
 	where u.status =1 group by u.parent_id, u."name"
     `)
 	err = p.model(db).Raw(sql.String()).Scan(&results).Error
@@ -265,6 +263,14 @@ func (p UnsNamespaceRepo) ListByTemplateId(db *gorm.DB, templateId int64, page *
 		db = page.ToGorm(db)
 	}
 	err = db.Where("model_id =?", templateId).Where("status=1").Find(&results).Error
+	return
+}
+func (p UnsNamespaceRepo) ListByTemplateIds(db *gorm.DB, templateIds []int64, page *stores.PageInfo) (results []*UnsNamespace, err error) {
+	db = p.model(db)
+	if page != nil {
+		db = page.ToGorm(db)
+	}
+	err = db.Where("model_id in ?", templateIds).Where("status=1").Find(&results).Error
 	return
 }
 func (p UnsNamespaceRepo) ListUnsByIds(db *gorm.DB, ids []int64) (results []*UnsPo, err error) {

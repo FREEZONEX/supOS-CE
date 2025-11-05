@@ -62,94 +62,179 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 	ctx = dao.SetDb(ctx, db)
 	return r.Remove(ctx, req.RemoveUnsOptions, unsPos)
 }
-func (r *UnsRemoveService) Remove(ctx context.Context, req types.RemoveUnsOptions, unsList []*dao.UnsNamespace) (resp *types.RemoveResult, err error) {
-	withFlow, withDashboard := defaultFalse(req.WithFlow), defaultFalse(req.WithDashboard)
-	resp = &types.RemoveResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
-
-	db := dao.GetDb(ctx)
-
-	paramGroups := base.GroupBy(unsList, func(e *dao.UnsNamespace) int16 {
-		return e.PathType
-	})
-	folders := paramGroups[constants.PathTypeDir]
-	if len(folders) > 0 {
-		onlyRemoveChild := false
-		if mrc := req.OnlyRemoveChild; mrc != nil {
-			onlyRemoveChild = *mrc
-		}
-		var layRecs []string
-		if onlyRemoveChild {
-			layRecs = base.Map(folders, func(e *dao.UnsNamespace) string {
-				return e.LayRec + "/"
-			})
-		} else {
-			layRecs = base.Map(folders, func(e *dao.UnsNamespace) string {
-				return e.LayRec
-			})
-		}
-		for _, lay := range base.Partition(layRecs, 500) {
-			page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
-
-			for {
-				rs, er := r.unsMapper.ListByLayRecs(db, lay, page)
-				if er != nil {
-					return nil, er
-				} else if len(rs) == 0 {
-					break
-				}
-				page.Page++
-				errMsg := r.deleteAndSendEvent(ctx, db, rs, withFlow, withDashboard)
-				if len(errMsg) > 0 {
-					resp.Code = 500
-					resp.Msg = errMsg
-					return
-				}
-			}
+func (r *UnsRemoveService) Remove(ctx context.Context, req types.RemoveUnsOptions, unsList []*dao.UnsNamespace) (*types.RemoveResult, error) {
+	ctx = dao.SetDb(ctx, dao.GetDb(ctx))
+	paramGroups := base.GroupBy(unsList, getPathType)
+	if folders := paramGroups[constants.PathTypeDir]; len(folders) > 0 {
+		rs, err := r.removeFolders(ctx, req, folders)
+		if rs != nil || err != nil {
+			return rs, err
 		}
 	}
-	files := paramGroups[constants.PathTypeFile]
-	if len(files) > 0 {
+
+	if files := paramGroups[constants.PathTypeFile]; len(files) > 0 {
 		for _, fs := range base.Partition(files, 1000) {
-			errMsg := r.deleteAndSendEvent(ctx, db, fs, withFlow, withDashboard)
-			if len(errMsg) > 0 {
-				resp.Code = 500
-				resp.Msg = errMsg
-				return
+			rs, err := r.deleteAndSendEvent(ctx, req, fs)
+			if rs != nil || err != nil {
+				return rs, err
 			}
 		}
 	}
-	return
+
+	if templates := paramGroups[constants.PathTypeTemplate]; len(templates) > 0 {
+		rs, err := r.removeTemplates(ctx, req, templates)
+		if rs != nil || err != nil {
+			return rs, err
+		}
+	}
+	return &types.RemoveResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}, nil
 }
 
-func (r *UnsRemoveService) deleteAndSendEvent(ctx context.Context, db *gorm.DB, rs []*dao.UnsNamespace, withFlow bool, withDashboard bool) (erMsg string) {
-	unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, bo.UnsInfo, int16](rs, func(e *dao.UnsNamespace) (int16, bo.UnsInfo) {
+func (r *UnsRemoveService) removeTemplates(ctx context.Context, req types.RemoveUnsOptions, templates []*dao.UnsNamespace) (*types.RemoveResult, error) {
+	db := dao.GetDb(ctx)
+	var files = make([]*dao.UnsNamespace, 0, 128)
+	var folders = make([]*dao.UnsNamespace, 0, 64)
+	for _, templateIds := range base.Partition(base.Map(templates, getId), 1000) {
+		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id"}}}
+		for {
+			list, er := r.unsMapper.ListByTemplateIds(db, templateIds, page)
+			if er != nil || len(list) == 0 {
+				break
+			}
+			page.Page++
+
+			unsGroups := base.GroupBy(list, getPathType)
+			if fs := unsGroups[constants.PathTypeFile]; len(fs) > 0 {
+				files = append(files, fs...)
+			}
+			if dirs := unsGroups[constants.PathTypeDir]; len(dirs) > 0 {
+				folders = append(folders, dirs...)
+			}
+			if len(files) >= 1000 {
+				rs, err := r.deleteAndSendEvent(ctx, req, files)
+				if rs != nil || err != nil {
+					return rs, err
+				}
+				files = files[:]
+			}
+			if int64(len(list)) < page.Size {
+				break
+			}
+		}
+	}
+	files = append(files, templates...)
+	rs, err := r.deleteAndSendEventWithCall(ctx, req, files, func(db *gorm.DB) (er error) {
+		if len(folders) > 0 {
+			dirIds := base.Map(folders, getId)
+			if len(dirIds) < 1000 {
+				_, er = r.unsMapper.UpdateNullTemplateIdByIds(db, dirIds)
+			} else {
+				for _, partIds := range base.Partition(dirIds, 1000) {
+					_, er = r.unsMapper.UpdateNullTemplateIdByIds(db, partIds)
+					if er != nil {
+						break
+					}
+				}
+			}
+		}
+		return
+	})
+	return rs, err
+}
+
+func (r *UnsRemoveService) removeFolders(
+	ctx context.Context,
+	req types.RemoveUnsOptions,
+	folders []*dao.UnsNamespace,
+) (*types.RemoveResult, error) {
+	onlyRemoveChild := base.P2v(req.OnlyRemoveChild)
+	var layRecs []string
+	if onlyRemoveChild {
+		layRecs = base.Map(folders, func(e *dao.UnsNamespace) string {
+			return e.LayRec + "/"
+		})
+	} else {
+		layRecs = base.Map(folders, func(e *dao.UnsNamespace) string {
+			return e.LayRec
+		})
+	}
+	db := dao.GetDb(ctx)
+	for _, lay := range base.Partition(layRecs, 500) {
+		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
+		for {
+			list, er := r.unsMapper.ListByLayRecs(db, lay, page)
+			if er != nil {
+				return nil, er
+			} else if len(list) == 0 {
+				break
+			}
+			page.Page++
+			delRs, delEr := r.deleteAndSendEvent(ctx, req, list)
+			if delEr != nil {
+				return delRs, delEr
+			} else if delRs != nil && delRs.Data != nil {
+				return delRs, nil
+			}
+			if int64(len(list)) < page.Size {
+				break
+			}
+		}
+	}
+	return nil, nil
+}
+func getId(e *dao.UnsNamespace) int64 {
+	return e.Id
+}
+func getPathType(e *dao.UnsNamespace) int16 {
+	return e.PathType
+}
+func (r *UnsRemoveService) deleteAndSendEvent(ctx context.Context, req types.RemoveUnsOptions, list []*dao.UnsNamespace) (resp *types.RemoveResult, err error) {
+	return r.deleteAndSendEventWithCall(ctx, req, list, nil)
+}
+func (r *UnsRemoveService) deleteAndSendEventWithCall(ctx context.Context, req types.RemoveUnsOptions, list []*dao.UnsNamespace, callback func(db *gorm.DB) error) (resp *types.RemoveResult, er error) {
+	unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, bo.UnsInfo, int16](list, func(e *dao.UnsNamespace) (int16, bo.UnsInfo) {
 		return e.PathType, e
 	})
-
-	tx := db.Begin()
-	er := r.unsMapper.LogicDeleteByIds(tx, base.Map[*dao.UnsNamespace, int64](rs, func(e *dao.UnsNamespace) int64 {
+	files := unsGroups[constants.PathTypeFile]
+	if len(files) > 0 {
+		//TODO 引用检查
+	}
+	db := dao.GetDb(ctx)
+	var tx = db
+	withTx := false
+	if !dao.IsInTransaction(db) {
+		tx = db.Begin()
+		withTx = true
+	}
+	ids := base.Map[*dao.UnsNamespace, int64](list, func(e *dao.UnsNamespace) int64 {
 		return e.Id
-	}))
+	})
+	if len(ids) <= 1000 {
+		er = r.unsMapper.LogicDeleteByIds(tx, ids)
+	} else {
+		for _, partIds := range base.Partition(ids, 1000) {
+			er = r.unsMapper.LogicDeleteByIds(tx, partIds)
+		}
+	}
+	if er == nil && callback != nil {
+		er = callback(tx)
+	}
+
 	if er == nil {
+		withFlow, withDashboard := defaultFalse(req.WithFlow), defaultFalse(req.WithDashboard)
 		delEvent := event.NewRemoveTopicsEvent(dao.SetDb(ctx, tx), time.Now(), withFlow, withDashboard,
-			unsGroups[constants.PathTypeFile],
+			files,
 			unsGroups[constants.PathTypeTemplate],
 			unsGroups[constants.PathTypeDir],
 		)
 		er = spring.PublishEvent(delEvent)
-		if er != nil {
-			erMsg = "RemoveEventErr:" + er.Error()
-		}
-	} else {
-		erMsg = "DbErr"
 	}
 	if er == nil {
-		tx.Commit()
-	} else {
-		if len(erMsg) == 0 {
-			erMsg = er.Error()
+		if withTx {
+			tx.Commit()
 		}
+	} else if withTx {
 		tx.Rollback()
 	}
-	return erMsg
+	return
 }

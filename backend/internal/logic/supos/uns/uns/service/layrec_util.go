@@ -69,26 +69,41 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 			return base.PutIfAbsent(nodesToUpdate, po.Id, po)
 		}
 	}
-
+	reverseGraph := base.BuildReverseGraph(base.MapValues(allNodes), func(t *dao.UnsNamespace) int64 {
+		return t.Id
+	}, func(t *dao.UnsNamespace) int64 {
+		return base.P2vWithDefault(t.ParentId, -1)
+	})
+	levels := base.MapKeys(reverseGraph)
+	sort.Sort(longSlice(levels))
 	// 处理所有节点
-	for _, node := range allNodes {
-		id := node.Id
-		proc := addFiles[id] != nil
-		if !proc {
-			if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentId, dbPo.ParentId)) {
-				proc = true
+	for _, level := range levels {
+		ids := reverseGraph[level]
+		for _, id := range ids {
+			node := allNodes[id]
+			proc := addFiles[id] != nil
+			if !proc {
+				if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentId, dbPo.ParentId)) {
+					proc = true
+				}
+			}
+			if proc {
+				// 生成当前节点的层级路径
+				generatePath(node, allNodes)
+				// 收集当前节点及其所有子节点用于更新
+				collectAffectedNodes(node, childrenMap, allNodes, recorder)
 			}
 		}
-		if proc {
-			// 生成当前节点的层级路径
-			generatePath(node, allNodes)
-			// 收集当前节点及其所有子节点用于更新
-			collectAffectedNodes(node, childrenMap, allNodes, recorder)
-		}
 	}
-
 	return &saveOrUpdate{insertList: base.MapValues(nodesToInsert), updateList: base.MapValues(nodesToUpdate)}
 }
+
+type longSlice []int64
+
+func (x longSlice) Len() int           { return len(x) }
+func (x longSlice) Less(i, j int) bool { return x[i] < x[j] }
+func (x longSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+
 func equalsInt64(a, b *int64) bool {
 	if a == nil && b == nil {
 		return true
@@ -165,20 +180,19 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 			})
 		}
 		for i, node := range group {
+			dbPo := dbFiles[node.Id]
+			if dbPo != nil && dbPo.Name == node.Name {
+				node.PathName = PathUtil.GetName(dbPo.Path)
+			}
 			if base.MapContainsKey(addFiles, node.Id) {
-				dbPo := dbFiles[node.Id]
-				if dbPo != nil && dbPo.Name == node.Name {
-					node.PathName = PathUtil.GetName(dbPo.Path)
+				xp := strings.LastIndex(name, "-")
+				if xp > 0 && xp < len(name)-1 && unicode.IsDigit(rune(name[xp+1])) {
+					name = name[:xp+1] + "0" + name[xp+1:]
+				}
+				if ces := node.CountExistsSiblings; ces > 0 {
+					node.PathName = name + "-" + strconv.FormatInt(ces+int64(i), 10)
 				} else {
-					xp := strings.LastIndex(name, "-")
-					if xp > 0 && xp < len(name)-1 && unicode.IsDigit(rune(name[xp+1])) {
-						name = name[:xp+1] + "0" + name[xp+1:]
-					}
-					if ces := node.CountExistsSiblings; ces > 0 {
-						node.PathName = name + "-" + strconv.FormatInt(ces+int64(i), 10)
-					} else {
-						node.PathName = name
-					}
+					node.PathName = name
 				}
 			}
 		}

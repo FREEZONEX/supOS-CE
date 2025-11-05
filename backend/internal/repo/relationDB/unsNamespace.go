@@ -24,8 +24,6 @@ func NewUnsNamespaceRepo() UnsNamespaceRepo {
 	return UnsNamespaceRepo{}
 }
 
-const NULL_PARENT_ID = int64(-1)
-
 func GetDb(ctx context.Context) *gorm.DB {
 	if connObj := ctx.Value("db"); connObj != nil {
 		if db, is := connObj.(*gorm.DB); is {
@@ -36,6 +34,12 @@ func GetDb(ctx context.Context) *gorm.DB {
 }
 func SetDb(ctx context.Context, db *gorm.DB) context.Context {
 	return context.WithValue(ctx, "db", db)
+}
+
+func IsInTransaction(db *gorm.DB) bool {
+	// 比较当前连接池是否与原始连接池相同
+	_, isTransaction := db.Statement.ConnPool.(gorm.TxCommitter)
+	return isTransaction
 }
 
 type UnsNamespaceFilter struct {

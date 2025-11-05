@@ -21,7 +21,6 @@ func (p UnsNamespaceRepo) UpdateModelFieldsById(db *gorm.DB, id int64, fields []
 	result := db.
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
-			"table_name":    TableNameUnsNamespace,
 			"fields":        fieldsJSON,
 			"number_fields": numberCount,
 			"update_at":     updateAt,
@@ -37,7 +36,6 @@ func (p UnsNamespaceRepo) UpdateDescByAlia(db *gorm.DB, alias string, descriptio
 	result := db.
 		Where("alias = ?", alias).
 		Updates(map[string]interface{}{
-			"table_name":  TableNameUnsNamespace,
 			"description": description,
 			"update_at":   updateAt,
 		})
@@ -47,7 +45,14 @@ func (p UnsNamespaceRepo) UpdateDescByAlia(db *gorm.DB, alias string, descriptio
 	}
 	return result.RowsAffected, nil
 }
-
+func (p UnsNamespaceRepo) UpdateNullTemplateIdByIds(db *gorm.DB, ids []int64) (int64, error) {
+	db = p.model(db)
+	result := db.Where("id in ?", ids).UpdateColumn("model_id", nil)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return result.RowsAffected, nil
+}
 func (p UnsNamespaceRepo) LinkLabelOnUns(db *gorm.DB, unsID, labelID int64, labelName string, updateAt time.Time) error {
 	// 使用原生 SQL 片段
 	sql := fmt.Sprintf(

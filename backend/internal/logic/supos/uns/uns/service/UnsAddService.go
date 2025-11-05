@@ -13,6 +13,7 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -27,6 +28,7 @@ type UnsAddService struct {
 	unsMapper       dao.UnsNamespaceRepo
 	labelRefMapper  dao.UnsLabelRefRepo
 	unsLabelService *service.UnsLabelService
+	removeService   *UnsRemoveService
 	unsCalcService  UnsCalcService
 }
 
@@ -35,6 +37,7 @@ func init() {
 		return &UnsAddService{
 			log:             logx.WithContext(context.Background()),
 			unsLabelService: spring.GetBean[*service.UnsLabelService](),
+			removeService:   spring.GetBean[*UnsRemoveService](),
 		}
 	})
 }
@@ -42,8 +45,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	topicDtos := args.Topics
 	errTipMap = make(map[string]string, len(topicDtos))
 	pathMap := initParamsUns(topicDtos, errTipMap)
-	paramFiles, paramFolders, paramTemplates := pathMap[constants.PathTypeFile], pathMap[constants.PathTypeDir], pathMap[constants.PathTypeTemplate]
-	if len(paramFolders)+len(paramFiles)+len(paramTemplates) == 0 {
+	if len(pathMap) == 0 {
 		u.log.Info("不存在任何文件夹或文件, 无法继续保存")
 		return errTipMap
 	}
@@ -70,6 +72,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	for _, vs := range pathMap {
 		tryFillIdOrAlias(vs, existsUns, dbFiles, errTipMap)
 	}
+	paramFiles, paramFolders := pathMap[constants.PathTypeFile], pathMap[constants.PathTypeDir]
 	addFiles := make(map[int64]*dao.UnsNamespace)
 	aliasMap := make(map[string]*dao.UnsNamespace)
 	folders := base.MapValues(paramFolders)
@@ -90,10 +93,11 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		}
 		return unsPo
 	}
-	unsPoLabels := make(map[int64]*bo.UnsPoLabels, len(paramFiles))
+	unsPoLabels := make(map[int64]*bo.UnsPoLabels, len(paramFiles)+len(paramFolders))
+	var deleteFiles []*dao.UnsNamespace
 	for _, vs := range pathMap {
 		for _, DTO := range vs {
-			po := u.trySetId(ctx, createTime, DTO, allUns, dbFiles, errTipMap)
+			po := u.trySetId(ctx, createTime, DTO, allUns, dbFiles, &deleteFiles, errTipMap)
 			if po != nil {
 				addFiles[po.Id] = po
 				aliasMap[po.Alias] = po
@@ -104,23 +108,15 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			}
 		}
 	}
-	//TODO 计算，引用，聚合等类型的 校验和处理
-	aliasToId(addFiles, allUns)
-	var deleteFiles []*dao.UnsNamespace
-	if len(dbFiles) > 0 {
-		for _, po := range dbFiles {
-			if po.Status != nil && *po.Status == 0 {
-				deleteFiles = append(deleteFiles, po)
-			}
-		}
-		if len(deleteFiles) > 0 {
-			for _, po := range deleteFiles {
-				delete(dbFiles, po.Id)
-			}
+	for k, dbPo := range dbFiles {
+		if base.P2v(dbPo.Status) == LOGIC_REMOVED {
+			delete(dbFiles, k)
 		}
 	}
+	//TODO 计算，引用，聚合等类型的 校验和处理
+	aliasToId(addFiles, allUns)
 	// 找出 parentAlias 或 name 有修改的最高层目录，后面需要获取它的整个子树，为更新 layRec 做准备
-	err := u.tryAddLayRecOrPathChangedChildren(ctx, folders, base.MapValues(paramFiles), base.MapValues(paramTemplates), existsUns, dbFiles)
+	err := u.tryAddLayRecOrPathChangedChildren(ctx, addFiles, dbFiles, existsUns)
 	if err != nil {
 		errTipMap["0"] = err.Error()
 		return errTipMap
@@ -236,27 +232,30 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 		}
 	}
 	if err == nil {
-		createFiles := base.GroupBy(notifyCreateList, pathTypeGroupBy)
-		notifyUpdate := base.GroupBy(notifyUpdateList, pathTypeGroupBy)
-		notifyUpdate[constants.PathTypeLabel] = base.Map(labelPos, UnsConverter.Label2Uns)
-		err = spring.PublishEvent(&event.BatchCreateTableEvent{
-			ApplicationEvent: event.ApplicationEvent{Context: ctx},
-			FlowName:         args.FlowName,
-			FromImport:       args.FromImport,
-			Creates:          createFiles,
-			Updates:          notifyUpdate,
-			DelegateAware:    getEventStatusCallback(args.StatusConsumer),
-		})
+		if len(notifyCreateList)+len(notifyUpdateList)+len(labelPos) > 0 {
+			createFiles := base.GroupBy(notifyCreateList, pathTypeGroupBy)
+			notifyUpdate := base.GroupBy(notifyUpdateList, pathTypeGroupBy)
+			if len(labelPos) > 0 {
+				notifyUpdate[constants.PathTypeLabel] = base.Map(labelPos, UnsConverter.Label2Uns)
+			}
+			err = spring.PublishEvent(&event.BatchCreateTableEvent{
+				ApplicationEvent: event.ApplicationEvent{Context: ctx},
+				FlowName:         args.FlowName,
+				FromImport:       args.FromImport,
+				Creates:          createFiles,
+				Updates:          notifyUpdate,
+				DelegateAware:    getEventStatusCallback(args.StatusConsumer),
+			})
+		}
 		if len(deleteFiles) > 0 {
-			deleteTime := time.Now()
-			err = u.unsMapper.LogicDeleteByIds(tx, base.Map[*dao.UnsNamespace, int64](deleteFiles, func(e *dao.UnsNamespace) int64 {
-				return e.Id
-			}))
-			if err == nil {
-				removeEvent := event.NewRemoveTopicsEvent(ctx, deleteTime, false, false, base.Map(deleteFiles, func(e *dao.UnsNamespace) bo.UnsInfo {
-					return e
-				}), nil, nil)
-				err = spring.PublishEvent(removeEvent)
+			delRs, delEr := u.removeService.Remove(ctx, types.RemoveUnsOptions{
+				WithFlow:    base.V2p(args.FlowName != ""),
+				RemoveRefer: &TRUE,
+			}, deleteFiles)
+			if delEr != nil {
+				err = delEr
+			} else if delRs != nil && delRs.Code != 200 && delRs.Msg != "" {
+				err = errors.New(delRs.Msg)
 			}
 		}
 	}
