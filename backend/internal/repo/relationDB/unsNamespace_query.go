@@ -352,7 +352,7 @@ func (p UnsNamespaceRepo) PageListByLabel(db *gorm.DB, labelID int64, pageNo, pa
 	// 基础查询
 	baseQuery := db.
 		Joins("JOIN uns_label_ref rf ON uns_namespace.id = rf.uns_id").
-		Where("rf.label_id = ?", labelID)
+		Where("rf.label_id = ? AND uns_namespace.status=1", labelID)
 
 	// COUNT 查询（不包含 SELECT 子句）
 	if searchCount != nil {
