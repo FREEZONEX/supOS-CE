@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/common/dto"
 	"backend/internal/common/utils/PathUtil"
+	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
@@ -173,24 +174,7 @@ func (l *UnsQueryService) getTopicTreeResults(all []*dao.UnsNamespace, list []*d
 			continue
 		}
 
-		rs := &types.TopicTreeResult{
-			Name: po.Name, Path: path, PathType: po.PathType, Type: po.PathType, Protocol: po.ProtocolType,
-		}
-
-		rs.ParentDataType = po.ParentDataType
-		rs.Id = strconv.FormatInt(po.Id, 10)
-		rs.Alias = po.Alias
-
-		if po.ParentId != nil {
-			pidStr := strconv.FormatInt(*po.ParentId, 10)
-			rs.ParentId = &pidStr
-			rs.ParentAlias = po.ParentAlias
-		}
-
-		rs.Name = po.Name
-		rs.PathName = PathUtil.GetName(po.Path)
-		rs.DisplayName = po.DisplayName
-		rs.Extend = po.Extend
+		rs := UnsConverter.Dto2TreeResult(po)
 
 		//if po.PathType == 2 {
 		//	info, exists := topicLastMessages[path]
@@ -254,6 +238,10 @@ func buildTreeStructure(nodeMap map[string]*types.TopicTreeResult, list []*dao.U
 		addRootNode(nodeMap, childrenMap, rootNodes, path)
 	}
 
+	// set countChildren
+	for _, node := range rootNodes {
+		node.GetCountChildren()
+	}
 	return convertMapToSlice(rootNodes)
 }
 

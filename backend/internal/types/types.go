@@ -1067,7 +1067,7 @@ type TopicTreeResult struct {
 	ParentAlias    *string                `json:"parentAlias,omitempty"`
 	Value          int64                  `json:"value,omitempty"`
 	LastUpdateTime int64                  `json:"lastUpdateTime,omitempty"`
-	CountChildren  int                    `json:"countChildren,omitempty"`
+	CountChildren  *int                   `json:"countChildren,omitempty"`
 	PathType       int16                  `json:"pathType"`
 	Type           int16                  `json:"type"`
 	DataType       *int16                 `json:"dataType,omitempty"`
