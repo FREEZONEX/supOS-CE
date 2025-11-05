@@ -8,6 +8,10 @@ type AdminResetPwdReq struct {
 	Password string `json:"password"`
 }
 
+type AliasPathReq struct {
+	Alias string `path:"alias"`
+}
+
 type AliasRequest struct {
 	Alias string `path:"alias"`
 }
@@ -56,6 +60,11 @@ type BatchUpdateResource struct {
 
 type BatchUpdateResourceReq struct {
 	Items []BatchUpdateResource
+}
+
+type BindUnsReq struct {
+	DashboardID string `json:"dashboardId"`
+	UnsAlias    string `json:"unsAlias"`
 }
 
 type CancelLabelReq struct {
@@ -402,6 +411,10 @@ type FlowUNMarkReq struct {
 	ID string `form:"id,optional"`
 }
 
+type GetByUnsReq struct {
+	UnsAlias string `form:"unsAlias"`
+}
+
 type GetByUnsRequest struct {
 	UnsAlias string `form:"unsAlias"`
 }
@@ -482,6 +495,10 @@ type InstanceField struct {
 	Topic string `json:"path"`
 	Field string `json:"field"`
 	Uts   bool   `json:"uts"`
+}
+
+type IsExistReq struct {
+	Alias string `form:"alias"`
 }
 
 type IsExistRequest struct {
