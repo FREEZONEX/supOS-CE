@@ -57,7 +57,7 @@ type UnsNamespace struct {
 	ExtendFieldFlags *int32           `gorm:"column:extend_field_flags" json:"extend_field_flags"`
 	MountType        *int16           `gorm:"column:mount_type" json:"mount_type"`
 	MountSource      *string          `gorm:"column:mount_source" json:"mount_source"`
-	SubscribeAt      time.Time        `gorm:"column:subscribe_at" json:"subscribe_at"`
+	SubscribeAt      *time.Time       `gorm:"column:subscribe_at" json:"subscribe_at"`
 
 	ModelAlias          string `gorm:"-" json:"modelAlias"`
 	PathName            string `gorm:"-" json:"pathName"`

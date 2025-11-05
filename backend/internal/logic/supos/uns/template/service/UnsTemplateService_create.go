@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
+	"backend/internal/common/utils/PathUtil"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"context"
@@ -12,6 +13,9 @@ func (l *UnsTemplateService) Create(ctx context.Context, req *types.CreateTempla
 	db := dao.GetDb(ctx)
 	rs = &types.CreateTemplateResp{}
 	rs.Code, rs.Msg = 200, "OK"
+	if req.Alias == "" {
+		req.Alias = PathUtil.GenerateAlias(req.Name, 1)
+	}
 	tmpl, _ := l.unsMapper.GetByAlias(db, req.Alias)
 	if tmpl != nil {
 		rs.Code, rs.Msg = 400, I18nUtils.GetMessage("uns.template.alias.already.exists")
@@ -45,7 +49,11 @@ func (l *UnsTemplateService) BatchSaveTemplates(ctx context.Context, list []*typ
 func copyTemplate2Uns(req *types.CreateTemplateReq, unsDto *types.CreateTopicDto) {
 	unsDto.PathType = constants.PathTypeTemplate
 	unsDto.Batch, unsDto.Index, unsDto.FlagNo = req.Batch, req.Index, req.FlagNo
-	unsDto.Alias = req.Alias
+	alias := req.Alias
+	if alias == "" {
+		alias = PathUtil.GenerateAlias(req.Name, 1)
+	}
+	unsDto.Alias = alias
 	unsDto.Fields = req.Fields
 	unsDto.Name = req.Name
 	if des := req.Description; len(des) > 0 {

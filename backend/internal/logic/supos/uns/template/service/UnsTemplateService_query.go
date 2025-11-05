@@ -1,11 +1,11 @@
 package service
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/dto"
 	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/PathUtil"
-	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
@@ -49,12 +49,13 @@ func (l *UnsTemplateService) DetailById(ctx context.Context, req *types.WithID) 
 	db := dao.GetDb(ctx)
 	var po *dao.UnsNamespace
 	po, err = l.unsMapper.SelectById(db, req.ID)
-	if err != nil || po == nil {
-		return nil, err
-	}
 	resp = &types.TemplateDetailResp{}
+	if po == nil {
+		resp.Code, resp.Msg = 404, I18nUtils.GetMessage("uns.template.not.exists")
+		return
+	}
 	resp.Code, resp.Msg = 200, "OK"
-	resp.Data, err = l.uns2TemplateVo(po, err)
+	resp.Data, err = l.uns2TemplateVo(po)
 	return
 }
 
@@ -62,18 +63,26 @@ func (l *UnsTemplateService) DetailByAlias(ctx context.Context, req *types.WithA
 	db := dao.GetDb(ctx)
 	var po *dao.UnsNamespace
 	po, err = l.unsMapper.GetByAlias(db, req.Alias)
-	if err != nil || po == nil {
-		return nil, err
-	}
 	resp = &types.TemplateDetailResp{}
+	if po == nil {
+		resp.Code, resp.Msg = 404, I18nUtils.GetMessage("uns.template.not.exists")
+		return
+	}
 	resp.Code, resp.Msg = 200, "OK"
-	resp.Data, err = l.uns2TemplateVo(po, err)
+	resp.Data, err = l.uns2TemplateVo(po)
 	return
 }
 
-func (l *UnsTemplateService) uns2TemplateVo(po *dao.UnsNamespace, err error) (*types.TemplateVo, error) {
-	vo := &types.TemplateVo{Topic: "template/" + po.Name}
-	err = UnsConverter.CopyProperties(po, vo)
+func (l *UnsTemplateService) uns2TemplateVo(po *dao.UnsNamespace) (*types.TemplateVo, error) {
+	vo := &types.TemplateVo{
+		Topic:       "template/" + po.Name,
+		ID:          po.Name,
+		Name:        po.Name,
+		Alias:       po.Alias,
+		Fields:      po.Fields,
+		CreateTime:  po.CreateAt.UnixMilli(),
+		Description: base.P2v(po.Description),
+	}
 	if flags := base.P2v(po.WithFlags); flags > 0 {
 		enable := constants.WithSubscribeEnable(flags)
 		vo.SubscribeEnable = &enable
@@ -88,5 +97,5 @@ func (l *UnsTemplateService) uns2TemplateVo(po *dao.UnsNamespace, err error) (*t
 			}
 		}
 	}
-	return vo, err
+	return vo, nil
 }
