@@ -170,7 +170,6 @@ const Module: FC<LabelDetailProps> = (props) => {
             border: '1px solid #C6C6C6',
             background: 'var(--supos-uns-button-color)',
             color: 'var(--supos-text-color)',
-            width: '32px',
           }}
         >
           +
