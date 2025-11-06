@@ -46,7 +46,7 @@ func (l *BindUNSLogic) BindUNS(req *types.SourceFlowBindUnsReq) error {
 	db := stores.GetCommonConn(l.ctx)
 	// 检查 UNS 是否存在
 	var uns relationDB.UnsNamespace
-	err := db.Where("alisa", req.UnsAlias).First(&uns).Error
+	err := db.Where("alias", req.UnsAlias).First(&uns).Error
 	if err != nil {
 		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("uns.file.not.exist"))
 	}
