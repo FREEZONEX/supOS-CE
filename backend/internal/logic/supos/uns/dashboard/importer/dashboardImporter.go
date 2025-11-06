@@ -3,8 +3,7 @@ package importer
 import (
 	"backend/internal/common/utils/fuxautil"
 	"backend/internal/common/utils/grafanautil"
-	"backend/internal/logic/supos/uns/dashboard/dao"
-	"backend/internal/logic/supos/uns/dashboard/model"
+	"backend/internal/repo/relationDB"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -42,13 +41,13 @@ func (c *DashboardImportContext) DataEmpty() bool {
 
 // DashboardJsonWrapper Dashboard JSON 包装器
 type DashboardJsonWrapper struct {
-	Data []*model.DashboardModel `json:"data"`
+	Data []*relationDB.DashboardModel `json:"data"`
 }
 
 // DashboardDataImporter Dashboard 数据导入器
 type DashboardDataImporter struct {
 	context              *DashboardImportContext
-	dashboardMapper      *dao.DashboardMapper
+	dashboardMapper      *relationDB.DashboardMapper
 	dashboardJsonWrapper *DashboardJsonWrapper
 	logger               logx.Logger
 }
@@ -56,7 +55,7 @@ type DashboardDataImporter struct {
 // NewDashboardDataImporter 创建 DashboardDataImporter 实例
 func NewDashboardDataImporter(
 	ctx *DashboardImportContext,
-	dashboardMapper *dao.DashboardMapper,
+	dashboardMapper *relationDB.DashboardMapper,
 ) *DashboardDataImporter {
 	return &DashboardDataImporter{
 		context:         ctx,
@@ -120,7 +119,7 @@ func (i *DashboardDataImporter) handleImportData() error {
 	}
 
 	// 筛选可以添加的数据
-	addList := make([]*model.DashboardModel, 0)
+	addList := make([]*relationDB.DashboardModel, 0)
 	for _, dashboard := range i.dashboardJsonWrapper.Data {
 		if existByID[dashboard.ID] {
 			i.context.AddError(dashboard.ID, "dashboard.id.already.exists")

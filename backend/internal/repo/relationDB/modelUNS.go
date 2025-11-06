@@ -367,39 +367,6 @@ func (*UnsLabelRef) TableName() string {
 	return TableNameUnsLabelRef
 }
 
-const TableNameUnsDashboard = "uns_dashboard"
-
-// UnsDashboard mapped from table <uns_dashboard>
-type UnsDashboard struct {
-	ID          string    `gorm:"column:id;primaryKey" json:"id"`
-	Name        string    `gorm:"column:name" json:"name"`
-	Description string    `gorm:"column:description" json:"description"`
-	JSONContent string    `gorm:"column:json_content" json:"json_content"`
-	UpdateTime  time.Time `gorm:"column:update_time" json:"update_time"`
-	CreateTime  time.Time `gorm:"column:create_time" json:"create_time"`
-	Type        int16     `gorm:"column:type;default:1" json:"type"`
-	Creator     string    `gorm:"column:creator" json:"creator"`
-}
-
-// TableName UnsDashboard's table name
-func (*UnsDashboard) TableName() string {
-	return TableNameUnsDashboard
-}
-
-const TableNameUnsDashboardRef = "uns_dashboard_ref"
-
-// UnsDashboardRef mapped from table <uns_dashboard_ref>
-type UnsDashboardRef struct {
-	DashboardID string    `gorm:"column:dashboard_id;not null" json:"dashboard_id"`
-	UnsAlias    string    `gorm:"column:uns_alias;not null" json:"uns_alias"`
-	CreateAt    time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
-}
-
-// TableName UnsDashboardRef's table name
-func (*UnsDashboardRef) TableName() string {
-	return TableNameUnsDashboardRef
-}
-
 const TableNameUnsDashboardTopRecode = "uns_dashboard_top_recodes"
 
 // UnsDashboardTopRecode mapped from table <uns_dashboard_top_recodes>

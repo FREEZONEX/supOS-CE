@@ -1,7 +1,6 @@
-package dao
+package relationDB
 
 import (
-	"backend/internal/logic/supos/uns/dashboard/model"
 	"context"
 	"fmt"
 
@@ -27,8 +26,8 @@ func NewDashboardMapper(db *gorm.DB, ctx context.Context) *DashboardMapper {
 }
 
 // SelectById 根据 ID 查询 Dashboard
-func (m *DashboardMapper) SelectById(id string) (*model.DashboardModel, error) {
-	var dashboard model.DashboardModel
+func (m *DashboardMapper) SelectById(id string) (*DashboardModel, error) {
+	var dashboard DashboardModel
 	err := m.db.WithContext(m.ctx).Where("id = ?", id).First(&dashboard).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -41,7 +40,7 @@ func (m *DashboardMapper) SelectById(id string) (*model.DashboardModel, error) {
 }
 
 // Insert 插入 Dashboard
-func (m *DashboardMapper) Insert(dashboard *model.DashboardModel) error {
+func (m *DashboardMapper) Insert(dashboard *DashboardModel) error {
 	err := m.db.WithContext(m.ctx).Create(dashboard).Error
 	if err != nil {
 		m.logger.Errorf("failed to insert dashboard: %v", err)
@@ -51,10 +50,10 @@ func (m *DashboardMapper) Insert(dashboard *model.DashboardModel) error {
 }
 
 // UpdateById 根据 ID 更新 Dashboard
-func (m *DashboardMapper) UpdateById(dashboard *model.DashboardModel) error {
+func (m *DashboardMapper) UpdateById(dashboard *DashboardModel) error {
 	// 使用 map 更新非零值字段，避免gorm默认的“忽略零值”行为
 	// 这里假设所有字段都需要更新
-	err := m.db.WithContext(m.ctx).Model(&model.DashboardModel{}).Where("id = ?", dashboard.ID).Updates(dashboard).Error
+	err := m.db.WithContext(m.ctx).Model(&DashboardModel{}).Where("id = ?", dashboard.ID).Updates(dashboard).Error
 	if err != nil {
 		m.logger.Errorf("failed to update dashboard: %v", err)
 		return err
@@ -64,7 +63,7 @@ func (m *DashboardMapper) UpdateById(dashboard *model.DashboardModel) error {
 
 // DeleteById 根据 ID 删除 Dashboard
 func (m *DashboardMapper) DeleteById(id string) error {
-	err := m.db.WithContext(m.ctx).Where("id = ?", id).Delete(&model.DashboardModel{}).Error
+	err := m.db.WithContext(m.ctx).Where("id = ?", id).Delete(&DashboardModel{}).Error
 	if err != nil {
 		m.logger.Errorf("failed to delete dashboard: %v", err)
 		return err
@@ -73,11 +72,11 @@ func (m *DashboardMapper) DeleteById(id string) error {
 }
 
 // SelectByFlowNames 根据名称列表查询 Dashboard
-func (m *DashboardMapper) SelectByFlowNames(names []string) ([]*model.DashboardModel, error) {
+func (m *DashboardMapper) SelectByFlowNames(names []string) ([]*DashboardModel, error) {
 	if len(names) == 0 {
-		return []*model.DashboardModel{}, nil
+		return []*DashboardModel{}, nil
 	}
-	var dashboards []*model.DashboardModel
+	var dashboards []*DashboardModel
 	err := m.db.WithContext(m.ctx).Where("name IN ?", names).Find(&dashboards).Error
 	if err != nil {
 		m.logger.Errorf("failed to select dashboards by names: %v", err)
@@ -87,7 +86,7 @@ func (m *DashboardMapper) SelectByFlowNames(names []string) ([]*model.DashboardM
 }
 
 // SaveOrIgnoreBatch 批量保存或忽略
-func (m *DashboardMapper) SaveOrIgnoreBatch(dashboards []*model.DashboardModel) error {
+func (m *DashboardMapper) SaveOrIgnoreBatch(dashboards []*DashboardModel) error {
 	if len(dashboards) == 0 {
 		return nil
 	}
@@ -102,7 +101,7 @@ func (m *DashboardMapper) SaveOrIgnoreBatch(dashboards []*model.DashboardModel) 
 
 // DashboardExtends Dashboard 扩展信息（包含置顶标记）
 type DashboardExtends struct {
-	model.DashboardModel
+	DashboardModel
 	Mark     *int   `db:"mark" json:"mark,omitzero"`          // 置顶标记
 	MarkTime *int64 `db:"mark_time" json:"markTime,omitzero"` // 置顶时间
 }
@@ -154,7 +153,7 @@ func (m *DashboardMapper) SelectDashboard(
 // SelectDashboardCount 查询 Dashboard 总数
 func (m *DashboardMapper) SelectDashboardCount(fuzzyName string, typ *int) (int64, error) {
 	var count int64
-	query := m.db.WithContext(m.ctx).Model(&model.DashboardModel{})
+	query := m.db.WithContext(m.ctx).Model(&DashboardModel{})
 
 	if fuzzyName != "" {
 		searchPattern := "%" + fuzzyName + "%"
@@ -174,12 +173,12 @@ func (m *DashboardMapper) SelectDashboardCount(fuzzyName string, typ *int) (int6
 }
 
 // SelectAll selects all DashboardModel from the database.
-func (m *DashboardMapper) SelectAll() ([]*model.DashboardModel, error) {
-	var dashboards []*model.DashboardModel
+func (m *DashboardMapper) SelectAll() ([]*DashboardModel, error) {
+	var dashboards []*DashboardModel
 	err := m.db.WithContext(m.ctx).Find(&dashboards).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return []*model.DashboardModel{}, nil
+			return []*DashboardModel{}, nil
 		}
 		m.logger.Errorf("failed to select all dashboards: %v", err)
 		return nil, err
@@ -188,11 +187,11 @@ func (m *DashboardMapper) SelectAll() ([]*model.DashboardModel, error) {
 }
 
 // SelectByIds selects multiple DashboardModel from the database by their IDs.
-func (m *DashboardMapper) SelectByIds(ids []string) ([]*model.DashboardModel, error) {
+func (m *DashboardMapper) SelectByIds(ids []string) ([]*DashboardModel, error) {
 	if len(ids) == 0 {
-		return []*model.DashboardModel{}, nil
+		return []*DashboardModel{}, nil
 	}
-	var dashboards []*model.DashboardModel
+	var dashboards []*DashboardModel
 	err := m.db.WithContext(m.ctx).Where("id IN ?", ids).Find(&dashboards).Error
 	if err != nil {
 		m.logger.Errorf("failed to select dashboards by ids: %v", err)
@@ -206,7 +205,7 @@ func (m *DashboardMapper) DeleteBatchIds(ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	err := m.db.WithContext(m.ctx).Where("id IN ?", ids).Delete(&model.DashboardModel{}).Error
+	err := m.db.WithContext(m.ctx).Where("id IN ?", ids).Delete(&DashboardModel{}).Error
 	if err != nil {
 		m.logger.Errorf("failed to delete dashboards by ids: %v", err)
 		return err
@@ -215,15 +214,15 @@ func (m *DashboardMapper) DeleteBatchIds(ids []string) error {
 }
 
 // SelectDashboardsToInit selects dashboards that need to be initialized.
-func (m *DashboardMapper) SelectDashboardsToInit() ([]*model.DashboardModel, error) {
-	var dashboards []*model.DashboardModel
+func (m *DashboardMapper) SelectDashboardsToInit() ([]*DashboardModel, error) {
+	var dashboards []*DashboardModel
 	err := m.db.WithContext(m.ctx).
 		Where("need_init = ? AND type = ? AND json_content IS NOT NULL AND json_content != ?", true, 1, "").
 		Find(&dashboards).Error
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return []*model.DashboardModel{}, nil
+			return []*DashboardModel{}, nil
 		}
 		m.logger.Errorf("failed to select dashboards to init: %v", err)
 		return nil, err

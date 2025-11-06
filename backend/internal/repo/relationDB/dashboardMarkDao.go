@@ -1,7 +1,6 @@
-package dao
+package relationDB
 
 import (
-	"backend/internal/logic/supos/uns/dashboard/model"
 	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -25,7 +24,7 @@ func NewDashboardMarkedMapper(db *gorm.DB, ctx context.Context) *DashboardMarked
 }
 
 // Insert 插入置顶标记
-func (m *DashboardMarkedMapper) Insert(mark *model.DashboardMarkModel) error {
+func (m *DashboardMarkedMapper) Insert(mark *DashboardMarkModel) error {
 	err := m.db.WithContext(m.ctx).Create(mark).Error
 	if err != nil {
 		m.logger.Errorf("failed to insert dashboard mark: %v", err)
@@ -38,7 +37,7 @@ func (m *DashboardMarkedMapper) Insert(mark *model.DashboardMarkModel) error {
 func (m *DashboardMarkedMapper) Delete(id string, userID string) error {
 	err := m.db.WithContext(m.ctx).
 		Where("id = ? AND user_id = ?", id, userID).
-		Delete(&model.DashboardMarkModel{}).Error
+		Delete(&DashboardMarkModel{}).Error
 	if err != nil {
 		m.logger.Errorf("failed to delete dashboard mark: %v", err)
 		return err
@@ -48,7 +47,7 @@ func (m *DashboardMarkedMapper) Delete(id string, userID string) error {
 
 // DeleteById 根据 Dashboard ID 删除所有置顶标记
 func (m *DashboardMarkedMapper) DeleteById(id string) error {
-	err := m.db.WithContext(m.ctx).Where("id = ?", id).Delete(&model.DashboardMarkModel{}).Error
+	err := m.db.WithContext(m.ctx).Where("id = ?", id).Delete(&DashboardMarkModel{}).Error
 	if err != nil {
 		m.logger.Errorf("failed to delete dashboard mark by id: %v", err)
 		return err

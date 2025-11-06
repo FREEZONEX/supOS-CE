@@ -245,15 +245,15 @@ type CreateUnsNodeRedDto struct {
 }
 
 type DashboardDto struct {
-	ID          string `json:"id,omitzero"`
+	ID          string `json:"id,optional,omitzero"`
 	Name        string `json:"name"`
 	Type        int    `json:"type"` // 1-grafana 2-fuxa
-	NeedInit    bool   `json:"needInit"`
-	Description string `json:"description,omitzero"`
-	JsonContent string `json:"jsonContent,omitzero"`
-	Creator     string `json:"creator,omitzero"`
-	UpdateTime  string `json:"updateTime,omitzero"`
-	CreateTime  string `json:"createTime,omitzero"`
+	NeedInit    bool   `json:"needInit,optional"`
+	Description string `json:"description,optional,omitzero"`
+	JsonContent string `json:"jsonContent,optional,omitzero"`
+	Creator     string `json:"creator,optional,omitzero"`
+	UpdateTime  string `json:"updateTime,optional,omitzero"`
+	CreateTime  string `json:"createTime,optional,omitzero"`
 }
 
 type DashboardPageResp struct {

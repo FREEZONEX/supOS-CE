@@ -1,7 +1,7 @@
 package exporter
 
 import (
-	"backend/internal/logic/supos/uns/dashboard/model"
+	"backend/internal/repo/relationDB"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -14,7 +14,7 @@ import (
 
 // DashboardExportContext Dashboard 导出上下文
 type DashboardExportContext struct {
-	DashboardModels []*model.DashboardModel
+	DashboardModels []*relationDB.DashboardModel
 }
 
 // DashboardDataExporter Dashboard 数据导出器

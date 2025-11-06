@@ -3,8 +3,6 @@ package dashboard
 import (
 	"backend/internal/common/errors"
 	"backend/internal/common/utils/grafanautil"
-	"backend/internal/logic/supos/uns/dashboard/dao"
-	"backend/internal/logic/supos/uns/dashboard/model"
 	unsservice "backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
@@ -22,8 +20,8 @@ type CreateGrafanaByUnsLogic struct {
 	logx.Logger
 	ctx                context.Context
 	svcCtx             *svc.ServiceContext
-	dashboardMapper    *dao.DashboardMapper
-	dashboardRefMapper *dao.DashboardRefMapper
+	dashboardMapper    *relationDB.DashboardMapper
+	dashboardRefMapper *relationDB.DashboardRefMapper
 	unsQueryService    *unsservice.UnsQueryService
 	unsUpdateService   *unsservice.UnsUpdateService
 }
@@ -38,8 +36,8 @@ func NewCreateGrafanaByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 		Logger:             logx.WithContext(ctx),
 		ctx:                ctx,
 		svcCtx:             svcCtx,
-		dashboardMapper:    dao.NewDashboardMapper(db, ctx),
-		dashboardRefMapper: dao.NewDashboardRefMapper(db, ctx),
+		dashboardMapper:    relationDB.NewDashboardMapper(db, ctx),
+		dashboardRefMapper: relationDB.NewDashboardRefMapper(db, ctx),
 		unsQueryService:    unsQueryService,
 		unsUpdateService:   unsUpdateService,
 	}
@@ -80,7 +78,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (string, erro
 
 	// 5. 保存 Dashboard 记录到数据库
 	now := time.Now()
-	dashboard := &model.DashboardModel{
+	dashboard := &relationDB.DashboardModel{
 		ID:          dashboardUID,
 		Name:        unsDef.Name,
 		Creator:     "system", // 系统自动创建
@@ -98,7 +96,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (string, erro
 	}
 
 	// 6. 创建 Dashboard 和 UNS 的绑定关系
-	ref := &model.DashboardRefModel{
+	ref := &relationDB.DashboardRefModel{
 		DashboardID: dashboardUID,
 		UnsAlias:    alias,
 		CreateAt:    now,

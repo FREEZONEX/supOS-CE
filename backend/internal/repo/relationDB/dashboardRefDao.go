@@ -1,7 +1,6 @@
-package dao
+package relationDB
 
 import (
-	"backend/internal/logic/supos/uns/dashboard/model"
 	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -25,7 +24,7 @@ func NewDashboardRefMapper(db *gorm.DB, ctx context.Context) *DashboardRefMapper
 }
 
 // Insert 插入 Dashboard 引用关系
-func (m *DashboardRefMapper) Insert(ref *model.DashboardRefModel) error {
+func (m *DashboardRefMapper) Insert(ref *DashboardRefModel) error {
 	err := m.db.WithContext(m.ctx).Create(ref).Error
 	if err != nil {
 		m.logger.Errorf("failed to insert dashboard ref: %v", err)
@@ -36,7 +35,7 @@ func (m *DashboardRefMapper) Insert(ref *model.DashboardRefModel) error {
 
 // DeleteByDashboardId 根据 Dashboard ID 删除引用关系
 func (m *DashboardRefMapper) DeleteByDashboardId(dashboardID string) error {
-	err := m.db.WithContext(m.ctx).Where("dashboard_id = ?", dashboardID).Delete(&model.DashboardRefModel{}).Error
+	err := m.db.WithContext(m.ctx).Where("dashboard_id = ?", dashboardID).Delete(&DashboardRefModel{}).Error
 	if err != nil {
 		m.logger.Errorf("failed to delete dashboard ref: %v", err)
 		return err
@@ -45,8 +44,8 @@ func (m *DashboardRefMapper) DeleteByDashboardId(dashboardID string) error {
 }
 
 // GetByUns 根据 UNS 别名获取 Dashboard
-func (m *DashboardRefMapper) GetByUns(unsAlias string) (*model.DashboardModel, error) {
-	var dashboard model.DashboardModel
+func (m *DashboardRefMapper) GetByUns(unsAlias string) (*DashboardModel, error) {
+	var dashboard DashboardModel
 	err := m.db.WithContext(m.ctx).
 		Table("uns_dashboard a").
 		Select("a.*").
@@ -65,8 +64,8 @@ func (m *DashboardRefMapper) GetByUns(unsAlias string) (*model.DashboardModel, e
 }
 
 // SelectByUnsAlias 根据 UNS 别名查询引用关系
-func (m *DashboardRefMapper) SelectByUnsAlias(unsAlias string) (*model.DashboardRefModel, error) {
-	var ref model.DashboardRefModel
+func (m *DashboardRefMapper) SelectByUnsAlias(unsAlias string) (*DashboardRefModel, error) {
+	var ref DashboardRefModel
 	err := m.db.WithContext(m.ctx).Where("uns_alias = ?", unsAlias).First(&ref).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -79,12 +78,12 @@ func (m *DashboardRefMapper) SelectByUnsAlias(unsAlias string) (*model.Dashboard
 }
 
 // SelectByUnsAliases selects dashboard references by a list of UNS aliases.
-func (m *DashboardRefMapper) SelectByUnsAliases(aliases []string) ([]*model.DashboardRefModel, error) {
+func (m *DashboardRefMapper) SelectByUnsAliases(aliases []string) ([]*DashboardRefModel, error) {
 	if len(aliases) == 0 {
-		return []*model.DashboardRefModel{}, nil
+		return []*DashboardRefModel{}, nil
 	}
 
-	var refs []*model.DashboardRefModel
+	var refs []*DashboardRefModel
 	err := m.db.WithContext(m.ctx).Where("uns_alias IN ?", aliases).Find(&refs).Error
 	if err != nil {
 		m.logger.Errorf("failed to select dashboard refs by aliases: %v", err)

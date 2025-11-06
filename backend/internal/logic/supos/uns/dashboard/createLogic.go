@@ -3,8 +3,6 @@ package dashboard
 import (
 	"backend/internal/common/errors"
 	"backend/internal/common/utils/grafanautil"
-	"backend/internal/logic/supos/uns/dashboard/dao"
-	"backend/internal/logic/supos/uns/dashboard/model"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"context"
@@ -19,7 +17,7 @@ type CreateLogic struct {
 	logx.Logger
 	ctx             context.Context
 	svcCtx          *svc.ServiceContext
-	dashboardMapper *dao.DashboardMapper
+	dashboardMapper *relationDB.DashboardMapper
 }
 
 func NewCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateLogic {
@@ -28,11 +26,11 @@ func NewCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateLogi
 		Logger:          logx.WithContext(ctx),
 		ctx:             ctx,
 		svcCtx:          svcCtx,
-		dashboardMapper: dao.NewDashboardMapper(db, ctx),
+		dashboardMapper: relationDB.NewDashboardMapper(db, ctx),
 	}
 }
 
-func (l *CreateLogic) Create(req *model.DashboardModel, creator string) (*model.DashboardModel, error) {
+func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*relationDB.DashboardModel, error) {
 	// 检查名称是否重复
 	dashboards, err := l.dashboardMapper.SelectByFlowNames([]string{req.Name})
 	if err != nil {

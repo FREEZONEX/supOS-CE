@@ -4,8 +4,6 @@
 package dashboard
 
 import (
-	"backend/internal/logic/supos/uns/dashboard/dao"
-	"backend/internal/logic/supos/uns/dashboard/model"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"context"
@@ -17,7 +15,7 @@ type MarkTopLogic struct {
 	logx.Logger
 	ctx                 context.Context
 	svcCtx              *svc.ServiceContext
-	dashboardMarkMapper *dao.DashboardMarkedMapper
+	dashboardMarkMapper *relationDB.DashboardMarkedMapper
 }
 
 func NewMarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MarkTopLogic {
@@ -26,12 +24,12 @@ func NewMarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MarkTopLo
 		Logger:              logx.WithContext(ctx),
 		ctx:                 ctx,
 		svcCtx:              svcCtx,
-		dashboardMarkMapper: dao.NewDashboardMarkedMapper(db, ctx),
+		dashboardMarkMapper: relationDB.NewDashboardMarkedMapper(db, ctx),
 	}
 }
 
 func (l *MarkTopLogic) MarkTop(id string, userID string) error {
-	mark := &model.DashboardMarkModel{
+	mark := &relationDB.DashboardMarkModel{
 		ID:     id,
 		UserID: userID,
 	}

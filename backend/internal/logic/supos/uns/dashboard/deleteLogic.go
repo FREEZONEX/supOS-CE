@@ -3,7 +3,6 @@ package dashboard
 import (
 	"backend/internal/common/utils/fuxautil"
 	"backend/internal/common/utils/grafanautil"
-	"backend/internal/logic/supos/uns/dashboard/dao"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"context"
@@ -17,9 +16,9 @@ type DeleteLogic struct {
 	logx.Logger
 	ctx                 context.Context
 	svcCtx              *svc.ServiceContext
-	dashboardMapper     *dao.DashboardMapper
-	dashboardRefMapper  *dao.DashboardRefMapper
-	dashboardMarkMapper *dao.DashboardMarkedMapper
+	dashboardMapper     *relationDB.DashboardMapper
+	dashboardRefMapper  *relationDB.DashboardRefMapper
+	dashboardMarkMapper *relationDB.DashboardMarkedMapper
 }
 
 func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogic {
@@ -28,9 +27,9 @@ func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogi
 		Logger:              logx.WithContext(ctx),
 		ctx:                 ctx,
 		svcCtx:              svcCtx,
-		dashboardMapper:     dao.NewDashboardMapper(db, ctx),
-		dashboardRefMapper:  dao.NewDashboardRefMapper(db, ctx),
-		dashboardMarkMapper: dao.NewDashboardMarkedMapper(db, ctx),
+		dashboardMapper:     relationDB.NewDashboardMapper(db, ctx),
+		dashboardRefMapper:  relationDB.NewDashboardRefMapper(db, ctx),
+		dashboardMarkMapper: relationDB.NewDashboardMarkedMapper(db, ctx),
 	}
 }
 

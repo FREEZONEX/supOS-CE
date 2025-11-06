@@ -25,7 +25,7 @@ import (
 // GetGrafanaURL returns the Grafana URL based on the runtime environment.
 func GetGrafanaURL() string {
 	if runtimeutil.IsLocalEnv() {
-		return "http://100.100.100.22:33997/grafana/home"
+		return "http://grafana:3000/grafana/home"
 	}
 	return "http://grafana:3000"
 }
