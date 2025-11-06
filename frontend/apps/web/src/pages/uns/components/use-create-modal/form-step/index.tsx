@@ -300,7 +300,9 @@ const FormStep: FC<FormStepProps> = ({
             (_, selectInfo, opt) => {
               const currentNode = getTargetNode(_ || [], id);
 
-              changeCurrentPath(selectInfo || currentNode || { key: id, id, type: queryType === 'addFolder' ? 0 : 2 });
+              changeCurrentPath(
+                selectInfo || currentNode || { key: id, id, pathType: queryType === 'addFolder' ? 0 : 2 }
+              );
               setTreeMap(false);
               if (selectInfo) {
                 // 非lasy树

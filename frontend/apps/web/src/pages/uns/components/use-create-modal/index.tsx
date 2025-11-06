@@ -71,7 +71,7 @@ const useOptionModal = ({
 
   const changeModalType = useCallback(
     async (type?: string, targetNode?: UnsTreeNode, pasteNode?: UnsTreeNode) => {
-      const { id, parentId = '', path = '', parentPath = '', type: nodeType } = targetNode || {};
+      const { id, parentId = '', path = '', parentPath = '', pathType: nodeType } = targetNode || {};
       const _folderPath = nodeType === 0 ? path : parentPath;
       const folderPath = _folderPath ? `${_folderPath}/` : '';
       const folderId = (nodeType === 0 ? id : parentId) || '';
@@ -80,7 +80,7 @@ const useOptionModal = ({
       setOpen(true);
       if (pasteNode) {
         //数据回填
-        const isPasteFolder = pasteNode.type === 0;
+        const isPasteFolder = pasteNode.pathType === 0;
         setAddModalType(isPasteFolder ? 'pasteFolder' : 'pasteFile');
         const getInfo = isPasteFolder ? getModelInfo : getInstanceInfo;
         const detail: any = await getInfo({ id: pasteNode.id });

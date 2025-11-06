@@ -35,7 +35,7 @@ const Index = ({
             size="small"
             type="link"
             onClick={() => {
-              onNameClick({ ...record, type: 0, key: record.id }, 'uns');
+              onNameClick({ ...record, pathType: 0, key: record.id }, 'uns');
             }}
           >
             {text}

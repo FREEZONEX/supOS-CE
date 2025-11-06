@@ -21,7 +21,7 @@ import { UnsContextProvider } from './UnsContext';
 const initNode = {
   key: '',
   id: '',
-  type: null,
+  pathType: null,
 };
 
 const Module = () => {

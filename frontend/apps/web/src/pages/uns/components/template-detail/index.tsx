@@ -42,7 +42,7 @@ const TemplateDetail: FC<TemplateDetailProps> = ({ currentNode: { id }, handleDe
 
   const onDeleteHandle = () => {
     if (id) {
-      handleDelete?.({ id: id as string, key: '', type: 1 });
+      handleDelete?.({ id: id as string, key: '', pathType: 1 });
     }
   };
 

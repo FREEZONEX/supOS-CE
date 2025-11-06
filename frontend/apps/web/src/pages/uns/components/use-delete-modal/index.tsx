@@ -69,7 +69,7 @@ const Module = ({ successCallBack, currentNode, lazyTree }: DeleteModalProps) =>
         const sourceId = deleteDetail?.parentId;
         const config = lazyTree
           ? {
-              queryType: deleteDetail?.type === 0 ? 'deleteFolder' : 'deleteFile',
+              queryType: deleteDetail?.pathType === 0 ? 'deleteFolder' : 'deleteFile',
               clearSelect,
               key: sourceId ? sourceId : ROOT_NODE_ID,
               newNodeKey: deleteDetail?.preId || deleteDetail?.nextId,
@@ -86,8 +86,8 @@ const Module = ({ successCallBack, currentNode, lazyTree }: DeleteModalProps) =>
   };
 
   const confirm = async (cascade?: boolean) => {
-    const { id, type } = deleteDetail || {};
-    if (type === 0) {
+    const { id, pathType } = deleteDetail || {};
+    if (pathType === 0) {
       deleteRequest({ cascade, id });
     } else {
       const formData = await form.validateFields();
@@ -104,11 +104,11 @@ const Module = ({ successCallBack, currentNode, lazyTree }: DeleteModalProps) =>
       open={open}
       onCancel={close}
       maskClosable={false}
-      title={formatMessage(deleteDetail?.type === 2 ? 'uns.deleteFile' : 'uns.deleteFolder')}
+      title={formatMessage(deleteDetail?.pathType === 2 ? 'uns.deleteFile' : 'uns.deleteFolder')}
       width={460}
     >
       <Form name="deleteForm" form={form} colon={false}>
-        {deleteDetail?.type === 2 ? (
+        {deleteDetail?.pathType === 2 ? (
           <>
             {showConfirm && (
               <>

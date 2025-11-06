@@ -42,7 +42,7 @@ const Module = ({ toTargetNode }: any) => {
               backgroundColor: 'var(--supos-uns-button-color)',
             }}
             onClick={() => {
-              toTargetNode('label', { type: 9, id: label.id });
+              toTargetNode('label', { pathType: 7, id: label.id });
               close();
             }}
           >

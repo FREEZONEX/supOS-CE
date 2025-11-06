@@ -97,9 +97,9 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
           {currentTreeMapType === 'all' && selectedNode?.id
             ? getTopicBreadcrumb(
                 breadcrumbList,
-                selectedNode.type === 0 ? (
+                selectedNode.pathType === 0 ? (
                   false
-                ) : selectedNode.type === 2 && systemInfo.useAliasPathAsTopic ? (
+                ) : selectedNode.pathType === 2 && systemInfo.useAliasPathAsTopic ? (
                   <Flex
                     align="center"
                     style={{ cursor: 'pointer' }}

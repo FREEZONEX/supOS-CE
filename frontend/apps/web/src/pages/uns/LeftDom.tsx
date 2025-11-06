@@ -20,7 +20,7 @@ const panelOpenSize = 500;
 const initNode = {
   key: '',
   id: '',
-  type: null,
+  pathType: null,
 };
 
 const isHidden = false;

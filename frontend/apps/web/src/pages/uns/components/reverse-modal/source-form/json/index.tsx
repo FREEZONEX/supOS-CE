@@ -85,11 +85,11 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
         // 如果存在子节点，则递归地修改每个子节点
         if (node.children && node.children.length > 0) {
           node.icon = ({ expanded }: any) => (expanded ? <FolderOpen /> : <Folder />);
-          node.type = 0;
+          node.pathType = 0;
           modifyNodesRecursively(node.children, node.alias, node.dataPath);
         } else {
           node.icon = <Document />;
-          node.type = 2;
+          node.pathType = 2;
           node.dataType = globalDataType || 1;
           // node.fields = [...(node.fields || []), ...defaultFields];
         }
@@ -156,7 +156,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
     const nextStep = () => {
       form.validateFields().then(async (values) => {
         const res: any = await json2fsTree(JSON.parse(values.jsonData || null));
-        const parentAlias = currentNode?.type == 0 ? currentNode?.alias : currentNode?.parentAlias;
+        const parentAlias = currentNode?.pathType == 0 ? currentNode?.alias : currentNode?.parentAlias;
         modifyNodesRecursively(res, parentAlias);
         setTreeData(res);
         setIsSave(true);
@@ -179,7 +179,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
       //获取最终提交的数组
       const newCheckedNodes = checkedNodes.map((node: TreeNode) => {
         const {
-          type,
+          pathType,
           name,
           description,
           tags,
@@ -192,14 +192,14 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
           addDashBoard = false,
           dataType,
         } = node;
-        if (type === 2 && typeof mainKey === 'number' && mainKey > -1) {
+        if (pathType === 2 && typeof mainKey === 'number' && mainKey > -1) {
           fields?.forEach((field: FieldItem, index: number) => {
             if (dataType === 2 && index === mainKey) {
               field.unique = true;
             }
           });
         }
-        return type === 0
+        return pathType === 0
           ? {
               name,
               description,
@@ -320,7 +320,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
               <div style={{ flex: 1, height: '100%', overflowY: 'auto', padding: '0 10px' }}>
                 <Flex align="center" gap={5}>
                   <span style={{ flexShrink: 0, height: '16px' }}>
-                    {selectedInfo.type === 2 ? <Document /> : <Folder />}
+                    {selectedInfo.pathType === 2 ? <Document /> : <Folder />}
                   </span>
                   <span style={{ wordBreak: 'break-word', minHeight: '22px' }}>
                     {getTargetNode(treeData, selectedInfo.dataPath)?.name}
@@ -340,7 +340,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                     },
                     {
                       validator: (_, value) => {
-                        if (selectedInfo.type === 0 && ['label', 'template'].includes(value)) {
+                        if (selectedInfo.pathType === 0 && ['label', 'template'].includes(value)) {
                           return Promise.reject(new Error(formatMessage('uns.prohibitKeywords')));
                         } else {
                           return Promise.resolve();
@@ -353,13 +353,13 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                 </Form.Item>
                 <Form.Item
                   name={['currentNode', 'description']}
-                  label={formatMessage(`uns.${selectedInfo?.type === 2 ? 'fileDescription' : 'folderDescription'}`)}
+                  label={formatMessage(`uns.${selectedInfo?.pathType === 2 ? 'fileDescription' : 'folderDescription'}`)}
                   rules={[
                     {
                       max: 255,
                       message: formatMessage('uns.labelMaxLength', {
                         label: formatMessage(
-                          `uns.${selectedInfo?.type === 2 ? 'fileDescription' : 'folderDescription'}`
+                          `uns.${selectedInfo?.pathType === 2 ? 'fileDescription' : 'folderDescription'}`
                         ),
                         length: 255,
                       }),
@@ -368,7 +368,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                 >
                   <TextArea rows={2} />
                 </Form.Item>
-                {selectedInfo.type === 2 ? (
+                {selectedInfo.pathType === 2 ? (
                   <>
                     <Form.Item name={['currentNode', 'tags']} label={formatMessage('common.label')}>
                       <TagSelect />
@@ -412,7 +412,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                 )}
                 <FieldsFormList
                   types={types}
-                  isCreateFolder={selectedInfo.type === 0}
+                  isCreateFolder={selectedInfo.pathType === 0}
                   showTooltip={false}
                   dataTypeName={['currentNode', 'dataType']}
                   fieldsName={['currentNode', 'fields']}

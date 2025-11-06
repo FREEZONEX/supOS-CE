@@ -706,17 +706,18 @@ const TopTreeCom = ({
                       key: 'viewTemplate',
                       label: formatMessage('common.viewTemplate'),
                       onClick: async () => {
-                        const getInfo = _node.type === 2 ? getInstanceInfo : getModelInfo;
+                        const getInfo = _node.pathType === 2 ? getInstanceInfo : getModelInfo;
                         const detail: any = await getInfo({ id: _node.id });
                         if (detail.modelId) {
-                          toTargetNode('template', { key: detail.modelId, type: 1, id: detail.modelId });
+                          toTargetNode('template', { key: detail.modelId, pathType: 1, id: detail.modelId });
                         } else {
                           message.warning(formatMessage('uns.noTemplate'));
                         }
                       },
                     },
                     {
-                      auth: _node.type === 0 ? ButtonPermission['uns.folderCopy'] : ButtonPermission['uns.fileCopy'],
+                      auth:
+                        _node.pathType === 0 ? ButtonPermission['uns.folderCopy'] : ButtonPermission['uns.fileCopy'],
                       key: 'copy',
                       label: formatMessage('common.copy'),
                       onClick: () => {
@@ -725,7 +726,8 @@ const TopTreeCom = ({
                       },
                     },
                     {
-                      auth: _node.type === 0 ? ButtonPermission['uns.folderPaste'] : ButtonPermission['uns.filePaste'],
+                      auth:
+                        _node.pathType === 0 ? ButtonPermission['uns.folderPaste'] : ButtonPermission['uns.filePaste'],
                       key: 'paste',
                       label: formatMessage('common.paste'),
                       onClick: () => {
@@ -734,7 +736,8 @@ const TopTreeCom = ({
                       disabled: isMountFile,
                     },
                     {
-                      auth: _node.type === 0 ? ButtonPermission['uns.folderPaste'] : ButtonPermission['uns.filePaste'],
+                      auth:
+                        _node.pathType === 0 ? ButtonPermission['uns.folderPaste'] : ButtonPermission['uns.filePaste'],
                       key: 'pasteAndEdit',
                       label: formatMessage('common.pasteAndEdit'),
                       onClick: () => {
@@ -784,7 +787,9 @@ const TopTreeCom = ({
                     },
                     {
                       auth:
-                        _node.type === 0 ? ButtonPermission['uns.folderDelete'] : ButtonPermission['uns.fileDelete'],
+                        _node.pathType === 0
+                          ? ButtonPermission['uns.folderDelete']
+                          : ButtonPermission['uns.fileDelete'],
                       key: 'delete',
                       label: formatMessage('common.delete'),
                       onClick: () => {
@@ -838,7 +843,7 @@ const TopTreeCom = ({
         }}
         treeNodeCount={(dataNode) => {
           return (
-            dataNode.type === 0 && (
+            dataNode.pathType === 0 && (
               <span style={{ color: 'var(--supos-text-color)', fontSize: '12px', opacity: 0.5 }}>
                 ({dataNode.countChildren})
               </span>
@@ -858,7 +863,7 @@ const TopTreeCom = ({
             >
               {isUns ? <TreeNodeIcon dataNode={dataNode} /> : undefined}
               <span style={{ fontWeight: 'bold', fontSize: 14 }}>{dataNode.title}</span>
-              {dataNode.type === 0 && (
+              {dataNode.pathType === 0 && (
                 <span style={{ fontSize: '12px', opacity: 0.5 }}>({dataNode.countChildren})</span>
               )}
             </Flex>
@@ -866,9 +871,9 @@ const TopTreeCom = ({
         }}
         drapOverChanges={(info) => {
           const { node, classNames, isInset } = info;
-          if (node?.type === 2) {
+          if (node?.pathType === 2) {
             return classNames.out;
-          } else if (node?.type === 0) {
+          } else if (node?.pathType === 0) {
             return isInset ? classNames.in : classNames.out;
           } else {
             return '';

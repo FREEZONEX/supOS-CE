@@ -38,7 +38,8 @@ export interface TreeNode extends TreeDataNode {
   dataPath: string;
   newDataPath?: string;
   children?: TreeNode[];
-  type: number;
+  // type: number;
+  pathType: number;
   description?: string;
   tags?: string[];
   save2db?: boolean;
