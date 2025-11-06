@@ -211,7 +211,7 @@ export const formatNodeData = (data: any[], parentPath: string = '', preId?: any
 export const formatNodeDataForTemplate = (data: any[], preId?: any): UnsTreeNode[] => {
   return data.map((item: any, index: number) => ({
     ...item,
-    type: 1,
+    pathType: 1,
     value: 0,
     title: item.name,
     isLeaf: true,

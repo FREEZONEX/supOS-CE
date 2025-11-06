@@ -385,7 +385,7 @@ const TreeNodeIcon = memo(({ dataNode }: { dataNode: UnsTreeNode }) => {
   const { expandedKeys } = useTreeStore((state) => ({
     expandedKeys: state.expandedKeys,
   }));
-  if (dataNode.type === 0) {
+  if (dataNode.pathType === 0) {
     return (
       <Flex align="center">
         <div style={{ width: 10, display: 'flex', alignItems: 'center' }}>
@@ -398,7 +398,7 @@ const TreeNodeIcon = memo(({ dataNode }: { dataNode: UnsTreeNode }) => {
         )}
       </Flex>
     );
-  } else if (dataNode.type === 2) {
+  } else if (dataNode.pathType === 2) {
     return (
       <Flex align="center">
         <div style={{ width: 10 }} />
@@ -550,7 +550,7 @@ const TopTreeCom = ({
   const pasteHandle = (source: any, target: any) => {
     if (source) {
       setLoading(true);
-      const targetId = (target?.type === 0 ? target?.id : target?.parentId) || '';
+      const targetId = (target?.pathType === 0 ? target?.id : target?.parentId) || '';
       pasteUns({
         sourceId: source?.id,
         targetId,
@@ -558,7 +558,7 @@ const TopTreeCom = ({
         .then(({ data, msg }) => {
           message.success(msg);
           loadData({
-            queryType: source?.type === 0 ? 'addFolder' : 'addFile',
+            queryType: source?.pathType === 0 ? 'addFolder' : 'addFile',
             key: targetId ? targetId : ROOT_NODE_ID,
             newNodeKey: data,
             reset: !targetId,
@@ -577,7 +577,7 @@ const TopTreeCom = ({
       <ProTree
         onDndDragStart={(info) => {
           const { active } = info;
-          if (active.type == 0 && expandedKeys.includes(active?.id)) {
+          if (active.pathType == 0 && expandedKeys.includes(active?.id)) {
             // 关闭文件夹
             setExpandedKeys((expandedKeys) => {
               return expandedKeys.filter((k) => active?.id !== k);
@@ -588,7 +588,7 @@ const TopTreeCom = ({
           const { active, over, isInset } = info;
           if (active?.id && over?.id && active.id !== over.id) {
             let _isInset = isInset;
-            if (over?.type === 2) {
+            if (over?.pathType === 2) {
               _isInset = false;
             }
             // active是我移动的节点，over是我放置的节点位置，_isInset是我放置在over这个节点里面还是over节点的下面
@@ -676,7 +676,7 @@ const TopTreeCom = ({
                   ? ['refresh', ...baseItems, 'collapseFolder']
                   : [...baseItems, 'expandFolder', 'collapseFolder'];
 
-                const mapItem = _node.type === 0 ? folderItems : ['viewLabels', ...baseItems];
+                const mapItem = _node.pathType === 0 ? folderItems : ['viewLabels', ...baseItems];
                 const isMountTarget = !!node.mount && mountStatus[node.alias];
                 const isMountFile = !!node.mount;
 
@@ -693,7 +693,7 @@ const TopTreeCom = ({
                       key: 'viewLabels',
                       label: formatMessage('common.viewLabels'),
                       onClick: async () => {
-                        const getInfo = _node.type === 2 ? getInstanceInfo : getModelInfo;
+                        const getInfo = _node.pathType === 2 ? getInstanceInfo : getModelInfo;
                         const detail: any = await getInfo({ id: _node.id });
                         if (detail?.labelList?.length > 0) {
                           setLabelOpen(detail.labelList);

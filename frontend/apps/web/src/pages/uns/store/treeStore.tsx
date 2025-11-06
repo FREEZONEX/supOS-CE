@@ -609,7 +609,7 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
                       const data = res.map((e: any) => ({
                         ...e,
                         name: e.labelName,
-                        type: 9,
+                        pathType: 9,
                         value: 0,
                         key: e.id,
                         title: e.labelName,

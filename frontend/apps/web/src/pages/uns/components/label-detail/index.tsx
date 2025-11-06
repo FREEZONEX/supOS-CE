@@ -93,7 +93,7 @@ const Module: FC<LabelDetailProps> = (props) => {
   };
 
   const onDeleteHandle = () => {
-    handleDelete({ key: '', id, type: 9 });
+    handleDelete({ key: '', id, pathType: 7 });
   };
   const { copy } = useClipboard();
 

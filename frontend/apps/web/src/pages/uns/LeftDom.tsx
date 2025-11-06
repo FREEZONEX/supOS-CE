@@ -23,6 +23,8 @@ const initNode = {
   type: null,
 };
 
+const isHidden = false;
+
 const LeftDom: FC<{
   changeCurrentPath: any;
   handleDelete: any;
@@ -190,7 +192,7 @@ const LeftDom: FC<{
             treeNodeExtra={(dataNode) => {
               return (
                 <TreeNodeExtra
-                  type={dataNode.type}
+                  type={dataNode.pathType}
                   handleDelete={() => handleDelete(dataNode)}
                   handleCopy={() => handleCopy(dataNode)}
                   deleteDisabled={!!dataNode?.mount && !mountStatus[dataNode?.alias]}
@@ -199,7 +201,8 @@ const LeftDom: FC<{
             }}
           />
         </Splitter.Panel>
-        {treeType === 'uns' && (
+        {/*暂时隐藏*/}
+        {isHidden && treeType === 'uns' && (
           <Splitter.Panel size={unusedTopicPanelSize[1]} min={panelCloseSize} style={{ overflow: 'hidden' }}>
             <div
               className="unusedTopicTree-collapsible"

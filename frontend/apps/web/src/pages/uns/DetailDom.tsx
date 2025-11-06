@@ -30,7 +30,7 @@ const DetailDom: FC<DetailDomProps> = ({ handleDelete, currentUnusedTopicNode })
 
   const getDetailDom = (selectedNode?: UnsTreeNode) => {
     if (!selectedNode) return <EmptyDetail />;
-    switch (selectedNode.type) {
+    switch (selectedNode.pathType) {
       case 0:
         return <ModelDetail currentNode={selectedNode} initTreeData={loadData} />;
       case 1:

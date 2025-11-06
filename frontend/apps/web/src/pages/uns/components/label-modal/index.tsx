@@ -40,7 +40,7 @@ const Module = ({ successCallBack, changeCurrentPath, setTreeMap, scrollTreeNode
       addLabel(name)
         .then((data: any) => {
           successCallBack({}, () => {
-            changeCurrentPath({ key: data?.id, id: data?.id, type: 9 });
+            changeCurrentPath({ key: data?.id, id: data?.id, pathType: 9 });
             setTreeMap(false);
             scrollTreeNode(data?.id);
           });

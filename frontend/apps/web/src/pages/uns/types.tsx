@@ -7,7 +7,12 @@ export interface UnsTreeNode extends Omit<DataNodeProps, 'children'> {
   parentId?: Key;
   path?: string;
   parentPath?: string;
-  type?: number | null;
+  /*
+   * @description type => pathType
+   * 0 文件夹 2 文件 1 模板 7 标签
+   * */
+  // type?: number | null;
+  pathType?: number | null;
   name?: string;
   alias?: string;
   parentAlias?: string;

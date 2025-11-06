@@ -47,7 +47,7 @@ const Module: FC<ExportModalProps> = (props) => {
   const save = async () => {
     const values = await form.validateFields();
     const { uns, fileType } = values;
-    const params = getParamsForArray(uns, 'type', {
+    const params = getParamsForArray(uns, 'pathType', {
       groups: {
         0: 'models',
         2: 'instances',
@@ -253,13 +253,13 @@ const Module: FC<ExportModalProps> = (props) => {
                   })
             }
             treeNodeIcon={(dataNode: any, _treeExpandedKeys = []) => {
-              if (dataNode.type === 0) {
+              if (dataNode.pathType === 0) {
                 return _treeExpandedKeys.includes(dataNode.key!) ? (
                   <FolderOpen style={{ flexShrink: 0, marginRight: '5px' }} />
                 ) : (
                   <Folder style={{ flexShrink: 0, marginRight: '5px' }} />
                 );
-              } else if (dataNode.type === 2) {
+              } else if (dataNode.pathType === 2) {
                 return <Document style={{ flexShrink: 0, marginRight: '5px' }} />;
               }
               return null;
