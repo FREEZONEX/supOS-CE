@@ -30,7 +30,7 @@ func (f *FieldDefine) IsUnique() bool {
 // IsSystemField checks if field is a system field
 func (f *FieldDefine) IsSystemField() bool {
 	_, ok := constants.SystemFields[f.Name]
-	return strings.HasPrefix(f.Name, constants.SystemFieldPrev) || ok
+	return ok || strings.HasPrefix(f.Name, constants.SystemFieldPrev)
 }
 
 // SetName sets and trims the field name

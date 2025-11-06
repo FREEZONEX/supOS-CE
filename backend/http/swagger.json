@@ -375,17 +375,7 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
+            "schema": {}
           }
         }
       },
@@ -429,18 +419,7 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "string"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
+              "type": "string"
             }
           }
         }
@@ -468,17 +447,7 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
+            "schema": {}
           }
         }
       }
@@ -528,18 +497,7 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "string"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
+              "type": "string"
             }
           }
         }
@@ -587,18 +545,7 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "string"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
+              "type": "string"
             }
           }
         }
@@ -645,17 +592,7 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
+            "schema": {}
           }
         }
       }
@@ -674,18 +611,7 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "string"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
+              "type": "string"
             }
           }
         }
@@ -709,16 +635,30 @@
             "allowEmptyValue": true
           },
           {
-            "type": "integer",
-            "name": "pageNo",
+            "type": "string",
+            "name": "orderCode",
             "in": "query",
-            "required": true
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "isAsc",
+            "in": "query",
+            "allowEmptyValue": true
           },
           {
             "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
             "name": "pageSize",
             "in": "query",
-            "required": true
+            "allowEmptyValue": true
           }
         ],
         "responses": {
@@ -735,6 +675,12 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "createTime": {
+                        "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
+                      },
                       "description": {
                         "type": "string"
                       },
@@ -749,6 +695,9 @@
                       },
                       "id": {
                         "type": "string"
+                      },
+                      "mark": {
+                        "type": "integer"
                       },
                       "template": {
                         "type": "string"
@@ -770,6 +719,71 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/event/mark": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Mark a  flow by id",
+        "operationId": "supos/EventflowMarkEventFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/inter-api/supos/event/unmark": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "delete Mark a  flow by id",
+        "operationId": "supos/EventflowUnmarkEventFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "formData",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
           }
         }
       }
@@ -1208,6 +1222,7 @@
                       "lastUpdateTime",
                       "countChildren",
                       "pathType",
+                      "type",
                       "dataType",
                       "parentDataType",
                       "name",
@@ -1242,6 +1257,7 @@
                             "lastUpdateTime",
                             "countChildren",
                             "pathType",
+                            "type",
                             "dataType",
                             "parentDataType",
                             "name",
@@ -1332,6 +1348,9 @@
                             },
                             "templateAlias": {
                               "type": "string"
+                            },
+                            "type": {
+                              "type": "integer"
                             },
                             "updateAt": {
                               "type": "integer"
@@ -1464,6 +1483,9 @@
                       "templateAlias": {
                         "type": "string"
                       },
+                      "type": {
+                        "type": "integer"
+                      },
                       "updateAt": {
                         "type": "integer"
                       },
@@ -1523,17 +1545,7 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
+            "schema": {}
           }
         }
       },
@@ -1577,18 +1589,7 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "string"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
+              "type": "string"
             }
           }
         }
@@ -1616,17 +1617,7 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
+            "schema": {}
           }
         }
       }
@@ -1676,18 +1667,7 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "string"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
+              "type": "string"
             }
           }
         }
@@ -1734,33 +1714,31 @@
             "schema": {
               "type": "object",
               "properties": {
-                "code": {
+                "createTime": {
                   "type": "integer"
                 },
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "description": {
-                      "type": "string"
-                    },
-                    "flowId": {
-                      "type": "string"
-                    },
-                    "flowName": {
-                      "type": "string"
-                    },
-                    "flowStatus": {
-                      "type": "string"
-                    },
-                    "id": {
-                      "type": "string"
-                    },
-                    "template": {
-                      "type": "string"
-                    }
-                  }
+                "creator": {
+                  "type": "string"
                 },
-                "msg": {
+                "description": {
+                  "type": "string"
+                },
+                "flowId": {
+                  "type": "string"
+                },
+                "flowName": {
+                  "type": "string"
+                },
+                "flowStatus": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "mark": {
+                  "type": "integer"
+                },
+                "template": {
                   "type": "string"
                 }
               }
@@ -1813,25 +1791,50 @@
             "schema": {
               "type": "object",
               "properties": {
-                "code": {
-                  "type": "integer"
+                "flowId": {
+                  "type": "string"
                 },
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "flowId": {
-                      "type": "string"
-                    },
-                    "version": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "msg": {
+                "version": {
                   "type": "string"
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/mark": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Mark a source flow by id",
+        "operationId": "supos/SourceflowMarkSourceFlow",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
           }
         }
       }
@@ -1877,17 +1880,36 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/unmark": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "delete Mark a source flow by id",
+        "operationId": "supos/SourceflowUnmarkSourceFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "id",
+            "in": "formData",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
           }
         }
       }
@@ -1916,33 +1938,31 @@
             "schema": {
               "type": "object",
               "properties": {
-                "code": {
+                "createTime": {
                   "type": "integer"
                 },
-                "data": {
-                  "type": "object",
-                  "properties": {
-                    "description": {
-                      "type": "string"
-                    },
-                    "flowId": {
-                      "type": "string"
-                    },
-                    "flowName": {
-                      "type": "string"
-                    },
-                    "flowStatus": {
-                      "type": "string"
-                    },
-                    "id": {
-                      "type": "string"
-                    },
-                    "template": {
-                      "type": "string"
-                    }
-                  }
+                "creator": {
+                  "type": "string"
                 },
-                "msg": {
+                "description": {
+                  "type": "string"
+                },
+                "flowId": {
+                  "type": "string"
+                },
+                "flowName": {
+                  "type": "string"
+                },
+                "flowStatus": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "mark": {
+                  "type": "integer"
+                },
+                "template": {
                   "type": "string"
                 }
               }
@@ -1965,18 +1985,7 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "string"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
+              "type": "string"
             }
           }
         }
@@ -2000,16 +2009,30 @@
             "allowEmptyValue": true
           },
           {
-            "type": "integer",
-            "name": "pageNo",
+            "type": "string",
+            "name": "orderCode",
             "in": "query",
-            "required": true
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "isAsc",
+            "in": "query",
+            "allowEmptyValue": true
           },
           {
             "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
             "name": "pageSize",
             "in": "query",
-            "required": true
+            "allowEmptyValue": true
           }
         ],
         "responses": {
@@ -2026,6 +2049,12 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "createTime": {
+                        "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
+                      },
                       "description": {
                         "type": "string"
                       },
@@ -2041,14 +2070,14 @@
                       "id": {
                         "type": "string"
                       },
+                      "mark": {
+                        "type": "integer"
+                      },
                       "template": {
                         "type": "string"
                       }
                     }
                   }
-                },
-                "msg": {
-                  "type": "string"
                 },
                 "pageNo": {
                   "type": "integer"
@@ -3504,9 +3533,6 @@
                       "-": {
                         "type": "integer"
                       },
-                      "Save2Db": {
-                        "type": "boolean"
-                      },
                       "accessLevel": {
                         "description": "Access level",
                         "type": "string"
@@ -3760,6 +3786,9 @@
                         }
                       },
                       "retainTableWhenDeleteInstance": {
+                        "type": "boolean"
+                      },
+                      "save2db": {
                         "type": "boolean"
                       },
                       "strMaxLen": {
@@ -4021,6 +4050,7 @@
                       "lastUpdateTime",
                       "countChildren",
                       "pathType",
+                      "type",
                       "dataType",
                       "parentDataType",
                       "name",
@@ -4055,6 +4085,7 @@
                             "lastUpdateTime",
                             "countChildren",
                             "pathType",
+                            "type",
                             "dataType",
                             "parentDataType",
                             "name",
@@ -4145,6 +4176,9 @@
                             },
                             "templateAlias": {
                               "type": "string"
+                            },
+                            "type": {
+                              "type": "integer"
                             },
                             "updateAt": {
                               "type": "integer"
@@ -4276,6 +4310,9 @@
                       },
                       "templateAlias": {
                         "type": "string"
+                      },
+                      "type": {
+                        "type": "integer"
                       },
                       "updateAt": {
                         "type": "integer"
@@ -5673,9 +5710,6 @@
                       "-": {
                         "type": "integer"
                       },
-                      "Save2Db": {
-                        "type": "boolean"
-                      },
                       "accessLevel": {
                         "description": "Access level",
                         "type": "string"
@@ -5929,6 +5963,9 @@
                         }
                       },
                       "retainTableWhenDeleteInstance": {
+                        "type": "boolean"
+                      },
+                      "save2db": {
                         "type": "boolean"
                       },
                       "strMaxLen": {
@@ -7906,6 +7943,9 @@
                 "retainTableWhenDeleteInstance": {
                   "type": "boolean"
                 },
+                "save2db": {
+                  "type": "boolean"
+                },
                 "strMaxLen": {
                   "type": "integer"
                 },
@@ -8752,7 +8792,7 @@
       },
       "put": {
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "produces": [
           "application/json"
@@ -8777,31 +8817,10 @@
           },
           {
             "type": "string",
+            "default": "NULL",
             "name": "description",
             "in": "formData",
             "allowEmptyValue": true
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "id"
-              ],
-              "properties": {
-                "description": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "integer"
-                },
-                "name": {
-                  "type": "string"
-                }
-              }
-            }
           }
         ],
         "responses": {
@@ -9161,9 +9180,7 @@
               "type": "object",
               "required": [
                 "pageNo",
-                "pageSize",
-                "key",
-                "subscribeEnable"
+                "pageSize"
               ],
               "properties": {
                 "key": {
@@ -9260,7 +9277,7 @@
             "required": true
           },
           {
-            "type": "boolean",
+            "type": "string",
             "name": "enable",
             "in": "formData",
             "allowEmptyValue": true
@@ -9358,6 +9375,7 @@
                       "lastUpdateTime",
                       "countChildren",
                       "pathType",
+                      "type",
                       "dataType",
                       "parentDataType",
                       "name",
@@ -9392,6 +9410,7 @@
                             "lastUpdateTime",
                             "countChildren",
                             "pathType",
+                            "type",
                             "dataType",
                             "parentDataType",
                             "name",
@@ -9482,6 +9501,9 @@
                             },
                             "templateAlias": {
                               "type": "string"
+                            },
+                            "type": {
+                              "type": "integer"
                             },
                             "updateAt": {
                               "type": "integer"
@@ -9613,6 +9635,9 @@
                       },
                       "templateAlias": {
                         "type": "string"
+                      },
+                      "type": {
+                        "type": "integer"
                       },
                       "updateAt": {
                         "type": "integer"
@@ -10599,7 +10624,7 @@
           "https"
         ],
         "summary": "Batch query flows by UNS aliases",
-        "operationId": "supos/Sourceflow/ServiceBatchSourceFlowByAliases",
+        "operationId": "supos/Sourceflow/ServiceApiBatchSourceFlowByAliases",
         "parameters": [
           {
             "name": "body",
@@ -10635,6 +10660,12 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "createTime": {
+                        "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
+                      },
                       "description": {
                         "type": "string"
                       },
@@ -10649,6 +10680,9 @@
                       },
                       "id": {
                         "type": "string"
+                      },
+                      "mark": {
+                        "type": "integer"
                       },
                       "template": {
                         "type": "string"
@@ -10673,8 +10707,8 @@
         "schemes": [
           "https"
         ],
-        "summary": "Proxy Node-RED event /flows endpoint using cookie scoped id",
-        "operationId": "supos/Eventflow/ProxyProxyEventFlows",
+        "summary": "Proxy Node-RED /flows endpoint using cookie scoped id",
+        "operationId": "supos/Eventflow/ServiceApiProxyEventFlows",
         "responses": {
           "200": {
             "description": "",
@@ -10694,7 +10728,7 @@
           "https"
         ],
         "summary": "Proxy Node-RED /flows endpoint using cookie scoped id",
-        "operationId": "supos/Sourceflow/ServiceProxySourceFlows",
+        "operationId": "supos/Sourceflow/ServiceApiProxySourceFlows",
         "responses": {
           "200": {
             "description": "",
@@ -10726,7 +10760,7 @@
       }
     }
   },
-  "x-date": "2025-10-31 09:19:12",
+  "x-date": "2025-11-05 17:26:16",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

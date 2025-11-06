@@ -39,11 +39,13 @@ func defFalse(b *bool) *bool {
 func (r *UnsRemoveService) RemoveModelOrInstance(ctx context.Context, req *types.RemoveReq) (resp *types.RemoveResult, err error) {
 
 	return r.removeModelOrInstance(ctx, req.Id, types.BatchRemoveUnsDto{
-		WithFlow:        defTrue(req.WithFlow),
-		WithDashboard:   defTrue(req.WithDashboard),
-		RemoveRefer:     req.RemoveRefer,
-		CheckMount:      &TRUE,
-		OnlyRemoveChild: &FALSE,
+		RemoveUnsOptions: types.RemoveUnsOptions{
+			WithFlow:        defTrue(req.WithFlow),
+			WithDashboard:   defTrue(req.WithDashboard),
+			RemoveRefer:     req.RemoveRefer,
+			CheckMount:      &TRUE,
+			OnlyRemoveChild: &FALSE,
+		},
 	})
 }
 func (r *UnsRemoveService) DetectIfRemove(ctx context.Context, req *types.DetectRemoveReq) (resp *types.RemoveResult, err error) {

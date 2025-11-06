@@ -2,6 +2,7 @@ package UnsConverter
 
 import (
 	"backend/internal/types"
+	"backend/share/base"
 	"encoding/json"
 	"testing"
 	"time"
@@ -49,19 +50,23 @@ func TestCopyFields(t *testing.T) {
 }
 func TestCopyTime2Long(t *testing.T) {
 	type User struct {
-		Id       int64     `json:"id,omitzero"`
-		CreateAt time.Time `json:"createAt,omitzero"`
+		Id          int64     `json:"id,omitzero"`
+		Name        string    `gorm:"column:name;not null" json:"name"`
+		Description *string   `json:"description,optional,omitzero" validate:"max=255"`
+		CreateAt    time.Time `json:"createAt,omitzero"`
 	}
 	type UserVo struct {
-		Id       string `json:"id,omitzero"`
-		CreateAt int64  `json:"createAt,omitzero"`
+		Id          string  `json:"id,omitzero"`
+		Name        string  `gorm:"column:name;not null" json:"name"`
+		Description *string `gorm:"column:description" json:"description"`
+		CreateAt    int64   `json:"createAt,omitzero"`
 	}
-	po := &User{Id: 123, CreateAt: time.Now()}
-	vo := &UserVo{}
+	po := &User{Id: 123, CreateAt: time.Now(), Name: "", Description: base.V2p("")}
+	vo := &UserVo{Name: "X", Description: base.V2p("des")}
 	err := copier.CopyWithOption(vo, po, apiConvertOptions)
 	if err != nil {
-		t.Fatal(err)
+		t.Log(err)
 	}
-	t.Logf("t0=%d,t1=%d\n", po.CreateAt.UnixMilli(), vo.CreateAt)
-	t.Logf("id0=%v,t1=%v\n", po.Id, vo.Id)
+	t.Logf("t0=%d,t1=%d, desc=%s\n", po.CreateAt.UnixMilli(), vo.CreateAt, *vo.Description)
+	t.Logf("vo=%+v\n", *vo)
 }

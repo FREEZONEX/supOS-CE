@@ -13,6 +13,7 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -27,6 +28,7 @@ type UnsAddService struct {
 	unsMapper       dao.UnsNamespaceRepo
 	labelRefMapper  dao.UnsLabelRefRepo
 	unsLabelService *service.UnsLabelService
+	removeService   *UnsRemoveService
 	unsCalcService  UnsCalcService
 }
 
@@ -35,15 +37,15 @@ func init() {
 		return &UnsAddService{
 			log:             logx.WithContext(context.Background()),
 			unsLabelService: spring.GetBean[*service.UnsLabelService](),
+			removeService:   spring.GetBean[*UnsRemoveService](),
 		}
 	})
 }
 func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args bo.CreateModelInstancesArgs) (errTipMap map[string]string) {
 	topicDtos := args.Topics
 	errTipMap = make(map[string]string, len(topicDtos))
-	paramFiles := make(map[string]*types.CreateTopicDto)
-	paramFolders := initParamsUns(topicDtos, errTipMap, paramFiles)
-	if len(paramFolders) == 0 && len(paramFiles) == 0 {
+	pathMap := initParamsUns(topicDtos, errTipMap)
+	if len(pathMap) == 0 {
 		u.log.Info("不存在任何文件夹或文件, 无法继续保存")
 		return errTipMap
 	}
@@ -56,8 +58,9 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	{
 		ids := make(map[int64]bool)
 		aliasSet := make(map[string]bool)
-		addAlias(base.MapValues(paramFolders), aliasSet, ids)
-		addAlias(base.MapValues(paramFiles), aliasSet, ids)
+		for _, vs := range pathMap {
+			addAlias(base.MapValues(vs), aliasSet, ids)
+		}
 		var err error
 		existsUns, err = u.listUnsByAliasAndIds(ctx, base.MapKeys(aliasSet), base.MapKeys(ids), dbFiles)
 		if err != nil {
@@ -66,7 +69,10 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			return errTipMap
 		}
 	}
-	tryFillIdOrAlias(paramFiles, existsUns, dbFiles, errTipMap)
+	for _, vs := range pathMap {
+		tryFillIdOrAlias(vs, existsUns, dbFiles, errTipMap)
+	}
+	paramFiles, paramFolders := pathMap[constants.PathTypeFile], pathMap[constants.PathTypeDir]
 	addFiles := make(map[int64]*dao.UnsNamespace)
 	aliasMap := make(map[string]*dao.UnsNamespace)
 	folders := base.MapValues(paramFolders)
@@ -74,20 +80,10 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		reverseGraph := base.BuildReverseGraph(folders, func(t *types.CreateTopicDto) string {
 			return t.Alias
 		}, func(t *types.CreateTopicDto) string {
-			parentAlias := ""
-			if pa := t.ParentAlias; pa != nil {
-				parentAlias = *pa
-			}
-			return parentAlias
+			return base.P2v(t.ParentAlias)
 		})
 		levelMap := base.CalculateLevels(reverseGraph)
 		sort.Sort(&unsLevel{uns: folders, levelMap: levelMap})
-	}
-	// 找出 parentAlias 或 name 有修改的最高层目录，后面需要获取它的整个子树，为更新 layRec 做准备
-	err := u.tryAddLayRecOrPathChangedChildren(ctx, folders, base.MapValues(paramFiles), existsUns, dbFiles)
-	if err != nil {
-		errTipMap["0"] = err.Error()
-		return errTipMap
 	}
 	createTime := time.Now()
 	allUns := func(alias string) *dao.UnsNamespace {
@@ -97,28 +93,34 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		}
 		return unsPo
 	}
-	for _, folder := range folders {
-		po := u.trySetId(createTime, folder, allUns, dbFiles, errTipMap)
-		if po != nil {
-			addFiles[po.Id] = po
-			aliasMap[po.Alias] = po
+	unsPoLabels := make(map[int64]*bo.UnsPoLabels, len(paramFiles)+len(paramFolders))
+	var deleteFiles []*dao.UnsNamespace
+	for _, vs := range pathMap {
+		for _, DTO := range vs {
+			po := u.trySetId(ctx, createTime, DTO, allUns, dbFiles, &deleteFiles, errTipMap)
+			if po != nil {
+				addFiles[po.Id] = po
+				aliasMap[po.Alias] = po
+				if DTO.LabelNames != nil {
+					_, exists := dbFiles[po.Id]
+					unsPoLabels[po.Id] = bo.NewUnsPoLabels(po, exists, DTO.LabelNames)
+				}
+			}
 		}
 	}
-
-	unsPoLabels := make(map[int64]*bo.UnsPoLabels, len(paramFiles))
-	for _, unsFile := range paramFiles {
-		po := u.trySetId(createTime, unsFile, allUns, dbFiles, errTipMap)
-		if po != nil {
-			addFiles[po.Id] = po
-			aliasMap[po.Alias] = po
-			if unsFile.LabelNames != nil {
-				_, exists := dbFiles[po.Id]
-				unsPoLabels[po.Id] = bo.NewUnsPoLabels(po, exists, unsFile.LabelNames)
-			}
+	for k, dbPo := range dbFiles {
+		if base.P2v(dbPo.Status) == LOGIC_REMOVED {
+			delete(dbFiles, k)
 		}
 	}
 	//TODO 计算，引用，聚合等类型的 校验和处理
 	aliasToId(addFiles, allUns)
+	// 找出 parentAlias 或 name 有修改的最高层目录，后面需要获取它的整个子树，为更新 layRec 做准备
+	err := u.tryAddLayRecOrPathChangedChildren(ctx, addFiles, dbFiles, existsUns)
+	if err != nil {
+		errTipMap["0"] = err.Error()
+		return errTipMap
+	}
 	rs := setLayRecAndPath(createTime, addFiles, dbFiles)
 	createList := make([]*types.CreateTopicDto, 0, len(addFiles))
 	dtoUpdateList := make([]*types.CreateTopicDto, 0, len(addFiles))
@@ -139,29 +141,6 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			labels.SetDto(createTopicDto)
 		}
 		if dbF != nil && base.P2v(dbF.Status) == OK {
-			switch file.PathType {
-			case constants.PathTypeFile:
-				createTopicDto.FieldsChanged = !base.EqualsF(file.Fields, dbF.Fields, func(a, b *types.FieldDefine) bool {
-					return a.Name == b.Name && a.Type == b.Type
-				})
-			case constants.PathTypeDir:
-				/*	if file.LayRec != dbF.LayRec {
-					createTopicDto.OldPath = dbF.Path
-					createTopicDto.OldLayRec = dbF.LayRec
-					protocolStr := file.Protocol
-					if protocolStr == "" || protocolStr[0] != '{' {
-						protocolStr = "{}"
-						file.Protocol = protocolStr
-					}
-					var protocol map[string]interface{}
-					if err := json.Unmarshal([]byte(protocolStr), &protocol); err == nil {
-						protocol["oldLay"] = dbF.LayRec
-						if updatedProtocol, err := json.Marshal(protocol); err == nil {
-							file.Protocol = string(updatedProtocol)
-						}
-					}
-				}*/
-			}
 			dtoUpdateList = append(dtoUpdateList, createTopicDto)
 		} else {
 			if dbF != nil {
@@ -216,7 +195,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		return upl
 	})
 	err = u.saveBatchAndSendEvent(ctx, createTime, &args, rs.insertList, rs.updateList,
-		createList, dtoUpdateList, unsLabels)
+		createList, dtoUpdateList, deleteFiles, unsLabels)
 	if err != nil {
 		errTipMap["0"] = err.Error()
 	}
@@ -230,11 +209,9 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 	updateList []*dao.UnsNamespace,
 	notifyCreateList []*types.CreateTopicDto,
 	notifyUpdateList []*types.CreateTopicDto,
+	deleteFiles []*dao.UnsNamespace,
 	unsLabels []bo.UnsLabels) error {
 
-	dataSrcFiles := base.GroupBy(notifyCreateList, func(e *types.CreateTopicDto) types.SrcJdbcType {
-		return types.SrcJdbcType(e.DataSrcID)
-	})
 	tx := dao.GetDb(ctx).Begin()
 	ctx = dao.SetDb(ctx, tx)
 	defer func() {
@@ -255,15 +232,32 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 		}
 	}
 	if err == nil {
-		err = spring.PublishEvent(&event.BatchCreateTableEvent{
-			ApplicationEvent: event.ApplicationEvent{Context: ctx},
-			FlowName:         args.FlowName,
-			FromImport:       args.FromImport,
-			Topics:           dataSrcFiles,
-			Updates:          notifyUpdateList,
-			Labels:           base.Map(labelPos, UnsConverter.Label2Uns),
-			DelegateAware:    getEventStatusCallback(args.StatusConsumer),
-		})
+		if len(notifyCreateList)+len(notifyUpdateList)+len(labelPos) > 0 {
+			createFiles := base.GroupBy(notifyCreateList, pathTypeGroupBy)
+			notifyUpdate := base.GroupBy(notifyUpdateList, pathTypeGroupBy)
+			if len(labelPos) > 0 {
+				notifyUpdate[constants.PathTypeLabel] = base.Map(labelPos, UnsConverter.Label2Uns)
+			}
+			err = spring.PublishEvent(&event.BatchCreateTableEvent{
+				ApplicationEvent: event.ApplicationEvent{Context: ctx},
+				FlowName:         args.FlowName,
+				FromImport:       args.FromImport,
+				Creates:          createFiles,
+				Updates:          notifyUpdate,
+				DelegateAware:    getEventStatusCallback(args.StatusConsumer),
+			})
+		}
+		if len(deleteFiles) > 0 {
+			delRs, delEr := u.removeService.Remove(ctx, types.RemoveUnsOptions{
+				WithFlow:    base.V2p(args.FlowName != ""),
+				RemoveRefer: &TRUE,
+			}, deleteFiles)
+			if delEr != nil {
+				err = delEr
+			} else if delRs != nil && delRs.Code != 200 && delRs.Msg != "" {
+				err = errors.New(delRs.Msg)
+			}
+		}
 	}
 	if err != nil {
 		u.log.Error("SaveUnsErr:", err)
@@ -272,6 +266,9 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 		tx.Commit()
 	}
 	return err
+}
+func pathTypeGroupBy(e *types.CreateTopicDto) int16 {
+	return e.PathType
 }
 func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types.CreateTopicDto) *types.StringResult {
 	result := &types.StringResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}

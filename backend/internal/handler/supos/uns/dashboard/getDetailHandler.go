@@ -1,6 +1,3 @@
-// Code scaffolded by goctl. Safe to edit.
-// goctl 1.9.2
-
 package dashboard
 
 import (
@@ -9,6 +6,7 @@ import (
 	"backend/internal/logic/supos/uns/dashboard"
 	"backend/internal/svc"
 	"backend/internal/types"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
@@ -21,8 +19,8 @@ func GetDetailHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		l := dashboard.NewGetDetailLogic(r.Context(), svcCtx)
-		resp, err := l.GetDetail(&req)
+		l := dashboard.NewGetByIdLogic(r.Context(), svcCtx)
+		resp, err := l.GetById(&dashboard.DashboardIDReq{ID: req.ID})
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

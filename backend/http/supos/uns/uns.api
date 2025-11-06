@@ -25,7 +25,7 @@ type (
         PathType    int16   `json:"pathType" validate:"required,min=0,max=2"`
         Path        string  `json:"path,optional,omitzero"`
         Alias       string  `json:"alias" validate:"required"`
-        Description string  `json:"description,optional,omitzero" validate:"max=255"`
+        Description *string  `json:"description,optional,omitzero" validate:"max=255"`
 
         // Model/Template fields
         ModelId    *int64 `json:"modelId,string,optional,omitempty"`
@@ -61,24 +61,24 @@ type (
 
 
         Refers            []*InstanceField `json:"refers,optional,omitzero"` // Calculation fields
-        Expression        string           `json:"expression,optional,omitzero" validate:"max=255"`
+        Expression        *string           `json:"expression,optional,omitzero" validate:"max=255"`
         CompileExpression interface{}       `json:"-"`
         StreamOptions     *StreamOptions   `json:"streamOptions,optional,omitzero"`
 
         // Protocol fields
-        DataPath     string         `json:"dataPath,optional"`
+        DataPath     *string         `json:"dataPath,optional"`
         Protocol     map[string]interface{} `json:"protocol,optional"`
-        ProtocolType string         `json:"protocolType,optional"`
+        ProtocolType *string         `json:"protocolType,optional"`
         ProtocolBean interface{}            `json:"-"`
 
 
-        WithFlags                     *int32 `json:"withFlags,optional,string,omitempty"` // Flags and options
-        AddFlow                       *bool  `json:"addFlow,optional,string,omitempty"`
-        AddDashBoard                  *bool  `json:"addDashBoard,optional,string,omitempty"`
-        Save2Db                       *bool  `json:"save2db,optional,string",omitempty`
-        RetainTableWhenDeleteInstance *bool  `json:"retainTableWhenDeleteInstance,optional,string,omitempty"`
-        CreateTemplate                *bool  `json:"createTemplate,optional,string,omitempty"`
-        SubscribeEnable               *bool  `json:"subscribeEnable,optional,string,omitempty"`
+        WithFlags                     *int32 `json:"withFlags,optional,omitempty"` // Flags and options
+        AddFlow                       *bool  `json:"addFlow,optional,omitempty"`
+        AddDashBoard                  *bool  `json:"addDashBoard,optional,omitempty"`
+        Save2Db                       *bool  `json:"save2db,optional,omitempty"`
+        RetainTableWhenDeleteInstance *bool  `json:"retainTableWhenDeleteInstance,optional,omitempty"`
+        CreateTemplate                *bool  `json:"createTemplate,optional,omitempty"`
+        SubscribeEnable               *bool  `json:"subscribeEnable,optional,omitempty"`
 
 
         Frequency        string `json:"frequency,optional,omitzero"`// Frequency for merge type
@@ -105,7 +105,7 @@ type (
 
 
         MountType   *int16 `json:"mountType,optional,omitempty,string"` // Mount fields
-        MountSource string `json:"mountSource,optional,omitzero"`
+        MountSource *string `json:"mountSource,optional,omitzero"`
 
 
         UpdateAt      int64 `json:"updateAt,optional,omitzero"` // Update metadata
@@ -192,18 +192,18 @@ type (
 		ParentAlias    *string                 `json:"parentAlias,omitempty"`
 		Value          int64                  `json:"value,omitempty"`
 		LastUpdateTime int64                  `json:"lastUpdateTime,omitempty"`
-		CountChildren  int                    `json:"countChildren,omitempty"`
+		CountChildren  *int                    `json:"countChildren,omitempty"`
 		PathType       int16                    `json:"pathType"`
-		//Type           int16                    `json:"type"`
+		Type           int16                    `json:"type"`
 		DataType       *int16                 `json:"dataType,omitempty"`
 		ParentDataType *int16                 `json:"parentDataType,omitempty"`
 		Name           string                 `json:"name"`
 		DisplayName    *string                 `json:"displayName,omitempty"`
 		Path           string                 `json:"path,omitempty"`
 		PathName       string                 `json:"pathName,omitempty"`
-		Description    string                 `json:"description,omitempty"`
+		Description    *string                 `json:"description,omitempty"`
 		TemplateAlias  *string                 `json:"templateAlias,omitempty"`
-		Protocol       string                 `json:"protocol,omitempty"`
+		Protocol       *string                 `json:"protocol,omitempty"`
 		Fields         []*FieldDefine          `json:"fields,omitempty"`
 		Children       []*TopicTreeResult      `json:"children,omitempty"`
 		Extend         map[string]interface{} `json:"extend,omitempty"`
@@ -457,13 +457,16 @@ type (
 		WithDashboard *bool  `form:"withDashboard,default=true"`
 		RemoveRefer   *bool  `form:"cascade,optional"`
 	}
-	BatchRemoveUnsDto {
-		AliasList       []string `json:"aliasList"`
+	RemoveUnsOptions {
 		WithFlow        *bool     `json:"withFlow,optional"`
 		WithDashboard   *bool     `json:"withDashboard,optional"`
 		RemoveRefer     *bool     `json:"removeRefer,optional"`
 		CheckMount      *bool     `json:"checkMount,optional"`
 		OnlyRemoveChild *bool     `json:"onlyRemoveChild,optional"`
+	}
+	BatchRemoveUnsDto {
+	    RemoveUnsOptions
+		AliasList       []string `json:"aliasList"`
 	}
 	CheckDuplicationNameReq {
 		Folder    string `form:"folder,optional"`

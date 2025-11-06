@@ -1,6 +1,7 @@
 package types
 
 import (
+	"backend/internal/common/constants"
 	"backend/internal/common/utils/PathUtil"
 	"sort"
 )
@@ -9,8 +10,25 @@ func (t *TopicTreeResult) AddChild(child *TopicTreeResult) {
 	if child == nil {
 		return
 	}
+	child.ParentId = &t.Id
 	t.Children = append(t.Children, child)
 	sort.Sort(unsList(t.Children))
+}
+func (t *TopicTreeResult) GetCountChildren() int {
+	if t.CountChildren == nil {
+		count := 0
+		if children := t.Children; len(children) > 0 {
+			for _, child := range children {
+				if child.PathType == constants.PathTypeFile {
+					count++
+				}
+				count += child.GetCountChildren()
+			}
+		}
+		t.CountChildren = &count
+		t.HasChildren = count > 0
+	}
+	return *t.CountChildren
 }
 
 type unsList []*TopicTreeResult

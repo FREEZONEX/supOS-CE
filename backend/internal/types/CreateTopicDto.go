@@ -4,6 +4,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
 	"backend/internal/common/utils/FieldFlags"
+	"backend/share/base"
 	"fmt"
 	"strings"
 )
@@ -112,7 +113,7 @@ func (c *CreateTopicDto) GetExtendFieldUsed() []string {
 
 // GetDataPath 获取 DataPath
 func (c *CreateTopicDto) GetDataPath() string {
-	return c.DataPath
+	return base.P2v(c.DataPath)
 }
 func (c *CreateTopicDto) GetPath() string {
 	return c.Path
@@ -120,12 +121,12 @@ func (c *CreateTopicDto) GetPath() string {
 
 // GetDescription 获取 Description
 func (c *CreateTopicDto) GetDescription() string {
-	return c.Description
+	return base.P2v(c.Description)
 }
 
 // GetProtocolType 获取 ProtocolType
 func (c *CreateTopicDto) GetProtocolType() string {
-	return c.ProtocolType
+	return base.P2v(c.ProtocolType)
 }
 
 // GetProtocol 获取 Protocol
@@ -140,7 +141,7 @@ func (c *CreateTopicDto) GetRefers() []*InstanceField {
 
 // GetExpression 获取 Expression
 func (c *CreateTopicDto) GetExpression() string {
-	return c.Expression
+	return base.P2v(c.Expression)
 }
 
 // GetStreamOptions 获取 StreamOptions
@@ -220,7 +221,7 @@ func (c *CreateTopicDto) GetMountType() *int16 {
 
 // GetMountSource 获取 MountSource
 func (c *CreateTopicDto) GetMountSource() string {
-	return c.MountSource
+	return base.P2v(c.MountSource)
 }
 func (c *CreateTopicDto) GetCreateAt() int64 {
 	return c.UpdateAt
@@ -345,7 +346,9 @@ func (c *CreateTopicDto) SetFrequency(frequency string) {
 
 // SetExpression sets expression and clears compiled expression
 func (c *CreateTopicDto) SetExpression(expression string) {
-	c.Expression = expression
+	if expression != "" {
+		c.Expression = &expression
+	}
 	c.CompileExpression = nil
 }
 
@@ -369,7 +372,8 @@ func (c *CreateTopicDto) GainBatchIndex() string {
 	if c.FlagNo != "" {
 		return c.FlagNo
 	}
-	return fmt.Sprintf("%d-%d", c.Batch, c.Index)
+	c.FlagNo = fmt.Sprintf("%d-%d", c.Batch, c.Index)
+	return c.FlagNo
 }
 
 // FilterAllBlobField filters all BLOB and LBLOB fields
@@ -405,7 +409,9 @@ func (c *CreateTopicDto) FilterBlobField() []*FieldDefine {
 // SetCalculation sets calculation parameters
 func (c *CreateTopicDto) SetCalculation(refers []*InstanceField, expression string) *CreateTopicDto {
 	c.Refers = refers
-	c.Expression = expression
+	if len(expression) > 0 {
+		c.Expression = base.V2p(expression)
+	}
 	return c
 }
 
@@ -418,7 +424,9 @@ func (c *CreateTopicDto) SetStreamCalculation(referTopic string, streamOptions *
 
 // SetDataPath sets data path
 func (c *CreateTopicDto) SetDataPath(dataPath string) *CreateTopicDto {
-	c.DataPath = dataPath
+	if len(dataPath) > 0 {
+		c.DataPath = &dataPath
+	}
 	return c
 }
 

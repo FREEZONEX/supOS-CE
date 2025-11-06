@@ -49,61 +49,51 @@ func (p UnsNamespaceRepo) PageListByConditions(db *gorm.DB, f *dto.UnsSearchCond
 	pageRs.PageSize = page.Size
 	return
 }
-func (p UnsNamespaceRepo) PageListByLazy(db *gorm.DB, f *dto.UnsSearchCondition, page *stores.PageInfo) (pageRs dto.PageResultDTO[*UnsNamespace], err error) {
+func (p UnsNamespaceRepo) PageListTemplates(db *gorm.DB, f dto.TemplateQueryVo, pageNo, pageSize int64, searchCount *int64) (pageRs []*UnsNamespace, err error) {
 	db = p.model(db)
-	db = page.ToGorm(db)
-	sql := &base.StringBuilder{}
-	sql.Grow(512)
-	sql.Append(`
-		SELECT a.* ,t.name AS template_name,t.alias AS template_alias
-        FROM uns_namespace a
-        LEFT JOIN uns_namespace t ON a.model_id = t.id
-    `)
-	filterByConditions(sql, f)
-	var sqlStr = sql.String()
-	err = db.Raw(sqlStr).Find(&pageRs.Data).Error
-	if err != nil {
-		return pageRs, stores.ErrFmt(err)
-	}
-	countErr := db.Raw("select count(*) from (" + sqlStr + ")").Count(&pageRs.Total).Error
-	if countErr != nil {
-		return pageRs, stores.ErrFmt(countErr)
-	}
-	pageRs.PageNo = page.Page
-	pageRs.PageSize = page.Size
-	return
-}
-func (p UnsNamespaceRepo) PageListTemplates(db *gorm.DB, f dto.TemplateQueryVo, page *stores.PageInfo) (pageRs dto.PageResultDTO[*dto.TemplateSearchResult], err error) {
-	db = p.model(db)
-	db = page.ToGorm(db)
-	sql := &base.StringBuilder{}
-	sql.Grow(512)
-	sql.Append(`select id,name,alias,description  FROM uns_namespace a where path_type=1 AND data_type=0 AND status=1`)
+	db = db.Select([]string{"id", "name", "path", "alias", "description"}).Where("path_type=1 AND data_type=0 AND status=1 ")
 	if f.Key != "" {
-		sql.Append(fmt.Sprintf(" AND a.name LIKE '%%%s%%'", escapeSQL(f.Key)))
+		db = db.Where(fmt.Sprintf(" name LIKE '%%%s%%'  ", escapeSQL(f.Key)))
 	}
 	if subscribeEnable := f.SubscribeEnable; subscribeEnable != nil {
 		if *subscribeEnable {
-			sql.Append("AND  with_flags&256 >0")
+			db = db.Where(" with_flags&256 >0 ")
 		} else {
-			sql.Append("AND  with_flags&256 =0")
+			db = db.Where(" with_flags&256 =0 ")
 		}
 	}
-	sql.Append("order by create_at asc")
-	var sqlStr = sql.String()
-	err = db.Raw(sqlStr).Find(&pageRs.Data).Error
+	if searchCount != nil {
+		countErr := db.Count(searchCount).Error
+		if countErr != nil {
+			return pageRs, stores.ErrFmt(countErr)
+		}
+	}
+	page := &stores.PageInfo{Page: pageNo, Size: pageSize, Orders: []stores.OrderBy{{Field: "id"}}}
+	db = page.ToGorm(db)
+	err = db.Find(&pageRs).Error
 	if err != nil {
 		return pageRs, stores.ErrFmt(err)
 	}
-	countErr := db.Raw("select count(*) from (" + sqlStr + ")").Count(&pageRs.Total).Error
-	if countErr != nil {
-		return pageRs, stores.ErrFmt(countErr)
-	}
-	pageRs.PageNo = page.Page
-	pageRs.PageSize = page.Size
 	return
 }
-
+func (p UnsNamespaceRepo) PageListByTemplateId(db *gorm.DB, templateId int64, pageNo, pageSize int64, searchCount *int64) (pageRs []*UnsNamespace, err error) {
+	db = p.model(db)
+	db = db.Select([]string{"id", "path_type", "name", "path"}).Where("templateId=? AND status=1", templateId)
+	if searchCount != nil {
+		countErr := db.Count(searchCount).Error
+		if countErr != nil {
+			err = stores.ErrFmt(countErr)
+			return
+		}
+	}
+	page := &stores.PageInfo{Page: pageNo, Size: pageSize, Orders: []stores.OrderBy{{Field: "id"}}}
+	db = page.ToGorm(db)
+	err = db.Find(&pageRs).Error
+	if err != nil {
+		return pageRs, stores.ErrFmt(err)
+	}
+	return
+}
 func filterByConditions(s *base.StringBuilder, f *dto.UnsSearchCondition) {
 	s.Append("WHERE a.status = 1 AND (a.data_type != 5 OR a.data_type IS NULL)")
 

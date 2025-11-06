@@ -8,6 +8,10 @@ type AdminResetPwdReq struct {
 	Password string `json:"password"`
 }
 
+type AliasPathReq struct {
+	Alias string `path:"alias"`
+}
+
 type AliasRequest struct {
 	Alias string `path:"alias"`
 }
@@ -28,12 +32,8 @@ type BatchQueryFileReq struct {
 }
 
 type BatchRemoveUnsDto struct {
-	AliasList       []string `json:"aliasList"`
-	WithFlow        *bool    `json:"withFlow,optional"`
-	WithDashboard   *bool    `json:"withDashboard,optional"`
-	RemoveRefer     *bool    `json:"removeRefer,optional"`
-	CheckMount      *bool    `json:"checkMount,optional"`
-	OnlyRemoveChild *bool    `json:"onlyRemoveChild,optional"`
+	RemoveUnsOptions
+	AliasList []string `json:"aliasList"`
 }
 
 type BatchUpdateResource struct {
@@ -60,6 +60,11 @@ type BatchUpdateResource struct {
 
 type BatchUpdateResourceReq struct {
 	Items []BatchUpdateResource
+}
+
+type BindUnsReq struct {
+	DashboardID string `json:"dashboardId"`
+	UnsAlias    string `json:"unsAlias"`
 }
 
 type CancelLabelReq struct {
@@ -153,7 +158,7 @@ type CreateTopicDto struct {
 	PathType                      int16                     `json:"pathType" validate:"required,min=0,max=2"`
 	Path                          string                    `json:"path,optional,omitzero"`
 	Alias                         string                    `json:"alias" validate:"required"`
-	Description                   string                    `json:"description,optional,omitzero" validate:"max=255"`
+	Description                   *string                   `json:"description,optional,omitzero" validate:"max=255"`
 	ModelId                       *int64                    `json:"modelId,string,optional,omitempty"`
 	ModelAlias                    *string                   `json:"modelAlias,optional,omitempty"`
 	Template                      string                    `json:"-"`
@@ -176,20 +181,20 @@ type CreateTopicDto struct {
 	ReferModelID                  string                    `json:"referModelId,optional,omitzero"`
 	Cited                         map[int64]bool            `json:"-"`                        // Set of cited IDs
 	Refers                        []*InstanceField          `json:"refers,optional,omitzero"` // Calculation fields
-	Expression                    string                    `json:"expression,optional,omitzero" validate:"max=255"`
+	Expression                    *string                   `json:"expression,optional,omitzero" validate:"max=255"`
 	CompileExpression             interface{}               `json:"-"`
 	StreamOptions                 *StreamOptions            `json:"streamOptions,optional,omitzero"`
-	DataPath                      string                    `json:"dataPath,optional"`
+	DataPath                      *string                   `json:"dataPath,optional"`
 	Protocol                      map[string]interface{}    `json:"protocol,optional"`
-	ProtocolType                  string                    `json:"protocolType,optional"`
+	ProtocolType                  *string                   `json:"protocolType,optional"`
 	ProtocolBean                  interface{}               `json:"-"`
-	WithFlags                     *int32                    `json:"withFlags,optional,string,omitempty"` // Flags and options
-	AddFlow                       *bool                     `json:"addFlow,optional,string,omitempty"`
-	AddDashBoard                  *bool                     `json:"addDashBoard,optional,string,omitempty"`
-	Save2Db                       *bool                     `json:"save2db,optional,string",omitempty`
-	RetainTableWhenDeleteInstance *bool                     `json:"retainTableWhenDeleteInstance,optional,string,omitempty"`
-	CreateTemplate                *bool                     `json:"createTemplate,optional,string,omitempty"`
-	SubscribeEnable               *bool                     `json:"subscribeEnable,optional,string,omitempty"`
+	WithFlags                     *int32                    `json:"withFlags,optional,omitempty"` // Flags and options
+	AddFlow                       *bool                     `json:"addFlow,optional,omitempty"`
+	AddDashBoard                  *bool                     `json:"addDashBoard,optional,omitempty"`
+	Save2Db                       *bool                     `json:"save2db,optional,omitempty"`
+	RetainTableWhenDeleteInstance *bool                     `json:"retainTableWhenDeleteInstance,optional,omitempty"`
+	CreateTemplate                *bool                     `json:"createTemplate,optional,omitempty"`
+	SubscribeEnable               *bool                     `json:"subscribeEnable,optional,omitempty"`
 	Frequency                     string                    `json:"frequency,optional,omitzero"` // Frequency for merge type
 	FrequencySeconds              *int64                    `json:"-"`
 	AlarmRuleDefine               interface{}               `json:"-"`                                         // AlarmRuleDefine type
@@ -204,7 +209,7 @@ type CreateTopicDto struct {
 	StrMaxLen                     int                       `json:"strMaxLen,optional,omitzero"`
 	AccessLevel                   string                    `json:"accessLevel,optional,omitzero"`       // Access level
 	MountType                     *int16                    `json:"mountType,optional,omitempty,string"` // Mount fields
-	MountSource                   string                    `json:"mountSource,optional,omitzero"`
+	MountSource                   *string                   `json:"mountSource,optional,omitzero"`
 	UpdateAt                      int64                     `json:"updateAt,optional,omitzero"` // Update metadata
 	CreateAt                      int64                     `json:"createAt,optional,omitzero"`
 	FieldsChanged                 bool                      `json:"-"`
@@ -406,6 +411,10 @@ type FlowUNMarkReq struct {
 	ID string `form:"id,optional"`
 }
 
+type GetByUnsReq struct {
+	UnsAlias string `form:"unsAlias"`
+}
+
 type GetByUnsRequest struct {
 	UnsAlias string `form:"unsAlias"`
 }
@@ -486,6 +495,10 @@ type InstanceField struct {
 	Topic string `json:"path"`
 	Field string `json:"field"`
 	Uts   bool   `json:"uts"`
+}
+
+type IsExistReq struct {
+	Alias string `form:"alias"`
 }
 
 type IsExistRequest struct {
@@ -611,9 +624,9 @@ type PageListRequest struct {
 }
 
 type PageListUnsByTemplateReq struct {
-	ID       int64 `form:"templateId,string" json:"id,string"`
-	PageNo   int64 `form:"pageNo,optional,default=1" json:"pageNo,optional,default=1" `       // 当前页数，默认为1
-	PageSize int64 `form:"pageSize,optional,default=20" json:"pageSize,optional,default=20" ` // 每页记录数，默认为20，最大支持1000
+	TemplateId int64 `form:"templateId,string" json:"id,string"`
+	PageNo     int64 `form:"pageNo,optional,default=1" json:"pageNo,optional,default=1" `       // 当前页数，默认为1
+	PageSize   int64 `form:"pageSize,optional,default=20" json:"pageSize,optional,default=20" ` // 每页记录数，默认为20，最大支持1000
 }
 
 type PageListUnsByTemplateResp struct {
@@ -683,6 +696,14 @@ type RemoveResult struct {
 
 type RemoveTip struct {
 	Refs int `json:"refs"`
+}
+
+type RemoveUnsOptions struct {
+	WithFlow        *bool `json:"withFlow,optional"`
+	WithDashboard   *bool `json:"withDashboard,optional"`
+	RemoveRefer     *bool `json:"removeRefer,optional"`
+	CheckMount      *bool `json:"checkMount,optional"`
+	OnlyRemoveChild *bool `json:"onlyRemoveChild,optional"`
 }
 
 type ResourceBatchDeleteReq struct {
@@ -981,15 +1002,15 @@ type TemplatePageResp struct {
 
 type TemplateQueryVo struct {
 	PaginationDTO
-	Key             string `json:"key" schema:"关键字查询，模版名称模糊匹配"`
-	SubscribeEnable *bool  `json:"subscribeEnable" schema:"是否订阅"`
+	Key             string `json:"key,optional" schema:"关键字查询，模版名称模糊匹配"`
+	SubscribeEnable *bool  `json:"subscribeEnable,optional" schema:"是否订阅"`
 }
 
 type TemplateSearchResult struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description,optional"`
-	Alias       string `json:"alias,optional"`
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,optional"`
+	Alias       string  `json:"alias,optional"`
 }
 
 type TemplateVo struct {
@@ -1046,17 +1067,18 @@ type TopicTreeResult struct {
 	ParentAlias    *string                `json:"parentAlias,omitempty"`
 	Value          int64                  `json:"value,omitempty"`
 	LastUpdateTime int64                  `json:"lastUpdateTime,omitempty"`
-	CountChildren  int                    `json:"countChildren,omitempty"`
+	CountChildren  *int                   `json:"countChildren,omitempty"`
 	PathType       int16                  `json:"pathType"`
+	Type           int16                  `json:"type"`
 	DataType       *int16                 `json:"dataType,omitempty"`
 	ParentDataType *int16                 `json:"parentDataType,omitempty"`
 	Name           string                 `json:"name"`
 	DisplayName    *string                `json:"displayName,omitempty"`
 	Path           string                 `json:"path,omitempty"`
 	PathName       string                 `json:"pathName,omitempty"`
-	Description    string                 `json:"description,omitempty"`
+	Description    *string                `json:"description,omitempty"`
 	TemplateAlias  *string                `json:"templateAlias,omitempty"`
-	Protocol       string                 `json:"protocol,omitempty"`
+	Protocol       *string                `json:"protocol,omitempty"`
 	Fields         []*FieldDefine         `json:"fields,omitempty"`
 	Children       []*TopicTreeResult     `json:"children,omitempty"`
 	Extend         map[string]interface{} `json:"extend,omitempty"`
@@ -1169,20 +1191,20 @@ type UpdateNameVo struct {
 }
 
 type UpdateTemplateBaseInfoReq struct {
-	ID          int64  `form:"id,string" json:"id,string"`
-	Name        string `form:"name,string" json:"name,optional" validate:"max=63"`
-	Description string `form:"description,string" json:"description,optional" validate:"max=255"`
+	ID          int64  `form:"id"`
+	Name        string `form:"name,string,optional"`
+	Description string `form:"description,string,optional,default=NULL"`
 }
 
 type UpdateTemplateFieldsAndDescReq struct {
 	Alias       string         `json:"alias" validate:"omitempty,max=63,alias"`
 	Fields      []*FieldDefine `json:"fields,optional" validate:"min=1"`
-	Description string         `json:"modelDescription,optional" validate:"omitempty,max=255"`
+	Description *string        `json:"modelDescription,optional" validate:"omitempty,max=255"`
 }
 
 type UpdateTemplateSubscribeReq struct {
-	ID                 int64  `form:"id,string"`
-	SubscribeEnable    *bool  `form:"enable,optional,string"`
+	ID                 int64  `form:"id"`
+	SubscribeEnable    string `form:"enable,optional,string"`
 	SubscribeFrequency string `form:"frequency,optional"`
 }
 

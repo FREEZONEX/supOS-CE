@@ -4,6 +4,8 @@
 package template
 
 import (
+	"backend/internal/logic/supos/uns/template/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
@@ -28,7 +30,5 @@ func NewUpdateBaseInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Up
 }
 
 func (l *UpdateBaseInfoLogic) UpdateBaseInfo(req *types.UpdateTemplateBaseInfoReq) (resp *types.BaseResult, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	return spring.GetBean[*service.UnsTemplateService]().UpdateBaseInfo(l.ctx, req)
 }

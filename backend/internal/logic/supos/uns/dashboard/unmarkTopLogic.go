@@ -4,31 +4,31 @@
 package dashboard
 
 import (
-	"context"
-
+	"backend/internal/logic/supos/uns/dashboard/dao"
+	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
-	"backend/internal/types"
+	"context"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type UnmarkTopLogic struct {
 	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
+	ctx                 context.Context
+	svcCtx              *svc.ServiceContext
+	dashboardMarkMapper *dao.DashboardMarkedMapper
 }
 
-// 取消置顶 Dashboard
 func NewUnmarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UnmarkTopLogic {
+	db := relationDB.GetDb(ctx)
 	return &UnmarkTopLogic{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
+		Logger:              logx.WithContext(ctx),
+		ctx:                 ctx,
+		svcCtx:              svcCtx,
+		dashboardMarkMapper: dao.NewDashboardMarkedMapper(db, ctx),
 	}
 }
 
-func (l *UnmarkTopLogic) UnmarkTop(req *types.UnmarkRequest) (resp *types.JsonResult, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+func (l *UnmarkTopLogic) UnmarkTop(id string, userID string) error {
+	return l.dashboardMarkMapper.Delete(id, userID)
 }

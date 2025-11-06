@@ -71,7 +71,7 @@ func (l *UnsQueryService) LazyTree(ctx context.Context, params *types.UnsTreeCon
 				fileCount = rsTypes[constants.PathTypeFile]
 			}
 
-			result.CountChildren = fileCount
+			result.CountChildren = &fileCount
 			result.HasChildren = folderCount+fileCount > 0
 			treeResultList = append(treeResultList, result)
 		}
@@ -107,7 +107,7 @@ func (l *UnsQueryService) simpleTree(ctx context.Context, parentId *int64, layRe
 				fileCount = rsTypes[constants.PathTypeFile]
 			}
 		}
-		result.CountChildren = fileCount
+		result.CountChildren = &fileCount
 		result.HasChildren = folderCount+fileCount > 0
 		return result
 	})

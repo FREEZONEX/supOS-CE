@@ -36,6 +36,12 @@ func SetDb(ctx context.Context, db *gorm.DB) context.Context {
 	return context.WithValue(ctx, "db", db)
 }
 
+func IsInTransaction(db *gorm.DB) bool {
+	// 比较当前连接池是否与原始连接池相同
+	_, isTransaction := db.Statement.ConnPool.(gorm.TxCommitter)
+	return isTransaction
+}
+
 type UnsNamespaceFilter struct {
 	//todo 添加过滤字段
 }

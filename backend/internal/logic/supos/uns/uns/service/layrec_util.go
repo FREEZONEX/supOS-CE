@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backend/internal/common/utils/PathUtil"
 	dao "backend/internal/repo/relationDB"
 	"backend/share/base"
 	"fmt"
@@ -51,9 +52,9 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 	nodesToUpdate := make(map[int64]*dao.UnsNamespace)
 
 	// 处理路径和名称
-	processPathName(rootNodes, addFiles)
+	processPathName(rootNodes, addFiles, dbFiles)
 	for _, children := range childrenMap {
-		processPathName(children, addFiles)
+		processPathName(children, addFiles, dbFiles)
 	}
 
 	// 分类节点
@@ -68,26 +69,41 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 			return base.PutIfAbsent(nodesToUpdate, po.Id, po)
 		}
 	}
-
+	reverseGraph := base.BuildReverseGraph(base.MapValues(allNodes), func(t *dao.UnsNamespace) int64 {
+		return t.Id
+	}, func(t *dao.UnsNamespace) int64 {
+		return base.P2vWithDefault(t.ParentId, -1)
+	})
+	levels := base.MapKeys(reverseGraph)
+	sort.Sort(longSlice(levels))
 	// 处理所有节点
-	for _, node := range allNodes {
-		id := node.Id
-		proc := addFiles[id] != nil
-		if !proc {
-			if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentId, dbPo.ParentId)) {
-				proc = true
+	for _, level := range levels {
+		ids := reverseGraph[level]
+		for _, id := range ids {
+			node := allNodes[id]
+			proc := addFiles[id] != nil
+			if !proc {
+				if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentId, dbPo.ParentId)) {
+					proc = true
+				}
+			}
+			if proc {
+				// 生成当前节点的层级路径
+				generatePath(node, allNodes)
+				// 收集当前节点及其所有子节点用于更新
+				collectAffectedNodes(node, childrenMap, allNodes, recorder)
 			}
 		}
-		if proc {
-			// 生成当前节点的层级路径
-			generatePath(node, allNodes)
-			// 收集当前节点及其所有子节点用于更新
-			collectAffectedNodes(node, childrenMap, allNodes, recorder)
-		}
 	}
-
 	return &saveOrUpdate{insertList: base.MapValues(nodesToInsert), updateList: base.MapValues(nodesToUpdate)}
 }
+
+type longSlice []int64
+
+func (x longSlice) Len() int           { return len(x) }
+func (x longSlice) Less(i, j int) bool { return x[i] < x[j] }
+func (x longSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+
 func equalsInt64(a, b *int64) bool {
 	if a == nil && b == nil {
 		return true
@@ -144,7 +160,7 @@ func collectAffectedNodes(changedNode *dao.UnsNamespace, childrenMap map[int64][
 }
 
 // processPathName 处理同名兄弟节点的路径
-func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNamespace) {
+func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) {
 	if len(siblings) == 0 {
 		return
 	}
@@ -164,18 +180,20 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 			})
 		}
 		for i, node := range group {
+			dbPo := dbFiles[node.Id]
+			if dbPo != nil && dbPo.Name == node.Name {
+				node.PathName = PathUtil.GetName(dbPo.Path)
+			}
 			if base.MapContainsKey(addFiles, node.Id) {
 				xp := strings.LastIndex(name, "-")
 				if xp > 0 && xp < len(name)-1 && unicode.IsDigit(rune(name[xp+1])) {
 					name = name[:xp+1] + "0" + name[xp+1:]
 				}
-				if node.CountExistsSiblings > 0 {
-					node.PathName = name + "-" + strconv.FormatInt(node.CountExistsSiblings+int64(i), 10)
+				if ces := node.CountExistsSiblings; ces > 0 {
+					node.PathName = name + "-" + strconv.FormatInt(ces+int64(i), 10)
 				} else {
 					node.PathName = name
 				}
-			} else {
-				node.PathName = name
 			}
 		}
 	}

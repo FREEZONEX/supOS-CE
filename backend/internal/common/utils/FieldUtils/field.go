@@ -235,13 +235,11 @@ func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine
 			theField := nonSysFields[0]
 			theField.Name = constants.SystemSeqValue // Ensure the name is correct
 			fNews = append(fNews, theField)
-			var len200 = 200
 			tableValueField := &types.FieldDefine{
 				Name:        constants.SystemSeqTag,
 				Type:        types.FieldTypeLong,
 				Unique:      &_True,
 				TbValueName: &theField.Name,
-				MaxLen:      &len200,
 			}
 			fNews = append(fNews, tableValueField)
 

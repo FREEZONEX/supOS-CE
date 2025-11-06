@@ -7,7 +7,22 @@ info(
 )
 
 // ==================== 类型定义 ====================
+type BindUnsReq {
+	DashboardID string `json:"dashboardId"`
+	UnsAlias    string `json:"unsAlias"`
+}
 
+type GetByUnsReq {
+	UnsAlias string `form:"unsAlias"`
+}
+
+type IsExistReq {
+	Alias string `form:"alias"`
+}
+
+type AliasPathReq {
+	Alias string `path:"alias"`
+}
 // DashboardDto Dashboard 数据传输对象
 type DashboardDto {
 	ID          string `json:"id,omitzero"`

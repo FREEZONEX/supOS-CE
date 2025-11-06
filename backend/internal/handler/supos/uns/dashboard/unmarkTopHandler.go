@@ -9,6 +9,7 @@ import (
 	"backend/internal/logic/supos/uns/dashboard"
 	"backend/internal/svc"
 	"backend/internal/types"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
@@ -22,11 +23,11 @@ func UnmarkTopHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := dashboard.NewUnmarkTopLogic(r.Context(), svcCtx)
-		resp, err := l.UnmarkTop(&req)
+		err := l.UnmarkTop(req.ID, getUserID(r))
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			httpx.Ok(w)
 		}
 	}
 }
