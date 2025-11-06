@@ -78,12 +78,14 @@ func (p UnsNamespaceRepo) PageListTemplates(db *gorm.DB, f dto.TemplateQueryVo, 
 }
 func (p UnsNamespaceRepo) PageListByTemplateId(db *gorm.DB, templateId int64, pageNo, pageSize int64, searchCount *int64) (pageRs []*UnsNamespace, err error) {
 	db = p.model(db)
-	db = db.Select([]string{"id", "path_type", "name", "path"}).Where("templateId=? AND status=1", templateId)
+	db = db.Select([]string{"id", "path_type", "name", "path"}).Where("model_id=? AND status=1", templateId)
 	if searchCount != nil {
 		countErr := db.Count(searchCount).Error
 		if countErr != nil {
 			err = stores.ErrFmt(countErr)
 			return
+		} else if *searchCount == 0 {
+			return nil, nil
 		}
 	}
 	page := &stores.PageInfo{Page: pageNo, Size: pageSize, Orders: []stores.OrderBy{{Field: "id"}}}

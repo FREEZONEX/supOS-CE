@@ -641,9 +641,9 @@ type PageListRequest struct {
 }
 
 type PageListUnsByTemplateReq struct {
-	TemplateId int64 `form:"templateId,string" json:"id,string"`
-	PageNo     int64 `form:"pageNo,optional,default=1" json:"pageNo,optional,default=1" `       // 当前页数，默认为1
-	PageSize   int64 `form:"pageSize,optional,default=20" json:"pageSize,optional,default=20" ` // 每页记录数，默认为20，最大支持1000
+	TemplateId int64 `form:"templateId"`
+	PageNo     int64 `form:"pageNo,optional,default=1"`    // 当前页数，默认为1
+	PageSize   int64 `form:"pageSize,optional,default=20"` // 每页记录数，默认为20，最大支持1000
 }
 
 type PageListUnsByTemplateResp struct {

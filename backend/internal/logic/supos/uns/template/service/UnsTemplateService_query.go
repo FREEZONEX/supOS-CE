@@ -74,10 +74,11 @@ func (l *UnsTemplateService) DetailByAlias(ctx context.Context, req *types.WithA
 }
 
 func (l *UnsTemplateService) uns2TemplateVo(po *dao.UnsNamespace) (*types.TemplateVo, error) {
+	name := PathUtil.GetName(po.Path)
 	vo := &types.TemplateVo{
-		Topic:       "template/" + po.Name,
-		ID:          po.Name,
-		Name:        po.Name,
+		Topic:       "template/" + name,
+		ID:          strconv.FormatInt(po.Id, 10),
+		Name:        name,
 		Alias:       po.Alias,
 		Fields:      po.Fields,
 		CreateTime:  po.CreateAt.UnixMilli(),

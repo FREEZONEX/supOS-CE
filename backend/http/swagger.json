@@ -7084,34 +7084,6 @@
             "name": "pageSize",
             "in": "query",
             "allowEmptyValue": true
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "id"
-              ],
-              "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "pageNo": {
-                  "description": "当前页数，默认为1",
-                  "type": "integer",
-                  "default": 1,
-                  "example": 1
-                },
-                "pageSize": {
-                  "description": "每页记录数，默认为20，最大支持1000",
-                  "type": "integer",
-                  "default": 20,
-                  "example": 20
-                }
-              }
-            }
           }
         ],
         "responses": {
@@ -10867,7 +10839,7 @@
       }
     }
   },
-  "x-date": "2025-11-06 14:21:35",
+  "x-date": "2025-11-06 15:00:19",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
