@@ -4,7 +4,6 @@ import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/utils/FieldUtils"
-	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	"backend/internal/logic/supos/uns/uns/bo"
@@ -14,6 +13,8 @@ import (
 	"context"
 	"strconv"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 func (l *UnsQueryService) GetInstanceDetail(ctx context.Context, req *types.InstanceDetailReq, alias string) (resp *types.InstanceDetailResp, err error) {
@@ -40,7 +41,6 @@ func (l *UnsQueryService) GetInstanceDetail(ctx context.Context, req *types.Inst
 	return
 }
 func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.ModelDetailReq, alias string) (resp *types.ModelDetailResp, err error) {
-	dto := &types.ModelDetail{}
 	db := dao.GetDb(ctx)
 	var po *dao.UnsNamespace
 	if id := req.Id; id > 0 {
@@ -58,36 +58,18 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 		resp.Msg = I18nUtils.GetMessage("uns.model.not.found")
 		return
 	}
-	dto.SubscribeEnable = constants.WithSubscribeEnable(base.P2v(po.WithFlags))
-	protocol := po.Protocol
-	if dto.SubscribeEnable && protocol != nil && strings.HasPrefix(*protocol, "{") {
-		var pMap = make(map[string]string)
-		JsonUtil.FromJson(*protocol, &pMap)
-		if freq, has := pMap["frequency"]; has {
-			dto.SubscribeFrequency = freq
-		}
-	}
-	dto.Id = strconv.FormatInt(po.Id, 10)
-	UnsConverter.CopyProperties(po, dto)
-	dto.Topic = base.SanYuan(constants.UseAliasAsTopic, po.Alias, po.Path)
-	if fs := dto.Fields; len(fs) > 0 {
-		for _, f := range fs {
-			f.Index = nil
-		}
-	}
-	if ms := l.mountService; ms != nil {
-		dto.Mount = ms.ParseMountDetail(po, false)
-	}
-	resp.Data = dto
+	dto := &types.ModelDetail{}
+	l.setDetailInfo(ctx, po, dto, false)
+	resp.Code, resp.Data = 200, dto
 	return
 }
 
-func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dto *types.InstanceDetail, setMount bool) {
+func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dto bo.UnsDetail, setMount bool) {
 	fs := file.GetRefers()
 	var origPo *types.CreateTopicDto
-	db := dao.GetDb(ctx)
-	ctx = dao.SetDb(ctx, db)
+	var db *gorm.DB
 	if len(fs) > 0 {
+		db = dao.GetDb(ctx)
 		if dataType := file.GetDataType(); dataType != nil && *dataType == constants.CitingType {
 			if len(fs) > 0 && fs[0].Id > 0 {
 				orig, _ := l.unsMapper.SelectById(db, fs[0].Id)
@@ -103,81 +85,84 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dt
 	if origPo != nil {
 		unsTarget = origPo
 	}
-
+	dto.SetPathType(unsTarget.GetPathType())
 	// 设置字段
 	if fields := unsTarget.GetFields(); fields != nil {
 		fieldDefines := getDisplayFields(unsTarget, unsTarget.GetFields())
-		dto.Fields = fieldDefines
+		dto.SetFields(fieldDefines)
 	}
 
 	// 设置基本信息
 	if id := file.GetId(); id > 0 {
-		dto.Id = strconv.FormatInt(id, 10)
+		dto.SetId(strconv.FormatInt(id, 10))
 	}
-	dto.DataType = file.GetDataType()
-	dto.Alias = file.GetAlias()
-	dto.Path = file.GetPath()
+	dto.SetDataType(file.GetDataType())
+	dto.SetAlias(file.GetAlias())
+	dto.SetPath(file.GetPath())
 	if constants.UseAliasAsTopic {
-		dto.Topic = file.GetAlias()
+		dto.SetTopic(file.GetAlias())
 	} else {
-		dto.Topic = file.GetPath()
+		dto.SetTopic(file.GetPath())
 	}
 	if dp := file.GetDataPath(); len(dp) > 0 {
-		dto.DataPath = &dp
+		dto.SetDataPath(&dp)
 	}
-	dto.Protocol = file.GetProtocolMap()
-
 	// 设置引用和表达式
 	if len(fs) > 0 {
-		l.calcService.setRefersAndExpression(fs, unsTarget.GetExpression(), unsTarget.GetCalculationType(), dto.Protocol, dto)
+		l.calcService.setRefersAndExpression(fs, unsTarget.GetExpression(), unsTarget.GetCalculationType(), file.GetProtocolMap(), dto)
 	}
 
 	//dto.CalculationType = unsTarget.CalculationType
-	dto.Description = file.GetDescription()
-	dto.CreateTime = file.GetCreateAt()
-	dto.UpdateTime = file.GetUpdateAt()
-	dto.Alias = file.GetAlias()
-	dto.Name = file.GetName()
-	dto.DisplayName = file.GetDisplayName()
-	dto.PathName = PathUtil.GetName(file.GetPath())
-	dto.Extend = file.GetExtend()
+	dto.SetDescription(file.GetDescription())
+	dto.SetCreateTime(file.GetCreateAt())
+	dto.SetUpdateTime(file.GetUpdateAt())
+	dto.SetName(file.GetName())
+	dto.SetDisplayName(file.GetDisplayName())
+	dto.SetPathName(PathUtil.GetName(file.GetPath()))
+	dto.SetExtend(file.GetExtend())
 
 	// 设置读写模式、保存到数据库、扩展字段使用、挂载信息
 	//dto.ReadWriteMode = unsTarget.ReadWriteMode
 	//dto.ExtendFieldUsed = FieldFlags.ParseFlag(unsTarget.GetExtendFieldFlags())
 
 	if mc := l.mountService; setMount && mc != nil {
-		dto.Mount = mc.ParseMountDetail(unsTarget, false)
+		dto.SetMount(mc.ParseMountDetail(unsTarget, false))
 	}
 
 	// 设置标志位
 	if flagsP := unsTarget.GetFlags(); flagsP != nil {
 		flags := *flagsP
-		dto.WithFlow = constants.WithFlow(flags)
-		dto.WithDashboard = constants.WithDashBoard(flags)
-		dto.WithSave2db = constants.WithSave2db(flags)
-		dto.Save2db = constants.WithSave2db(flags)
-		dto.SubscribeEnable = constants.WithSubscribeEnable(flags)
+		dto.SetWithFlow(constants.WithFlow(flags))
+		dto.SetWithDashboard(constants.WithDashBoard(flags))
+		dto.SetWithSave2db(constants.WithSave2db(flags))
+		dto.SetSave2db(constants.WithSave2db(flags))
+		dto.SetSubscribeEnable(constants.WithSubscribeEnable(flags))
 	}
-
+	dto.SetProtocol(file.GetProtocolMap())
 	// 设置标签列表
 	if labelIds := file.GetLabelIds(); len(labelIds) > 0 {
+		if db == nil {
+			db = dao.GetDb(ctx)
+		}
 		labelPos, _ := l.labelMapper.ListByIds(db, base.MapKeys(labelIds))
 		if len(labelPos) > 0 {
-			dto.LabelList = base.Map[*dao.UnsLabel, types.LabelVo](labelPos, func(e *dao.UnsLabel) (rs types.LabelVo) {
+			dto.SetLabelList(base.Map[*dao.UnsLabel, types.LabelVo](labelPos, func(e *dao.UnsLabel) (rs types.LabelVo) {
 				rs = *UnsConverter.LabelPo2Vo(e)
 				return rs
-			})
+			}))
 		}
 	}
 
 	// 设置模板信息
 	if templateId := file.GetModelId(); templateId != nil {
+		if db == nil {
+			db = dao.GetDb(ctx)
+		}
 		if template, er := l.unsMapper.SelectById(db, *templateId); er == nil && template != nil {
-			dto.ModelId = strconv.FormatInt(*templateId, 10)
-			dto.ModelId = template.Name
-			dto.TemplateName = template.Name
-			dto.TemplateAlias = template.Alias
+			dto.SetModelId(strconv.FormatInt(*templateId, 10))
+			dto.SetModelName(template.Name)
+			dto.SetTemplateName(template.Name)
+			dto.SetTemplateAlias(template.Alias)
 		}
 	}
 }

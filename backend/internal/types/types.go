@@ -8,6 +8,22 @@ type AdminResetPwdReq struct {
 	Password string `json:"password"`
 }
 
+type AlarmHandlerVo struct {
+	Id       int64  `json:"id"`
+	UnsId    string `json:"unsId,omitempty"`
+	UserId   string `json:"userId,omitempty"`
+	Username string `json:"username,omitempty"`
+	CreateAt int64  `json:"createAt,omitzero"`
+}
+
+type AlarmRuleDefine struct {
+	Condition    string  `json:"condition"`
+	LimitValue   float64 `json:"limitValue" validate:"required"`
+	DeadBandType int     `json:"deadBandType"`
+	DeadBand     float64 `json:"deadBand"`
+	OverTime     int64   `json:"overTime"`
+}
+
 type AliasPathReq struct {
 	Alias string `path:"alias"`
 }
@@ -445,8 +461,8 @@ type InstanceDetail struct {
 	Id               string                 `json:"id"`
 	Topic            string                 `json:"topic"`
 	Alias            string                 `json:"alias"`
-	ParentAlias      *string                `json:"parentAlias"`
-	Path             string                 `json:"path"`
+	ParentAlias      *string                `json:"parentAlias,omitempty"`
+	Path             string                 `json:"path,omitempty"`
 	DataType         *int16                 `json:"dataType"`
 	ParentDataType   *int16                 `json:"parentDataType"`
 	DataPath         *string                `json:"dataPath"`
@@ -455,28 +471,28 @@ type InstanceDetail struct {
 	CreateTime       int64                  `json:"createTime"`
 	UpdateTime       int64                  `json:"updateTime"`
 	Protocol         map[string]interface{} `json:"protocol"`
-	ModelDescription string                 `json:"modelDescription"`
-	Description      string                 `json:"description"`
+	ModelDescription string                 `json:"modelDescription,omitempty"`
+	Description      string                 `json:"description,omitempty"`
 	WithFlow         bool                   `json:"withFlow"`
 	WithDashboard    bool                   `json:"withDashboard"`
 	WithSave2db      bool                   `json:"withSave2db"`
 	Save2db          bool                   `json:"save2db"`
 	SubscribeEnable  bool                   `json:"subscribeEnable"`
-	Expression       string                 `json:"expression"`
-	ShowExpression   string                 `json:"showExpression"`
+	Expression       string                 `json:"expression,omitempty"`
+	ShowExpression   string                 `json:"showExpression,omitempty"`
 	Refers           []InstanceField        `json:"refers"`
 	LabelList        []LabelVo              `json:"labelList"`
-	Name             string                 `json:"name"`
-	DisplayName      string                 `json:"displayName"`
-	PathName         string                 `json:"pathName"`
-	ModelId          string                 `json:"modelId"`
-	ModelName        string                 `json:"modelName"`
+	Name             string                 `json:"name,omitempty"`
+	DisplayName      string                 `json:"displayName,omitempty"`
+	PathName         string                 `json:"pathName,omitempty"`
+	ModelId          string                 `json:"modelId",omitempty`
+	ModelName        string                 `json:"modelName,omitempty"`
 	Extend           map[string]interface{} `json:"extend"`
-	Payload          string                 `json:"payload"`
-	TemplateName     string                 `json:"templateName"`
-	TemplateAlias    string                 `json:"templateAlias"`
-	AccessLevel      string                 `json:"accessLevel"`
-	Mount            *MountDetailVo         `json:"mount"`
+	Payload          string                 `json:"payload,omitempty"`
+	TemplateName     string                 `json:"templateName,omitempty"`
+	TemplateAlias    string                 `json:"templateAlias,omitempty"`
+	AccessLevel      string                 `json:"accessLevel,omitempty"`
+	Mount            *MountDetailVo         `json:"mount,omitempty"`
 }
 
 type InstanceDetailReq struct {
@@ -560,23 +576,24 @@ type ModelDetail struct {
 	Id                 string                 `json:"id"`
 	Topic              string                 `json:"topic"`
 	SubscribeEnable    bool                   `json:"subscribeEnable"`
-	SubscribeFrequency string                 `json:"subscribeFrequency"`
+	SubscribeFrequency string                 `json:"subscribeFrequency,omitempty"`
 	Alias              string                 `json:"alias"`
-	ParentAlias        string                 `json:"parentAlias"`
-	Path               string                 `json:"path"`
-	DataType           int                    `json:"dataType"`
-	Fields             []*FieldDefine         `json:"fields"`
+	ParentAlias        string                 `json:"parentAlias,omitempty"`
+	Path               string                 `json:"path,omitempty"`
+	PathType           int16                  `json:"pathType"`
+	DataType           *int16                 `json:"dataType,omitempty"`
+	Fields             []*FieldDefine         `json:"fields,omitempty"`
 	CreateTime         int64                  `json:"createTime"`
 	UpdateTime         int64                  `json:"updateTime"`
-	Description        string                 `json:"description"`
-	Name               string                 `json:"name"`
-	DisplayName        string                 `json:"displayName"`
-	PathName           string                 `json:"pathName"`
-	ModelId            string                 `json:"modelId"`
-	ModelName          string                 `json:"modelName"`
-	Extend             map[string]interface{} `json:"extend"`
-	TemplateAlias      string                 `json:"templateAlias"`
-	Mount              *MountDetailVo         `json:"mount"`
+	Description        string                 `json:"description,omitempty"`
+	Name               string                 `json:"name,omitempty"`
+	DisplayName        string                 `json:"displayName,omitempty"`
+	PathName           string                 `json:"pathName,omitempty"`
+	ModelId            string                 `json:"modelId,omitempty"`
+	ModelName          string                 `json:"modelName,omitempty"`
+	Extend             map[string]interface{} `json:"extend,omitempty"`
+	TemplateAlias      string                 `json:"templateAlias,omitempty"`
+	Mount              *MountDetailVo         `json:"mount,omitempty"`
 }
 
 type ModelDetailReq struct {
@@ -624,9 +641,9 @@ type PageListRequest struct {
 }
 
 type PageListUnsByTemplateReq struct {
-	TemplateId int64 `form:"templateId,string" json:"id,string"`
-	PageNo     int64 `form:"pageNo,optional,default=1" json:"pageNo,optional,default=1" `       // 当前页数，默认为1
-	PageSize   int64 `form:"pageSize,optional,default=20" json:"pageSize,optional,default=20" ` // 每页记录数，默认为20，最大支持1000
+	TemplateId int64 `form:"templateId"`
+	PageNo     int64 `form:"pageNo,optional,default=1"`    // 当前页数，默认为1
+	PageSize   int64 `form:"pageSize,optional,default=20"` // 每页记录数，默认为20，最大支持1000
 }
 
 type PageListUnsByTemplateResp struct {
@@ -644,7 +661,7 @@ type PageResultDTO struct {
 	PageNo   int64  `json:"pageNo"`
 	PageSize int64  `json:"pageSize"`
 	Total    int64  `json:"total"`
-	Code     int64  `json:"code"`
+	Code     int64  `json:"code,omitzero"`
 	Msg      string `json:"msg,omitempty"`
 }
 
@@ -1044,30 +1061,35 @@ type TokenCallbackReq struct {
 }
 
 type TopicInfo struct {
-	Id             string         `json:"id"`
-	Alias          string         `json:"alias"`
-	ParentId       string         `json:"parentId"`
-	Name           string         `json:"name"`
-	Path           string         `json:"path"`
-	Topic          string         `json:"topic"`
-	DataType       int            `json:"dataType"`
-	ParentDataType *int16         `json:"parentDataType"`
-	PathType       int            `json:"pathType"`
-	Fields         []*FieldDefine `json:"fields"`
+	Id              string            `json:"id"`
+	Alias           string            `json:"alias,omitempty"`
+	ParentId        string            `json:"parentId,omitempty"`
+	Name            string            `json:"name,omitempty"`
+	Path            string            `json:"path,omitempty"`
+	Topic           string            `json:"topic,omitempty"`
+	DataType        int               `json:"dataType"`
+	ParentDataType  *int16            `json:"parentDataType,omitempty"`
+	Fields          []*FieldDefine    `json:"fields,omitempty"`
+	Description     string            `json:"description,omitempty"` // Alarm fields
+	RefUns          string            `json:"refUns,omitempty"`      //引用的实例
+	Field           string            `json:"field,omitempty"`
+	AlarmCount      *int64            `json:"alarmCount,omitempty"`      //报警数量
+	NoReadCount     *int64            `json:"noReadCount,omitempty"`     //未读数
+	AlarmRuleDefine *AlarmRuleDefine  `json:"alarmRuleDefine,omitempty"` //Alarm 规则定义
+	WithFlags       *int32            `json:"withFlags,omitempty"`       //接收方式 16-人员 32-工作流程
+	HandlerList     []*AlarmHandlerVo `json:"handlerList,omitempty"`     //处理人列表
 }
 
 type TopicPaginationSearchResult struct {
-	Code     int         `json:"code"`
-	Msg      string      `json:"msg"`
-	PageNo   int64       `json:"pageNo"`
-	PageSize int64       `json:"pageSize"`
-	Total    int64       `json:"total"`
-	Data     []TopicInfo `json:"data"`
+	Code int            `json:"code"`
+	Msg  string         `json:"msg,omitempty"`
+	Page *PageResultDTO `json:"page,omitempty"`
+	Data []TopicInfo    `json:"data,omitempty"`
 }
 
 type TopicTreeResult struct {
 	Id             string                 `json:"id"`
-	Alias          string                 `json:"alias"`
+	Alias          string                 `json:"alias,omitempty"`
 	ParentId       *string                `json:"parentId,omitempty"`
 	ParentAlias    *string                `json:"parentAlias,omitempty"`
 	Value          int64                  `json:"value,omitempty"`

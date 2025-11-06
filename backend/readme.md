@@ -39,6 +39,8 @@ goctl api new viewsvr  --style=goZero
 ```shell
 #cd apisvr && goctl api go -api http/api.api  -dir ./  --style=goZero && cd ..
 goctl api go -api http/backend.api  -dir ./  --style=goZero  && goctl api swagger -filename swagger.json -api http/backend.api -dir ./http&&  goctl api access  -api http/backend.api -dir ./http 
+#goctl 1.9.2+
+goctl api go -api http/backend.api  -dir ./  --style=goZero  && goctl api swagger -filename swagger -api http/backend.api -dir ./http&&  goctl api access  -api http/backend.api -dir ./http 
 
 goctl api swagger -filename swagger.json -api http/backend.api -dir ./http 
 goctl api access  -api http/backend.api -dir ./http 

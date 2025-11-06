@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backend/internal/logic/supos/uns/uns/bo"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"context"
@@ -25,7 +26,7 @@ func (s UnsCalcService) setRefersAndExpression(fs []*types.InstanceField,
 	expression string,
 	calculationType *int32,
 	protocolMap map[string]interface{},
-	dto *types.InstanceDetail) {
+	dto bo.UnsDetail) {
 
 }
 func (s UnsCalcService) detectReferencedCalcInstance(ctx context.Context, files []*dao.UnsNamespace, modelPath string, delFields []*types.FieldDefine) (affectedFiles []*dao.UnsNamespace) {

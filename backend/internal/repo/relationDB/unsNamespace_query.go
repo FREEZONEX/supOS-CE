@@ -8,6 +8,7 @@ import (
 
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (p UnsNamespaceRepo) ListByAlias(db *gorm.DB, alias []string) (results []*UnsNamespace, er error) {
@@ -83,7 +84,7 @@ func (p UnsNamespaceRepo) ListPaths(db *gorm.DB, f *UnsPathFilter, page *stores.
 	if len(f.DataTypes) > 0 {
 		db = db.Where("data_type in ?", f.DataTypes).Where("data_type <> ?", constants.AlarmRuleType)
 	}
-	db = db.Where("status = 1")
+	db = db.Where("id>1000 AND status = 1")
 	if searchCount != nil {
 		er = db.Count(searchCount).Error
 		if er != nil || *searchCount == 0 {
@@ -338,7 +339,7 @@ func (p UnsNamespaceRepo) ListLabeledUnsByKeyword(db *gorm.DB, keyword string) (
 		query = query.Where("(LOWER(n.path) LIKE ? OR LOWER(n.alias) LIKE ?)", likeKeyword, likeKeyword)
 	}
 
-	err = query.Find(&results).Error
+	err = query.Order(clause.OrderByColumn{Column: clause.Column{Name: "n.id"}}).Find(&results).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get uns by keyword: %w", err)
 	}

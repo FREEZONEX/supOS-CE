@@ -19,6 +19,7 @@ const ( // 注意：不能合并到第二个const()块，否则常量值可能�
 	AlarmRuleType                        // 报警规则类型 (5)
 	MergeType                            // 聚合类型 (6)
 	CitingType                           // 引用类型 (7)
+	JsonbType                            //整个json当做一个字段存储
 )
 const (
 	// System Fields and Flags
