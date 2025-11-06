@@ -874,6 +874,11 @@ type SourceFlowBatchAliasReq struct {
 	Aliases []string `json:"aliases"`
 }
 
+type SourceFlowBindUnsReq struct {
+	FlowID   int64  `form:"flowId"`
+	UnsAlias string `form:"unsAlias"`
+}
+
 type SourceFlowCopyReq struct {
 	SourceID    string `json:"sourceId"`
 	FlowName    string `json:"flowName"`

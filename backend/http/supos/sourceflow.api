@@ -60,6 +60,10 @@ service backend {
     @doc "delete Mark a source flow by id"
     @handler unmarkSourceFlow
     delete /flow/unmark (FlowUNMarkReq) returns ()
+
+    @doc "bind a source flow with UNS alias"
+    @handler bindUNS
+    post /flow/bindUns (SourceFlowBindUnsReq) returns ()
 }
 
 @server(
@@ -168,5 +172,10 @@ type (
     }
     FlowUNMarkReq {
         ID  string `form:"id,optional"`
+    }
+
+    SourceFlowBindUnsReq {
+        FlowID    int64 `form:"flowId"`
+        UnsAlias string `form:"unsAlias"`
     }
 )

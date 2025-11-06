@@ -375,6 +375,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: supossourceflow.DeleteSourceFlowHandler(serverCtx),
 				},
 				{
+					// bind a source flow with UNS alias
+					Method:  http.MethodPost,
+					Path:    "/flow/bindUns",
+					Handler: supossourceflow.BindUNSHandler(serverCtx),
+				},
+				{
 					// Copy an existing source flow
 					Method:  http.MethodPost,
 					Path:    "/flow/copy",
