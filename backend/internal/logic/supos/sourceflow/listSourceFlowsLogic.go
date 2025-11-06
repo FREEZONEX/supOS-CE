@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -103,7 +104,7 @@ func (l *ListSourceFlowsLogic) ListFlowsWithType(req *types.SourceFlowListQuery,
 		})
 	}
 	return &types.SourceFlowPageResult{
-		Code:     0,
+		Code:     http.StatusOK,
 		PageNo:   pageNo,
 		PageSize: pageSize,
 		Total:    total,
