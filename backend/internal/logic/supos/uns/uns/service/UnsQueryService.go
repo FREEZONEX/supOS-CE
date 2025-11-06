@@ -40,14 +40,18 @@ func (l *UnsQueryService) SearchPaged(ctx context.Context, req *types.SearchPage
 	pageInfo := &stores.PageInfo{Page: int64(req.PageNo), Size: int64(req.PageSize), Orders: []stores.OrderBy{
 		{Field: "create_at", Sort: stores.OrderDesc},
 	}}
-	resp = &types.TopicPaginationSearchResult{Code: 500, PageNo: int64(req.PageNo), PageSize: int64(req.PageSize)}
+	resp = &types.TopicPaginationSearchResult{Code: 500, Page: &types.PageResultDTO{PageNo: int64(req.PageNo), PageSize: int64(req.PageSize)}}
 	switch req.SearchType {
 	case 0, 2: // 查询普通文件或目录，可指定dataType
 		var list []*dao.SimpleUns
 		pageInfo.Orders = []stores.OrderBy{
 			{Field: "path", Sort: stores.OrderAsc}, {Field: "create_at", Sort: stores.OrderDesc},
 		}
-		list, err = l.unsMapper.ListPaths(db, &dao.UnsPathFilter{Key: keyword, PathType: req.SearchType, DataTypes: req.DataTypes}, pageInfo, &resp.Total)
+		filter := &dao.UnsPathFilter{Key: keyword, PathType: req.SearchType, DataTypes: req.DataTypes}
+		if req.Normal && len(req.DataTypes) == 0 {
+			filter.DataTypes = []int16{constants.TimeSequenceType, constants.RelationType, constants.JsonbType}
+		}
+		list, err = l.unsMapper.ListPaths(db, filter, pageInfo, &resp.Page.Total)
 		if err != nil {
 			resp.Msg = err.Error()
 			return
@@ -63,7 +67,7 @@ func (l *UnsQueryService) SearchPaged(ctx context.Context, req *types.SearchPage
 		})
 	case 3: // 为计算类型的下拉框查询其他类型文件
 		var list []*dao.UnsNamespace
-		list, err = l.unsMapper.ListNotCalcSeqFiles(db, keyword, req.NumberFieldCount, pageInfo, &resp.Total)
+		list, err = l.unsMapper.ListNotCalcSeqFiles(db, keyword, req.NumberFieldCount, pageInfo, &resp.Page.Total)
 		if err != nil {
 			resp.Msg = err.Error()
 			return
@@ -71,7 +75,7 @@ func (l *UnsQueryService) SearchPaged(ctx context.Context, req *types.SearchPage
 		resp.Data = l.po2TopicInfo(list)
 	case 4: // 查询时序类文件
 		var list []*dao.UnsNamespace
-		list, err = l.unsMapper.ListTimeSeriesFiles(db, keyword, pageInfo, &resp.Total)
+		list, err = l.unsMapper.ListTimeSeriesFiles(db, keyword, pageInfo, &resp.Page.Total)
 		if err != nil {
 			resp.Msg = err.Error()
 			return
@@ -79,7 +83,7 @@ func (l *UnsQueryService) SearchPaged(ctx context.Context, req *types.SearchPage
 		resp.Data = l.po2TopicInfo(list)
 	case 5: //Alarm
 		var list []*dao.UnsNamespace
-		list, err = l.unsMapper.ListAlarmRules(db, keyword, pageInfo, &resp.Total)
+		list, err = l.unsMapper.ListAlarmRules(db, keyword, pageInfo, &resp.Page.Total)
 		if err != nil {
 			resp.Msg = err.Error()
 			return
@@ -114,6 +118,11 @@ func (l *UnsQueryService) po2TopicInfo(list []*dao.UnsNamespace) []types.TopicIn
 			Name:           e.Name,
 			Fields:         fs,
 			Topic:          base.SanYuan(constants.UseAliasAsTopic, e.Alias, e.Path),
+		}
+		if v.DataType == int(constants.AlarmRuleType) {
+			//TODO Alarm
+			v.Topic = e.Path
+			v.Description = base.P2v(e.Description)
 		}
 		return
 	})

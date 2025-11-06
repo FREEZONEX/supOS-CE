@@ -12,7 +12,7 @@ func (t *TopicTreeResult) AddChild(child *TopicTreeResult) {
 	}
 	child.ParentId = &t.Id
 	t.Children = append(t.Children, child)
-	sort.Sort(unsList(t.Children))
+	SortUnsList(t.Children)
 }
 func (t *TopicTreeResult) GetCountChildren() int {
 	if t.CountChildren == nil {
@@ -29,6 +29,9 @@ func (t *TopicTreeResult) GetCountChildren() int {
 		t.HasChildren = count > 0
 	}
 	return *t.CountChildren
+}
+func SortUnsList(list []*TopicTreeResult) {
+	sort.Sort(unsList(list))
 }
 
 type unsList []*TopicTreeResult

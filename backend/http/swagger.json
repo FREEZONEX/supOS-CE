@@ -6174,7 +6174,6 @@
                     "name",
                     "displayName",
                     "pathName",
-                    "modelId",
                     "modelName",
                     "extend",
                     "payload",
@@ -6184,6 +6183,9 @@
                     "mount"
                   ],
                   "properties": {
+                    "ModelId": {
+                      "type": "string"
+                    },
                     "accessLevel": {
                       "type": "string"
                     },
@@ -6306,9 +6308,6 @@
                       }
                     },
                     "modelDescription": {
-                      "type": "string"
-                    },
-                    "modelId": {
                       "type": "string"
                     },
                     "modelName": {
@@ -7392,6 +7391,7 @@
                     "alias",
                     "parentAlias",
                     "path",
+                    "pathType",
                     "dataType",
                     "fields",
                     "createTime",
@@ -7513,6 +7513,9 @@
                     },
                     "pathName": {
                       "type": "string"
+                    },
+                    "pathType": {
+                      "type": "integer"
                     },
                     "subscribeEnable": {
                       "type": "boolean"
@@ -8559,15 +8562,61 @@
                       "topic",
                       "dataType",
                       "parentDataType",
-                      "pathType",
-                      "fields"
+                      "fields",
+                      "description",
+                      "refUns",
+                      "field",
+                      "alarmCount",
+                      "noReadCount",
+                      "alarmRuleDefine",
+                      "withFlags",
+                      "handlerList"
                     ],
                     "properties": {
+                      "alarmCount": {
+                        "description": "报警数量",
+                        "type": "integer"
+                      },
+                      "alarmRuleDefine": {
+                        "description": "Alarm 规则定义",
+                        "type": "object",
+                        "required": [
+                          "condition",
+                          "limitValue",
+                          "deadBandType",
+                          "deadBand",
+                          "overTime"
+                        ],
+                        "properties": {
+                          "condition": {
+                            "type": "string"
+                          },
+                          "deadBand": {
+                            "type": "number"
+                          },
+                          "deadBandType": {
+                            "type": "integer"
+                          },
+                          "limitValue": {
+                            "type": "number"
+                          },
+                          "overTime": {
+                            "type": "integer"
+                          }
+                        }
+                      },
                       "alias": {
                         "type": "string"
                       },
                       "dataType": {
                         "type": "integer"
+                      },
+                      "description": {
+                        "description": "Alarm fields",
+                        "type": "string"
+                      },
+                      "field": {
+                        "type": "string"
                       },
                       "fields": {
                         "type": "array",
@@ -8617,11 +8666,46 @@
                           }
                         }
                       },
+                      "handlerList": {
+                        "description": "处理人列表",
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "unsId",
+                            "userId",
+                            "username",
+                            "createAt"
+                          ],
+                          "properties": {
+                            "createAt": {
+                              "type": "integer"
+                            },
+                            "id": {
+                              "type": "integer"
+                            },
+                            "unsId": {
+                              "type": "string"
+                            },
+                            "userId": {
+                              "type": "string"
+                            },
+                            "username": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
                       "id": {
                         "type": "string"
                       },
                       "name": {
                         "type": "string"
+                      },
+                      "noReadCount": {
+                        "description": "未读数",
+                        "type": "integer"
                       },
                       "parentDataType": {
                         "type": "integer"
@@ -8632,11 +8716,16 @@
                       "path": {
                         "type": "string"
                       },
-                      "pathType": {
-                        "type": "integer"
+                      "refUns": {
+                        "description": "引用的实例",
+                        "type": "string"
                       },
                       "topic": {
                         "type": "string"
+                      },
+                      "withFlags": {
+                        "description": "接收方式 16-人员 32-工作流程",
+                        "type": "integer"
                       }
                     }
                   }
@@ -8644,14 +8733,32 @@
                 "msg": {
                   "type": "string"
                 },
-                "pageNo": {
-                  "type": "integer"
-                },
-                "pageSize": {
-                  "type": "integer"
-                },
-                "total": {
-                  "type": "integer"
+                "page": {
+                  "type": "object",
+                  "required": [
+                    "pageNo",
+                    "pageSize",
+                    "total",
+                    "code",
+                    "msg"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "pageNo": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
                 }
               }
             }
@@ -10760,7 +10867,7 @@
       }
     }
   },
-  "x-date": "2025-11-05 17:26:16",
+  "x-date": "2025-11-06 14:21:35",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

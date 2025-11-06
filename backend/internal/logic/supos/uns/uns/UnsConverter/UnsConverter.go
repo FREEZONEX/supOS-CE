@@ -271,14 +271,9 @@ func CopyProperties(from any, to any) error {
 	return copier.CopyWithOption(to, from, apiConvertOptions)
 }
 func LabelPo2Vo(po *dao.UnsLabel) (vo *types.LabelVo) {
-	vo = &types.LabelVo{}
-	err := CopyProperties(po, vo)
-	if err != nil {
-		vo.LabelName = po.LabelName
-		vo.CreateTime = po.CreateAt.UnixMilli()
-		if po.SubscribeAt != nil && !po.SubscribeAt.IsZero() {
-			vo.SubscribeAt = po.SubscribeAt.UnixMilli()
-		}
+	vo = &types.LabelVo{ID: po.ID, LabelName: po.LabelName, CreateAt: po.CreateAt.UnixMilli()}
+	if po.SubscribeAt != nil && !po.SubscribeAt.IsZero() {
+		vo.SubscribeAt = po.SubscribeAt.UnixMilli()
 	}
 	vo.Topic = "label/" + po.LabelName
 	if flags := base.P2v(po.WithFlags); flags > 0 {

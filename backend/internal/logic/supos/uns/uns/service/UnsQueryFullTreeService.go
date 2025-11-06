@@ -304,5 +304,6 @@ func convertMapToSlice(nodes map[string]*types.TopicTreeResult) []*types.TopicTr
 	for _, node := range nodes {
 		result = append(result, node)
 	}
+	types.SortUnsList(result)
 	return result
 }
