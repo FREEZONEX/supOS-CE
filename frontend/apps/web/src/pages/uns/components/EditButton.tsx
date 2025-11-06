@@ -13,7 +13,7 @@ import { useBaseStore } from '@/stores/base';
 
 const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
   const { alias, dataType, fields = [], moduleId, extendFieldUsed } = modelInfo || {};
-  const showMoreBtn = dataType === 1 && !moduleId;
+  const showMoreBtn = editType === 'file' && dataType === 1 && !moduleId;
   const { message, modal } = App.useApp();
   const [form] = Form.useForm();
   const formatMessage = useTranslate();
@@ -106,7 +106,7 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
       .validateFields()
       .then((values) => {
         const _fields = values.fields.map(
-          ({ name, type, displayName, remark, maxLen, unit, upperLimit, lowerLimit, decimal }: FieldItem) => {
+          ({ name, type, displayName, remark, maxLen, unit, upperLimit, lowerLimit, decimal, unique }: FieldItem) => {
             return dataType === 1
               ? {
                   name,
@@ -119,7 +119,14 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
                   lowerLimit: fieldSelected?.includes('lowerLimit') ? lowerLimit : undefined,
                   decimal: fieldSelected?.includes('decimal') ? decimal : undefined,
                 }
-              : { name, type, displayName, remark, maxLen };
+              : {
+                  name,
+                  type,
+                  displayName,
+                  remark,
+                  maxLen,
+                  ...(editType === 'file' && dataType === 2 ? { unique } : {}),
+                };
           }
         );
 
@@ -163,7 +170,10 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
         });
       const _fields = fields?.map((field: FieldItem) => ({ ...field, readOnly: true }));
       form.setFieldsValue({
-        fields: dataType === 1 ? moveDefaultFieldsToEnd(_fields, [timestampName, qualityName]) : _fields,
+        fields:
+          editType === 'file' && dataType === 1
+            ? moveDefaultFieldsToEnd(_fields, [timestampName, qualityName])
+            : _fields,
       });
     }
   }, [show]);
@@ -481,7 +491,9 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
                             )}
                           </Flex>
                           {/* 删除按钮 */}
-                          {dataType === 1 && [qualityName, timestampName].includes(fieldList[index]?.name) ? (
+                          {editType === 'file' &&
+                          dataType === 1 &&
+                          [qualityName, timestampName].includes(fieldList[index]?.name) ? (
                             <div style={{ width: 32 }} />
                           ) : (
                             <Button

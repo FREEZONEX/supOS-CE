@@ -14,6 +14,7 @@ import AdvancedOptions from '@/pages/uns/components/use-create-modal/components/
 import ExpandedKeyFormList from '@/pages/uns/components/ExpandedKeyFormList';
 import ComCheckbox from '@/components/com-checkbox';
 import ComRadio from '@/components/com-radio';
+import AttributeTypeForm from '@/pages/uns/components/use-create-modal/components/file/AttributeTypeForm';
 
 const { TextArea } = Input;
 
@@ -105,6 +106,8 @@ const FormItems: FC<FormItemsProps> = ({ formData }) => {
             return <AggForm key={key} />;
           case 'advancedOptions':
             return <AdvancedOptions key={key} />;
+          case 'attributeTypeForm':
+            return <AttributeTypeForm key={key} {...childProps} />;
           default:
             return null;
         }

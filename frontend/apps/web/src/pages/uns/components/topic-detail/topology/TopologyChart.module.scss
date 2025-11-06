@@ -46,8 +46,14 @@
     justify-content: center;
     cursor: pointer;
 
-    &:hover {
-      color: var(--supos-theme-color);
+    :global {
+      .ant-btn:hover {
+        color: var(--supos-theme-color) !important;
+      }
+
+      .ant-btn-variant-text:hover {
+        background-color: var(--supos-cell-hover-bg);
+      }
     }
   }
 }
@@ -89,6 +95,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 16px;
 }
 
 .loading-spinner {

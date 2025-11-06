@@ -13,7 +13,7 @@ import { getExternalTreeData } from '@/apis/inter-api/external.ts';
 import ComLeft from '@/components/com-layout/ComLeft';
 import Loading from '@/components/loading';
 import { useWebSocket } from 'ahooks';
-import { useUnsContext } from '@/pages/uns/UnsContext';
+import { useBaseStore } from '@/stores/base';
 
 const panelCloseSize = 48;
 const panelOpenSize = 500;
@@ -22,8 +22,6 @@ const initNode = {
   id: '',
   pathType: null,
 };
-
-const isHidden = false;
 
 const LeftDom: FC<{
   changeCurrentPath: any;
@@ -44,9 +42,13 @@ const LeftDom: FC<{
 }) => {
   const { message } = App.useApp();
   const formatMessage = useTranslate();
-  const { mountStatus } = useUnsContext();
   // 针对Unused订阅的topic进行实时数据展示
   const [unusedTopicTreeData, setUnusedTopicTreeData] = useState<UnsTreeNode[]>([]); // unusedTopic订阅
+  const {
+    systemInfo: { enableAutoCategorization },
+  } = useBaseStore((state) => ({
+    systemInfo: state.systemInfo,
+  }));
 
   const { treeType, operationFns, selectedNode } = useTreeStore((state) => ({
     treeType: state.treeType,
@@ -170,6 +172,7 @@ const LeftDom: FC<{
   };
 
   useEffect(() => {
+    if (enableAutoCategorization) return;
     if (treeType === 'uns') {
       connect?.();
     }
@@ -180,7 +183,7 @@ const LeftDom: FC<{
       // abortControllerRef.current?.abort();
       disconnect?.();
     };
-  }, [treeType]);
+  }, [treeType, enableAutoCategorization]);
 
   const { isTreeMapVisible, setTreeMapVisible } = useUnsTreeMapContext();
   const { isH5 } = useMediaSize();
@@ -189,20 +192,20 @@ const LeftDom: FC<{
       <Splitter layout="vertical" onResize={setUnusedTopicPanelSize} className="unusedTopicTree-Splitter">
         <Splitter.Panel min={120} size={unusedTopicPanelSize[0]}>
           <Tree
+            changeCurrentPath={changeCurrentPath}
             treeNodeExtra={(dataNode) => {
               return (
                 <TreeNodeExtra
                   type={dataNode.pathType}
                   handleDelete={() => handleDelete(dataNode)}
                   handleCopy={() => handleCopy(dataNode)}
-                  deleteDisabled={!!dataNode?.mount && !mountStatus[dataNode?.alias]}
                 />
               );
             }}
           />
         </Splitter.Panel>
         {/*暂时隐藏*/}
-        {isHidden && treeType === 'uns' && (
+        {treeType === 'uns' && !enableAutoCategorization && (
           <Splitter.Panel size={unusedTopicPanelSize[1]} min={panelCloseSize} style={{ overflow: 'hidden' }}>
             <div
               className="unusedTopicTree-collapsible"

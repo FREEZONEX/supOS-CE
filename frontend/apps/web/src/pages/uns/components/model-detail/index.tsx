@@ -2,7 +2,15 @@ import { useState, useEffect, type FC, type CSSProperties, useRef } from 'react'
 import { getModelInfo, modifyModel, updateModelSubscribe } from '@/apis/inter-api/uns';
 import { useClipboard, useTranslate } from '@/hooks';
 import { Collapse, App, theme, Typography, Flex, Tag } from 'antd';
-import { CaretRight, Copy, Folder } from '@carbon/icons-react';
+import {
+  CaretRight,
+  Copy,
+  Folder,
+  WatsonHealth3DCurveAutoColon,
+  Document,
+  SendAlt,
+  ChartLine,
+} from '@carbon/icons-react';
 import Icon from '@ant-design/icons';
 import DocumentList from '@/pages/uns/components/DocumentList.tsx';
 import UploadButton from '@/pages/uns/components/UploadButton.tsx';
@@ -64,8 +72,17 @@ const Module: FC<FolderDetailProps> = (props) => {
   const { copy } = useClipboard();
 
   const mountTypeMap: { [key: number]: string } = {
-    50: formatMessage('streams.dataSource'),
     16: formatMessage('uns.grpcGateway'),
+    50: formatMessage('streams.dataSource'),
+    51: formatMessage('streams.dataSource'),
+    52: formatMessage('streams.dataSource'),
+    100: formatMessage('streams.dataSource'),
+  };
+
+  const folderTypeMap: { [key: number]: string } = {
+    1: formatMessage('uns.state'),
+    2: formatMessage('uns.action'),
+    3: formatMessage('uns.metric'),
   };
 
   const items = [
@@ -105,7 +122,7 @@ const Module: FC<FolderDetailProps> = (props) => {
             <div className="detailItem">
               <div className="detailKey">{formatMessage('uns.mountDataSource')}</div>
               <div>
-                {mountTypeMap[modelInfo.mount?.mountType || '']}（
+                {mountTypeMap[modelInfo.mount?.mountType || 100]}（
                 {modelInfo.mount?.displayName || modelInfo.mount?.mountSource}）
               </div>
             </div>
@@ -160,6 +177,12 @@ const Module: FC<FolderDetailProps> = (props) => {
                 </div>
               </div>
             ))}
+          {modelInfo.dataType > 0 && (
+            <div className="detailItem">
+              <div className="detailKey">{formatMessage('uns.folderType')}</div>
+              <div>{folderTypeMap[modelInfo.dataType]}</div>
+            </div>
+          )}
         </>
       ),
       style: panelStyle,
@@ -249,19 +272,46 @@ const Module: FC<FolderDetailProps> = (props) => {
     message.success(enable ? formatMessage('uns.subscribeSuccessful') : formatMessage('uns.unsubscribeSuccessful'));
   };
 
+  const getFolderIcon = () => {
+    switch (modelInfo.dataType) {
+      case 0:
+        return <WatsonHealth3DCurveAutoColon size={20} />;
+      case 1:
+        return <Document size={20} style={{ color: '#D2A106' }} />;
+      case 2:
+        return <SendAlt size={20} style={{ color: '#94C518' }} />;
+      case 3:
+        return <ChartLine size={20} style={{ color: '#1D77FE' }} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="topicDetailWrap">
       <div className="topicDetailContent">
         <Flex className="detailTitle" gap={8} align="center">
           <Flex align="center" gap={4}>
             {modelInfo.alias && mountStatus[modelInfo.alias] && <StatusDot status={mountStatus[modelInfo.alias]} />}
-            <Folder size={20} />
+            {systemInfo.enableAutoCategorization ? (
+              <Flex
+                align="center"
+                justify="center"
+                style={{ width: 36, height: 36, background: '#f4f4f4', borderRadius: 3 }}
+              >
+                {getFolderIcon()}
+              </Flex>
+            ) : (
+              <Folder size={20} />
+            )}
           </Flex>
           <Title
             level={2}
             style={{ margin: 0, width: '100%', insetInlineStart: 0 }}
             editable={
-              hasPermission(ButtonPermission['uns.folderDetail']) && systemInfo?.useAliasPathAsTopic
+              hasPermission(ButtonPermission['uns.folderDetail']) &&
+              systemInfo?.useAliasPathAsTopic &&
+              !modelInfo.dataType
                 ? {
                     icon: (
                       <Icon

@@ -45,9 +45,11 @@ const FormStep: FC<FormStepProps> = ({
   const form = Form.useFormInstance();
   const [loading, setLoading] = useState(false);
 
-  const { operationFns, setCurrentTreeMapType } = useTreeStore((state) => ({
+  const { operationFns, setCurrentTreeMapType, lazyTree, treeData } = useTreeStore((state) => ({
     operationFns: state.operationFns,
     setCurrentTreeMapType: state.setCurrentTreeMapType,
+    lazyTree: state.lazyTree,
+    treeData: state.treeData,
   }));
 
   //以下变量用于控制步骤按钮的显示
@@ -72,6 +74,11 @@ const FormStep: FC<FormStepProps> = ({
     form
       .validateFields()
       .then(async () => {
+        const next = form.getFieldValue('next');
+        if ((attributeType === 3 || (isFormTopic && jsonList?.length > 1)) && !next) {
+          message.error(formatMessage('uns.noFieldsTip'));
+          return;
+        }
         const {
           alias,
           fields,
@@ -109,6 +116,8 @@ const FormStep: FC<FormStepProps> = ({
 
           path,
           pasteInfo,
+          parentDataType,
+          pasteNode,
         } = cloneDeep(form.getFieldsValue(true));
 
         // 表单验证通过后的操作
@@ -134,7 +143,9 @@ const FormStep: FC<FormStepProps> = ({
               pathType: 2,
               extend: extendToObj(extend),
               labelNames: tags?.map(({ label, value }: { label: string; value: string }) => label || value) || [],
-              ...(dataType !== 6 ? { fields, addDashBoard } : {}),
+              fields: [1, 2, 3].includes(dataType) ? fields : undefined,
+              addDashBoard,
+              parentDataType,
             };
 
         if (isCreateFolder && modelId === 'custom' && fields?.length > 0) {
@@ -283,9 +294,13 @@ const FormStep: FC<FormStepProps> = ({
             case 7:
               Object.assign(data, {
                 referIds: [referId?.value],
-                fields: undefined,
                 save2db: undefined,
                 addDashBoard: undefined,
+              });
+              break;
+            case 8:
+              Object.assign(data, {
+                fields: [{ name: 'json', type: 'string' }],
               });
               break;
             default:
@@ -294,14 +309,28 @@ const FormStep: FC<FormStepProps> = ({
         }
 
         setLoading(true);
-        const handleCallback = (id: string, queryType: string) => {
+        const handleCallback = (data: { id: string; parentId: string }, queryType: string) => {
+          const { id, parentId } = data;
+          const hasParentNode = getTargetNode(treeData || [], parentId);
+
+          const _parentId = hasParentNode ? parentId : sourceId ? sourceId : ROOT_NODE_ID;
+          const _childId = hasParentNode || parentId === sourceId || !lazyTree ? id : parentId;
+
           successCallBack(
-            { queryType, key: sourceId ? sourceId : ROOT_NODE_ID, newNodeKey: id, reset: !sourceId },
+            {
+              queryType,
+              key: _parentId,
+              newNodeKey: _childId,
+              reset: !(sourceId || parentId),
+              nodeDetail: pasteNode,
+            },
             (_, selectInfo, opt) => {
-              const currentNode = getTargetNode(_ || [], id);
+              const currentNode = getTargetNode(_ || [], _childId);
+              if (!selectInfo && !_childId) return;
 
               changeCurrentPath(
-                selectInfo || currentNode || { key: id, id, pathType: queryType === 'addFolder' ? 0 : 2 }
+                selectInfo ||
+                  currentNode || { key: _childId, id: _childId, pathType: queryType === 'addFolder' ? 0 : 2 }
               );
               setTreeMap(false);
               if (selectInfo) {
@@ -329,10 +358,14 @@ const FormStep: FC<FormStepProps> = ({
             targetId: data?.parentId,
             newF: data,
           })
-            .then(({ data, msg }) => {
+            .then(({ msg, code, data }) => {
               handleCallback(data, isCreateFolder ? 'addFolder' : 'addFile');
               handleClose(() => setLoading(false));
-              message.success(msg);
+              if (code === 206) {
+                message.warning(msg);
+              } else {
+                message.success(formatMessage('uns.pasteSuccess'));
+              }
             })
             .catch(() => {
               setLoading(false);
@@ -377,11 +410,6 @@ const FormStep: FC<FormStepProps> = ({
 
   const handleStep = async () => {
     return form.validateFields().then(() => {
-      const next = form.getFieldValue('next');
-      if ((attributeType === 3 || (isFormTopic && jsonList?.length > 1)) && !next) {
-        message.error(formatMessage('uns.noFieldsTip'));
-        return;
-      }
       if (step === 2) {
         if (calculationType === 4 && advancedOptions) {
           setStep(() => step + 1);
@@ -414,7 +442,10 @@ const FormStep: FC<FormStepProps> = ({
           {formatMessage('common.prev')}
         </Button>
       )}
-      {(step === 1 && [6, 7].includes(dataType)) || (step === 2 && !advancedOptions) || step === 3 || isCreateFolder ? (
+      {(step === 1 && [1, 2, 6, 7, 8].includes(dataType)) ||
+      (step === 2 && !advancedOptions) ||
+      step === 3 ||
+      isCreateFolder ? (
         <ComPopupGuide
           key={isCreateFolder ? 'saveFolder' : 'saveFile'}
           currentStep={addNamespaceForAi?.currentStep}

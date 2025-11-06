@@ -15,6 +15,7 @@ export interface FormContentProps {
   setAddNamespaceForAi: (e: any) => void;
   open: boolean;
   addModalType: string;
+  topicType: number;
 }
 
 type TemplateItemType = { label: string; value: string };
@@ -24,15 +25,25 @@ type GetFormDataParamsType = {
   dataType: number;
   modelId: string;
   fields: FieldItem[];
-  attributeType: number;
   windowType: string;
   addModalType: string;
 };
-const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddNamespaceForAi, open, addModalType }) => {
+const FormContent: FC<FormContentProps> = ({
+  step,
+  addNamespaceForAi,
+  setAddNamespaceForAi,
+  open,
+  addModalType,
+  topicType,
+}) => {
   const form = Form.useFormInstance();
   const formatMessage = useTranslate();
-  const { dashboardType } = useBaseStore((state) => ({
+  const {
+    dashboardType,
+    systemInfo: { enableAutoCategorization },
+  } = useBaseStore((state) => ({
     dashboardType: state.dashboardType,
+    systemInfo: state.systemInfo,
   }));
   const lang = useI18nStore((state) => state.lang);
 
@@ -44,9 +55,12 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
   const calculationType = useFormValue('calculationType', form);
   const dataType = useFormValue('dataType', form);
   const modelId = useFormValue('modelId', form);
-  const attributeType = useFormValue('attributeType', form);
   const fields = useFormValue('fields', form) || [];
   const windowType = useFormValue(['streamOptions', 'window', 'windowType'], form);
+  const parentDataType = useFormValue('parentDataType', form);
+
+  const isCreateFolder = addModalType.includes('Folder');
+  const isFormTopic = addModalType.includes('topic');
 
   useEffect(() => {
     if (!open) return;
@@ -78,10 +92,54 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
     form.setFieldsValue({ referIds });
   };
 
+  const getDataTypeOptions = (parentDataType: number) => {
+    if (enableAutoCategorization) {
+      switch (parentDataType) {
+        case 1:
+          return [
+            { label: formatMessage('uns.relational'), value: 2 },
+            ...(isFormTopic
+              ? []
+              : [
+                  { label: 'JSONB', value: 8 },
+                  { label: formatMessage('uns.aggregation'), value: 6 },
+                  { label: formatMessage('uns.reference'), value: 7 },
+                ]),
+          ];
+        case 2:
+          return [{ label: 'JSONB', value: 8 }];
+        case 3:
+          return [
+            { label: formatMessage('uns.timeSeries'), value: 1 },
+            ...(isFormTopic
+              ? []
+              : [
+                  { label: formatMessage('uns.calculation'), value: 3 },
+                  { label: formatMessage('uns.aggregation'), value: 6 },
+                  { label: formatMessage('uns.reference'), value: 7 },
+                ]),
+          ];
+      }
+    } else {
+      return [
+        { label: formatMessage('uns.timeSeries'), value: 1 },
+        { label: 'JSONB', value: 8 },
+        { label: formatMessage('uns.relational'), value: 2 },
+        ...(isFormTopic
+          ? []
+          : [
+              { label: formatMessage('uns.calculation'), value: 3 },
+              { label: formatMessage('uns.aggregation'), value: 6 },
+              { label: formatMessage('uns.reference'), value: 7 },
+            ]),
+      ];
+    }
+  };
+
   const getFormData = (data: GetFormDataParamsType) => {
-    const { currentStep, dataType, modelId, fields, attributeType, windowType } = data;
-    const isCreateFolder = addModalType.includes('Folder');
-    const isFormTopic = addModalType.includes('topic');
+    const { currentStep, dataType, modelId, fields, windowType } = data;
+    // const isCreateFolder = addModalType.includes('Folder');
+    // const isFormTopic = addModalType.includes('topic');
     const formItemList = [];
 
     if (currentStep === 1) {
@@ -185,21 +243,39 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
           childProps: { rows: 2 },
         }
       );
-      if ([1, 2].includes(dataType) && !isCreateFolder) {
+      if (!isCreateFolder) {
         formItemList.push({
-          formType: 'select',
+          formType: 'tagSelect',
           formProps: {
-            label: formatMessage('uns.writDownData'),
-            name: 'accessLevel',
-            initialValue: 'READ_ONLY',
+            name: 'tags',
+            label: formatMessage('common.label'),
+            tooltip: {
+              title: formatMessage('uns.labelTooltip'),
+            },
           },
           childProps: {
-            options: [
-              { label: formatMessage('uns.true'), value: 'READ_WRITE' },
-              { label: formatMessage('uns.false'), value: 'READ_ONLY' },
-            ],
+            tagMaxLen: 63,
           },
         });
+        if ([1, 2].includes(dataType)) {
+          formItemList.push({
+            formType: 'select',
+            formProps: {
+              tooltip: {
+                title: formatMessage('uns.writDownDataTooltip'),
+              },
+              label: formatMessage('uns.writDownData'),
+              name: 'accessLevel',
+              initialValue: 'READ_ONLY',
+            },
+            childProps: {
+              options: [
+                { label: formatMessage('uns.true'), value: 'READ_WRITE' },
+                { label: formatMessage('uns.false'), value: 'READ_ONLY' },
+              ],
+            },
+          });
+        }
       }
       formItemList.push({ formType: 'expandFormList', formProps: { name: 'expandFormList' } });
 
@@ -252,12 +328,95 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
           },
         });
       } else {
+        if (enableAutoCategorization) {
+          formItemList.push({
+            formType: 'radioGroup',
+            formProps: {
+              name: 'parentDataType',
+              label: formatMessage('uns.parentDataType'),
+              initialValue: 1,
+              tooltip: {
+                title: (
+                  <div>
+                    <span>{formatMessage('uns.parentDataType')}: </span>
+                    <br />
+                    <span>• {formatMessage('uns.state')}</span>: "{formatMessage('uns.stateDescription')}"
+                    <br />
+                    <span>• {formatMessage('uns.action')}</span>: "{formatMessage('uns.actionDescription')}"
+                    <br />
+                    <span>• {formatMessage('uns.metric')}</span>: "{formatMessage('uns.metricDescription')}"
+                    <br />
+                    <br />
+                    <span>{formatMessage('uns.finalTopicExample')}:</span>
+                    <br />
+                    <span style={{ wordBreak: 'break-all' }}>• {formatMessage('uns.finalExample')}</span>
+                    <br />
+                    <br />
+                    <span>{formatMessage('uns.briefAnnotation')}:</span>
+                    <br />
+                    <span>• "{formatMessage('uns.briefAnnotationExample')}"</span>
+                    <br />
+                  </div>
+                ),
+              },
+            },
+            childProps: {
+              style: { flexWrap: 'wrap' },
+              options: isFormTopic
+                ? [
+                    { label: formatMessage('uns.state'), value: 1 },
+                    { label: formatMessage('uns.metric'), value: 3 },
+                  ]
+                : [
+                    { label: formatMessage('uns.state'), value: 1 },
+                    { label: formatMessage('uns.action'), value: 2 },
+                    { label: formatMessage('uns.metric'), value: 3 },
+                  ],
+              disabled: topicType > 0,
+              onChange: (e: any) => {
+                const resetObj = {
+                  refers: [{}],
+                  frequency: undefined,
+                  aggregationModel: undefined,
+                  referIds: undefined,
+                  mainKey: undefined,
+                  timeReference: undefined,
+                };
+                const attributeTypeObj = {
+                  fields: [{}],
+                  attributeType: 1,
+                  modelId: undefined,
+                  jsonData: undefined,
+                  jsonList: [],
+                  jsonDataPath: undefined,
+                  source: undefined,
+                  dataSource: undefined,
+                  table: undefined,
+                  next: false,
+                };
+                switch (e.target.value) {
+                  case 1:
+                    Object.assign(resetObj, { dataType: 2, ...(dataType !== 1 ? attributeTypeObj : {}) });
+                    break;
+                  case 2:
+                    Object.assign(resetObj, { dataType: 8, ...attributeTypeObj });
+                    break;
+                  case 3:
+                    Object.assign(resetObj, { dataType: 1, ...(dataType !== 2 ? attributeTypeObj : {}) });
+                    break;
+                }
+
+                form.setFieldsValue(resetObj);
+              },
+            },
+          });
+        }
         formItemList.push({
           formType: 'radioGroup',
           formProps: {
             name: 'dataType',
             label: formatMessage('uns.databaseType'),
-            initialValue: 1,
+            initialValue: enableAutoCategorization ? 2 : 1,
             tooltip: {
               title: (
                 <div>
@@ -283,17 +442,7 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
           },
           childProps: {
             style: { flexWrap: 'wrap' },
-            options: [
-              { label: formatMessage('uns.timeSeries'), value: 1 },
-              { label: formatMessage('uns.relational'), value: 2 },
-              ...(isFormTopic
-                ? []
-                : [
-                    { label: formatMessage('uns.calculation'), value: 3 },
-                    { label: formatMessage('uns.aggregation'), value: 6 },
-                    { label: formatMessage('uns.reference'), value: 7 },
-                  ]),
-            ],
+            options: getDataTypeOptions(parentDataType),
             onChange: (e: any) => {
               const resetObj = {
                 refers: [{}],
@@ -330,86 +479,11 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
               childProps: { types },
             });
           } else {
-            formItemList.push(
-              { formType: 'divider', formProps: { name: 'timeSeriesDivider' } },
-              {
-                formType: 'radioGroup',
-                formProps: {
-                  name: 'attributeType',
-                  label: formatMessage('uns.attributeGenerationMethod'),
-                  initialValue: 1,
-                  tooltip: {
-                    title: (
-                      <div>
-                        <span>• {formatMessage('common.custom')}</span> —&nbsp;
-                        {formatMessage('uns.attributeGenerationMethodTooltip-Custom')}
-                        <br />
-                        <span>• {formatMessage('common.template')}</span> —&nbsp;
-                        {formatMessage('uns.attributeGenerationMethodTooltip-Template')}
-                        <br />
-                        <span>• {formatMessage('uns.reverseGeneration')}</span> —&nbsp;
-                        {formatMessage('uns.attributeGenerationMethodTooltip-ReverseGeneration')}
-                      </div>
-                    ),
-                  },
-                  className: lang === 'en-US' ? 'customLabelStyle' : '',
-                },
-                childProps: {
-                  options: [
-                    { label: formatMessage('common.custom'), value: 1 },
-                    { label: formatMessage('common.template'), value: 2 },
-                    { label: formatMessage('uns.reverseGeneration'), value: 3 },
-                  ],
-                  onChange: () => {
-                    form.setFieldsValue({
-                      fields: [{}],
-
-                      modelId: undefined,
-                      jsonData: undefined,
-                      jsonList: [],
-                      jsonDataPath: undefined,
-                      source: undefined,
-                      dataSource: undefined,
-                      table: undefined,
-                      next: false,
-                      mainKey: undefined,
-                    });
-                  },
-                },
-              }
-            );
-            if (attributeType === 1) {
-              //选择自定义属性
-              formItemList.push({
-                formType: 'fieldsFormList',
-                formProps: { name: 'fields' },
-                childProps: {
-                  types,
-                  addNamespaceForAi,
-                  setAddNamespaceForAi,
-                  showMoreBtn: dataType === 1,
-                },
-              });
-            }
-            if (attributeType === 2) {
-              //选择模板属性
-              formItemList.push({
-                formType: 'modelFieldsForm',
-                formProps: { name: 'modelFieldsForm' },
-                childProps: {
-                  options: templateList.slice(1),
-                  types,
-                },
-              });
-            }
-            if (attributeType === 3) {
-              //选择逆向生成属性
-              formItemList.push({
-                formType: 'reverseGeneration',
-                formProps: { name: 'reverseGeneration' },
-                childProps: { types },
-              });
-            }
+            formItemList.push({
+              formType: 'attributeTypeForm',
+              formProps: { name: 'attributeTypeForm' },
+              childProps: { types, addNamespaceForAi, setAddNamespaceForAi, dataType, templateList },
+            });
           }
         }
         if (dataType === 3) {
@@ -466,7 +540,24 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
               formProps: {
                 name: 'frequencyDivider',
               },
-            },
+            }
+          );
+          if (dashboardType?.includes('grafana')) {
+            formItemList.push({
+              formType: 'checkbox',
+              formProps: {
+                name: 'addDashBoard',
+                label: formatMessage('uns.autoDashboard'),
+                initialValue: true,
+                valuePropName: 'checked',
+                tooltip: {
+                  title: formatMessage('uns.autoDashboardTooltip'),
+                },
+                className: lang === 'en-US' ? 'customLabelStyle' : '',
+              },
+            });
+          }
+          formItemList.push(
             {
               formType: 'checkbox',
               formProps: {
@@ -516,22 +607,54 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
                 apiParams: { type: 2, normal: true },
                 labelInValue: true,
               },
-            },
-            { formType: 'divider', formProps: { name: 'tagsDivider' } },
-            {
-              formType: 'tagSelect',
-              formProps: {
-                name: 'tags',
-                label: formatMessage('common.label'),
-                tooltip: {
-                  title: formatMessage('uns.labelTooltip'),
-                },
-              },
-              childProps: {
-                tagMaxLen: 63,
-              },
             }
           );
+        }
+
+        if ([1, 2, 8].includes(dataType)) {
+          formItemList.push({ formType: 'divider', formProps: { name: 'addFlowDivider' } });
+          if ([1, 2].includes(dataType)) {
+            formItemList.push({
+              formType: 'checkbox',
+              formProps: {
+                name: 'addFlow',
+                label: formatMessage('uns.mockData'),
+                initialValue: true,
+                valuePropName: 'checked',
+                tooltip: {
+                  title: formatMessage('uns.mockDataTooltip'),
+                },
+              },
+            });
+          }
+          if (dashboardType?.includes('grafana')) {
+            formItemList.push({
+              formType: 'checkbox',
+              formProps: {
+                name: 'addDashBoard',
+                label: formatMessage('uns.autoDashboard'),
+                initialValue: true,
+                valuePropName: 'checked',
+                tooltip: {
+                  title: formatMessage('uns.autoDashboardTooltip'),
+                },
+                className: lang === 'en-US' ? 'customLabelStyle' : '',
+              },
+            });
+          }
+          formItemList.push({
+            formType: 'checkbox',
+            formProps: {
+              name: 'save2db',
+              label: formatMessage('uns.persistence'),
+              initialValue: false,
+              valuePropName: 'checked',
+              tooltip: {
+                title: formatMessage('uns.persistenceTooltip'),
+              },
+            },
+            childProps: { disabled: dataType === 3 && calculationType === 4 },
+          });
         }
       }
     }
@@ -575,36 +698,6 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
         if (calculationType === 4) {
           formItemList.push({ formType: 'aggForm', formProps: { name: 'aggForm' } });
         }
-      }
-      formItemList.push(
-        {
-          formType: 'tagSelect',
-          formProps: {
-            name: 'tags',
-            label: formatMessage('common.label'),
-            tooltip: {
-              title: formatMessage('uns.labelTooltip'),
-            },
-          },
-          childProps: {
-            tagMaxLen: 63,
-          },
-        },
-        { formType: 'divider', formProps: { name: 'tagsDivider' } }
-      );
-      if (dataType !== 3) {
-        formItemList.push({
-          formType: 'checkbox',
-          formProps: {
-            name: 'addFlow',
-            label: formatMessage('uns.mockData'),
-            initialValue: true,
-            valuePropName: 'checked',
-            tooltip: {
-              title: formatMessage('uns.mockDataTooltip'),
-            },
-          },
-        });
       }
       if (dashboardType?.includes('grafana')) {
         formItemList.push({
@@ -696,7 +789,6 @@ const FormContent: FC<FormContentProps> = ({ step, addNamespaceForAi, setAddName
         dataType,
         modelId,
         fields,
-        attributeType,
         windowType,
         addModalType,
       })}

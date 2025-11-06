@@ -857,11 +857,7 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo, getFileDetail
         unsAlias: instanceInfo.alias,
       }).then(() => {
         message.success(formatMessage('common.optsuccess'));
-        getFileDetail(instanceInfo.id).then((dashboardInfo: any) => {
-          navigate(
-            `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`
-          );
-        });
+        getFileDetail(instanceInfo.id);
       });
     } else {
       return bindFlowForUns({
@@ -870,19 +866,7 @@ const TopologyChart = ({ instanceInfo, payload, dt, dashboardInfo, getFileDetail
       }).then(() => {
         message.success(formatMessage('common.optsuccess'));
         getFileDetail(instanceInfo.id);
-        fetchTopologyData(instanceInfo.alias).then((datas: any) => {
-          if (datas) {
-            navigate(
-              `/collection-flow/flow-editor?${getSearchParamsString({
-                id: datas.id,
-                name: datas.flowName,
-                status: datas.flowStatus,
-                flowId: datas.flowId,
-                from: location.pathname,
-              })}`
-            );
-          }
-        });
+        fetchTopologyData(instanceInfo.alias);
       });
     }
   };

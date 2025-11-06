@@ -96,6 +96,9 @@ export interface SystemInfoProps {
 
   // 主题插件配置信息
   themeConfig?: any;
+
+  // 是否开启文件分类配置
+  enableAutoCategorization?: boolean;
 }
 
 /**

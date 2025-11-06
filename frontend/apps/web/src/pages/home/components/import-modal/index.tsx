@@ -199,7 +199,7 @@ const Module: FC<ImportModalProps> = (props) => {
             <div className="loadingGlobalContent">
               {runningStatusList?.map((m) => {
                 const { code, finished, msg, task, module, totalCount, successCount } = m;
-                const title = `${formatMessage('home.' + module)}：${finished ? msg : task || ''}`;
+                const title = `${formatMessage('home.' + module)}${module === 'uns' && finished ? '-' + task : ''}：${finished ? msg : task || ''}`;
                 return (
                   <InlineLoading
                     title={title}

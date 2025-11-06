@@ -14,6 +14,9 @@ import {
   RepoArtifact,
   Document,
   TrashCan,
+  WatsonHealth3DCurveAutoColon,
+  SendAlt,
+  ChartLine,
 } from '@carbon/icons-react';
 import Icon from '@ant-design/icons';
 import { ButtonPermission } from '@/common-types/button-permission';
@@ -31,6 +34,8 @@ import TagAdd from '@/components/svg-components/TagAdd';
 import { usePageIsShow } from '@/contexts/tabs-lifecycle-context.ts';
 import { useUnsContext } from '@/pages/uns/UnsContext';
 import StatusDot from './StatusDot';
+import { useBaseStore } from '@/stores/base';
+import { getTargetNode } from '@/utils';
 
 const renderOperationDom = (type: string) => {
   switch (type) {
@@ -61,8 +66,17 @@ const Operation = () => {
     selectedNode: state.selectedNode,
     loadData: state.loadData,
   }));
+  const {
+    systemInfo: { enableAutoCategorization },
+  } = useBaseStore((state) => ({
+    systemInfo: state.systemInfo,
+  }));
   const { message } = App.useApp();
   const [reverserOpen, setReverserOpen] = useState<boolean>(false); //复制的topic
+
+  const hasTopicType =
+    enableAutoCategorization && selectedNode && !(selectedNode?.type === 0 && !selectedNode?.dataType);
+
   const options = useMemo(() => {
     return filterPermissionToList<{
       onClick: () => void;
@@ -93,7 +107,7 @@ const Operation = () => {
         buttonType: 'FolderAdd',
         showTreeType: 'uns',
         key: 'addFolder',
-        disabled: !!selectedNode?.mount,
+        disabled: !!selectedNode?.mount || hasTopicType,
       },
       // {
       //   title: formatMessage('uns.batchGeneration'),
@@ -104,7 +118,7 @@ const Operation = () => {
       //   buttonType: 'RepoArtifact',
       //   showTreeType: 'uns',
       //   key: 'batchGeneration',
-      //   disabled: !!selectedNode?.mount,
+      //   disabled: !!selectedNode?.mount || hasTopicType,
       // },
       {
         title: formatMessage('uns.addTemplate'),
@@ -385,16 +399,54 @@ const TreeNodeIcon = memo(({ dataNode }: { dataNode: UnsTreeNode }) => {
   const { expandedKeys } = useTreeStore((state) => ({
     expandedKeys: state.expandedKeys,
   }));
+  const {
+    systemInfo: { enableAutoCategorization },
+  } = useBaseStore((state) => ({
+    systemInfo: state.systemInfo,
+  }));
+
+  let Dom;
+  let color;
+  const parentDataType = enableAutoCategorization
+    ? dataNode.type === 0
+      ? dataNode.dataType
+      : dataNode.parentDataType
+    : 0;
+
+  switch (parentDataType) {
+    case 1:
+      Dom = Document;
+      color = '#D2A106';
+      break;
+    case 2:
+      Dom = SendAlt;
+      color = '#94C518';
+      break;
+    case 3:
+      Dom = ChartLine;
+      color = '#1D77FE';
+      break;
+    default:
+      break;
+  }
+  const commonStyle = { flexShrink: 0, marginRight: '5px' };
+
   if (dataNode.pathType === 0) {
     return (
       <Flex align="center">
         <div style={{ width: 10, display: 'flex', alignItems: 'center' }}>
           {dataNode.alias && mountStatus[dataNode.alias] && <StatusDot status={mountStatus[dataNode.alias]} />}
         </div>
-        {expandedKeys.includes(dataNode.key) && !dataNode.hasChildren ? (
-          <FolderOpen style={{ flexShrink: 0, marginRight: '5px' }} />
+        {enableAutoCategorization ? (
+          dataNode.dataType && Dom ? (
+            <Dom style={{ ...commonStyle, color: color }} />
+          ) : (
+            <WatsonHealth3DCurveAutoColon style={commonStyle} />
+          )
+        ) : expandedKeys.includes(dataNode.key) && dataNode.hasChildren ? (
+          <FolderOpen style={commonStyle} />
         ) : (
-          <Folder style={{ flexShrink: 0, marginRight: '5px' }} />
+          <Folder style={commonStyle} />
         )}
       </Flex>
     );
@@ -402,7 +454,7 @@ const TreeNodeIcon = memo(({ dataNode }: { dataNode: UnsTreeNode }) => {
     return (
       <Flex align="center">
         <div style={{ width: 10 }} />
-        <Document style={{ flexShrink: 0, marginRight: '5px' }} />
+        {Dom ? <Dom style={{ ...commonStyle, color: color }} /> : <Document style={commonStyle} />}
       </Flex>
     );
   }
@@ -428,14 +480,21 @@ const findNodeWithParent = (
 const TopTreeCom = ({
   header,
   treeNodeExtra,
+  changeCurrentPath,
 }: {
   header: ProTreeProps['header'];
   treeNodeExtra?: ProTreeProps['treeNodeExtra'];
+  changeCurrentPath?: any;
 }) => {
   const formatMessage = useTranslate();
   const { message } = App.useApp();
   // 创建一个 ref 来引用 tree 元素
   const treeRef = useRef<any>(null);
+  const {
+    systemInfo: { enableAutoCategorization },
+  } = useBaseStore((state) => ({
+    systemInfo: state.systemInfo,
+  }));
 
   const {
     lazyTree,
@@ -493,8 +552,6 @@ const TopTreeCom = ({
     setTreeData: state.setTreeData,
     setLoading: state.setLoading,
   }));
-
-  const { mountStatus } = useUnsContext();
 
   //滚动到目标树节点
   const scrollTreeNode = useCallback((id: Key) => {
@@ -555,14 +612,46 @@ const TopTreeCom = ({
         sourceId: source?.id,
         targetId,
       })
-        .then(({ data, msg }) => {
-          message.success(msg);
-          loadData({
-            queryType: source?.pathType === 0 ? 'addFolder' : 'addFile',
-            key: targetId ? targetId : ROOT_NODE_ID,
-            newNodeKey: data,
-            reset: !targetId,
-          });
+        .then(({ data, msg, code }) => {
+          const { parentId, id } = data;
+          const hasParentNode = getTargetNode(treeData || [], parentId);
+
+          const _parentId = hasParentNode ? parentId : targetId ? targetId : ROOT_NODE_ID;
+          const _childId = hasParentNode || parentId === targetId || !lazyTree ? id : parentId;
+          if (code === 206) {
+            message.warning(msg);
+          } else {
+            message.success(formatMessage('uns.pasteSuccess'));
+          }
+          loadData(
+            {
+              queryType: source?.pathType === 0 ? 'addFolder' : 'addFile',
+              // key: targetId ? targetId : ROOT_NODE_ID,
+              // newNodeKey: data,
+              key: _parentId,
+              newNodeKey: _childId,
+              // reset: !targetId,
+              reset: !(targetId || parentId),
+              nodeDetail: source,
+            },
+            (_, selectInfo, opt) => {
+              if (!selectInfo && !_childId) return;
+              const currentNode = getTargetNode(_ || [], _childId);
+              changeCurrentPath(
+                selectInfo ||
+                  currentNode || {
+                    key: _childId,
+                    id: _childId,
+                    pathType: source?.pathType === 0 ? 0 : 2,
+                  }
+              );
+              setTreeMap(false);
+              if (selectInfo) {
+                // 非lasy树
+                opt?.scrollTreeNode?.(id);
+              }
+            }
+          );
         })
         .catch(() => {
           setLoading(false);
@@ -651,6 +740,7 @@ const TopTreeCom = ({
                           message.warning(formatMessage('uns.copyTip'));
                         }
                       },
+                      disabled: !!(enableAutoCategorization && pasteNode?.pathType === 0 && pasteNode?.dataType),
                     },
                     {
                       auth: ButtonPermission['uns.folderAdd'],
@@ -671,13 +761,50 @@ const TopTreeCom = ({
                   ];
                 }
                 const _node = { ...node };
-                const baseItems = ['viewTemplate', 'copy', 'paste', 'pasteAndEdit', 'addFolder', 'addFile', 'delete'];
+                const baseItems =
+                  (_node.pathType === 0 && !_node.dataType) || !enableAutoCategorization
+                    ? ['viewTemplate', 'copy', 'paste', 'pasteAndEdit', 'addFolder', 'addFile', 'delete']
+                    : ['viewTemplate', 'copy', 'paste', 'pasteAndEdit', 'addFile', 'delete'];
+                let disabledPaste = false;
+                let disabledPasteAndEdit = false;
+                if (enableAutoCategorization && pasteNode) {
+                  if (pasteNode.pathType === 0) {
+                    if (pasteNode.dataType) {
+                      if (
+                        (_node.pathType === 0 && _node.dataType && pasteNode.dataType !== _node.dataType) ||
+                        (_node.pathType === 2 && pasteNode.dataType !== _node.parentDataType)
+                      ) {
+                        disabledPaste = true;
+                        disabledPasteAndEdit = true;
+                      }
+                      if (
+                        (_node.pathType === 0 && pasteNode.dataType === _node.dataType) ||
+                        (_node.pathType === 2 && pasteNode.dataType === _node.parentDataType) ||
+                        !_node.dataType
+                      ) {
+                        disabledPasteAndEdit = true;
+                      }
+                    } else {
+                      if ((_node.pathType === 0 && _node.dataType) || (_node.pathType === 2 && _node.parentDataType)) {
+                        disabledPaste = true;
+                        disabledPasteAndEdit = true;
+                      }
+                    }
+                  } else if (pasteNode.pathType === 2) {
+                    if (
+                      (_node.pathType === 0 && _node.dataType && pasteNode.parentDataType !== _node.dataType) ||
+                      (_node.pathType === 2 && pasteNode.parentDataType !== _node.parentDataType)
+                    ) {
+                      disabledPaste = true;
+                      disabledPasteAndEdit = true;
+                    }
+                  }
+                }
                 const folderItems = lazyTree
                   ? ['refresh', ...baseItems, 'collapseFolder']
                   : [...baseItems, 'expandFolder', 'collapseFolder'];
 
                 const mapItem = _node.pathType === 0 ? folderItems : ['viewLabels', ...baseItems];
-                const isMountTarget = !!node.mount && mountStatus[node.alias];
                 const isMountFile = !!node.mount;
 
                 return filterPermissionToList<ItemType>(
@@ -733,7 +860,7 @@ const TopTreeCom = ({
                       onClick: () => {
                         pasteHandle(pasteNode, _node);
                       },
-                      disabled: isMountFile,
+                      disabled: isMountFile || disabledPaste,
                     },
                     {
                       auth:
@@ -748,7 +875,7 @@ const TopTreeCom = ({
                           message.warning(formatMessage('uns.copyTip'));
                         }
                       },
-                      disabled: isMountFile,
+                      disabled: isMountFile || disabledPasteAndEdit,
                     },
                     {
                       auth: ButtonPermission['uns.folderAdd'],
@@ -800,7 +927,6 @@ const TopTreeCom = ({
                           <TrashCan />
                         </div>
                       ),
-                      disabled: isMountFile && !isMountTarget,
                     },
                   ]?.filter((f) => !f.key || mapItem.includes(f.key)) as any
                 );
@@ -844,7 +970,13 @@ const TopTreeCom = ({
         treeNodeCount={(dataNode) => {
           return (
             dataNode.pathType === 0 && (
-              <span style={{ color: 'var(--supos-text-color)', fontSize: '12px', opacity: 0.5 }}>
+              <span
+                style={{
+                  color: enableAutoCategorization ? '#161616' : 'var(--supos-text-color)',
+                  fontSize: '12px',
+                  opacity: 0.5,
+                }}
+              >
                 ({dataNode.countChildren})
               </span>
             )
@@ -879,12 +1011,43 @@ const TopTreeCom = ({
             return '';
           }
         }}
+        renderTitleStyle={(dataNode) => {
+          const bgColor =
+            dataNode.type === 0 && dataNode.dataType && enableAutoCategorization
+              ? dataNode.dataType === 1
+                ? '#FCF4D6'
+                : dataNode.dataType === 2
+                  ? '#F0FBD2'
+                  : '#E8F1FF'
+              : '';
+          const highNode =
+            breadcrumbList
+              ?.slice(0, -1)
+              .map((e) => e.key)
+              .includes(dataNode.key) ?? false;
+
+          return bgColor
+            ? {
+                height: '26px',
+                backgroundColor: bgColor,
+                borderRadius: '3px',
+                paddingRight: '8px',
+                color: highNode ? 'var(--supos-theme-color)' : '#161616',
+              }
+            : {};
+        }}
       />
     </>
   );
 };
 
-const UnsTree = ({ treeNodeExtra }: { treeNodeExtra?: ProTreeProps['treeNodeExtra'] }) => {
-  return <TopTreeCom treeNodeExtra={treeNodeExtra} header={<TreeHeader />} />;
+const UnsTree = ({
+  treeNodeExtra,
+  changeCurrentPath,
+}: {
+  treeNodeExtra?: ProTreeProps['treeNodeExtra'];
+  changeCurrentPath?: any;
+}) => {
+  return <TopTreeCom treeNodeExtra={treeNodeExtra} changeCurrentPath={changeCurrentPath} header={<TreeHeader />} />;
 };
 export default UnsTree;

@@ -14,6 +14,7 @@ import './index.scss';
 import type { UnsTreeNode, InitTreeDataFnType, FieldItem } from '@/pages/uns/types';
 import type { TreeStoreActions } from '../../store/types';
 import { getExpression, parseArrayToObjects, parseTime } from '@/utils/uns';
+import { useBaseStore } from '@/stores/base';
 
 export interface UseOptionModalProps {
   successCallBack: InitTreeDataFnType;
@@ -50,6 +51,13 @@ const useOptionModal = ({
   const [addModalType, setAddModalType] = useState<string>(''); //addFolder,addFile,topicToFile
   const [sourcePath, setSourcePath] = useState<string>(''); //父文件路径
   const [sourceId, setSourceId] = useState<string>(''); //父文件id
+  const [topicType, setTopicType] = useState<number>(0); //文件夹类型
+
+  const {
+    systemInfo: { enableAutoCategorization },
+  } = useBaseStore((state) => ({
+    systemInfo: state.systemInfo,
+  }));
 
   const name = Form.useWatch('name', form) || form.getFieldValue('name');
   const modelId = Form.useWatch('modelId', form) || form.getFieldValue('modelId');
@@ -71,12 +79,23 @@ const useOptionModal = ({
 
   const changeModalType = useCallback(
     async (type?: string, targetNode?: UnsTreeNode, pasteNode?: UnsTreeNode) => {
-      const { id, parentId = '', path = '', parentPath = '', pathType: nodeType } = targetNode || {};
+      const {
+        id,
+        parentId = '',
+        path = '',
+        parentPath = '',
+        pathType: nodeType,
+        dataType,
+        parentDataType,
+      } = targetNode || {};
       const _folderPath = nodeType === 0 ? path : parentPath;
       const folderPath = _folderPath ? `${_folderPath}/` : '';
       const folderId = (nodeType === 0 ? id : parentId) || '';
+      const _topicType = nodeType === 0 && dataType ? dataType : parentDataType || 0;
       setSourcePath(folderPath);
       setSourceId(folderId as string);
+      setTopicType(_topicType);
+
       setOpen(true);
       if (pasteNode) {
         //数据回填
@@ -94,6 +113,7 @@ const useOptionModal = ({
             fields,
             extend: extendToArr(extend),
             pasteInfo: pasteNode ? { sourceId: pasteNode.id, targetId: targetNode?.id } : undefined,
+            pasteNode: pasteNode,
           });
         } else {
           const {
@@ -114,6 +134,8 @@ const useOptionModal = ({
             extend,
             accessLevel,
             extendFieldUsed,
+            parentDataType,
+            pathType,
           } = detail || {};
 
           const backfillForm: { [key: string]: any } = {
@@ -128,124 +150,130 @@ const useOptionModal = ({
             extend: extendToArr(extend),
             dataType,
             pasteInfo: pasteNode ? { sourceId: pasteNode.id, targetId: targetNode?.id } : undefined,
+            parentDataType,
           };
-
-          switch (dataType) {
-            case 1:
-            case 2:
-              Object.assign(backfillForm, {
-                attributeType: modelId ? 2 : 1,
-                modelId: modelId,
-                addFlow: withFlow,
-                mainKey: fields.findIndex((item: FieldItem) => item.unique === true),
-                accessLevel,
-                extendFieldUsed,
-              });
-              break;
-            case 3: {
-              type ReferType = {
-                id: string;
-                path: string;
-                field: string;
-                uts?: boolean;
-              };
-              const refersRes = await Promise.all(refers?.map((e: ReferType) => getInstanceInfo({ id: e.id })) || []);
-              const _refers = refers?.map((refer: ReferType, i: number) => ({
-                ...refer,
-                refer: {
-                  label: refer.path,
-                  value: refer.id,
-                  option: {
-                    dataType: refersRes[i]?.dataType,
+          if (pathType === 2) {
+            switch (dataType) {
+              case 1:
+              case 2:
+                Object.assign(backfillForm, {
+                  attributeType: modelId ? 2 : 1,
+                  modelId: modelId,
+                  addFlow: withFlow,
+                  mainKey: fields.findIndex((item: FieldItem) => item.unique === true),
+                  accessLevel,
+                  extendFieldUsed,
+                });
+                fields.forEach((e: FieldItem) => {
+                  delete e.unique;
+                });
+                break;
+              case 3: {
+                type ReferType = {
+                  id: string;
+                  path: string;
+                  field: string;
+                  uts?: boolean;
+                };
+                const refersRes = await Promise.all(refers?.map((e: ReferType) => getInstanceInfo({ id: e.id })) || []);
+                const _refers = refers?.map((refer: ReferType, i: number) => ({
+                  ...refer,
+                  refer: {
+                    label: refer.path,
+                    value: refer.id,
+                    option: {
+                      dataType: refersRes[i]?.dataType,
+                    },
                   },
-                },
-                fields: refersRes[i]?.fields?.filter?.(
-                  (t: FieldItem) => !t.systemField && ['INTEGER', 'LONG', 'FLOAT', 'DOUBLE', 'BOOLEAN'].includes(t.type)
-                ) || [{ name: refer.field }],
-              }));
-              //实时计算
-              Object.assign(backfillForm, {
-                dataType: 3,
-                calculationType: 3,
-                refers: _refers,
-                expression: getExpression(refers, expression),
-                timeReference: refers?.find((item: ReferType) => item.uts)?.id,
-                extendFieldUsed,
-              });
-              break;
-            }
-            case 4: {
-              //历史计算
-              const {
-                window,
-                trigger = '',
-                waterMark,
-                deleteMark,
-                fillHistory,
-                ignoreUpdate,
-                ignoreExpired,
-                startTime,
-                endTime,
-              } = protocol;
-              Object.assign(backfillForm, {
-                dataType: 3,
-                calculationType: 4,
-                DataSource: { value: dataPath },
-                functions: parseArrayToObjects(fields.map((field: FieldItem) => field.index)),
-                whereCondition: getExpression(refers, expression, true),
-                streamOptions: { window },
-                advancedOptions:
-                  !!trigger || !!waterMark || !!deleteMark || fillHistory || ignoreUpdate || ignoreExpired,
-                _advancedOptions: {
-                  trigger: trigger.split(' ')[0],
-                  delayTime: trigger.split(' ')[1],
+                  fields: refersRes[i]?.fields?.filter?.(
+                    (t: FieldItem) =>
+                      !t.systemField && ['INTEGER', 'LONG', 'FLOAT', 'DOUBLE', 'BOOLEAN'].includes(t.type)
+                  ) || [{ name: refer.field }],
+                }));
+                //实时计算
+                Object.assign(backfillForm, {
+                  dataType: 3,
+                  calculationType: 3,
+                  refers: _refers,
+                  expression: getExpression(refers, expression),
+                  timeReference: refers?.find((item: ReferType) => item.uts)?.id,
+                  extendFieldUsed,
+                });
+                break;
+              }
+              case 4: {
+                //历史计算
+                const {
+                  window,
+                  trigger = '',
                   waterMark,
                   deleteMark,
                   fillHistory,
                   ignoreUpdate,
                   ignoreExpired,
-                  startTime: startTime ? dayjs(startTime, 'YYYY-MM-DD') : undefined,
-                  endTime: endTime ? dayjs(endTime, 'YYYY-MM-DD') : undefined,
-                },
-              });
-              if (dataPath) {
-                searchTreeData({ type: 3, pageNo: 1, pageSize: 99999 }).then((res: any) => {
-                  const whereFieldList =
-                    res
-                      ?.find((e: { topic: string }) => e.topic === dataPath)
-                      ?.fields?.map(({ name, type }: FieldItem) => {
-                        return { label: name, value: name, type };
-                      }) || [];
-                  form.setFieldsValue({ whereFieldList });
+                  startTime,
+                  endTime,
+                } = protocol;
+                Object.assign(backfillForm, {
+                  dataType: 3,
+                  calculationType: 4,
+                  DataSource: { value: dataPath },
+                  functions: parseArrayToObjects(fields.map((field: FieldItem) => field.index)),
+                  whereCondition: getExpression(refers, expression, true),
+                  streamOptions: { window },
+                  advancedOptions:
+                    !!trigger || !!waterMark || !!deleteMark || fillHistory || ignoreUpdate || ignoreExpired,
+                  _advancedOptions: {
+                    trigger: trigger.split(' ')[0],
+                    delayTime: trigger.split(' ')[1],
+                    waterMark,
+                    deleteMark,
+                    fillHistory,
+                    ignoreUpdate,
+                    ignoreExpired,
+                    startTime: startTime ? dayjs(startTime, 'YYYY-MM-DD') : undefined,
+                    endTime: endTime ? dayjs(endTime, 'YYYY-MM-DD') : undefined,
+                  },
                 });
-              }
+                if (dataPath) {
+                  searchTreeData({ type: 3, pageNo: 1, pageSize: 99999 }).then((res: any) => {
+                    const whereFieldList =
+                      res
+                        ?.find((e: { topic: string }) => e.topic === dataPath)
+                        ?.fields?.map(({ name, type }: FieldItem) => {
+                          return { label: name, value: name, type };
+                        }) || [];
+                    form.setFieldsValue({ whereFieldList });
+                  });
+                }
 
-              break;
+                break;
+              }
+              case 6:
+                Object.assign(backfillForm, {
+                  frequency: protocol.frequency
+                    ? {
+                        value: parseTime(protocol.frequency)[0],
+                        unit: parseTime(protocol.frequency)[1],
+                      }
+                    : {},
+                  referIds: refers.map((item: { id: string; path: string }) => ({
+                    label: item.path,
+                    value: item.id,
+                  })),
+                });
+                break;
+              case 7:
+                Object.assign(backfillForm, {
+                  referId: {
+                    label: refers?.[0].path,
+                    value: refers?.[0].id,
+                  },
+                });
+                break;
+              default:
+                break;
             }
-            case 6:
-              Object.assign(backfillForm, {
-                frequency: protocol.frequency
-                  ? {
-                      value: parseTime(protocol.frequency)[0],
-                      unit: parseTime(protocol.frequency)[1],
-                    }
-                  : {},
-                referIds: refers.map((item: { id: string; path: string }) => ({
-                  label: item.path,
-                  value: item.id,
-                })),
-              });
-              break;
-            case 7:
-              Object.assign(backfillForm, {
-                referId: {
-                  label: refers?.[0].path,
-                  value: refers?.[0].id,
-                },
-              });
-              break;
-            default:
-              break;
           }
           console.log(backfillForm, 'backfillForm');
           form.setFieldsValue(backfillForm);
@@ -292,6 +320,12 @@ const useOptionModal = ({
                 fields: fields || [{}],
                 attributeType: 1,
                 modelId: undefined,
+                ...(enableAutoCategorization
+                  ? {
+                      parentDataType: _topicType || 1,
+                      dataType: _topicType === 1 ? 2 : _topicType === 2 ? 8 : _topicType === 3 ? 1 : 2,
+                    }
+                  : {}),
               });
               break;
             default:
@@ -393,6 +427,7 @@ const useOptionModal = ({
             setAddNamespaceForAi={setAddNamespaceForAi}
             open={open}
             addModalType={addModalType}
+            topicType={topicType}
           />
           <FormStep
             step={step}

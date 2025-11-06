@@ -10,7 +10,7 @@ import {
 import { useWebSocket } from 'ahooks';
 import { Button, Collapse, Flex, theme, Typography, App, Space } from 'antd';
 import Icon, { FullscreenOutlined } from '@ant-design/icons';
-import { CaretRight, Document, Code, TableSplit } from '@carbon/icons-react';
+import { CaretRight, Document, Code, TableSplit, SendAlt, ChartLine } from '@carbon/icons-react';
 import { useTranslate } from '@/hooks';
 import type { CSSProperties } from 'react';
 import type { CollapseProps } from 'antd';
@@ -53,7 +53,7 @@ const Module: FC<FileDetailProps> = (props) => {
     initTreeData,
   } = props;
   const {
-    systemInfo: { qualityName = 'quality', timestampName = 'timeStamp', useAliasPathAsTopic },
+    systemInfo: { qualityName = 'quality', timestampName = 'timeStamp', useAliasPathAsTopic, enableAutoCategorization },
   } = useBaseStore((state) => ({
     systemInfo: state.systemInfo,
   }));
@@ -240,7 +240,7 @@ const Module: FC<FileDetailProps> = (props) => {
         ),
       },
       {
-        key: 'definition',
+        key: [1, 2, 3, 6, 7].includes(instanceInfo.dataType) ? 'definition' : '',
         label: formatMessage('uns.definition'),
         children: <Definition instanceInfo={instanceInfo} />,
         style: panelStyle,
@@ -255,23 +255,25 @@ const Module: FC<FileDetailProps> = (props) => {
           ) : null,
       },
       {
-        key: [1, 2, 3, 6, 7].includes(instanceInfo.dataType) ? 'payload' : '',
+        key: [1, 2, 3, 6, 7, 8].includes(instanceInfo.dataType) ? 'payload' : '',
         label: formatMessage('uns.payload'),
-        children: showPayloadTable ? (
-          <Payload websocketData={websocketData} fields={instanceInfo.fields || []} />
-        ) : (
-          <RawData payload={websocketData?.data} />
-        ),
+        children:
+          instanceInfo.dataType === 8 || !showPayloadTable ? (
+            <RawData payload={websocketData?.data} />
+          ) : (
+            <Payload websocketData={websocketData} fields={instanceInfo.fields || []} />
+          ),
         style: panelStyle,
-        extra: (
-          <Button
-            style={{ border: '1px solid #C6C6C6' }}
-            color="default"
-            variant="filled"
-            icon={showPayloadTable ? <Code /> : <TableSplit />}
-            onClick={() => setShowPayloadTable(!showPayloadTable)}
-          />
-        ),
+        extra:
+          instanceInfo.dataType === 8 ? null : (
+            <Button
+              style={{ border: '1px solid #C6C6C6' }}
+              color="default"
+              variant="filled"
+              icon={showPayloadTable ? <Code /> : <TableSplit />}
+              onClick={() => setShowPayloadTable(!showPayloadTable)}
+            />
+          ),
       },
       ...(!isH5
         ? [
@@ -350,7 +352,7 @@ const Module: FC<FileDetailProps> = (props) => {
               ),
             },
             {
-              key: [1, 2].includes(instanceInfo.dataType) ? 'topologyChart' : '',
+              key: [1, 2, 8].includes(instanceInfo.dataType) ? 'topologyChart' : '',
               label: formatMessage('uns.topology'),
               children: (
                 <TopologyChart
@@ -410,6 +412,20 @@ const Module: FC<FileDetailProps> = (props) => {
   //   getFileDetail(id as string);
   //   message.success(enable ? formatMessage('uns.subscribeSuccessful') : formatMessage('uns.unsubscribeSuccessful'));
   // };
+
+  const getFileIcon = () => {
+    switch (instanceInfo.parentDataType) {
+      case 1:
+        return <Document size={20} style={{ color: '#D2A106' }} />;
+      case 2:
+        return <SendAlt size={20} style={{ color: '#94C518' }} />;
+      case 3:
+        return <ChartLine size={20} style={{ color: '#1D77FE' }} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="topicDetailWrap">
       <div
@@ -421,7 +437,17 @@ const Module: FC<FileDetailProps> = (props) => {
         }}
       >
         <Flex className="detailTitle" gap={8} align="center">
-          <Document size={20} />
+          {enableAutoCategorization ? (
+            <Flex
+              align="center"
+              justify="center"
+              style={{ width: 36, height: 36, background: '#f4f4f4', borderRadius: 3 }}
+            >
+              {getFileIcon()}
+            </Flex>
+          ) : (
+            <Document size={20} />
+          )}
           <Title
             level={2}
             style={{ margin: 0, width: '100%', insetInlineStart: 0 }}

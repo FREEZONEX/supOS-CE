@@ -9,6 +9,7 @@ import { getTypes, getEmptyFolder } from '@/apis/inter-api/uns';
 import type { UnsTreeNode, InitTreeDataFnType } from '@/pages/uns/types';
 import ComRadio from '@/components/com-radio';
 import ProModal from '@/components/pro-modal';
+import { useBaseStore } from '@/stores/base';
 
 export interface ReverseModalProps {
   currentNode?: UnsTreeNode;
@@ -28,8 +29,15 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
 
   const attributeType = Form.useWatch('attributeType', form) || form.getFieldValue('attributeType');
   const source = Form.useWatch('source', form) || form.getFieldValue('source');
+  const parentDataType = Form.useWatch('parentDataType', form) || form.getFieldValue('parentDataType');
 
   const jsonFormRef = useRef<any>(null);
+
+  const {
+    systemInfo: { enableAutoCategorization },
+  } = useBaseStore((state) => ({
+    systemInfo: state.systemInfo,
+  }));
 
   const getSourceForm = () => {
     switch (source) {
@@ -94,6 +102,24 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
     }
   }, [temporaryNode, attributeType]);
 
+  const getDataTypeOptions = () => {
+    if (enableAutoCategorization) {
+      switch (parentDataType) {
+        case 1:
+          return [{ label: formatMessage('uns.relational'), value: 2 }];
+        case 3:
+          return [{ label: formatMessage('uns.timeSeries'), value: 1 }];
+        default:
+          return [];
+      }
+    } else {
+      return [
+        { label: formatMessage('uns.timeSeries'), value: 1 },
+        { label: formatMessage('uns.relational'), value: 2 },
+      ];
+    }
+  };
+
   return (
     <ProModal
       title={formatMessage('uns.batchGeneration')}
@@ -114,7 +140,7 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
         colon={false}
         style={{ position: 'relative' }}
         initialValues={{
-          dataType: 1,
+          dataType: enableAutoCategorization ? 2 : 1,
           source: 'json',
         }}
         labelCol={{ span: 6 }}
@@ -122,17 +148,6 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
         labelAlign="left"
         labelWrap
       >
-        <Form.Item name="dataType" label={formatMessage('uns.databaseType')}>
-          <ComRadio
-            options={[
-              { label: formatMessage('uns.timeSeries'), value: 1 },
-              { label: formatMessage('uns.relational'), value: 2 },
-            ]}
-            onClick={(e) => {
-              jsonFormRef?.current?.batchModifyDataType?.(e.target.value * 1);
-            }}
-          />
-        </Form.Item>
         <Form.Item name="attributeType" label={formatMessage('uns.attributeGenerationMethod')} initialValue={1}>
           <ComRadio
             options={[
@@ -149,11 +164,56 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
                 persistence: false,
                 dashboard: false,
                 syncMeta: false,
+                ...(enableAutoCategorization
+                  ? {
+                      parentDataType: e.target.value === 2 ? 3 : 1,
+                      dataType: e.target.value === 2 ? 1 : 2,
+                    }
+                  : {}),
               });
             }}
           />
         </Form.Item>
+
+        {enableAutoCategorization && (
+          <Form.Item name="parentDataType" label={formatMessage('uns.parentDataType')} initialValue={1}>
+            <ComRadio
+              options={[
+                { label: formatMessage('uns.state'), value: 1 },
+                { label: formatMessage('uns.metric'), value: 3 },
+              ]}
+              onChange={(e) => {
+                switch (e.target.value) {
+                  case 1:
+                    form.setFieldsValue({ dataType: 2 });
+                    jsonFormRef?.current?.batchModifyDataType?.(2, 1);
+                    break;
+                  case 3:
+                    form.setFieldsValue({ dataType: 1 });
+                    jsonFormRef?.current?.batchModifyDataType?.(1, 3);
+                    break;
+                  default:
+                    break;
+                }
+              }}
+              disabled={enableAutoCategorization && attributeType === 2}
+            />
+          </Form.Item>
+        )}
+
+        <Form.Item name="dataType" label={formatMessage('uns.databaseType')}>
+          <ComRadio
+            options={getDataTypeOptions()}
+            onClick={(e) => {
+              jsonFormRef?.current?.batchModifyDataType?.(e.target.value);
+            }}
+            disabled={enableAutoCategorization && attributeType === 2}
+          />
+        </Form.Item>
         <Divider style={{ borderColor: '#c6c6c6' }} />
+        <Form.Item name="source" label={formatMessage('uns.source')} rules={[{ required: true }]}>
+          <Select placeholder={formatMessage('uns.source')} options={sourceOptionsMap[attributeType]} />
+        </Form.Item>
         {attributeType === 2 && (
           <Form.Item name="targetFolder" label={formatMessage('uns.targetFolder')} rules={[{ required: true }]}>
             <Select
@@ -165,13 +225,6 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
             />
           </Form.Item>
         )}
-        <Form.Item name="source" label={formatMessage('uns.source')} rules={[{ required: true }]}>
-          <Select
-            placeholder={formatMessage('uns.source')}
-            options={sourceOptionsMap[attributeType]}
-            onChange={() => {}}
-          />
-        </Form.Item>
         {getSourceForm()}
       </Form>
     </ProModal>

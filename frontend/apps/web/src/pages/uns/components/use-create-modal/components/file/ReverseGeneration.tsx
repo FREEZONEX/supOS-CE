@@ -161,7 +161,7 @@ const ReverseGeneration: FC<ReverseGenerationProps> = ({ types }) => {
 }`;
 
   return (
-    <div className="dashedWrap">
+    <>
       <Form.Item name="next" hidden initialValue={false}>
         <Input />
       </Form.Item>
@@ -281,7 +281,7 @@ const ReverseGeneration: FC<ReverseGenerationProps> = ({ types }) => {
           )}
         </Flex>
       )}
-    </div>
+    </>
   );
 };
 

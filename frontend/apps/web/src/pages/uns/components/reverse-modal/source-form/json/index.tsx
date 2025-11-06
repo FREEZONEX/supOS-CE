@@ -47,7 +47,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
 
     const {
       dashboardType,
-      systemInfo: { qualityName = 'quality', timestampName = 'timeStamp' },
+      systemInfo: { qualityName = 'quality', timestampName = 'timeStamp', enableAutoCategorization },
     } = useBaseStore((state) => ({
       dashboardType: state.dashboardType,
       systemInfo: state.systemInfo,
@@ -55,6 +55,8 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
     const globalDataType = Form.useWatch('dataType', form);
     const hasGrafana = dashboardType?.includes('grafana');
     const jsonData = Form.useWatch('jsonData', form);
+    const globalParentDataType = Form.useWatch('parentDataType', form);
+    const currentParentDataType = Form.useWatch(['currentNode', 'parentDataType'], form);
 
     useImperativeHandle(ref, () => ({
       batchModifyDataType,
@@ -91,6 +93,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
           node.icon = <Document />;
           node.pathType = 2;
           node.dataType = globalDataType || 1;
+          node.parentDataType = globalParentDataType || 1;
           // node.fields = [...(node.fields || []), ...defaultFields];
         }
       });
@@ -191,6 +194,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
           addFlow = false,
           addDashBoard = false,
           dataType,
+          parentDataType,
         } = node;
         if (pathType === 2 && typeof mainKey === 'number' && mainKey > -1) {
           fields?.forEach((field: FieldItem, index: number) => {
@@ -222,6 +226,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
               alias,
               parentAlias,
               pathType: 2,
+              parentDataType,
             };
       });
 
@@ -305,10 +310,31 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
     }
 }`;
 
+    const getDataTypeOptions = () => {
+      if (enableAutoCategorization) {
+        switch (currentParentDataType) {
+          case 1:
+            return [{ label: formatMessage('uns.relational'), value: 2 }];
+          case 3:
+            return [{ label: formatMessage('uns.timeSeries'), value: 1 }];
+          default:
+            return [];
+        }
+      } else {
+        return [
+          { label: formatMessage('uns.timeSeries'), value: 1 },
+          { label: formatMessage('uns.relational'), value: 2 },
+        ];
+      }
+    };
+
     const renderContent = () => {
       return isSave ? (
         <>
-          <Flex gap={10} style={{ height: fullScreen ? 'calc(100vh - 330px)' : '400px' }}>
+          <Flex
+            gap={10}
+            style={{ height: fullScreen ? 'calc(100vh - 330px)' : enableAutoCategorization ? '350px' : '400px' }}
+          >
             <JsonTree
               ref={jsonTreeRef}
               treeData={treeData}
@@ -374,13 +400,36 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                       <TagSelect />
                     </Form.Item>
                     <Divider style={{ borderColor: '#c6c6c6' }} />
+
+                    {enableAutoCategorization && (
+                      <Form.Item
+                        name={['currentNode', 'parentDataType']}
+                        label={formatMessage('uns.parentDataType')}
+                        initialValue={1}
+                      >
+                        <ComRadio
+                          options={[
+                            { label: formatMessage('uns.state'), value: 1 },
+                            { label: formatMessage('uns.metric'), value: 3 },
+                          ]}
+                          onChange={(e) => {
+                            switch (e.target.value) {
+                              case 1:
+                                form.setFieldValue(['currentNode', 'dataType'], 2);
+                                break;
+                              case 3:
+                                form.setFieldValue(['currentNode', 'dataType'], 1);
+                                break;
+                              default:
+                                break;
+                            }
+                          }}
+                        />
+                      </Form.Item>
+                    )}
+
                     <Form.Item name={['currentNode', 'dataType']} label={formatMessage('uns.databaseType')}>
-                      <ComRadio
-                        options={[
-                          { label: formatMessage('uns.timeSeries'), value: 1 },
-                          { label: formatMessage('uns.relational'), value: 2 },
-                        ]}
-                      />
+                      <ComRadio options={getDataTypeOptions()} />
                     </Form.Item>
                     <Divider style={{ borderColor: '#c6c6c6' }} />
                     <Form.Item
@@ -522,8 +571,12 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
       handleNodeInfo(treeData, 'addDashBoard', !allAutoDashboardChecked);
       form.setFieldValue(['currentNode', 'addDashBoard'], !allAutoDashboardChecked);
     };
-    const batchModifyDataType = (type: number) => {
+    const batchModifyDataType = (type: number, parentDataType?: number) => {
       handleNodeInfo(treeData, 'dataType', type);
+      if (parentDataType) {
+        handleNodeInfo(treeData, 'parentDataType', parentDataType);
+        form.setFieldValue(['currentNode', 'parentDataType'], parentDataType);
+      }
       form.setFieldValue(['currentNode', 'dataType'], type);
     };
 

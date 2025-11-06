@@ -248,4 +248,5 @@ export const getSourceList = async (params?: Record<string, unknown>) => api.get
 export const pasteUns = async (data?: { sourceId?: any; targetId?: any; newF?: Record<string, unknown> }) =>
   api.post('/paste', data, {
     [CustomAxiosConfigEnum.BusinessResponse]: true,
+    [CustomAxiosConfigEnum.NoCode]: true,
   }); // 黏贴uns文件文件夹

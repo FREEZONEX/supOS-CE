@@ -147,6 +147,15 @@ export const appendTreeData = (
         } else if (type === 'addFolder') {
           node.hasChildren = true;
           node.isLeaf = false;
+          const updateAncestors = (key: string) => {
+            let parent = findNodeInfoById(list, key);
+            while (parent) {
+              parent.countChildren =
+                (parent.countChildren ?? 0) + (nodeDetail?.countChildren ? nodeDetail?.countChildren : 0);
+              parent = findNodeInfoById(list, parent.parentId as string);
+            }
+          };
+          updateAncestors(key as string);
         } else if (type === 'deleteFile' || type === 'deleteFolder') {
           const countChild = type === 'deleteFolder' ? nodeDetail?.countChildren || 0 : 1;
           // 递归处理数量减掉

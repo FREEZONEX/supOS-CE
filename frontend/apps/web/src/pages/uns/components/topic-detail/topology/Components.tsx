@@ -1,10 +1,10 @@
 import type { FC, ReactNode } from 'react';
-import { Flex, Tooltip } from 'antd';
+import { Button, Flex, Tooltip } from 'antd';
 import Binding from '../binding/DashboardBinding.tsx';
 import { flowPage } from '@/apis/inter-api/flow.ts';
 import type { NodeDataType } from './types.ts';
 import { useTranslate } from '@/hooks';
-import { Add, ApplicationWeb, InformationFilled, Launch } from '@carbon/icons-react';
+import { AddLarge, ApplicationWeb, InformationFilled, Launch } from '@carbon/icons-react';
 import classNames from 'classnames';
 import styles from './TopologyChart.module.scss';
 import { useBaseStore } from '@/stores/base';
@@ -61,16 +61,25 @@ export const CommonNode = ({
           {title}
         </span>
       </Flex>
-      {NavigateBtn && (
-        <div className={styles['common-node-btn']} data-action="navigate">
-          {NavigateBtn}
-        </div>
-      )}
-      {bindConfig && (
-        <div data-action="noNavigate">
-          <Binding selectValue={bindConfig?.selectValue} api={bindConfig?.api} onBinding={bindConfig?.onBinding} />
-        </div>
-      )}
+      <Flex>
+        {NavigateBtn && (
+          <div className={styles['common-node-btn']} data-action="navigate">
+            <Button
+              size="small"
+              color="default"
+              variant="text"
+              style={{ color: 'var(--supos-text-color)', padding: '0 4px' }}
+            >
+              {NavigateBtn}
+            </Button>
+          </div>
+        )}
+        {bindConfig && (
+          <div className={styles['common-node-btn']} data-action="noNavigate">
+            <Binding selectValue={bindConfig?.selectValue} api={bindConfig?.api} onBinding={bindConfig?.onBinding} />
+          </div>
+        )}
+      </Flex>
       {indicatorConfig && (
         <div className={styles['status-indicator']}>
           <span className={styles['status-dot']} style={{ background: indicatorConfig?.statusColor }} />
@@ -139,7 +148,7 @@ export const NodeRed: FC<NodeDataType> = (data) => {
             ) : configured ? (
               <Launch size={20} />
             ) : (
-              <Add size={20} />
+              <AddLarge size={20} />
             )
           }
           bindConfig={{
@@ -175,19 +184,18 @@ export const DataBase: FC<NodeDataType> = (data) => {
     dataBaseType: state.dataBaseType,
     systemInfo: state.systemInfo,
   }));
-  const props =
-    data.node.data.dataType === 2
-      ? {
-          Icon: <img src={postgresql} alt="" width="28px" />,
-          subtitle: 'PostgreSQL',
-          title: 'Relational DB',
-          NavigateBtn: systemInfo?.containerMap?.chat2db ? <Launch size={20} /> : undefined,
-        }
-      : {
-          Icon: <img src={dataBaseType.includes('tdengine') ? tdengine : timescaleDB} width="28px" />,
-          title: dataBaseType.includes('tdengine') ? 'tdengine' : 'Database',
-          subtitle: 'TimescaleDB',
-        };
+  const props = [2, 8].includes(data.node.data.dataType)
+    ? {
+        Icon: <img src={postgresql} alt="" width="28px" />,
+        subtitle: 'PostgreSQL',
+        title: 'Relational DB',
+        NavigateBtn: systemInfo?.containerMap?.chat2db ? <Launch size={20} /> : undefined,
+      }
+    : {
+        Icon: <img src={dataBaseType.includes('tdengine') ? tdengine : timescaleDB} width="28px" />,
+        title: dataBaseType.includes('tdengine') ? 'tdengine' : 'Database',
+        subtitle: 'TimescaleDB',
+      };
   return <CommonNode active={data.node.data.active} {...props} />;
 };
 

@@ -129,7 +129,7 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
   }, [dataType, fieldList]);
 
   useEffect(() => {
-    if (dataType === 2 && modelId) {
+    if (dataType === 2 && modelId && modelId !== 'custom') {
       getTemplateDetail({ id: modelId }).then((res) => {
         res?.fields.forEach((e: FieldItem) => {
           e.systemField = false;

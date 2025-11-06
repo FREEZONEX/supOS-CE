@@ -103,38 +103,40 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
       extend: extendToArr(extend || []),
       labelNames: (labelList || [])?.map((i: any) => ({ label: i.labelName, value: i.id })),
     };
+    if (type === 'file') {
+      if (dataType === 3) {
+        //实时计算
+        const refersRes = await Promise.all(refers.map((e: ReferType) => getInstanceInfo({ id: e.id })));
+        const _refers = refers.map((refer: ReferType, i: number) => ({
+          ...refer,
+          refer: {
+            label: refer.path,
+            value: refer.id,
+          },
+          fields: refersRes[i]?.fields?.filter?.(
+            (t: any) => !(t.systemField || ['BLOB', 'LBLOB'].includes(t.type))
+          ) || [{ name: refer.field }],
+        }));
 
-    if (dataType === 3) {
-      //实时计算
-      const refersRes = await Promise.all(refers.map((e: ReferType) => getInstanceInfo({ id: e.id })));
-      const _refers = refers.map((refer: ReferType, i: number) => ({
-        ...refer,
-        refer: {
-          label: refer.path,
-          value: refer.id,
-        },
-        fields: refersRes[i]?.fields?.filter?.((t: any) => !(t.systemField || ['BLOB', 'LBLOB'].includes(t.type))) || [
-          { name: refer.field },
-        ],
-      }));
+        Object.assign(backfillForm, {
+          refers: _refers,
+          expression: getExpression(refers, expression),
+        });
+      }
+      if (dataType === 7) {
+        const referId = modelInfo?.refers?.length
+          ? {
+              label: modelInfo?.refers?.[0]?.path,
+              value: modelInfo?.refers?.[0]?.id,
+            }
+          : undefined;
 
-      Object.assign(backfillForm, {
-        refers: _refers,
-        expression: getExpression(refers, expression),
-      });
+        Object.assign(backfillForm, {
+          referId,
+        });
+      }
     }
-    if (dataType === 7) {
-      const referId = modelInfo?.refers?.length
-        ? {
-            label: modelInfo?.refers?.[0]?.path,
-            value: modelInfo?.refers?.[0]?.id,
-          }
-        : undefined;
 
-      Object.assign(backfillForm, {
-        referId,
-      });
-    }
     form.setFieldsValue(backfillForm);
   };
 
@@ -158,24 +160,26 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
 
       ...restInfo
     } = info;
-    if (dataType === 3) {
-      //实时计算-函数计算
-      restInfo.refers = refers.map((item: ReferItemType, index: number) => {
-        return {
-          id: item?.refer?.value,
-          field: item.field,
-          variableName: `a${index + 1}`,
-          variableGroup: 0,
-        };
-      });
-      restInfo.expression = expression ? expression.replace(/\$(.*?)#/g, '$1') : '';
-    }
+    if (type === 'file') {
+      if (dataType === 3) {
+        //实时计算-函数计算
+        restInfo.refers = refers.map((item: ReferItemType, index: number) => {
+          return {
+            id: item?.refer?.value,
+            field: item.field,
+            variableName: `a${index + 1}`,
+            variableGroup: 0,
+          };
+        });
+        restInfo.expression = expression ? expression.replace(/\$(.*?)#/g, '$1') : '';
+      }
 
-    if (dataType === 7) {
-      //模型
-      restInfo.refers = referId?.value ? [{ id: referId.value }] : [];
+      if (dataType === 7) {
+        //模型
+        restInfo.refers = referId?.value ? [{ id: referId.value }] : [];
+      }
+      restInfo.labelNames = labelNames?.map((e: any) => e.label || e.value) || [];
     }
-    if (type === 'file' && dataType !== 6) restInfo.labelNames = labelNames?.map((e: any) => e.label || e.value) || [];
     setLoading(true);
     modifyDetail({
       ...restInfo,
@@ -247,7 +251,7 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
             ),
             label: formatMessage('uns.referenceTarget'),
             name: 'referId',
-            noShowKey: modelInfo.dataType === 7 ? undefined : 'hidden',
+            noShowKey: type === 'file' && modelInfo.dataType === 7 ? undefined : 'hidden',
           },
           {
             type: 'Select',
@@ -259,9 +263,9 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
                 { label: formatMessage('uns.true'), value: 'READ_WRITE' },
                 { label: formatMessage('uns.false'), value: 'READ_ONLY' },
               ],
-              disabled: modelInfo.mount || modelInfo.dataType === 7,
+              disabled: modelInfo.mount || (type === 'file' && modelInfo.dataType === 7),
             },
-            noShowKey: ![1, 2, 7].includes(modelInfo.dataType) ? 'hidden' : 'folder',
+            noShowKey: ![1, 2, 7].includes(modelInfo.dataType) && type === 'file' ? 'hidden' : 'folder',
           },
           {
             type: 'Checkbox',
@@ -271,14 +275,14 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
               style: { marginLeft: 5 },
               disabled: modelInfo.mount,
             },
-            noShowKey: [6, 7].includes(modelInfo.dataType) ? 'hidden' : 'folder',
+            noShowKey: [7].includes(modelInfo.dataType) && type === 'file' ? 'hidden' : 'folder',
             valuePropName: 'checked',
           },
           {
             type: 'TagSelect',
             label: formatMessage('common.label'),
             name: 'labelNames',
-            noShowKey: [6].includes(modelInfo.dataType) ? 'hidden' : 'folder',
+            noShowKey: 'folder',
             properties: {
               tagMaxLen: 63,
             },
@@ -296,7 +300,7 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
             return e;
           });
       case 2:
-        if (modelInfo.dataType === 3) {
+        if (type === 'file' && modelInfo.dataType === 3) {
           return [
             {
               render: () => <ExpressionForm apiParams={{ calculationType: 1 }} />,
@@ -342,7 +346,7 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
             {formatMessage('common.prev')}
           </Button>
         )}
-        {modelInfo.dataType === 3 && step === 1 ? (
+        {type === 'file' && modelInfo.dataType === 3 && step === 1 ? (
           <Button style={{ height: '40px' }} type="primary" variant="solid" onClick={() => setStep?.(step + 1)} block>
             {formatMessage('common.next')}
           </Button>
@@ -353,7 +357,7 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
         )}
       </Flex>
     );
-  }, [step, modelInfo?.dataType, loading, getModel]);
+  }, [step, modelInfo?.dataType, loading, getModel, type]);
 
   const renderFrom = useMemo(() => {
     if (!show) return null;

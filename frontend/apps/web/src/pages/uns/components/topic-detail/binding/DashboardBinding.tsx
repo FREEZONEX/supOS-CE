@@ -70,7 +70,7 @@ const Binding: FC<{
       popupRender={() => {
         return (
           <div
-            style={{ width: 160, borderRadius: 5, border: '1px solid #E0E0E0', padding: '4px 0' }}
+            style={{ width: 350, borderRadius: 5, border: '1px solid #E0E0E0', padding: '4px 0' }}
             className={classNames(styles['container'])}
           >
             <ComInput
@@ -131,24 +131,24 @@ const Binding: FC<{
       }}
     >
       <Button
+        size="small"
         color="default"
-        variant="link"
-        style={{ padding: '6px 0', color: 'var(--supos-text-color)' }}
-        className={styles['button']}
+        variant="text"
+        style={{ color: 'var(--supos-text-color)', padding: '0 4px' }}
         title={formatMessage('common.changeBinding')}
       >
-        <Flex
-          align="center"
+        <span
           style={{
-            height: '100%',
             transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease-in-out',
             display: 'inline-block',
+            height: 20,
+            width: 20,
           }}
           title={formatMessage('common.changeBinding')}
         >
-          <ChevronDown />
-        </Flex>
+          <ChevronDown size={20} />
+        </span>
       </Button>
     </Dropdown>
   );

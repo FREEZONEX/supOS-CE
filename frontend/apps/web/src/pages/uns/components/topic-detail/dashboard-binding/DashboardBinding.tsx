@@ -77,7 +77,7 @@ const DashboardBinding: FC<{
         popupRender={() => {
           return (
             <div
-              style={{ width: 160, borderRadius: 5, border: '1px solid #E0E0E0', padding: '4px 0' }}
+              style={{ width: 350, borderRadius: 5, border: '1px solid #E0E0E0', padding: '4px 0' }}
               className={classNames(styles['container'])}
             >
               <ComInput

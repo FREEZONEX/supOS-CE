@@ -63,6 +63,7 @@ export interface ProTreeProps extends TreeProps {
     classNames: { in: string; out: string };
   }) => string;
   // 自定义拖拽功能 结束 ====
+  renderTitleStyle?: CSSProperties | ((dataNode: DataNodeProps) => CSSProperties);
 }
 
 // 组件引用类型

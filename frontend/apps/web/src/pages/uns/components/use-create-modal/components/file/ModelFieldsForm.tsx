@@ -19,7 +19,7 @@ const ModelFieldsForm: FC<ModelFieldsFormProps> = ({ types, options }) => {
   const modelId = Form.useWatch('modelId', form) || form.getFieldValue('modelId');
 
   return (
-    <div className="dashedWrap">
+    <>
       <Form.Item name="modelId" label={formatMessage('common.template')} rules={[{ required: true }]}>
         <Select
           showSearch
@@ -31,7 +31,7 @@ const ModelFieldsForm: FC<ModelFieldsFormProps> = ({ types, options }) => {
         />
       </Form.Item>
       {modelId && <FieldsFormList types={types} disabled showWrap={false} />}
-    </div>
+    </>
   );
 };
 export default ModelFieldsForm;

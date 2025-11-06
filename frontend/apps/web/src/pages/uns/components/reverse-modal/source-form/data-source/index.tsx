@@ -1,7 +1,7 @@
 import { type FC, useState, useEffect } from 'react';
 import { Form, Select, Flex, Button, Divider, App } from 'antd';
 import ComCheckbox from '@/components/com-checkbox';
-import HelpTooltip from '@/components/help-tooltip';
+// import HelpTooltip from '@/components/help-tooltip';
 import { saveMount, getSourceList } from '@/apis/inter-api/uns';
 
 export interface DataSourceFromProps {
@@ -63,14 +63,14 @@ const DataSourceForm: FC<DataSourceFromProps> = ({ formatMessage, close }) => {
         <Form.Item name="dashboard" valuePropName="checked" initialValue={false} noStyle>
           <ComCheckbox>{formatMessage('uns.batchAutoDashboard')}</ComCheckbox>
         </Form.Item>
-        <Form.Item name="syncMeta" valuePropName="checked" initialValue={false} noStyle>
+        {/* <Form.Item name="syncMeta" valuePropName="checked" initialValue={false} noStyle>
           <ComCheckbox>
             <Flex gap={4} align="center">
               <span>{formatMessage('uns.metadataSynchronization')}</span>
               <HelpTooltip title={formatMessage('uns.metadataSynchronizationTooltip')} />
             </Flex>
           </ComCheckbox>
-        </Form.Item>
+        </Form.Item> */}
       </Flex>
     );
   };

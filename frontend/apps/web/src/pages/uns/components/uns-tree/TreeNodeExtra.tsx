@@ -22,8 +22,7 @@ const TreeNodeExtra: FC<{
   handleDelete: () => void;
   handleCopy: () => void;
   type?: number;
-  deleteDisabled?: boolean;
-}> = ({ handleDelete, handleCopy, type, deleteDisabled }) => {
+}> = ({ handleDelete, handleCopy, type }) => {
   const formatMessage = useTranslate();
   const { treeType } = useTreeStore((state) => ({
     treeType: state.treeType,
@@ -49,14 +48,11 @@ const TreeNodeExtra: FC<{
           title={formatMessage('common.delete')}
           style={{
             lineHeight: 1,
-            cursor: deleteDisabled ? 'not-allowed' : 'pointer',
-            color: deleteDisabled ? 'var(--supos-select-d-color)' : 'var(--supos-text-color)',
           }}
         >
           <Subtract
             onClick={(e) => {
               e?.stopPropagation();
-              if (deleteDisabled) return;
               handleDelete?.();
             }}
           />
