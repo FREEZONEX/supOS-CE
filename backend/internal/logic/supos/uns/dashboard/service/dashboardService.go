@@ -65,7 +65,7 @@ func (s *DashboardService) InitDashboardsOnStartup(db *gorm.DB) {
 				continue
 			}
 
-			var dashboardData map[string]interface{}
+			var dashboardData map[string]any
 			if err := json.Unmarshal([]byte(db.JsonContent), &dashboardData); err != nil {
 				s.logger.Errorf("failed to unmarshal dashboard json content for %s: %v", db.Name, err)
 				continue

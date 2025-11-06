@@ -1,5 +1,7 @@
 package dto
 
+import "net/http"
+
 // PaginationDTO represents pagination parameters
 type PaginationDTO struct {
 	PageNo   int64 `json:"pageNo" form:"pageNo"`     // 当前页数，默认为1
@@ -35,7 +37,7 @@ type PageResultDTO[T any] struct {
 	PageNo   int64 `json:"pageNo"`        // 当前页数
 	PageSize int64 `json:"pageSize"`      // 每页记录数
 	Total    int64 `json:"total"`         // 总记录数
-	Code     int64 `json:"code,omitzero"` // 状态码
+	Code     int64 `json:"code"`          // 状态码
 	Data     []T   `json:"data,omitzero"` // 数据列表
 }
 
@@ -45,7 +47,7 @@ func NewPageResult[T any](pageNo, pageSize, total int64, data []T) PageResultDTO
 		PageNo:   pageNo,
 		PageSize: pageSize,
 		Total:    total,
-		Code:     200,
+		Code:     http.StatusOK,
 		Data:     data,
 	}
 }

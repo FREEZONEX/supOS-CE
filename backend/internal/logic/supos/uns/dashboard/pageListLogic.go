@@ -10,6 +10,7 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 	"context"
+	"net/http"
 	"regexp"
 	"strings"
 
@@ -71,7 +72,7 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	}
 
 	return &dto.PageResultDTO[*model.DashboardModel]{
-		Code:     0,
+		Code:     http.StatusOK,
 		Total:    total,
 		PageNo:   int64(req.PageNum),
 		PageSize: int64(req.PageSize),
