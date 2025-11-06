@@ -276,7 +276,7 @@ const Module: FC<FileDetailProps> = (props) => {
       ...(!isH5
         ? [
             {
-              key: instanceInfo.dataType !== 6 ? 'dashboard' : '',
+              key: instanceInfo.dataType !== 7 ? 'dashboard' : '',
               label: formatMessage('uns.dashboard'),
               children: <Dashboard instanceInfo={instanceInfo} />,
               style: panelStyle,
