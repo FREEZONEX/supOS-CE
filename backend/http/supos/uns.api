@@ -5,4 +5,5 @@ import "uns/alarm.api"
 import "uns/dashboard.api"
 import "uns/data.api"
 import "uns/person.api"
+import "uns/i18n.api"
 

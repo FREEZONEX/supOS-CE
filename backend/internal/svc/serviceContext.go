@@ -5,15 +5,16 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/repo/relationDB"
 
-	"gitee.com/unitedrhino/share/conf"
+	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/stores"
 	"gitee.com/unitedrhino/share/utils"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/rest"
+	"golang.org/x/text/language"
 
 	cache "backend/internal/common/cache"
 	"backend/internal/config"
-	keycloakrepo "backend/internal/repo/keycloak"
 	"backend/share/clients"
 	noderedclient "backend/share/clients/nodered"
 )
@@ -26,10 +27,12 @@ type ServiceContext struct {
 	Keycloak       *clients.KeycloakClient
 	SourceNodeRed  *noderedclient.Client
 	EventNodeRed   *noderedclient.Client
+	I18n           map[language.Tag]*i18n.MessageFile
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-
+	mf, err := i18ns.InitWithFS("etc/i18n")
+	logx.Must(err)
 	stores.InitConn(c.Database)
 	relationDB.Migrate(c.Database, c.DatabaseSchema)
 
@@ -56,6 +59,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		CheckTokenWare: middleware.NewCheckTokenWareMiddleware(keycloakClient, c.OAuthKeyCloak.SuposHome, c.OAuthKeyCloak.Realm).Handle,
 		InitCtxsWare:   middleware.NewInitCtxsWareMiddleware().Handle,
 		SnowFlake:      utils.NewSnowFlake(1),
+		I18n:           mf,
 		Keycloak:       keycloakClient,
 		SourceNodeRed:  noderedclient.NewClient(c.NodeRed.Source.Host, c.NodeRed.Source.Port, ""),
 		EventNodeRed:   noderedclient.NewClient(c.NodeRed.Event.Host, c.NodeRed.Event.Port, ""),
