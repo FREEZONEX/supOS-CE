@@ -1,16 +1,15 @@
 package dashboard
 
 import (
-	"backend/internal/common/errors"
 	"backend/internal/common/utils/grafanautil"
-	"backend/internal/logic/supos/uns/dashboard/dao"
-	"backend/internal/logic/supos/uns/dashboard/model"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
 	"fmt"
 	"time"
 
+	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/google/uuid"
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -19,7 +18,7 @@ type CreateLogic struct {
 	logx.Logger
 	ctx             context.Context
 	svcCtx          *svc.ServiceContext
-	dashboardMapper *dao.DashboardMapper
+	dashboardMapper *relationDB.DashboardMapper
 }
 
 func NewCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateLogic {
@@ -28,11 +27,11 @@ func NewCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateLogi
 		Logger:          logx.WithContext(ctx),
 		ctx:             ctx,
 		svcCtx:          svcCtx,
-		dashboardMapper: dao.NewDashboardMapper(db, ctx),
+		dashboardMapper: relationDB.NewDashboardMapper(db, ctx),
 	}
 }
 
-func (l *CreateLogic) Create(req *model.DashboardModel, creator string) (*model.DashboardModel, error) {
+func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*types.JsonResult, error) {
 	// 检查名称是否重复
 	dashboards, err := l.dashboardMapper.SelectByFlowNames([]string{req.Name})
 	if err != nil {
@@ -41,7 +40,10 @@ func (l *CreateLogic) Create(req *model.DashboardModel, creator string) (*model.
 	if len(dashboards) > 0 {
 		for _, db := range dashboards {
 			if db.Type == req.Type {
-				return nil, errors.NewBuzError(500, "uns.dashboard.name.duplicate")
+				return &types.JsonResult{
+					Code: 500,
+					Msg:  i18ns.LocalizeMsg("uns.dashboard.name.duplicate"),
+				}, nil
 			}
 		}
 	}
@@ -68,7 +70,10 @@ func (l *CreateLogic) Create(req *model.DashboardModel, creator string) (*model.
 		_, err := grafanautil.CreateDashboardByBody(req.ID, "", dashboardJSON)
 		if err != nil {
 			l.Logger.Errorf("failed to create grafana dashboard: %v", err)
-			return nil, errors.NewBuzError(500, "uns.dashboard.create.failed")
+			return &types.JsonResult{
+				Code: 500,
+				Msg:  i18ns.LocalizeMsg("uns.dashboard.create.failed"),
+			}, nil
 		}
 		l.Logger.Infof("created grafana dashboard: %s, url: %s", req.ID, url)
 	}
@@ -76,8 +81,16 @@ func (l *CreateLogic) Create(req *model.DashboardModel, creator string) (*model.
 	// 保存到数据库
 	err = l.dashboardMapper.Insert(req)
 	if err != nil {
-		return nil, err
+		l.Logger.Errorf("failed to save dashboard: %v", err)
+		return &types.JsonResult{
+			Code: 500,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.create.failed"),
+		}, nil
 	}
 
-	return req, nil
+	return &types.JsonResult{
+		Code: 200,
+		Msg:  i18ns.LocalizeMsg("uns.dashboard.create.success"),
+		Data: req,
+	}, nil
 }

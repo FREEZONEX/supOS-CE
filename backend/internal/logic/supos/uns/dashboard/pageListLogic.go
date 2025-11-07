@@ -4,8 +4,6 @@ import (
 	"backend/internal/common/dto"
 	"backend/internal/common/errors"
 	"backend/internal/common/utils/dbutil"
-	"backend/internal/logic/supos/uns/dashboard/dao"
-	"backend/internal/logic/supos/uns/dashboard/model"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -21,7 +19,7 @@ type PageListLogic struct {
 	logx.Logger
 	ctx             context.Context
 	svcCtx          *svc.ServiceContext
-	dashboardMapper *dao.DashboardMapper
+	dashboardMapper *relationDB.DashboardMapper
 }
 
 func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageListLogic {
@@ -30,11 +28,11 @@ func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageList
 		Logger:          logx.WithContext(ctx),
 		ctx:             ctx,
 		svcCtx:          svcCtx,
-		dashboardMapper: dao.NewDashboardMapper(db, ctx),
+		dashboardMapper: relationDB.NewDashboardMapper(db, ctx),
 	}
 }
 
-func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dto.PageResultDTO[*model.DashboardModel], error) {
+func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dto.PageResultDTO[*relationDB.DashboardModel], error) {
 	keyword := dbutil.EscapeForLike(req.K)
 	orderCode := req.OrderCode
 	descOrAsc := req.IsAsc
@@ -66,12 +64,12 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	}
 
 	// 构建响应
-	data := make([]*model.DashboardModel, len(dashboards))
+	data := make([]*relationDB.DashboardModel, len(dashboards))
 	for i, db := range dashboards {
 		data[i] = &db.DashboardModel
 	}
 
-	return &dto.PageResultDTO[*model.DashboardModel]{
+	return &dto.PageResultDTO[*relationDB.DashboardModel]{
 		Code:     http.StatusOK,
 		Total:    total,
 		PageNo:   int64(req.PageNum),

@@ -5,10 +5,9 @@ import (
 	"backend/internal/common/errors"
 	"backend/internal/common/utils/fuxautil"
 	"backend/internal/common/utils/grafanautil"
-	"backend/internal/logic/supos/uns/dashboard/dao"
 	"backend/internal/logic/supos/uns/dashboard/exporter"
 	"backend/internal/logic/supos/uns/dashboard/importer"
-	"backend/internal/logic/supos/uns/dashboard/model"
+	"backend/internal/repo/relationDB"
 	"backend/share/spring"
 	"context"
 	"encoding/json"
@@ -47,7 +46,7 @@ func NewDashboardService() *DashboardService {
 // InitDashboardsOnStartup 应用启动时初始化 Dashboard
 func (s *DashboardService) InitDashboardsOnStartup(db *gorm.DB) {
 	go func() {
-		dashboardMapper := dao.NewDashboardMapper(db, s.ctx)
+		dashboardMapper := relationDB.NewDashboardMapper(db, s.ctx)
 		dashboards, err := dashboardMapper.SelectDashboardsToInit()
 		if err != nil {
 			s.logger.Errorf("failed to select dashboards to init: %v", err)
@@ -112,8 +111,8 @@ func (s *DashboardService) InitDashboardsOnStartup(db *gorm.DB) {
 // OnRemoveTopics 当 UNS Topic 被删除时的处理逻辑
 func (s *DashboardService) OnRemoveTopics(ctx context.Context, db *gorm.DB, aliases []string) error {
 	s.logger.Infof("removing dashboards for topics: %v", aliases)
-	dashboardRefMapper := dao.NewDashboardRefMapper(db, ctx)
-	dashboardMapper := dao.NewDashboardMapper(db, ctx)
+	dashboardRefMapper := relationDB.NewDashboardRefMapper(db, ctx)
+	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
 
 	// 1. 根据别名查询关联的 dashboard ID
 	refs, err := dashboardRefMapper.SelectByUnsAliases(aliases)
@@ -138,7 +137,7 @@ func (s *DashboardService) OnRemoveTopics(ctx context.Context, db *gorm.DB, alia
 func (s *DashboardService) CreateByEvent(ctx context.Context, db *gorm.DB, uuid, name, username string) error {
 	s.logger.Infof("creating dashboard by event: name=%s, uuid=%s", name, uuid)
 	now := time.Now()
-	dashboard := &model.DashboardModel{
+	dashboard := &relationDB.DashboardModel{
 		ID:         uuid,
 		Name:       name,
 		Creator:    username,
@@ -146,7 +145,7 @@ func (s *DashboardService) CreateByEvent(ctx context.Context, db *gorm.DB, uuid,
 		UpdateTime: now,
 	}
 
-	dashboardMapper := dao.NewDashboardMapper(db, ctx)
+	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
 	err := dashboardMapper.Insert(dashboard)
 	if err != nil {
 		s.logger.Errorf("failed to insert dashboard by event: %v", err)
@@ -154,19 +153,19 @@ func (s *DashboardService) CreateByEvent(ctx context.Context, db *gorm.DB, uuid,
 	}
 
 	// 创建引用关系
-	ref := &model.DashboardRefModel{
+	ref := &relationDB.DashboardRefModel{
 		DashboardID: uuid,
 		UnsAlias:    name, // 假设 alias 和 name 相同
 		CreateAt:    now,
 	}
-	dashboardRefMapper := dao.NewDashboardRefMapper(db, ctx)
+	dashboardRefMapper := relationDB.NewDashboardRefMapper(db, ctx)
 	return dashboardRefMapper.Insert(ref)
 }
 
 // DataExport 导出 Dashboard 数据
 func (s *DashboardService) DataExport(ctx context.Context, db *gorm.DB, exportParam *dto.DashboardExportParam) (string, error) {
 	context := &exporter.DashboardExportContext{}
-	dashboardMapper := dao.NewDashboardMapper(db, ctx)
+	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
 
 	// 1. 获取数据
 	err := s.fetchDataForExport(context, dashboardMapper, exportParam)
@@ -187,8 +186,8 @@ func (s *DashboardService) DataExport(ctx context.Context, db *gorm.DB, exportPa
 }
 
 // fetchDataForExport 为导出获取数据
-func (s *DashboardService) fetchDataForExport(context *exporter.DashboardExportContext, dashboardMapper *dao.DashboardMapper, exportParam *dto.DashboardExportParam) error {
-	var dashboards []*model.DashboardModel
+func (s *DashboardService) fetchDataForExport(context *exporter.DashboardExportContext, dashboardMapper *relationDB.DashboardMapper, exportParam *dto.DashboardExportParam) error {
+	var dashboards []*relationDB.DashboardModel
 	var err error
 
 	if len(exportParam.Ids) > 0 {
@@ -233,7 +232,7 @@ func (s *DashboardService) AsyncImport(ctx context.Context, db *gorm.DB, filePat
 	}
 	defer file.Close()
 
-	dashboardMapper := dao.NewDashboardMapper(db, ctx)
+	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
 	importContext := importer.NewDashboardImportContext(filePath)
 	dataImporter := importer.NewDashboardDataImporter(importContext, dashboardMapper)
 

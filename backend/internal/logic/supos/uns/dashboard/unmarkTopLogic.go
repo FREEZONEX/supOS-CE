@@ -4,7 +4,6 @@
 package dashboard
 
 import (
-	"backend/internal/logic/supos/uns/dashboard/dao"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"context"
@@ -16,7 +15,7 @@ type UnmarkTopLogic struct {
 	logx.Logger
 	ctx                 context.Context
 	svcCtx              *svc.ServiceContext
-	dashboardMarkMapper *dao.DashboardMarkedMapper
+	dashboardMarkMapper *relationDB.DashboardMarkedMapper
 }
 
 func NewUnmarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UnmarkTopLogic {
@@ -25,7 +24,7 @@ func NewUnmarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UnmarkT
 		Logger:              logx.WithContext(ctx),
 		ctx:                 ctx,
 		svcCtx:              svcCtx,
-		dashboardMarkMapper: dao.NewDashboardMarkedMapper(db, ctx),
+		dashboardMarkMapper: relationDB.NewDashboardMarkedMapper(db, ctx),
 	}
 }
 

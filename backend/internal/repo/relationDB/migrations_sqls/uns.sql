@@ -295,3 +295,5 @@ CREATE TABLE if not exists "uns_mount_extend" (
 "extend" text
 );
 alter table uns_namespace add if not exists "parent_data_type" int2 NULL;
+
+alter table uns_dashboard add if not exists "need_init" bool DEFAULT false;

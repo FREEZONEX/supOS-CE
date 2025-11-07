@@ -3,8 +3,6 @@ package dashboard
 import (
 	"backend/internal/common/errors"
 	"backend/internal/common/utils/grafanautil"
-	"backend/internal/logic/supos/uns/dashboard/dao"
-	"backend/internal/logic/supos/uns/dashboard/model"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"context"
@@ -19,7 +17,7 @@ type EditLogic struct {
 	logx.Logger
 	ctx             context.Context
 	svcCtx          *svc.ServiceContext
-	dashboardMapper *dao.DashboardMapper
+	dashboardMapper *relationDB.DashboardMapper
 }
 
 func NewEditLogic(ctx context.Context, svcCtx *svc.ServiceContext) *EditLogic {
@@ -28,11 +26,11 @@ func NewEditLogic(ctx context.Context, svcCtx *svc.ServiceContext) *EditLogic {
 		Logger:          logx.WithContext(ctx),
 		ctx:             ctx,
 		svcCtx:          svcCtx,
-		dashboardMapper: dao.NewDashboardMapper(db, ctx),
+		dashboardMapper: relationDB.NewDashboardMapper(db, ctx),
 	}
 }
 
-func (l *EditLogic) Edit(dashboard *model.DashboardModel) error {
+func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) error {
 	// 检查 Dashboard 是否存在
 	existing, err := l.dashboardMapper.SelectById(dashboard.ID)
 	if err != nil {

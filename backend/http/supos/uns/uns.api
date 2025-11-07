@@ -346,7 +346,7 @@ type (
 		Name             string                 `json:"name,omitempty"`
 		DisplayName      string                 `json:"displayName,omitempty"`
 		PathName         string                 `json:"pathName,omitempty"`
-		ModelId          string                 `json:"modelId",omitempty`
+		ModelId          string                 `json:"modelId,omitempty"`
 		ModelName        string                 `json:"modelName,omitempty"`
 		Extend           map[string]interface{} `json:"extend"`
 		Payload          string                 `json:"payload,omitempty"`

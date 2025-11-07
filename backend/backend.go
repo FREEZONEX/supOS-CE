@@ -9,7 +9,6 @@ import (
 	"flag"
 	"fmt"
 
-	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
 	_ "github.com/zeromicro/go-zero/core/proc" //开启pprof采集 https://mp.weixin.qq.com/s/yYFM3YyBbOia3qah3eRVQA
@@ -24,7 +23,6 @@ func main() {
 	var c config.Config
 	var confFile = "etc/backend.yaml"
 	utils.ConfMustLoad(confFile, &c)
-	i18ns.InitWithFS("etc/i18n")
 
 	/* 下面是使用示例
 	msg := i18ns.LocalizeMsg("nodered.protocol.unsupported", "vewwrfw3")

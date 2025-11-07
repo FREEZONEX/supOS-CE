@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"backend/internal/logic/supos/uns/dashboard"
-	"backend/internal/logic/supos/uns/dashboard/model"
+	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
+	"backend/internal/types"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
@@ -13,14 +14,18 @@ import (
 // edit
 func EditHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req model.DashboardModel
-		if err := httpx.Parse(r, &req); err != nil {
+		var req types.DashboardDto
+		if err := httpx.ParseJsonBody(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
 		l := dashboard.NewEditLogic(r.Context(), svcCtx)
-		err := l.Edit(&req)
+		err := l.Edit(&relationDB.DashboardModel{
+			Name:        req.Name,
+			Type:        req.Type,
+			Description: req.Description,
+		})
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
