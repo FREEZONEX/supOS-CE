@@ -11,7 +11,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -32,11 +31,11 @@ func NewUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UpdateLogi
 
 func (l *UpdateLogic) Update(req *types.UpdatePersonConfigReq) error {
 	if req == nil {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	lang := strings.TrimSpace(req.MainLanguage)
 	if lang == "" {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 
 	user := currentUser(l.ctx)
@@ -48,7 +47,7 @@ func (l *UpdateLogic) Update(req *types.UpdatePersonConfigReq) error {
 	if targetUserID == "" {
 		targetUserID = user.Sub
 	} else if !strings.EqualFold(targetUserID, user.Sub) {
-		return errors.Permissions.WithMsg(i18ns.LocalizeMsg("common.noPermissionMessage"))
+		return errors.Permissions.WithMsg("common.noPermissionMessage")
 	}
 
 	repo := relationDB.NewUnsPersonConfigRepo(l.ctx)

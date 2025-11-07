@@ -12,7 +12,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -45,7 +44,7 @@ func (l *ConfigLogic) Config(req *types.GetPersonConfigReq) (*types.GetPersonCon
 	if targetUserID == "" {
 		targetUserID = strings.TrimSpace(user.Sub)
 	} else if !strings.EqualFold(targetUserID, user.Sub) {
-		return nil, errors.Permissions.WithMsg(i18ns.LocalizeMsg("common.noPermissionMessage"))
+		return nil, errors.Permissions.WithMsg("common.noPermissionMessage")
 	}
 
 	repo := relationDB.NewUnsPersonConfigRepo(l.ctx)
@@ -56,7 +55,6 @@ func (l *ConfigLogic) Config(req *types.GetPersonConfigReq) (*types.GetPersonCon
 		}
 		cfg = nil
 	}
-
 	resp := &types.GetPersonConfigResp{
 		UserID:       targetUserID,
 		MainLanguage: preferredLanguage(cfg, user),

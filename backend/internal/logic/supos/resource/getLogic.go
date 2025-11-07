@@ -49,12 +49,12 @@ func (l *GetLogic) Get(req *types.ResourceQuery) (resp []types.ResourceVO, err e
 	}
 	resp = make([]types.ResourceVO, 0, len(records))
 	for _, item := range records {
-		resp = append(resp, toResourceVO(&item))
+		resp = append(resp, toResourceVO(l.ctx, &item))
 	}
 	return resp, nil
 }
 
-func toResourceVO(res *relationDB.SuposResource) types.ResourceVO {
+func toResourceVO(ctx context.Context, res *relationDB.SuposResource) types.ResourceVO {
 	if res == nil {
 		return types.ResourceVO{}
 	}
@@ -62,12 +62,12 @@ func toResourceVO(res *relationDB.SuposResource) types.ResourceVO {
 	if res.ParentID != nil && *res.ParentID > 0 {
 		parentID = strconv.FormatInt(*res.ParentID, 10)
 	}
-	showName := I18nUtils.GetMessage(stringValue(res.NameCode))
+	showName := I18nUtils.GetMessageWithCtx(ctx, stringValue(res.NameCode))
 	if showName == "" {
 		showName = stringValue(res.NameCode)
 	}
 	showName = transI18nSTR(showName)
-	showDesc := I18nUtils.GetMessage(stringValue(res.DescriptionCode))
+	showDesc := I18nUtils.GetMessageWithCtx(ctx, stringValue(res.DescriptionCode))
 	if showDesc == "" {
 		showDesc = stringValue(res.DescriptionCode)
 	}
