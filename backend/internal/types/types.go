@@ -454,6 +454,17 @@ type GetLastMsgResp struct {
 	Data map[string]interface{} `json:"data"`
 }
 
+type GetPersonConfigReq struct {
+	UserID string `form:"userId"`
+}
+
+type GetPersonConfigResp struct {
+	UserID       string `json:"userId"`
+	MainLanguage string `json:"mainLanguage"`
+	CreateAt     int64  `json:"createAt"`
+	UpdateAt     int64  `json:"updateAt"`
+}
+
 type GetUnsI18nMessagesReq struct {
 	Lang string `form:"lang"`
 }
@@ -1239,6 +1250,11 @@ type UpdateModeRequestVo struct {
 type UpdateNameVo struct {
 	Id   int64  `json:"id"`
 	Name string `json:"name"`
+}
+
+type UpdatePersonConfigReq struct {
+	UserID       string `json:"userId"`
+	MainLanguage string `json:"mainLanguage"`
 }
 
 type UpdateTemplateBaseInfoReq struct {
