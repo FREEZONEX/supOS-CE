@@ -1,11 +1,13 @@
 package dashboard
 
 import (
-	"backend/internal/common/errors"
 	"backend/internal/common/utils/grafanautil"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
+	"net/http"
 
+	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -23,11 +25,18 @@ func NewIsExistLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsExistLo
 	}
 }
 
-func (l *IsExistLogic) IsExist(alias string) (map[string]any, error) {
+func (l *IsExistLogic) IsExist(alias string) (*types.JsonResult, error) {
 	uuid := grafanautil.GetDashboardUUIDByAlias(alias)
 	dbJSON, err := grafanautil.GetDashboardByUUID(uuid)
 	if err != nil || dbJSON == nil {
-		return nil, errors.NewBuzError(400, "uns.dashboard.not.exit")
+		return &types.JsonResult{
+			Code: http.StatusBadRequest,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.not.exit"),
+		}, nil
 	}
-	return dbJSON, nil
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+		Data: dbJSON,
+	}, nil
 }

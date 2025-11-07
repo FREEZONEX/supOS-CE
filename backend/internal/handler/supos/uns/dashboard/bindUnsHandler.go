@@ -20,11 +20,11 @@ func BindUnsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := dashboard.NewBindUnsLogic(r.Context(), svcCtx)
-		err := l.BindUns(req.DashboardID, req.UnsAlias)
+		resp, err := l.BindUns(req.DashboardID, req.UnsAlias)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.Ok(w)
+			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}
 }

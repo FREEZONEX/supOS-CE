@@ -4,8 +4,11 @@ import (
 	unsservice "backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
+	"net/http"
 
+	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -31,8 +34,25 @@ func NewGetByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetByUns
 	}
 }
 
-func (l *GetByUnsLogic) GetByUns(unsAlias string) (*relationDB.DashboardModel, error) {
+func (l *GetByUnsLogic) GetByUns(unsAlias string) (*types.JsonResult, error) {
 	// TODO: As identified before, the DTO from GetModelDefinition lacks the 'Refers' field.
 	// This logic is simplified until the UNS service provides the necessary details.
-	return l.dashboardRefMapper.GetByUns(unsAlias)
+	dashboard, err := l.dashboardRefMapper.GetByUns(unsAlias)
+	if err != nil {
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
+	}
+	if dashboard == nil {
+		return &types.JsonResult{
+			Code: http.StatusBadRequest,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.not.exit"),
+		}, nil
+	}
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+		Data: dashboard,
+	}, nil
 }

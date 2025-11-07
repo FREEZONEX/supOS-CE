@@ -142,6 +142,8 @@ func (m *DashboardMapper) SelectDashboard(
 	offset := (pageNo - 1) * pageSize
 	query = query.Limit(int(pageSize)).Offset(int(offset))
 
+	m.logger.Infof("SelectDashboard: query: %v", query.ToSQL(func(tx *gorm.DB) *gorm.DB { return tx }))
+
 	err := query.Find(&dashboards).Error
 	if err != nil {
 		m.logger.Errorf("failed to select dashboards: %v", err)

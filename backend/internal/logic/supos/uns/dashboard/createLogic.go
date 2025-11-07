@@ -7,6 +7,7 @@ import (
 	"backend/internal/types"
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"gitee.com/unitedrhino/share/i18ns"
@@ -41,8 +42,8 @@ func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*t
 		for _, db := range dashboards {
 			if db.Type == req.Type {
 				return &types.JsonResult{
-					Code: 500,
-					Msg:  i18ns.LocalizeMsgWithCtx(l.ctx, "uns.dashboard.name.duplicate"),
+					Code: http.StatusBadRequest,
+					Msg:  i18ns.LocalizeMsg("uns.dashboard.name.duplicate"),
 				}, nil
 			}
 		}
@@ -71,8 +72,8 @@ func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*t
 		if err != nil {
 			l.Logger.Errorf("failed to create grafana dashboard: %v", err)
 			return &types.JsonResult{
-				Code: 500,
-				Msg:  i18ns.LocalizeMsgWithCtx(l.ctx, "uns.dashboard.create.failed"),
+				Code: http.StatusInternalServerError,
+				Msg:  i18ns.LocalizeMsg("uns.dashboard.create.failed", err.Error()),
 			}, nil
 		}
 		l.Logger.Infof("created grafana dashboard: %s, url: %s", req.ID, url)
@@ -83,14 +84,14 @@ func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*t
 	if err != nil {
 		l.Logger.Errorf("failed to save dashboard: %v", err)
 		return &types.JsonResult{
-			Code: 500,
-			Msg:  i18ns.LocalizeMsgWithCtx(l.ctx, "uns.dashboard.create.failed"),
+			Code: http.StatusInternalServerError,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.create.failed", err.Error()),
 		}, nil
 	}
 
 	return &types.JsonResult{
-		Code: 200,
-		Msg:  i18ns.LocalizeMsgWithCtx(l.ctx, "uns.dashboard.create.success"),
+		Code: http.StatusOK,
+		Msg:  "success",
 		Data: req,
 	}, nil
 }

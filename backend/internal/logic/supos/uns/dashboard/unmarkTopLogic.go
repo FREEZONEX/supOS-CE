@@ -6,7 +6,9 @@ package dashboard
 import (
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
+	"net/http"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,6 +30,16 @@ func NewUnmarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UnmarkT
 	}
 }
 
-func (l *UnmarkTopLogic) UnmarkTop(id string, userID string) error {
-	return l.dashboardMarkMapper.Delete(id, userID)
+func (l *UnmarkTopLogic) UnmarkTop(id string, userID string) (*types.JsonResult, error) {
+	err := l.dashboardMarkMapper.Delete(id, userID)
+	if err != nil {
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
+	}
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+	}, nil
 }

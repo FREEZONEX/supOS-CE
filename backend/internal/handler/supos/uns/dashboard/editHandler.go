@@ -21,7 +21,8 @@ func EditHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := dashboard.NewEditLogic(r.Context(), svcCtx)
-		err := l.Edit(&relationDB.DashboardModel{
+		resp, err := l.Edit(&relationDB.DashboardModel{
+			ID:          req.ID,
 			Name:        req.Name,
 			Type:        req.Type,
 			Description: req.Description,
@@ -29,7 +30,7 @@ func EditHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.Ok(w)
+			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}
 }

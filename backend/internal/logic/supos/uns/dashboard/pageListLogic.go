@@ -37,6 +37,14 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	orderCode := req.OrderCode
 	descOrAsc := req.IsAsc
 
+	pageResult := &dto.PageResultDTO[*relationDB.DashboardModel]{
+		Code:     http.StatusOK,
+		PageNo:   int64(req.PageNum),
+		PageSize: int64(req.PageSize),
+	}
+
+	l.Logger.Infof("PageListLogic: PageList request: %+v, userID: %s", req, userID)
+
 	// 排序字段校验
 	if orderCode != "" {
 		if orderCode != "name" && orderCode != "createTime" {
@@ -52,13 +60,14 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	}
 
 	// 查询总数
-	total, err := l.dashboardMapper.SelectDashboardCount(keyword, &req.Type)
+	total, err := l.dashboardMapper.SelectDashboardCount(keyword, req.Type)
 	if err != nil {
 		return nil, err
 	}
+	pageResult.Total = total
 
 	// 查询数据
-	dashboards, err := l.dashboardMapper.SelectDashboard(userID, keyword, &req.Type, orderCode, descOrAsc, int64(req.PageNum), int64(req.PageSize))
+	dashboards, err := l.dashboardMapper.SelectDashboard(userID, keyword, req.Type, orderCode, descOrAsc, int64(req.PageNum), int64(req.PageSize))
 	if err != nil {
 		return nil, err
 	}
@@ -68,14 +77,9 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	for i, db := range dashboards {
 		data[i] = &db.DashboardModel
 	}
+	pageResult.Data = data
 
-	return &dto.PageResultDTO[*relationDB.DashboardModel]{
-		Code:     http.StatusOK,
-		Total:    total,
-		PageNo:   int64(req.PageNum),
-		PageSize: int64(req.PageSize),
-		Data:     data,
-	}, nil
+	return pageResult, nil
 }
 
 // camelToSnake 驼峰转下划线

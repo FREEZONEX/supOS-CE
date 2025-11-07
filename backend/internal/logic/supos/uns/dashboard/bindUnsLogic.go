@@ -1,14 +1,15 @@
 package dashboard
 
 import (
-	"backend/internal/common/errors"
 	unsservice "backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 	"context"
+	"net/http"
 	"time"
 
+	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -36,30 +37,47 @@ func NewBindUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *BindUnsLo
 	}
 }
 
-func (l *BindUnsLogic) BindUns(dashboardID string, unsAlias string) error {
+func (l *BindUnsLogic) BindUns(dashboardID string, unsAlias string) (*types.JsonResult, error) {
 	// 检查 Dashboard 是否存在
 	dashboard, err := l.dashboardMapper.SelectById(dashboardID)
 	if err != nil {
-		return err
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 	if dashboard == nil {
-		return errors.NewBuzError(400, "uns.dashboard.not.exit")
+		return &types.JsonResult{
+			Code: http.StatusBadRequest,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.not.exit"),
+		}, nil
 	}
 
 	// 检查 UNS 是否存在
 	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, unsAlias)
 	if err != nil {
 		l.Logger.Errorf("failed to get uns definition for alias %s: %v", unsAlias, err)
-		return errors.NewBuzError(500, "uns.file.not.exist")
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 	if unsResp == nil || unsResp.Data == nil || unsResp.Data.Id == "" {
-		return errors.NewBuzError(400, "uns.file.not.exist")
+		l.Logger.Errorf("uns definition for alias %s not found", unsAlias)
+		return &types.JsonResult{
+			Code: http.StatusBadRequest,
+			Msg:  i18ns.LocalizeMsg("uns.file.not.exist"),
+		}, nil
 	}
 
 	// 删除旧的绑定关系
 	err = l.dashboardRefMapper.DeleteByDashboardId(dashboardID)
 	if err != nil {
 		l.Logger.Errorf("failed to delete old dashboard ref: %v", err)
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 
 	// 创建新的绑定关系
@@ -68,5 +86,16 @@ func (l *BindUnsLogic) BindUns(dashboardID string, unsAlias string) error {
 		UnsAlias:    unsAlias,
 		CreateAt:    time.Now(),
 	}
-	return l.dashboardRefMapper.Insert(ref)
+	err = l.dashboardRefMapper.Insert(ref)
+	if err != nil {
+		l.Logger.Errorf("failed to create new dashboard ref: %v", err)
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
+	}
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+	}, nil
 }
