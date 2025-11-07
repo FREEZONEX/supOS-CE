@@ -2,6 +2,7 @@ package relationDB
 
 import (
 	"context"
+	"strings"
 
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
@@ -17,12 +18,22 @@ func NewUnsPersonConfigRepo(in any) *UnsPersonConfigRepo {
 }
 
 type UnsPersonConfigFilter struct {
-	//todo 添加过滤字段
+	IDs     []int64
+	UserID  string
+	UserIDs []string
 }
 
 func (p UnsPersonConfigRepo) fmtFilter(ctx context.Context, f UnsPersonConfigFilter) *gorm.DB {
 	db := p.db.WithContext(ctx)
-	//todo 添加条件
+	if len(f.IDs) > 0 {
+		db = db.Where("id IN ?", f.IDs)
+	}
+	if uid := strings.TrimSpace(f.UserID); uid != "" {
+		db = db.Where("user_id = ?", uid)
+	}
+	if len(f.UserIDs) > 0 {
+		db = db.Where("user_id IN ?", f.UserIDs)
+	}
 	return db
 }
 

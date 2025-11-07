@@ -2,13 +2,16 @@ package keycloak
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	authdto "backend/internal/common/dto/auth"
 	"backend/internal/common/enums"
+	"backend/internal/common/utils/langutil"
 	"backend/internal/common/vo"
+	"backend/internal/repo/relationDB"
 
 	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -106,6 +109,12 @@ func (r *AuthRepo) BuildUserInfo(ctx context.Context, realm string, userID strin
 
 	user.DenyResourceList = sanitizeResources(denyResources)
 	user.ResourceList = finalizeAllowResources(allowResources)
+
+	lang, langErr := resolveUserMainLanguage(ctx, userID)
+	if langErr != nil {
+		logx.WithContext(ctx).Errorf("resolve user(%s) language failed: %v", userID, langErr)
+	}
+	user.MainLanguage = lang
 
 	return user, nil
 }
@@ -471,4 +480,40 @@ func deduplicateResources(resources []*authdto.ResourceDto) []*authdto.ResourceD
 		out = append(out, res)
 	}
 	return out
+}
+
+func resolveUserMainLanguage(ctx context.Context, userID string) (string, error) {
+	defaultLang := langutil.SystemLocale()
+	if strings.TrimSpace(userID) == "" {
+		return defaultLang, nil
+	}
+
+	lang, err := loadUserMainLanguage(ctx, userID)
+	if err != nil {
+		return defaultLang, err
+	}
+	if lang == "" {
+		return defaultLang, nil
+	}
+	return lang, nil
+}
+
+func loadUserMainLanguage(ctx context.Context, userID string) (string, error) {
+	conn := stores.GetCommonConn(ctx)
+	if conn == nil {
+		return "", stores.ErrFmt(fmt.Errorf("common database connection not initialized"))
+	}
+
+	var cfg relationDB.UnsPersonConfig
+	err := conn.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("update_at DESC").
+		First(&cfg).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", nil
+		}
+		return "", stores.ErrFmt(err)
+	}
+	return strings.TrimSpace(cfg.MainLanguage), nil
 }
