@@ -23,6 +23,7 @@ type IsExistReq {
 type AliasPathReq {
 	Alias string `path:"alias"`
 }
+
 // DashboardDto Dashboard 数据传输对象
 type DashboardDto {
 	ID          string `json:"id,optional,omitzero"`
@@ -56,10 +57,11 @@ type DashboardPageResp {
     PageResultDTO
     Data     []DashboardDto `json:"data"`
 }
+
 // JsonResult 通用 JSON 响应
 type JsonResult {
 	Code int         `json:"code"`
-	Msg  string      `json:"msg,omitzero"`
+	Msg  string      `json:"msg"`
 	Data interface{} `json:"data,omitzero"`
 }
 
@@ -82,11 +84,11 @@ service backend {
     
     @doc "获取 Dashboard 详情"
     @handler GetDetail
-    get /detail (DetailRequest) returns (ResultVO)
+    get /detail (DetailRequest) returns (JsonResult)
     
     @doc "根据 UID 获取 Dashboard"
     @handler GetByUuid
-    get /:uid (UuidRequest) returns (ResultVO)
+    get /:uid (UuidRequest) returns (JsonResult)
     
     @doc "创建 Dashboard"
     @handler Create
@@ -110,19 +112,19 @@ service backend {
     
     @doc "绑定 UNS"
     @handler BindUns
-    post /bindUns (DashboardRefDto) returns (ResultVO)
+    post /bindUns (DashboardRefDto) returns (JsonResult)
     
     @doc "根据 UNS 获取 Dashboard"
     @handler GetByUns
-    get /getByUns (GetByUnsRequest) returns (ResultVO)
+    get /getByUns (GetByUnsRequest) returns (JsonResult)
     
     @doc "基于 UNS 创建 Grafana Dashboard"
     @handler CreateGrafanaByUns
-    post /createGrafanaByUns/:alias (AliasRequest) returns (ResultVO)
+    post /createGrafanaByUns/:alias (AliasRequest) returns (JsonResult)
     
     @doc "检查 Dashboard 是否存在"
     @handler IsExist
-    get /isExist (IsExistRequest) returns (ResultVO)
+    get /isExist (IsExistRequest) returns (JsonResult)
 }
 
 type DetailRequest {
