@@ -19,7 +19,7 @@ func NewKongHandler(kongLogic *logic.KongLogic) *KongHandler {
 // RouteListHandler 对应 GET /inter-api/supos/kong/routeList
 func (h *KongHandler) RouteListHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		routes, err := h.kongLogic.RouteList()
+		routes, err := h.kongLogic.RouteList(r.Context())
 		if err != nil {
 			httpx.Error(w, err)
 			return
