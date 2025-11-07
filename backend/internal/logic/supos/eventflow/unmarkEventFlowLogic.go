@@ -12,7 +12,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -33,7 +32,7 @@ func NewUnmarkEventFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *U
 
 func (l *UnmarkEventFlowLogic) UnmarkEventFlow(req *types.FlowUNMarkReq) error {
 	if req == nil {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	return sourceflow.NewUnmarkSourceFlowLogic(l.ctx, l.svcCtx).
 		UnmarkFlowWithType(req, constants.FlowTypeEVENTFLOW)

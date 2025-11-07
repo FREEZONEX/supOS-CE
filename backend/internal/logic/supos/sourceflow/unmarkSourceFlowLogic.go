@@ -14,7 +14,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -40,12 +39,12 @@ func (l *UnmarkSourceFlowLogic) UnmarkSourceFlow(req *types.FlowUNMarkReq) error
 // UnmarkFlowWithType removes the pin for the specified flow type.
 func (l *UnmarkSourceFlowLogic) UnmarkFlowWithType(req *types.FlowUNMarkReq, flowType string) error {
 	if req == nil {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	idStr := strings.TrimSpace(req.ID)
 	flowID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil || flowID <= 0 {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.flowId.empty"))
+		return errors.Parameter.WithMsg("nodered.flowId.empty")
 	}
 	userID := resolveUserID(l.ctx)
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)

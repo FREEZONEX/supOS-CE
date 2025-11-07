@@ -3,7 +3,7 @@ module backend
 go 1.24.2
 
 require (
-	gitee.com/unitedrhino/share v1.5.42
+	gitee.com/unitedrhino/share v1.5.43
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/expr-lang/expr v1.17.6

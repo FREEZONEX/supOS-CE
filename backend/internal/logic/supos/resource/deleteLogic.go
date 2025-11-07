@@ -8,7 +8,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
@@ -31,17 +30,17 @@ func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogi
 
 func (l *DeleteLogic) Delete(req *types.ResourceIDReq) error {
 	if req == nil || req.ID == 0 {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("resource.id.not.found"))
+		return errors.Parameter.WithMsg("resource.id.not.found")
 	}
 	db := stores.GetCommonConn(l.ctx)
 	return db.WithContext(l.ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("id = ?", req.ID).Delete(&relationDB.SuposResource{}).Error; err != nil {
 			l.Errorf("failed to delete resource %d: %v", req.ID, err)
-			return errors.Database.WithMsg(i18ns.LocalizeMsg("resource.delete.failed")).AddDetail(err)
+			return errors.Database.WithMsg("resource.delete.failed").AddDetail(err)
 		}
 		if err := tx.Where("parent_id = ?", req.ID).Delete(&relationDB.SuposResource{}).Error; err != nil {
 			l.Errorf("failed to delete child resources for %d: %v", req.ID, err)
-			return errors.Database.WithMsg(i18ns.LocalizeMsg("resource.delete.failed")).AddDetail(err)
+			return errors.Database.WithMsg("resource.delete.failed").AddDetail(err)
 		}
 		return nil
 	})

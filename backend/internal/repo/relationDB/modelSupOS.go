@@ -28,3 +28,16 @@ type SuposResource struct {
 func (SuposResource) TableName() string {
 	return "supos_resource"
 }
+
+// supos_i18n_language 国际化语言表
+type SuposI18nLanguage struct {
+	ID           int64  `gorm:"column:id;primaryKey;autoIncrement"` // 主键
+	LanguageCode string `gorm:"column:language_code"`               // 语言编码，例如 zh_CN、en_US
+	LanguageName string `gorm:"column:language_name"`               // 语言名称，例如 中文（中国）、English (US)
+	LanguageType int    `gorm:"column:language_type"`               // 语言类型：1-内置，2-自定义
+	HasUsed      bool   `gorm:"column:has_used"`                    // 是否启用
+}
+
+func (SuposI18nLanguage) TableName() string {
+	return "supos_i18n_language"
+}

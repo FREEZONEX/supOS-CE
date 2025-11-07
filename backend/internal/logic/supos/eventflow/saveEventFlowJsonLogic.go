@@ -12,7 +12,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -33,7 +32,7 @@ func NewSaveEventFlowJsonLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 
 func (l *SaveEventFlowJsonLogic) SaveEventFlowJson(req *types.EventFlowSaveReq) error {
 	if req == nil {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	srcReq := &types.SourceFlowSaveReq{
 		ID:    req.ID,

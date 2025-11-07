@@ -9,7 +9,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
@@ -32,13 +31,13 @@ func NewBatchLogic(ctx context.Context, svcCtx *svc.ServiceContext) *BatchLogic 
 
 func (l *BatchLogic) Batch(req *[]types.BatchUpdateResource) error {
 	if req == nil || len(*req) == 0 {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("resource.batch.empty"))
+		return errors.Parameter.WithMsg("resource.batch.empty")
 	}
 	db := stores.GetCommonConn(l.ctx)
 	return db.WithContext(l.ctx).Transaction(func(tx *gorm.DB) error {
 		for _, item := range *req {
 			if item.ID == 0 {
-				return errors.Parameter.WithMsg(i18ns.LocalizeMsg("resource.id.not.found"))
+				return errors.Parameter.WithMsg("resource.id.not.found")
 			}
 			updates := make(map[string]any)
 
@@ -107,7 +106,7 @@ func (l *BatchLogic) Batch(req *[]types.BatchUpdateResource) error {
 
 			if err := tx.Model(&relationDB.SuposResource{}).Where("id = ?", item.ID).Updates(updates).Error; err != nil {
 				l.Errorf("batch update resource %d failed: %v", item.ID, err)
-				return errors.Database.WithMsg(i18ns.LocalizeMsg("resource.batch.update.failed")).AddDetail(err)
+				return errors.Database.WithMsg("resource.batch.update.failed").AddDetail(err)
 			}
 		}
 		return nil

@@ -9,7 +9,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
@@ -32,7 +31,7 @@ func NewPostLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PostLogic {
 
 func (l *PostLogic) Post(req *types.SaveResourceReq) error {
 	if req == nil {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("resource.request.empty"))
+		return errors.Parameter.WithMsg("resource.request.empty")
 	}
 
 	db := stores.GetCommonConn(l.ctx)
@@ -55,10 +54,10 @@ func (l *PostLogic) saveResource(tx *gorm.DB, dto *types.SaveResourceReq) (int64
 		var count int64
 		if err := tx.Model(&relationDB.SuposResource{}).Where("code = ?", dto.Code).Count(&count).Error; err != nil {
 			l.Errorf("failed to check resource code: %v", err)
-			return 0, errors.Database.WithMsg(i18ns.LocalizeMsg("resource.save.failed")).AddDetail(err)
+			return 0, errors.Database.WithMsg("resource.save.failed").AddDetail(err)
 		}
 		if count > 0 {
-			return 0, errors.Duplicate.WithMsg(i18ns.LocalizeMsg("resource.code.duplicate")).AddDetail(dto.Code)
+			return 0, errors.Duplicate.WithMsg("resource.code.duplicate").AddDetail(dto.Code)
 		}
 		flag := true
 		res := &relationDB.SuposResource{
@@ -83,7 +82,7 @@ func (l *PostLogic) saveResource(tx *gorm.DB, dto *types.SaveResourceReq) (int64
 		}
 		if err := tx.Create(res).Error; err != nil {
 			l.Errorf("failed to insert resource: %v", err)
-			return 0, errors.Database.WithMsg(i18ns.LocalizeMsg("resource.save.failed")).AddDetail(err)
+			return 0, errors.Database.WithMsg("resource.save.failed").AddDetail(err)
 		}
 		id := res.ID
 		for i := range dto.Children {
@@ -98,10 +97,10 @@ func (l *PostLogic) saveResource(tx *gorm.DB, dto *types.SaveResourceReq) (int64
 	var existing relationDB.SuposResource
 	if err := tx.Where("id = ?", dto.ID).First(&existing).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return 0, errors.NotFind.WithMsg(i18ns.LocalizeMsg("resource.id.not.found")).AddDetail(dto.ID)
+			return 0, errors.NotFind.WithMsg("resource.id.not.found").AddDetail(dto.ID)
 		}
 		l.Errorf("failed to load resource %d: %v", dto.ID, err)
-		return 0, errors.Database.WithMsg(i18ns.LocalizeMsg("resource.save.failed")).AddDetail(err)
+		return 0, errors.Database.WithMsg("resource.save.failed").AddDetail(err)
 	}
 
 	updates := map[string]any{
@@ -128,7 +127,7 @@ func (l *PostLogic) saveResource(tx *gorm.DB, dto *types.SaveResourceReq) (int64
 
 	if err := tx.Model(&relationDB.SuposResource{}).Where("id = ?", dto.ID).Updates(updates).Error; err != nil {
 		l.Errorf("failed to update resource %d: %v", dto.ID, err)
-		return 0, errors.Database.WithMsg(i18ns.LocalizeMsg("resource.save.failed")).AddDetail(err)
+		return 0, errors.Database.WithMsg("resource.save.failed").AddDetail(err)
 	}
 	for i := range dto.Children {
 		dto.Children[i].ParentID = dto.ID

@@ -12,7 +12,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -33,7 +32,7 @@ func NewCopyEventFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Cop
 
 func (l *CopyEventFlowLogic) CopyEventFlow(req *types.EventFlowCopyReq) (string, error) {
 	if req == nil {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return "", errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	srcReq := &types.SourceFlowCopyReq{
 		SourceID:    req.SourceID,

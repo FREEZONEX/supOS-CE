@@ -14,7 +14,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -40,16 +39,16 @@ func (l *UpdateSourceFlowLogic) UpdateSourceFlow(req *types.SourceFlowUpdateReq)
 // UpdateFlowWithType updates the flow metadata for the specified template.
 func (l *UpdateSourceFlowLogic) UpdateFlowWithType(req *types.SourceFlowUpdateReq, flowType string) error {
 	if req == nil {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	idStr := strings.TrimSpace(req.ID)
 	flowID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil || flowID <= 0 {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.flowId.empty"))
+		return errors.Parameter.WithMsg("nodered.flowId.empty")
 	}
 	name := strings.TrimSpace(req.FlowName)
 	if name == "" {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
 	template := strings.TrimSpace(flowType)
@@ -63,7 +62,7 @@ func (l *UpdateSourceFlowLogic) UpdateFlowWithType(req *types.SourceFlowUpdateRe
 			Template: template,
 		}
 		if exist, err := repo.FindOneByFilter(l.ctx, filter); err == nil && exist != nil && exist.ID != flowID {
-			return errors.Duplicate.WithMsg(i18ns.LocalizeMsg("nodered.flowName.has.used"))
+			return errors.Duplicate.WithMsg("nodered.flowName.has.used")
 		} else if err != nil && !errors.Cmp(err, errors.NotFind) {
 			return err
 		}

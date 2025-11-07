@@ -13,7 +13,6 @@ import (
 	"backend/internal/svc"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -40,7 +39,7 @@ func (l *ProxyNodeRedFlowsLogic) ProxyNodeRedFlows(flowID string) (string, error
 
 	// id, err := strconv.ParseInt(primaryID, 10, 64)
 	// if err != nil || id <= 0 {
-	// 	return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.invalid.parameter"))
+	// 	return "", errors.Parameter.WithMsg("nodered.invalid.parameter"))
 	// }
 
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
@@ -49,7 +48,7 @@ func (l *ProxyNodeRedFlowsLogic) ProxyNodeRedFlows(flowID string) (string, error
 		return "", err
 	}
 	if flow == nil {
-		return "", errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
+		return "", errors.NotFind.WithMsg("nodered.flow.not.exist")
 	}
 
 	nodes, err := l.resolveFlowNodes(flow)
@@ -66,7 +65,7 @@ func (l *ProxyNodeRedFlowsLogic) ProxyNodeRedFlows(flowID string) (string, error
 	data, err := json.Marshal(resp)
 	if err != nil {
 		l.Errorf("marshal proxy node-red flow response failed: %v", err)
-		return "", errors.System.WithMsg(i18ns.LocalizeMsg("error.sys.systemError")).AddDetail(err.Error())
+		return "", errors.System.WithMsg("error.sys.systemError").AddDetail(err.Error())
 	}
 	return string(data), nil
 }
@@ -77,7 +76,7 @@ func (l *ProxyNodeRedFlowsLogic) resolveFlowNodes(flow *relationDB.NoderedSource
 		var nodes []map[string]any
 		if err := json.Unmarshal([]byte(draft), &nodes); err != nil {
 			l.Errorf("unmarshal flow(%d) draft json failed: %v", flow.ID, err)
-			return nil, errors.System.WithMsg(i18ns.LocalizeMsg("error.sys.systemError")).AddDetail(err.Error())
+			return nil, errors.System.WithMsg("error.sys.systemError").AddDetail(err.Error())
 		}
 		return nodes, nil
 	}
