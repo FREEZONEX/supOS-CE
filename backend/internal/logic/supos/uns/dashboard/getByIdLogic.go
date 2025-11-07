@@ -3,7 +3,9 @@ package dashboard
 import (
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
+	"net/http"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -29,6 +31,17 @@ func NewGetByIdLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetByIdLo
 	}
 }
 
-func (l *GetByIdLogic) GetById(req *DashboardIDReq) (*relationDB.DashboardModel, error) {
-	return l.dashboardMapper.SelectById(req.ID)
+func (l *GetByIdLogic) GetById(req *DashboardIDReq) (*types.JsonResult, error) {
+	dashboard, err := l.dashboardMapper.SelectById(req.ID)
+	if err != nil {
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
+	}
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+		Data: dashboard,
+	}, nil
 }

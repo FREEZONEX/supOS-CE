@@ -6,7 +6,9 @@ package dashboard
 import (
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
+	"net/http"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,10 +30,20 @@ func NewMarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MarkTopLo
 	}
 }
 
-func (l *MarkTopLogic) MarkTop(id string, userID string) error {
+func (l *MarkTopLogic) MarkTop(id string, userID string) (*types.JsonResult, error) {
 	mark := &relationDB.DashboardMarkModel{
 		ID:     id,
 		UserID: userID,
 	}
-	return l.dashboardMarkMapper.Insert(mark)
+	err := l.dashboardMarkMapper.Insert(mark)
+	if err != nil {
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
+	}
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+	}, nil
 }

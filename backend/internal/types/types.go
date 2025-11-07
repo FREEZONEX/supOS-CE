@@ -668,7 +668,7 @@ type PageInfo struct {
 
 type PageListRequest struct {
 	K         string `form:"k,optional"`         // 关键字
-	Type      int    `form:"type,optional"`      // Dashboard 类型
+	Type      *int   `form:"type,optional"`      // Dashboard 类型
 	OrderCode string `form:"orderCode,optional"` // 排序字段
 	IsAsc     string `form:"isAsc,optional"`     // 是否升序
 	PageNum   int    `form:"pageNum,default=1"`

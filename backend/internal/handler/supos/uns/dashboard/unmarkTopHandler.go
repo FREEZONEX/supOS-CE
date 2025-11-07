@@ -23,11 +23,11 @@ func UnmarkTopHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := dashboard.NewUnmarkTopLogic(r.Context(), svcCtx)
-		err := l.UnmarkTop(req.ID, getUserID(r))
+		resp, err := l.UnmarkTop(req.ID, getUserID(r))
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.Ok(w)
+			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}
 }

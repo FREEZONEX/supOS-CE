@@ -1,14 +1,16 @@
 package dashboard
 
 import (
-	"backend/internal/common/errors"
 	"backend/internal/common/utils/grafanautil"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
 	"encoding/json"
+	"net/http"
 	"time"
 
+	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 )
@@ -30,17 +32,26 @@ func NewEditLogic(ctx context.Context, svcCtx *svc.ServiceContext) *EditLogic {
 	}
 }
 
-func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) error {
+func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) (*types.JsonResult, error) {
 	// 检查 Dashboard 是否存在
 	existing, err := l.dashboardMapper.SelectById(dashboard.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.NewBuzError(400, "uns.dashboard.not.exit")
+			return &types.JsonResult{
+				Code: http.StatusBadRequest,
+				Msg:  i18ns.LocalizeMsg("uns.dashboard.not.exit"),
+			}, nil
 		}
-		return err
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.not.exit"),
+		}, nil
 	}
 	if existing == nil {
-		return errors.NewBuzError(400, "uns.dashboard.not.exit")
+		return &types.JsonResult{
+			Code: http.StatusBadRequest,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.not.exit"),
+		}, nil
 	}
 
 	// Grafana Dashboard 更新
@@ -48,7 +59,10 @@ func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) error {
 		// 获取现有的 Dashboard
 		dbJSON, err := grafanautil.GetDashboardByUUID(dashboard.ID)
 		if err != nil || dbJSON == nil {
-			return errors.NewBuzError(400, "uns.dashboard.not.exit")
+			return &types.JsonResult{
+				Code: http.StatusBadRequest,
+				Msg:  i18ns.LocalizeMsg("uns.dashboard.edit.failed"),
+			}, nil
 		}
 
 		// 更新 title 和 description
@@ -63,12 +77,26 @@ func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) error {
 		_, err = grafanautil.CreateDashboardByBody(dashboard.ID, "", string(jsonBytes))
 		if err != nil {
 			l.Logger.Errorf("failed to update grafana dashboard: %v", err)
-			return err
+			return &types.JsonResult{
+				Code: http.StatusInternalServerError,
+				Msg:  i18ns.LocalizeMsg("uns.dashboard.edit.failed"),
+			}, nil
 		}
 		l.Logger.Infof("updated grafana dashboard: %s, url: %s", dashboard.ID, url)
 	}
 
 	// 更新数据库
 	dashboard.UpdateTime = time.Now()
-	return l.dashboardMapper.UpdateById(dashboard)
+	err = l.dashboardMapper.UpdateById(dashboard)
+	if err != nil {
+		l.Logger.Errorf("failed to update dashboard: %v", err)
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.edit.failed"),
+		}, nil
+	}
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+	}, nil
 }

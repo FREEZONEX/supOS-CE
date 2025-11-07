@@ -23,11 +23,11 @@ func MarkTopHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := dashboard.NewMarkTopLogic(r.Context(), svcCtx)
-		err := l.MarkTop(req.ID, getUserID(r))
+		resp, err := l.MarkTop(req.ID, getUserID(r))
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.Ok(w)
+			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}
 }

@@ -19,11 +19,11 @@ func DeleteHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := dashboard.NewDeleteLogic(r.Context(), svcCtx)
-		err := l.Delete(req.Uid)
+		resp, err := l.Delete(req.Uid)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.Ok(w)
+			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}
 }

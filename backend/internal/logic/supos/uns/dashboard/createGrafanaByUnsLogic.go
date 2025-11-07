@@ -1,7 +1,6 @@
 package dashboard
 
 import (
-	"backend/internal/common/errors"
 	"backend/internal/common/utils/grafanautil"
 	unsservice "backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/repo/relationDB"
@@ -10,8 +9,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
+	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/google/uuid"
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -43,11 +44,15 @@ func NewCreateGrafanaByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 
-func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (string, error) {
+func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonResult, error) {
 	// 1. 获取 UNS 定义
 	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, alias)
 	if err != nil || unsResp == nil || unsResp.Data == nil {
-		return "", errors.NewBuzError(400, "uns.file.not.exist")
+		l.Logger.Errorf("failed to get uns definition for alias %s: %v", alias, err)
+		return &types.JsonResult{
+			Code: http.StatusBadRequest,
+			Msg:  err.Error(),
+		}, nil
 	}
 	unsDef := unsResp.Data
 
@@ -58,7 +63,10 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (string, erro
 		// Fall through, but log the error
 	}
 	if existingDashboard != nil {
-		return "", errors.NewBuzError(400, "uns.dashboard.already.exists")
+		return &types.JsonResult{
+			Code: http.StatusBadRequest,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.already.exists"),
+		}, nil
 	}
 
 	// 3. 根据 UNS 字段构建 Grafana Dashboard JSON
@@ -66,14 +74,20 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (string, erro
 	dashboardJSON, err := l.buildGrafanaJSONFromUns(unsDef, dashboardUID)
 	if err != nil {
 		l.Logger.Errorf("failed to build grafana json for uns %s: %v", alias, err)
-		return "", errors.NewBuzError(500, "uns.dashboard.create.failed")
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 
 	// 4. 调用 Grafana API 创建 Dashboard
 	_, err = grafanautil.CreateDashboardByBody(dashboardUID, "", dashboardJSON)
 	if err != nil {
 		l.Logger.Errorf("failed to create grafana dashboard for uns %s: %v", alias, err)
-		return "", errors.NewBuzError(500, "uns.dashboard.create.failed")
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 
 	// 5. 保存 Dashboard 记录到数据库
@@ -92,7 +106,10 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (string, erro
 		l.Logger.Errorf("failed to save dashboard record for uns %s: %v", alias, err)
 		// 尝试回滚 Grafana 的创建操作
 		_ = grafanautil.DeleteDashboard(dashboardUID)
-		return "", err
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 
 	// 6. 创建 Dashboard 和 UNS 的绑定关系
@@ -102,8 +119,11 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (string, erro
 		CreateAt:    now,
 	}
 	if err = l.dashboardRefMapper.Insert(ref); err != nil {
-		// 此处为非关键路径，只记录日志
 		l.Logger.Errorf("failed to bind dashboard %s to uns %s: %v", dashboardUID, alias, err)
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 
 	// 7. 更新 UNS 的 flags
@@ -114,12 +134,19 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (string, erro
 	}
 	_, updateErr := l.unsUpdateService.UpdateDetail(l.ctx, updateDto)
 	if updateErr != nil {
-		// 此处为非关键路径，只记录日志
 		l.Logger.Errorf("failed to update uns flags for %s after creating dashboard: %v", alias, updateErr)
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  updateErr.Error(),
+		}, nil
 	}
 
 	// 8. 返回新创建的 Dashboard UID
-	return dashboardUID, nil
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+		Data: dashboardUID,
+	}, nil
 }
 
 // buildGrafanaJSONFromUns 根据 UNS 定义构建 Grafana Dashboard JSON

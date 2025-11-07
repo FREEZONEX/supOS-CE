@@ -5,9 +5,12 @@ import (
 	"backend/internal/common/utils/grafanautil"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
 	"fmt"
+	"net/http"
 
+	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 )
@@ -33,14 +36,20 @@ func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogi
 	}
 }
 
-func (l *DeleteLogic) Delete(uid string) error {
+func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 	// 检查 Dashboard 是否存在
 	dashboard, err := l.dashboardMapper.SelectById(uid)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return err
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.delete.failed", err.Error()),
+		}, nil
 	}
 	if dashboard == nil {
-		return nil // 已经不存在，视为成功
+		return &types.JsonResult{
+			Code: http.StatusOK,
+			Msg:  "success",
+		}, nil
 	}
 
 	// Grafana Dashboard 删除
@@ -48,6 +57,10 @@ func (l *DeleteLogic) Delete(uid string) error {
 		err := grafanautil.DeleteDashboard(uid)
 		if err != nil {
 			l.Logger.Errorf("failed to delete grafana dashboard: %v", err)
+			return &types.JsonResult{
+				Code: http.StatusInternalServerError,
+				Msg:  err.Error(),
+			}, nil
 		}
 	}
 
@@ -63,14 +76,33 @@ func (l *DeleteLogic) Delete(uid string) error {
 	err = l.dashboardMarkMapper.DeleteById(uid)
 	if err != nil {
 		l.Logger.Errorf("failed to delete dashboard mark: %v", err)
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 
 	// 删除引用关系
 	err = l.dashboardRefMapper.DeleteByDashboardId(uid)
 	if err != nil {
 		l.Logger.Errorf("failed to delete dashboard ref: %v", err)
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
 	}
 
 	// 删除 Dashboard
-	return l.dashboardMapper.DeleteById(uid)
+	err = l.dashboardMapper.DeleteById(uid)
+	if err != nil {
+		l.Logger.Errorf("failed to delete dashboard: %v", err)
+		return &types.JsonResult{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, nil
+	}
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+	}, nil
 }
