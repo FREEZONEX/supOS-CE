@@ -5,6 +5,7 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/repo/relationDB"
 
+	"gitee.com/unitedrhino/share/conf"
 	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/stores"
 	"gitee.com/unitedrhino/share/utils"
@@ -15,6 +16,7 @@ import (
 
 	cache "backend/internal/common/cache"
 	"backend/internal/config"
+	keycloakrepo "backend/internal/repo/keycloak"
 	"backend/share/clients"
 	noderedclient "backend/share/clients/nodered"
 )

@@ -6,7 +6,7 @@ info(
 
 @server(
     group: supos/i18n
-    prefix: /inter-api/supos/auth
+    prefix: /inter-api/supos
 )
 
 service backend {
