@@ -4,6 +4,7 @@ import (
 	"backend/internal/adapters/kong/listener"
 	"backend/internal/adapters/kong/vo"
 	"backend/internal/common/dto/protocol"
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -95,7 +96,7 @@ func GetKongLogic(host string, port int) *KongLogic {
 }
 
 // getRawRoutes 获取原始的路由列表
-func (l *KongLogic) getRawRoutes() ([]InternalKongVO, error) {
+func (l *KongLogic) getRawRoutes(ctx context.Context) ([]InternalKongVO, error) {
 	resp, err := l.client.R().
 		SetResult(&InternalKongResponseVO{}).
 		Get(l.baseURL + "/" + routesPath)
@@ -115,8 +116,8 @@ func (l *KongLogic) getRawRoutes() ([]InternalKongVO, error) {
 }
 
 // QueryRoutes 查询并处理路由列表
-func (l *KongLogic) QueryRoutes() ([]vo.RouteVO, error) {
-	rawRoutes, err := l.getRawRoutes()
+func (l *KongLogic) QueryRoutes(ctx context.Context) ([]vo.RouteVO, error) {
+	rawRoutes, err := l.getRawRoutes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -128,11 +129,11 @@ func (l *KongLogic) QueryRoutes() ([]vo.RouteVO, error) {
 	for _, kongVO := range rawRoutes {
 		if l.IsMenu(kongVO.Tags) {
 			// 基础菜单名称
-			menuName := i18ns.LocalizeMsg(kongVO.Name)
+			menuName := i18ns.LocalizeMsgWithCtx(ctx, kongVO.Name)
 			showName := menuName
 
 			// 解析标签并获取 showName
-			tags, parsedShowName := l.parseTags(kongVO.Tags)
+			tags, parsedShowName := l.parseTags(ctx, kongVO.Tags)
 			if parsedShowName != "" {
 				showName = parsedShowName
 			}
@@ -162,8 +163,8 @@ func (l *KongLogic) QueryRoutes() ([]vo.RouteVO, error) {
 }
 
 // RouteList 查询简化的路由列表
-func (l *KongLogic) RouteList() ([]vo.SimpleRouteVO, error) {
-	rawRoutes, err := l.getRawRoutes()
+func (l *KongLogic) RouteList(ctx context.Context) ([]vo.SimpleRouteVO, error) {
+	rawRoutes, err := l.getRawRoutes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -182,21 +183,21 @@ func (l *KongLogic) RouteList() ([]vo.SimpleRouteVO, error) {
 }
 
 // parseTags 解析 Kong 路由的标签
-func (l *KongLogic) parseTags(tags []string) ([]*protocol.KeyValuePair[string], string) {
+func (l *KongLogic) parseTags(ctx context.Context, tags []string) ([]*protocol.KeyValuePair[string], string) {
 	var tagList []*protocol.KeyValuePair[string]
 	var showName string
 	for _, t := range tags {
 		if tag, found := strings.CutPrefix(t, "parentName:"); found {
-			tagShowName := i18ns.LocalizeMsg(tag)
+			tagShowName := i18ns.LocalizeMsgWithCtx(ctx, tag)
 			tagList = append(tagList, &protocol.KeyValuePair[string]{Key: t, Value: tagShowName})
 		} else if tag, found := strings.CutPrefix(t, "description:"); found {
-			tagShowName := i18ns.LocalizeMsg(tag)
+			tagShowName := i18ns.LocalizeMsgWithCtx(ctx, tag)
 			tagList = append(tagList, &protocol.KeyValuePair[string]{Key: t, Value: tagShowName})
 		} else if tag, found := strings.CutPrefix(t, "homeParentName:"); found {
-			tagShowName := i18ns.LocalizeMsg(tag)
+			tagShowName := i18ns.LocalizeMsgWithCtx(ctx, tag)
 			tagList = append(tagList, &protocol.KeyValuePair[string]{Key: t, Value: tagShowName})
 		} else if tag, found := strings.CutPrefix(t, "showName:"); found {
-			showName = i18ns.LocalizeMsg(tag)
+			showName = i18ns.LocalizeMsgWithCtx(ctx, tag)
 			tagList = append(tagList, &protocol.KeyValuePair[string]{Key: t, Value: tag})
 		} else {
 			tagList = append(tagList, &protocol.KeyValuePair[string]{Key: "", Value: t})

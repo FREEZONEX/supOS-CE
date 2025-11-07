@@ -30,7 +30,7 @@ func NewRouteListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RouteLi
 
 func (l *RouteListLogic) RouteList() (resp *types.RouteListResp, err error) {
 	kongLogic := logic.GetKongLogic(l.svcCtx.Config.Kong.Host, l.svcCtx.Config.Kong.Port)
-	routes, err := kongLogic.RouteList()
+	routes, err := kongLogic.RouteList(l.ctx)
 	if err != nil {
 		return nil, err
 	}

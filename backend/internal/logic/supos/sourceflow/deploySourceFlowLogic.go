@@ -17,7 +17,6 @@ import (
 	noderedclient "backend/share/clients/nodered"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -43,18 +42,18 @@ func (l *DeploySourceFlowLogic) DeploySourceFlow(req *types.SourceFlowDeployReq)
 // DeployFlowWithType deploys a flow definition using the provided Node-RED client.
 func (l *DeploySourceFlowLogic) DeployFlowWithType(req *types.SourceFlowDeployReq, flowType string, client *noderedclient.Client) (*types.SourceFlowDeployResult, error) {
 	if req == nil {
-		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return nil, errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	idStr := strings.TrimSpace(req.ID)
 	flowID, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil || flowID <= 0 {
-		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.flowId.empty"))
+		return nil, errors.Parameter.WithMsg("nodered.flowId.empty")
 	}
 	var override string
 	if len(req.Flows) > 0 {
 		data, err := json.Marshal(req.Flows)
 		if err != nil {
-			return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.invalid.parameter"))
+			return nil, errors.Parameter.WithMsg("nodered.invalid.parameter")
 		}
 		override = string(data)
 	}

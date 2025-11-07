@@ -6,14 +6,14 @@ import (
 )
 
 func getUserID(r *http.Request) string {
-	if user := apiutil.GetUserFromContext(r); user != nil {
+	if user := apiutil.GetUserFromContext(r.Context()); user != nil {
 		return user.Sub
 	}
 	return ""
 }
 
 func getUsername(r *http.Request) string {
-	if user := apiutil.GetUserFromContext(r); user != nil {
+	if user := apiutil.GetUserFromContext(r.Context()); user != nil {
 		return user.PreferredUsername
 	}
 	return ""

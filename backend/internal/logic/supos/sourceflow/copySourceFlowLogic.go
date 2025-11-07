@@ -16,7 +16,6 @@ import (
 	noderedclient "backend/share/clients/nodered"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -42,15 +41,15 @@ func (l *CopySourceFlowLogic) CopySourceFlow(req *types.SourceFlowCopyReq) (stri
 // CopyFlowWithType duplicates a flow for the specified template/flow type.
 func (l *CopySourceFlowLogic) CopyFlowWithType(req *types.SourceFlowCopyReq, flowType string, client *noderedclient.Client) (string, error) {
 	if req == nil {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return "", errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	srcID, err := strconv.ParseInt(strings.TrimSpace(req.SourceID), 10, 64)
 	if err != nil || srcID <= 0 {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return "", errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	name := strings.TrimSpace(req.FlowName)
 	if name == "" {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return "", errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	template := strings.TrimSpace(req.Template)
 	if template == "" {

@@ -12,7 +12,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -33,7 +32,7 @@ func NewMarkEventFlowLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Mar
 
 func (l *MarkEventFlowLogic) MarkEventFlow(req *types.FlowMarkReq) error {
 	if req == nil {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	return sourceflow.NewMarkSourceFlowLogic(l.ctx, l.svcCtx).
 		MarkFlowWithType(req, constants.FlowTypeEVENTFLOW)

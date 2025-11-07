@@ -8,7 +8,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 )
 
 type CreateUserLogic struct {
@@ -28,11 +27,11 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateReq) (*types.Operation
 	}
 	username := strings.TrimSpace(req.Username)
 	if username == "" {
-		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("user.username.empty"))
+		return nil, errors.Parameter.WithMsg("user.username.empty")
 	}
 	password := strings.TrimSpace(req.Password)
 	if password == "" {
-		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("user.password.empty"))
+		return nil, errors.Parameter.WithMsg("user.password.empty")
 	}
 
 	kc, err := l.keycloakClient()
@@ -48,7 +47,7 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateReq) (*types.Operation
 			return nil, errors.System.WithMsg("failed to check email")
 		}
 		if existing != nil {
-			return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("user.email.already.exists"))
+			return nil, errors.Parameter.WithMsg("user.email.already.exists")
 		}
 	}
 

@@ -12,7 +12,6 @@ import (
 	noderedclient "backend/share/clients/nodered"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/google/uuid"
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -52,7 +51,7 @@ func CopyFlow(
 		return nil, err
 	}
 	if src == nil {
-		return nil, errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
+		return nil, errors.NotFind.WithMsg("nodered.flow.not.exist")
 	}
 
 	dst := &relationDB.NoderedFlow{
@@ -91,7 +90,7 @@ func DeployFlow(
 	aliasExtractor func([]map[string]any) []string,
 ) (string, error) {
 	if client == nil {
-		return "", errors.System.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
+		return "", errors.System.WithMsg("nodered.flow.not.exist")
 	}
 
 	rec, err := repo.FindOne(ctx, entityID)
@@ -99,7 +98,7 @@ func DeployFlow(
 		return "", err
 	}
 	if rec == nil {
-		return "", errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
+		return "", errors.NotFind.WithMsg("nodered.flow.not.exist")
 	}
 
 	resolvedJSON, _, err := ResolveNodesJSON(ctx, client, overrideJSON, rec)
@@ -108,12 +107,12 @@ func DeployFlow(
 	}
 	resolvedJSON = strings.TrimSpace(resolvedJSON)
 	if resolvedJSON == "" {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.flowId.empty"))
+		return "", errors.Parameter.WithMsg("nodered.flowId.empty")
 	}
 
 	var rawNodes []map[string]any
 	if err := json.Unmarshal([]byte(resolvedJSON), &rawNodes); err != nil {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.invalid.parameter"))
+		return "", errors.Parameter.WithMsg("nodered.invalid.parameter")
 	}
 
 	flowNodes, globalNodes := splitGlobalNodes(rawNodes)
@@ -132,12 +131,12 @@ func DeployFlow(
 		code, body, errs := client.DoJSON(ctx, "POST", "/flow", req, &out)
 		if len(errs) > 0 || (code != 200 && code != 204) {
 			logx.WithContext(ctx).Errorf("create flow failed: code=%d err=%v body=%s", code, errs, string(body))
-			return "", errors.System.WithMsg(i18ns.LocalizeMsg("error.sys.systemError")).AddDetailf("node-red create flow failed: code=%d err=%v body=%s", code, errs, string(body))
+			return "", errors.System.WithMsg("error.sys.systemError").AddDetailf("node-red create flow failed: code=%d err=%v body=%s", code, errs, string(body))
 		}
 		if id, ok := out["id"].(string); ok && strings.TrimSpace(id) != "" {
 			flowID = id
 		} else {
-			return "", errors.System.WithMsg(i18ns.LocalizeMsg("error.sys.systemError")).AddDetail("node-red create flow returned empty id")
+			return "", errors.System.WithMsg("error.sys.systemError").AddDetail("node-red create flow returned empty id")
 		}
 	}
 
@@ -154,7 +153,7 @@ func DeployFlow(
 	code, body, errs := client.DoJSON(ctx, "PUT", "/flow/"+flowID, flowBody, &upd)
 	if len(errs) > 0 || (code != 200 && code != 204) {
 		logx.WithContext(ctx).Errorf("update flow failed: code=%d err=%v body=%s", code, errs, string(body))
-		return "", errors.System.WithMsg(i18ns.LocalizeMsg("error.sys.systemError")).AddDetailf("node-red update flow failed: code=%d err=%v body=%s", code, errs, string(body))
+		return "", errors.System.WithMsg("error.sys.systemError").AddDetailf("node-red update flow failed: code=%d err=%v body=%s", code, errs, string(body))
 	}
 
 	if len(globalNodes) > 0 {
@@ -166,7 +165,7 @@ func DeployFlow(
 		code, body, errs = client.DoJSON(ctx, "PUT", "/flow/global", globalBody, &gout)
 		if len(errs) > 0 || (code != 200 && code != 204) {
 			logx.WithContext(ctx).Errorf("update global flow failed: code=%d err=%v body=%s", code, errs, string(body))
-			return "", errors.System.WithMsg(i18ns.LocalizeMsg("error.sys.systemError")).AddDetailf("node-red update global failed: code=%d err=%v body=%s", code, errs, string(body))
+			return "", errors.System.WithMsg("error.sys.systemError").AddDetailf("node-red update global failed: code=%d err=%v body=%s", code, errs, string(body))
 		}
 	}
 
@@ -203,7 +202,7 @@ func ResolveNodesJSON(ctx context.Context, client *noderedclient.Client, overrid
 		code, body, errs := client.GetFlowNodesV1(ctx, entity.FlowID, &out)
 		if len(errs) > 0 || (code != 200 && code != 204) {
 			logx.WithContext(ctx).Errorf("fetch nodes from node-red failed: code=%d err=%v body=%s", code, errs, string(body))
-			return "", "", errors.System.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
+			return "", "", errors.System.WithMsg("nodered.flow.not.exist")
 		}
 		if nodes, ok := out["nodes"].([]any); ok {
 			js, err := json.Marshal(nodes)
@@ -231,7 +230,7 @@ func regenerateNodeIDs(jsonStr string) (string, error) {
 	}
 	var nodes []map[string]any
 	if err := json.Unmarshal([]byte(jsonStr), &nodes); err != nil {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.invalid.parameter"))
+		return "", errors.Parameter.WithMsg("nodered.invalid.parameter")
 	}
 	result := jsonStr
 	for _, node := range nodes {

@@ -5,6 +5,8 @@ import (
 	"context"
 	"net/http"
 	"os"
+
+	"gitee.com/unitedrhino/share/i18ns"
 )
 
 // userContextKey is an unexported type to prevent context key collisions.
@@ -18,16 +20,17 @@ const (
 // SetUserInContext returns a new request with the user information stored in its context.
 // This is the idiomatic Go way to pass values through context, typically used in middleware.
 // It does NOT modify the original request.
-func SetUserInContext(r *http.Request, user *vo.UserInfoVo) *http.Request {
-	ctx := context.WithValue(r.Context(), UserKey, user)
-	return r.WithContext(ctx)
+func SetUserInContext(ctx context.Context, user *vo.UserInfoVo) context.Context {
+	ctx = context.WithValue(ctx, UserKey, user)
+	ctx = i18ns.SetLangWithCtx(ctx, user.MainLanguage)
+	return ctx
 }
 
 // GetUserFromContext retrieves user information from the request's context.
 // If auth is disabled and no user is in the context, it returns a default "guest" user.
-func GetUserFromContext(r *http.Request) *vo.UserInfoVo {
+func GetUserFromContext(ctx context.Context) *vo.UserInfoVo {
 	// Try to get user from context
-	if user, ok := r.Context().Value(UserKey).(*vo.UserInfoVo); ok && user != nil {
+	if user, ok := ctx.Value(UserKey).(*vo.UserInfoVo); ok && user != nil {
 		return user
 	}
 

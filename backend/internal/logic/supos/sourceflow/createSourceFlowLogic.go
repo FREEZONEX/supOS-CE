@@ -15,7 +15,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -45,11 +44,11 @@ func (l *CreateSourceFlowLogic) CreateFlowWithType(req *types.SourceFlowCreateRe
 
 func (l *CreateSourceFlowLogic) createFlow(req *types.SourceFlowCreateReq, flowType string) (string, error) {
 	if req == nil {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return "", errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	name := strings.TrimSpace(req.FlowName)
 	if name == "" {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return "", errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	template := flowType
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
@@ -58,7 +57,7 @@ func (l *CreateSourceFlowLogic) createFlow(req *types.SourceFlowCreateReq, flowT
 		Template: template,
 	}
 	if exist, err := repo.FindOneByFilter(l.ctx, filter); err == nil && exist != nil {
-		return "", errors.Duplicate.WithMsg(i18ns.LocalizeMsg("nodered.flowName.has.used"))
+		return "", errors.Duplicate.WithMsg("nodered.flowName.has.used")
 	} else if err != nil && !errors.Cmp(err, errors.NotFind) {
 		return "", err
 	}

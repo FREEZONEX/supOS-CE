@@ -13,7 +13,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -34,11 +33,11 @@ func NewGetSourceFlowByAliasLogic(ctx context.Context, svcCtx *svc.ServiceContex
 
 func (l *GetSourceFlowByAliasLogic) GetSourceFlowByAlias(req *types.SourceFlowAliasQuery) (resp *types.SourceFlowInfo, err error) {
 	if req == nil {
-		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return nil, errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	alias := strings.TrimSpace(req.Alias)
 	if alias == "" {
-		return nil, errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return nil, errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
 	flow, err := repo.FindLatestByAlias(l.ctx, alias)

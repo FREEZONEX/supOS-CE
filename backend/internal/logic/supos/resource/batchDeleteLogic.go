@@ -8,7 +8,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
@@ -31,17 +30,17 @@ func NewBatchDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Batch
 
 func (l *BatchDeleteLogic) BatchDelete(req *types.ResourceBatchDeleteReq) error {
 	if req == nil || len(req.IDs) == 0 {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("resource.batch.delete.empty"))
+		return errors.Parameter.WithMsg("resource.batch.delete.empty")
 	}
 	db := stores.GetCommonConn(l.ctx)
 	return db.WithContext(l.ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("id IN ?", req.IDs).Delete(&relationDB.SuposResource{}).Error; err != nil {
 			l.Errorf("failed to batch delete resources: %v", err)
-			return errors.Database.WithMsg(i18ns.LocalizeMsg("resource.delete.failed")).AddDetail(err)
+			return errors.Database.WithMsg("resource.delete.failed").AddDetail(err)
 		}
 		if err := tx.Where("parent_id IN ?", req.IDs).Delete(&relationDB.SuposResource{}).Error; err != nil {
 			l.Errorf("failed to delete child resources: %v", err)
-			return errors.Database.WithMsg(i18ns.LocalizeMsg("resource.delete.failed")).AddDetail(err)
+			return errors.Database.WithMsg("resource.delete.failed").AddDetail(err)
 		}
 		return nil
 	})

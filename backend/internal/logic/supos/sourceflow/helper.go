@@ -9,7 +9,6 @@ import (
 	"backend/internal/repo/relationDB"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 )
 
 func LoadFlowByType(ctx context.Context, repo *relationDB.NoderedSourceFlowRepo, flowID int64, flowType string) (*relationDB.NoderedSourceFlow, error) {
@@ -18,11 +17,11 @@ func LoadFlowByType(ctx context.Context, repo *relationDB.NoderedSourceFlowRepo,
 		return nil, err
 	}
 	if rec == nil {
-		return nil, errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
+		return nil, errors.NotFind.WithMsg("nodered.flow.not.exist")
 	}
 	ft := strings.TrimSpace(flowType)
 	if ft != "" && !strings.EqualFold(strings.TrimSpace(rec.Template), ft) {
-		return nil, errors.NotFind.WithMsg(i18ns.LocalizeMsg("nodered.flow.not.exist"))
+		return nil, errors.NotFind.WithMsg("nodered.flow.not.exist")
 	}
 	return rec, nil
 }

@@ -16,7 +16,6 @@ import (
 	"backend/internal/svc"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -43,7 +42,7 @@ func (l *ProxyEventFlowsLogic) ProxyEventFlows(flowID string) (string, error) {
 
 	id, err := strconv.ParseInt(primaryID, 10, 64)
 	if err != nil || id <= 0 {
-		return "", errors.Parameter.WithMsg(i18ns.LocalizeMsg("nodered.invalid.parameter"))
+		return "", errors.Parameter.WithMsg("nodered.invalid.parameter")
 	}
 
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
@@ -66,7 +65,7 @@ func (l *ProxyEventFlowsLogic) ProxyEventFlows(flowID string) (string, error) {
 	data, err := json.Marshal(resp)
 	if err != nil {
 		l.Errorf("marshal proxy event node-red flow response failed: %v", err)
-		return "", errors.System.WithMsg(i18ns.LocalizeMsg("error.sys.systemError")).AddDetail(err.Error())
+		return "", errors.System.WithMsg("error.sys.systemError").AddDetail(err.Error())
 	}
 	return string(data), nil
 }
@@ -77,7 +76,7 @@ func (l *ProxyEventFlowsLogic) resolveFlowNodes(flow *relationDB.NoderedSourceFl
 		var nodes []map[string]any
 		if err := json.Unmarshal([]byte(draft), &nodes); err != nil {
 			l.Errorf("unmarshal event flow(%d) draft json failed: %v", flow.ID, err)
-			return nil, errors.System.WithMsg(i18ns.LocalizeMsg("error.sys.systemError")).AddDetail(err.Error())
+			return nil, errors.System.WithMsg("error.sys.systemError").AddDetail(err.Error())
 		}
 		return nodes, nil
 	}

@@ -12,7 +12,6 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -46,7 +45,7 @@ func (l *GetLogic) Get(req *types.ResourceQuery) (resp []types.ResourceVO, err e
 	var records []relationDB.SuposResource
 	if err = query.Order("sort ASC, id ASC").Find(&records).Error; err != nil {
 		l.Errorf("failed to query resources: %v", err)
-		return nil, errors.Database.WithMsg(i18ns.LocalizeMsg("resource.query.failed")).AddDetail(err)
+		return nil, errors.Database.WithMsg("resource.query.failed").AddDetail(err)
 	}
 	resp = make([]types.ResourceVO, 0, len(records))
 	for _, item := range records {

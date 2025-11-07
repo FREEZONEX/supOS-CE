@@ -42,7 +42,7 @@ func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*t
 			if db.Type == req.Type {
 				return &types.JsonResult{
 					Code: 500,
-					Msg:  i18ns.LocalizeMsg("uns.dashboard.name.duplicate"),
+					Msg:  i18ns.LocalizeMsgWithCtx(l.ctx, "uns.dashboard.name.duplicate"),
 				}, nil
 			}
 		}
@@ -72,7 +72,7 @@ func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*t
 			l.Logger.Errorf("failed to create grafana dashboard: %v", err)
 			return &types.JsonResult{
 				Code: 500,
-				Msg:  i18ns.LocalizeMsg("uns.dashboard.create.failed"),
+				Msg:  i18ns.LocalizeMsgWithCtx(l.ctx, "uns.dashboard.create.failed"),
 			}, nil
 		}
 		l.Logger.Infof("created grafana dashboard: %s, url: %s", req.ID, url)
@@ -84,13 +84,13 @@ func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*t
 		l.Logger.Errorf("failed to save dashboard: %v", err)
 		return &types.JsonResult{
 			Code: 500,
-			Msg:  i18ns.LocalizeMsg("uns.dashboard.create.failed"),
+			Msg:  i18ns.LocalizeMsgWithCtx(l.ctx, "uns.dashboard.create.failed"),
 		}, nil
 	}
 
 	return &types.JsonResult{
 		Code: 200,
-		Msg:  i18ns.LocalizeMsg("uns.dashboard.create.success"),
+		Msg:  i18ns.LocalizeMsgWithCtx(l.ctx, "uns.dashboard.create.success"),
 		Data: req,
 	}, nil
 }

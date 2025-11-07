@@ -14,7 +14,6 @@ import (
 
 	unsservice "backend/internal/logic/supos/uns/uns/service"
 
-	"gitee.com/unitedrhino/share/i18ns"
 	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -41,14 +40,14 @@ func NewBindUNSLogic(ctx context.Context, svcCtx *svc.ServiceContext) *BindUNSLo
 
 func (l *BindUNSLogic) BindUNS(req *types.SourceFlowBindUnsReq) error {
 	if req.FlowID == 0 || req.UnsAlias == "" {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("error.sys.parameterError"))
+		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
 	db := stores.GetCommonConn(l.ctx)
 	// 检查 UNS 是否存在
 	var uns relationDB.UnsNamespace
 	err := db.Where("alias", req.UnsAlias).First(&uns).Error
 	if err != nil {
-		return errors.Parameter.WithMsg(i18ns.LocalizeMsg("uns.file.not.exist"))
+		return errors.Parameter.WithMsg("uns.file.not.exist")
 	}
 	// 删除旧的
 	db.Where("alias", req.UnsAlias).Delete(&relationDB.NoderedFlowNode{})
