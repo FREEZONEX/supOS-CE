@@ -4,6 +4,7 @@ import (
 	"backend/internal/common"
 	"backend/internal/middleware"
 	"backend/internal/repo/relationDB"
+	_ "backend/share/result"
 
 	"gitee.com/unitedrhino/share/conf"
 	"gitee.com/unitedrhino/share/i18ns"
@@ -37,7 +38,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	logx.Must(err)
 	stores.InitConn(c.Database)
 	relationDB.Migrate(c.Database, c.DatabaseSchema)
-
 	if err := cache.InitCaches(); err != nil {
 		logx.Errorf("failed to init cache: %v", err)
 		panic(err)
