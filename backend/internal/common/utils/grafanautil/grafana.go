@@ -415,7 +415,10 @@ func GetDashboardByUUID(uuid string) (map[string]any, error) {
 	}
 
 	var result map[string]any
-	json.Unmarshal(body, &result)
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -428,7 +431,10 @@ func CreateFolder(uid, title string) (*grafanadto.GrafanaFolderDto, error) {
 		defer resp.Body.Close()
 		body, _ := io.ReadAll(resp.Body)
 		var folder grafanadto.GrafanaFolderDto
-		json.Unmarshal(body, &folder)
+		err = json.Unmarshal(body, &folder)
+		if err != nil {
+			return nil, err
+		}
 		return &folder, nil
 	}
 
@@ -448,7 +454,10 @@ func CreateFolder(uid, title string) (*grafanadto.GrafanaFolderDto, error) {
 	if resp.StatusCode == http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		var folder grafanadto.GrafanaFolderDto
-		json.Unmarshal(body, &folder)
+		err = json.Unmarshal(body, &folder)
+		if err != nil {
+			return nil, err
+		}
 		return &folder, nil
 	}
 
@@ -529,7 +538,10 @@ func formatTemplate(template string, data any) string {
 	// Convert struct to map and use formatTemplateMap
 	jsonData, _ := json.Marshal(data)
 	var dataMap map[string]any
-	json.Unmarshal(jsonData, &dataMap)
+	err := json.Unmarshal(jsonData, &dataMap)
+	if err != nil {
+		return ""
+	}
 	return formatTemplateMap(template, dataMap)
 }
 

@@ -7,10 +7,12 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"gitee.com/unitedrhino/share/i18ns"
+	"github.com/go-resty/resty/v2"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 )
@@ -57,10 +59,6 @@ func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 		err := grafanautil.DeleteDashboard(uid)
 		if err != nil {
 			l.Logger.Errorf("failed to delete grafana dashboard: %v", err)
-			return &types.JsonResult{
-				Code: http.StatusInternalServerError,
-				Msg:  err.Error(),
-			}, nil
 		}
 	}
 
@@ -70,36 +68,46 @@ func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 		url := fmt.Sprintf("%s/api/project/%s", fuxautil.GetFuxaURL(), uid)
 		l.Logger.Infof("deleting fuxa dashboard: %s", url)
 		// 注意：fuxautil 目前没有 Delete 方法，需要直接 HTTP 调用或添加方法
+		_, err := resty.New().R().Delete(url)
+		if err != nil {
+			l.Logger.Errorf("failed to delete fuxa dashboard: %v", err)
+		}
 	}
 
 	// 删除置顶标记
 	err = l.dashboardMarkMapper.DeleteById(uid)
 	if err != nil {
 		l.Logger.Errorf("failed to delete dashboard mark: %v", err)
-		return &types.JsonResult{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, nil
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return &types.JsonResult{
+				Code: http.StatusInternalServerError,
+				Msg:  err.Error(),
+			}, nil
+		}
 	}
 
 	// 删除引用关系
 	err = l.dashboardRefMapper.DeleteByDashboardId(uid)
 	if err != nil {
 		l.Logger.Errorf("failed to delete dashboard ref: %v", err)
-		return &types.JsonResult{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, nil
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return &types.JsonResult{
+				Code: http.StatusInternalServerError,
+				Msg:  err.Error(),
+			}, nil
+		}
 	}
 
 	// 删除 Dashboard
 	err = l.dashboardMapper.DeleteById(uid)
 	if err != nil {
 		l.Logger.Errorf("failed to delete dashboard: %v", err)
-		return &types.JsonResult{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, nil
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return &types.JsonResult{
+				Code: http.StatusInternalServerError,
+				Msg:  err.Error(),
+			}, nil
+		}
 	}
 	return &types.JsonResult{
 		Code: http.StatusOK,

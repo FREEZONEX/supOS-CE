@@ -59,10 +59,8 @@ func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) (*types.JsonResul
 		// 获取现有的 Dashboard
 		dbJSON, err := grafanautil.GetDashboardByUUID(dashboard.ID)
 		if err != nil || dbJSON == nil {
-			return &types.JsonResult{
-				Code: http.StatusBadRequest,
-				Msg:  i18ns.LocalizeMsg("uns.dashboard.edit.failed"),
-			}, nil
+			l.Logger.Errorf("failed to get grafana dashboard: %v", err)
+			goto UPDATE_DB
 		}
 
 		// 更新 title 和 description
@@ -85,6 +83,7 @@ func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) (*types.JsonResul
 		l.Logger.Infof("updated grafana dashboard: %s, url: %s", dashboard.ID, url)
 	}
 
+UPDATE_DB:
 	// 更新数据库
 	dashboard.UpdateTime = time.Now()
 	err = l.dashboardMapper.UpdateById(dashboard)
