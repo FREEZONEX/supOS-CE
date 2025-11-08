@@ -367,22 +367,6 @@ func (*UnsLabelRef) TableName() string {
 	return TableNameUnsLabelRef
 }
 
-const TableNameUnsDashboardTopRecode = "uns_dashboard_top_recodes"
-
-// UnsDashboardTopRecode mapped from table <uns_dashboard_top_recodes>
-type UnsDashboardTopRecode struct {
-	ID         int64     `gorm:"column:id;not null" json:"id"`
-	UserID     string    `gorm:"column:user_id;not null" json:"user_id"`
-	Mark       int16     `gorm:"column:mark;default:1" json:"mark"`
-	MarkTime   time.Time `gorm:"column:mark_time;default:CURRENT_TIMESTAMP" json:"mark_time"`
-	UpdateTime time.Time `gorm:"column:update_time" json:"update_time"`
-}
-
-// TableName UnsDashboardTopRecode's table name
-func (*UnsDashboardTopRecode) TableName() string {
-	return TableNameUnsDashboardTopRecode
-}
-
 const TableNameUnsAttachment = "uns_attachment"
 
 // UnsAttachment mapped from table <uns_attachment>

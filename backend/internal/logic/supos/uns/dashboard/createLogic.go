@@ -57,16 +57,15 @@ func (l *CreateLogic) Create(req *relationDB.DashboardModel, creator string) (*t
 
 	// Grafana Dashboard 创建
 	if req.Type == 1 {
-		// 构建 Dashboard JSON
+		// 构建 Dashboard JSON, 只构建 dashboard 内部的对象
 		dashboardJSON := fmt.Sprintf(`{
-			"dashboard": {
-				"uid": "%s",
-				"title": "%s",
-				"id": null
-			}
+			"uid": "%s",
+			"title": "%s",
+			"id": null
 		}`, req.ID, req.Name)
 
 		// 调用 Grafana API 创建 Dashboard
+		// grafanautil.CreateDashboardByBody 会自动添加 "dashboard": {} 和 "overwrite": true 的外层包装
 		url := grafanautil.GetGrafanaURL() + "/api/dashboards/db"
 		_, err := grafanautil.CreateDashboardByBody(req.ID, "", dashboardJSON)
 		if err != nil {

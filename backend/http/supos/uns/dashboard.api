@@ -67,7 +67,7 @@ type JsonResult {
 
 // MarkTopRequest 置顶请求
 type MarkTopRequest {
-	ID string `json:"id"`
+	ID int64 `json:"id"`
 }
 
 // ==================== 服务定义 ====================
