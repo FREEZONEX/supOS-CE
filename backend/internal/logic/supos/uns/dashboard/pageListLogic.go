@@ -32,12 +32,12 @@ func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageList
 	}
 }
 
-func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dto.PageResultDTO[*relationDB.DashboardModel], error) {
+func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dto.PageResultDTO[*relationDB.DashboardExtends], error) {
 	keyword := dbutil.EscapeForLike(req.K)
 	orderCode := req.OrderCode
 	descOrAsc := req.IsAsc
 
-	pageResult := &dto.PageResultDTO[*relationDB.DashboardModel]{
+	pageResult := &dto.PageResultDTO[*relationDB.DashboardExtends]{
 		Code:     http.StatusOK,
 		PageNo:   int64(req.PageNum),
 		PageSize: int64(req.PageSize),
@@ -71,13 +71,7 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	if err != nil {
 		return nil, err
 	}
-
-	// 构建响应
-	data := make([]*relationDB.DashboardModel, len(dashboards))
-	for i, db := range dashboards {
-		data[i] = &db.DashboardModel
-	}
-	pageResult.Data = data
+	pageResult.Data = dashboards
 
 	return pageResult, nil
 }

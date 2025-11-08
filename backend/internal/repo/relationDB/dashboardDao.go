@@ -3,6 +3,7 @@ package relationDB
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
@@ -102,8 +103,8 @@ func (m *DashboardMapper) SaveOrIgnoreBatch(dashboards []*DashboardModel) error 
 // DashboardExtends Dashboard 扩展信息（包含置顶标记）
 type DashboardExtends struct {
 	DashboardModel
-	Mark     *int   `db:"mark" json:"mark,omitzero"`          // 置顶标记
-	MarkTime *int64 `db:"mark_time" json:"markTime,omitzero"` // 置顶时间
+	Mark     *int       `db:"mark" json:"mark,omitzero"`          // 置顶标记
+	MarkTime *time.Time `db:"mark_time" json:"markTime,omitzero"` // 置顶时间
 }
 
 // SelectDashboard 分页查询 Dashboard（包含置顶信息）
