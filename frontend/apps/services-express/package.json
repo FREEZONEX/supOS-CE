@@ -12,18 +12,19 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "express": "^5.1.0",
+    "express": "catalog:server",
     "dockerode": "catalog:server",
     "openai": "catalog:ai",
     "@copilotkit/runtime": "catalog:ai",
     "@langchain/anthropic": "catalog:ai",
     "@langchain/ollama": "catalog:ai",
     "@langchain/openai": "catalog:ai",
-    "dotenv": "catalog:dev"
+    "dotenv": "catalog:dev",
+    "@modelcontextprotocol/sdk": "catalog:ai"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3",
-    "@types/dockerode": "^3.3.44",
+    "@types/express": "catalog:type",
+    "@types/dockerode": "catalog:type",
     "@types/node": "catalog:type",
     "tsdown": "catalog:build"
   }

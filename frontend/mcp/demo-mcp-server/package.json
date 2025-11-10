@@ -1,0 +1,41 @@
+{
+  "name": "demo-mcp-server",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "pnpm run build",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "start:sse": "node dist/transport/sse.js",
+    "start:streamableHttp": "node dist/transport/streamableHttp.js",
+    "inspector": "npx -y @modelcontextprotocol/inspector npx demo-mcp-server"
+  },
+  "bin": {
+    "demo-mcp-server": "dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "catalog:ai",
+    "cors": "catalog:server",
+    "express": "catalog:server",
+    "zod": "catalog:util",
+    "zod-to-json-schema": "catalog:util",
+    "node-fetch": "catalog:util"
+  },
+  "devDependencies": {
+    "@types/cors": "catalog:type",
+    "@types/express": "catalog:type",
+    "@types/node-fetch": "catalog:type",
+    "shx": "catalog:dev",
+    "typescript": "catalog:lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

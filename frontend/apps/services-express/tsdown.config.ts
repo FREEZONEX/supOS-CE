@@ -7,6 +7,6 @@ export default defineConfig({
   outDir: 'dist', // 输出目录
   unbundle: true, // 输出目录和源文件木有一一对应 https://tsdown.dev/zh-CN/options/unbundle
   minify: true,
-  external: ['dotenv'],
+  external: ['dotenv', '@modelcontextprotocol/sdk'],
   watch: process.argv.includes('--watch') ? ['./src/**/*.ts'] : false,
 });
