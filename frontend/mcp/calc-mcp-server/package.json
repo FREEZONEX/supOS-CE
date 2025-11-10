@@ -1,0 +1,28 @@
+{
+  "name": "calc-mcp-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "watch": "tsc --watch",
+    "inspector": "npx -y @modelcontextprotocol/inspector npx calc-mcp-server"
+  },
+  "bin": {
+    "calc-mcp-server": "dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "catalog:ai"
+  },
+  "devDependencies": {
+    "shx": "catalog:dev",
+    "typescript": "catalog:lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

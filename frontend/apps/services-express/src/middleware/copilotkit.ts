@@ -11,22 +11,17 @@ import { ChatOllama } from '@langchain/ollama';
 import { ChatAnthropic } from '@langchain/anthropic';
 import OpenAI from 'openai';
 import { config } from '@/config';
+import { MCPClient, parseTransportUrl } from '@/utils';
 
 const ollamaModel = new ChatOllama({
   model: config.ollamaModal,
   baseUrl: config.ollamaBaseurl,
 });
 
-const openaiModel = new ChatOpenAI(
-  {
-    model: config.openAiModel,
-    apiKey: config.openAiKey,
-    // baseUrl: OLLAMA_BASEURL,
-  }
-  // {
-  //   httpAgent: agentProxy,
-  // }
-);
+const openaiModel = new ChatOpenAI({
+  model: config.openAiModel,
+  apiKey: config.openAiKey,
+});
 
 const anthropicModel = new ChatAnthropic({
   model: config.anthropicAiModel,
@@ -69,6 +64,10 @@ const llmType: any = {
   tongyi: serviceAdapterByTongyi,
 };
 
+// MCP客户端缓存，避免重复创建
+// const mcpClientCache: MCPClient | null = null;
+// const mcpEndpointCache: string | null = null;
+
 export const copilotkitHandler = (req: Request, res: Response, next: NextFunction) => {
   (async () => {
     // 直连mcpclient的agent
@@ -86,7 +85,22 @@ export const copilotkitHandler = (req: Request, res: Response, next: NextFunctio
     //     }),
     //   ],
     // });
-    const runtime = new CopilotRuntime();
+    const runtime = new CopilotRuntime({
+      createMCPClient: async (config) => {
+        const props = parseTransportUrl(config.endpoint);
+        // 检查是否可以使用缓存的客户端
+        // if (mcpClientCache && mcpEndpointCache === config.endpoint) {
+        //   console.log('使用缓存的MCP客户端');
+        //   return mcpClientCache;
+        // }
+        const mcpClient = new MCPClient(props);
+        await mcpClient.connect();
+        // 缓存客户端和端点
+        // mcpClientCache = mcpClient;
+        // mcpEndpointCache = config.endpoint;
+        return mcpClient;
+      },
+    });
     const handler = copilotRuntimeNodeHttpEndpoint({
       endpoint: '/copilotkit',
       runtime,

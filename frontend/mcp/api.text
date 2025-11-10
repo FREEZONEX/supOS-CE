@@ -1,0 +1,10 @@
+https://wis.qq.com/city/like?source=pc&city=杭州
+
+======================
+
+https://wis.qq.com/weather/common?weather_type=observe&source=pc&province=&city=&county=
+
+weather_type:'observe|forecast_1h|forecast_24h|index|alarm|limit|tips|air|rise'
+source:'pc'
+
+======================

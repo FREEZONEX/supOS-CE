@@ -1,4 +1,4 @@
-import { useCopilotAction, useCopilotReadable, useCoAgent } from '@copilotkit/react-core';
+import { useCopilotAction, useCopilotReadable, useCoAgent, useCopilotChat } from '@copilotkit/react-core';
 import { type FC, type ReactNode, useEffect, useState } from 'react';
 import { useLocalStorage } from '@/hooks';
 import { useCopilotChatSuggestions } from '@copilotkit/react-ui';
@@ -55,7 +55,25 @@ const CopilotContext: FC<{ children: ReactNode; copilotCatRef: any }> = ({ child
   useEffect(() => {
     setPage(location.pathname);
   }, [location.pathname]);
-
+  const { setMcpServers } = useCopilotChat();
+  useEffect(() => {
+    setMcpServers([
+      // {
+      // Try a sample MCP server at https://mcp.composio.dev/
+      // endpoint: 'see://http://localhost:3000/mcp',
+      // },
+      // {
+      //   endpoint: 'stdio://npx/-y/calc-mcp-server',
+      // },
+      // {
+      //   endpoint:
+      //     'stdio://npx/-y/@sup-platform/mcp-server?env=SUPOS_API_URL:http://100.100.100.22:33893,SUPOS_API_KEY:2550783a8c884f219c6e22376220d55c',
+      // },
+      // {
+      //   endpoint: 'streamable-http://http://localhost:3000/mcp',
+      // },
+    ]);
+  }, [setMcpServers]);
   // 获取mcpclient存储的本地配置
   const mcpConfigStr: any = useLocalStorage(STORAGE_KEY);
   const modelConfigStr: any = useLocalStorage(STORAGE_MODEL_KEY);
