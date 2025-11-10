@@ -647,19 +647,6 @@ importers:
         specifier: catalog:build
         version: 7.1.9(@types/node@24.7.2)(jiti@2.6.1)(sass@1.93.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
 
-  mcp/calc-mcp-server:
-    dependencies:
-      '@modelcontextprotocol/sdk':
-        specifier: catalog:ai
-        version: 1.21.0(@cfworker/json-schema@4.1.1)
-    devDependencies:
-      shx:
-        specifier: catalog:dev
-        version: 0.4.0
-      typescript:
-        specifier: catalog:lint
-        version: 5.9.3
-
   mcp/demo-mcp-server:
     dependencies:
       '@modelcontextprotocol/sdk':
@@ -693,6 +680,9 @@ importers:
       shx:
         specifier: catalog:dev
         version: 0.4.0
+      tsdown:
+        specifier: catalog:build
+        version: 0.14.2(typescript@5.9.3)
       typescript:
         specifier: catalog:lint
         version: 5.9.3
