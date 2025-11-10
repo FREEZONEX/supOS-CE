@@ -8,12 +8,12 @@ async function run() {
       case 'stdio':
         await import('./transport/stdio');
         break;
-      // case 'sse':
-      //   await import('./transport/sse.js');
-      //   break;
-      // case 'streamableHttp':
-      //   await import('./transport/streamableHttp.js');
-      //   break;
+      case 'sse':
+        await import('./transport/sse');
+        break;
+      case 'streamableHttp':
+        await import('./transport/streamableHttp');
+        break;
       default:
         console.error(`Unknown script: ${scriptName}`);
         console.log('Available scripts:');

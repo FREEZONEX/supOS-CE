@@ -1,18 +1,18 @@
 {
   "name": "@supos-os-edge/demo-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "dev": "tsdown --watch",
     "build": "tsdown && shx chmod +x dist/*.js",
     "prepare": "pnpm run build",
-    "watch": "tsc --watch",
     "start": "node dist/index.js",
     "start:sse": "node dist/transport/sse.js",
     "start:streamableHttp": "node dist/transport/streamableHttp.js",
@@ -37,7 +37,13 @@
     "typescript": "catalog:lint",
     "tsdown": "catalog:build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "mcp",
+    "supos-edge"
+  ],
+  "author": "zhengfayue",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  }
 }
