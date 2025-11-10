@@ -3,6 +3,7 @@ export type TransportType = 'sse' | 'stdio' | 'streamable-http';
 export interface McpClientOptions {
   serverUrl: string;
   transportType?: TransportType;
+  clientName: string;
   headers?: Record<string, string>;
   onMessage?: (message: Record<string, unknown>) => void;
   onError?: (error: Error) => void;
@@ -14,6 +15,7 @@ export interface McpClientOptions {
 export interface TransportConfig {
   transportType: TransportType;
   serverUrl: string;
+  clientName: string;
   stdioConfig?: {
     command: string;
     args: string[];

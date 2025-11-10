@@ -58,20 +58,20 @@ const CopilotContext: FC<{ children: ReactNode; copilotCatRef: any }> = ({ child
   const { setMcpServers } = useCopilotChat();
   useEffect(() => {
     setMcpServers([
+      {
+        endpoint: 'stdio://npx/-y/@supos-os-edge/demo-mcp-server',
+      },
       // {
       // Try a sample MCP server at https://mcp.composio.dev/
       // endpoint: 'see://http://localhost:3000/mcp',
       // },
       // {
-      //   endpoint: 'stdio://npx/-y/calc-mcp-server',
-      // },
-      // {
       //   endpoint:
       //     'stdio://npx/-y/@sup-platform/mcp-server?env=SUPOS_API_URL:http://100.100.100.22:33893,SUPOS_API_KEY:2550783a8c884f219c6e22376220d55c',
       // },
-      // {
-      //   endpoint: 'streamable-http://http://localhost:3000/mcp',
-      // },
+      {
+        endpoint: 'streamable-http://http://localhost:3000/mcp?clientName=supos-mcp-server',
+      },
     ]);
   }, [setMcpServers]);
   // 获取mcpclient存储的本地配置

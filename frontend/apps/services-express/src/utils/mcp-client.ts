@@ -14,6 +14,7 @@ export class MCPClient implements MCPClientInterface {
   // 参数类型
   private transportType: TransportType;
   private serverUrl: URL;
+  private clientName: string;
   private onMessage: (message: Record<string, unknown>) => void;
   private onError: (error: Error) => void;
   private onOpen: () => void;
@@ -30,6 +31,7 @@ export class MCPClient implements MCPClientInterface {
     this.transportType = options.transportType || 'stdio';
     this.headers = options.headers || {};
     this.stdioConfig = options.stdioConfig || {};
+    this.clientName = options.clientName || 'cpk-mcp-client';
     this.onMessage = options.onMessage || ((message) => console.log('Message received:', message));
     this.onError = options.onError || ((error) => console.error('Error:', error));
     this.onOpen = options.onOpen || (() => console.log('Connection opened'));
@@ -38,7 +40,7 @@ export class MCPClient implements MCPClientInterface {
 
     // Initialize the client
     this.client = new Client({
-      name: 'cpk-mcp-client',
+      name: this.clientName,
       version: '0.0.1',
     });
 
@@ -74,7 +76,7 @@ export class MCPClient implements MCPClientInterface {
    */
   public async connect(): Promise<void> {
     try {
-      console.log('Connecting to MCP server:', this.serverUrl.href);
+      console.log('Connecting to MCP server:', this.clientName);
 
       // Connect the client (which connects the transport)
       await this.client.connect(this.transport as any);
@@ -416,14 +418,6 @@ export class MCPClient implements MCPClientInterface {
   ): SSEClientTransport | StdioClientTransport | StreamableHTTPClientTransport {
     switch (type) {
       case 'stdio':
-        // {
-        //   command: 'npx',
-        //     args: ['-y', '@sup-platform/mcp-server'],
-        //   env: {
-        //   SUPOS_API_URL: 'http://100.100.100.22:33893',
-        //     SUPOS_API_KEY: '2550783a8c884f219c6e22376220d55c',
-        // },
-        // }
         return new StdioClientTransport(this.stdioConfig);
       case 'streamable-http':
         return new StreamableHTTPClientTransport(this.serverUrl, this.headers);

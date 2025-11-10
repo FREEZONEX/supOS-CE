@@ -1,5 +1,15 @@
 import { TransportConfig } from '@/types';
 
+const getParams = (urlString: string) => {
+  try {
+    const url = new URL(urlString);
+    const params = new URLSearchParams(url.search);
+    return Object.fromEntries(params);
+  } catch (e) {
+    console.log(e);
+    return {};
+  }
+};
 /**
  * 解析自定义传输协议URL
  * @param urlString 要解析的自定义协议URL字符串
@@ -12,17 +22,25 @@ export function parseTransportUrl(urlString: string): TransportConfig {
     const protocol = url.protocol.replace(':', ''); // 移除冒号，得到协议部分
 
     switch (protocol) {
-      case 'sse':
+      case 'sse': {
+        const serverUrl = urlString.replace('sse://', '');
+        const params = getParams(serverUrl);
         return {
           transportType: 'sse',
-          serverUrl: urlString.replace('sse://', ''), // 提取see://后面的完整URL[7](@ref)
+          clientName: params.clientName || 'see',
+          serverUrl, // 提取see://后面的完整URL[7](@ref)
         };
+      }
 
-      case 'streamable-http':
+      case 'streamable-http': {
+        const serverUrl = urlString.replace('streamable-http://', '');
+        const params = getParams(serverUrl);
         return {
           transportType: 'streamable-http',
-          serverUrl: urlString.replace('streamable-http://', ''), // 提取streamable-http://后面的完整URL[7](@ref)
+          clientName: params.clientName || 'streamable-http',
+          serverUrl, // 提取streamable-http://后面的完整URL[7](@ref)
         };
+      }
 
       case 'stdio': {
         // 提取命令（主机名部分）
@@ -65,6 +83,7 @@ export function parseTransportUrl(urlString: string): TransportConfig {
 
         return {
           transportType: 'stdio',
+          clientName: args[1] || args[0] || 'stdio',
           serverUrl: 'http://localhost:3000',
           stdioConfig: {
             command,
