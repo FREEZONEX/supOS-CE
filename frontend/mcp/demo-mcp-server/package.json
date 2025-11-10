@@ -1,6 +1,6 @@
 {
   "name": "@supos-os-edge/demo-mcp-server",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "",
   "type": "module",
   "main": "dist/index.js",
@@ -44,6 +44,7 @@
   "author": "zhengfayue",
   "license": "ISC",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
