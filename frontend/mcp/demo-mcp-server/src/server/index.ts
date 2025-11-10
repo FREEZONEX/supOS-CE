@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { formatErrorMessage, formatWeatherResult, WeatherTool } from '../tools/weather.js';
 import { z } from 'zod';
-import { logger } from '../utils/index.js';
+import { logger } from '../utils';
 
 export const createServer = () => {
   const server = new McpServer(

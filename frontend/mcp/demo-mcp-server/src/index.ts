@@ -6,7 +6,7 @@ async function run() {
   try {
     switch (scriptName) {
       case 'stdio':
-        await import('./transport/stdio.js');
+        await import('./transport/stdio');
         break;
       // case 'sse':
       //   await import('./transport/sse.js');

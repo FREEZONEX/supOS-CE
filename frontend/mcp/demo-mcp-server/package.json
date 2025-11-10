@@ -1,5 +1,5 @@
 {
-  "name": "demo-mcp-server",
+  "name": "@supos-os-edge/demo-mcp-server",
   "version": "1.0.0",
   "description": "",
   "type": "module",
@@ -9,16 +9,17 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && shx chmod +x dist/*.js",
+    "dev": "tsdown --watch",
+    "build": "tsdown && shx chmod +x dist/*.js",
     "prepare": "pnpm run build",
     "watch": "tsc --watch",
     "start": "node dist/index.js",
     "start:sse": "node dist/transport/sse.js",
     "start:streamableHttp": "node dist/transport/streamableHttp.js",
-    "inspector": "npx -y @modelcontextprotocol/inspector npx demo-mcp-server"
+    "inspector": "npx -y @modelcontextprotocol/inspector npx @supos-os-edge/demo-mcp-server"
   },
   "bin": {
-    "demo-mcp-server": "dist/index.js"
+    "@supos-os-edge/demo-mcp-server": "dist/index.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "catalog:ai",
@@ -33,7 +34,8 @@
     "@types/express": "catalog:type",
     "@types/node-fetch": "catalog:type",
     "shx": "catalog:dev",
-    "typescript": "catalog:lint"
+    "typescript": "catalog:lint",
+    "tsdown": "catalog:build"
   },
   "keywords": [],
   "author": "",

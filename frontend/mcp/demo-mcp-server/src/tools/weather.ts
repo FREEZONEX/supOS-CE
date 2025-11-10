@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { logger } from '../utils/index.js';
+import { logger } from '../utils';
 
 export interface CityInfo {
   province: string;
