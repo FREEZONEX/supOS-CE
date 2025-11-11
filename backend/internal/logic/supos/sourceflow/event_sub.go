@@ -177,7 +177,6 @@ func (s *SourceFlowService) createMockFlow(ctx context.Context, repo *dao.Nodere
 	if err := repo.Insert(ctx, rec); err != nil {
 		return err
 	}
-	return nil
 	client := s.svcCtx.SourceNodeRed
 	if client == nil {
 		s.log.Infof("node-red client missing, skip deploy for flow %s", rec.FlowName)
