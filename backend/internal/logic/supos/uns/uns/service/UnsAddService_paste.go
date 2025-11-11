@@ -82,15 +82,15 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 	var positioningUns = srcUns //返回给前端的定位UNS
 	countChildren := int64(0)
 	if src.PathType == constants.PathTypeDir {
-		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "lay_rec", Sort: stores.OrderAsc}}}
-		count := int64(0)
-		for {
-			var searchCount *int64
+		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
+		MaxId := int64(0)
+		queryMaxId := &MaxId
+		for loop := true; loop; {
+			poList, _ := u.unsMapper.ListByLayRec(db, src.LayRec+"/", page, queryMaxId)
 			if countChildren == 0 {
-				searchCount = &count
+				queryMaxId = nil
 			}
-			poList, _ := u.unsMapper.ListByLayRec(db, src.LayRec+"/", page, searchCount)
-			if len(poList) < 1 || countChildren >= count { // countChildren >= count -- 防止复制自己时死循环
+			if len(poList) == 0 {
 				break
 			}
 			page.Page++
@@ -100,6 +100,11 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 			}
 
 			for _, po := range poList {
+				if po.Id > MaxId {
+					u.log.Infof("复制自己文件结束: id=%d > %d, len(list)=%d", po.Id, MaxId, len(list))
+					loop = false
+					break
+				}
 				newAlias := PathUtil.GenerateAliasWithRandom(po.Name)
 				if po.PathType == constants.PathTypeDir {
 					parentAliasMap[po.Alias] = newAlias
@@ -120,7 +125,11 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 					unsDto.WithFlags = &fl
 				}
 			}
-			if countChildren == 0 && u.sysConfig.EnableAutoCategorization && base.P2v(src.DataType) > 0 {
+			if len(list) == 0 {
+				loop = false
+				break
+			}
+			if countChildren == 0 && u.sysConfig.EnableAutoCategorization && base.P2v(src.DataType) > 0 && len(list) > 1 {
 				positioningUns = list[1]
 			}
 			srcAlias := srcUns.Alias
@@ -133,7 +142,11 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 				u.log.Infof("修正别名: %s -> %s", srcAlias, srcUns.Alias)
 				parentAliasMap[src.Alias] = srcUns.Alias
 			}
-			countChildren += int64(len(poList))
+			listSize := int64(len(poList))
+			countChildren += listSize
+			if listSize < page.Size {
+				break
+			}
 		}
 	}
 	if countChildren == 0 {

@@ -3,6 +3,7 @@ package relationDB
 import (
 	"backend/internal/common/constants"
 	"backend/share/base"
+	"context"
 	"fmt"
 	"strings"
 
@@ -262,11 +263,11 @@ func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.P
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListByLayRec(db *gorm.DB, layRec string, page *stores.PageInfo, searchCount *int64) (results []*UnsNamespace, err error) {
+func (p UnsNamespaceRepo) ListByLayRec(db *gorm.DB, layRec string, page *stores.PageInfo, maxId *int64) (results []*UnsNamespace, err error) {
 	db = p.model(db).Where("lay_rec like '" + escapeSQL(layRec) + "%'").Where("status=1")
-	if searchCount != nil {
-		err = db.Count(searchCount).Error
-		if err != nil || *searchCount == 0 {
+	if maxId != nil {
+		err = db.WithContext(context.Background()).Select("MAX(id) as id").Scan(maxId).Error
+		if err != nil || *maxId == 0 {
 			return
 		}
 	}
