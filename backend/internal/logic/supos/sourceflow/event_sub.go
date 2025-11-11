@@ -129,26 +129,8 @@ func (s *SourceFlowService) createMockFlow(ctx context.Context, repo *dao.Nodere
 		return fmt.Errorf("alias empty for topic id=%d", dto.GetId())
 	}
 	path := strings.TrimSpace(dto.GetPath())
-	if path == "" {
-		path = alias
-	}
 
-	// // Skip if a flow already exists for this alias.
-	// filter:=dao.NoderedSourceFlowFilter{Name:dto.Name}
-	// existingCount, err := repo.CountByFilter(ctx, filter)
-	// if err != nil {
-	// 	return err
-	// }
-	// if existingCount > 0 {
-	// 	for _, flow := range existingCount {
-	// 		if flow != nil && strings.EqualFold(flow.Template, constants.FlowTypeNODERED) {
-	// 			s.log.Infof("skip auto mock flow for alias=%s, flow=%s already exists", alias, flow.FlowName)
-	// 			return nil
-	// 		}
-	// 	}
-	// }
-
-	flowName, _, err := repo.FindAvailableFlowName(ctx, dto.Name, constants.FlowTypeNODERED)
+	flowName, _, err := repo.FindAvailableFlowName(ctx, path, constants.FlowTypeNODERED)
 	if err != nil {
 		return err
 	}

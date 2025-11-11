@@ -179,7 +179,7 @@ func DeployFlow(
 
 	rec.FlowID = flowID
 	rec.FlowStatus = FlowStatusRunning
-	rec.FlowData = strings.TrimSpace(overrideJSON)
+	rec.FlowData = ""
 	if err := repo.Update(ctx, rec); err != nil {
 		return "", err
 	}
