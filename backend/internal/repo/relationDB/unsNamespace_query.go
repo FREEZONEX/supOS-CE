@@ -262,12 +262,18 @@ func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.P
 	}
 	return
 }
-func (p UnsNamespaceRepo) ListByLayRec(db *gorm.DB, layRec string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
-	db = p.model(db)
+func (p UnsNamespaceRepo) ListByLayRec(db *gorm.DB, layRec string, page *stores.PageInfo, searchCount *int64) (results []*UnsNamespace, err error) {
+	db = p.model(db).Where("lay_rec like '" + escapeSQL(layRec) + "%'").Where("status=1")
+	if searchCount != nil {
+		err = db.Count(searchCount).Error
+		if err != nil || *searchCount == 0 {
+			return
+		}
+	}
 	if page != nil {
 		db = page.ToGorm(db)
 	}
-	err = db.Where("lay_rec like '" + escapeSQL(layRec) + "%'").Where("status=1").Find(&results).Error
+	err = db.Find(&results).Error
 	return
 }
 

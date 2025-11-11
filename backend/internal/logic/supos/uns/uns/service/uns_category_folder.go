@@ -199,6 +199,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 									child.ParentAlias = &existsCategoryFolder.Alias
 								}
 							}
+							topicDto.Alias = existsCategoryFolder.Alias
 							findSameCategoryDir = true
 							break
 						}

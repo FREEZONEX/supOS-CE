@@ -80,12 +80,17 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 		}
 	}
 	var positioningUns = srcUns //返回给前端的定位UNS
-	countChildren := 0
+	countChildren := int64(0)
 	if src.PathType == constants.PathTypeDir {
 		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "lay_rec", Sort: stores.OrderAsc}}}
+		count := int64(0)
 		for {
-			poList, _ := u.unsMapper.ListByLayRec(db, src.LayRec+"/", page)
-			if len(poList) < 1 {
+			var searchCount *int64
+			if countChildren == 0 {
+				searchCount = &count
+			}
+			poList, _ := u.unsMapper.ListByLayRec(db, src.LayRec+"/", page, searchCount)
+			if len(poList) < 1 || countChildren >= count { // countChildren >= count -- 防止复制自己时死循环
 				break
 			}
 			page.Page++
@@ -118,12 +123,17 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 			if countChildren == 0 && u.sysConfig.EnableAutoCategorization && base.P2v(src.DataType) > 0 {
 				positioningUns = list[1]
 			}
-			countChildren += len(poList)
+			srcAlias := srcUns.Alias
 			tipMap := u.CreateModelAndInstance(ctx, list, false)
 			if len(tipMap) > 0 {
 				resp.Code, resp.Msg = 400, fmt.Sprintf("%+v", tipMap)
 				return
 			}
+			if countChildren == 0 && srcAlias != srcUns.Alias {
+				u.log.Infof("修正别名: %s -> %s", srcAlias, srcUns.Alias)
+				parentAliasMap[src.Alias] = srcUns.Alias
+			}
+			countChildren += int64(len(poList))
 		}
 	}
 	if countChildren == 0 {
