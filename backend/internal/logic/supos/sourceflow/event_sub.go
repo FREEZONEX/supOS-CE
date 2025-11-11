@@ -1,6 +1,7 @@
-package service
+package sourceflow
 
 import (
+	"backend/internal/common"
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/logic/supos/flowcommon"
@@ -35,6 +36,7 @@ type SourceFlowService struct {
 }
 
 func init() {
+	fmt.Println("regSourceFlowService")
 	spring.RegisterLazy[*SourceFlowService](func() *SourceFlowService {
 		svc := &SourceFlowService{
 			log:    logx.WithContext(context.Background()),
@@ -131,21 +133,22 @@ func (s *SourceFlowService) createMockFlow(ctx context.Context, repo *dao.Nodere
 		path = alias
 	}
 
-	// Skip if a flow already exists for this alias.
-	existing, err := repo.SelectByAliases(ctx, []string{alias})
-	if err != nil {
-		return err
-	}
-	if len(existing) > 0 {
-		for _, flow := range existing {
-			if flow != nil && strings.EqualFold(flow.Template, constants.FlowTypeNODERED) {
-				s.log.Infof("skip auto mock flow for alias=%s, flow=%s already exists", alias, flow.FlowName)
-				return nil
-			}
-		}
-	}
+	// // Skip if a flow already exists for this alias.
+	// filter:=dao.NoderedSourceFlowFilter{Name:dto.Name}
+	// existingCount, err := repo.CountByFilter(ctx, filter)
+	// if err != nil {
+	// 	return err
+	// }
+	// if existingCount > 0 {
+	// 	for _, flow := range existingCount {
+	// 		if flow != nil && strings.EqualFold(flow.Template, constants.FlowTypeNODERED) {
+	// 			s.log.Infof("skip auto mock flow for alias=%s, flow=%s already exists", alias, flow.FlowName)
+	// 			return nil
+	// 		}
+	// 	}
+	// }
 
-	flowName, _, err := repo.FindAvailableFlowName(ctx, alias, constants.FlowTypeNODERED)
+	flowName, _, err := repo.FindAvailableFlowName(ctx, dto.Name, constants.FlowTypeNODERED)
 	if err != nil {
 		return err
 	}
@@ -164,18 +167,17 @@ func (s *SourceFlowService) createMockFlow(ctx context.Context, repo *dao.Nodere
 	}, flowcommon.GenerateNodeID)
 
 	rec := &dao.NoderedSourceFlow{
-		ID:          s.svcCtx.SnowFlake.GetSnowflakeId(),
-		FlowName:    flowName,
-		Description: fmt.Sprintf("auto mock flow for %s", alias),
-		Template:    constants.FlowTypeNODERED,
-		FlowStatus:  flowcommon.FlowStatusDraft,
-		FlowData:    rendered,
+		ID:         common.NextId(),
+		FlowName:   flowName,
+		Template:   constants.FlowTypeNODERED,
+		FlowStatus: flowcommon.FlowStatusDraft,
+		FlowData:   rendered,
 	}
 
 	if err := repo.Insert(ctx, rec); err != nil {
 		return err
 	}
-
+	return nil
 	client := s.svcCtx.SourceNodeRed
 	if client == nil {
 		s.log.Infof("node-red client missing, skip deploy for flow %s", rec.FlowName)
@@ -186,10 +188,6 @@ func (s *SourceFlowService) createMockFlow(ctx context.Context, repo *dao.Nodere
 		return err
 	}
 
-	// Refresh cached data after deployment.
-	if _, err := repo.FindOne(ctx, rec.ID); err != nil {
-		return err
-	}
 	return nil
 }
 

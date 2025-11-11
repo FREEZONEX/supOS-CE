@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common"
 	"backend/internal/common/constants"
 	"backend/internal/logic/supos/flowcommon"
 	"backend/internal/repo/relationDB"
@@ -63,7 +64,7 @@ func (l *CreateSourceMockFlowLogic) CreateSourceMockFlow(req *types.SourceFlowMo
 		return nil, err
 	}
 	rec := &relationDB.NoderedSourceFlow{
-		ID:          l.svcCtx.SnowFlake.GetSnowflakeId(),
+		ID:          common.NextId(),
 		FlowName:    flowName,
 		Description: fmt.Sprintf("auto mock for %s", alias),
 		Template:    constants.FlowTypeNODERED,

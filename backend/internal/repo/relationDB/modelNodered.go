@@ -16,8 +16,8 @@ type NoderedFlow struct {
 	Description string `gorm:"column:description;size:512;comment:描述"`
 	// GORM many2many association with UnsNamespace via supos_node_flow_models.
 	Nodes      []UnsNamespace `gorm:"many2many:supos_node_flow_models;foreignKey:ID;joinForeignKey:ParentID;References:Alias;joinReferences:Alias"`
-	CreateTime time.Time      `gorm:"column:create_time;default:now()" json:"create_time"`
-	UpdateTime time.Time      `gorm:"column:update_time" json:"update_time"`
+	CreateTime time.Time      `gorm:"column:create_time;autoCreateTime;" json:"create_time"`
+	UpdateTime time.Time      `gorm:"column:update_time;autoUpdateTime;" json:"update_time"`
 	Creator    string         `gorm:"column:creator;comment:创建者"`
 }
 
@@ -29,7 +29,7 @@ type NoderedFlowNode struct {
 	ParentID   int64     `gorm:"column:parent_id;comment:flow表id"`
 	Alias      string    `gorm:"column:alias;"`
 	Topic      string    `gorm:"column:topic;"`
-	CreateTime time.Time `gorm:"column:create_time;default:now()" json:"create_time"`
+	CreateTime time.Time `gorm:"column:create_time;autoCreateTime" json:"create_time"`
 }
 
 func (NoderedFlowNode) TableName() string {
@@ -46,7 +46,7 @@ type NoderedFlowTop struct {
 	ID         int64     `gorm:"column:id;primaryKey;type:bigint;"`
 	UserID     string    `gorm:"column:user_id;primaryKey;size:128;"`
 	Mark       int       `gorm:"column:mark;default:1"`
-	UpdateTime time.Time `gorm:"column:update_time" json:"update_time"`
+	UpdateTime time.Time `gorm:"column:update_time;autoUpdateTime;" json:"update_time"`
 	MarkTime   time.Time `gorm:"column:mark_time;type:timestamptz;autoCreateTime"`
 }
 

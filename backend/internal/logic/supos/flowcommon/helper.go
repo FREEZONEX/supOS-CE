@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"backend/internal/common"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 
@@ -55,7 +56,7 @@ func CopyFlow(
 	}
 
 	dst := &relationDB.NoderedFlow{
-		ID:          svcCtx.SnowFlake.GetSnowflakeId(),
+		ID:          common.NextId(),
 		FlowName:    strings.TrimSpace(input.FlowName),
 		Description: strings.TrimSpace(input.Description),
 		Template:    strings.TrimSpace(input.Template),

@@ -1,4 +1,4 @@
-package service
+package sourceflow
 
 import (
 	"backend/internal/common/constants"

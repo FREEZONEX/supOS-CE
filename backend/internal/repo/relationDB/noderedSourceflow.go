@@ -255,7 +255,7 @@ func (r NoderedSourceFlowRepo) FindAvailableFlowName(ctx context.Context, base s
 	if !existsBase {
 		return base, 0, nil
 	}
-	return fmt.Sprintf("%s-%d", base, maxN+1), maxN + 1, nil
+	return fmt.Sprintf("%s(%d)", base, maxN+1), maxN + 1, nil
 }
 
 // SelectByAliases returns flows associated with any of the given aliases.
