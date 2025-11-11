@@ -29,7 +29,7 @@ func NewCreateModelInstanceLogic(ctx context.Context, svcCtx *svc.ServiceContext
 	}
 }
 
-func (l *CreateModelInstanceLogic) CreateModelInstance(req *types.CreateTopicDto) (resp *types.StringResult, err error) {
+func (l *CreateModelInstanceLogic) CreateModelInstance(req *types.CreateTopicDto) (resp *types.CreateUnsResp, err error) {
 	resp = spring.GetBean[*service.UnsAddService]().CreateModelInstance(l.ctx, req)
 	return
 }

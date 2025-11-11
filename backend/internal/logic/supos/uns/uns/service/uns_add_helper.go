@@ -253,10 +253,8 @@ func checkTopicDto(errTipMap map[string]string,
 	pathMap map[int16]map[string]*types.CreateTopicDto,
 	put func(*types.CreateTopicDto),
 	d *types.CreateTopicDto) {
+
 	pathType := d.PathType
-	if pathType == constants.PathTypeDir {
-		d.DataType = nil
-	}
 	//TODO 假设 validator 在 Go 中已实现
 	//violations := validator.Validate(dto)
 	batchIndex := d.GainBatchIndex()
@@ -279,7 +277,6 @@ func checkTopicDto(errTipMap map[string]string,
 	}
 
 	if pathType == constants.PathTypeDir { // 当前是文件夹
-		d.DataType = nil
 		put(d)
 	} else if pathType == constants.PathTypeFile { // 当前是文件
 		dataType := d.DataType
@@ -373,6 +370,9 @@ func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 	if unsDto.ModelAlias != nil {
 		instance.ModelAlias = *unsDto.ModelAlias
 	}
+	if unsDto.PathType == constants.PathTypeFile && unsDto.ParentDataType != nil {
+		instance.ParentDataType = unsDto.ParentDataType
+	}
 
 	if unsDto.Refers != nil {
 		instance.Refers = unsDto.Refers
@@ -429,7 +429,7 @@ func getTemplate(topicDto *types.CreateTopicDto, existsUns func(string) *dao.Uns
 	} else if folderAlias = topicDto.ParentAlias; folderAlias != nil {
 		folder := existsUns(*folderAlias)
 		if folder == nil {
-			errMsg = I18nUtils.GetMessage("uns.folder.not.found")
+			errMsg = I18nUtils.GetMessage("uns.folder.not.found") + ":alias=" + *folderAlias
 		} else if pt := topicDto.PathType; folder.PathType != constants.PathTypeDir && (pt == constants.PathTypeFile || pt == constants.PathTypeDir) {
 			errMsg = I18nUtils.GetMessage("uns.alias.has.exist.type",
 				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(folder.PathType))),
@@ -544,15 +544,15 @@ func (u *UnsAddService) trySetId(
 	DB_EXISTS := dbPo != nil && base.P2v(dbPo.Status) == OK
 
 	// 创建关系型文件, 不允许新增系统字段
-	if !DB_EXISTS && len(unsDto.Fields) > 0 &&
-		unsDto.DataSrcID != 0 && types.SrcJdbcType(unsDto.DataSrcID).TypeCode() != constants.TimeSequenceType {
-		for _, fd := range unsDto.Fields {
-			if fd.IsSystemField() {
-				errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.keyword", fd.Name)
-				return nil
-			}
-		}
-	}
+	//if !DB_EXISTS && len(unsDto.Fields) > 0 &&
+	//	unsDto.DataSrcID != 0 && types.SrcJdbcType(unsDto.DataSrcID).TypeCode() != constants.TimeSequenceType {
+	//	for _, fd := range unsDto.Fields {
+	//		if fd.IsSystemField() {
+	//			errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.keyword", fd.Name) + ",alias=" + unsDto.Alias
+	//			return nil
+	//		}
+	//	}
+	//}
 
 	newUns := newUnsFile(unsDto)
 	dataType := int16(0)
@@ -575,7 +575,7 @@ func (u *UnsAddService) trySetId(
 
 	if DB_EXISTS {
 		tar := *dbPo
-		copier.CopyWithOption(&tar, newUns, copier.Option{IgnoreEmpty: true})
+		_ = copier.CopyWithOption(&tar, newUns, copier.Option{IgnoreEmpty: true})
 		if unsDto.Name == "" {
 			unsDto.Name = dbPo.Name
 		}
@@ -853,7 +853,7 @@ func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context,
 	return nil
 }
 
-func aliasToId(addFiles map[int64]*dao.UnsNamespace, aliasMap func(string) *dao.UnsNamespace) {
+func aliasToId(addFiles map[int64]*dao.UnsNamespace, aliasMap func(string) *dao.UnsNamespace, pathMap map[int16]map[string]*types.CreateTopicDto) {
 	for _, file := range addFiles {
 		if modelAlias := file.ModelAlias; modelAlias != "" {
 			if model := aliasMap(modelAlias); model != nil {
@@ -863,6 +863,14 @@ func aliasToId(addFiles map[int64]*dao.UnsNamespace, aliasMap func(string) *dao.
 		if parentAlias := file.ParentAlias; parentAlias != nil {
 			if parent := aliasMap(*parentAlias); parent != nil {
 				file.ParentId = &parent.Id
+			}
+		}
+		if dtoMap, has := pathMap[file.PathType]; has {
+			DTO := dtoMap[file.Alias]
+			if DTO != nil {
+				DTO.Id = file.Id
+				DTO.ModelId = file.ModelId
+				DTO.ParentId = file.ParentId
 			}
 		}
 	}

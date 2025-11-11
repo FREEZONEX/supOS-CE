@@ -1,6 +1,7 @@
 package system
 
 import (
+	"backend/share/spring"
 	"context"
 	"errors"
 	"fmt"
@@ -36,19 +37,20 @@ func NewSystemConfigLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Syst
 		svcCtx: svcCtx,
 	}
 }
-
-func (l *SystemConfigLogic) SystemConfig() (resp *types.SystemConfigResp, err error) {
-	cfg, buildErr := buildSystemConfig(l.Logger)
-	if buildErr != nil {
-		// Log the error but still attempt to return whatever we have.
-		l.Errorf("failed to build system config: %v", buildErr)
-		if err == nil {
-			err = buildErr
+func init() {
+	spring.RegisterLazy[*sysconfig.SystemConfig](func() *sysconfig.SystemConfig {
+		logger := logx.WithContext(context.Background())
+		cfg, buildErr := buildSystemConfig(logger)
+		if buildErr != nil {
+			// Log the error but still attempt to return whatever we have.
+			logger.Errorf("failed to build system config: %v", buildErr)
 		}
-	}
-
+		return cfg
+	})
+}
+func (l *SystemConfigLogic) SystemConfig() (resp *types.SystemConfigResp, err error) {
+	cfg := spring.GetBean[*sysconfig.SystemConfig]()
 	resp = mapSystemConfigToResp(cfg)
-
 	return
 }
 
@@ -77,7 +79,7 @@ func buildSystemConfig(logger logx.Logger) (*sysconfig.SystemConfig, error) {
 	cfg.TimestampName = firstNonEmpty(os.Getenv("SYS_OS_TIMESTAMP_NAME"), firstNonEmpty(cfg.TimestampName, constants.SysFieldCreateTime))
 	cfg.LazyTree = boolEnv("SYS_OS_LAZY_TREE", cfg.LazyTree)
 	cfg.LDAPEnable = boolEnv("SYS_OS_LDAP_ENABLE", cfg.LDAPEnable)
-
+	cfg.EnableAutoCategorization = boolEnv("SYS_OS_ENABLE_AUTO_CATEGORIZATION", cfg.EnableAutoCategorization)
 	containerMap, err := loadContainerMap(logger)
 	if err != nil {
 		return cfg, err
@@ -108,6 +110,7 @@ func mapSystemConfigToResp(cfg *sysconfig.SystemConfig) *types.SystemConfigResp 
 		TimestampName:        cfg.TimestampName,
 		LazyTree:             cfg.LazyTree,
 		LdapEnable:           cfg.LDAPEnable,
+		AutoCategoryEnable:   cfg.EnableAutoCategorization,
 	}
 
 	if len(cfg.ContainerMap) > 0 {

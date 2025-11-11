@@ -151,6 +151,9 @@ func GenerateFileAlias(path string) string {
 
 	return aliasPath[:prefixLen] + "_" + hashStr
 }
+func GenerateAliasWithRandom(name string) string {
+	return randomByName(name)
+}
 
 // GenerateAlias 根据路径和类型生成别名
 func GenerateAlias(path string, pathType int16) string {
@@ -172,6 +175,10 @@ func GenerateAlias(path string, pathType int16) string {
 		aliasPath = path
 	}
 
+	return randomByName(aliasPath)
+}
+
+func randomByName(aliasPath string) string {
 	aliasPath = strings.ReplaceAll(aliasPath, "/", "_")
 	aliasPath = strings.ReplaceAll(aliasPath, "-", "_")
 	aliasPath = generatePinyinAlias(aliasPath)

@@ -75,7 +75,7 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 		return base.P2vWithDefault(t.ParentId, -1)
 	})
 	levels := base.MapKeys(reverseGraph)
-	sort.Sort(longSlice(levels))
+	sort.Sort(base.LongSlice(levels))
 	// 处理所有节点
 	for _, level := range levels {
 		ids := reverseGraph[level]
@@ -97,12 +97,6 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 	}
 	return &saveOrUpdate{insertList: base.MapValues(nodesToInsert), updateList: base.MapValues(nodesToUpdate)}
 }
-
-type longSlice []int64
-
-func (x longSlice) Len() int           { return len(x) }
-func (x longSlice) Less(i, j int) bool { return x[i] < x[j] }
-func (x longSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 func equalsInt64(a, b *int64) bool {
 	if a == nil && b == nil {

@@ -223,7 +223,7 @@ func (l *UnsLabelService) CancelLabelByNames(ctx context.Context, unsAlias strin
 }
 
 // OnEventRemoveTopicsEvent 处理UNS 删除事件
-func (l *UnsLabelService) OnEventRemoveTopicsEvent(event event.RemoveTopicsEvent) (er error) {
+func (l *UnsLabelService) OnEventRemoveTopicsEvent(event *event.RemoveTopicsEvent) (er error) {
 	labelIds := base.FilterAndFlatMap(event.Topics, func(e bo.UnsInfo) (vs []int64, ok bool) {
 		if labelIDs := e.GetLabelIds(); len(labelIDs) > 0 {
 			vs, ok = base.MapKeys(labelIDs), true

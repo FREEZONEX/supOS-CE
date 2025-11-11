@@ -112,7 +112,9 @@ func (p UnsNamespaceRepo) SelectById(db *gorm.DB, id int64) (*UnsNamespace, erro
 	return &result, nil
 }
 func (p UnsNamespaceRepo) SelectByIds(db *gorm.DB, ids []int64) (results []*UnsNamespace, err error) {
-	err = p.model(db).Where("id IN ?", ids).Where("status=1").First(&results).Error
+	err = p.model(db).Where("id IN ?", ids).Where("status=1").
+		Order(clause.OrderByColumn{Column: clause.Column{Name: "id"}, Desc: false}).
+		Find(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
 	}

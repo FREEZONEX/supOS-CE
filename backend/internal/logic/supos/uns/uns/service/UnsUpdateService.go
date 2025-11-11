@@ -103,8 +103,8 @@ func (s *UnsUpdateService) UpdateDetail(ctx context.Context, unsDto *types.Updat
 	createTopicDto.ParentAlias = unsPo.ParentAlias
 	createTopicDto.DataType = unsPo.DataType
 
-	resp = s.unsAddService.CreateModelInstance(ctx, createTopicDto)
-
+	createUnsResp := s.unsAddService.CreateModelInstance(ctx, createTopicDto)
+	resp = &types.StringResult{BaseResult: createUnsResp.BaseResult, Data: createUnsResp.Data.Id}
 	return
 }
 
@@ -126,7 +126,8 @@ func (s *UnsUpdateService) UpdateName(ctx context.Context, req *types.UpdateName
 		DataType:    unsPo.DataType,
 	}
 
-	resp = s.unsAddService.CreateModelInstance(ctx, createTopicDto)
+	createUnsResp := s.unsAddService.CreateModelInstance(ctx, createTopicDto)
+	resp = &types.StringResult{BaseResult: createUnsResp.BaseResult, Data: createUnsResp.Data.Id}
 	return
 }
 

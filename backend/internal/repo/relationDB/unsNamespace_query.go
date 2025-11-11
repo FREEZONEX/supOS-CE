@@ -59,6 +59,31 @@ func (p UnsNamespaceRepo) GetAliasByPath(db *gorm.DB, path string) (alias string
 	return
 }
 
+// ListCategoryFolders 查询分类文件夹
+func (p UnsNamespaceRepo) ListCategoryFolders(db *gorm.DB, parentAliasList []string) (results []*UnsNamespace, err error) {
+	if len(parentAliasList) == 0 {
+		return results, nil
+	}
+	err = p.model(db).
+		Select([]string{"id", "parent_id", "alias", "parent_alias", "data_type"}).
+		Where("parent_alias IN ?", parentAliasList).
+		Where("data_type > ?", 0).
+		Where("path_type = ?", 0).
+		Find(&results).Error
+	return
+}
+
+// ListRootCategoryFolders 查询根分类文件夹
+func (p UnsNamespaceRepo) ListRootCategoryFolders(db *gorm.DB) (results []*UnsNamespace, err error) {
+	err = p.model(db).
+		Select([]string{"id", "parent_id", "alias", "parent_alias", "data_type"}).
+		Where("parent_id is null").
+		Where("data_type > ?", 0).
+		Where("path_type = ?", 0).
+		Find(&results).Error
+	return
+}
+
 type UnsPathFilter struct {
 	Key        string
 	TemplateId int64
@@ -217,7 +242,7 @@ func (p UnsNamespaceRepo) ListTimeSeriesFiles(db *gorm.DB, key string, page *sto
 }
 func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.PageInfo, searchCount *int64) (results []*UnsNamespace, err error) {
 	db = p.model(db)
-	db.Where("path_type = ?", 2).Where("data_type = ?", constants.AlarmRuleType)
+	db = db.Where("path_type = ?", 2).Where("data_type = ?", constants.AlarmRuleType)
 	if key != "" {
 		db = db.Where("(data_path like ? OR description like ?)", key, key)
 	}
@@ -228,7 +253,9 @@ func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.P
 			return
 		}
 	}
-	db = page.ToGorm(db)
+	if page != nil {
+		db = page.ToGorm(db)
+	}
 	err = db.Find(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)
@@ -237,9 +264,20 @@ func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.P
 }
 func (p UnsNamespaceRepo) ListByLayRec(db *gorm.DB, layRec string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
 	db = p.model(db)
-	db = page.ToGorm(db)
+	if page != nil {
+		db = page.ToGorm(db)
+	}
 	err = db.Where("lay_rec like '" + escapeSQL(layRec) + "%'").Where("status=1").Find(&results).Error
 	return
+}
+
+func (p UnsNamespaceRepo) ExistsForbiddenFiles(db *gorm.DB, layRec string, pDataType int16) bool {
+	db = p.model(db)
+	var rs UnsNamespace
+	err := db.Select([]string{"id"}).Where("lay_rec like '"+escapeSQL(layRec)+"%'").
+		Where("(path_type=0 and data_type <> ?) OR (path_type=2 and parent_data_type <> ?)", pDataType, pDataType).
+		Where("status=1").First(&rs).Error
+	return err == nil
 }
 func (p UnsNamespaceRepo) ListByLayRecs(db *gorm.DB, layRecs []string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
 	db = p.model(db)

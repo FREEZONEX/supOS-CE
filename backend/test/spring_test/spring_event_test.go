@@ -3,9 +3,19 @@ package spring_test
 import (
 	"backend/share/spring"
 	"fmt"
+	"reflect"
 	"testing"
+
+	typetostring "github.com/samber/go-type-to-string"
 )
 
+func TestEventName(t *testing.T) {
+	vs := []any{UserCreatedEvent{}, &UserCreatedEvent{}}
+	for i, v := range vs {
+		eventType := typetostring.GetReflectType(reflect.TypeOf(v))
+		t.Logf("eventType[%d]=%#v\n", i, eventType)
+	}
+}
 func TestSpringEvent(t *testing.T) {
 
 	fmt.Println("=== Event-Driven Architecture Example ===")

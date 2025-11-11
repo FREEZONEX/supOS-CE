@@ -244,6 +244,16 @@ type CreateUnsNodeRedDto struct {
 	Tag       string `json:"tag,optional"`
 }
 
+type CreateUnsResp struct {
+	BaseResult
+	Data CreateUnsResult `json:"data,optional"`
+}
+
+type CreateUnsResult struct {
+	Id       string `json:"id"`
+	ParentId string `json:"parentId"`
+}
+
 type DashboardDto struct {
 	ID          string `json:"id,optional,omitzero"`
 	Name        string `json:"name"`
@@ -604,7 +614,7 @@ type MakeSingleLabelReq struct {
 }
 
 type MarkTopRequest struct {
-	ID string `json:"id"`
+	ID int64 `json:"id"`
 }
 
 type ModelDetail struct {
@@ -720,9 +730,9 @@ type ParserTopicPayloadReq struct {
 }
 
 type PasteRequestVO struct {
-	SourceId int64 `json:"sourceId"`
-	TargetId int64 `json:"targetId"`
-	NewF     bool  `json:"newF"`
+	SourceId int64           `json:"sourceId,string"`
+	TargetId int64           `json:"targetId,string,optional"`
+	NewFile  *CreateTopicDto `json:"newF,optional"`
 }
 
 type PhoneUpdateReq struct {
@@ -1040,6 +1050,7 @@ type SystemConfigResp struct {
 	TimestampName        string                   `json:"timestampName,optional"`
 	LazyTree             bool                     `json:"lazyTree,optional"`
 	LdapEnable           bool                     `json:"ldapEnable,optional"`
+	AutoCategoryEnable   bool                     `json:"enableAutoCategorization,optional"` //是否开启文件自动归类
 }
 
 type Tag struct {

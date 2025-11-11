@@ -4,6 +4,8 @@
 package uns
 
 import (
+	"backend/internal/logic/supos/uns/uns/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
@@ -27,8 +29,7 @@ func NewPasteFolderOrFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 	}
 }
 
-func (l *PasteFolderOrFileLogic) PasteFolderOrFile(req *types.PasteRequestVO) (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
-
+func (l *PasteFolderOrFileLogic) PasteFolderOrFile(req *types.PasteRequestVO) (resp *types.CreateUnsResp, err error) {
+	resp, err = spring.GetBean[*service.UnsAddService]().PasteFolderOrFile(l.ctx, req)
 	return
 }

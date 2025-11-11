@@ -28,10 +28,7 @@ func (l *UnsTemplateService) Create(ctx context.Context, req *types.CreateTempla
 	rs.Code, rs.Msg = 500, "Err"
 	if idRs != nil {
 		rs.Code, rs.Msg = idRs.Code, idRs.Msg
-		if id := idRs.Data; len(id) > 0 {
-			rs.Id = id
-			rs.Code, rs.Msg = 200, "OK"
-		}
+		rs.Id = idRs.Data.Id
 	}
 	return
 }

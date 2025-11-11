@@ -35,6 +35,7 @@ type (
         TimestampName       string                       `json:"timestampName,optional"`
         LazyTree            bool                         `json:"lazyTree,optional"`
         LdapEnable          bool                         `json:"ldapEnable,optional"`
+        AutoCategoryEnable  bool                         `json:"enableAutoCategorization,optional"`//是否开启文件自动归类
     }
 
     ContainerInfo {

@@ -22,27 +22,29 @@ type SystemConfig struct {
 	TimestampName string `mapstructure:"timestamp_name"` // 系统时间字段名称
 
 	// Features
-	LazyTree   bool `mapstructure:"lazy_tree"`   // 是否启用UNS树懒加载模式
-	LDAPEnable bool `mapstructure:"ldap_enable"` // 是否启用LDAP用户体系
-
+	LazyTree                 bool `mapstructure:"lazy_tree"`                  // 是否启用UNS树懒加载模式
+	LDAPEnable               bool `mapstructure:"ldap_enable"`                // 是否启用LDAP用户体系
+	EnableAutoCategorization bool `mapstructure:"enable_auto_categorization"` //是否开启文件自动归类
 	// Container configuration
 	ContainerMap map[string]*ContainerInfo `mapstructure:"containers"` // 系统容器
+
 }
 
 // NewSystemConfig returns a SystemConfig with default values
 func NewSystemConfig() *SystemConfig {
 	return &SystemConfig{
-		Lang:                 "zh-CN",
-		AuthEnable:           false,
-		LLMType:              "ollama",
-		MQTTTCPPort:          1883,
-		MQTTWebsocketTSLPort: 8084,
-		LoginPath:            "/supos-login",
-		PlatformType:         "linux",
-		QualityName:          "status",
-		TimestampName:        "timeStamp",
-		LazyTree:             false,
-		LDAPEnable:           false,
-		ContainerMap:         make(map[string]*ContainerInfo),
+		Lang:                     "zh-CN",
+		AuthEnable:               false,
+		LLMType:                  "ollama",
+		MQTTTCPPort:              1883,
+		MQTTWebsocketTSLPort:     8084,
+		LoginPath:                "/supos-login",
+		PlatformType:             "linux",
+		QualityName:              "status",
+		TimestampName:            "timeStamp",
+		LazyTree:                 false,
+		LDAPEnable:               false,
+		EnableAutoCategorization: true,
+		ContainerMap:             make(map[string]*ContainerInfo),
 	}
 }

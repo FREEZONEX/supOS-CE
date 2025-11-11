@@ -3,8 +3,10 @@ package service
 import (
 	"backend/internal/common"
 	"backend/internal/common/I18nUtils"
+	sysconfig "backend/internal/common/config"
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
+	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/label/service"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	"backend/internal/logic/supos/uns/uns/bo"
@@ -27,6 +29,7 @@ type UnsAddService struct {
 	log             logx.Logger
 	unsMapper       dao.UnsNamespaceRepo
 	labelRefMapper  dao.UnsLabelRefRepo
+	sysConfig       *sysconfig.SystemConfig
 	unsLabelService *service.UnsLabelService
 	removeService   *UnsRemoveService
 	unsCalcService  UnsCalcService
@@ -36,14 +39,23 @@ func init() {
 	spring.RegisterLazy[*UnsAddService](func() *UnsAddService {
 		return &UnsAddService{
 			log:             logx.WithContext(context.Background()),
+			sysConfig:       spring.GetBean[*sysconfig.SystemConfig](),
 			unsLabelService: spring.GetBean[*service.UnsLabelService](),
 			removeService:   spring.GetBean[*UnsRemoveService](),
 		}
 	})
 }
 func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args bo.CreateModelInstancesArgs) (errTipMap map[string]string) {
+	{
+		db := dao.GetDb(ctx)
+		ctx = dao.SetDb(ctx, db)
+	}
+	// 对文件进行归类
+	errTipMap = make(map[string]string, len(args.Topics))
+	if u.sysConfig.EnableAutoCategorization {
+		args.Topics = u.appendCategoryFolders(ctx, args.Topics, errTipMap)
+	}
 	topicDtos := args.Topics
-	errTipMap = make(map[string]string, len(topicDtos))
 	pathMap := initParamsUns(topicDtos, errTipMap)
 	if len(pathMap) == 0 {
 		u.log.Info("不存在任何文件夹或文件, 无法继续保存")
@@ -51,10 +63,6 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	dbFiles := make(map[int64]*dao.UnsNamespace)
 	var existsUns map[string]*dao.UnsNamespace
-	{
-		db := dao.GetDb(ctx)
-		ctx = dao.SetDb(ctx, db)
-	}
 	{
 		ids := make(map[int64]bool)
 		aliasSet := make(map[string]bool)
@@ -95,26 +103,17 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	unsPoLabels := make(map[int64]*bo.UnsPoLabels, len(paramFiles)+len(paramFolders))
 	var deleteFiles []*dao.UnsNamespace
-	for _, vs := range pathMap {
-		for _, DTO := range vs {
-			po := u.trySetId(ctx, createTime, DTO, allUns, dbFiles, &deleteFiles, errTipMap)
-			if po != nil {
-				addFiles[po.Id] = po
-				aliasMap[po.Alias] = po
-				if DTO.LabelNames != nil {
-					_, exists := dbFiles[po.Id]
-					unsPoLabels[po.Id] = bo.NewUnsPoLabels(po, exists, DTO.LabelNames)
-				}
-			}
-		}
-	}
+	u.itrFiles(ctx, base.MapValues(pathMap[constants.PathTypeTemplate]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+	u.itrFiles(ctx, folders, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+	u.itrFiles(ctx, base.MapValues(pathMap[constants.PathTypeFile]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+
 	for k, dbPo := range dbFiles {
 		if base.P2v(dbPo.Status) == LOGIC_REMOVED {
 			delete(dbFiles, k)
 		}
 	}
 	//TODO 计算，引用，聚合等类型的 校验和处理
-	aliasToId(addFiles, allUns)
+	aliasToId(addFiles, allUns, pathMap)
 	// 找出 parentAlias 或 name 有修改的最高层目录，后面需要获取它的整个子树，为更新 layRec 做准备
 	err := u.tryAddLayRecOrPathChangedChildren(ctx, addFiles, dbFiles, existsUns)
 	if err != nil {
@@ -201,6 +200,31 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	return errTipMap
 }
+
+func (u *UnsAddService) itrFiles(
+	ctx context.Context,
+	vs []*types.CreateTopicDto,
+	createTime time.Time, allUns func(alias string) *dao.UnsNamespace,
+	dbFiles map[int64]*dao.UnsNamespace, deleteFiles []*dao.UnsNamespace,
+	errTipMap map[string]string,
+	addFiles map[int64]*dao.UnsNamespace,
+	aliasMap map[string]*dao.UnsNamespace,
+	unsPoLabels map[int64]*bo.UnsPoLabels) {
+	if len(vs) == 0 {
+		return
+	}
+	for _, DTO := range vs {
+		po := u.trySetId(ctx, createTime, DTO, allUns, dbFiles, &deleteFiles, errTipMap)
+		if po != nil {
+			addFiles[po.Id] = po
+			aliasMap[po.Alias] = po
+			if DTO.LabelNames != nil {
+				_, exists := dbFiles[po.Id]
+				unsPoLabels[po.Id] = bo.NewUnsPoLabels(po, exists, DTO.LabelNames)
+			}
+		}
+	}
+}
 func (u *UnsAddService) saveBatchAndSendEvent(
 	ctx context.Context,
 	createTime time.Time,
@@ -270,8 +294,8 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 func pathTypeGroupBy(e *types.CreateTopicDto) int16 {
 	return e.PathType
 }
-func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types.CreateTopicDto) *types.StringResult {
-	result := &types.StringResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
+func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types.CreateTopicDto) *types.CreateUnsResp {
+	result := &types.CreateUnsResp{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
 	db := dao.GetDb(ctx)
 	// 处理父文件夹ID
 	if topicDto.ParentId != nil && *topicDto.ParentId != 0 && topicDto.ParentAlias == nil {
@@ -282,7 +306,7 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 			return result
 		} else if folder == nil {
 			result.Code = 400
-			result.Msg = I18nUtils.GetMessage("uns.folder.not.found")
+			result.Msg = I18nUtils.GetMessage("uns.folder.not.found") + ":id=" + strconv.Itoa(int(*topicDto.ParentId))
 			return result
 		}
 
@@ -291,27 +315,29 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 		//}
 		topicDto.ParentAlias = &folder.Alias
 	}
-
-	// TODO 是文件夹并且需要创建模板
+	unsList := make([]*types.CreateTopicDto, 0, 2)
+	// 是文件夹 并且需要创建模板
 	if topicDto.PathType == constants.PathTypeDir && topicDto.CreateTemplate != nil && *topicDto.CreateTemplate {
-		//templateVo := &CreateTemplateVo{
-		//	Name:   topicDto.Name,
-		//	Fields: topicDto.Fields,
-		//}
-		//templateResult := u.unsTemplateService.CreateTemplate(templateVo)
-		//if templateResult.Code != 200 {
-		//	result.Code = 400
-		//	result.Message = templateResult.Message
-		//	return result
-		//}
-		//modelId, _ := strconv.ParseInt(templateResult.Data, 10, 64)
-		//topicDto.ModelId = &modelId
+		var templateAlias = ""
+		if topicDto.Alias == "" {
+			templateAlias = PathUtil.GenerateAlias(topicDto.Name, constants.PathTypeTemplate)
+		} else {
+			templateAlias = topicDto.Alias + "_d1"
+		}
+		templateVo := &types.CreateTopicDto{
+			Alias:  templateAlias,
+			Name:   topicDto.Name,
+			Fields: topicDto.Fields,
+		}
+		unsList = append(unsList, templateVo)
+		topicDto.ModelAlias = &templateVo.Alias
 	}
 
 	topicDto.Index = 0
+	unsList = append(unsList, topicDto)
 
 	args := bo.CreateModelInstancesArgs{
-		Topics:              []*types.CreateTopicDto{topicDto},
+		Topics:              unsList,
 		FromImport:          false,
 		ThrowModelExistsErr: true,
 	}
@@ -330,9 +356,10 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 		}
 		result.Code = 400
 		result.Msg = strings.Join(errorMessages, ", ")
-	} else {
-		if topicDto.Id > 0 {
-			result.Data = strconv.FormatInt(topicDto.Id, 10)
+	} else if topicDto.Id > 0 {
+		result.Data = types.CreateUnsResult{Id: strconv.FormatInt(topicDto.Id, 10)}
+		if topicDto.ParentId != nil {
+			result.Data.ParentId = strconv.FormatInt(*topicDto.ParentId, 10)
 		}
 	}
 

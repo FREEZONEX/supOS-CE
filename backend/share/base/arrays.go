@@ -164,3 +164,9 @@ func Partition[E any](arr []E, size int) [][]E {
 
 	return result
 }
+
+type LongSlice []int64
+
+func (x LongSlice) Len() int           { return len(x) }
+func (x LongSlice) Less(i, j int) bool { return x[i] < x[j] }
+func (x LongSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }

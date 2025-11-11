@@ -544,9 +544,9 @@ type (
 	}
 	EmptyFolderReq  {}
 	PasteRequestVO {
-		SourceId int64 `json:"sourceId"`
-		TargetId int64 `json:"targetId"`
-		NewF     bool  `json:"newF"`
+		SourceId     int64 `json:"sourceId,string"`
+		TargetId     int64 `json:"targetId,string,optional"`
+		NewFile      *CreateTopicDto   `json:"newF,optional"`
 	}
 	SubscribeModelReq {
 		Id        int64  `form:"id"`
@@ -568,6 +568,14 @@ type (
 	StringResult {
 		BaseResult
 		Data string `json:"data,optional"`
+	}
+	CreateUnsResult {
+		Id           string `json:"id"`
+		ParentId     string `json:"parentId"`
+    }
+	CreateUnsResp {
+		BaseResult
+		Data CreateUnsResult `json:"data,optional"`
 	}
 )
 
@@ -721,7 +729,7 @@ service backend {
 		summary: "创建文件夹和文件"
 	)
 	@handler createModelInstance
-	post /uns/model (CreateTopicDto) returns (StringResult)
+	post /uns/model (CreateTopicDto) returns (CreateUnsResp)
 
     @doc (
 		summary: "创建文件夹和文件"
@@ -747,7 +755,7 @@ service backend {
 		summary: "粘贴文件夹和文件"
 	)
 	@handler pasteFolderOrFile
-	post /uns/paste (PasteRequestVO) returns (ResultVO)
+	post /uns/paste (PasteRequestVO) returns (CreateUnsResp)
 
 	@doc (
 		summary: "文件或文件夹修改订阅"

@@ -267,7 +267,7 @@ func WithSubscribeEnable(flags int32) bool {
 }
 
 func IsValidDataType(dataType int16) bool {
-	return dataType >= TimeSequenceType && dataType <= CitingType
+	return dataType >= TimeSequenceType && dataType <= JsonbType
 }
 
 func GenerateCodeByPrefix(prefix, code string) string {
