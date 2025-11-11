@@ -99,10 +99,8 @@ export class MCPClient implements MCPClientInterface {
     try {
       // Return from cache if available
       if (this.toolsCache) {
-        console.log('有tools');
         return this.toolsCache;
       }
-      console.log('重加tools');
       // Fetch raw tools data
       const rawToolsResult = await this.client.listTools();
 

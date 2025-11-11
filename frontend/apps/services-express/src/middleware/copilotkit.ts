@@ -11,7 +11,9 @@ import { ChatOllama } from '@langchain/ollama';
 import { ChatAnthropic } from '@langchain/anthropic';
 import OpenAI from 'openai';
 import { config } from '@/config';
-import { MCPClient, parseTransportUrl } from '@/utils';
+import { MCPClientManager } from '@/utils';
+
+const mcpManager = new MCPClientManager();
 
 const ollamaModel = new ChatOllama({
   model: config.ollamaModal,
@@ -87,18 +89,11 @@ export const copilotkitHandler = (req: Request, res: Response, next: NextFunctio
     // });
     const runtime = new CopilotRuntime({
       createMCPClient: async (config) => {
-        const props = parseTransportUrl(config.endpoint);
-        // 检查是否可以使用缓存的客户端
-        // if (mcpClientCache && mcpEndpointCache === config.endpoint) {
-        //   console.log('使用缓存的MCP客户端');
-        //   return mcpClientCache;
-        // }
-        const mcpClient = new MCPClient(props);
-        await mcpClient.connect();
-        // 缓存客户端和端点
-        // mcpClientCache = mcpClient;
-        // mcpEndpointCache = config.endpoint;
-        return mcpClient;
+        return await mcpManager.getOrCreateMCPClient(config);
+        // const props = parseTransportUrl(config.endpoint);
+        // const mcpClient = new MCPClient(props);
+        // await mcpClient.connect();
+        // return mcpClient;
       },
     });
     const handler = copilotRuntimeNodeHttpEndpoint({
