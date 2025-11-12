@@ -112,8 +112,13 @@ func (s *DashboardService) InitDashboardsOnStartup(db *gorm.DB) {
 }
 
 // OnEventRemoveTopics 当 UNS Topic 被删除时的处理逻辑
-func (s *DashboardService) OnEventRemoveTopics(event event.RemoveTopicsEvent) error {
-	s.logger.Infof("removing dashboards for topics: %v", event.Topics)
+func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) error {
+	if event == nil {
+		return errors.NewBuzError(400, "global.event.nil")
+	}
+	s.logger.Infof("removing dashboards for topics: %v", base.Map(event.Topics, func(e bo.UnsInfo) string {
+		return e.GetAlias()
+	}))
 	dashboardRefMapper := relationDB.NewDashboardRefMapper(relationDB.GetDb(event.Context), event.Context)
 	dashboardMapper := relationDB.NewDashboardMapper(relationDB.GetDb(event.Context), event.Context)
 
@@ -141,7 +146,10 @@ func (s *DashboardService) OnEventRemoveTopics(event event.RemoveTopicsEvent) er
 }
 
 // OnEventCreateDashboard 通过事件创建 Dashboard
-func (s *DashboardService) OnEventCreateDashboard(event event.CreateDashboardEvent) error {
+func (s *DashboardService) OnEventCreateDashboard(event *event.CreateDashboardEvent) error {
+	if event == nil {
+		return errors.NewBuzError(400, "global.event.nil")
+	}
 	s.logger.Infof("creating dashboard by event: name=%s, uuid=%s", event.Name, event.UUID)
 	now := time.Now()
 	dashboard := &relationDB.DashboardModel{
