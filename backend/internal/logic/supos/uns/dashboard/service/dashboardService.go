@@ -34,11 +34,7 @@ func init() {
 
 // NewDashboardService 创建 DashboardService 实例
 func NewDashboardService() *DashboardService {
-	ctx := context.Background()
-
 	s := &DashboardService{
-		ctx:          ctx,
-		logger:       logx.WithContext(ctx),
 		fileRootPath: "data", // 暂定根路径，后续可从配置中读取
 	}
 	// Note: InitDashboardsOnStartup should be called by the application's main startup logic,
@@ -47,9 +43,9 @@ func NewDashboardService() *DashboardService {
 }
 
 // InitDashboardsOnStartup 应用启动时初始化 Dashboard
-func (s *DashboardService) InitDashboardsOnStartup(db *gorm.DB) {
+func (s *DashboardService) InitDashboardsOnStartup(ctx context.Context) {
 	go func() {
-		dashboardMapper := relationDB.NewDashboardMapper(db, s.ctx)
+		dashboardMapper := relationDB.NewDashboardMapper(relationDB.GetDb(ctx), ctx)
 		dashboards, err := dashboardMapper.SelectDashboardsToInit()
 		if err != nil {
 			s.logger.Errorf("failed to select dashboards to init: %v", err)
