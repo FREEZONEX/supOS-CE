@@ -3,11 +3,14 @@ package service
 import (
 	"backend/internal/common/dto"
 	"backend/internal/common/errors"
+	"backend/internal/common/event"
 	"backend/internal/common/utils/fuxautil"
 	"backend/internal/common/utils/grafanautil"
 	"backend/internal/logic/supos/uns/dashboard/exporter"
 	"backend/internal/logic/supos/uns/dashboard/importer"
+	"backend/internal/logic/supos/uns/uns/bo"
 	"backend/internal/repo/relationDB"
+	"backend/share/base"
 	"backend/share/spring"
 	"context"
 	"encoding/json"
@@ -108,14 +111,18 @@ func (s *DashboardService) InitDashboardsOnStartup(db *gorm.DB) {
 	}()
 }
 
-// OnRemoveTopics 当 UNS Topic 被删除时的处理逻辑
-func (s *DashboardService) OnRemoveTopics(ctx context.Context, db *gorm.DB, aliases []string) error {
-	s.logger.Infof("removing dashboards for topics: %v", aliases)
-	dashboardRefMapper := relationDB.NewDashboardRefMapper(db, ctx)
-	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
+// OnEventRemoveTopics 当 UNS Topic 被删除时的处理逻辑
+func (s *DashboardService) OnEventRemoveTopics(event event.RemoveTopicsEvent) error {
+	s.logger.Infof("removing dashboards for topics: %v", event.Topics)
+	dashboardRefMapper := relationDB.NewDashboardRefMapper(relationDB.GetDb(event.Context), event.Context)
+	dashboardMapper := relationDB.NewDashboardMapper(relationDB.GetDb(event.Context), event.Context)
 
 	// 1. 根据别名查询关联的 dashboard ID
-	refs, err := dashboardRefMapper.SelectByUnsAliases(aliases)
+	refs, err := dashboardRefMapper.SelectByUnsAliases(
+		base.Map(event.Topics, func(e bo.UnsInfo) string {
+			return e.GetAlias()
+		}),
+	)
 	if err != nil {
 		s.logger.Errorf("failed to select dashboard refs by aliases: %v", err)
 		return err
@@ -133,19 +140,20 @@ func (s *DashboardService) OnRemoveTopics(ctx context.Context, db *gorm.DB, alia
 	return dashboardMapper.DeleteBatchIds(idsToDelete)
 }
 
-// CreateByEvent 通过事件创建 Dashboard
-func (s *DashboardService) CreateByEvent(ctx context.Context, db *gorm.DB, uuid, name, username string) error {
-	s.logger.Infof("creating dashboard by event: name=%s, uuid=%s", name, uuid)
+// OnEventCreateDashboard 通过事件创建 Dashboard
+func (s *DashboardService) OnEventCreateDashboard(event event.CreateDashboardEvent) error {
+	s.logger.Infof("creating dashboard by event: name=%s, uuid=%s", event.Name, event.UUID)
 	now := time.Now()
 	dashboard := &relationDB.DashboardModel{
-		ID:         uuid,
-		Name:       name,
-		Creator:    username,
+		ID:         event.UUID,
+		Name:       event.Name,
+		Creator:    event.UserName,
 		CreateTime: now,
 		UpdateTime: now,
 	}
 
-	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
+	db := relationDB.GetDb(event.Context)
+	dashboardMapper := relationDB.NewDashboardMapper(db, event.Context)
 	err := dashboardMapper.Insert(dashboard)
 	if err != nil {
 		s.logger.Errorf("failed to insert dashboard by event: %v", err)
@@ -154,11 +162,11 @@ func (s *DashboardService) CreateByEvent(ctx context.Context, db *gorm.DB, uuid,
 
 	// 创建引用关系
 	ref := &relationDB.DashboardRefModel{
-		DashboardID: uuid,
-		UnsAlias:    name, // 假设 alias 和 name 相同
+		DashboardID: event.UUID,
+		UnsAlias:    event.Name, // 假设 alias 和 name 相同
 		CreateAt:    now,
 	}
-	dashboardRefMapper := relationDB.NewDashboardRefMapper(db, ctx)
+	dashboardRefMapper := relationDB.NewDashboardRefMapper(db, event.Context)
 	return dashboardRefMapper.Insert(ref)
 }
 

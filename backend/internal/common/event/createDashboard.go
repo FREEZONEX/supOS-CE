@@ -10,6 +10,7 @@ type CreateDashboardEvent struct {
 	ApplicationEvent
 	UUID        string
 	Name        string
+	UserName    string
 	Description string
 }
 
