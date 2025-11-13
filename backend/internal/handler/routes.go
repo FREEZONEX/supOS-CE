@@ -1017,6 +1017,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/uns/types",
 				Handler: suposunsuns.ListTypesHandler(serverCtx),
 			},
+			{
+				// WebSocket 连接
+				Method:  http.MethodGet,
+				Path:    "/uns/ws",
+				Handler: suposunsuns.WebsocketHandler(serverCtx),
+			},
 		},
 		rest.WithPrefix("/inter-api/supos"),
 	)

@@ -32,5 +32,5 @@ NodeRed:
     Host: eventflow
     Port: "1889"
 Kong:
-  Host: 100.100.100.20
+  Host: kong
   Port: 8001

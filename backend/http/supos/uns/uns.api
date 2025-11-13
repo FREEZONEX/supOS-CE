@@ -840,5 +840,10 @@ service backend {
 	)
 	@handler searchEmptyFolder
 	get /uns/folder/empty (EmptyFolderReq) returns (EmptyFolderResp)
-}
 
+	@doc (
+		summary: "WebSocket 连接"
+	)
+	@handler websocket
+	get /uns/ws
+}
