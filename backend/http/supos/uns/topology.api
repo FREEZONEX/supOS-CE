@@ -1,0 +1,46 @@
+syntax = "v1"
+
+info (
+	title:  "UNS Topology Service"
+	desc:   "UNS 拓扑服务"
+	author: "sunlifang"
+	email:  "sunlifang@supos.com"
+)
+
+// DTOs
+type InstanceTopologyData {
+	TopologyNode string `json:"topologyNode"`
+	EventCode    string `json:"eventCode"`
+	EventMessage string `json:"eventMessage,omitempty"`
+	EventTime    int64  `json:"eventTime,omitempty"`
+}
+
+// APIs
+type (
+	GetInstanceTopologyReq {
+		UnsId int64 `form:"unsId,optional"`
+	}
+	GetInstanceTopologyResp {
+		Data []InstanceTopologyData `json:"data"`
+	}
+	MockInstanceTopologyReq {
+		UnsId int64  `form:"unsId,optional"`
+		Topic string `form:"topic,optional"` // The java code has topic, but it seems unused in log method. Kept for compatibility.
+		Node  string `form:"node,optional"`
+	}
+)
+
+@server (
+	group:  supos/uns/topology
+	prefix: /inter-api/supos/uns
+)
+service backend {
+	@doc "获取实例拓扑状态"
+	@handler GetInstanceTopologyHandler
+	get /topology (GetInstanceTopologyReq) returns (GetInstanceTopologyResp)
+
+	@doc "设置实例拓扑状态(mock)"
+	@handler MockInstanceTopologyHandler
+	get /topology-mock (MockInstanceTopologyReq)
+}
+

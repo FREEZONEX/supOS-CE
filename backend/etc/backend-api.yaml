@@ -1,0 +1,11 @@
+# Elasticsearch Configuration
+Elasticsearch:
+  Enabled: true
+  Addresses:
+    - http://elasticsearch:9200
+  Username: ""
+  Password: ""
+  TimeHorizon: 60 # in seconds, for topology service
+
+# kong admin gateway
+Kong:

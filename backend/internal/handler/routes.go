@@ -29,6 +29,7 @@ import (
 	suposunsperson "backend/internal/handler/supos/uns/person"
 	suposunssystem "backend/internal/handler/supos/uns/system"
 	suposunstemplate "backend/internal/handler/supos/uns/template"
+	suposunstopology "backend/internal/handler/supos/uns/topology"
 	suposunsuns "backend/internal/handler/supos/uns/uns"
 	suposuserManage "backend/internal/handler/supos/userManage"
 	"backend/internal/svc"
@@ -807,6 +808,24 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				},
 			}...,
 		),
+		rest.WithPrefix("/inter-api/supos/uns"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 获取实例拓扑状态
+				Method:  http.MethodGet,
+				Path:    "/topology",
+				Handler: suposunstopology.GetInstanceTopologyHandler(serverCtx),
+			},
+			{
+				// 设置实例拓扑状态(mock)
+				Method:  http.MethodGet,
+				Path:    "/topology-mock",
+				Handler: suposunstopology.MockInstanceTopologyHandler(serverCtx),
+			},
+		},
 		rest.WithPrefix("/inter-api/supos/uns"),
 	)
 

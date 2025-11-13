@@ -9,6 +9,6 @@ import (
 type QueryLastMsgEvent struct {
 	ApplicationEvent
 	Uns           *types.CreateTopicDto
-	MsgCreateTime *int64
+	MsgCreateTime int64
 	LastMessage   map[string]any
 }

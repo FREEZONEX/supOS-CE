@@ -19,4 +19,13 @@ type Config struct {
 	OAuthKeyCloak clients.KeycloakConfig `json:",optional" `
 	NodeRed       nodered.NodeRedConfig  `json:",optional" `
 	Kong          clients.KongConfig     `json:",optional" mapstructure:"Kong"`
+	Elasticsearch ElasticsearchConfig    `json:",optional"`
+}
+
+// ElasticsearchConfig represents Elasticsearch adapter configuration
+type ElasticsearchConfig struct {
+	Enabled   bool     `json:"enabled,optional"`
+	Addresses []string `json:"addresses,optional"`
+	Username  string   `json:"username,optional"`
+	Password  string   `json:"password,optional,env=ELASTICSEARCH_PASSWORD"`
 }

@@ -445,6 +445,14 @@ type GetByUnsRequest struct {
 	UnsAlias string `form:"unsAlias"`
 }
 
+type GetInstanceTopologyReq struct {
+	UnsId int64 `form:"unsId,optional"`
+}
+
+type GetInstanceTopologyResp struct {
+	Data []InstanceTopologyData `json:"data"`
+}
+
 type GetLanguagesReq struct {
 	OnlyForEnabled bool `form:"onlyForEnabled,optional"`
 }
@@ -558,6 +566,13 @@ type InstanceField struct {
 	Uts   bool   `json:"uts"`
 }
 
+type InstanceTopologyData struct {
+	TopologyNode string `json:"topologyNode"`
+	EventCode    string `json:"eventCode"`
+	EventMessage string `json:"eventMessage,omitempty"`
+	EventTime    int64  `json:"eventTime,omitempty"`
+}
+
 type IsExistReq struct {
 	Alias string `form:"alias"`
 }
@@ -615,6 +630,12 @@ type MakeSingleLabelReq struct {
 
 type MarkTopRequest struct {
 	ID int64 `json:"id"`
+}
+
+type MockInstanceTopologyReq struct {
+	UnsId int64  `form:"unsId,optional"`
+	Topic string `form:"topic,optional"` // The java code has topic, but it seems unused in log method. Kept for compatibility.
+	Node  string `form:"node,optional"`
 }
 
 type ModelDetail struct {
