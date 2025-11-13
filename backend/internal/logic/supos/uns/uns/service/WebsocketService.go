@@ -2,6 +2,8 @@ package service
 
 import (
 	"backend/internal/common/constants"
+	"backend/internal/common/event"
+	"backend/internal/logic/supos/uns/topology/service"
 	"backend/share/spring"
 	"encoding/json"
 	"net/url"
@@ -89,7 +91,9 @@ func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL
 			if subscription, ok := subscriptionVal.(*WsSubscription); ok {
 				s.topologySessions.Store(sessionId, subscription.Conn)
 				logx.Infof("topology subscription: %s", sessionId)
-				// TODO: Publish initial topology message
+
+				// Publish initial topology message
+				s.publishTopologyMessage(subscription.Conn)
 			}
 			return
 		}
@@ -270,18 +274,24 @@ func (s *WebsocketService) HandleSessionClosed(sessionId string) {
 }
 
 func (s *WebsocketService) publishMessage(conn *websocket.Conn, id int64) {
-	// TODO: Get last message from UnsQueryService
-	msg := "{}" // Placeholder
+	msg := s.getTopicLastMessage(id)
 	if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		logx.Errorf("failed to sendWs: id=%d, err=%v", id, err)
 	}
 }
 
 func (s *WebsocketService) publishMessageByTopic(conn *websocket.Conn, topic string) {
-	// TODO: Get last message from UnsQueryService by topic
-	msg := "{}" // Placeholder
+	msg := s.getTopicLastMessageByPath(topic)
 	if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		logx.Errorf("failed to sendWs: topic=%s, err=%v", topic, err)
+	}
+}
+
+func (s *WebsocketService) publishTopologyMessage(conn *websocket.Conn) {
+	topologyService := spring.GetBean[*service.UnsTopologyService]()
+	msg := topologyService.GetLastMsg()
+	if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+		logx.Errorf("failed to send topology message: %v", err)
 	}
 }
 
@@ -374,16 +384,90 @@ func (s *WebsocketService) SendLatestMsg(unsId int64, path string) {
 }
 
 func (s *WebsocketService) getTopicLastMessage(id int64) string {
-	// TODO: Call UnsQueryService.GetLastMsg
+	unsQueryService := spring.GetBean[*UnsQueryService]()
+	if result, err := unsQueryService.GetLastMsg(id); err == nil && result != nil {
+		if dataStr, ok := result.Data.(string); ok {
+			return dataStr
+		}
+		// If Data is map or other type, marshal it
+		if jsonBytes, err := json.Marshal(result.Data); err == nil {
+			return string(jsonBytes)
+		}
+	}
 	return "{}"
 }
 
 func (s *WebsocketService) getTopicLastMessageByPath(topic string) string {
-	// TODO: Call UnsQueryService.GetLastMsgByPath
+	unsQueryService := spring.GetBean[*UnsQueryService]()
+	if result, err := unsQueryService.GetLastMsgByPath(topic); err == nil && result != nil {
+		if dataStr, ok := result.Data.(string); ok {
+			return dataStr
+		}
+		// If Data is map or other type, marshal it
+		if jsonBytes, err := json.Marshal(result.Data); err == nil {
+			return string(jsonBytes)
+		}
+	}
 	return "{}"
 }
 
-// Event listeners would be added here to handle:
-// - UnsTopologyChangeEvent
-// - RemoveTopicsEvent
-// - Data update events
+// OnEventUnsTopologyChangeEvent handles topology change events
+func (s *WebsocketService) OnEventUnsTopologyChangeEvent(e *event.UnsTopologyChangeEvent) error {
+	if s.topologySessions == nil {
+		return nil
+	}
+
+	// Get topology service
+	topologyService := spring.GetBean[*service.UnsTopologyService]()
+	msg := topologyService.GetLastMsg()
+
+	// Send to all topology subscribers
+	s.topologySessions.Range(func(key, value any) bool {
+		sessionId := key.(string)
+		if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
+			subscription := subscriptionVal.(*WsSubscription)
+			subscription.WriteLock.Lock()
+			if err := subscription.Conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+				logx.Errorf("fail to send topology update to session[%s]: %v", sessionId, err)
+			}
+			subscription.WriteLock.Unlock()
+		}
+		return true
+	})
+
+	return nil
+}
+
+// OnEventRemoveTopicsEvent handles topic removal events
+func (s *WebsocketService) OnEventRemoveTopicsEvent(e *event.RemoveTopicsEvent) error {
+	// Remove subscriptions for deleted topics
+	for _, topic := range e.Topics {
+		unsId := topic.GetId()
+		if unsId == 0 {
+			continue
+		}
+
+		// Remove from idToSessionsMap
+		if sessionsVal, ok := s.idToSessionsMap.Load(unsId); ok {
+			sessions := sessionsVal.(*sync.Map)
+			sessions.Range(func(key, value any) bool {
+				sessionId := key.(string)
+				if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
+					subscription := subscriptionVal.(*WsSubscription)
+					subscription.UnsIds.Delete(unsId)
+				}
+				return true
+			})
+			s.idToSessionsMap.Delete(unsId)
+		}
+	}
+
+	logx.Infof("removed %d topic subscriptions", len(e.Topics))
+	return nil
+}
+
+// OnEventWebsocketNotifyEvent handles websocket notification events for data updates
+func (s *WebsocketService) OnEventWebsocketNotifyEvent(e *event.WebsocketNotifyEvent) error {
+	s.SendLatestMsg(e.UnsID, e.Path)
+	return nil
+}

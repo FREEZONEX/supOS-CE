@@ -29,6 +29,43 @@ func init() {
 	})
 }
 
+// GetLastMsg returns the last message for a UNS by ID
+func (l *UnsQueryService) GetLastMsg(id int64) (*types.JsonResult, error) {
+	// TODO: Implement actual data retrieval from time-series database
+	// For now, return empty data structure
+	return &types.JsonResult{
+		Code: 200,
+		Data: map[string]interface{}{
+			"updateTime": 0,
+			"data":       map[string]interface{}{},
+		},
+	}, nil
+}
+
+// GetLastMsgByAlias returns the last message for a UNS by alias
+func (l *UnsQueryService) GetLastMsgByAlias(alias string) (*types.JsonResult, error) {
+	// TODO: Get ID from alias, then call GetLastMsg
+	return &types.JsonResult{
+		Code: 200,
+		Data: map[string]interface{}{
+			"updateTime": 0,
+			"data":       map[string]interface{}{},
+		},
+	}, nil
+}
+
+// GetLastMsgByPath returns the last message for a UNS by path
+func (l *UnsQueryService) GetLastMsgByPath(path string) (*types.JsonResult, error) {
+	// TODO: Get ID from path, then call GetLastMsg
+	return &types.JsonResult{
+		Code: 200,
+		Data: map[string]interface{}{
+			"updateTime": 0,
+			"data":       map[string]interface{}{},
+		},
+	}, nil
+}
+
 func (l *UnsQueryService) SearchPaged(ctx context.Context, req *types.SearchPagedReq) (resp *types.TopicPaginationSearchResult, err error) {
 	db := dao.GetDb(ctx)
 	keyword := req.Key
