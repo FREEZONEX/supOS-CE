@@ -2,17 +2,8 @@ package subDev
 
 import (
 	"backend/share/clients"
-	"context"
-	"encoding/json"
-	"strings"
-	"time"
 
 	"gitee.com/unitedrhino/share/conf"
-	"gitee.com/unitedrhino/share/ctxs"
-	"gitee.com/unitedrhino/share/utils"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/timex"
 )
 
 type (
@@ -38,8 +29,11 @@ const (
 	TopicUns = ShareSubTopicPrefix + "#"
 )
 
-func newEmqClient(conf *conf.MqttConf) (SubDev, error) {
-	mc, err := clients.NewMqttClient(conf)
+func NewMqttClient(conf *conf.MqttConf, consumer clients.MqttMsgConsumer) (*MqttClient, error) {
+	if conf.ConnNum == 0 {
+		conf.ConnNum = 1
+	}
+	mc, err := clients.NewMqttClient(conf, consumer)
 	if err != nil {
 		return nil, err
 	}
@@ -47,102 +41,13 @@ func newEmqClient(conf *conf.MqttConf) (SubDev, error) {
 		client: mc,
 	}, nil
 }
-
-func (d *MqttClient) SubDevMsg(handle Handle) error {
-	err := d.subDevMsg(nil, handle)
-	if err != nil {
-		return err
-	}
-	clients.SetMqttSetOnConnectHandler(func(cli mqtt.Client) {
-		err := d.subDevMsg(cli, handle)
-		if err != nil {
-			logx.Errorf("%s.mqttSetOnConnectHandler.subDevMsg err:%v", utils.FuncName(), err)
-		}
-	})
-	return nil
+func (d *MqttClient) SubscribeAll() error {
+	//暂不用共享的 TopicUns，实测gmqtt重连后,新消息一直会收到两份
+	return d.client.Subscribe("#", 1)
 }
-
-func (d *MqttClient) subDevMsg(cli mqtt.Client, handle Handle) error {
-	logx.Infof("%s", utils.FuncName())
-	err := d.subscribeWithFunc(cli, TopicConnectStatus, d.subscribeConnectStatus(handle))
-	if err != nil {
-		return err
-	}
-	err = d.subscribeWithFunc(cli, TopicUns, func(ctx context.Context, topic string, payload []byte) error {
-		if strings.HasPrefix(topic, "$") {
-			return nil
-		}
-		return handle(ctx).Msg(topic, payload)
-	})
-	if err != nil {
-		return err
-	}
-	return nil
+func (d *MqttClient) Subscribe(topics map[string]byte) error {
+	return d.client.SubscribeMultiple(topics)
 }
-
-func (d *MqttClient) subscribeConnectStatus(handle Handle) func(ctx context.Context, topic string, payload []byte) error {
-	return func(ctx context.Context, topic string, payload []byte) error {
-		var (
-			msg ConnectMsg
-			err error
-		)
-		err = json.Unmarshal(payload, &msg)
-		if err != nil {
-			logx.Error(err)
-			return err
-		}
-		do := clients.DevConn{
-			UserName:  msg.UserName,
-			Timestamp: msg.Ts, //毫秒时间戳
-			Address:   msg.Address,
-			ClientID:  msg.ClientID,
-			Reason:    msg.Reason,
-		}
-		if strings.HasSuffix(topic, "/disconnected") {
-			logx.WithContext(ctx).Infof("%s.disconnected topic:%v message:%v err:%v",
-				utils.FuncName(), topic, string(payload), err)
-			do.Action = clients.ActionDisconnected
-			err = handle(ctx).Disconnected(&do)
-			if err != nil {
-				logx.Error(err)
-				return err
-			}
-		} else {
-			do.Action = clients.ActionConnected
-			logx.WithContext(ctx).Infof("%s.connected topic:%v message:%v err:%v",
-				utils.FuncName(), topic, string(payload), err)
-			err = handle(ctx).Connected(&do)
-			if err != nil {
-				logx.Error(err)
-				return err
-			}
-		}
-		return nil
-	}
-
-}
-
-func (d *MqttClient) subscribeWithFunc(cli mqtt.Client, topic string, handle func(ctx context.Context, topic string, payload []byte) error) error {
-	return d.client.Subscribe(cli, topic,
-		1, func(client mqtt.Client, message mqtt.Message) {
-			go func() {
-				ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
-				defer cancel()
-				utils.Recover(ctx)
-				//dgsvr 订阅到了设备端数据，此时调用StartSpan方法，将订阅到的主题推送给jaeger
-				//此时的ctx已经包含当前节点的span信息，会随着 handle(ctx).Publish 传递到下个节点
-				ctx, span := ctxs.StartSpan(ctx, message.Topic(), "")
-				defer span.End()
-				startTime := timex.Now()
-				duration := timex.Since(startTime)
-				ctx = ctxs.WithRoot(ctx)
-				err := handle(ctx, message.Topic(), message.Payload())
-				if err != nil {
-					logx.WithContext(ctx).Errorf("%s.handle failure err:%v topic:%v", utils.FuncName(), err, topic)
-				}
-				logx.WithContext(ctx).WithDuration(duration).Infof(
-					"subscribeWithFuncIThingsDevicePublish topic:%v message:%v err:%v",
-					message.Topic(), string(message.Payload()), err)
-			}()
-		})
+func (d *MqttClient) Publish(topic string, qos byte, retained bool, payload interface{}) error {
+	return d.client.Publish(topic, qos, retained, payload)
 }

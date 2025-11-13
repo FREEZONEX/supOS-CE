@@ -52,12 +52,16 @@ func (p UnsNamespaceRepo) GetByAlias(db *gorm.DB, alias string) (result *UnsName
 	}
 	return &po, nil
 }
-func (p UnsNamespaceRepo) GetAliasByPath(db *gorm.DB, path string) (alias string, err error) {
-	err = p.model(db).Select("alias").Where("path = ? ", path).Where("status = 1").Pluck("alias", &alias).Error
+func (p UnsNamespaceRepo) GetByPath(db *gorm.DB, path string) (result *UnsNamespace, err error) {
+	var po UnsNamespace
+	err = p.model(db).
+		Where("pathash = hashtext(?)", path).
+		Where("path = ? ", path).
+		Where("status = 1").First(&po).Error
 	if err != nil {
-		return "", stores.ErrFmt(err)
+		return nil, stores.ErrFmt(err)
 	}
-	return
+	return &po, nil
 }
 
 // ListCategoryFolders 查询分类文件夹

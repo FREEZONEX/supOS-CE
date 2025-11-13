@@ -12,10 +12,8 @@ type IUnsDefinitionService interface {
 	GetDefinitionById(id int64) *types.CreateTopicDto
 
 	DeleteByIds(ids []int64) error
-	InitSaveBatch(list []*types.CreateTopicDto, ver int64) error
-	InitDeleteBatch(list []*types.CreateTopicDto, ver int64) error
-	SaveBatch(list []*types.CreateTopicDto, ver int64) error
-	DeleteBatch(list []*types.CreateTopicDto, ver int64) error
+	SaveBatch(list []*types.CreateTopicDto) error
+	DeleteBatch(list []*types.CreateTopicDto) error
 }
 
 type IResourceService interface {

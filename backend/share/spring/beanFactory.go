@@ -48,6 +48,10 @@ func GetBean[Component any]() Component {
 	return do.MustInvoke[Component](beanFactory)
 }
 
+func GetBeanOrErr[Component any]() (Component, error) {
+	return do.Invoke[Component](beanFactory)
+}
+
 // RefreshBeanContext 项目初始化完成之后调用，相当于 spring onApplicationRefreshed
 func RefreshBeanContext() {
 	beanLock.Lock()

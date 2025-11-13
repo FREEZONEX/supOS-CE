@@ -1,6 +1,8 @@
 package main
 
 import (
+	_ "backend/internal/adapters/msg_consumer" // 手动导入 adapter
+	"backend/internal/common/event"
 	"backend/internal/config"
 	"backend/internal/handler"
 	"backend/internal/svc"
@@ -38,5 +40,6 @@ func main() {
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	spring.RegisterBean[*svc.ServiceContext](ctx)
 	spring.RefreshBeanContext()
+	_ = spring.PublishEvent(&event.ContextRefreshedEvent{SvcContext: ctx})
 	server.Start()
 }
