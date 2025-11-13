@@ -1,11 +1,12 @@
 package clients
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"math/rand"
 	"net/url"
-	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,15 +24,20 @@ var (
 	mqttClient   *MqttClient
 	// mqttSetOnConnectHandler 如果会话断开可以通过该回调函数来重新订阅消息
 	//不使用mqtt的clean session是因为会话保持期间共享订阅也会给离线的客户端,这会导致在线的客户端丢失消息
-	mqttSetOnConnectHandler func(cli mqtt.Client)
 )
 
 type MqttClient struct {
-	clients []mqtt.Client
-	cfg     *conf.MqttConf
+	clients         []mqtt.Client
+	cfg             *conf.MqttConf
+	subscribeTopics map[string]byte
+	consumer        MqttMsgConsumer
+	lock            sync.RWMutex
+}
+type MqttMsgConsumer interface {
+	OnMsg(ctx context.Context, topic string, msgId int, message []byte)
 }
 
-func NewMqttClient(conf *conf.MqttConf) (mcs *MqttClient, err error) {
+func NewMqttClient(conf *conf.MqttConf, consumer MqttMsgConsumer) (mcs *MqttClient, err error) {
 	mqttInitOnce.Do(func() {
 		var clients []mqtt.Client
 		var start = time.Now()
@@ -39,23 +45,25 @@ func NewMqttClient(conf *conf.MqttConf) (mcs *MqttClient, err error) {
 			var (
 				mc mqtt.Client
 			)
-			var tryTime = 5
-			for i := tryTime; i > 0; i-- {
-				mc, err = initMqtt(conf)
+			var cli = MqttClient{cfg: conf, consumer: consumer, subscribeTopics: make(map[string]byte, 8)}
+			var tryTime = 3
+			for i := 1; i <= tryTime; i++ {
+				mc, err = initMqtt(conf, &cli)
 				logx.Infof("mqtt_client initMqtt2 mc:%v err:%v", mc, err)
 				if err != nil { //出现并发情况的时候可能联犀的http还没启动完毕
-					logx.Errorf("mqtt_client 连接失败 重试剩余次数:%v", i-1)
-					time.Sleep(time.Second * time.Duration(tryTime) / time.Duration(i))
+					logx.Errorf("mqtt_client 连接失败 重试剩余次数:%v", tryTime-i)
+					time.Sleep(time.Second * time.Duration(i))
 					continue
 				}
 				break
 			}
 			if err != nil {
 				logx.Errorf("mqtt_client 连接失败 conf:%#v  err:%v", conf, err)
-				os.Exit(-1)
+				//os.Exit(-1)
+				return
 			}
 			clients = append(clients, mc)
-			var cli = MqttClient{clients: clients, cfg: conf}
+			cli.clients = clients
 			mqttClient = &cli
 			logx.Infof("mqtt_client 连接完成 clientNum:%v use:%s", len(clients), time.Now().Sub(start))
 		}
@@ -63,54 +71,89 @@ func NewMqttClient(conf *conf.MqttConf) (mcs *MqttClient, err error) {
 	return mqttClient, err
 }
 
-func SetMqttSetOnConnectHandler(f func(cli mqtt.Client)) {
-	mqttSetOnConnectHandler = f
-}
-
-func (m MqttClient) Subscribe(cli mqtt.Client, topic string, qos byte, callback mqtt.MessageHandler) error {
-	var clients = m.clients
-	if cli != nil {
-		clients = []mqtt.Client{cli}
+func (m *MqttClient) Subscribe(topic string, qos byte) error {
+	if m.consumer == nil {
+		return fmt.Errorf("consumer is nil")
 	}
-	logx.Infof("mqtt_client_subscribe clientNum:%v topic:%v", len(clients), topic)
-	for _, c := range clients {
-		err := c.Subscribe(topic, qos, callback).Error()
-		if err != nil {
-			return errors.System.AddDetail(err)
-		}
+
+	m.lock.Lock()
+	if _, has := m.subscribeTopics[topic]; has {
+		m.lock.Unlock()
+		return nil
+	}
+	m.subscribeTopics[topic] = qos
+	m.lock.Unlock()
+
+	logx.Infof("mqtt_client_subscribe topic:%v", topic)
+	var cli = m.clients[0]
+	err := cli.Subscribe(topic, qos, m.subscribeHandler).Error()
+	if err != nil {
+		return errors.System.AddDetail(err)
 	}
 	return nil
 }
+func (m *MqttClient) SubscribeMultiple(filters map[string]byte) error {
+	if m.consumer == nil {
+		return fmt.Errorf("consumer is nil")
+	}
+	newAdds := make(map[string]byte, len(filters))
+	m.lock.Lock()
+	for t, q := range filters {
+		if _, has := m.subscribeTopics[t]; !has {
+			m.subscribeTopics[t] = q
+		} else {
+			newAdds[t] = q
+		}
+	}
+	m.lock.Unlock()
 
-func (m MqttClient) Publish(topic string, qos byte, retained bool, payload interface{}) error {
+	if len(newAdds) == 0 {
+		return nil
+	}
+	logx.Infof("mqtt_client_subscribe topics: %+v", filters)
+	var cli = m.clients[0]
+	err := cli.SubscribeMultiple(newAdds, m.subscribeHandler).Error()
+	if err != nil {
+		return errors.System.AddDetail(err)
+	}
+	return nil
+}
+func (m *MqttClient) subscribeHandler(client mqtt.Client, message mqtt.Message) {
+	topic := message.Topic()
+	if strings.HasPrefix(topic, "$") {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+	defer cancel()
+	utils.Recover(ctx)
+	m.consumer.OnMsg(ctx, topic, int(message.MessageID()), message.Payload())
+}
+
+func (m *MqttClient) Publish(topic string, qos byte, retained bool, payload interface{}) error {
 	id := rand.Intn(len(m.clients))
 	return m.clients[id].Publish(topic, qos, retained, payload).Error()
 }
 
-func initMqtt(conf *conf.MqttConf) (mc mqtt.Client, err error) {
+func initMqtt(conf *conf.MqttConf, mcs *MqttClient) (mc mqtt.Client, err error) {
 	opts := mqtt.NewClientOptions()
 	for _, broker := range conf.Brokers {
 		opts.AddBroker(broker)
 	}
-	uuid := uuid.NewString()
-	clientID := conf.ClientID + "_" + uuid
+	randId := uuid.NewString()
+	clientID := conf.ClientID + "_" + randId
 	logx.Infof("mqtt_client initMqtt conf:%#v clientID:%v brokers:%#v stack=%s", conf, clientID, opts.Servers, utils.Stack(1, 10))
 	opts.SetClientID(clientID).SetUsername(conf.User).SetPassword(conf.Pass)
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
-		logx.Infof("mqtt_client Connected clientID:%v", clientID)
-		if mqttSetOnConnectHandler != nil {
-			mqttSetOnConnectHandler(client)
-		}
+		er := reSubscribe(client, mcs)
+		logx.Infof("mqtt_client Connected clientID:%v, er=%v", clientID, er)
 	})
 	opts.SetReconnectingHandler(func(client mqtt.Client, options *mqtt.ClientOptions) {
 		logx.Infof("mqtt_client Reconnecting clientID:%#v", options)
-		if mqttSetOnConnectHandler != nil {
-			mqttSetOnConnectHandler(client)
-		}
 	})
 
 	opts.SetAutoReconnect(true).SetMaxReconnectInterval(30 * time.Second) //意外离线的重连参数
-	opts.SetConnectRetry(true).SetConnectRetryInterval(5 * time.Second)   //首次连接的重连参数
+	//opts.SetConnectRetry(true).SetConnectRetryInterval(5 * time.Second)   //首次连接的重连参数
+	opts.SetConnectRetry(false)
 
 	opts.SetConnectionAttemptHandler(func(broker *url.URL, tlsCfg *tls.Config) *tls.Config {
 		logx.Infof("mqtt_client 正在尝试连接 broker:%v clientID:%v", utils.Fmt(broker), clientID)
@@ -121,10 +164,19 @@ func initMqtt(conf *conf.MqttConf) (mc mqtt.Client, err error) {
 	})
 	mc = mqtt.NewClient(opts)
 	er2 := mc.Connect().WaitTimeout(5 * time.Second)
-	if er2 == false {
+	if er2 == false || !mc.IsConnected() {
 		logx.Errorf("mqtt_client 连接失败超时")
 		err = fmt.Errorf("mqtt_client 连接失败")
 		return nil, err
 	}
 	return
+}
+
+func reSubscribe(client mqtt.Client, mcs *MqttClient) (err error) {
+	if mcs.consumer != nil {
+		mcs.lock.RLock()
+		err = client.SubscribeMultiple(mcs.subscribeTopics, mcs.subscribeHandler).Error()
+		mcs.lock.RUnlock()
+	}
+	return err
 }
