@@ -491,6 +491,19 @@ type GetUnsI18nMessagesResp struct {
 	Messages map[string]string `json:"messages"`
 }
 
+type GlobalTopologyData struct {
+	ModelNum             int64             `json:"Folder"`               // Number of models (path_type=0)
+	InstanceNum          int64             `json:"File"`                 // Number of instances (path_type=2)
+	AlarmNum             int64             `json:"Alarm"`                // Number of alarms
+	AllConnections       int64             `json:"allConnections"`       // Total MQTT connections
+	LiveConnections      int64             `json:"liveConnections"`      // Active MQTT connections
+	MessageInThroughput  int64             `json:"messageInThroughput"`  // Messages/sec into MQTT broker
+	MessageOutThroughput int64             `json:"messageOutThroughput"` // Messages/sec out of MQTT broker
+	Protocol             map[string]int64  `json:"protocol"`             // Protocol counts: {"mqtt": 200, "opcua": 50}
+	ICMPStates           []interface{}     `json:"icmpStates"`           // ICMP ping states
+	MountStatus          map[string]string `json:"mountStatus"`          // Mount status by alias
+}
+
 type HistoryValueRequest struct {
 }
 

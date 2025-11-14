@@ -40,6 +40,14 @@ func (p UnsAlarmsDatumRepo) FindOneByFilter(ctx context.Context, f UnsAlarmsDatu
 	}
 	return &result, nil
 }
+
+// Count returns the total count of alarm records
+func (p UnsAlarmsDatumRepo) Count(ctx context.Context) (int64, error) {
+	var count int64
+	err := p.db.WithContext(ctx).Model(&UnsAlarmsDatum{}).Count(&count).Error
+	return count, stores.ErrFmt(err)
+}
+
 func (p UnsAlarmsDatumRepo) FindByFilter(ctx context.Context, f UnsAlarmsDatumFilter, page *stores.PageInfo) ([]*UnsAlarmsDatum, error) {
 	var results []*UnsAlarmsDatum
 	db := p.fmtFilter(ctx, f).Model(&UnsAlarmsDatum{})

@@ -72,6 +72,17 @@ func (p UnsMountRepo) Delete(ctx context.Context, id int64) error {
 	err := p.db.WithContext(ctx).Where("id = ?", id).Delete(&UnsMount{}).Error
 	return stores.ErrFmt(err)
 }
+
+// FindAll returns all mount records
+func (p UnsMountRepo) FindAll(ctx context.Context) ([]*UnsMount, error) {
+	var results []*UnsMount
+	err := p.db.WithContext(ctx).Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
+
 func (p UnsMountRepo) FindOne(ctx context.Context, id int64) (*UnsMount, error) {
 	var result UnsMount
 	err := p.db.WithContext(ctx).Where("id = ?", id).First(&result).Error

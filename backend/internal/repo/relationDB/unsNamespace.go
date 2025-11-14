@@ -157,3 +157,39 @@ func (p UnsNamespaceRepo) ListAliasByBase(db *gorm.DB, base string) ([]string, e
 		Pluck("alias", &aliases).Error
 	return aliases, stores.ErrFmt(err)
 }
+
+// PathTypeCount represents the count of UNS by path type
+type PathTypeCount struct {
+	PathType int   `gorm:"column:path_type"`
+	Count    int64 `gorm:"column:count"`
+}
+
+// ProtocolCount represents the count of UNS by protocol type
+type ProtocolCount struct {
+	Protocol string `gorm:"column:protocol_type"`
+	Count    int64  `gorm:"column:count"`
+}
+
+// CountByPathType returns count grouped by path_type
+func (p *UnsNamespaceRepo) CountByPathType(db *gorm.DB) ([]PathTypeCount, error) {
+	var results []PathTypeCount
+	err := p.model(db).
+		Model(&UnsNamespace{}).
+		Select("path_type, COUNT(*) as count").
+		Where("status = 1").
+		Group("path_type").
+		Find(&results).Error
+	return results, stores.ErrFmt(err)
+}
+
+// CountByProtocolType returns count grouped by protocol_type
+func (p *UnsNamespaceRepo) CountByProtocolType(db *gorm.DB) ([]ProtocolCount, error) {
+	var results []ProtocolCount
+	err := p.model(db).
+		Model(&UnsNamespace{}).
+		Select("protocol_type, COUNT(*) as count").
+		Where("status = 1 AND protocol_type IS NOT NULL AND protocol_type != ''").
+		Group("protocol_type").
+		Find(&results).Error
+	return results, stores.ErrFmt(err)
+}

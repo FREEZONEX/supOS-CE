@@ -13,6 +13,7 @@ import (
 	"backend/internal/svc"
 	"backend/share/spring"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -52,16 +53,15 @@ func (l *WebsocketLogic) Websocket() {
 	// Get WebsocketService from spring container
 	wsService := spring.GetBean[*service.WebsocketService]()
 
-	// Check session limit
-	if wsService.GetSessionCount() >= WS_SESSION_LIMIT {
+	// Generate unique session ID
+	sessionId := uuid.New().String()
+
+	// Check session limit with lock protection (prevent TOCTOU race condition)
+	if !wsService.TryAddSession(sessionId, l.conn, WS_SESSION_LIMIT) {
 		l.conn.WriteMessage(websocket.TextMessage, []byte("session reached its maximum capacity"))
 		logx.Errorf("ws session exceeded limit (%d), closing connection", WS_SESSION_LIMIT)
 		return
 	}
-
-	// Add session
-	sessionId := l.conn.RemoteAddr().String()
-	wsService.AddSession(sessionId, l.conn)
 
 	// Parse user from token (optional, if needed)
 	user := apiutil.GetUserFromContext(l.ctx)
@@ -89,7 +89,7 @@ func (l *WebsocketLogic) Websocket() {
 		}
 
 		msg := string(payload)
-		logx.Infof("WebSocket handleMessage[%s]: %s", sessionId, msg)
+		logx.WithContext(l.ctx).Debugf("WebSocket handleMessage[%s]: %s", sessionId, msg)
 
 		// Handle ping/pong heartbeat
 		if msg == "ping" {

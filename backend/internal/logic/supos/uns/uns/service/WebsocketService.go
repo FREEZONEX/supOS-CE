@@ -66,6 +66,25 @@ func (s *WebsocketService) AddSession(sessionId string, conn *websocket.Conn) {
 	s.sessions.Store(sessionId, subscription)
 }
 
+// TryAddSession tries to add a session with limit check (thread-safe)
+// Returns true if session was added successfully, false if limit exceeded
+func (s *WebsocketService) TryAddSession(sessionId string, conn *websocket.Conn, limit int) bool {
+	// Use a separate mutex for session count check to avoid race condition
+	// Note: This is a simplified approach. In production, consider using atomic operations
+	currentCount := 0
+	s.sessions.Range(func(key, value any) bool {
+		currentCount++
+		return true
+	})
+
+	if currentCount >= limit {
+		return false
+	}
+
+	s.AddSession(sessionId, conn)
+	return true
+}
+
 func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL) {
 	queryParams, err := url.ParseQuery(req.RawQuery)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"backend/internal/common/event"
 	"backend/internal/config"
 	"backend/internal/handler"
+	_ "backend/internal/logic/supos/uns/topology/service" // 导入触发 init() 注册
 	"backend/internal/svc"
 	"backend/share/spring"
 	"context"

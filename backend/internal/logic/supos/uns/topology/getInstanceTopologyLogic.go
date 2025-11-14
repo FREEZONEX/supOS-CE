@@ -9,7 +9,7 @@ import (
 	"backend/internal/types"
 	"backend/share/spring"
 	"context"
-	"encoding/json"
+	"net/http"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,18 +28,16 @@ func NewGetInstanceTopologyLogic(ctx context.Context, svcCtx *svc.ServiceContext
 	}
 }
 
-func (l *GetInstanceTopologyLogic) GetInstanceTopology(req *types.GetInstanceTopologyReq) (*types.GetInstanceTopologyResp, error) {
+func (l *GetInstanceTopologyLogic) GetInstanceTopology(req *types.GetInstanceTopologyReq) (*types.JsonResult, error) {
 	topologyService := spring.GetBean[*service.UnsTopologyService]()
 
-	// Parse the JSON string and return the typed response
-	jsonStr := topologyService.GetLastMsg()
+	// Get topology data for the specific instance.
+	// Currently returns default data with all nodes in SUCCESS state
+	topologyData := topologyService.GainTopologyDataOfFile(req.UnsId)
 
-	resp := &types.GetInstanceTopologyResp{}
-	if err := json.Unmarshal([]byte(jsonStr), resp); err != nil {
-		logx.Errorf("failed to unmarshal topology data: %v", err)
-		// Return empty response on error
-		return &types.GetInstanceTopologyResp{Data: []types.InstanceTopologyData{}}, nil
-	}
-
-	return resp, nil
+	return &types.JsonResult{
+		Code: http.StatusOK,
+		Msg:  "success",
+		Data: topologyData,
+	}, nil
 }

@@ -29,11 +29,8 @@ func NewMockInstanceTopologyLogic(ctx context.Context, svcCtx *svc.ServiceContex
 }
 
 func (l *MockInstanceTopologyLogic) MockInstanceTopology(req *types.MockInstanceTopologyReq) error {
-	// Java code uses `TopologyLog.EventCode.ERROR` as a hardcoded value for the mock.
-	// We will do the same. The event message "sd" is also from the Java code.
 	topologylog.Log(req.UnsId, req.Node, topologylog.EventCodeError, "sd")
 
-	// Update topology service state (EventCodeError is already a string constant)
 	topologyService := spring.GetBean[*service.UnsTopologyService]()
 	topologyService.UpdateTopologyState(req.Node, string(topologylog.EventCodeError))
 
