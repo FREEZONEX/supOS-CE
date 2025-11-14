@@ -28,17 +28,13 @@ type UnsTopologyService struct {
 	globalTopologyDirty bool
 	stopChan            chan struct{}
 	unsMapper           dao.UnsNamespaceRepo
-	alarmMapper         dao.UnsAlarmsDatumRepo
-	mountMapper         dao.UnsMountRepo
 }
 
 func NewUnsTopologyService() *UnsTopologyService {
 	s := &UnsTopologyService{
 		globalTopologyDirty: true,
 		stopChan:            make(chan struct{}),
-		unsMapper:           dao.UnsNamespaceRepo{},
-		alarmMapper:         dao.UnsAlarmsDatumRepo{},
-		mountMapper:         dao.UnsMountRepo{},
+		unsMapper:           dao.NewUnsNamespaceRepo(),
 	}
 	return s
 }
@@ -110,8 +106,9 @@ func (s *UnsTopologyService) refresh() {
 		logx.Errorf("failed to count by protocol type: %v", err)
 	}
 
+	alarmMapper := dao.NewUnsAlarmsDatumRepo(db)
 	// Count alarms
-	if alarmCount, err := s.alarmMapper.Count(ctx); err == nil {
+	if alarmCount, err := alarmMapper.Count(ctx); err == nil {
 		topologyData.AlarmNum = alarmCount
 		logx.Infof("Alarm Count=%d", alarmCount)
 	} else {
@@ -254,7 +251,8 @@ func (s *UnsTopologyService) OnEventMountStatusChangeEvent(e *mount.MountStatusC
 // doCountMountStatus queries mount status from database
 func (s *UnsTopologyService) doCountMountStatus(ctx context.Context) map[string]string {
 	mountStatus := make(map[string]string)
-	mounts, err := s.mountMapper.FindAll(ctx)
+	mountMapper := dao.NewUnsMountRepo(ctx)
+	mounts, err := mountMapper.FindAll(ctx)
 	if err != nil {
 		logx.Errorf("failed to query mount status: %v", err)
 		return mountStatus
