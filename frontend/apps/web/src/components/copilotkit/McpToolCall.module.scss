@@ -1,0 +1,77 @@
+.mcpToolCall {
+  background-color: #1e2738;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  width: 100%;
+
+  .header {
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    .title {
+      color: white;
+      font-size: 0.875rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .statusIndicator {
+      margin-left: auto;
+
+      .indicator {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+
+        &.complete {
+          background-color: #d1d5db;
+        }
+
+        &.inProgress,
+        &.executing {
+          background-color: #6b7280;
+          animation: pulse 2s infinite;
+        }
+
+        &.default {
+          background-color: #374151;
+        }
+      }
+    }
+  }
+
+  .content {
+    padding: 0 1rem 1rem;
+    color: #d1d5db;
+    font-family: monospace;
+    font-size: 0.75rem;
+
+    .section {
+      margin-bottom: 1rem;
+
+      .label {
+        color: #9ca3af;
+        margin-bottom: 0.5rem;
+      }
+
+      .pre {
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow: auto;
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}

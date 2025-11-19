@@ -1,4 +1,10 @@
-import { useCopilotAction, useCopilotReadable, useCoAgent, useCopilotChat } from '@copilotkit/react-core';
+import {
+  useCopilotAction,
+  useCopilotReadable,
+  useCoAgent,
+  useCopilotChat,
+  type CatchAllActionRenderProps,
+} from '@copilotkit/react-core';
 import { type FC, type ReactNode, useEffect, useState } from 'react';
 import { useLocalStorage } from '@/hooks';
 import { useCopilotChatSuggestions } from '@copilotkit/react-ui';
@@ -6,6 +12,7 @@ import { useLocation } from 'react-router';
 import MermaidCom from './sub-com/MermaidCom.tsx';
 import { attempt, isError } from 'lodash-es';
 import { useBaseStore } from '@/stores/base';
+import MCPToolCall from '@/components/copilotkit/McpToolCall.tsx';
 
 const JSONParse = (str: string | null) => {
   let json = attempt(JSON.parse, str);
@@ -163,6 +170,16 @@ const CopilotContext: FC<{ children: ReactNode; copilotCatRef: any }> = ({ child
   //     return <ToolCallRenderer name={name} args={args} status={status || 'unknown'} result={result} />;
   //   },
   // });
+
+  useCopilotAction({
+    /**
+     * The asterisk (*) matches all tool calls
+     */
+    name: '*',
+    render: ({ name, status, args, result }: CatchAllActionRenderProps<[]>) => (
+      <MCPToolCall status={status} name={name} args={args} result={result} />
+    ),
+  });
 
   return systemInfo?.llmType === 'openai' ? <SuggestionsContext>{children}</SuggestionsContext> : children;
 };
