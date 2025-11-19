@@ -3,7 +3,7 @@ module backend
 go 1.24.2
 
 require (
-	gitee.com/unitedrhino/share v1.5.43
+	gitee.com/unitedrhino/share v1.5.44
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/expr-lang/expr v1.17.6
@@ -66,7 +66,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20230207041349-798e818bf904 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/gorilla/websocket v1.5.3
 	github.com/grafana/pyroscope-go v1.2.7 // indirect
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.24.0 // indirect
