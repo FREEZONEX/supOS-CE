@@ -58,9 +58,9 @@ const CopilotContext: FC<{ children: ReactNode; copilotCatRef: any }> = ({ child
   const { setMcpServers } = useCopilotChat();
   useEffect(() => {
     setMcpServers([
-      // {
-      //   endpoint: 'stdio://npx/-y/@supos-os-edge/demo-mcp-server',
-      // },
+      {
+        endpoint: 'stdio://npx/-y/@supos-os-edge/demo-mcp-server',
+      },
       // {
       // Try a sample MCP server at https://mcp.composio.dev/
       // endpoint: 'see://http://localhost:3000/mcp',
