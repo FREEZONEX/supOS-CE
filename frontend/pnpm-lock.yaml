@@ -580,8 +580,8 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       shepherd.js:
-        specifier: ^14.4.0
-        version: 14.5.1
+        specifier: ^13.0.3
+        version: 13.0.3
       use-immer:
         specifier: catalog:util
         version: 0.11.0(immer@10.1.3)(react@18.3.1)
@@ -4896,8 +4896,8 @@ packages:
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
-  deepmerge-ts@7.1.5:
-    resolution: {integrity: sha512-HOJkrhaYsweh+W+e74Yn7YStZOilkoPb6fycpwNLKzSPtruFs48nYis0zy5yJz1+ktUhHxoRDJ27RQAWLIJVJw==}
+  deepmerge-ts@5.1.0:
+    resolution: {integrity: sha512-eS8dRJOckyo9maw9Tu5O5RUi/4inFLrnoLkBe3cPfDMx3WZioXtmOew4TXQaxq7Rhl4xjDtR7c6x8nNTxOvbFw==}
     engines: {node: '>=16.0.0'}
 
   deepmerge@4.3.1:
@@ -7693,8 +7693,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  shepherd.js@14.5.1:
-    resolution: {integrity: sha512-VuvPvLG1QjNOLP7AIm2HGyfmxEIz8QdskvWOHwUcxLDibYWjLRBmCWd8LSL5FlwhBW7D/GU+3gNVC/ASxAWdxg==}
+  shepherd.js@13.0.3:
+    resolution: {integrity: sha512-1lQtQUNQYi+8k9BAmbUZh7D2QxFfkxiWKU0XFTbzYaIrCkB4nR0DLQuarH5G7Ym6L8wfbadxP3hJhZ2HzVktaA==}
     engines: {node: 18.* || >= 20}
 
   shx@0.4.0:
@@ -13563,7 +13563,7 @@ snapshots:
 
   deep-is@0.1.4: {}
 
-  deepmerge-ts@7.1.5: {}
+  deepmerge-ts@5.1.0: {}
 
   deepmerge@4.3.1: {}
 
@@ -14571,7 +14571,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.12.2(debug@4.4.3))
+      retry-axios: 2.6.0(axios@1.12.2)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -16824,7 +16824,7 @@ snapshots:
       onetime: 7.0.0
       signal-exit: 4.1.0
 
-  retry-axios@2.6.0(axios@1.12.2(debug@4.4.3)):
+  retry-axios@2.6.0(axios@1.12.2):
     dependencies:
       axios: 1.12.2(debug@4.4.3)
 
@@ -17065,11 +17065,11 @@ snapshots:
       interpret: 1.4.0
       rechoir: 0.6.2
 
-  shepherd.js@14.5.1:
+  shepherd.js@13.0.3:
     dependencies:
       '@floating-ui/dom': 1.7.4
       '@scarf/scarf': 1.4.0
-      deepmerge-ts: 7.1.5
+      deepmerge-ts: 5.1.0
 
   shx@0.4.0:
     dependencies:

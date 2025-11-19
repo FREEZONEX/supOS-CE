@@ -58,7 +58,7 @@
     "react-sticky-box": "catalog:util",
     "sass": "catalog:ui",
     "screenfull": "^6.0.2",
-    "shepherd.js": "^14.4.0",
+    "shepherd.js": "^13.0.3",
     "use-immer": "catalog:util",
     "uuid": "catalog:util",
     "zustand": "catalog:util",

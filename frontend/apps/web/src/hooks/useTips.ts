@@ -144,15 +144,16 @@ export const useTips = (originTips: any[] = []) => {
         ),
       });
     });
-    tour.off('complete'); // 先删除之前的事件绑定函数
-    tour.on('complete', () => {
+    const fn = () => {
       // if (checked) {
       // 调后端接口设置不再触发tips
       updateTipsEnable(checked ? 0 : 1);
       // }
       // 监听完成时设置为不开启
       setUserTipsEnable('0');
-    });
+    };
+    tour.off('complete', fn); // 先删除之前的事件绑定函数
+    tour.on('complete', fn);
   }, [checked]);
 
   return {
