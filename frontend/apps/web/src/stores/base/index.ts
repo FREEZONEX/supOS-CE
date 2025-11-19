@@ -137,7 +137,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const allRoutes = filterRouteByUserResource(
         mapResource(resource?.filter((r: ResourceProps) => r.type !== 3)),
         userRoutesResourceList,
-        (systemInfo?.authEnable && !info?.superAdmin) || IsSupAdmin
+        systemInfo?.authEnable && !info?.superAdmin && !IsSupAdmin
       );
       // 剔除未启用的路由
       const enableRoutes = allRoutes?.filter((f) => f.enable);
@@ -221,7 +221,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const allRoutes = filterRouteByUserResource(
         mapResource(resource.filter((r: ResourceProps) => r.type !== 3)),
         baseState?.currentUserInfo?.pageList,
-        baseState.systemInfo?.authEnable && !baseState.currentUserInfo?.superAdmin
+        baseState.systemInfo?.authEnable && !baseState.currentUserInfo?.superAdmin && !IsSupAdmin
       );
       const enableRoutes = allRoutes?.filter((f) => f.enable);
       const { homeTree, homeTabGroup, homeGroup, menuGroup, menuTree } = buildResourceTrees(enableRoutes);

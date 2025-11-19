@@ -631,7 +631,7 @@
   "uns.labelTooltip": "单个标签值可帮助您对文件进行分组或搜索（例如生产、测试）。",
   "uns.mockDataTooltip": "打开一个预构建的Node-RED流，该流将示例消息发布到此主题。稍后在Node-RED中配置详细信息。",
   "uns.autoDashboardTooltip": "生成一个连接到此文件数据的启动Grafana仪表板。",
-  "uns.persistenceTooltip": "将每条MOTT消息存储在备份数据库表（Alias）中。支持保留和索引。",
+  "uns.persistenceTooltip": "将每条MQTT消息存储在备份数据库表（Alias）中。支持保留和索引。",
   "uns.variablePickerTooltip": "选择一个主题字段以将其转换为变量。单击加号添加更多内容。",
   "uns.variableChipsTooltip": "通过将所选主题字段设置为变量，可以自由单击并使用它。",
   "uns.expressionTooltip": "在此处编写数学、逻辑或字符串运算。使用如上所示的变量名。示例：AVG(变量1、变量2)*60",
