@@ -349,6 +349,7 @@ const Module: FC<FolderDetailProps> = (props) => {
             {modelInfo.pathName}
           </Title>
           <Subscribe
+            hidden
             showModal
             value={modelInfo.subscribeEnable}
             topic={modelInfo.topic}

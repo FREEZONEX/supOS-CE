@@ -15,10 +15,11 @@ interface PropsTypes {
   unit?: string; // 单位
   onChange: (checked: boolean, config?: any) => Promise<void>;
   subscribeFrequency?: string;
+  hidden?: boolean;
 }
 
 const Subscribe = (props: PropsTypes) => {
-  const { onChange, value, showModal, topic, fileCount, subscribeFrequency } = props;
+  const { onChange, value, showModal, topic, fileCount, subscribeFrequency, hidden } = props;
   const [form] = Form.useForm();
   const [open, setOpen] = useState<boolean>(false);
   const [checked, setChecked] = useState<boolean>(false);
@@ -52,6 +53,7 @@ const Subscribe = (props: PropsTypes) => {
     });
   };
 
+  if (hidden) return null;
   return (
     <Flex className={styles.subscribe}>
       <Button

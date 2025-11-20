@@ -231,6 +231,7 @@ const Module: FC<LabelDetailProps> = (props) => {
             {topicTitle}
           </Title>
           <Subscribe
+            hidden
             showModal
             value={modelInfo.subscribeEnable}
             topic={modelInfo.topic}

@@ -279,6 +279,7 @@ const TemplateDetail: FC<TemplateDetailProps> = ({ currentNode: { id }, handleDe
             {info?.name}
           </Title>
           <Subscribe
+            hidden
             showModal
             value={info.subscribeEnable}
             subscribeFrequency={info.subscribeFrequency}

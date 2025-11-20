@@ -153,7 +153,7 @@ const Details: FC<DetailsProps> = ({ instanceInfo, updateTime, websocketData }) 
       {![3, 4].includes(instanceInfo.dataType) && (
         <div className="detailItem">
           <div className="detailKey">{formatMessage('common.latestUpdate')}</div>
-          {updateTime && <div>{formatTimestamp(updateTime)}</div>}
+          {updateTime ? <div>{formatTimestamp(updateTime)}</div> : ''}
         </div>
       )}
       <div className="detailItem">
