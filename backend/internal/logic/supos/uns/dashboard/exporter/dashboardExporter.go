@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"backend/internal/common/constants"
 	"backend/internal/repo/relationDB"
 	"context"
 	"encoding/json"
@@ -33,7 +34,7 @@ func NewDashboardDataExporter() *DashboardDataExporter {
 func (e *DashboardDataExporter) ExportData(context *DashboardExportContext, fileRootPath string) (string, error) {
 	// 构建导出路径
 	timestamp := time.Now().Format("20060102150405")
-	relativePath := fmt.Sprintf("export/dashboard/%s/dashboard-export.json", timestamp)
+	relativePath := constants.GlobalExport + fmt.Sprintf("dashboard/%s/", timestamp) + constants.GlobalExportDashboard
 	targetPath := filepath.Join(fileRootPath, relativePath)
 
 	// 确保目录存在

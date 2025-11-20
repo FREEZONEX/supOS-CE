@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backend/internal/common/constants"
 	"backend/internal/common/dto"
 	"backend/internal/common/errors"
 	"backend/internal/common/event"
@@ -35,7 +36,8 @@ func init() {
 // NewDashboardService 创建 DashboardService 实例
 func NewDashboardService() *DashboardService {
 	s := &DashboardService{
-		fileRootPath: "data", // 暂定根路径，后续可从配置中读取
+		logger:       logx.WithContext(context.Background()),
+		fileRootPath: constants.RootPath, // 暂定根路径，后续可从配置中读取
 	}
 	// Note: InitDashboardsOnStartup should be called by the application's main startup logic,
 	// after the database connection is established and passed in.
