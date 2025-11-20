@@ -132,6 +132,8 @@ type (
         UpperLimit  *float64 `json:"upperLimit,optional,omitempty"`
         LowerLimit  *float64 `json:"lowerLimit,optional,omitempty"`
         Decimal     *int     `json:"decimal,optional,omitempty"`
+        LastValue   string   `json:"-,optional"`
+        LastTime    int64    `json:"-,optional"`
     }
      FieldDefines  {
         FieldsMap     map[string]*FieldDefine // Field name -> FieldDefine
@@ -354,6 +356,8 @@ type (
 		TemplateAlias    string                 `json:"templateAlias,omitempty"`
 		AccessLevel      string                 `json:"accessLevel,omitempty"`
 		Mount            *MountDetailVo          `json:"mount,omitempty"`
+        Table            string                 `json:"table,omitempty"`
+        TbFieldName      string                 `json:"tbFieldName,omitempty"`
 	}
     InstanceField {
         Id    int64  `json:"id"`
@@ -420,41 +424,82 @@ type (
 	}
 
 	StreamOptions  {}
-	UpdateUnsDto {
-		Id                            int64                  `json:"id,optional"`
-		Name                          string                 `json:"name,optional"`
-		DisplayName                   string                 `json:"displayName,optional"`
-		PathType                      int                    `json:"pathType,optional"`
-		ReferUns                      string                 `json:"referUns,optional"`
-		ReferIds                      []int64                `json:"referIds,optional"`
-		ReferTable                    string                 `json:"referTable,optional"`
-		RefFields                     []FieldDefine          `json:"refFields,optional"`
-		ReferModelId                  string                 `json:"referModelId,optional"`
-		Alias                         string                 `json:"alias"`
-		ModelId                       *int64                  `json:"modelId,optional,string"`
-		ModelAlias                    *string                 `json:"modelAlias,optional"`
-		ParentAlias                   *string                 `json:"parentAlias,optional"`
-		ParentId                      *int64                  `json:"parentId,optional,string"`
-		DataType                      *int16                    `json:"dataType,optional,string"`
-		Fields                        []FieldDefine          `json:"fields,optional"`
-		DataPath                      string                 `json:"dataPath,optional"`
-		Description                   string                 `json:"description,optional"`
-		Refers                        []InstanceField        `json:"refers,optional"`
-		Expression                    string                 `json:"expression,optional"`
-		StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
-		AddFlow                       *bool                   `json:"addFlow,optional"`
-		AddDashBoard                  *bool                   `json:"addDashBoard,optional"`
-		Save2db                       *bool                   `json:"save2db,optional"`
-		RetainTableWhenDeleteInstance *bool                   `json:"retainTableWhenDeleteInstance,optional"`
-		Frequency                     string                 `json:"frequency,optional"`
-		Extend                        map[string]interface{} `json:"extend,optional"`
-		LabelNames                    []string               `json:"labelNames,optional"`
-		RefSource                     string                 `json:"refSource,optional"`
-		ValueType                     string                 `json:"valueType,optional"`
-		InitValue                     interface{}            `json:"initValue,optional"`
-		StrMaxLen                     *int                    `json:"strMaxLen,optional,string"`
-		AccessLevel                   string                 `json:"accessLevel,optional"`
-	}
+    UpdateUnsDto {
+        // Basic fields
+        Id          int64   `json:"id,string,optional,omitzero"`
+        Name        string  `json:"name,optional" validate:"max=63"`
+        DisplayName *string `json:"displayName,optional,omitempty" validate:"max=128"`
+        PathType    int16   `json:"pathType,optional" validate:"min=0,max=2"`
+        Path        string  `json:"path,optional,omitzero"`
+        Alias       string  `json:"alias,optional"`
+        Description *string `json:"description,optional,omitzero" validate:"max=255"`
+
+        // Model/Template fields
+        ModelId    *int64 `json:"modelId,string,optional,omitempty"`
+        ModelAlias *string `json:"modelAlias,optional,omitempty"`
+
+        // Parent fields
+        ParentAlias *string `json:"parentAlias,optional,omitempty"`
+        ParentId    *int64  `json:"parentId,string,optional,omitempty"`
+
+        // Data type and fields
+        DataType       *int16            `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"`
+        ParentDataType *int16            `json:"parentDataType,optional,string,omitempty"`
+        Fields         []*FieldDefine    `json:"fields,optional"`
+
+        // Reference fields
+        ReferUns     string         `json:"referUns,optional,omitzero"`
+        ReferIds     []int64        `json:"referIds,optional,omitzero"`
+        RefUns       map[int64]int  `json:"refUns,optional"`
+        ReferTable   string         `json:"referTable,optional,omitzero"`
+        RefFields    []*FieldDefine `json:"refFields,optional,omitzero"`
+        ReferModelID string         `json:"referModelId,optional,omitzero"`
+
+        // Calculation fields
+        Refers            []*InstanceField `json:"refers,optional,omitzero"`
+        Expression        *string           `json:"expression,optional,omitzero" validate:"max=255"`
+        StreamOptions     *StreamOptions   `json:"streamOptions,optional,omitzero"`
+
+        // Protocol fields
+        DataPath     *string         `json:"dataPath,optional"`
+        Protocol     map[string]interface{} `json:"protocol,optional"`
+        ProtocolType *string         `json:"protocolType,optional"`
+
+        // Flags and options
+        WithFlags                     *int32 `json:"withFlags,optional,omitempty"`
+        AddFlow                       *bool  `json:"addFlow,optional,omitempty"`
+        AddDashBoard                  *bool  `json:"addDashBoard,optional,omitempty"`
+        Save2Db                       *bool  `json:"save2db,optional,omitempty"`
+        RetainTableWhenDeleteInstance *bool  `json:"retainTableWhenDeleteInstance,optional,omitempty"`
+        CreateTemplate                *bool  `json:"createTemplate,optional,omitempty"`
+        SubscribeEnable               *bool  `json:"subscribeEnable,optional,omitempty"`
+
+        // Frequency for merge type
+        Frequency        string `json:"frequency,optional,omitzero"`
+
+        // Extended fields
+        Extend          map[string]interface{}   `json:"extend,optional,omitzero" validate:"max=3"`
+        ExtendFieldUsed []string         `json:"extendFieldUsed,optional,omitzero"`
+        LabelNames      []string         `json:"labelNames,optional,omitzero"`
+
+        // Pride specific fields
+        RefSource string `json:"refSource,optional,omitzero"`
+        ValueType string `json:"valueType,optional,omitzero"`
+        InitValue interface{}    `json:"initValue,optional,omitzero"`
+        StrMaxLen int    `json:"strMaxLen,optional,omitzero"`
+
+        // Access level
+        AccessLevel string `json:"accessLevel,optional,omitzero"`
+
+        // Mount fields
+        MountType   *int16 `json:"mountType,optional,omitempty,string"`
+        MountSource *string `json:"mountSource,optional,omitzero"`
+
+        // Update metadata
+        UpdateAt      int64 `json:"updateAt,optional,omitzero"`
+        CreateAt      int64 `json:"createAt,optional,omitzero"`
+    }
+
 	UpdateNameVo {
 		Id   int64  `json:"id"`
 		Name string `json:"name"`
@@ -586,68 +631,6 @@ type ResultVO {
 }
 
 
-type (
-    
-    // 外部/内部创建主题（文件夹/文件）的入参
-    UnsCreateTopicDTO{
-        // 父级别名（可选），与 ParentId 任选其一
-        ParentAlias string `json:"parentAlias,optional"`
-        // 父级ID，可与 ParentAlias 任选其一
-        ParentID int64 `json:"parentId,optional"`
-        // 模板id
-        ModelID int64 `json:"modelId,optional"`
-        // 自定义别名（可选）
-        Alias string `json:"alias,optional"`
-        // 名称（文件夹或文件名）
-        Name string `json:"name"`
-        // 路径类型：1=文件夹 2=文件
-        PathType int64 `json:"pathType"`
-        // 数据类型（当 PathType=文件 时可指定，如 int/float/bool/string 等编码值）
-        DataType int64 `json:"dataType,optional"`
-        // 字段定义（当为文件且需定义结构化字段时可填写）
-        Fields []FieldDef `json:"fields,optional"`
-        // 描述
-        Description string `json:"description,optional"`
-        // 协议（可选，例如 mqtt/kafka/http 等）
-        Protocol string `json:"protocol,optional"`
-        // 协议类型/子类型（可选）
-        ProtocolType string `json:"protocolType,optional"`
-        // 外部数据源ID（可选）
-        DataSrcId int64 `json:"dataSrcId,optional"`
-        // 是否附带创建仪表盘
-        AddDashBoard bool `json:"addDashBoard,optional"`
-        // 是否保存数据到库
-        Save2db bool `json:"save2db,optional"`
-        // 是否创建流程
-        AddFlow bool `json:"addFlow,optional"`
-        // 标签名称集合（按名称绑定标签）
-        LabelNames []string `json:"labelNames,optional"`
-        // extend
-        Extend map[string]interface{} `json:"extend,optional"`
-        // 生成模板
-        CreateTemplate bool `json:"createTemplate,optional"`
-    }
-    // 字段定义（参考 Java DTO 提供的字段）
-    FieldDef{
-        // 字段名
-        Name string `json:"name"`
-        // 字段类型：int, long, float, string, boolean
-        Type string `json:"type"`
-        // 是否唯一约束（新建模板时不生效）
-        Unique bool `json:"unique,optional"`
-        // 对应的协议字段key（新建模板时不生效）
-        Index string `json:"index,optional"`
-        // 显式名
-        DisplayName string `json:"displayName,optional"`
-        // 备注
-        Remark string `json:"remark,optional"`
-        // 最大长度（string字段类型生效）
-        MaxLen int64 `json:"maxLen,optional"`
-        // tbValueName（内部使用）
-        TbValueName string `json:"tbValueName,optional"`
-    }
-)
-
 @server (
 	prefix: /inter-api/supos
 	group:  supos/uns/uns
@@ -730,14 +713,6 @@ service backend {
 	)
 	@handler createModelInstance
 	post /uns/model (CreateTopicDto) returns (CreateUnsResp)
-
-    @doc (
-		summary: "创建文件夹和文件"
-	)
-	@handler modelCreate
-	post /uns/model_v0 (UnsCreateTopicDTO) returns (WithID)
-
-// modelCreate
 
 	@doc (
 		summary: "修改文件夹或文件明细"

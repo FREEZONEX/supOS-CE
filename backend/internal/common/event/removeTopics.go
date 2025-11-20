@@ -1,7 +1,7 @@
 package event
 
 import (
-	"backend/internal/logic/supos/uns/uns/bo"
+	"backend/internal/types"
 	"context"
 	"time"
 )
@@ -12,13 +12,13 @@ type RemoveTopicsEvent struct {
 	DeleteTime    time.Time
 	WithFlow      bool
 	WithDashboard bool
-	Topics        []bo.UnsInfo
-	Templates     []bo.UnsInfo
-	Folders       []bo.UnsInfo
+	Topics        []*types.CreateTopicDto
+	Templates     []*types.CreateTopicDto
+	Folders       []*types.CreateTopicDto
 }
 
 // NewRemoveTopicsEvent creates a new RemoveTopicsEvent.
-func NewRemoveTopicsEvent(ctx context.Context, deleteTime time.Time, withFlow, withDashboard bool, topics, templates, folders []bo.UnsInfo) *RemoveTopicsEvent {
+func NewRemoveTopicsEvent(ctx context.Context, deleteTime time.Time, withFlow, withDashboard bool, topics, templates, folders []*types.CreateTopicDto) *RemoveTopicsEvent {
 	return &RemoveTopicsEvent{
 		ApplicationEvent: ApplicationEvent{Context: ctx},
 		DeleteTime:       deleteTime,

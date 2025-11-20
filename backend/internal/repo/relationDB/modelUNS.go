@@ -65,6 +65,18 @@ type UnsNamespace struct {
 	CountExistsSiblings int64  `gorm:"-" json:"countExistsSiblings"`
 }
 
+func (u *UnsNamespace) GetTbFieldName() string {
+	if len(u.Fields) == 0 || u.TableName_ == nil {
+		return ""
+	}
+	for _, f := range u.Fields {
+		if f.TbValueName != nil {
+			return f.Name
+		}
+	}
+	return ""
+}
+
 func (u *UnsNamespace) GetLayRec() string {
 	return u.LayRec
 }
@@ -72,7 +84,7 @@ func (u *UnsNamespace) GetLayRec() string {
 func (u *UnsNamespace) GetDataPath() string {
 	return base.P2v(u.DataPath)
 }
-func (c *UnsNamespace) GetCalculationType() *int32 {
+func (u *UnsNamespace) GetCalculationType() *int32 {
 	return nil //TODO
 }
 func (u *UnsNamespace) GetProtocolMap() (pmap map[string]interface{}) {
@@ -280,8 +292,15 @@ func (f LabelIds) Value() (driver.Value, error) {
 }
 
 // TableName UnsNamespace's table name
-func (*UnsNamespace) TableName() string {
+func (u *UnsNamespace) TableName() string {
 	return TableNameUnsNamespace
+}
+
+func (u *UnsNamespace) GetTable() string {
+	if tb := u.TableName_; tb != nil {
+		return *tb
+	}
+	return u.Alias
 }
 func (u *UnsNamespace) GetID() int64 {
 	return u.Id

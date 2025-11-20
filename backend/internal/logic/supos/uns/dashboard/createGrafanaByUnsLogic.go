@@ -6,6 +6,7 @@ import (
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/base"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -127,10 +128,9 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	}
 
 	// 7. 更新 UNS 的 flags
-	addDashboard := true
 	updateDto := &types.UpdateUnsDto{
 		Alias:        alias,
-		AddDashBoard: &addDashboard,
+		AddDashBoard: base.OptionalTrue,
 	}
 	_, updateErr := l.unsUpdateService.UpdateDetail(l.ctx, updateDto)
 	if updateErr != nil {

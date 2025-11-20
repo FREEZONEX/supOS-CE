@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 )
@@ -12,6 +13,16 @@ type CreateDashboardEvent struct {
 	Name        string
 	UserName    string
 	Description string
+}
+
+func NewCreateDashboardEvent(ctx context.Context, uuid, name, description, userName string) *CreateDashboardEvent {
+	return &CreateDashboardEvent{
+		ApplicationEvent: ApplicationEvent{Context: ctx},
+		UUID:             uuid,
+		Name:             name,
+		Description:      description,
+		UserName:         userName,
+	}
 }
 
 // String implements the fmt.Stringer interface to provide a JSON representation.

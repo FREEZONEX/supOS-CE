@@ -59,11 +59,10 @@ func init() {
 		Database: conf.Database{
 			IsInitTable: true,
 			DBType:      "pgsql",
-			DSN:         "postgres://postgres:postgres@100.100.100.20:31014/postgres",
+			DSN:         "postgres://postgres:postgres@100.100.100.20:31014/postgres?search_path=supos",
 		},
-		DatabaseSchema: "supos",
 	}
 
 	stores.InitConn(c.Database)
-	Migrate(c.Database, c.DatabaseSchema)
+	Migrate(c.Database)
 }

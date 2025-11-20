@@ -87,6 +87,9 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 		withFlags = *p.WithFlags
 	}
 	unsDto.Id = p.Id
+	if tbn := p.TableName_; tbn != nil {
+		unsDto.TableName = *tbn
+	}
 	unsDto.WithFlags = p.WithFlags
 	unsDto.AddFlow = boPt(constants.WithFlow(withFlags))
 	unsDto.AddDashBoard = boPt(constants.WithDashBoard(withFlags))
@@ -263,7 +266,22 @@ var apiConvertOptions = copier.Option{IgnoreEmpty: true, Converters: []copier.Ty
 
 func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *types.CreateTopicDto {
 	var target types.CreateTopicDto
-	copier.CopyWithOption(&target, apiDto, apiConvertOptions)
+	er := copier.CopyWithOption(&target, apiDto, copier.Option{IgnoreEmpty: true})
+	if er != nil {
+		target.Id = apiDto.Id
+		target.Alias = apiDto.Alias
+		target.ParentAlias = apiDto.ParentAlias
+		target.ParentId = apiDto.ParentId
+		target.Fields = apiDto.Fields
+		target.Name = apiDto.Name
+		target.ModelId = apiDto.ModelId
+		target.ModelAlias = apiDto.ModelAlias
+		target.Description = apiDto.Description
+		target.WithFlags = apiDto.WithFlags
+		target.AddFlow = apiDto.AddFlow
+		target.AddDashBoard = apiDto.AddDashBoard
+		target.SubscribeEnable = apiDto.SubscribeEnable
+	}
 	return &target
 }
 

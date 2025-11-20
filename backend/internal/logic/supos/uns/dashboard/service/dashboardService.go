@@ -8,8 +8,8 @@ import (
 	"backend/internal/common/utils/grafanautil"
 	"backend/internal/logic/supos/uns/dashboard/exporter"
 	"backend/internal/logic/supos/uns/dashboard/importer"
-	"backend/internal/logic/supos/uns/uns/bo"
 	"backend/internal/repo/relationDB"
+	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
@@ -112,18 +112,15 @@ func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) e
 	if event == nil {
 		return errors.NewBuzError(400, "global.event.nil")
 	}
-	s.logger.Infof("removing dashboards for topics: %v", base.Map(event.Topics, func(e bo.UnsInfo) string {
+	aliasList := base.Map(event.Topics, func(e *types.CreateTopicDto) string {
 		return e.GetAlias()
-	}))
+	})
+	s.logger.Infof("removing dashboards for topics: %v", aliasList)
 	dashboardRefMapper := relationDB.NewDashboardRefMapper(relationDB.GetDb(event.Context), event.Context)
 	dashboardMapper := relationDB.NewDashboardMapper(relationDB.GetDb(event.Context), event.Context)
 
 	// 1. 根据别名查询关联的 dashboard ID
-	refs, err := dashboardRefMapper.SelectByUnsAliases(
-		base.Map(event.Topics, func(e bo.UnsInfo) string {
-			return e.GetAlias()
-		}),
-	)
+	refs, err := dashboardRefMapper.SelectByUnsAliases(aliasList)
 	if err != nil {
 		s.logger.Errorf("failed to select dashboard refs by aliases: %v", err)
 		return err

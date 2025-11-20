@@ -6,16 +6,21 @@ Timeout: 20000
 
 Database:
   DBType: pgsql
-  DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres
+  DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres?search_path=supos
+
+loggerLevel: debug
+
+persistent_url:
+  postgresql: postgres://postgres:postgres@100.100.100.22:34099/postgres
+  timescaledb: postgres://postgres:postgres@100.100.100.22:34099/postgres
+  
 KeycloakDSN: postgres://postgres:postgres@100.100.100.20:31014/keycloak
 CacheRedis:
  - Host: localhost:6379
    Pass:
    Type: node
-#OAuthKeyCloak:
-#   Realm: supos
-#   ClientName: supos
-#   ClientID:
+OAuthKeyCloak:
+  ClientID: NULL
 #   ClientSecret: VaOS2makbDhJJsLlYPt4Wl87bo9VzXiO
 #   AuthorizationGrantType: authorization_code
 #   RedirectURI: http://office.unibutton.com:11488/inter-api/supos/auth/token
@@ -23,6 +28,19 @@ CacheRedis:
 #   IssuerURI: http://office.unibutton.com:11488/keycloak/home/auth
 #   # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
 #   RefreshTokenTime: "60"
+DevLink:
+  Mode: mqtt
+  SubMode: emq
+  Mqtt:
+    ClientID: uns.rpc
+    Pass: uns
+    User: unssvr
+    Brokers:
+      - tcp://127.0.0.1:1883
+    OpenApi:
+      Host: http://127.0.0.1:18083
+      ApiKey: 69b84915bc0d50db
+      SecretKey: nzREWI29BQjrY9A1gsgczHEUhDr3kJXonkUE9A7hueCB4G
 NodeRed:
   Source:
     Host: localhost

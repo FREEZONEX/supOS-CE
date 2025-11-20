@@ -1027,6 +1027,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -1389,6 +1392,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -2326,6 +2332,38 @@
                   }
                 },
                 "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/log/{level}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "日志级别配置",
+        "operationId": "supos/Uns/SystemLogConfig",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "level",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "rootLevel": {
                   "type": "string"
                 }
               }
@@ -3692,6 +3730,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -3792,6 +3833,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -4321,6 +4365,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -5104,9 +5151,6 @@
             "required": true,
             "schema": {
               "type": "object",
-              "required": [
-                "alias"
-              ],
               "properties": {
                 "accessLevel": {
                   "type": "string"
@@ -5119,6 +5163,12 @@
                 },
                 "alias": {
                   "type": "string"
+                },
+                "createAt": {
+                  "type": "integer"
+                },
+                "createTemplate": {
+                  "type": "boolean"
                 },
                 "dataPath": {
                   "type": "string"
@@ -5138,6 +5188,12 @@
                 "extend": {
                   "type": "object",
                   "additionalProperties": {}
+                },
+                "extendFieldUsed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "fields": {
                   "type": "array",
@@ -5206,17 +5262,36 @@
                 "modelId": {
                   "type": "integer"
                 },
+                "mountSource": {
+                  "type": "string"
+                },
+                "mountType": {
+                  "type": "integer"
+                },
                 "name": {
                   "type": "string"
                 },
                 "parentAlias": {
                   "type": "string"
                 },
+                "parentDataType": {
+                  "type": "integer"
+                },
                 "parentId": {
                   "type": "integer"
                 },
+                "path": {
+                  "type": "string"
+                },
                 "pathType": {
                   "type": "integer"
+                },
+                "protocol": {
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "protocolType": {
+                  "type": "string"
                 },
                 "refFields": {
                   "type": "array",
@@ -5268,6 +5343,12 @@
                 },
                 "refSource": {
                   "type": "string"
+                },
+                "refUns": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  }
                 },
                 "referIds": {
                   "type": "array",
@@ -5327,8 +5408,17 @@
                 "streamOptions": {
                   "type": "object"
                 },
+                "subscribeEnable": {
+                  "type": "boolean"
+                },
+                "updateAt": {
+                  "type": "integer"
+                },
                 "valueType": {
                   "type": "string"
+                },
+                "withFlags": {
+                  "type": "integer"
                 }
               }
             }
@@ -5790,9 +5880,6 @@
                       "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
                       "accessLevel": {
                         "description": "Access level",
                         "type": "string"
@@ -6300,7 +6387,9 @@
                     "templateName",
                     "templateAlias",
                     "accessLevel",
-                    "mount"
+                    "mount",
+                    "table",
+                    "tbFieldName"
                   ],
                   "properties": {
                     "accessLevel": {
@@ -6516,6 +6605,12 @@
                     },
                     "subscribeEnable": {
                       "type": "boolean"
+                    },
+                    "table": {
+                      "type": "string"
+                    },
+                    "tbFieldName": {
+                      "type": "string"
                     },
                     "templateAlias": {
                       "type": "string"
@@ -7780,9 +7875,6 @@
                 "-"
               ],
               "properties": {
-                "-": {
-                  "type": "integer"
-                },
                 "accessLevel": {
                   "description": "Access level",
                   "type": "string"
@@ -8251,136 +8343,6 @@
         }
       }
     },
-    "/inter-api/supos/uns/model_v0": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "创建文件夹和文件",
-        "operationId": "supos/Uns/UnsModelCreate",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "name",
-                "pathType"
-              ],
-              "properties": {
-                "addDashBoard": {
-                  "type": "boolean"
-                },
-                "addFlow": {
-                  "type": "boolean"
-                },
-                "alias": {
-                  "type": "string"
-                },
-                "createTemplate": {
-                  "type": "boolean"
-                },
-                "dataSrcId": {
-                  "type": "integer"
-                },
-                "dataType": {
-                  "type": "integer"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "extend": {
-                  "type": "object",
-                  "additionalProperties": {}
-                },
-                "fields": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "required": [
-                      "name",
-                      "type"
-                    ],
-                    "properties": {
-                      "displayName": {
-                        "type": "string"
-                      },
-                      "index": {
-                        "type": "string"
-                      },
-                      "maxLen": {
-                        "type": "integer"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "remark": {
-                        "type": "string"
-                      },
-                      "tbValueName": {
-                        "type": "string"
-                      },
-                      "type": {
-                        "type": "string"
-                      },
-                      "unique": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                },
-                "labelNames": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "modelId": {
-                  "type": "integer"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "parentAlias": {
-                  "type": "string"
-                },
-                "parentId": {
-                  "type": "integer"
-                },
-                "pathType": {
-                  "type": "integer"
-                },
-                "protocol": {
-                  "type": "string"
-                },
-                "protocolType": {
-                  "type": "string"
-                },
-                "save2db": {
-                  "type": "boolean"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object"
-            }
-          }
-        }
-      }
-    },
     "/inter-api/supos/uns/name": {
       "put": {
         "consumes": [
@@ -8541,9 +8503,6 @@
                     "-"
                   ],
                   "properties": {
-                    "-": {
-                      "type": "integer"
-                    },
                     "accessLevel": {
                       "description": "Access level",
                       "type": "string"
@@ -9890,6 +9849,82 @@
         }
       }
     },
+    "/inter-api/supos/uns/topology": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "获取实例拓扑状态",
+        "operationId": "supos/Uns/TopologyGetInstanceTopologyHandler",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "unsId",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/topology-mock": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "设置实例拓扑状态(mock)",
+        "operationId": "supos/Uns/TopologyMockInstanceTopologyHandler",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "unsId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "The java code has topic, but it seems unused in log method. Kept for compatibility.",
+            "name": "topic",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "node",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
     "/inter-api/supos/uns/tree": {
       "get": {
         "produces": [
@@ -10125,6 +10160,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -10270,6 +10308,24 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/ws": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "WebSocket 连接",
+        "operationId": "supos/Uns/UnsWebsocket",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
           }
         }
       }
@@ -11343,7 +11399,7 @@
       }
     }
   },
-  "x-date": "2025-11-11 15:00:45",
+  "x-date": "2025-11-20 09:52:57",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

@@ -97,10 +97,13 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 		if topicDto.PathType == constants.PathTypeFile && base.P2v(topicDto.DataType) != constants.AlarmRuleType {
 			// 验证 parentDataType 是否有效
 			if topicDto.ParentDataType == nil || *topicDto.ParentDataType < 1 || *topicDto.ParentDataType > 3 {
-				errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.file.type.invalid")
+				if topicDto.Id == 0 {
+					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.file.type.invalid")
+				} else {
+					validTopicDtos = append(validTopicDtos, topicDto)
+				}
 				continue // 跳过这个元素
 			}
-
 			// 判断父级类型和文件类型是否匹配
 			if !enums.IsTypeMatched(topicDto.ParentDataType, topicDto.DataType) {
 				errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.category.type.not.eq")

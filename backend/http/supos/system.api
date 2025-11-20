@@ -14,9 +14,19 @@ service backend {
     @doc "获取系统配置"
     @handler systemConfig
     get /systemConfig () returns (SystemConfigResp)
+
+    @doc "日志级别配置"
+    @handler logConfig
+    get /log/:level (LogConfigRequest) returns (LogConfigResponse)
 }
 
 type (
+    LogConfigRequest {
+        Level string `path:"level,optional"`
+    }
+    LogConfigResponse {
+        Level string `json:"rootLevel"`
+    }
     SystemConfigResp {
         AppTitle            string                       `json:"appTitle,optional"`
         Version             string                       `json:"version,optional"`

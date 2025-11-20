@@ -389,17 +389,6 @@ type Field struct {
 	Type string `json:"type"`
 }
 
-type FieldDef struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Unique      bool   `json:"unique,optional"`
-	Index       string `json:"index,optional"`
-	DisplayName string `json:"displayName,optional"`
-	Remark      string `json:"remark,optional"`
-	MaxLen      int64  `json:"maxLen,optional"`
-	TbValueName string `json:"tbValueName,optional"`
-}
-
 type FieldDefine struct {
 	Name        string   `json:"name"`
 	Type        string   `json:"type"`
@@ -413,6 +402,8 @@ type FieldDefine struct {
 	UpperLimit  *float64 `json:"upperLimit,optional,omitempty"`
 	LowerLimit  *float64 `json:"lowerLimit,optional,omitempty"`
 	Decimal     *int     `json:"decimal,optional,omitempty"`
+	LastValue   string   `json:"-,optional"`
+	LastTime    int64    `json:"-,optional"`
 }
 
 type FieldDefines struct {
@@ -559,6 +550,8 @@ type InstanceDetail struct {
 	TemplateAlias    string                 `json:"templateAlias,omitempty"`
 	AccessLevel      string                 `json:"accessLevel,omitempty"`
 	Mount            *MountDetailVo         `json:"mount,omitempty"`
+	Table            string                 `json:"table,omitempty"`
+	TbFieldName      string                 `json:"tbFieldName,omitempty"`
 }
 
 type InstanceDetailReq struct {
@@ -629,6 +622,14 @@ type LabelVo struct {
 type ListTypesResult struct {
 	BaseResult
 	Data []string `json:"data"`
+}
+
+type LogConfigRequest struct {
+	Level string `path:"level,optional"`
+}
+
+type LogConfigResponse struct {
+	Level string `json:"rootLevel"`
 }
 
 type MakeLabelReq struct {
@@ -1214,27 +1215,6 @@ type UnsByLabelPageResp struct {
 	Data     []FileVo `json:"data"`
 }
 
-type UnsCreateTopicDTO struct {
-	ParentAlias    string                 `json:"parentAlias,optional"`
-	ParentID       int64                  `json:"parentId,optional"`
-	ModelID        int64                  `json:"modelId,optional"`
-	Alias          string                 `json:"alias,optional"`
-	Name           string                 `json:"name"`
-	PathType       int64                  `json:"pathType"`
-	DataType       int64                  `json:"dataType,optional"`
-	Fields         []FieldDef             `json:"fields,optional"`
-	Description    string                 `json:"description,optional"`
-	Protocol       string                 `json:"protocol,optional"`
-	ProtocolType   string                 `json:"protocolType,optional"`
-	DataSrcId      int64                  `json:"dataSrcId,optional"`
-	AddDashBoard   bool                   `json:"addDashBoard,optional"`
-	Save2db        bool                   `json:"save2db,optional"`
-	AddFlow        bool                   `json:"addFlow,optional"`
-	LabelNames     []string               `json:"labelNames,optional"`
-	Extend         map[string]interface{} `json:"extend,optional"`
-	CreateTemplate bool                   `json:"createTemplate,optional"`
-}
-
 type UnsDataResponseVo struct {
 	NotExists   []string          `json:"notExists"`
 	ErrorFields map[string]string `json:"errorFields"`
@@ -1321,39 +1301,52 @@ type UpdateTemplateSubscribeReq struct {
 }
 
 type UpdateUnsDto struct {
-	Id                            int64                  `json:"id,optional"`
-	Name                          string                 `json:"name,optional"`
-	DisplayName                   string                 `json:"displayName,optional"`
-	PathType                      int                    `json:"pathType,optional"`
-	ReferUns                      string                 `json:"referUns,optional"`
-	ReferIds                      []int64                `json:"referIds,optional"`
-	ReferTable                    string                 `json:"referTable,optional"`
-	RefFields                     []FieldDefine          `json:"refFields,optional"`
-	ReferModelId                  string                 `json:"referModelId,optional"`
-	Alias                         string                 `json:"alias"`
-	ModelId                       *int64                 `json:"modelId,optional,string"`
-	ModelAlias                    *string                `json:"modelAlias,optional"`
-	ParentAlias                   *string                `json:"parentAlias,optional"`
-	ParentId                      *int64                 `json:"parentId,optional,string"`
-	DataType                      *int16                 `json:"dataType,optional,string"`
-	Fields                        []FieldDefine          `json:"fields,optional"`
-	DataPath                      string                 `json:"dataPath,optional"`
-	Description                   string                 `json:"description,optional"`
-	Refers                        []InstanceField        `json:"refers,optional"`
-	Expression                    string                 `json:"expression,optional"`
-	StreamOptions                 StreamOptions          `json:"streamOptions,optional"`
-	AddFlow                       *bool                  `json:"addFlow,optional"`
-	AddDashBoard                  *bool                  `json:"addDashBoard,optional"`
-	Save2db                       *bool                  `json:"save2db,optional"`
-	RetainTableWhenDeleteInstance *bool                  `json:"retainTableWhenDeleteInstance,optional"`
-	Frequency                     string                 `json:"frequency,optional"`
-	Extend                        map[string]interface{} `json:"extend,optional"`
-	LabelNames                    []string               `json:"labelNames,optional"`
-	RefSource                     string                 `json:"refSource,optional"`
-	ValueType                     string                 `json:"valueType,optional"`
-	InitValue                     interface{}            `json:"initValue,optional"`
-	StrMaxLen                     *int                   `json:"strMaxLen,optional,string"`
-	AccessLevel                   string                 `json:"accessLevel,optional"`
+	Id                            int64                  `json:"id,string,optional,omitzero"`
+	Name                          string                 `json:"name,optional" validate:"max=63"`
+	DisplayName                   *string                `json:"displayName,optional,omitempty" validate:"max=128"`
+	PathType                      int16                  `json:"pathType,optional" validate:"min=0,max=2"`
+	Path                          string                 `json:"path,optional,omitzero"`
+	Alias                         string                 `json:"alias,optional"`
+	Description                   *string                `json:"description,optional,omitzero" validate:"max=255"`
+	ModelId                       *int64                 `json:"modelId,string,optional,omitempty"`
+	ModelAlias                    *string                `json:"modelAlias,optional,omitempty"`
+	ParentAlias                   *string                `json:"parentAlias,optional,omitempty"`
+	ParentId                      *int64                 `json:"parentId,string,optional,omitempty"`
+	DataType                      *int16                 `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"`
+	ParentDataType                *int16                 `json:"parentDataType,optional,string,omitempty"`
+	Fields                        []*FieldDefine         `json:"fields,optional"`
+	ReferUns                      string                 `json:"referUns,optional,omitzero"`
+	ReferIds                      []int64                `json:"referIds,optional,omitzero"`
+	RefUns                        map[int64]int          `json:"refUns,optional"`
+	ReferTable                    string                 `json:"referTable,optional,omitzero"`
+	RefFields                     []*FieldDefine         `json:"refFields,optional,omitzero"`
+	ReferModelID                  string                 `json:"referModelId,optional,omitzero"`
+	Refers                        []*InstanceField       `json:"refers,optional,omitzero"`
+	Expression                    *string                `json:"expression,optional,omitzero" validate:"max=255"`
+	StreamOptions                 *StreamOptions         `json:"streamOptions,optional,omitzero"`
+	DataPath                      *string                `json:"dataPath,optional"`
+	Protocol                      map[string]interface{} `json:"protocol,optional"`
+	ProtocolType                  *string                `json:"protocolType,optional"`
+	WithFlags                     *int32                 `json:"withFlags,optional,omitempty"`
+	AddFlow                       *bool                  `json:"addFlow,optional,omitempty"`
+	AddDashBoard                  *bool                  `json:"addDashBoard,optional,omitempty"`
+	Save2Db                       *bool                  `json:"save2db,optional,omitempty"`
+	RetainTableWhenDeleteInstance *bool                  `json:"retainTableWhenDeleteInstance,optional,omitempty"`
+	CreateTemplate                *bool                  `json:"createTemplate,optional,omitempty"`
+	SubscribeEnable               *bool                  `json:"subscribeEnable,optional,omitempty"`
+	Frequency                     string                 `json:"frequency,optional,omitzero"`
+	Extend                        map[string]interface{} `json:"extend,optional,omitzero" validate:"max=3"`
+	ExtendFieldUsed               []string               `json:"extendFieldUsed,optional,omitzero"`
+	LabelNames                    []string               `json:"labelNames,optional,omitzero"`
+	RefSource                     string                 `json:"refSource,optional,omitzero"`
+	ValueType                     string                 `json:"valueType,optional,omitzero"`
+	InitValue                     interface{}            `json:"initValue,optional,omitzero"`
+	StrMaxLen                     int                    `json:"strMaxLen,optional,omitzero"`
+	AccessLevel                   string                 `json:"accessLevel,optional,omitzero"`
+	MountType                     *int16                 `json:"mountType,optional,omitempty,string"`
+	MountSource                   *string                `json:"mountSource,optional,omitzero"`
+	UpdateAt                      int64                  `json:"updateAt,optional,omitzero"`
+	CreateAt                      int64                  `json:"createAt,optional,omitzero"`
 }
 
 type UserCreateReq struct {

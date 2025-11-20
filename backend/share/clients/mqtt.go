@@ -19,13 +19,6 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-var (
-	mqttInitOnce sync.Once
-	mqttClient   *MqttClient
-	// mqttSetOnConnectHandler 如果会话断开可以通过该回调函数来重新订阅消息
-	//不使用mqtt的clean session是因为会话保持期间共享订阅也会给离线的客户端,这会导致在线的客户端丢失消息
-)
-
 type MqttClient struct {
 	clients         []mqtt.Client
 	cfg             *conf.MqttConf
@@ -37,38 +30,35 @@ type MqttMsgConsumer interface {
 	OnMsg(ctx context.Context, topic string, msgId int, message []byte)
 }
 
-func NewMqttClient(conf *conf.MqttConf, consumer MqttMsgConsumer) (mcs *MqttClient, err error) {
-	mqttInitOnce.Do(func() {
-		var clients []mqtt.Client
-		var start = time.Now()
-		for len(clients) < conf.ConnNum {
-			var (
-				mc mqtt.Client
-			)
-			var cli = MqttClient{cfg: conf, consumer: consumer, subscribeTopics: make(map[string]byte, 8)}
-			var tryTime = 3
-			for i := 1; i <= tryTime; i++ {
-				mc, err = initMqtt(conf, &cli)
-				logx.Infof("mqtt_client initMqtt2 mc:%v err:%v", mc, err)
-				if err != nil { //出现并发情况的时候可能联犀的http还没启动完毕
-					logx.Errorf("mqtt_client 连接失败 重试剩余次数:%v", tryTime-i)
-					time.Sleep(time.Second * time.Duration(i))
-					continue
-				}
-				break
+func NewMqttClient(conf *conf.MqttConf, consumer MqttMsgConsumer) (cli *MqttClient, err error) {
+	var clients []mqtt.Client
+	var start = time.Now()
+	for len(clients) < conf.ConnNum {
+		var (
+			mc mqtt.Client
+		)
+		cli = &MqttClient{cfg: conf, consumer: consumer, subscribeTopics: make(map[string]byte, 8)}
+		var tryTime = 3
+		for i := 1; i <= tryTime; i++ {
+			mc, err = initMqtt(conf, cli)
+			logx.Infof("mqtt_client initMqtt2 mc:%v err:%v", mc, err)
+			if err != nil { //出现并发情况的时候可能联犀的http还没启动完毕
+				logx.Errorf("mqtt_client 连接失败 重试剩余次数:%v", tryTime-i)
+				time.Sleep(time.Second * time.Duration(i))
+				continue
 			}
-			if err != nil {
-				logx.Errorf("mqtt_client 连接失败 conf:%#v  err:%v", conf, err)
-				//os.Exit(-1)
-				return
-			}
-			clients = append(clients, mc)
-			cli.clients = clients
-			mqttClient = &cli
-			logx.Infof("mqtt_client 连接完成 clientNum:%v use:%s", len(clients), time.Now().Sub(start))
+			break
 		}
-	})
-	return mqttClient, err
+		if err != nil {
+			logx.Errorf("mqtt_client 连接失败 conf:%#v  err:%v", conf, err)
+			//os.Exit(-1)
+			return
+		}
+		clients = append(clients, mc)
+		cli.clients = clients
+	}
+	logx.Infof("mqtt_client 连接完成 clientNum:%v use:%s", len(clients), time.Now().Sub(start))
+	return
 }
 
 func (m *MqttClient) Subscribe(topic string, qos byte) error {

@@ -2,12 +2,14 @@ package service
 
 import (
 	"backend/internal/common/constants"
+	"backend/internal/common/serviceApi"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -21,51 +23,50 @@ type UnsQueryService struct {
 	labelMapper  dao.UnsLabelRepo
 	mountService UnsMountService
 	calcService  UnsCalcService
+	defService   serviceApi.IUnsDefinitionService
 }
 
 func init() {
-	spring.RegisterBean(&UnsQueryService{
-		log: logx.WithContext(context.Background()),
+	spring.RegisterLazy[*UnsQueryService](func() *UnsQueryService {
+		return &UnsQueryService{
+			log:        logx.WithContext(context.Background()),
+			defService: spring.GetBean[serviceApi.IUnsDefinitionService](),
+		}
 	})
 }
 
+var unsNotFoundError = errors.New("unsNotFoundError")
+
 // GetLastMsg returns the last message for a UNS by ID
-func (l *UnsQueryService) GetLastMsg(id int64) (*types.JsonResult, error) {
-	// TODO: Implement actual data retrieval from time-series database
-	// For now, return empty data structure
-	return &types.JsonResult{
-		Code: 200,
-		Data: map[string]interface{}{
-			"updateTime": 0,
-			"data":       map[string]interface{}{},
-		},
-	}, nil
+func (l *UnsQueryService) GetLastMsg(id int64) ([]byte, error) {
+	def := l.defService.GetDefinitionById(id)
+	if def == nil {
+		return nil, unsNotFoundError
+	}
+	return l.getLastMsg(def), nil
 }
 
 // GetLastMsgByAlias returns the last message for a UNS by alias
-func (l *UnsQueryService) GetLastMsgByAlias(alias string) (*types.JsonResult, error) {
-	// TODO: Get ID from alias, then call GetLastMsg
-	return &types.JsonResult{
-		Code: 200,
-		Data: map[string]interface{}{
-			"updateTime": 0,
-			"data":       map[string]interface{}{},
-		},
-	}, nil
+func (l *UnsQueryService) GetLastMsgByAlias(alias string) ([]byte, error) {
+	def := l.defService.GetDefinitionByAlias(alias)
+	if def == nil {
+		return nil, unsNotFoundError
+	}
+	return l.getLastMsg(def), nil
 }
 
 // GetLastMsgByPath returns the last message for a UNS by path
-func (l *UnsQueryService) GetLastMsgByPath(path string) (*types.JsonResult, error) {
-	// TODO: Get ID from path, then call GetLastMsg
-	return &types.JsonResult{
-		Code: 200,
-		Data: map[string]interface{}{
-			"updateTime": 0,
-			"data":       map[string]interface{}{},
-		},
-	}, nil
+func (l *UnsQueryService) GetLastMsgByPath(path string) ([]byte, error) {
+	def := l.defService.GetDefinitionByPath(path)
+	if def == nil {
+		return nil, unsNotFoundError
+	}
+	return l.getLastMsg(def), nil
 }
-
+func (l *UnsQueryService) getLastMsg(def *types.CreateTopicDto) []byte {
+	wsMsg := serviceApi.WebsocketMessage{Def: def}
+	return processWsMsg(wsMsg)
+}
 func (l *UnsQueryService) SearchPaged(ctx context.Context, req *types.SearchPagedReq) (resp *types.TopicPaginationSearchResult, err error) {
 	db := dao.GetDb(ctx)
 	keyword := req.Key

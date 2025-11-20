@@ -147,3 +147,8 @@ func (m *ModelDetail) SetAccessLevel(accessLevel string) {
 func (m *ModelDetail) SetMount(mount *MountDetailVo) {
 	m.Mount = mount
 }
+func (m *ModelDetail) SetTable(table string) {
+}
+
+func (m *ModelDetail) SetTbFieldName(name string) {
+}

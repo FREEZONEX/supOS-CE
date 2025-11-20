@@ -4,6 +4,8 @@
 package uns
 
 import (
+	"backend/internal/logic/supos/uns/uns/service"
+	"backend/share/spring"
 	"context"
 
 	"backend/internal/svc"
@@ -28,7 +30,6 @@ func NewDetectIfFieldReferencedLogic(ctx context.Context, svcCtx *svc.ServiceCon
 }
 
 func (l *DetectIfFieldReferencedLogic) DetectIfFieldReferenced(req *types.UpdateModeRequestVo) (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
-
+	resp, err = spring.GetBean[*service.UnsQueryService]().DetectIfFieldReferenced(l.ctx, req)
 	return
 }

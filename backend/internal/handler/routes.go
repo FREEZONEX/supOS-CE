@@ -738,6 +738,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
+					// 日志级别配置
+					Method:  http.MethodGet,
+					Path:    "/log/:level",
+					Handler: suposunssystem.LogConfigHandler(serverCtx),
+				},
+				{
 					// 获取系统配置
 					Method:  http.MethodGet,
 					Path:    "/systemConfig",
@@ -974,12 +980,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodPut,
 				Path:    "/uns/model/subscribe",
 				Handler: suposunsuns.SubscribeModelHandler(serverCtx),
-			},
-			{
-				// 创建文件夹和文件
-				Method:  http.MethodPost,
-				Path:    "/uns/model_v0",
-				Handler: suposunsuns.ModelCreateHandler(serverCtx),
 			},
 			{
 				// 修改文件夹或文件名称

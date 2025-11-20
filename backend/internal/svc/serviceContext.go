@@ -37,7 +37,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	mf, err := i18ns.InitWithFS("etc/i18n")
 	logx.Must(err)
 	stores.InitConn(c.Database)
-	relationDB.Migrate(c.Database, c.DatabaseSchema)
+	relationDB.Migrate(c.Database)
 	if err := cache.InitCaches(); err != nil {
 		logx.Errorf("failed to init cache: %v", err)
 		panic(err)

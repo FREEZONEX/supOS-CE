@@ -129,7 +129,14 @@ func TypeMatchScore(vHolder *any, fieldType types.FieldType, maxStrLen int) int 
 	} else if fieldType == types.FieldTypeDatetime {
 		if isNumber(val.Kind()) {
 			score = 97
-		} else if _, err := datetimeutils.ParseDate(fmt.Sprintf("%v", obj)); err == nil {
+		} else if strVal := fmt.Sprintf("%v", obj); len(strVal) > 4 && strVal[5] != '-' {
+			long, NaN := strconv.ParseInt(strVal, 10, 64)
+			if NaN == nil {
+				*vHolder = long
+				score = 100
+			}
+		} else if timestamp, err := datetimeutils.ParseDate(strVal); err == nil {
+			*vHolder = timestamp.UnixMilli() //日期统一转成时间戳毫秒
 			score = 98
 		}
 	} else if fieldType == types.FieldTypeBoolean {
@@ -310,7 +317,7 @@ func procMap(fieldDefines *types.FieldDefines, rs *SearchResult, dataPath string
 			fd1 = fieldDefines.FieldsMap[k]
 			ecA = -2
 			if fd1 != nil {
-				ecA = TypeMatchScore(&vHolder, types.FieldType(fd1.Type), fd1.GetMaxLen())
+				ecA = TypeMatchScore(&vHolder, types.FieldType(fd1.Type), base.P2vWithDefault(fd1.GetMaxLen(), types.DefaultMaxStrLen))
 			}
 
 			if ecA > 0 {
@@ -325,7 +332,7 @@ func procMap(fieldDefines *types.FieldDefines, rs *SearchResult, dataPath string
 				}
 				ecB = -2
 				if fdIdx != nil {
-					ecB = TypeMatchScore(&vHolder, types.FieldType(fdIdx.Type), fdIdx.GetMaxLen())
+					ecB = TypeMatchScore(&vHolder, types.FieldType(fdIdx.Type), base.P2vWithDefault(fdIdx.GetMaxLen(), types.DefaultMaxStrLen))
 				}
 
 				if ecB > 0 {
@@ -376,7 +383,7 @@ func procMap(fieldDefines *types.FieldDefines, rs *SearchResult, dataPath string
 				deleteKeys = append(deleteKeys, k)
 				cvtStr, err := JsonUtil.ToJson(v)
 				if err == nil {
-					maxLen := fd.GetMaxLen()
+					maxLen := base.P2vWithDefault(fd.GetMaxLen(), types.DefaultMaxStrLen)
 					if maxLen <= 0 || len(cvtStr) <= maxLen {
 						countFieldMatch++
 						addKvList = append(addKvList, [2]any{fd.Name, cvtStr})

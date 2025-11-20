@@ -3,20 +3,46 @@ package service
 import (
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
+	"backend/internal/common/serviceApi"
 	"backend/internal/logic/supos/uns/topology/service"
+	"backend/internal/types"
+	"backend/share/base"
 	"backend/share/spring"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
+// WebsocketService manages all WebSocket connections and subscriptions
+type WebsocketService struct {
+	sessions           *sync.Map // map[string]*WsSubscription (sessionId -> subscription)
+	idToSessionsMap    *sync.Map // map[int64]*sync.Map (unsId -> map[sessionId]bool)
+	topicToSessionsMap *sync.Map // map[string]*sync.Map (topic -> map[sessionId]bool)
+	aliasToSessionsMap *sync.Map // map[string]*sync.Map (alias -> map[sessionId]subValueObj)
+	topologySessions   *sync.Map // map[string]*websocket.Conn (sessionId -> conn)
+	unsQueryService    *UnsQueryService
+	topologyService    *service.UnsTopologyService
+}
+
 func init() {
-	spring.RegisterBean(NewWebsocketService())
+	spring.RegisterLazy[*WebsocketService](func() *WebsocketService {
+		return &WebsocketService{
+			sessions:           &sync.Map{},
+			idToSessionsMap:    &sync.Map{},
+			topicToSessionsMap: &sync.Map{},
+			aliasToSessionsMap: &sync.Map{},
+			topologySessions:   &sync.Map{},
+			unsQueryService:    spring.GetBean[*UnsQueryService](),
+			topologyService:    spring.GetBean[*service.UnsTopologyService](),
+		}
+	})
 }
 
 // WsSubscription represents a WebSocket subscription
@@ -28,22 +54,12 @@ type WsSubscription struct {
 	WriteLock sync.Mutex
 }
 
-// WebsocketService manages all WebSocket connections and subscriptions
-type WebsocketService struct {
-	sessions           *sync.Map // map[string]*WsSubscription (sessionId -> subscription)
-	idToSessionsMap    *sync.Map // map[int64]*sync.Map (unsId -> map[sessionId]bool)
-	topicToSessionsMap *sync.Map // map[string]*sync.Map (topic -> map[sessionId]bool)
-	aliasToSessionsMap *sync.Map // map[string]*sync.Map (alias -> map[sessionId]subValueObj)
-	topologySessions   *sync.Map // map[string]*websocket.Conn (sessionId -> conn)
-}
-
-func NewWebsocketService() *WebsocketService {
-	return &WebsocketService{
-		sessions:           &sync.Map{},
-		idToSessionsMap:    &sync.Map{},
-		topicToSessionsMap: &sync.Map{},
-		aliasToSessionsMap: &sync.Map{},
-		topologySessions:   &sync.Map{},
+func newWsSubscription(conn *websocket.Conn) *WsSubscription {
+	return &WsSubscription{
+		Conn:     conn,
+		UnsIds:   &sync.Map{},
+		Topics:   &sync.Map{},
+		AliasSet: &sync.Map{},
 	}
 }
 
@@ -57,13 +73,7 @@ func (s *WebsocketService) GetSessionCount() int {
 }
 
 func (s *WebsocketService) AddSession(sessionId string, conn *websocket.Conn) {
-	subscription := &WsSubscription{
-		Conn:     conn,
-		UnsIds:   &sync.Map{},
-		Topics:   &sync.Map{},
-		AliasSet: &sync.Map{},
-	}
-	s.sessions.Store(sessionId, subscription)
+	s.sessions.Store(sessionId, newWsSubscription(conn))
 }
 
 // TryAddSession tries to add a session with limit check (thread-safe)
@@ -294,21 +304,20 @@ func (s *WebsocketService) HandleSessionClosed(sessionId string) {
 
 func (s *WebsocketService) publishMessage(conn *websocket.Conn, id int64) {
 	msg := s.getTopicLastMessage(id)
-	if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 		logx.Errorf("failed to sendWs: id=%d, err=%v", id, err)
 	}
 }
 
 func (s *WebsocketService) publishMessageByTopic(conn *websocket.Conn, topic string) {
 	msg := s.getTopicLastMessageByPath(topic)
-	if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 		logx.Errorf("failed to sendWs: topic=%s, err=%v", topic, err)
 	}
 }
 
 func (s *WebsocketService) publishTopologyMessage(conn *websocket.Conn) {
-	topologyService := spring.GetBean[*service.UnsTopologyService]()
-	msg := topologyService.GetLastMsg()
+	msg := s.topologyService.GetLastMsg()
 	if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		logx.Errorf("failed to send topology message: %v", err)
 	}
@@ -359,21 +368,25 @@ func (s *WebsocketService) aliasSubResponse(version string, cmd int, dataMap map
 	return string(jsonBytes)
 }
 
-// SendLatestMsg implements the WebsocketSender interface
-func (s *WebsocketService) SendLatestMsg(unsId int64, path string) {
+// SendMessage SendLatestMsg implements the WebsocketSender interface
+func (s *WebsocketService) SendMessage(wsMsg serviceApi.WebsocketMessage) {
+	var unsId int64
+	if def := wsMsg.Def; def != nil {
+		unsId = def.Id
+	}
+	var path = wsMsg.Path
 	if unsId != 0 {
 		// Send by UNS ID
 		if sessionsVal, ok := s.idToSessionsMap.Load(unsId); ok {
 			sessions := sessionsVal.(*sync.Map)
-			msg := s.getTopicLastMessage(unsId)
-
+			msg := processWsMsg(wsMsg)
 			sessions.Range(func(key, value any) bool {
 				sessionId := key.(string)
 				if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
 					subscription := subscriptionVal.(*WsSubscription)
 					subscription.WriteLock.Lock()
 					defer subscription.WriteLock.Unlock()
-					if err := subscription.Conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+					if err := subscription.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 						logx.Errorf("fail to sendMessage to[%s], unsId=%d", sessionId, unsId)
 					}
 				}
@@ -384,7 +397,7 @@ func (s *WebsocketService) SendLatestMsg(unsId int64, path string) {
 		// Send by topic path
 		if sessionsVal, ok := s.topicToSessionsMap.Load(path); ok {
 			sessions := sessionsVal.(*sync.Map)
-			msg := s.getTopicLastMessageByPath(path)
+			msg := processWsMsg(wsMsg)
 
 			sessions.Range(func(key, value any) bool {
 				sessionId := key.(string)
@@ -392,7 +405,7 @@ func (s *WebsocketService) SendLatestMsg(unsId int64, path string) {
 					subscription := subscriptionVal.(*WsSubscription)
 					subscription.WriteLock.Lock()
 					defer subscription.WriteLock.Unlock()
-					if err := subscription.Conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+					if err := subscription.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 						logx.Errorf("fail to sendMessage to[%s], topic=%s", sessionId, path)
 					}
 				}
@@ -402,32 +415,79 @@ func (s *WebsocketService) SendLatestMsg(unsId int64, path string) {
 	}
 }
 
-func (s *WebsocketService) getTopicLastMessage(id int64) string {
-	unsQueryService := spring.GetBean[*UnsQueryService]()
-	if result, err := unsQueryService.GetLastMsg(id); err == nil && result != nil {
-		if dataStr, ok := result.Data.(string); ok {
-			return dataStr
-		}
-		// If Data is map or other type, marshal it
-		if jsonBytes, err := json.Marshal(result.Data); err == nil {
-			return string(jsonBytes)
-		}
-	}
-	return "{}"
+type TopicMessageInfo struct {
+	Msg        string           `json:"msg,omitempty"`
+	UpdateTime int64            `json:"updateTime,omitempty"`
+	Data       map[string]any   `json:"data,omitempty"`
+	Dt         map[string]int64 `json:"dt,omitempty"`
+	Payload    string           `json:"payload,omitempty"`
 }
 
-func (s *WebsocketService) getTopicLastMessageByPath(topic string) string {
-	unsQueryService := spring.GetBean[*UnsQueryService]()
-	if result, err := unsQueryService.GetLastMsgByPath(topic); err == nil && result != nil {
-		if dataStr, ok := result.Data.(string); ok {
-			return dataStr
-		}
-		// If Data is map or other type, marshal it
-		if jsonBytes, err := json.Marshal(result.Data); err == nil {
-			return string(jsonBytes)
+func processWsMsg(message serviceApi.WebsocketMessage) []byte {
+	info := &TopicMessageInfo{UpdateTime: time.Now().UnixMilli(), Msg: message.ErrMsg, Payload: message.Payload}
+	if message.Def != nil {
+		fs := message.Def.Fields
+		if sz := len(fs); sz > 0 {
+			data := make(map[string]any, sz)
+			dt := make(map[string]int64, sz)
+			isRelation := base.P2v(message.Def.DataType) == constants.RelationType
+			dm := message.Data
+			hasDm := len(dm) > 0
+			for _, f := range fs {
+				name := f.Name
+				if (isRelation && name == constants.SysFieldCreateTime) || name == constants.SystemSeqTag || name == constants.SysFieldID {
+					continue
+				}
+				var v any
+				has := false
+				if hasDm {
+					v, has = dm[name]
+				}
+				if lv := f.LastValue; !has && len(lv) > 0 {
+					v = lv
+				}
+				if v != nil {
+					switch f.Type {
+					case types.FieldTypeDouble, types.FieldTypeLong:
+						v = fmt.Sprintf(`"%v"`, v)
+					}
+					data[name] = v
+				}
+				if lt := f.LastTime; lt > 0 {
+					dt[name] = lt
+				}
+			}
+			info.Dt = dt
+			info.Data = data
 		}
 	}
-	return "{}"
+	ret, err := json.Marshal(info)
+	if err != nil {
+		return emptyJson
+	}
+	return ret
+}
+
+var emptyJson = []byte(`{}`)
+
+func (s *WebsocketService) getTopicLastMessage(id int64) []byte {
+	if result, err := s.unsQueryService.GetLastMsg(id); err == nil && result != nil {
+		return result
+	}
+	return emptyJson
+}
+
+func (s *WebsocketService) getTopicLastMessageByPath(topic string) []byte {
+	if result, err := s.unsQueryService.GetLastMsgByPath(topic); err == nil && result != nil {
+		return result
+	}
+	return emptyJson
+}
+func (s *WebsocketService) getTopicLastMessageByAlias(alias string) []byte {
+	if result, err := s.unsQueryService.GetLastMsgByAlias(alias); err == nil && result != nil {
+		return result
+	}
+	return emptyJson
 }
 
 // OnEventUnsTopologyChangeEvent handles topology change events
@@ -485,8 +545,8 @@ func (s *WebsocketService) OnEventRemoveTopicsEvent(e *event.RemoveTopicsEvent) 
 	return nil
 }
 
-// OnEventWebsocketNotifyEvent handles websocket notification events for data updates
-func (s *WebsocketService) OnEventWebsocketNotifyEvent(e *event.WebsocketNotifyEvent) error {
-	s.SendLatestMsg(e.UnsID, e.Path)
-	return nil
-}
+//// OnEventWebsocketNotifyEvent handles websocket notification events for data updates
+//func (s *WebsocketService) OnEventWebsocketNotifyEvent(e *event.WebsocketNotifyEvent) error {
+//	s.SendLatestMsg(e.UnsID, e.Path)
+//	return nil
+//}

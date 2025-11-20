@@ -285,7 +285,7 @@ func checkTopicDto(errTipMap map[string]string,
 			errTipMap[batchIndex] = msg
 			return
 		} else if !constants.IsValidDataType(*dataType) {
-			msg := I18nUtils.GetMessage(fmt.Sprintf("uns.file.dataType.invalid", *dataType))
+			msg := fmt.Sprint(I18nUtils.GetMessage("uns.file.dataType.invalid"), *dataType)
 			errTipMap[batchIndex] = msg
 			return
 		}

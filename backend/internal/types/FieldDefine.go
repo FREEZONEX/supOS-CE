@@ -75,8 +75,8 @@ func (f *FieldDefine) GetName() string {
 }
 
 // GetType 获取 Type
-func (f *FieldDefine) GetType() string {
-	return f.Type
+func (f *FieldDefine) GetType() FieldType {
+	return FieldType(f.Type)
 }
 
 // GetUnique 获取 Unique
@@ -100,11 +100,8 @@ func (f *FieldDefine) GetRemark() *string {
 }
 
 // GetMaxLen 获取 MaxLen
-func (f *FieldDefine) GetMaxLen() (maxLen int) {
-	if f.MaxLen != nil {
-		maxLen = *f.MaxLen
-	}
-	return maxLen
+func (f *FieldDefine) GetMaxLen() (maxLen *int) {
+	return f.MaxLen
 }
 
 // GetTbValueName 获取 TbValueName

@@ -4,7 +4,7 @@ import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
-	"backend/internal/logic/supos/uns/uns/bo"
+	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
@@ -192,8 +192,8 @@ func (r *UnsRemoveService) deleteAndSendEvent(ctx context.Context, req types.Rem
 	return r.deleteAndSendEventWithCall(ctx, req, list, nil)
 }
 func (r *UnsRemoveService) deleteAndSendEventWithCall(ctx context.Context, req types.RemoveUnsOptions, list []*dao.UnsNamespace, callback func(db *gorm.DB) error) (resp *types.RemoveResult, er error) {
-	unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, bo.UnsInfo, int16](list, func(e *dao.UnsNamespace) (int16, bo.UnsInfo) {
-		return e.PathType, e
+	unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, *types.CreateTopicDto, int16](list, func(e *dao.UnsNamespace) (int16, *types.CreateTopicDto) {
+		return e.PathType, UnsConverter.Po2Dto(e)
 	})
 	files := unsGroups[constants.PathTypeFile]
 	if len(files) > 0 {

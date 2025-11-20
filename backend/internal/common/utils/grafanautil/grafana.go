@@ -1,9 +1,11 @@
 package grafanautil
 
 import (
+	"backend/internal/common/serviceApi"
 	"backend/internal/types"
 	"bytes"
 	"crypto/md5"
+	"embed"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -19,6 +21,9 @@ import (
 
 	"github.com/google/uuid"
 )
+
+//go:embed templates/*
+var templates embed.FS
 
 // GrafanaUtils provides utility functions for Grafana operations.
 //
@@ -77,11 +82,11 @@ func DeleteDatasource(uid string) error {
 }
 
 // CreateDatasource creates a Grafana datasource.
-func CreateDatasource(jdbcType *types.SrcJdbcType, username, password string, reCreate bool) (bool, error) {
+func CreateDatasource(jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceProperties, reCreate bool) (bool, error) {
 	title := jdbcType.Alias()
 	datasource := &grafanadto.GrafanaDataSourceDto{
-		User:     username,
-		Password: password,
+		User:     dsProps.UserName,
+		Password: dsProps.Password,
 		UID:      GetDatasourceUUIDByJDBC(jdbcType),
 		Name:     title,
 	}
@@ -94,15 +99,15 @@ func CreateDatasource(jdbcType *types.SrcJdbcType, username, password string, re
 	var dsTemplate string
 	switch jdbcType.Id() {
 	case types.SrcJdbcTypePostgresql.Id():
-		dsTemplate = loadTemplate("templates/pg-datasource.json")
+		dsTemplate = LoadTemplate("templates/pg-datasource.json")
 		datasource.URL = constants.PGJDBCURL
 	case types.SrcJdbcTypeTimeScaleDB.Id():
-		dsTemplate = loadTemplate("templates/pg-datasource.json")
+		dsTemplate = LoadTemplate("templates/pg-datasource.json")
 		datasource.URL = constants.TSDBJDBCURL
 	case types.SrcJdbcTypeTdEngine.Id():
 		datasource.URL = constants.TDJDBCURL
 		datasource.CreateBasicAuth()
-		dsTemplate = loadTemplate("templates/td-datasource.json")
+		dsTemplate = LoadTemplate("templates/td-datasource.json")
 	default:
 		return false, fmt.Errorf("unsupported JDBC type: %d", jdbcType.Id())
 	}
@@ -157,14 +162,14 @@ func CreateDatasourceByBody(name, body string, reCreate bool) (string, error) {
 }
 
 // CreateDashboard creates a Grafana dashboard.
-func CreateDashboard(table, tagNameCondition string, jdbcType *types.SrcJdbcType, schema, title, columns, ct string) (string, error) {
+func CreateDashboard(table, tagNameCondition string, jdbcType types.SrcJdbcType, schema, title, columns, ct string) (string, error) {
 	uid := GetDashboardUUIDByAlias(title)
 	var template string
 	var dbParams map[string]any
 
-	switch jdbcType.Id() {
-	case types.SrcJdbcTypePostgresql.Id():
-		template = loadTemplate("templates/pg-dashboard.json")
+	switch jdbcType {
+	case types.SrcJdbcTypePostgresql:
+		template = LoadTemplate("templates/pg-dashboard.json")
 		dbParams = map[string]any{
 			"title":          title,
 			"uid":            uid,
@@ -174,8 +179,8 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *types.SrcJdbcType
 			"tableName":      table,
 			"columns":        columns,
 		}
-	case types.SrcJdbcTypeTdEngine.Id():
-		template = loadTemplate("templates/td-dashboard.json")
+	case types.SrcJdbcTypeTdEngine:
+		template = LoadTemplate("templates/td-dashboard.json")
 		dbParams = map[string]any{
 			"title":            title,
 			"uid":              uid,
@@ -186,8 +191,8 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *types.SrcJdbcType
 			"tagNameCondition": tagNameCondition,
 			"columns":          columns,
 		}
-	case types.SrcJdbcTypeTimeScaleDB.Id():
-		template = loadTemplate("templates/ts-dashboard.json")
+	case types.SrcJdbcTypeTimeScaleDB:
+		template = LoadTemplate("templates/ts-dashboard.json")
 		dbParams = map[string]any{
 			"title":            title,
 			"uid":              uid,
@@ -203,7 +208,7 @@ func CreateDashboard(table, tagNameCondition string, jdbcType *types.SrcJdbcType
 	}
 
 	dbParams["sys_field_create_time"] = ct
-	dashboardJSON := formatTemplateMap(template, dbParams)
+	dashboardJSON := FormatTemplateMap(template, dbParams)
 
 	logx.Debugf("创建 dashboardJson 请求: %s", dashboardJSON)
 
@@ -279,30 +284,32 @@ func CreateDashboardByBody(uidsTr, datasourceName, body string) (string, error) 
 }
 
 // GetDataSourceByName retrieves a Grafana datasource by name.
-func GetDataSourceByName(name string) (string, error) {
+func GetDataSourceByName(name string) int {
 	url := GetGrafanaURL() + "/api/datasources/name/" + name
 	logx.Debugf("查询 datasource 请求: %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return -1
 	}
 	defer resp.Body.Close()
-
+	if resp.StatusCode != http.StatusOK {
+		return resp.StatusCode
+	}
 	body, _ := io.ReadAll(resp.Body)
 	logx.Debugf("查询 datasource 返回结果: %s", string(body))
 
-	return string(body), nil
+	return resp.StatusCode
 }
 
 // GetDatasourceUUIDByJDBC generates a datasource UUID from JDBC type.
-func GetDatasourceUUIDByJDBC(jdbcType *types.SrcJdbcType) string {
+func GetDatasourceUUIDByJDBC(jdbcType types.SrcJdbcType) string {
 	hash := md5.Sum([]byte(jdbcType.Alias()))
 	return hex.EncodeToString(hash[:])
 }
 
 // Fields2Columns converts field definitions to column string for Grafana.
-func Fields2Columns(jdbcType *types.SrcJdbcType, fields []*types.FieldDefine) string {
+func Fields2Columns(jdbcType types.SrcJdbcType, fields []*types.FieldDefine) string {
 	// TDengine uses `, PostgreSQL and TimescaleDB use "
 	flag := "`"
 	if jdbcType.Id() != types.SrcJdbcTypeTdEngine.Id() {
@@ -328,14 +335,14 @@ func Fields2Columns(jdbcType *types.SrcJdbcType, fields []*types.FieldDefine) st
 }
 
 // CreateTimeSeriesListDashboard creates a time series list dashboard with multiple panels.
-func CreateTimeSeriesListDashboard(srcJdbcType *types.SrcJdbcType, topics []*types.CreateTopicDto, dashboardName string) (string, error) {
+func CreateTimeSeriesListDashboard(srcJdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, dashboardName string) (string, error) {
 	logx.Infof("调用 创建时序组合Dashboard: %s", dashboardName)
 
 	var panelTemplate string
 	if srcJdbcType.Id() == types.SrcJdbcTypeTimeScaleDB.Id() {
-		panelTemplate = loadTemplate("templates/ts-panel.json")
+		panelTemplate = LoadTemplate("templates/ts-panel.json")
 	} else {
-		panelTemplate = loadTemplate("templates/td-panel.json")
+		panelTemplate = LoadTemplate("templates/td-panel.json")
 	}
 
 	var panelJSONList []any
@@ -366,13 +373,13 @@ func CreateTimeSeriesListDashboard(srcJdbcType *types.SrcJdbcType, topics []*typ
 			"gridPosX":      gridPosX,
 		}
 
-		panelJSON := formatTemplateMap(panelTemplate, panelParam)
+		panelJSON := FormatTemplateMap(panelTemplate, panelParam)
 		var panel any
 		json.Unmarshal([]byte(panelJSON), &panel)
 		panelJSONList = append(panelJSONList, panel)
 	}
 
-	template := loadTemplate("templates/td-dashboard-list.json")
+	template := LoadTemplate("templates/td-dashboard-list.json")
 	uid := uuid.New().String()[:32] // Fast simple UUID
 
 	dbParams := map[string]any{
@@ -381,7 +388,7 @@ func CreateTimeSeriesListDashboard(srcJdbcType *types.SrcJdbcType, topics []*typ
 		"panels": panelJSONList,
 	}
 
-	dashboardJSON := formatTemplateMap(template, dbParams)
+	dashboardJSON := FormatTemplateMap(template, dbParams)
 	logx.Debugf("创建时序组合DashboardDashboard 请求: %s", dashboardJSON)
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBufferString(dashboardJSON))
@@ -399,12 +406,13 @@ func CreateTimeSeriesListDashboard(srcJdbcType *types.SrcJdbcType, topics []*typ
 // GetDashboardByUUID retrieves a dashboard by UUID.
 func GetDashboardByUUID(uuid string) (map[string]any, error) {
 	url := GetGrafanaURL() + "/api/dashboards/uid/" + uuid
-	logx.Debugf("查询 dashboards 请求: %s", url)
-
 	resp, err := http.Get(url)
 	if err != nil {
+		logx.Errorf("查询 dashboards 失败: %v, %s", err, url)
 		return nil, err
 	}
+	logx.Debugf("查询 dashboards 请求: %s", url)
+
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
@@ -525,28 +533,30 @@ func Get(uuid string) (string, error) {
 
 // Helper functions
 
-// loadTemplate loads a template file.
-// TODO: Implement actual template loading from embedded files or resources directory.
-func loadTemplate(path string) string {
-	// In Go, we can use embed.FS or read from a resources directory
-	// For now, return a placeholder
-	return "{}"
+// LoadTemplate loads a template file.
+func LoadTemplate(path string) string {
+	bs, er := templates.ReadFile(path)
+	if er != nil {
+		logx.Error("FileNotExist:", path)
+		return ""
+	}
+	return string(bs)
 }
 
 // formatTemplate formats a template string with struct values.
 func formatTemplate(template string, data any) string {
-	// Convert struct to map and use formatTemplateMap
+	// Convert struct to map and use FormatTemplateMap
 	jsonData, _ := json.Marshal(data)
 	var dataMap map[string]any
 	err := json.Unmarshal(jsonData, &dataMap)
 	if err != nil {
 		return ""
 	}
-	return formatTemplateMap(template, dataMap)
+	return FormatTemplateMap(template, dataMap)
 }
 
-// formatTemplateMap formats a template string with map values.
-func formatTemplateMap(template string, data map[string]any) string {
+// FormatTemplateMap formats a template string with map values.
+func FormatTemplateMap(template string, data map[string]any) string {
 	result := template
 	for key, value := range data {
 		placeholder := fmt.Sprintf("{%s}", key)
@@ -555,8 +565,7 @@ func formatTemplateMap(template string, data map[string]any) string {
 		case string:
 			valueStr = v
 		default:
-			jsonValue, _ := json.Marshal(v)
-			valueStr = string(jsonValue)
+			valueStr = fmt.Sprint(v)
 		}
 		result = strings.ReplaceAll(result, placeholder, valueStr)
 	}

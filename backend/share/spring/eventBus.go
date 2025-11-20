@@ -27,6 +27,9 @@ func (e eventListener) String() string {
 	return e.name
 }
 func registerEventListener(obj any) {
+	if obj == nil || reflect.ValueOf(obj).IsNil() {
+		return
+	}
 	t := reflect.TypeOf(obj)
 	beanTypeName := typetostring.GetReflectType(t)
 	if x := strings.Index(beanTypeName, "/"); x > 0 {

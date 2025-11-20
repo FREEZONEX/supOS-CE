@@ -85,6 +85,15 @@ func (m *DashboardMapper) SelectByFlowNames(names []string) ([]*DashboardModel, 
 	}
 	return dashboards, nil
 }
+func (m *DashboardMapper) SelectByNameAndType(name string, dashType int) ([]*DashboardModel, error) {
+	var dashboards []*DashboardModel
+	err := m.db.WithContext(m.ctx).Where("name = ?", name).Where("type=?", dashType).Find(&dashboards).Error
+	if err != nil {
+		m.logger.Errorf("failed to select dashboards by NameAndType: %v", err)
+		return nil, err
+	}
+	return dashboards, nil
+}
 
 // SaveOrIgnoreBatch 批量保存或忽略
 func (m *DashboardMapper) SaveOrIgnoreBatch(dashboards []*DashboardModel) error {

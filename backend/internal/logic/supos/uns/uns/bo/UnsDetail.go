@@ -34,6 +34,8 @@ type UnsDetail interface {
 	SetPathName(pathName string)
 	SetModelId(modelId string)
 	SetModelName(modelName string)
+	SetTable(table string)
+	SetTbFieldName(name string)
 	SetExtend(extend map[string]interface{})
 	SetPayload(payload string)
 	SetTemplateName(templateName string)
@@ -41,3 +43,6 @@ type UnsDetail interface {
 	SetAccessLevel(accessLevel string)
 	SetMount(mount *types.MountDetailVo)
 }
+
+var _ UnsDetail = &types.InstanceDetail{}
+var _ UnsDetail = &types.ModelDetail{}

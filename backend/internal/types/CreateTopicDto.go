@@ -231,6 +231,12 @@ func (c *CreateTopicDto) GetCreateAt() int64 {
 func (c *CreateTopicDto) GetUpdateAt() int64 {
 	return c.UpdateAt
 }
+func (c *CreateTopicDto) GetPrimaryField() []string {
+	if c.FieldDefines == nil {
+		c.SetFields(c.Fields)
+	}
+	return c.PrimaryField
+}
 
 // GetTimestampField returns the timestamp field name
 func (c *CreateTopicDto) GetTimestampField() string {
@@ -273,6 +279,12 @@ func (c *CreateTopicDto) GetTable() string {
 		return c.Alias
 	}
 	return c.Path
+}
+func (c *CreateTopicDto) GetTbFieldName() string {
+	if c.FieldDefines == nil && len(c.Fields) > 0 {
+		c.SetFields(c.Fields)
+	}
+	return c.TbFieldName
 }
 
 // SetTableName sets the table name and parses field name if present

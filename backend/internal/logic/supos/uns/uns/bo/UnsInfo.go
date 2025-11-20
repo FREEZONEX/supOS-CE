@@ -24,6 +24,8 @@ type UnsInfo interface {
 	GetLabelIds() map[int64]string
 	GetModelId() *int64
 	GetDataType() *int16
+	GetTable() string
+	GetTbFieldName() string
 	GetParentDataType() *int16
 	GetPathType() int16
 	GetRefers() []*types.InstanceField

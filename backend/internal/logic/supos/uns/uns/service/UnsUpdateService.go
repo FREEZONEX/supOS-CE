@@ -47,7 +47,7 @@ func (s *UnsUpdateService) UpdateDetail(ctx context.Context, unsDto *types.Updat
 	if createTopicDto.Name == "" {
 		createTopicDto.Name = unsPo.Name
 	}
-
+	createTopicDto.Id = unsPo.Id
 	createTopicDto.PathType = unsPo.PathType
 
 	var flags *int32

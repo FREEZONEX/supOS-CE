@@ -1,11 +1,15 @@
 package main
 
 import (
+	_ "backend/internal/adapters/grafana"
 	_ "backend/internal/adapters/msg_consumer" // 手动导入 adapter
 	"backend/internal/common/event"
 	"backend/internal/config"
 	"backend/internal/handler"
+	"backend/internal/logic/supos/uns/system"
 	_ "backend/internal/logic/supos/uns/topology/service" // 导入触发 init() 注册
+	_ "backend/internal/logic/supos/uns/uns/service"
+
 	"backend/internal/svc"
 	"backend/share/spring"
 	"context"
@@ -26,7 +30,6 @@ func main() {
 	var c config.Config
 	var confFile = "etc/backend.yaml"
 	utils.ConfMustLoad(confFile, &c)
-
 	/* 下面是使用示例
 	msg := i18ns.LocalizeMsg("nodered.protocol.unsupported", "vewwrfw3")
 	logx.Info(msg) // 输出:  Unsupported protocol: vewwrfw3.
@@ -35,6 +38,10 @@ func main() {
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 
+	if lv := c.LoggerLevel; lv != "" {
+		system.SetLogLevel(lv)
+	}
+
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
 	server.PrintRoutes()
@@ -42,5 +49,9 @@ func main() {
 	spring.RegisterBean[*svc.ServiceContext](ctx)
 	spring.RefreshBeanContext()
 	_ = spring.PublishEvent(&event.ContextRefreshedEvent{SvcContext: ctx})
+	defer func() {
+		_ = spring.PublishEvent(&event.ContextClosedEvent{SvcContext: ctx})
+	}()
+	fmt.Printf("Started server at %s:%d...\n", c.Host, c.Port)
 	server.Start()
 }

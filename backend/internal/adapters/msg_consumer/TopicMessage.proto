@@ -1,0 +1,15 @@
+syntax = "proto3";
+option go_package = ".";
+
+message TopicMessageList {
+  repeated TopicMessage messages = 1;
+}
+message TopicMessage {
+  int64 id = 1;
+  int32 dataSrcId = 2;
+  repeated DataArray data = 3;
+
+  message DataArray {
+     map<string,string> value = 1;
+  }
+}

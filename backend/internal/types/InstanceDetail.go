@@ -140,3 +140,10 @@ func (i *InstanceDetail) SetAccessLevel(accessLevel string) {
 func (i *InstanceDetail) SetMount(mount *MountDetailVo) {
 	i.Mount = mount
 }
+func (i *InstanceDetail) SetTable(table string) {
+	i.Table = table
+}
+
+func (i *InstanceDetail) SetTbFieldName(name string) {
+	i.TbFieldName = name
+}

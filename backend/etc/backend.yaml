@@ -1,12 +1,19 @@
 ﻿Name: backend
 Host: 0.0.0.0
-Port: 6547
+Port: 8080
 CpuThreshold: 0
 Timeout: 20000
 
 Database:
   DBType: pgsql
-  DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres
+  DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres?search_path=supos
+
+loggerLevel: debug
+
+persistent_url:
+  postgresql: postgres://postgres:postgres@100.100.100.20:31014/postgres
+  timescaledb: postgres://postgres:postgres@100.100.100.20:31014/postgres
+
 KeycloakDSN: postgres://postgres:postgres@100.100.100.20:31014/keycloak
 CacheRedis:
   - Host: localhost:6379
@@ -27,7 +34,7 @@ DevLink:
     Pass: uns
     User: unssvr
     Brokers:
-      - tcp://127.0.0.1:1885
+      - tcp://127.0.0.1:1883
     OpenApi:
       Host: http://127.0.0.1:18083
       ApiKey: 69b84915bc0d50db
@@ -44,7 +51,7 @@ OssConf:
 OAuthKeyCloak:
     Realm: supos
     ClientName: supos
-    ClientID: supos
+    ClientID: NULL
     ClientSecret: VaOS2makbDhJJsLlYPt4Wl87bo9VzXiO
     AuthorizationGrantType: authorization_code
     RedirectURI: http://office.unibutton.com:11488/inter-api/supos/auth/token

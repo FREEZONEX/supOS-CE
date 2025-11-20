@@ -2,7 +2,6 @@ package main
 
 import (
 	"backend/internal/repo/event/subDev"
-	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -16,8 +15,8 @@ func TestPublishMqtt(t *testing.T) {
 	if er != nil {
 		log.Fatalf("NewMqttClient(%v) failed", er)
 	}
-	msg := fmt.Sprintf(`{ "msg": "H8-world-%v" }`, time.Now().String())
-	er = cli.Publish("guanxi/uns_folder_type_state___EXTRA___interface_______/Retmgxh-3", 0, false, []byte(msg))
+	msg := `{ "tm": 12321,"wq": 123.21 }`
+	er = cli.Publish("akJia_seqxajk8", 0, false, []byte(msg))
 	log.Println("发送消息:", er, msg)
 	time.Sleep(1 * time.Second)
 }
