@@ -20,6 +20,8 @@ func batchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 		return nil
 	}
 	alterTableSQLs := make([]string, 0, len(topics))
+	hyperTableSQLs := make([]string, 0, len(topics))
+
 	tables := make(map[string]bool, len(topics))
 	for _, uns := range topics {
 		tableName := uns.GetTable()
@@ -40,7 +42,7 @@ func batchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 			if uns.GetSrcJdbcType().TypeCode() == constants.TimeSequenceType {
 				ct := uns.GetTimestampField()
 				timeScaleDbCreateTableSQL := "SELECT create_hypertable('" + dbName + ".\"" + tableName + "\"', '" + ct + "',chunk_time_interval => INTERVAL '7 day')"
-				alterTableSQLs = append(alterTableSQLs, timeScaleDbCreateTableSQL)
+				hyperTableSQLs = append(hyperTableSQLs, timeScaleDbCreateTableSQL)
 			}
 		}
 	}
@@ -59,10 +61,24 @@ func batchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 				errs = append(errs, err)
 			}
 		}
-		er := br.Close()
-		if er != nil {
-			errs = append(errs, er)
-		}
+		_ = br.Close()
 	}
+	for i, sqlList := range base.Partition(hyperTableSQLs, constants.SQLBatchSize) {
+		batch := &pgx.Batch{}
+		for j, sql := range sqlList {
+			logx.Debugf("Batch hyperTable SQL[%d-%d]: %s", i, j, sql)
+			batch.Queue(sql)
+		}
+		// 执行批次
+		br := conn.SendBatch(context.Background(), batch)
+		for i := 0; i < batch.Len(); i++ {
+			_, err := br.Exec()
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}
+		_ = br.Close()
+	}
+
 	return errs
 }
