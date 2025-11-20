@@ -94,16 +94,11 @@ func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(evt *event.Context
 		for !stop {
 			countOk := 0
 			for srcId, ds := range g.dsMap {
-				rsCode := grafanautil.GetDataSourceByName(srcId.DataSrcType())
-				if rsCode == 200 {
+				ok, err := grafanautil.CreateDatasource(srcId, ds.GetDataSourceProperties(), false)
+				if err != nil {
+					g.log.Error("CreateDatasourceErr:", srcId.Alias(), err)
+				} else if ok {
 					countOk++
-				} else {
-					ok, err := grafanautil.CreateDatasource(srcId, ds.GetDataSourceProperties(), false)
-					if err != nil {
-						g.log.Error("CreateDatasourceErr:", srcId.Alias(), err)
-					} else if ok {
-						countOk++
-					}
 				}
 			}
 			if countOk == len(g.dsMap) {

@@ -10,6 +10,8 @@ type DataSourceProperties struct {
 	Url      string
 	UserName string
 	Password string
+	DbName   string
+	HostPort string
 	Schema   string
 }
 

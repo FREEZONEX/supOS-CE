@@ -74,7 +74,7 @@ func Persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	var allErrors []string
 
 	// 步骤1: 在一个SendBatch中创建所有临时表
-	if err := createAllTempTables(conn, defaultSchema, tableInfos, 0); err != nil {
+	if err := createAllTempTables(dbPool, conn, defaultSchema, tableInfos, 0); err != nil {
 		allErrors = append(allErrors, fmt.Sprintf("创建临时表失败: %v", err))
 		return fmt.Errorf("处理失败: %s", strings.Join(allErrors, "; "))
 	}
@@ -104,17 +104,13 @@ func Persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	return nil
 }
 
-func createAllTempTables(conn *pgxpool.Conn, defaultSchema string, tableInfos []*tableProcessInfo, retry int) error {
+func createAllTempTables(dbPool *pgxpool.Pool, conn *pgxpool.Conn, defaultSchema string, tableInfos []*tableProcessInfo, retry int) error {
 	batch := &pgx.Batch{}
 
 	// 为每个表添加创建临时表的操作
 	for _, tableInfo := range tableInfos {
 		// 创建临时表
-		createSQL := fmt.Sprintf(`
-            CREATE TEMP TABLE %s 
-            (LIKE "%s" INCLUDING ALL)
-        `, tableInfo.tempTableName, tableInfo.GetTableName())
-
+		createSQL := fmt.Sprintf(`CREATE TEMP TABLE %s (LIKE "%s" EXCLUDING INDEXES)`, tableInfo.tempTableName, tableInfo.GetTableName())
 		logx.Debug("创建临时表:", retry, createSQL)
 		batch.Queue(createSQL)
 	}
@@ -129,7 +125,7 @@ func createAllTempTables(conn *pgxpool.Conn, defaultSchema string, tableInfos []
 		_, err := br.Exec()
 		if err != nil {
 			if retry > 0 {
-				return fmt.Errorf("批次操作 %d 失败: %v", i, err)
+				return fmt.Errorf("【%d】批次操作 %d 失败: %v", retry, i, err)
 			} else {
 				retryTables = append(retryTables, tableInfos[i])
 			}
@@ -141,8 +137,8 @@ func createAllTempTables(conn *pgxpool.Conn, defaultSchema string, tableInfos []
 			return e.def
 		})
 		tableInfoMap, _ := ListTableInfos(conn, uns)
-		batchCreateTables(conn, defaultSchema, uns, tableInfoMap)
-		return createAllTempTables(conn, defaultSchema, retryTables, retry+1)
+		batchCreateTables(dbPool, defaultSchema, uns, tableInfoMap)
+		return createAllTempTables(dbPool, conn, defaultSchema, retryTables, retry+1)
 	}
 	return br.Close()
 }
@@ -214,18 +210,12 @@ func mergeAllTables(conn *pgxpool.Conn, tableInfos []*tableProcessInfo) error {
 	// 为每个表添加合并操作
 	for _, tableInfo := range tableInfos {
 		// 构建插入字段 和 更新字段
-		var insertColumns = &base.StringBuilder{}
 		var updateColumns = &base.StringBuilder{}
-		insertColumns.Grow(len(tableInfo.def.Fields) * 16)
 		updateColumns.Grow(len(tableInfo.def.Fields) * 32)
 		firstUpdate := false
-		for i, f := range tableInfo.def.Fields {
+		for _, f := range tableInfo.def.Fields {
 			fieldName := f.Name
-			if i > 0 {
-				insertColumns.Append(`, `)
-			}
-			insertColumns.Append(`"`).Append(fieldName).Append(`"`)
-			if !f.IsUnique() && !f.IsSystemField() {
+			if !f.IsUnique() {
 				if firstUpdate {
 					updateColumns.Append(`, `)
 				} else {
@@ -234,29 +224,30 @@ func mergeAllTables(conn *pgxpool.Conn, tableInfos []*tableProcessInfo) error {
 				updateColumns.Append(`"`).Append(fieldName).Append(`"  = EXCLUDED."`).Append(fieldName).Append(`"`)
 			}
 		}
-		pks := &base.StringBuilder{}
-		pks.Grow(len(tableInfo.def.GetPrimaryField()) * 16)
-		for i, f := range tableInfo.def.GetPrimaryField() {
-			if i > 0 {
-				pks.Append(`, `)
-			}
-			pks.Append(`"`).Append(f).Append(`"`)
-		}
-		allColumnsStr := insertColumns.String()
+		primaryFields := tableInfo.def.GetPrimaryField()
 		// 合并数据SQL
-		mergeSQL := fmt.Sprintf(`
-            INSERT INTO "%s" (%s) 
-            SELECT %s FROM %s 
-            ON CONFLICT (%s) 
-            DO UPDATE SET %s
-        `, tableInfo.GetTableName(),
-			allColumnsStr,
-			allColumnsStr,
-			tableInfo.tempTableName,
-			pks.String(),
-			updateColumns.String())
+		mergeSQL := &base.StringBuilder{}
+		mergeSQL.Grow(128 + len(primaryFields)*10)
+		mergeSQL.Append(`INSERT INTO "`).Append(tableInfo.GetTableName()).
+			Append(`" SELECT *  FROM `).Append(tableInfo.tempTableName)
 
-		batch.Queue(mergeSQL)
+		if len(primaryFields) > 0 {
+			mergeSQL.Append(` ON CONFLICT (`)
+			for i, f := range primaryFields {
+				if i > 0 {
+					mergeSQL.Append(`, `)
+				}
+				mergeSQL.Append(`"`).Append(f).Append(`"`)
+			}
+			mergeSQL.Append(`)`)
+			updates := updateColumns.String()
+			if len(updates) > 0 {
+				mergeSQL.Append(" DO UPDATE SET ").Append(updates)
+			} else {
+				mergeSQL.Append(" DO NOTHING ")
+			}
+		}
+		batch.Queue(mergeSQL.String())
 	}
 
 	// 执行批次

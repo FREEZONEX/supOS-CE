@@ -13,6 +13,7 @@ type Config struct {
 	rest.RestConf
 	Database      conf.Database
 	LoggerLevel   string            `json:"loggerLevel,optional" `
+	GrafanaUrl    string            `json:"grafanaUrl,optional,default=http://grafana:3000"`
 	PersistentUrl map[string]string `json:"persistent_url,optional"`
 	DevLink       conf.EventConf
 	CacheRedis    cache.ClusterConf

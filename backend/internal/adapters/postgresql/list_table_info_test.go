@@ -42,7 +42,7 @@ func TestListTableInfo(t *testing.T) {
 	}
 }
 func TestPgTempTable(t *testing.T) {
-	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@100.100.100.22:34099/postgres")
+	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@100.100.100.20:31014/postgres")
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +52,7 @@ func TestPgTempTable(t *testing.T) {
 		panic(err)
 	}
 	defer conn.Release()
-	sql := "CREATE TEMP TABLE temp__f1_c9 (LIKE _f1_c0c20fe8900546768a72 INCLUDING ALL) "
+	sql := "CREATE TEMP TABLE temp__f1_c9 (LIKE public.uns_label_ref EXCLUDING INDEXES) "
 	tag, err := conn.Exec(context.Background(), sql)
 	if err != nil {
 		panic(err)
@@ -60,14 +60,14 @@ func TestPgTempTable(t *testing.T) {
 	utcTime := time.Now().UTC()
 	ts := utcTime.Format("2006-01-02 15:04:05.000") + "+00"
 	t.Log("ts:", ts)
-	sq1 := `insert into temp__f1_c9("timeStamp","aaa") values (`
-	tag, err = conn.Exec(context.Background(), sq1+`'`+ts+`', 125)`)
+	tag, err = conn.Exec(context.Background(), `insert into temp__f1_c9("label_id","uns_id") values (200,2),(200,2),(211,33)`)
 	if err != nil {
 		panic(err)
 	}
 	t.Log(tag.RowsAffected())
 
-	tag, err = conn.Exec(context.Background(), `insert into _f1_c0c20fe8900546768a72 select * from temp__f1_c9`)
+	tag, err = conn.Exec(context.Background(), `insert into public.uns_label_ref("label_id","uns_id") 
+    select "label_id","uns_id" from temp__f1_c9 ON CONFLICT("label_id","uns_id") DO NOTHING `)
 	if err != nil {
 		panic(err)
 	}

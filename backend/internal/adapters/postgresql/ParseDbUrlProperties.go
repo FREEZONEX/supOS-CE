@@ -16,7 +16,7 @@ func ParseDbUrlProperties(dbUrl string) serviceApi.DataSourceProperties {
 	if err != nil {
 		return props
 	}
-
+	props.HostPort = parsedUrl.Host
 	// 提取用户名和密码
 	if parsedUrl.User != nil {
 		props.UserName = parsedUrl.User.Username()
@@ -30,14 +30,14 @@ func ParseDbUrlProperties(dbUrl string) serviceApi.DataSourceProperties {
 	if parsedUrl.Path != "" {
 		pathParts := strings.Split(strings.Trim(parsedUrl.Path, "/"), "/")
 		if len(pathParts) > 0 {
-			// 使用路径中的数据库名作为备选Schema
-			props.Schema = pathParts[len(pathParts)-1]
+			// 使用路径中的数据库名作为备选 DbName
+			props.DbName = pathParts[len(pathParts)-1]
 		}
 	}
-
+	props.Schema = "public" // pg default schema
 	// 优先从查询参数中获取search_path作为Schema
-	if parsedUrl.Query().Get("search_path") != "" {
-		props.Schema = parsedUrl.Query().Get("search_path")
+	if schema := parsedUrl.Query().Get("search_path"); schema != "" {
+		props.Schema = schema
 	}
 
 	return props

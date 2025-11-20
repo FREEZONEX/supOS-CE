@@ -15,4 +15,5 @@ func TestPaseDbUrl(t *testing.T) {
 	fmt.Printf("UserName: %s\n", result.UserName)
 	fmt.Printf("Password: %s\n", result.Password)
 	fmt.Printf("Schema: %s\n", result.Schema)
+	fmt.Printf("Host: %s\n", result.HostPort)
 }

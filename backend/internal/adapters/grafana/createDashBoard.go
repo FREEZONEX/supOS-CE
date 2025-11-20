@@ -61,8 +61,8 @@ func (g *GrafanaEventHandler) createDashboardForTopic(ctx context.Context, dto *
 	schema, table := g.extractSchemaAndTable(dto.GetTable(), ds.Schema)
 	tagNameCondition := g.buildTagNameCondition(dto)
 
-	g.log.Infof("创建 Grafana 仪表板 - 列：%s, 标题：%s, 模式：%s, 表：%s, 标签条件：%s",
-		columns, title, schema, table, tagNameCondition)
+	g.log.Infof("创建 Grafana 仪表板 - 列：%s, 标题：%s, 模式：%s, 表：%s, 标签条件：%s, fromImport? %v",
+		columns, title, schema, table, tagNameCondition, fromImport)
 
 	uuid, er := grafanautil.CreateDashboard(table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
 	if er != nil {

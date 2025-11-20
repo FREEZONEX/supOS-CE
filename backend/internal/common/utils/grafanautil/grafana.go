@@ -2,7 +2,9 @@ package grafanautil
 
 import (
 	"backend/internal/common/serviceApi"
+	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/spring"
 	"bytes"
 	"crypto/md5"
 	"embed"
@@ -15,7 +17,6 @@ import (
 
 	"backend/internal/common/constants"
 	grafanadto "backend/internal/common/dto/grafana"
-	"backend/internal/common/utils/runtimeutil"
 
 	"github.com/zeromicro/go-zero/core/logx"
 
@@ -24,21 +25,30 @@ import (
 
 //go:embed templates/*
 var templates embed.FS
+var _grafanaUrl string
 
 // GrafanaUtils provides utility functions for Grafana operations.
 //
 // GetGrafanaURL returns the Grafana URL based on the runtime environment.
 func GetGrafanaURL() string {
-	if runtimeutil.IsLocalEnv() {
-		return "http://grafana:3000"
+	if _grafanaUrl == "" {
+		_grafanaUrl = spring.GetBean[*svc.ServiceContext]().Config.GrafanaUrl
 	}
-	return "http://grafana:3000"
+	return _grafanaUrl
 }
 
 // GetDashboardUUIDByAlias generates a dashboard UUID from an alias using MD5.
 func GetDashboardUUIDByAlias(alias string) string {
-	hash := md5.Sum([]byte(alias))
-	return hex.EncodeToString(hash[:8]) // 16-character hex (MD5 digestHex16)
+	// 创建MD5哈希对象
+	hasher := md5.New()
+	// 写入输入字符串
+	hasher.Write([]byte(alias))
+	// 计算MD5哈希值
+	hashBytes := hasher.Sum(nil)
+	// 转换为32字符的十六进制字符串
+	fullHash := hex.EncodeToString(hashBytes)
+	// 取前16字符作为结果
+	return fullHash[8:24]
 }
 
 // DeleteDashboard deletes a Grafana dashboard by UID.
@@ -81,13 +91,32 @@ func DeleteDatasource(uid string) error {
 	return nil
 }
 
+// GetDataSourceByName retrieves a Grafana datasource by name.
+func GetDataSourceByName(name string) int {
+	url := GetGrafanaURL() + "/api/datasources/name/" + name
+	logx.Debugf("查询 datasource 请求: %s", url)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return -1
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return resp.StatusCode
+	}
+	body, _ := io.ReadAll(resp.Body)
+	logx.Debugf("查询 datasource 返回结果: %s", string(body))
+
+	return resp.StatusCode
+}
+
 // CreateDatasource creates a Grafana datasource.
 func CreateDatasource(jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceProperties, reCreate bool) (bool, error) {
 	title := jdbcType.Alias()
 	datasource := &grafanadto.GrafanaDataSourceDto{
 		User:     dsProps.UserName,
 		Password: dsProps.Password,
-		UID:      GetDatasourceUUIDByJDBC(jdbcType),
+		UID:      GetDashboardUUIDByAlias(title),
 		Name:     title,
 	}
 
@@ -111,11 +140,39 @@ func CreateDatasource(jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceP
 	default:
 		return false, fmt.Errorf("unsupported JDBC type: %d", jdbcType.Id())
 	}
-
+	datasource.URL = dsProps.HostPort
 	dsJSON := formatTemplate(dsTemplate, datasource)
 	logx.Infof("创建 datasource 请求: %s", dsJSON)
 
-	resp, err := http.Post(GetGrafanaURL()+"/api/datasources", "application/json", bytes.NewBufferString(dsJSON))
+	host := GetGrafanaURL()
+	{
+		url := host + "/api/datasources/name/" + datasource.Name
+		resp, err := http.Get(url)
+		if err != nil {
+			logx.Debugf("查询 datasource 失败: %v %s", err, url)
+		} else {
+			defer resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				body, _ := io.ReadAll(resp.Body)
+				logx.Debugf("查询 datasource 返回结果: %s", string(body))
+				if len(body) > 0 && body[0] == '{' {
+					var rsMap map[string]interface{}
+					err = json.Unmarshal(body, &rsMap)
+					if err == nil && len(rsMap) > 0 {
+						var oldUrl = rsMap["url"].(string)
+						var oldUser = rsMap["user"].(string)
+						if oldUrl != datasource.URL || oldUser != datasource.User {
+							var uid = rsMap["uid"].(string)
+							logx.Infof("准备删除重建数据源[%s],因为: url: %s->%s, user: %s->%s", uid, oldUrl, datasource.URL, oldUser, datasource.User)
+							_ = DeleteDatasource(uid)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	resp, err := http.Post(host+"/api/datasources", "application/json", bytes.NewBufferString(dsJSON))
 	if err != nil {
 		return false, err
 	}
@@ -283,29 +340,9 @@ func CreateDashboardByBody(uidsTr, datasourceName, body string) (string, error) 
 	return string(respBody), nil
 }
 
-// GetDataSourceByName retrieves a Grafana datasource by name.
-func GetDataSourceByName(name string) int {
-	url := GetGrafanaURL() + "/api/datasources/name/" + name
-	logx.Debugf("查询 datasource 请求: %s", url)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return -1
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return resp.StatusCode
-	}
-	body, _ := io.ReadAll(resp.Body)
-	logx.Debugf("查询 datasource 返回结果: %s", string(body))
-
-	return resp.StatusCode
-}
-
 // GetDatasourceUUIDByJDBC generates a datasource UUID from JDBC type.
 func GetDatasourceUUIDByJDBC(jdbcType types.SrcJdbcType) string {
-	hash := md5.Sum([]byte(jdbcType.Alias()))
-	return hex.EncodeToString(hash[:])
+	return GetDashboardUUIDByAlias(jdbcType.Alias())
 }
 
 // Fields2Columns converts field definitions to column string for Grafana.
