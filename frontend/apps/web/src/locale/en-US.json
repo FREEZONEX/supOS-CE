@@ -703,6 +703,8 @@
   "uns.briefAnnotation": "Brief Annotation",
   "uns.briefAnnotationExample": "The second-to-last layer is automatically assigned as 'State', 'Action', or 'Metric', categorizing topics based on system state, actions, or time-series data.",
   "uns.awaitingDataInput": "Awaiting data input...",
+  "uns.additionalSettings": "Additional Settings",
+  "uns.optionalBehaviors": "Optional Behaviors",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

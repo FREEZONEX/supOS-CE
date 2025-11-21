@@ -2,7 +2,7 @@ import { type FC, useState, useEffect } from 'react';
 import { Form } from 'antd';
 import { getTypes, getAllTemplate } from '@/apis/inter-api/uns';
 import { useTranslate, useFormValue } from '@/hooks';
-import FormItems from './FormItems';
+import FormItems, { type FormItemType } from './FormItems';
 import { uniqBy } from 'lodash-es';
 
 import type { FieldItem } from '@/pages/uns/types';
@@ -138,12 +138,10 @@ const FormContent: FC<FormContentProps> = ({
 
   const getFormData = (data: GetFormDataParamsType) => {
     const { currentStep, dataType, modelId, fields, windowType } = data;
-    // const isCreateFolder = addModalType.includes('Folder');
-    // const isFormTopic = addModalType.includes('topic');
-    const formItemList = [];
+
+    const formItemList: FormItemType[] = [];
 
     if (currentStep === 1) {
-      //第一步
       if (isFormTopic) {
         formItemList.push({
           formType: 'input',
@@ -154,32 +152,19 @@ const FormContent: FC<FormContentProps> = ({
           childProps: { disabled: true },
         });
       } else {
-        formItemList.push(
-          {
-            formType: 'input',
-            formProps: {
-              name: 'topic',
-              label: formatMessage('uns.namespace'),
-              tooltip: {
-                title: formatMessage('uns.namespaceTooltip'),
-              },
+        formItemList.push({
+          formType: 'input',
+          formProps: {
+            name: 'topic',
+            label: formatMessage('uns.namespace'),
+            tooltip: {
+              title: formatMessage('uns.namespaceTooltip'),
             },
-            childProps: { disabled: true },
           },
-          {
-            formType: 'input',
-            formProps: {
-              name: 'alias',
-              label: formatMessage('uns.alias'),
-              tooltip: {
-                title: formatMessage('uns.aliasTooltip'),
-              },
-            },
-            childProps: { disabled: true },
-          }
-        );
+          childProps: { disabled: true },
+        });
       }
-      formItemList.push({ formType: 'divider', formProps: { name: 'aliasDivider' } });
+      //第一步
       if (isFormTopic) {
         formItemList.push({
           formType: 'input',
@@ -216,118 +201,7 @@ const FormContent: FC<FormContentProps> = ({
         });
       }
 
-      formItemList.push(
-        {
-          formType: 'input',
-          formProps: {
-            name: 'displayName',
-            label: formatMessage('uns.displayName'),
-            rules: [{ max: 128 }],
-          },
-        },
-        {
-          formType: 'textArea',
-          formProps: {
-            name: 'description',
-            label: formatMessage(isCreateFolder ? 'uns.folderDescription' : 'uns.fileDescription'),
-            rules: [
-              {
-                max: 255,
-                message: formatMessage('uns.labelMaxLength', {
-                  label: formatMessage(isCreateFolder ? 'uns.folderDescription' : 'uns.fileDescription'),
-                  length: 255,
-                }),
-              },
-            ],
-          },
-          childProps: { rows: 2 },
-        }
-      );
       if (!isCreateFolder) {
-        formItemList.push({
-          formType: 'tagSelect',
-          formProps: {
-            name: 'tags',
-            label: formatMessage('common.label'),
-            tooltip: {
-              title: formatMessage('uns.labelTooltip'),
-            },
-          },
-          childProps: {
-            tagMaxLen: 63,
-          },
-        });
-        if ([1, 2].includes(dataType)) {
-          formItemList.push({
-            formType: 'select',
-            formProps: {
-              tooltip: {
-                title: formatMessage('uns.writDownDataTooltip'),
-              },
-              label: formatMessage('uns.writDownData'),
-              name: 'accessLevel',
-              initialValue: 'READ_ONLY',
-            },
-            childProps: {
-              options: [
-                { label: formatMessage('uns.true'), value: 'READ_WRITE' },
-                { label: formatMessage('uns.false'), value: 'READ_ONLY' },
-              ],
-            },
-          });
-        }
-      }
-      formItemList.push({ formType: 'expandFormList', formProps: { name: 'expandFormList' } });
-
-      if (isCreateFolder) {
-        //创建文件夹
-        formItemList.push(
-          { formType: 'divider', formProps: { name: 'modelDescriptionDivider' } },
-          {
-            formType: 'select',
-            formProps: {
-              name: 'modelId',
-              label: formatMessage('common.template'),
-              initialValue: 'custom',
-            },
-            childProps: {
-              showSearch: true,
-              optionFilterProp: 'path',
-              options: templateList,
-              onChange: (modelId: string) => {
-                if (modelId === 'custom' || !modelId) {
-                  form.setFieldValue('fields', undefined);
-                }
-              },
-            },
-          }
-        );
-        if (modelId === 'custom' && fields.length) {
-          formItemList.push({
-            formType: 'checkbox',
-            formProps: {
-              name: 'createTemplate',
-              label: formatMessage('uns.generationTemplate'),
-              initialValue: true,
-              valuePropName: 'checked',
-            },
-          });
-        }
-        formItemList.push({
-          formType: 'fieldsFormList',
-          formProps: {
-            name: 'fields',
-          },
-          childProps: {
-            disabled: modelId !== 'custom',
-            isCreateFolder,
-            showMainKey: false,
-            types,
-            addNamespaceForAi,
-            setAddNamespaceForAi,
-          },
-        });
-      } else {
         if (enableAutoCategorization) {
           formItemList.push({
             formType: 'radioGroup',
@@ -470,6 +344,7 @@ const FormContent: FC<FormContentProps> = ({
             },
           },
         });
+
         if ([1, 2].includes(dataType)) {
           //选择时序或关系型
           if (isFormTopic) {
@@ -506,7 +381,7 @@ const FormContent: FC<FormContentProps> = ({
                 },
               },
             },
-            { formType: 'divider', formProps: { name: 'calculationTypeDivider' } },
+            // { formType: 'divider', formProps: { name: 'calculationTypeDivider' } },
             {
               formType: 'fieldsFormList',
               formProps: { name: 'fields' },
@@ -522,79 +397,50 @@ const FormContent: FC<FormContentProps> = ({
         if (dataType === 6) {
           //选择聚合
           formItemList.push(
-            { formType: 'divider', formProps: { name: 'aggregationDivider' } },
+            // { formType: 'divider', formProps: { name: 'aggregationDivider' } },
             {
               formType: 'frequency',
               formProps: {
                 name: 'frequency',
                 label: formatMessage('uns.frequency'),
-                style: { marginBottom: 0 },
                 required: true,
                 tooltip: {
                   title: formatMessage('uns.frequencyTooltip'),
                 },
               },
-            },
-            {
-              formType: 'divider',
-              formProps: {
-                name: 'frequencyDivider',
-              },
             }
+            // {
+            //   formType: 'divider',
+            //   formProps: {
+            //     name: 'frequencyDivider',
+            //   },
+            // }
           );
-          if (dashboardType?.includes('grafana')) {
-            formItemList.push({
-              formType: 'checkbox',
-              formProps: {
-                name: 'addDashBoard',
-                label: formatMessage('uns.autoDashboard'),
-                initialValue: true,
-                valuePropName: 'checked',
-                tooltip: {
-                  title: formatMessage('uns.autoDashboardTooltip'),
-                },
-                className: lang === 'en-US' ? 'customLabelStyle' : '',
-              },
-            });
-          }
-          formItemList.push(
-            {
-              formType: 'checkbox',
-              formProps: {
-                name: 'save2db',
-                label: formatMessage('uns.persistence'),
-                initialValue: false,
-                valuePropName: 'checked',
-                tooltip: {
-                  title: formatMessage('uns.persistenceTooltip'),
-                },
+
+          formItemList.push({
+            formType: 'searchSelect',
+            formProps: {
+              name: 'referIds',
+              label: formatMessage('uns.aggregationTarget'),
+              rules: [{ required: true }],
+              tooltip: {
+                title: <div>{formatMessage('uns.aggregationTargetTooltip')}</div>,
               },
             },
-            {
-              formType: 'searchSelect',
-              formProps: {
-                name: 'referIds',
-                label: formatMessage('uns.aggregationTarget'),
-                rules: [{ required: true }],
-                tooltip: {
-                  title: <div>{formatMessage('uns.aggregationTargetTooltip')}</div>,
-                },
-              },
-              childProps: {
-                placeholder: formatMessage('uns.searchInstance'),
-                mode: 'multiple',
-                maxCount: 100,
-                selectAll: selectAll,
-                apiParams: { type: 2, normal: true },
-                labelInValue: true,
-              },
-            }
-          );
+            childProps: {
+              placeholder: formatMessage('uns.searchInstance'),
+              mode: 'multiple',
+              maxCount: 100,
+              selectAll: selectAll,
+              apiParams: { type: 2, normal: true },
+              labelInValue: true,
+            },
+          });
         }
         if (dataType === 7) {
           //选择引用
           formItemList.push(
-            { formType: 'divider', formProps: { name: 'referenceDivider' } },
+            // { formType: 'divider', formProps: { name: 'referenceDivider' } },
             {
               formType: 'searchSelect',
               formProps: {
@@ -610,54 +456,256 @@ const FormContent: FC<FormContentProps> = ({
             }
           );
         }
+      }
 
-        if ([1, 2, 8].includes(dataType)) {
-          formItemList.push({ formType: 'divider', formProps: { name: 'addFlowDivider' } });
-          if ([1, 2].includes(dataType)) {
-            formItemList.push({
-              formType: 'checkbox',
-              formProps: {
-                name: 'addFlow',
-                label: formatMessage('uns.mockData'),
-                initialValue: true,
-                valuePropName: 'checked',
-                tooltip: {
-                  title: formatMessage('uns.mockDataTooltip'),
-                },
-              },
-            });
-          }
-          if (dashboardType?.includes('grafana')) {
-            formItemList.push({
-              formType: 'checkbox',
-              formProps: {
-                name: 'addDashBoard',
-                label: formatMessage('uns.autoDashboard'),
-                initialValue: true,
-                valuePropName: 'checked',
-                tooltip: {
-                  title: formatMessage('uns.autoDashboardTooltip'),
-                },
-                className: lang === 'en-US' ? 'customLabelStyle' : '',
-              },
-            });
-          }
-          formItemList.push({
-            formType: 'checkbox',
-            formProps: {
-              name: 'save2db',
-              label: formatMessage('uns.persistence'),
-              initialValue: false,
-              valuePropName: 'checked',
-              tooltip: {
-                title: formatMessage('uns.persistenceTooltip'),
-              },
+      formItemList.push({
+        formType: 'divider',
+        formProps: {
+          name: 'aliasDivider',
+        },
+        childProps: {
+          style: {
+            marginBottom: 0,
+          },
+        },
+      });
+      // collapse
+      const collapseFormItemList: FormItemType[] = [];
+      collapseFormItemList.push(
+        {
+          formType: 'input',
+          formProps: {
+            name: 'alias',
+            label: formatMessage('uns.alias'),
+            tooltip: {
+              title: formatMessage('uns.aliasTooltip'),
             },
-            childProps: { disabled: dataType === 3 && calculationType === 4 },
+          },
+          childProps: { disabled: true },
+        },
+        {
+          formType: 'input',
+          formProps: {
+            name: 'displayName',
+            label: formatMessage('uns.displayName'),
+            rules: [{ max: 128 }],
+          },
+        },
+        {
+          formType: 'textArea',
+          formProps: {
+            name: 'description',
+            label: formatMessage(isCreateFolder ? 'uns.folderDescription' : 'uns.fileDescription'),
+            rules: [
+              {
+                max: 255,
+                message: formatMessage('uns.labelMaxLength', {
+                  label: formatMessage(isCreateFolder ? 'uns.folderDescription' : 'uns.fileDescription'),
+                  length: 255,
+                }),
+              },
+            ],
+          },
+          childProps: { rows: 2 },
+        }
+      );
+
+      if (!isCreateFolder) {
+        collapseFormItemList.push({
+          formType: 'tagSelect',
+          formProps: {
+            name: 'tags',
+            label: formatMessage('common.label'),
+            tooltip: {
+              title: formatMessage('uns.labelTooltip'),
+            },
+          },
+          childProps: {
+            tagMaxLen: 63,
+          },
+        });
+        if ([1, 2].includes(dataType)) {
+          collapseFormItemList.push({
+            formType: 'select',
+            formProps: {
+              tooltip: {
+                title: formatMessage('uns.writDownDataTooltip'),
+              },
+              label: formatMessage('uns.writDownData'),
+              name: 'accessLevel',
+              initialValue: 'READ_ONLY',
+            },
+            childProps: {
+              options: [
+                { label: formatMessage('uns.true'), value: 'READ_WRITE' },
+                { label: formatMessage('uns.false'), value: 'READ_ONLY' },
+              ],
+            },
           });
         }
       }
+
+      collapseFormItemList.push({ formType: 'expandFormList', formProps: { name: 'expandFormList' } });
+      if (isCreateFolder) {
+        //创建文件夹
+        collapseFormItemList.push(
+          // {
+          //   formType: 'divider',
+          //   formProps: { name: 'modelDescriptionDivider' },
+          //   childProps: {
+          //     style: {
+          //       marginTop: 0,
+          //     },
+          //   },
+          // },
+          {
+            formType: 'select',
+            formProps: {
+              name: 'modelId',
+              label: formatMessage('common.template'),
+              initialValue: 'custom',
+            },
+            childProps: {
+              showSearch: true,
+              optionFilterProp: 'path',
+              options: templateList,
+              onChange: (modelId: string) => {
+                if (modelId === 'custom' || !modelId) {
+                  form.setFieldValue('fields', undefined);
+                }
+              },
+            },
+          }
+        );
+
+        if (modelId === 'custom' && fields.length) {
+          collapseFormItemList.push({
+            formType: 'checkbox',
+            formProps: {
+              name: 'createTemplate',
+              label: formatMessage('uns.generationTemplate'),
+              initialValue: true,
+              valuePropName: 'checked',
+            },
+          });
+        }
+        collapseFormItemList.push({
+          formType: 'fieldsFormList',
+          formProps: {
+            name: 'fields',
+          },
+          childProps: {
+            disabled: modelId !== 'custom',
+            isCreateFolder,
+            showMainKey: false,
+            types,
+            addNamespaceForAi,
+            setAddNamespaceForAi,
+            style: {
+              marginBottom: 16,
+            },
+          },
+        });
+      }
+
+      formItemList.push({
+        formType: 'collapse',
+        formProps: {},
+        collapse: {
+          key: 'additionalSettings',
+          label: formatMessage('uns.additionalSettings'),
+          formData: collapseFormItemList,
+        },
+      });
+      if ([1, 2, 6, 8].includes(dataType) && !isCreateFolder) {
+        formItemList.push({
+          formType: 'divider',
+          formProps: { name: 'addFlowDivider' },
+          childProps: { style: { marginTop: 0 } },
+        });
+        const rowFormItemList: FormItemType[] = [];
+
+        if ([1, 2].includes(dataType)) {
+          rowFormItemList.push({
+            formType: 'checkbox',
+            formProps: {
+              name: 'addFlow',
+              initialValue: true,
+              valuePropName: 'checked',
+              wrapperCol: { span: 22 },
+              labelCol: { span: 1 },
+              style: {
+                marginBottom: 0,
+              },
+            },
+            childProps: {
+              children: formatMessage('uns.mockData'),
+              tooltip: {
+                title: formatMessage('uns.mockDataTooltip'),
+              },
+              rootClassname: 'opt-checkbox',
+            },
+          });
+        }
+
+        if (dashboardType?.includes('grafana')) {
+          rowFormItemList.push({
+            formType: 'checkbox',
+            formProps: {
+              name: 'addDashBoard',
+              initialValue: true,
+              valuePropName: 'checked',
+              className: lang === 'en-US' ? 'customLabelStyle' : '',
+              wrapperCol: { span: 22 },
+              labelCol: { span: 1 },
+              style: {
+                marginBottom: 0,
+              },
+            },
+            childProps: {
+              label: formatMessage('uns.autoDashboard'),
+              tooltip: {
+                title: formatMessage('uns.autoDashboardTooltip'),
+              },
+              rootClassname: 'opt-checkbox',
+            },
+          });
+        }
+
+        rowFormItemList.push({
+          formType: 'checkbox',
+          formProps: {
+            name: 'save2db',
+            initialValue: false,
+            valuePropName: 'checked',
+            wrapperCol: { span: 22 },
+            labelCol: { span: 1 },
+            style: {
+              marginBottom: 0,
+            },
+          },
+          childProps: {
+            children: formatMessage('uns.persistence'),
+            tooltip: {
+              title: formatMessage('uns.persistenceTooltip'),
+            },
+            disabled: dataType === 3 && calculationType === 4,
+            rootClassname: 'opt-checkbox',
+          },
+        });
+
+        formItemList.push({
+          formType: 'row',
+          formProps: {},
+          row: {
+            key: 'optionalBehaviors',
+            label: formatMessage('uns.optionalBehaviors'),
+            formData: rowFormItemList,
+          },
+        });
+      }
     }
+
     if (currentStep === 2) {
       //第二步
       formItemList.push(
@@ -699,52 +747,90 @@ const FormContent: FC<FormContentProps> = ({
           formItemList.push({ formType: 'aggForm', formProps: { name: 'aggForm' } });
         }
       }
+
+      const rowFormItemList: FormItemType[] = [];
+
       if (dashboardType?.includes('grafana')) {
-        formItemList.push({
+        rowFormItemList.push({
           formType: 'checkbox',
           formProps: {
             name: 'addDashBoard',
-            label: formatMessage('uns.autoDashboard'),
             initialValue: true,
             valuePropName: 'checked',
+            className: lang === 'en-US' ? 'customLabelStyle' : '',
+            wrapperCol: { span: 22 },
+            labelCol: { span: 1 },
+            style: {
+              marginBottom: 0,
+            },
+          },
+          childProps: {
+            label: formatMessage('uns.autoDashboard'),
             tooltip: {
               title: formatMessage('uns.autoDashboardTooltip'),
             },
-            className: lang === 'en-US' ? 'customLabelStyle' : '',
+            rootClassname: 'opt-checkbox',
           },
         });
       }
-      formItemList.push({
+
+      rowFormItemList.push({
         formType: 'checkbox',
         formProps: {
           name: 'save2db',
-          label: formatMessage('uns.persistence'),
           initialValue: false,
           valuePropName: 'checked',
+          wrapperCol: { span: 22 },
+          labelCol: { span: 1 },
+          style: {
+            marginBottom: 0,
+          },
+        },
+        childProps: {
+          children: formatMessage('uns.persistence'),
           tooltip: {
             title: formatMessage('uns.persistenceTooltip'),
           },
+          disabled: dataType === 3 && calculationType === 4,
+          rootClassname: 'opt-checkbox',
         },
-        childProps: { disabled: dataType === 3 && calculationType === 4 },
       });
+
       if (dataType === 3 && calculationType === 4) {
-        formItemList.push({
+        rowFormItemList.push({
           formType: 'checkbox',
           formProps: {
             name: 'advancedOptions',
-            label: formatMessage('streams.advancedOptions'),
             initialValue: false,
             valuePropName: 'checked',
+            wrapperCol: { span: 22 },
+            labelCol: { span: 1 },
+            style: {
+              marginBottom: 0,
+            },
           },
           childProps: {
+            children: formatMessage('streams.advancedOptions'),
             onChange: () => {
               form.setFieldValue('_advancedOptions', undefined);
             },
             disabled: windowType === 'COUNT_WINDOW',
+            rootClassname: 'opt-checkbox',
           },
         });
       }
+
+      formItemList.push({
+        formType: 'row',
+        formProps: {},
+        row: {
+          key: 'optionalBehaviors2',
+          label: formatMessage('uns.optionalBehaviors'),
+          formData: rowFormItemList,
+        },
+      });
     }
+
     if (currentStep === 3) {
       //第三步
       formItemList.push(
@@ -774,16 +860,22 @@ const FormContent: FC<FormContentProps> = ({
         });
       }
     }
+
     formItemList.push({
       formType: 'divider',
       formProps: {
         name: 'bottomDivider',
       },
+      childProps:
+        (!isCreateFolder && [1, 2, 6, 8].includes(dataType)) || currentStep === 2
+          ? { margin: '16px 0' }
+          : { style: { margin: '0 0 16px 0' } },
     });
     return formItemList;
   };
   return (
     <FormItems
+      open={open}
       formData={getFormData({
         currentStep: step,
         dataType,

@@ -210,3 +210,32 @@
     height: 2rem !important;
   }
 }
+
+.code-snippet--with-line-numbers {
+  .code-snippet-container {
+    pre {
+      counter-reset: line;
+    }
+  }
+
+  .code-snippet__line {
+    display: block;
+    padding-left: 3.5rem; // Increased padding to make space for the line
+    position: relative;
+
+    &::before {
+      content: counter(line);
+      counter-increment: line;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2.5rem; // Increased width to accommodate padding and border
+      padding-right: 0.5rem;
+      margin-right: 0.5rem;
+      text-align: right;
+      color: var(--supos-text-secondary-color);
+      user-select: none;
+      border-right: 1px solid #e0e0e0;
+    }
+  }
+}

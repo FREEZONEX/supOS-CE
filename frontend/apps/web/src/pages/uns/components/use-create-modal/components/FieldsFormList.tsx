@@ -1,4 +1,4 @@
-import { type FC, useEffect } from 'react';
+import { type CSSProperties, type FC, useEffect } from 'react';
 import { Form, Flex, Input, Select, Button, InputNumber, Divider, ConfigProvider } from 'antd';
 import { SubtractAlt, AddAlt } from '@carbon/icons-react';
 import { useTranslate, useFormValue } from '@/hooks';
@@ -29,6 +29,7 @@ export interface FieldsFormListProps {
   mainKeyName?: string | (string | number)[];
   hasDefaultVal?: boolean;
   showMoreBtn?: boolean;
+  style?: CSSProperties;
 }
 
 const FieldsFormList: FC<FieldsFormListProps> = ({
@@ -44,6 +45,7 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
   fieldsName = 'fields',
   mainKeyName = 'mainKey',
   showMoreBtn = false,
+  style,
 }) => {
   const formatMessage = useTranslate();
   const form = Form.useFormInstance();
@@ -118,7 +120,6 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
       const removeDefaultFields = fieldList?.filter(
         (e: FieldItem) => !(e?.systemField || (modelId && [qualityName, timestampName].includes(e?.name)))
       );
-      console.log('removeDefaultFields', removeDefaultFields);
       form.setFieldValue(fieldsName, [...removeDefaultFields, ...defaultFields]);
     }
     if (dataType === 2 && fieldList?.some((e: FieldItem) => e?.systemField) && !modelId) {
@@ -510,6 +511,12 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
     </>
   );
 
-  return showWrap ? <div className="dashedWrap">{content}</div> : content;
+  return showWrap ? (
+    <div className="dashedWrap" style={style}>
+      {content}
+    </div>
+  ) : (
+    content
+  );
 };
 export default FieldsFormList;

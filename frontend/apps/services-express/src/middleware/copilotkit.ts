@@ -11,9 +11,7 @@ import { ChatOllama } from '@langchain/ollama';
 import { ChatAnthropic } from '@langchain/anthropic';
 import OpenAI from 'openai';
 import { config } from '@/config';
-import { MCPClientManager } from '@/utils';
-
-const mcpManager = new MCPClientManager();
+import { mcpManager } from '@/utils';
 
 const ollamaModel = new ChatOllama({
   model: config.ollamaModal,
@@ -90,10 +88,6 @@ export const copilotkitHandler = (req: Request, res: Response, next: NextFunctio
     const runtime = new CopilotRuntime({
       createMCPClient: async (config) => {
         return await mcpManager.getOrCreateMCPClient(config);
-        // const props = parseTransportUrl(config.endpoint);
-        // const mcpClient = new MCPClient(props);
-        // await mcpClient.connect();
-        // return mcpClient;
       },
     });
     const handler = copilotRuntimeNodeHttpEndpoint({

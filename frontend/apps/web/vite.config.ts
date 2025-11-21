@@ -48,7 +48,7 @@ export default defineConfig({
     proxy: {
       ...proxy,
       '/copilotkit': 'http://localhost:4000',
-      // '/open-api': 'http://localhost:4000',
+      '/open-api': 'http://localhost:4000',
       ...(devInfo.VITE_ASSET_PREFIX !== '1'
         ? {
             '/plugin/': {

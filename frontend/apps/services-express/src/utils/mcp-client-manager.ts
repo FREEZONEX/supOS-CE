@@ -198,4 +198,148 @@ export class MCPClientManager {
 
     console.log('Removed all MCP clients from cache');
   }
+
+  /**
+   * 获取只读的MCP客户端缓存视图
+   */
+  getMCPClientCache(): ReadonlyArray<Readonly<Omit<MCPClientEntry, 'client'>>> {
+    return Array.from(this.mcpClientCache.entries()).map(([key, entry]) => ({
+      endpoint: entry.endpoint || key,
+      lastUsed: entry.lastUsed,
+      isConnected: entry.isConnected,
+    }));
+  }
+
+  /**
+   * 刷新指定的MCP客户端 - 通过重新连接来刷新状态
+   * @param endpoint MCP客户端端点
+   * @returns 刷新结果
+   */
+  async refreshMCPClient(endpoint: string): Promise<{ success: boolean; message: string }> {
+    const cacheKey = endpoint;
+    const entry = this.mcpClientCache.get(cacheKey);
+
+    if (!entry) {
+      return { success: false, message: `MCP客户端 ${endpoint} 不存在` };
+    }
+
+    try {
+      console.log(`开始刷新MCP客户端: ${endpoint}`);
+
+      // 如果客户端已连接，先断开连接
+      if (entry.isConnected) {
+        await entry.client.close();
+        entry.isConnected = false;
+        console.log(`已断开MCP客户端连接: ${endpoint}`);
+      }
+
+      // 重新连接客户端
+      await entry.client.connect();
+      entry.isConnected = true;
+      entry.lastUsed = Date.now();
+
+      // 清除工具缓存，强制重新获取工具列表
+      (entry.client as any).toolsCache = null;
+
+      console.log(`成功刷新MCP客户端: ${endpoint}`);
+      return { success: true, message: `MCP客户端 ${endpoint} 刷新成功` };
+    } catch (error) {
+      console.error(`刷新MCP客户端 ${endpoint} 失败:`, error);
+      entry.isConnected = false;
+      return {
+        success: false,
+        message: `MCP客户端 ${endpoint} 刷新失败: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  }
+
+  /**
+   * 重启指定的MCP客户端 - 先停止再重新创建
+   * @param endpoint MCP客户端端点
+   * @returns 重启结果
+   */
+  async restartMCPClient(endpoint: string): Promise<{ success: boolean; message: string }> {
+    const cacheKey = endpoint;
+    const entry = this.mcpClientCache.get(cacheKey);
+
+    if (!entry) {
+      return { success: false, message: `MCP客户端 ${endpoint} 不存在` };
+    }
+
+    try {
+      console.log(`开始重启MCP客户端: ${endpoint}`);
+
+      // 保存客户端配置信息
+      const config = { endpoint };
+      const props = parseTransportUrl(endpoint);
+
+      // 先停止客户端
+      await this.removeMCPClient(endpoint);
+
+      // 重新创建客户端
+      const newClient = await this.createNewMCPClient(config, props);
+
+      // 更新缓存
+      const newEntry: MCPClientEntry = {
+        client: newClient,
+        endpoint: endpoint,
+        lastUsed: Date.now(),
+        isConnected: true,
+      };
+
+      this.mcpClientCache.set(cacheKey, newEntry);
+
+      console.log(`成功重启MCP客户端: ${endpoint}`);
+      return { success: true, message: `MCP客户端 ${endpoint} 重启成功` };
+    } catch (error) {
+      console.error(`重启MCP客户端 ${endpoint} 失败:`, error);
+      return {
+        success: false,
+        message: `MCP客户端 ${endpoint} 重启失败: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  }
+
+  /**
+   * 停止指定的MCP客户端 - 断开连接但不从缓存中移除
+   * @param endpoint MCP客户端端点
+   * @returns 停止结果
+   */
+  async stopMCPClient(endpoint: string): Promise<{ success: boolean; message: string }> {
+    const cacheKey = endpoint;
+    const entry = this.mcpClientCache.get(cacheKey);
+
+    if (!entry) {
+      return { success: false, message: `MCP客户端 ${endpoint} 不存在` };
+    }
+
+    try {
+      console.log(`开始停止MCP客户端: ${endpoint}`);
+
+      // 断开连接
+      if (entry.isConnected) {
+        await entry.client.close();
+        entry.isConnected = false;
+        console.log(`已停止MCP客户端: ${endpoint}`);
+      } else {
+        console.log(`MCP客户端 ${endpoint} 已经处于停止状态`);
+      }
+
+      // 更新最后使用时间
+      entry.lastUsed = Date.now();
+
+      console.log(`成功停止MCP客户端: ${endpoint}`);
+      return { success: true, message: `MCP客户端 ${endpoint} 停止成功` };
+    } catch (error) {
+      console.error(`停止MCP客户端 ${endpoint} 失败:`, error);
+      return {
+        success: false,
+        message: `MCP客户端 ${endpoint} 停止失败: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  }
 }
+
+const mcpManager = new MCPClientManager();
+
+export { mcpManager };

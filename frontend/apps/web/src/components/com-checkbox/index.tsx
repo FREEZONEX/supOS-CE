@@ -1,7 +1,9 @@
-import { Checkbox, type CheckboxProps } from 'antd';
+import { Checkbox, type CheckboxProps, Flex, Tooltip, type TooltipProps } from 'antd';
 import type { CSSProperties, FC, ReactNode } from 'react';
 import classNames from 'classnames';
 import './index.scss';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import ComEllipsis from '../com-ellipsis';
 
 export interface ComCheckboxProps extends CheckboxProps {
   label?: ReactNode;
@@ -9,6 +11,7 @@ export interface ComCheckboxProps extends CheckboxProps {
   readonly?: boolean;
   rootStyle?: CSSProperties;
   rootClassname?: CSSProperties;
+  tooltip?: TooltipProps;
 }
 
 const ComCheckbox: FC<ComCheckboxProps> = ({
@@ -18,6 +21,7 @@ const ComCheckbox: FC<ComCheckboxProps> = ({
   label,
   disabled,
   children,
+  tooltip,
   ...restProps
 }) => {
   return (
@@ -26,7 +30,18 @@ const ComCheckbox: FC<ComCheckboxProps> = ({
         (label ?? children)
       ) : (
         <Checkbox {...restProps} disabled={disabled} className={classNames('com-checkbox', restProps.className)}>
-          {label ?? children}
+          {tooltip ? (
+            <Flex gap={8} style={{ overflow: 'hidden' }}>
+              <ComEllipsis>{(label ?? children) as string}</ComEllipsis>
+              {tooltip && (
+                <Tooltip title={tooltip?.title}>
+                  <QuestionCircleOutlined />
+                </Tooltip>
+              )}
+            </Flex>
+          ) : (
+            (label ?? children)
+          )}
         </Checkbox>
       )}
     </div>

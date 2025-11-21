@@ -39,7 +39,8 @@
     "dev:servicesExpress": {
       "dependsOn": ["^build"],
       "persistent": true,
-      "cache": false
+      "cache": false,
+      "inputs": ["src/**/*.ts", "tsdown.config.ts"]
     },
     "start": {
       "persistent": true,

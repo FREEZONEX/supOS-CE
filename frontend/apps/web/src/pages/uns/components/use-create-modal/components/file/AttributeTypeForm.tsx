@@ -48,7 +48,7 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
   };
   return (
     <>
-      <Divider style={{ borderColor: '#c6c6c6' }} />
+      {/*<Divider style={{ borderColor: '#c6c6c6' }} />*/}
       <div className="dashedWrap">
         <Form.Item
           name="attributeType"

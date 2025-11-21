@@ -1,4 +1,14 @@
-import { type FC, type ReactNode, useRef, useEffect, useState, useCallback, type MouseEvent } from 'react';
+import {
+  type FC,
+  type ReactNode,
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  type MouseEvent,
+  useMemo,
+  Children,
+} from 'react';
 import { Tooltip } from 'antd';
 import { ChevronDown, Copy } from '@carbon/icons-react';
 import classNames from 'classnames';
@@ -130,6 +140,11 @@ export interface CodeSnippetProps {
   type?: 'single' | 'inline' | 'multi';
 
   /**
+   * 指定是否显示行号
+   */
+  showLineNumbers?: boolean;
+
+  /**
    * 指定是否自动换行
    */
   wrapText?: boolean;
@@ -165,6 +180,7 @@ const CodeSnippet: FC<CodeSnippetProps> = ({
   showLessText,
   hideCopyButton,
   wrapText = false,
+  showLineNumbers = false,
   maxCollapsedNumberOfRows = defaultMaxCollapsedNumberOfRows,
   maxExpandedNumberOfRows = defaultMaxExpandedNumberOfRows,
   minCollapsedNumberOfRows = defaultMinCollapsedNumberOfRows,
@@ -272,6 +288,36 @@ const CodeSnippet: FC<CodeSnippetProps> = ({
     }
   };
 
+  const getChildrenString = useCallback((node: ReactNode): string => {
+    let text = '';
+    Children.forEach(node, (child) => {
+      if (typeof child === 'string' || typeof child === 'number') {
+        text += child;
+      } else if (child && typeof child === 'object' && 'props' in child && child.props.children) {
+        text += getChildrenString(child.props.children);
+      }
+    });
+    return text;
+  }, []);
+
+  const processedChildren = useMemo(() => {
+    if (showLineNumbers && type === 'multi') {
+      const textContent = getChildrenString(children);
+      const lines = textContent.split('\n');
+
+      if (lines.length > 0 && lines[lines.length - 1] === '') {
+        lines.pop();
+      }
+
+      return lines.map((line, index) => (
+        <span className="code-snippet__line" key={index}>
+          {line === '' ? '\u00A0' : line}
+        </span>
+      ));
+    }
+    return children;
+  }, [children, showLineNumbers, type, getChildrenString]);
+
   const codeSnippetClasses = classNames(className, 'code-snippet', {
     [`code-snippet--${type}`]: type,
     'code-snippet--disabled': type !== 'inline' && disabled,
@@ -281,6 +327,7 @@ const CodeSnippet: FC<CodeSnippetProps> = ({
     'code-snippet--wraptext': wrapText,
     'code-snippet--has-right-overflow': type === 'multi' && hasRightOverflow,
     'code-snippet--copy-button': !hideCopyButton,
+    'code-snippet--with-line-numbers': showLineNumbers && type === 'multi',
   });
 
   const expandCodeBtnText = expandedCode
@@ -344,7 +391,7 @@ const CodeSnippet: FC<CodeSnippetProps> = ({
         {...containerStyle}
       >
         <pre ref={codeContentRef} onScroll={(type === 'multi' && handleScroll) || undefined}>
-          <code ref={innerCodeRef}>{children}</code>
+          <code ref={innerCodeRef}>{processedChildren}</code>
         </pre>
       </div>
       {/* 左侧溢出指示器 */}

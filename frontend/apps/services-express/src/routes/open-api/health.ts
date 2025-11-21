@@ -7,7 +7,7 @@ const healthRouter = express.Router();
 
 // 详细健康检查
 healthRouter.get('/health/server/detailed', (_: Request, res: Response) => {
-  res.json({
+  res.status(200).json({
     status: 'ok',
     environment: config.nodeEnv,
     version: '1.0.1',

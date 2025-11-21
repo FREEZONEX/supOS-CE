@@ -742,6 +742,8 @@ const messages = {
   'uns.briefAnnotationExample':
     "倒数第二层被自动分配为'状态'、'操作'或'指标'，根据系统状态、操作或时间序列数据对主题进行分类。",
   'uns.awaitingDataInput': '等待数据输入...',
+  'uns.additionalSettings': '额外设置',
+  'uns.optionalBehaviors': '可选行为',
 
   //公共通用模块
   'common.url': '地址',
