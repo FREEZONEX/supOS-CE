@@ -1,5 +1,11 @@
 import defaultIconUrl from '@/assets/home-icons/default.svg';
-import { CUSTOM_MENU_ICON, CUSTOM_MENU_ICON_PRE, MENU_TARGET_PATH, STORAGE_PATH } from '@/common-types/constans.ts';
+import {
+  CUSTOM_MENU_ICON,
+  CUSTOM_MENU_ICON_PRE,
+  CUSTOM_MENU_ICON_PRE1,
+  MENU_TARGET_PATH,
+  STORAGE_PATH,
+} from '@/common-types/constans.ts';
 
 export function getOpenAiUrl() {
   if (import.meta.env.MODE !== 'production') {
@@ -55,7 +61,7 @@ export const getImageSrcByTheme = (theme: string, iconName?: string) => {
   if (!iconName) {
     return { themeImageUrl: '', defaultImageUrl: '', fallbackImageUrl };
   }
-  if (iconName.includes(CUSTOM_MENU_ICON_PRE)) {
+  if (iconName.includes(CUSTOM_MENU_ICON_PRE) || iconName.includes(CUSTOM_MENU_ICON_PRE1)) {
     // 自定义上传图片地址
     return {
       themeImageUrl: `${CUSTOM_MENU_ICON}?objectName=${encodeURI(iconName)}`,

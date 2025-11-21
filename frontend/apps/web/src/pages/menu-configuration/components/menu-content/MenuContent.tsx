@@ -8,7 +8,13 @@ import { useMenuStore } from '../../store/menuStore.tsx';
 import { useEffect, useState } from 'react';
 import { uploadAttachment } from '@/apis/inter-api';
 import { passwordRegex } from '@/utils';
-import { CUSTOM_MENU_ICON, CUSTOM_MENU_ICON_PRE, MENU_TARGET_PATH, STORAGE_PATH } from '@/common-types/constans.ts';
+import {
+  CUSTOM_MENU_ICON,
+  CUSTOM_MENU_ICON_PRE,
+  CUSTOM_MENU_ICON_PRE1,
+  MENU_TARGET_PATH,
+  STORAGE_PATH,
+} from '@/common-types/constans.ts';
 import { ButtonPermission } from '@/common-types/button-permission.ts';
 
 const Title = () => {
@@ -269,7 +275,7 @@ const MenuContent = () => {
     if (selectNode && ['editMenu', 'editGroup'].includes(contentType || '')) {
       // 赋值
       const url = selectNode?.icon
-        ? selectNode?.icon?.includes(CUSTOM_MENU_ICON_PRE)
+        ? selectNode?.icon?.includes(CUSTOM_MENU_ICON_PRE) || selectNode?.icon?.includes(CUSTOM_MENU_ICON_PRE1)
           ? `${CUSTOM_MENU_ICON}?objectName=${encodeURI(selectNode.icon)}`
           : `${STORAGE_PATH}${MENU_TARGET_PATH}/${encodeURI(selectNode.icon)}`
         : '';
