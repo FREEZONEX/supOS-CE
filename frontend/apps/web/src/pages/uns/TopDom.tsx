@@ -1,5 +1,5 @@
 import { Badge, Button, Flex } from 'antd';
-import { Copy, DocumentView, Rss } from '@carbon/icons-react';
+import { Copy, Rss } from '@carbon/icons-react';
 import { ButtonPermission } from '@/common-types/button-permission';
 import { getTreeStoreSnapshot, useTreeStore, useTreeStoreRef } from './store/treeStore';
 import { useClipboard, useTranslate } from '@/hooks';
@@ -9,7 +9,6 @@ import { AuthButton, AuthWrapper } from '@/components/auth';
 import ComBreadcrumb from '@/components/com-breadcrumb';
 import ComText from '@/components/com-text';
 import { useBaseStore } from '@/stores/base';
-import SchemaModal, { type SchemaModalRef } from '@/pages/uns/components/schema-modal';
 import { getUnsExportRecordsApi } from '@/apis/inter-api/uns';
 
 interface TopDomProps {
@@ -20,9 +19,8 @@ interface TopDomProps {
 const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcrumbList, currentUnusedTopicNode }) => {
   const systemInfo = useBaseStore((state) => state.systemInfo);
   const formatMessage = useTranslate();
-  const [importModal, setImportModal] = useState(false);
   const exportRef = useRef<any>(null);
-  const schemaRef = useRef<SchemaModalRef>(null);
+  const importRef = useRef<any>(null);
   const copyPathRef = useRef(null);
   const { treeType, currentTreeMapType, breadcrumbList, selectedNode, setSelectedNode } = useTreeStore((state) => ({
     treeType: state.treeType,
@@ -132,13 +130,11 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
         <span />
       )}
       <div className="chartTopR">
-        <AuthButton onClick={() => schemaRef?.current?.onOpen?.({})}>
-          <Flex align="center" gap={8}>
-            <DocumentView />
-            Schema
-          </Flex>
-        </AuthButton>
-        <AuthButton auth={ButtonPermission['uns.unsImport']} type="primary" onClick={() => setImportModal(true)}>
+        <AuthButton
+          auth={ButtonPermission['uns.unsImport']}
+          type="primary"
+          onClick={() => importRef?.current?.setOpen(true)}
+        >
           {formatMessage('common.import')}
         </AuthButton>
         <AuthWrapper auth={ButtonPermission['uns.unsExport']}>
@@ -156,9 +152,8 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
           </Badge>
         </AuthWrapper>
       </div>
-      <ImportModal importModal={importModal} setImportModal={setImportModal} initTreeData={loadData} />
-      <ExportModal setButtonExportRecords={setExportRecords} exportRef={exportRef} />
-      <SchemaModal ref={schemaRef} />
+      <ImportModal importRef={importRef} initTreeData={loadData} />
+      <ExportModal exportRef={exportRef} />
     </div>
   );
 };

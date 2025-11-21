@@ -29,8 +29,9 @@ const ProTree = forwardRef<ProTreeRef, ProTreeProps>((props, ref) => {
     header,
     empty,
     height,
-    treeData,
+    treeData = [],
     wrapperStyle,
+    loadingStyle,
     wrapperClassName,
     specialStyle = true,
     rightClickMenuItems,
@@ -185,7 +186,7 @@ const ProTree = forwardRef<ProTreeRef, ProTreeProps>((props, ref) => {
   );
 
   return (
-    <Spin wrapperClassName="pro-tree-loading" spinning={!!loading}>
+    <Spin wrapperClassName="pro-tree-loading" style={loadingStyle} spinning={!!loading}>
       <div
         className={cx('pro-tree-wrap', wrapperClassName, {
           'pro-tree-special': specialStyle,

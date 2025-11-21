@@ -78,7 +78,7 @@ const Module: FC<ExportModalProps> = (props) => {
       eventFlowExportParam: getParamsForArray(eventFlowExportParam),
       dashboardExportParam: getParamsForArray(dashboardExportParam),
       unsExportParam: {
-        fileType: 'excel',
+        fileType: 'json',
         ...getParamsForArray(unsExportParam, 'type', {
           groups: {
             0: 'models',

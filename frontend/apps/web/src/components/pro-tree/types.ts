@@ -29,6 +29,7 @@ export interface ProTreeProps extends TreeProps {
   empty?: ReactNode;
   // 样式相关
   wrapperStyle?: CSSProperties;
+  loadingStyle?: CSSProperties;
   wrapperClassName?: string;
   treeNodeClassName?: string;
   // 特殊样式

@@ -1,11 +1,17 @@
 .code-snippet {
   background-color: var(--supos-switchwrap-bg-color);
 
-  code {
+  code,
+  .code-snippet__line {
     font-size: 0.75rem;
     font-weight: 400;
     line-height: 1.3333;
     letter-spacing: 0.32px;
+  }
+
+  // 当 placeholder 激活时，仅将文本颜色变淡，不影响行号
+  code[data-placeholder-active='true'] {
+    color: rgb(var(--supos-text-color-rgb, 22, 22, 22), 0.4);
   }
 
   &-btn--text {
@@ -238,4 +244,8 @@
       border-right: 1px solid #e0e0e0;
     }
   }
+}
+
+.code-snippet--full-height {
+  height: 100%;
 }

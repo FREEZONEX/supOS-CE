@@ -38,7 +38,7 @@ const LogoImg: FC<IconImgProps> = ({ isDark, onClick, ...props }) => {
       onClick={onClick}
       style={{
         cursor: 'pointer',
-        minWidth: 60,
+        minWidth: 50,
         overflow: 'hidden',
         marginRight: 8,
       }}

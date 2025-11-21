@@ -136,7 +136,7 @@ const CustomMenuHeader = () => {
               <MenuIcon size={20} style={{ color: 'var(--supos-text-color)' }} onClick={() => setDrawerVisible(true)} />
             )}
           </div>
-          <div style={{ minWidth: 60, flexShrink: 0 }}>
+          <div style={{ minWidth: 50, flexShrink: 0 }}>
             <LogoImg
               isDark={theme === ThemeType.Dark}
               onClick={() => {

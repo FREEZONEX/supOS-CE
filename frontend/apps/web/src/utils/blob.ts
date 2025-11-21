@@ -8,3 +8,12 @@ export const downloadFn = ({ data, name }: { data: any; name: string }) => {
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
 };
+
+export async function blobToJsonUsingTextMethod(blob: Blob) {
+  try {
+    const jsonString = await blob.text();
+    return JSON.stringify(JSON.parse(jsonString), null, 2);
+  } catch (error) {
+    throw new Error('转换失败，原因：' + error);
+  }
+}

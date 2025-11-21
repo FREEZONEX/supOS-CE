@@ -273,3 +273,97 @@ export const uniqueArr = (arr: any[]) => {
     return acc;
   }, []);
 };
+
+// 平铺树
+export const flattenTreeData = (nodes: UnsTreeNode[]): UnsTreeNode[] => {
+  const result: UnsTreeNode[] = [];
+
+  const traverse = (nodeList: UnsTreeNode[]) => {
+    nodeList.forEach((node) => {
+      result.push(node);
+      if (node.children && node.children.length > 0) {
+        traverse(node.children);
+      }
+    });
+  };
+
+  traverse(nodes);
+  return result;
+};
+
+// SHOW_CHILD 只显示子; SHOW_ALL 显示所有; SHOW_PARENT 显示父
+export const processedCheckedKeys = ({
+  checkedKeys,
+  strategy = 'SHOW_PARENT',
+  treeData = [],
+}: {
+  // 字符串 的 id集合
+  checkedKeys: Key[];
+  strategy?: 'SHOW_CHILD' | 'SHOW_ALL' | 'SHOW_PARENT';
+  // 树数据，非平铺
+  treeData?: UnsTreeNode[];
+}) => {
+  if (!treeData || treeData.length === 0 || !checkedKeys || checkedKeys.length === 0) {
+    return [];
+  }
+
+  // 平铺树数据，方便查找
+  const flatTreeData = flattenTreeData(treeData);
+
+  // 创建节点映射表（使用id作为key）
+  const nodeMap = new Map<Key, UnsTreeNode>();
+  flatTreeData.forEach((node) => {
+    nodeMap.set(node.id!, node);
+  });
+
+  const checkedKeySet = new Set(checkedKeys);
+  let resultKeys: Key[] = [];
+
+  if (strategy === 'SHOW_ALL') {
+    // SHOW_ALL: 返回所有选中的节点
+    resultKeys = Array.from(checkedKeySet);
+  } else if (strategy === 'SHOW_CHILD') {
+    // SHOW_CHILD: 只返回选中的子节点 (其父节点未被选中的已选节点)
+    resultKeys = checkedKeys.filter((key) => {
+      const node = nodeMap.get(key);
+      // 如果节点没有父节点，或者父节点未被选中，则保留该节点
+      if (!node || !node.parentId) {
+        return true;
+      }
+      return !checkedKeySet.has(node.parentId);
+    });
+  } else if (strategy === 'SHOW_PARENT') {
+    // SHOW_PARENT: antd TreeSelect的SHOW_PARENT策略逻辑：
+    // 当一个父节点的所有直接子节点都被选中时，只显示该父节点，其子节点将被隐藏。
+    // 这个逻辑会从下至上应用，如果子节点成组后其父节点又满足条件，会继续向上合并。
+    const resultKeySet = new Set(checkedKeySet);
+
+    // 从扁平数据中筛选出所有父节点
+    const parentNodes = flatTreeData.filter((node) => node.children && node.children.length > 0);
+
+    // 逆序遍历父节点，实现从下至上的检查，确保子节点先被处理
+    for (const parentNode of parentNodes.reverse()) {
+      // 确保 parentNode.children 存在
+      if (!parentNode.children) continue;
+
+      // 检查该父节点的所有直接子节点是否都在 resultKeySet 中
+      const allChildrenInSet = parentNode.children.every((child) => resultKeySet.has(child.id!));
+
+      if (allChildrenInSet) {
+        // 如果所有子节点都在，则从结果集中移除它们
+        parentNode.children.forEach((child) => {
+          resultKeySet.delete(child.id!);
+        });
+        // 并将父节点添加到结果集中
+        resultKeySet.add(parentNode.id!);
+      }
+    }
+    resultKeys = Array.from(resultKeySet);
+  } else {
+    // 默认返回原始checkedKeys
+    resultKeys = Array.from(checkedKeySet);
+  }
+
+  // 根据最终的keys返回对应的节点信息
+  return resultKeys.map((id) => nodeMap.get(id)).filter((node): node is UnsTreeNode => node !== undefined);
+};
