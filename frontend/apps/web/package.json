@@ -65,7 +65,8 @@
     "uuid": "catalog:util",
     "zustand": "catalog:util",
     "rc-virtual-list": "catalog:ui",
-    "blueimp-md5": "^2.19.0"
+    "blueimp-md5": "^2.19.0",
+    "@lezer/highlight": "1.2.1"
   },
   "devDependencies": {
     "@supos-os-edge/scripts": "workspace:^",

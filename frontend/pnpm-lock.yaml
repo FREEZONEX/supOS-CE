@@ -489,6 +489,9 @@ importers:
       '@ibm/plex-sans':
         specifier: ^1.1.0
         version: 1.1.0
+      '@lezer/highlight':
+        specifier: 1.2.1
+        version: 1.2.1
       '@module-federation/enhanced':
         specifier: catalog:build
         version: 0.20.0(@rspack/core@1.5.8(@swc/helpers@0.5.17))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)
