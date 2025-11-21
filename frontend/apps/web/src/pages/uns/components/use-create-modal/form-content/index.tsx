@@ -102,8 +102,8 @@ const FormContent: FC<FormContentProps> = ({
               ? []
               : [
                   { label: 'JSONB', value: 8 },
-                  { label: formatMessage('uns.aggregation'), value: 6 },
-                  { label: formatMessage('uns.reference'), value: 7 },
+                  // { label: formatMessage('uns.aggregation'), value: 6 },
+                  // { label: formatMessage('uns.reference'), value: 7 },
                 ]),
           ];
         case 2:
@@ -114,9 +114,9 @@ const FormContent: FC<FormContentProps> = ({
             ...(isFormTopic
               ? []
               : [
-                  { label: formatMessage('uns.calculation'), value: 3 },
-                  { label: formatMessage('uns.aggregation'), value: 6 },
-                  { label: formatMessage('uns.reference'), value: 7 },
+                  // { label: formatMessage('uns.calculation'), value: 3 },
+                  // { label: formatMessage('uns.aggregation'), value: 6 },
+                  // { label: formatMessage('uns.reference'), value: 7 },
                 ]),
           ];
       }
@@ -128,9 +128,9 @@ const FormContent: FC<FormContentProps> = ({
         ...(isFormTopic
           ? []
           : [
-              { label: formatMessage('uns.calculation'), value: 3 },
-              { label: formatMessage('uns.aggregation'), value: 6 },
-              { label: formatMessage('uns.reference'), value: 7 },
+              // { label: formatMessage('uns.calculation'), value: 3 },
+              // { label: formatMessage('uns.aggregation'), value: 6 },
+              // { label: formatMessage('uns.reference'), value: 7 },
             ]),
       ];
     }
