@@ -60,22 +60,9 @@ func getCreateTableSQL(isShareTable bool, tableName string, fields []*types.Fiel
 		for pk := range ids {
 			builder.Append("\"").Append(pk).Append("\",")
 		}
-
-		// 移除最后一个逗号并添加右括号
-		sqlStr := builder.String()
-		sqlStr = sqlStr[:len(sqlStr)-1] + ")"
-		builder.Reset()
-		builder.Append(sqlStr)
-		builder.Append(" ")
+		builder.SetLast(')').Append(" ")
 	}
-
-	// 移除最后一个逗号并添加右括号
+	builder.SetLast(')')
 	sqlStr := builder.String()
-	if len(sqlStr) > 0 && sqlStr[len(sqlStr)-1] == ',' {
-		sqlStr = sqlStr[:len(sqlStr)-1] + ")"
-	} else {
-		sqlStr += ")"
-	}
-
 	return sqlStr
 }

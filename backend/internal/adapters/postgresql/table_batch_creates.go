@@ -15,7 +15,7 @@ type sendBatcher interface {
 	SendBatch(context.Context, *pgx.Batch) pgx.BatchResults
 }
 
-func batchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.CreateTopicDto, tableInfoMap map[string]*TableInfo) []error {
+func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.CreateTopicDto, tableInfoMap map[string]*TableInfo) []error {
 	if len(topics) == 0 {
 		return nil
 	}

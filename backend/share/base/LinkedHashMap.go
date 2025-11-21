@@ -72,6 +72,13 @@ func (h *LinkedHashMap[K, V]) Range(visit func(K, V)) {
 		visit(p.next.key, p.next.value)
 	}
 }
+func (h *LinkedHashMap[K, V]) Values() []V {
+	vs := make([]V, 0, h.Size())
+	for p := h.head; p.next != nil; p = p.next {
+		vs = append(vs, p.next.value)
+	}
+	return vs
+}
 func (h *LinkedHashMap[K, V]) String() string {
 	sz := h.Size()
 	if sz == 0 {

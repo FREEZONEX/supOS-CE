@@ -1,23 +1,37 @@
 package base
 
 import (
+	"backend/share/base/buffer"
 	"strconv"
-	"strings"
 )
 
 type StringBuilder struct {
-	strings.Builder
+	bs buffer.ByteBuffer
 }
 
+func (s *StringBuilder) Grow(n int) *StringBuilder {
+	s.bs.Grow(n)
+	return s
+}
 func (s *StringBuilder) Append(str string) *StringBuilder {
-	s.WriteString(str)
+	_, _ = s.bs.WriteString(str)
 	return s
 }
 func (s *StringBuilder) Int(n int) *StringBuilder {
-	s.WriteString(strconv.Itoa(n))
+	_, _ = s.bs.WriteString(strconv.Itoa(n))
 	return s
 }
 func (s *StringBuilder) Long(n int64) *StringBuilder {
-	s.WriteString(strconv.FormatInt(n, 10))
+	_, _ = s.bs.WriteString(strconv.FormatInt(n, 10))
 	return s
+}
+func (s *StringBuilder) SetLast(d byte) *StringBuilder {
+	s.bs.PutLast(d)
+	return s
+}
+func (s *StringBuilder) String() string {
+	return s.bs.String()
+}
+func (s *StringBuilder) Reset() {
+	s.bs.Reset()
 }

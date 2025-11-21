@@ -48,14 +48,14 @@ func init() {
 			log:           log,
 			dbPool:        pool,
 			currentSchema: "public",
-			batchSize:     8000,
+			batchSize:     200,
 			maxRetries:    1,
 			urlProperties: ParseDbUrlProperties(pgUrl),
 		}
 	})
 }
 func (p *PgPersistentService) Persistent(unsData []serviceApi.UnsData) {
-	err := Persistence(p.dbPool, p.currentSchema, p.batchSize, unsData)
+	err := persistence(p.dbPool, p.currentSchema, p.batchSize, unsData)
 	if err != nil {
 		p.log.Error("persistence fail", err, len(unsData))
 	}
@@ -97,7 +97,7 @@ func OnCreate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrc
 			log.Error("ListTableInfos fail", er)
 			return er
 		}
-		Errors := batchCreateTables(dbPool, defaultSchema, creates, tableInfoMap)
+		Errors := BatchCreateTables(dbPool, defaultSchema, creates, tableInfoMap)
 		if len(Errors) > 0 {
 			log.Error("BatchCreateTables fail", Errors)
 			return Errors[0]
@@ -115,7 +115,7 @@ func OnUpdate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrc
 			log.Error("ListTableInfos fail", er)
 			return er
 		}
-		Errors := batchCreateTables(dbPool, defaultSchema, topicList, tableInfoMap)
+		Errors := BatchCreateTables(dbPool, defaultSchema, topicList, tableInfoMap)
 		if len(Errors) > 0 {
 			log.Error("BatchUpdate fail", Errors)
 			return Errors[0]

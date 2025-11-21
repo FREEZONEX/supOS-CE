@@ -52,7 +52,7 @@ func init() {
 const dsId = types.SrcJdbcTypeTimeScaleDB
 
 func (p *TsdbPersistentService) Persistent(unsData []serviceApi.UnsData) {
-	err := postgresql.Persistence(p.dbPool, p.currentSchema, p.batchSize, unsData)
+	err := persistence(p.dbPool, p.currentSchema, p.batchSize, unsData)
 	if err != nil {
 		p.log.Error("persistence fail", err, len(unsData))
 	}
