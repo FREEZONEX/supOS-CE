@@ -281,9 +281,11 @@ func checkTopicDto(errTipMap map[string]string,
 	} else if pathType == constants.PathTypeFile { // 当前是文件
 		dataType := d.DataType
 		if dataType == nil {
-			msg := I18nUtils.GetMessage("uns.file.dataType.empty")
-			errTipMap[batchIndex] = msg
-			return
+			if d.Id == 0 {
+				msg := I18nUtils.GetMessage("uns.file.dataType.empty")
+				errTipMap[batchIndex] = msg
+				return
+			}
 		} else if !constants.IsValidDataType(*dataType) {
 			msg := fmt.Sprint(I18nUtils.GetMessage("uns.file.dataType.invalid"), *dataType)
 			errTipMap[batchIndex] = msg
@@ -291,7 +293,7 @@ func checkTopicDto(errTipMap map[string]string,
 		}
 
 		fields := d.Fields
-		if len(fields) == 0 && *dataType == constants.MergeType {
+		if len(fields) == 0 && base.P2v(dataType) == constants.MergeType {
 			mergeMaxLen := 512 * 1024
 			mergeField := &types.FieldDefine{
 				Name:   "data_json",
@@ -875,18 +877,6 @@ func aliasToId(addFiles map[int64]*dao.UnsNamespace, aliasMap func(string) *dao.
 		}
 	}
 }
-
-type unsLevel struct {
-	uns      []*types.CreateTopicDto
-	levelMap map[string]int
-}
-
-func (x *unsLevel) Len() int { return len(x.uns) }
-func (x *unsLevel) Less(i, j int) bool {
-	a, b := x.levelMap[x.uns[i].Alias], x.levelMap[x.uns[j].Alias]
-	return a < b
-}
-func (x *unsLevel) Swap(i, j int) { x.uns[i], x.uns[j] = x.uns[j], x.uns[i] }
 
 func (u *UnsAddService) listUnsByAliasAndIds(ctx context.Context, alias []string, ids []int64, dbFiles map[int64]*dao.UnsNamespace) (aliasMap map[string]*dao.UnsNamespace, er error) {
 	aliasMap = make(map[string]*dao.UnsNamespace, len(alias)+len(ids))

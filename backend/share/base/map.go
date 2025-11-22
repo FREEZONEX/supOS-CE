@@ -9,6 +9,17 @@ func Map[E any, M any](arr []E, op func(e E) M) (rs []M) {
 	}
 	return rs
 }
+func MapFilter[K comparable, V any](m map[K]V, f func(V) bool) (rs map[K]V) {
+	rs = make(map[K]V, len(m))
+	if len(m) > 0 {
+		for k, v := range m {
+			if f(v) {
+				rs[k] = v
+			}
+		}
+	}
+	return rs
+}
 func MapKeys[K comparable, V any](m map[K]V) (rs []K) {
 	rs = make([]K, len(m))
 	if len(m) > 0 {

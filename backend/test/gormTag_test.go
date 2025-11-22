@@ -1,27 +1,47 @@
 package test
 
 import (
-	"fmt"
+	"crypto/md5"
+	"encoding/hex"
 	"reflect"
 	"strings"
 	"testing"
 )
 
 func TestGormColumn(t *testing.T) {
-	example := ExampleStruct{}
+	jsonStr := `{
+  "name" : "state-wait",
+  "parentId" : "",
+  "alias" : "stateWait2",
+  "dataType" : 2,
+  "save2db" : false,
+  "pathType" : 2,
+  "labelNames" : [ ],
+  "fields" : [ {
+    "name" : "value",
+    "type" : "FLOAT"
+  } ],
+  "parentDataType" : 1
+}`
+	t.Log(jsonStr)
+}
 
-	fmt.Println("=== 获取所有有效列名 ===")
-	columns := GetValidColumns(example)
-	for columnName, fieldName := range columns {
-		fmt.Printf("字段名: %s -> 列名: %s\n", fieldName, columnName)
+// MD5Digest16 生成16字符的MD5摘要（等效于Java的digestHex16）
+func MD5Digest16(input string) string {
+	// 创建MD5哈希对象
+	hasher := md5.New()
 
-		//fmt.Println("\n=== 根据字段名获取列名 ===")
-		//fmt.Printf("MountSource 列名: %s\n", GetColumnNameByField(example, "MountSource"))
-		//fmt.Printf("PathName 列名: %s\n", GetColumnNameByField(example, "PathName"))
-		//fmt.Printf("Labels 列名: %s\n", GetColumnNameByField(example, "Labels"))
-		//fmt.Printf("Name 列名: %s\n", GetColumnNameByField(example, "Name"))
-		//fmt.Printf("Age 列名: %s\n", GetColumnNameByField(example, "Age"))
-	}
+	// 写入输入字符串
+	hasher.Write([]byte(input))
+
+	// 计算MD5哈希值
+	hashBytes := hasher.Sum(nil)
+
+	// 转换为32字符的十六进制字符串
+	fullHash := hex.EncodeToString(hashBytes)
+
+	// 取前16字符作为结果
+	return fullHash[8:24]
 }
 
 // 定义示例结构体

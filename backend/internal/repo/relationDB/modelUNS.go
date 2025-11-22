@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -65,8 +66,14 @@ type UnsNamespace struct {
 	CountExistsSiblings int64  `gorm:"-" json:"countExistsSiblings"`
 }
 
+func (u *UnsNamespace) String() string {
+	if u.Id != 0 {
+		return strconv.FormatInt(u.Id, 10)
+	}
+	return u.Alias
+}
 func (u *UnsNamespace) GetTbFieldName() string {
-	if len(u.Fields) == 0 || u.TableName_ == nil {
+	if len(u.Fields) == 0 || base.P2v(u.TableName_) == "" {
 		return ""
 	}
 	for _, f := range u.Fields {
@@ -297,8 +304,8 @@ func (u *UnsNamespace) TableName() string {
 }
 
 func (u *UnsNamespace) GetTable() string {
-	if tb := u.TableName_; tb != nil {
-		return *tb
+	if tb := base.P2v(u.TableName_); tb != "" {
+		return tb
 	}
 	return u.Alias
 }

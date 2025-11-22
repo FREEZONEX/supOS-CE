@@ -3558,7 +3558,6 @@
                     "required": [
                       "id",
                       "labelName",
-                      "createAt",
                       "topic",
                       "subscribeEnable",
                       "subscribeFrequency",
@@ -3566,9 +3565,6 @@
                       "subscribeAt"
                     ],
                     "properties": {
-                      "createAt": {
-                        "type": "integer"
-                      },
                       "createTime": {
                         "type": "integer"
                       },
@@ -5204,6 +5200,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -5302,6 +5301,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -5572,6 +5574,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -5880,6 +5885,9 @@
                       "-"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "accessLevel": {
                         "description": "Access level",
                         "type": "string"
@@ -5935,6 +5943,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -6035,6 +6046,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -6429,6 +6443,9 @@
                           "type"
                         ],
                         "properties": {
+                          "-": {
+                            "type": "integer"
+                          },
                           "decimal": {
                             "type": "integer"
                           },
@@ -6478,7 +6495,6 @@
                         "required": [
                           "id",
                           "labelName",
-                          "createAt",
                           "topic",
                           "subscribeEnable",
                           "subscribeFrequency",
@@ -6486,9 +6502,6 @@
                           "subscribeAt"
                         ],
                         "properties": {
-                          "createAt": {
-                            "type": "integer"
-                          },
                           "createTime": {
                             "type": "integer"
                           },
@@ -6705,6 +6718,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -6851,6 +6867,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -6997,7 +7016,6 @@
                   "required": [
                     "id",
                     "labelName",
-                    "createAt",
                     "topic",
                     "subscribeEnable",
                     "subscribeFrequency",
@@ -7005,9 +7023,6 @@
                     "subscribeAt"
                   ],
                   "properties": {
-                    "createAt": {
-                      "type": "integer"
-                    },
                     "createTime": {
                       "type": "integer"
                     },
@@ -7139,7 +7154,6 @@
                   "required": [
                     "id",
                     "labelName",
-                    "createAt",
                     "topic",
                     "subscribeEnable",
                     "subscribeFrequency",
@@ -7147,9 +7161,6 @@
                     "subscribeAt"
                   ],
                   "properties": {
-                    "createAt": {
-                      "type": "integer"
-                    },
                     "createTime": {
                       "type": "integer"
                     },
@@ -7439,7 +7450,6 @@
                     "required": [
                       "id",
                       "labelName",
-                      "createAt",
                       "topic",
                       "subscribeEnable",
                       "subscribeFrequency",
@@ -7447,9 +7457,6 @@
                       "subscribeAt"
                     ],
                     "properties": {
-                      "createAt": {
-                        "type": "integer"
-                      },
                       "createTime": {
                         "type": "integer"
                       },
@@ -7622,6 +7629,9 @@
                           "type"
                         ],
                         "properties": {
+                          "-": {
+                            "type": "integer"
+                          },
                           "decimal": {
                             "type": "integer"
                           },
@@ -7764,6 +7774,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -7875,6 +7888,9 @@
                 "-"
               ],
               "properties": {
+                "-": {
+                  "type": "integer"
+                },
                 "accessLevel": {
                   "description": "Access level",
                   "type": "string"
@@ -7930,6 +7946,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -8030,6 +8049,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -8226,6 +8248,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -8503,6 +8528,9 @@
                     "-"
                   ],
                   "properties": {
+                    "-": {
+                      "type": "integer"
+                    },
                     "accessLevel": {
                       "description": "Access level",
                       "type": "string"
@@ -8558,6 +8586,9 @@
                           "type"
                         ],
                         "properties": {
+                          "-": {
+                            "type": "integer"
+                          },
                           "decimal": {
                             "type": "integer"
                           },
@@ -8658,6 +8689,9 @@
                           "type"
                         ],
                         "properties": {
+                          "-": {
+                            "type": "integer"
+                          },
                           "decimal": {
                             "type": "integer"
                           },
@@ -9062,6 +9096,9 @@
                             "type"
                           ],
                           "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
                             "decimal": {
                               "type": "integer"
                             },
@@ -9268,6 +9305,9 @@
                           "type"
                         ],
                         "properties": {
+                          "-": {
+                            "type": "integer"
+                          },
                           "decimal": {
                             "type": "integer"
                           },
@@ -9424,6 +9464,9 @@
                       "type"
                     ],
                     "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
                       "decimal": {
                         "type": "integer"
                       },
@@ -9619,6 +9662,9 @@
                           "type"
                         ],
                         "properties": {
+                          "-": {
+                            "type": "integer"
+                          },
                           "decimal": {
                             "type": "integer"
                           },
@@ -11399,7 +11445,7 @@
       }
     }
   },
-  "x-date": "2025-11-20 09:52:57",
+  "x-date": "2025-11-22 11:10:27",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

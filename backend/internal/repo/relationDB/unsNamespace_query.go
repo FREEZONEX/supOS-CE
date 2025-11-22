@@ -379,7 +379,7 @@ func (p UnsNamespaceRepo) ListAllEmptyFolder(db *gorm.DB) (results []*UnsNamespa
 
 func (p UnsNamespaceRepo) ListLabeledUnsByKeyword(db *gorm.DB, keyword string) (results []*UnsNamespace, err error) {
 	query := db.Table("uns_namespace n").
-		Joins("INNER JOIN uns_label_ref ulr ON n.id = ulr.uns_id").
+		Where("id in(select distinct uns_id from uns_label_ref ulr )").
 		Where("n.path_type = ?", 2).
 		Where("n.status =1") // 软删除过滤
 

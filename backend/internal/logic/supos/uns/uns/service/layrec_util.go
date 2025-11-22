@@ -10,11 +10,13 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type saveOrUpdate struct {
-	insertList []*dao.UnsNamespace
-	updateList []*dao.UnsNamespace
+	insertList map[int64]*dao.UnsNamespace
+	updateList map[int64]*dao.UnsNamespace
 }
 
 func (su *saveOrUpdate) String() string {
@@ -69,33 +71,30 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 			return base.PutIfAbsent(nodesToUpdate, po.Id, po)
 		}
 	}
-	reverseGraph := base.BuildReverseGraph(base.MapValues(allNodes), func(t *dao.UnsNamespace) int64 {
+	list := base.MapValues(allNodes)
+	base.SorByDependency(list, func(t *dao.UnsNamespace) int64 {
 		return t.Id
 	}, func(t *dao.UnsNamespace) int64 {
 		return base.P2vWithDefault(t.ParentId, -1)
 	})
-	levels := base.MapKeys(reverseGraph)
-	sort.Sort(base.LongSlice(levels))
+	logx.Debug("setLayRecAndPath: list=", list)
 	// 处理所有节点
-	for _, level := range levels {
-		ids := reverseGraph[level]
-		for _, id := range ids {
-			node := allNodes[id]
-			proc := addFiles[id] != nil
-			if !proc {
-				if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentId, dbPo.ParentId)) {
-					proc = true
-				}
-			}
-			if proc {
-				// 生成当前节点的层级路径
-				generatePath(node, allNodes)
-				// 收集当前节点及其所有子节点用于更新
-				collectAffectedNodes(node, childrenMap, allNodes, recorder)
+	for _, node := range list {
+		id := node.Id
+		proc := addFiles[id] != nil
+		if !proc {
+			if dbPo := dbFiles[id]; dbPo != nil && (node.LayRec == "" || !equalsInt64(node.ParentId, dbPo.ParentId)) {
+				proc = true
 			}
 		}
+		if proc {
+			// 生成当前节点的层级路径
+			generatePath(node, allNodes)
+			// 收集当前节点及其所有子节点用于更新
+			collectAffectedNodes(node, childrenMap, allNodes, recorder)
+		}
 	}
-	return &saveOrUpdate{insertList: base.MapValues(nodesToInsert), updateList: base.MapValues(nodesToUpdate)}
+	return &saveOrUpdate{insertList: nodesToInsert, updateList: nodesToUpdate}
 }
 
 func equalsInt64(a, b *int64) bool {

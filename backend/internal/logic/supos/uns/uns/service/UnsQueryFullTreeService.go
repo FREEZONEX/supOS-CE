@@ -224,7 +224,7 @@ func buildTreeStructure(nodeMap map[string]*types.TopicTreeResult, list []*dao.U
 		// 当前节点就是根节点
 		if parentPath == "" {
 			ensureChildMap(childrenMap, parentPath)
-			if !childrenMap[parentPath][path] {
+			if _, has := childrenMap[parentPath][path]; !has {
 				childrenMap[parentPath][path] = true
 				rootNodes[path] = currentNode
 			}
@@ -232,17 +232,24 @@ func buildTreeStructure(nodeMap map[string]*types.TopicTreeResult, list []*dao.U
 		}
 
 		// 构建从当前节点到根节点的路径
-		buildPathToRoot(nodeMap, childrenMap, currentNode, path)
+		addRoot, tempParentNode := buildPathToRoot(nodeMap, childrenMap, currentNode, path)
 
-		// 添加根节点
-		addRootNode(nodeMap, childrenMap, rootNodes, path)
+		if addRoot && tempParentNode != nil {
+			ensureChildMap(childrenMap, parentPath)
+			childMap := childrenMap[parentPath]
+			if _, has := childMap[tempParentNode.Path]; !has {
+				rootNodes[tempParentNode.Path] = tempParentNode
+			}
+		}
 	}
 
 	// set countChildren
 	for _, node := range rootNodes {
 		node.GetCountChildren()
 	}
-	return convertMapToSlice(rootNodes)
+	result := base.MapValues(rootNodes)
+	types.SortUnsList(result)
+	return result
 }
 
 // ensureChildMap 确保子节点映射存在
@@ -253,57 +260,31 @@ func ensureChildMap(childrenMap map[string]map[string]bool, key string) {
 }
 
 // buildPathToRoot 构建到根节点的路径
-func buildPathToRoot(nodeMap map[string]*types.TopicTreeResult, childrenMap map[string]map[string]bool, currentNode *types.TopicTreeResult, path string) {
+func buildPathToRoot(nodeMap map[string]*types.TopicTreeResult, childrenMap map[string]map[string]bool, currentNode *types.TopicTreeResult, path string) (addRoot bool, tempParentNode *types.TopicTreeResult) {
 	tempCurrentNode := currentNode
-	currentParentPath := PathUtil.SubParentPath(path)
-
-	for currentParentPath != "" {
-		tempParentNode, exists := nodeMap[currentParentPath]
+	parentPath := PathUtil.SubParentPath(path)
+	addRoot = true
+	for parentPath != "" {
+		var exists bool
+		tempParentNode, exists = nodeMap[parentPath]
 		if !exists {
-			name := PathUtil.GetName(currentParentPath)
-			tempParentNode = &types.TopicTreeResult{Name: name, Path: currentParentPath, PathType: 0}
-			nodeMap[currentParentPath] = tempParentNode
+			name := PathUtil.GetName(parentPath)
+			tempParentNode = &types.TopicTreeResult{Name: name, Path: parentPath, PathType: 0}
+			nodeMap[parentPath] = tempParentNode
 		}
 
-		ensureChildMap(childrenMap, currentParentPath)
-
-		if !childrenMap[currentParentPath][tempCurrentNode.Path] {
-			childrenMap[currentParentPath][tempCurrentNode.Path] = true
+		ensureChildMap(childrenMap, parentPath)
+		childMap := childrenMap[parentPath]
+		if _, has := childMap[tempCurrentNode.Path]; !has {
+			childMap[tempCurrentNode.Path] = true
 			tempParentNode.AddChild(tempCurrentNode)
 		} else {
+			addRoot = false
 			break
 		}
 
-		currentParentPath = PathUtil.SubParentPath(currentParentPath)
+		parentPath = PathUtil.SubParentPath(parentPath)
 		tempCurrentNode = tempParentNode
 	}
-}
-
-// addRootNode 添加根节点
-func addRootNode(nodeMap map[string]*types.TopicTreeResult, childrenMap map[string]map[string]bool, rootNodes map[string]*types.TopicTreeResult, path string) {
-	currentPath := path
-	for {
-		parentPath := PathUtil.SubParentPath(currentPath)
-		if parentPath == "" {
-			if rootNode, exists := nodeMap[currentPath]; exists {
-				ensureChildMap(childrenMap, "")
-				if !childrenMap[""][currentPath] {
-					childrenMap[""][currentPath] = true
-					rootNodes[currentPath] = rootNode
-				}
-			}
-			break
-		}
-		currentPath = parentPath
-	}
-}
-
-// convertMapToSlice 将 map 转换为切片
-func convertMapToSlice(nodes map[string]*types.TopicTreeResult) []*types.TopicTreeResult {
-	result := make([]*types.TopicTreeResult, 0, len(nodes))
-	for _, node := range nodes {
-		result = append(result, node)
-	}
-	types.SortUnsList(result)
-	return result
+	return addRoot, tempParentNode
 }

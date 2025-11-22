@@ -33,7 +33,7 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 	}
 	var ids = make([]int64, 0, 2)
 	ids = append(ids, req.SourceId)
-	if targetId := req.TargetId; targetId > 0 {
+	if targetId := req.TargetId; targetId > 0 && targetId != req.SourceId {
 		ids = append(ids, targetId)
 	}
 	var idMap map[int64]*dao.UnsNamespace

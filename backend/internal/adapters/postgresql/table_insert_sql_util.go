@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-	"unicode"
 )
 
 func getInsertStatement(uns *types.CreateTopicDto, data []map[string]string) (sql string, params []interface{}) {
@@ -34,10 +33,10 @@ func getInsertStatement(uns *types.CreateTopicDto, data []map[string]string) (sq
 			if v, has := record[fd.Name]; has {
 				i++
 				sw.Append(fmt.Sprintf("$%d", i))
-				if fd.Type == types.FieldTypeDatetime && len(v) > 4 && unicode.IsDigit(rune(v[4])) {
-					mill, _ := strconv.ParseInt(v, 10, 64)
+				if fd.Type == types.FieldTypeDatetime {
+					mill, _ := strconv.ParseFloat(v, 64)
 					if mill > 0 {
-						utcTime := time.UnixMilli(mill).UTC()
+						utcTime := time.UnixMilli(int64(mill)).UTC()
 						v = utcTime.Format(time.RFC3339)
 					}
 				}

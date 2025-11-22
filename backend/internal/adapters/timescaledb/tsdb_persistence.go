@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -174,10 +173,10 @@ func copyDataToTempTable(conn *pgxpool.Conn, batchSize int, tableInfo *tableProc
 					row[k] = f.GetType().DefaultValue()
 					continue
 				}
-				if f.Type == types.FieldTypeDatetime && len(v) > 4 && unicode.IsDigit(rune(v[4])) {
-					mill, _ := strconv.ParseInt(v, 10, 64)
+				if f.Type == types.FieldTypeDatetime {
+					mill, _ := strconv.ParseFloat(v, 64)
 					if mill > 0 {
-						utcTime := time.UnixMilli(mill).UTC()
+						utcTime := time.UnixMilli(int64(mill)).UTC()
 						v = utcTime.Format("2006-01-02 15:04:05.000") + "+00"
 					}
 				}

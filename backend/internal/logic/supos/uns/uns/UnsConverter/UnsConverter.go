@@ -87,8 +87,13 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 		withFlags = *p.WithFlags
 	}
 	unsDto.Id = p.Id
-	if tbn := p.TableName_; tbn != nil {
+	unsDto.Alias = p.Alias
+	unsDto.DataType = p.DataType
+	unsDto.ParentDataType = p.ParentDataType
+	if tbn := p.TableName_; tbn != nil && *tbn != "" {
 		unsDto.TableName = *tbn
+	} else {
+		unsDto.TableName = ""
 	}
 	unsDto.WithFlags = p.WithFlags
 	unsDto.AddFlow = boPt(constants.WithFlow(withFlags))
@@ -289,7 +294,7 @@ func CopyProperties(from any, to any) error {
 	return copier.CopyWithOption(to, from, apiConvertOptions)
 }
 func LabelPo2Vo(po *dao.UnsLabel) (vo *types.LabelVo) {
-	vo = &types.LabelVo{ID: po.ID, LabelName: po.LabelName, CreateAt: po.CreateAt.UnixMilli()}
+	vo = &types.LabelVo{ID: po.ID, LabelName: po.LabelName, CreateTime: po.CreateAt.UnixMilli()}
 	if po.SubscribeAt != nil && !po.SubscribeAt.IsZero() {
 		vo.SubscribeAt = po.SubscribeAt.UnixMilli()
 	}

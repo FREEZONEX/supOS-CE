@@ -40,7 +40,8 @@ func (l *UnsTemplateService) UpdateFieldsAndDesc(ctx context.Context, req *types
 		return
 	}
 	unsDto := &types.CreateTopicDto{
-		PathType: constants.PathTypeTemplate,
+		PathType: uns.PathType,
+		Id:       uns.Id,
 		Alias:    req.Alias,
 		Fields:   req.Fields,
 	}

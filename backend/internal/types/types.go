@@ -611,7 +611,6 @@ type LabelPageReq struct {
 type LabelVo struct {
 	ID                 int64  `json:"id,string"`
 	LabelName          string `json:"labelName,omitempty"`
-	CreateAt           int64  `json:"createAt,omitzero"`
 	Topic              string `json:"topic,omitempty"`
 	SubscribeEnable    *bool  `json:"subscribeEnable,omitempty"`
 	SubscribeFrequency string `json:"subscribeFrequency,omitempty"`

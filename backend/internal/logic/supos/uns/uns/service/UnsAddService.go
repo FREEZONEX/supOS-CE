@@ -17,7 +17,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -85,13 +84,11 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	aliasMap := make(map[string]*dao.UnsNamespace)
 	folders := base.MapValues(paramFolders)
 	if len(folders) > 1 {
-		reverseGraph := base.BuildReverseGraph(folders, func(t *types.CreateTopicDto) string {
+		base.SorByDependency(folders, func(t *types.CreateTopicDto) string {
 			return t.Alias
 		}, func(t *types.CreateTopicDto) string {
 			return base.P2v(t.ParentAlias)
 		})
-		levelMap := base.CalculateLevels(reverseGraph)
-		sort.Sort(&unsLevel{uns: folders, levelMap: levelMap})
 	}
 	createTime := time.Now()
 	allUns := func(alias string) *dao.UnsNamespace {
@@ -107,11 +104,6 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	u.itrFiles(ctx, folders, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
 	u.itrFiles(ctx, base.MapValues(pathMap[constants.PathTypeFile]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
 
-	for k, dbPo := range dbFiles {
-		if base.P2v(dbPo.Status) == LOGIC_REMOVED {
-			delete(dbFiles, k)
-		}
-	}
 	//TODO 计算，引用，聚合等类型的 校验和处理
 	aliasToId(addFiles, allUns, pathMap)
 	// 找出 parentAlias 或 name 有修改的最高层目录，后面需要获取它的整个子树，为更新 layRec 做准备
@@ -120,11 +112,13 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		errTipMap["0"] = err.Error()
 		return errTipMap
 	}
-	rs := setLayRecAndPath(createTime, addFiles, dbFiles)
+	validDBFiles := base.MapFilter(dbFiles, func(dbPo *dao.UnsNamespace) bool {
+		return base.P2v(dbPo.Status) == OK
+	})
+	rs := setLayRecAndPath(createTime, addFiles, validDBFiles)
 	createList := make([]*types.CreateTopicDto, 0, len(addFiles))
 	dtoUpdateList := make([]*types.CreateTopicDto, 0, len(addFiles))
 
-	u.log.Infof("addFiles:%d,db:%d, createList.size=%d, updateList.size=%d\n", len(addFiles), len(dbFiles), len(rs.insertList), len(rs.updateList))
 	for _, file := range addFiles {
 		file.Status = &OK
 		createTopicDto := UnsConverter.Po2Dto(file)
@@ -161,6 +155,9 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 				if file.RefUns == nil {
 					file.RefUns = make(dao.RefUns)
 				}
+				id := file.Id
+				rs.updateList[id] = file
+				delete(rs.insertList, id)
 			}
 			file.CreateAt = createTime
 			file.UpdateAt = createTime
@@ -190,10 +187,11 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			}
 		}
 	}*/
+	u.log.Infof("addFiles:%d,db:%d, createList.size=%d, updateList.size=%d\n", len(addFiles), len(dbFiles), len(rs.insertList), len(rs.updateList))
 	var unsLabels = base.MapMapValues(unsPoLabels, func(upl *bo.UnsPoLabels) bo.UnsLabels {
 		return upl
 	})
-	err = u.saveBatchAndSendEvent(ctx, createTime, &args, rs.insertList, rs.updateList,
+	err = u.saveBatchAndSendEvent(ctx, createTime, &args, base.MapValues(rs.insertList), base.MapValues(rs.updateList),
 		createList, dtoUpdateList, deleteFiles, unsLabels)
 	if err != nil {
 		errTipMap["0"] = err.Error()
@@ -317,17 +315,13 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 	}
 	unsList := make([]*types.CreateTopicDto, 0, 2)
 	// 是文件夹 并且需要创建模板
-	if topicDto.PathType == constants.PathTypeDir && topicDto.CreateTemplate != nil && *topicDto.CreateTemplate {
-		var templateAlias = ""
-		if topicDto.Alias == "" {
-			templateAlias = PathUtil.GenerateAlias(topicDto.Name, constants.PathTypeTemplate)
-		} else {
-			templateAlias = topicDto.Alias + "_d1"
-		}
+	if topicDto.PathType == constants.PathTypeDir && base.P2v(topicDto.CreateTemplate) {
+		var templateAlias = "T" + PathUtil.GenerateAliasWithRandom(topicDto.Name)
 		templateVo := &types.CreateTopicDto{
-			Alias:  templateAlias,
-			Name:   topicDto.Name,
-			Fields: topicDto.Fields,
+			PathType: constants.PathTypeTemplate,
+			Alias:    templateAlias,
+			Name:     topicDto.Name,
+			Fields:   topicDto.Fields,
 		}
 		unsList = append(unsList, templateVo)
 		topicDto.ModelAlias = &templateVo.Alias
