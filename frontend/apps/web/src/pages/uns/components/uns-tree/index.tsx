@@ -609,8 +609,8 @@ const TopTreeCom = ({
       setLoading(true);
       const targetId = (target?.pathType === 0 ? target?.id : target?.parentId) || '';
       pasteUns({
-        sourceId: source?.id,
-        targetId,
+        sourceId: source?.id || undefined,
+        targetId: targetId || undefined,
       })
         .then(({ data, msg, code }) => {
           const { parentId, id } = data;

@@ -125,7 +125,7 @@ const FormStep: FC<FormStepProps> = ({
           ? {
               name,
               displayName,
-              parentId: sourceId,
+              parentId: sourceId || undefined,
               alias,
               description,
               fields,
@@ -135,7 +135,7 @@ const FormStep: FC<FormStepProps> = ({
           : {
               name,
               displayName,
-              parentId: sourceId,
+              parentId: sourceId || undefined,
               alias,
               dataType,
               description,
@@ -354,8 +354,8 @@ const FormStep: FC<FormStepProps> = ({
         }
         if (pasteInfo) {
           pasteUns({
-            sourceId: pasteInfo?.sourceId,
-            targetId: data?.parentId,
+            sourceId: pasteInfo?.sourceId || undefined,
+            targetId: data?.parentId || undefined,
             newF: data,
           })
             .then(({ msg, code, data }) => {
