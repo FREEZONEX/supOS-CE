@@ -34,6 +34,7 @@ import { useBaseStore } from '@/stores/base';
 // import Subscribe from '@/pages/uns/components/subscribe';
 import EditButton from '@/pages/uns/components/EditButton.tsx';
 import screenfull from 'screenfull';
+import { CustomAxiosConfigEnum } from '@/utils';
 
 const { Title } = Typography;
 
@@ -209,7 +210,7 @@ const Module: FC<FileDetailProps> = (props) => {
             }
           }
           setInstanceInfo(data);
-          return getDashboardByUns(data?.alias).then((data) => {
+          return getDashboardByUns(data?.alias, { [CustomAxiosConfigEnum.NoMessage]: true }).then((data) => {
             setDashboardInfo(data || { type: 0 });
             return data;
           });

@@ -22,7 +22,8 @@ export const getDashboardList = async (params?: Record<string, unknown>) =>
   }); // 获取dashboard
 export const addDashboard = async (data: any) => api.post('/dashboard', data); // 新增dashboard
 export const editDashboard = async (data: any) => api.put('/dashboard', data); // 编辑dashboard
-export const getDashboardByUns = async (unsAlias: string) => api.get(`/dashboard/getByUns?unsAlias=${unsAlias}`); // 获取dashboard信息
+export const getDashboardByUns = async (unsAlias: string, config?: any) =>
+  api.get(`/dashboard/getByUns?unsAlias=${unsAlias}`, config); // 获取dashboard信息
 export const bindDashboardForUns = async (data: any) => api.post(`/dashboard/bindUns`, data); // 获取dashboard信息
 // 置顶
 export const markDashboard = async (id: string) => api.post('/dashboard/mark', { id });
