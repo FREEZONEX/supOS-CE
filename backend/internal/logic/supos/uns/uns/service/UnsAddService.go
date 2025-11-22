@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -54,6 +55,11 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	if u.sysConfig.EnableAutoCategorization {
 		args.Topics = u.appendCategoryFolders(ctx, args.Topics, errTipMap)
 	}
+	for i, topic := range args.Topics {
+		if topic.Index == 0 {
+			topic.Index = i
+		}
+	}
 	topicDtos := args.Topics
 	pathMap := initParamsUns(topicDtos, errTipMap)
 	if len(pathMap) == 0 {
@@ -84,7 +90,9 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	aliasMap := make(map[string]*dao.UnsNamespace)
 	folders := base.MapValues(paramFolders)
 	if len(folders) > 1 {
-		base.SorByDependency(folders, func(t *types.CreateTopicDto) string {
+		base.SorByDependency(folders, func(a, b *types.CreateTopicDto) bool {
+			return a.Index < b.Index
+		}, func(t *types.CreateTopicDto) string {
 			return t.Alias
 		}, func(t *types.CreateTopicDto) string {
 			return base.P2v(t.ParentAlias)
@@ -102,7 +110,9 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	var deleteFiles []*dao.UnsNamespace
 	u.itrFiles(ctx, base.MapValues(pathMap[constants.PathTypeTemplate]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
 	u.itrFiles(ctx, folders, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
-	u.itrFiles(ctx, base.MapValues(pathMap[constants.PathTypeFile]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+	files := base.MapValues(pathMap[constants.PathTypeFile])
+	sort.Sort(indexedFiles(files))
+	u.itrFiles(ctx, files, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
 
 	//TODO 计算，引用，聚合等类型的 校验和处理
 	aliasToId(addFiles, allUns, pathMap)
@@ -198,6 +208,12 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	return errTipMap
 }
+
+type indexedFiles []*types.CreateTopicDto
+
+func (x indexedFiles) Len() int           { return len(x) }
+func (x indexedFiles) Less(i, j int) bool { return x[i].Index < x[j].Index }
+func (x indexedFiles) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 func (u *UnsAddService) itrFiles(
 	ctx context.Context,

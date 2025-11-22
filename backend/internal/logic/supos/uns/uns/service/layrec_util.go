@@ -72,7 +72,9 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 		}
 	}
 	list := base.MapValues(allNodes)
-	base.SorByDependency(list, func(t *dao.UnsNamespace) int64 {
+	base.SorByDependency(list, func(a, b *dao.UnsNamespace) bool {
+		return a.Id < b.Id
+	}, func(t *dao.UnsNamespace) int64 {
 		return t.Id
 	}, func(t *dao.UnsNamespace) int64 {
 		return base.P2vWithDefault(t.ParentId, -1)
@@ -177,7 +179,7 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 			if dbPo != nil && dbPo.Name == node.Name {
 				node.PathName = PathUtil.GetName(dbPo.Path)
 			}
-			if base.MapContainsKey(addFiles, node.Id) {
+			if node.LayRec == "" && base.MapContainsKey(addFiles, node.Id) {
 				xp := strings.LastIndex(name, "-")
 				if xp > 0 && xp < len(name)-1 && unicode.IsDigit(rune(name[xp+1])) {
 					name = name[:xp+1] + "0" + name[xp+1:]

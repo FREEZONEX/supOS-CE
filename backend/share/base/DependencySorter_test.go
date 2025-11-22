@@ -23,8 +23,12 @@ func (n *Node) String() string {
 	return strconv.Itoa(n.id)
 }
 func TestBuildReverseGraph(t *testing.T) {
-	list := []*Node{nn(3, 2), nn(4, 2), nn(2, 1)}
-	SorByDependency(list, func(n *Node) int {
+	list := []*Node{nn(50, 40), nn(43, 2), nn(31, 2), nn(30, 2), nn(40, 2), nn(2, 1)}
+	SorByDependency(list, func(n *Node, n2 *Node) bool {
+		xiao := n.id < n2.id
+		t.Logf(" %d < %d ? %v\n", n.id, n2.id, xiao)
+		return xiao
+	}, func(n *Node) int {
 		return n.id
 	}, func(n *Node) int {
 		return n.pid

@@ -844,6 +844,7 @@ func (u *UnsAddService) tryAddLayRecOrPathChangedChildren(ctx context.Context,
 						sameNameSiblings := sib.names[cm.Name]
 						if len(sameNameSiblings) > 0 {
 							for _, uns := range sameNameSiblings {
+								uns.LayRec = ""
 								uns.CountExistsSiblings = cm.CountExistsSiblings
 							}
 						}
