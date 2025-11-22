@@ -182,8 +182,9 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 				if xp > 0 && xp < len(name)-1 && unicode.IsDigit(rune(name[xp+1])) {
 					name = name[:xp+1] + "0" + name[xp+1:]
 				}
-				if ces := node.CountExistsSiblings; ces > 0 {
-					node.PathName = name + "-" + strconv.FormatInt(ces+int64(i), 10)
+				index := int64(i) + node.CountExistsSiblings
+				if index > 0 {
+					node.PathName = name + "-" + strconv.FormatInt(index, 10)
 				} else {
 					node.PathName = name
 				}
