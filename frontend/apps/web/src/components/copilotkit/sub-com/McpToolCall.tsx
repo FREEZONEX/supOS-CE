@@ -9,7 +9,6 @@ interface ToolCallProps {
 }
 
 export default function MCPToolCall({ status, name = '', args, result }: ToolCallProps) {
-  console.log(args, result, name);
   const [isOpen, setIsOpen] = useState(false);
 
   // Format content for display

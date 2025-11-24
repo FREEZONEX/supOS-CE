@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import {
   CopilotRuntime,
-  OpenAIAdapter,
   LangChainAdapter,
   copilotRuntimeNodeHttpEndpoint,
   // langGraphPlatformEndpoint,
@@ -9,7 +8,6 @@ import {
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
 import { ChatAnthropic } from '@langchain/anthropic';
-import OpenAI from 'openai';
 import { config } from '@/config';
 import { mcpManager } from '@/utils';
 
@@ -28,9 +26,12 @@ const anthropicModel = new ChatAnthropic({
   apiKey: config.anthropicAiKey,
 });
 
-const alibabaTongyiModel: any = new OpenAI({
+const alibabaTongyiModel: any = new ChatOpenAI({
   apiKey: config.tongyiAiKey,
-  baseURL: config.tongyiBaseurl,
+  model: config.tongyiModal,
+  configuration: {
+    baseURL: config.tongyiBaseurl,
+  },
 });
 
 const serviceAdapterByllama = new LangChainAdapter({
@@ -51,10 +52,10 @@ const serviceAdapterByAnthropic = new LangChainAdapter({
   },
 });
 
-const serviceAdapterByTongyi = new OpenAIAdapter({
-  openai: alibabaTongyiModel,
-  model: config.tongyiModal,
-  keepSystemRole: true,
+const serviceAdapterByTongyi = new LangChainAdapter({
+  chainFn: async ({ messages, tools }) => {
+    return alibabaTongyiModel.bindTools(tools).stream(messages);
+  },
 });
 
 const llmType: any = {
@@ -64,9 +65,29 @@ const llmType: any = {
   tongyi: serviceAdapterByTongyi,
 };
 
-// MCP客户端缓存，避免重复创建
-// const mcpClientCache: MCPClient | null = null;
-// const mcpEndpointCache: string | null = null;
+let globalCopilotRuntime: CopilotRuntime | null = null;
+// 存储老的mcpservers记录
+let oldMcpServers: any = [];
+/**
+ * 创建或更新CopilotRuntime实例
+ */
+function createOrUpdateCopilotRuntime(): CopilotRuntime {
+  const currentMcpServers = mcpManager?.getMCPClientCache()?.map((m) => ({ endpoint: m.endpoint })) || [];
+  if (!globalCopilotRuntime || JSON.stringify(currentMcpServers) !== JSON.stringify(oldMcpServers)) {
+    oldMcpServers = currentMcpServers;
+    globalCopilotRuntime = new CopilotRuntime(
+      currentMcpServers?.length > 0
+        ? {
+            mcpServers: currentMcpServers,
+            createMCPClient: async (config) => {
+              return await mcpManager.getOrCreateMCPClient(config);
+            },
+          }
+        : {}
+    );
+  }
+  return globalCopilotRuntime;
+}
 
 export const copilotkitHandler = (req: Request, res: Response, next: NextFunction) => {
   (async () => {
@@ -85,14 +106,9 @@ export const copilotkitHandler = (req: Request, res: Response, next: NextFunctio
     //     }),
     //   ],
     // });
-    const runtime = new CopilotRuntime({
-      createMCPClient: async (config) => {
-        return await mcpManager.getOrCreateMCPClient(config);
-      },
-    });
     const handler = copilotRuntimeNodeHttpEndpoint({
       endpoint: '/copilotkit',
-      runtime,
+      runtime: createOrUpdateCopilotRuntime(),
       serviceAdapter: llmType?.[config.llmType],
     });
     return handler(req, res);

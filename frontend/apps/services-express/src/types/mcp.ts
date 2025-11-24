@@ -22,3 +22,22 @@ export interface TransportConfig {
     env: Record<string, string>;
   };
 }
+
+export interface StdioConfig {
+  command: string;
+  args: string[];
+  env?: Record<string, string>[];
+}
+
+export interface HttpConfig {
+  baseUrl?: string;
+  url?: string;
+}
+
+export type TTransportConfig = StdioConfig | HttpConfig;
+
+export interface McpServerConfig {
+  name: string;
+  transportType: TransportType;
+  config: TTransportConfig;
+}

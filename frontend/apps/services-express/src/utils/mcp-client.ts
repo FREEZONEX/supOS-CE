@@ -22,8 +22,7 @@ export class MCPClient implements MCPClientInterface {
   private isConnected = false;
   private headers?: Record<string, string>;
   private stdioConfig?: any;
-
-  // Cache for tools to avoid repeated fetches
+  // 工具缓存，避免重复获取
   private toolsCache: Record<string, MCPTool> | null = null;
 
   constructor(options: McpClientOptions) {
@@ -32,19 +31,19 @@ export class MCPClient implements MCPClientInterface {
     this.headers = options.headers || {};
     this.stdioConfig = options.stdioConfig || {};
     this.clientName = options.clientName || 'cpk-mcp-client';
-    this.onMessage = options.onMessage || ((message) => console.log('Message received:', message));
-    this.onError = options.onError || ((error) => console.error('Error:', error));
-    this.onOpen = options.onOpen || (() => console.log('Connection opened'));
-    this.onClose = options.onClose || (() => console.log('Connection closed'));
+    this.onMessage = options.onMessage || ((message) => console.log('收到消息:', message));
+    this.onError = options.onError || ((error) => console.error('错误:', error));
+    this.onOpen = options.onOpen || (() => console.log('连接已打开'));
+    this.onClose = options.onClose || (() => console.log('连接已关闭'));
     this.transport = this.createTransport(this.transportType);
 
-    // Initialize the client
+    // 初始化客户端
     this.client = new Client({
       name: this.clientName,
       version: '0.0.1',
     });
 
-    // Set up event handlers
+    // 设置事件处理器
     this.transport.onmessage = this.handleMessage.bind(this);
     this.transport.onerror = this.handleError.bind(this);
     this.transport.onclose = this.handleClose.bind(this);
@@ -54,7 +53,7 @@ export class MCPClient implements MCPClientInterface {
     try {
       this.onMessage(message as Record<string, unknown>);
     } catch (error) {
-      this.onError(error instanceof Error ? error : new Error(`Failed to handle message: ${error}`));
+      this.onError(error instanceof Error ? error : new Error(`处理消息失败: ${error}`));
     }
   }
 
@@ -62,7 +61,6 @@ export class MCPClient implements MCPClientInterface {
     this.onError(error);
     if (this.isConnected) {
       this.isConnected = false;
-      // Could implement reconnection logic here
     }
   }
 
@@ -72,211 +70,197 @@ export class MCPClient implements MCPClientInterface {
   }
 
   /**
-   * Connects to the MCP server using SSE
+   * 连接到MCP服务器
    */
   public async connect(): Promise<void> {
     try {
-      console.log('Connecting to MCP server:', this.clientName);
+      console.log(`正在连接到MCP服务器 (客户端: ${this.clientName})`);
 
-      // Connect the client (which connects the transport)
+      // 连接客户端（这会连接传输层）
       await this.client.connect(this.transport as any);
 
       this.isConnected = true;
-      console.log('Connected to MCP server');
+      console.log(`已连接到MCP服务器 (客户端: ${this.clientName})`);
       this.onOpen();
     } catch (error) {
-      console.error('Failed to connect to MCP server:', error);
+      console.error(`连接到MCP服务器失败 (客户端: ${this.clientName}):`, error);
       this.onError(error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
 
   /**
-   * Returns a map of tool names to MCPTool objects
-   * This method matches the expected CopilotKit interface
+   * 返回工具名称到MCPTool对象的映射
+   * 此方法符合CopilotKit接口的预期
    */
   public async tools(): Promise<Record<string, MCPTool>> {
     try {
-      // Return from cache if available
+      // 如果缓存可用，从缓存返回
       if (this.toolsCache) {
         return this.toolsCache;
       }
-      // Fetch raw tools data
+
+      // 获取原始工具数据
       const rawToolsResult = await this.client.listTools();
 
-      // Transform to the expected format
+      // 转换为预期格式
       const toolsMap: Record<string, MCPTool> = {};
 
       if (rawToolsResult) {
-        // If the result has a 'tools' property with an array of tools
-        if (typeof rawToolsResult === 'object' && 'tools' in rawToolsResult && Array.isArray(rawToolsResult.tools)) {
-          rawToolsResult.tools.forEach((tool: any) => {
+        const toolsArray = this.extractToolsArray(rawToolsResult);
+
+        if (toolsArray) {
+          toolsArray.forEach((tool: any) => {
             if (tool && typeof tool === 'object' && 'name' in tool) {
-              // Extract required parameters if available
-              let requiredParams: string[] = [];
-
-              if (
-                tool.inputSchema &&
-                typeof tool.inputSchema === 'object' &&
-                'required' in tool.inputSchema &&
-                Array.isArray(tool.inputSchema.required)
-              ) {
-                requiredParams = tool.inputSchema.required;
-              }
-
-              // Enhanced description with parameter requirements if available
-              let enhancedDescription = tool.description || '';
-
-              // Add parameter information to the description
-              if (requiredParams.length > 0) {
-                enhancedDescription += `\nRequired parameters: ${requiredParams.join(', ')}`;
-              }
-
-              // Add example structure if we can derive it from schema
-              const exampleInput = this.deriveExampleInput(tool.inputSchema, tool.name);
-              if (exampleInput) {
-                enhancedDescription += `\nExample usage: ${exampleInput}`;
-              }
-
-              toolsMap[tool.name] = {
-                description: enhancedDescription,
-                schema: tool.inputSchema || {},
-                execute: async (args: Record<string, unknown>) => {
-                  return this.callTool(tool.name, args);
-                },
-              };
-            }
-          });
-        }
-        // If the result is an array directly
-        else if (Array.isArray(rawToolsResult)) {
-          rawToolsResult.forEach((tool: any) => {
-            if (tool && typeof tool === 'object' && 'name' in tool) {
-              // Extract required parameters if available
-              let requiredParams: string[] = [];
-
-              if (
-                tool.inputSchema &&
-                typeof tool.inputSchema === 'object' &&
-                'required' in tool.inputSchema &&
-                Array.isArray(tool.inputSchema.required)
-              ) {
-                requiredParams = tool.inputSchema.required;
-              }
-
-              // Enhanced description with parameter requirements if available
-              let enhancedDescription = tool.description || '';
-
-              // Add parameter information to the description
-              if (requiredParams.length > 0) {
-                enhancedDescription += `\nRequired parameters: ${requiredParams.join(', ')}`;
-              }
-
-              // Add example structure if we can derive it from schema
-              const exampleInput = this.deriveExampleInput(tool.inputSchema, tool.name);
-              if (exampleInput) {
-                enhancedDescription += `\nExample usage: ${exampleInput}`;
-              }
-
-              toolsMap[tool.name] = {
-                description: enhancedDescription,
-                schema: tool.inputSchema || {},
-                execute: async (args: Record<string, unknown>) => {
-                  return this.callTool(tool.name, args);
-                },
-              };
+              toolsMap[tool.name] = this.createMCPTool(tool);
             }
           });
         }
       }
 
-      // Cache the result
+      // 缓存结果
       this.toolsCache = toolsMap;
-      console.log('toolsMap:', toolsMap);
       return toolsMap;
     } catch (error) {
-      console.error('Error fetching tools:', error);
-      // Return empty map on error rather than throwing
+      console.error(`获取工具时出错 (客户端: ${this.clientName}):`, error);
       return {};
     }
   }
+
   /**
-   * Close the connection to the MCP server
-   * This method matches the expected CopilotKit interface
+   * 从原始结果中提取工具数组
+   */
+  private extractToolsArray(rawToolsResult: any): any[] | null {
+    if (typeof rawToolsResult === 'object' && 'tools' in rawToolsResult && Array.isArray(rawToolsResult.tools)) {
+      return rawToolsResult.tools;
+    } else if (Array.isArray(rawToolsResult)) {
+      return rawToolsResult;
+    }
+    return null;
+  }
+
+  /**
+   * 从原始工具数据创建MCPTool
+   */
+  private createMCPTool(tool: any): MCPTool {
+    const requiredParams = this.extractRequiredParams(tool);
+    const enhancedDescription = this.buildEnhancedDescription(
+      tool.description,
+      requiredParams,
+      tool.inputSchema,
+      tool.name
+    );
+
+    return {
+      description: enhancedDescription,
+      schema: tool.inputSchema || {},
+      execute: async (args: Record<string, unknown>) => {
+        return this.callTool(tool.name, args);
+      },
+    };
+  }
+
+  /**
+   * 从工具模式中提取必需参数
+   */
+  private extractRequiredParams(tool: any): string[] {
+    if (
+      tool.inputSchema &&
+      typeof tool.inputSchema === 'object' &&
+      'required' in tool.inputSchema &&
+      Array.isArray(tool.inputSchema.required)
+    ) {
+      return tool.inputSchema.required;
+    }
+    return [];
+  }
+
+  /**
+   * 构建包含参数信息的增强描述
+   */
+  private buildEnhancedDescription(
+    baseDescription: string,
+    requiredParams: string[],
+    inputSchema: any,
+    toolName: string
+  ): string {
+    let description = baseDescription || '';
+
+    if (requiredParams.length > 0) {
+      description += `\n必需参数: ${requiredParams.join(', ')}`;
+    }
+
+    const exampleInput = this.deriveExampleInput(inputSchema, toolName);
+    if (exampleInput) {
+      description += `\n使用示例: ${exampleInput}`;
+    }
+
+    return description;
+  }
+  /**
+   * 关闭与MCP服务器的连接
+   * 此方法符合CopilotKit接口的预期
    */
   public async close(): Promise<void> {
     return this.disconnect();
   }
 
   /**
-   * Disconnects from the MCP server
-   * (Legacy method, prefer using close() for compatibility with CopilotKit)
+   * 断开与MCP服务器的连接
+   * (旧方法，建议使用close()以兼容CopilotKit)
    */
   public async disconnect(): Promise<void> {
     try {
-      // Clear the tools cache
+      // 清理工具缓存
       this.toolsCache = null;
-
-      // Close the transport connection
+      // 关闭传输连接
       await this.transport.close();
       this.isConnected = false;
-      console.log('Disconnected from MCP server');
+      console.log(`已断开与MCP服务器的连接 (客户端: ${this.clientName})`);
     } catch (error) {
-      console.error('Error disconnecting from MCP server:', error);
+      console.error(`断开MCP服务器连接时出错 (客户端: ${this.clientName}):`, error);
       this.onError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
   /**
-   * Call a tool with the given name and arguments
-   * @param name Tool name
-   * @param args Tool arguments
-   * @returns Tool execution result
+   * 使用给定名称和参数调用工具
+   * @param name 工具名称
+   * @param args 工具参数
+   * @returns 工具执行结果
    */
   public async callTool(name: string, args: Record<string, unknown>): Promise<any> {
     try {
-      console.log(`Calling tool: ${name} with args:`, JSON.stringify(args, null, 2));
-
-      // Generic handler for double-nested params structure
       const fixedArgs = this.normalizeToolArgs(args);
-
-      // Process string-encoded JSON objects
       const processedArgs = this.processStringifiedJsonArgs(fixedArgs);
 
-      // Log the processed arguments
-      console.log(`Processed args for ${name}:`, JSON.stringify(processedArgs.params, null, 2));
-
-      // Check if the params object in processedArgs contains an object
+      // 检查processedArgs中的params对象是否包含对象
       if (processedArgs.params && Object.keys(processedArgs.params).length > 0) {
-        console.log(`Calling tool ${name} with processed params:`, JSON.stringify(processedArgs.params, null, 2));
-        // Call the tool with processed arguments
         return this.client.callTool({
           name: name,
           arguments: processedArgs.params as Record<string, unknown>,
         });
       } else {
-        // If params is not an object, call the tool directly
         return this.client.callTool({
           name: name,
           arguments: processedArgs,
         });
       }
     } catch (error) {
-      console.error(`Error calling tool ${name}:`, error);
+      console.error(`调用工具 ${name} 时出错 (客户端: ${this.clientName}):`, error);
       throw error;
     }
   }
 
   /**
-   * Normalize tool arguments - detects and fixes common patterns in LLM tool calls
-   * like double-nested params objects
+   * 标准化工具参数 - 检测并修复LLM工具调用中的常见模式
+   * 如双重嵌套的params对象
    */
   private normalizeToolArgs(args: Record<string, unknown>): Record<string, unknown> {
-    // Handle double-nested params: { params: { params: { actual data } } }
+    // 处理双重嵌套参数: { params: { params: { 实际数据 } } }
     if ('params' in args && args.params !== null && typeof args.params === 'object') {
       const paramsObj = args.params as Record<string, unknown>;
       if ('params' in paramsObj) {
-        console.log('Detected double-nested params, fixing structure');
         return paramsObj;
       }
     }
@@ -285,98 +269,75 @@ export class MCPClient implements MCPClientInterface {
   }
 
   /**
-   * Process arguments to handle cases where JSON strings might be passed instead of objects
+   * 处理参数，处理JSON字符串可能被传递而不是对象的情况
    */
   private processStringifiedJsonArgs(args: Record<string, unknown>): Record<string, unknown> {
     const result: Record<string, unknown> = {};
 
-    // Process each argument to handle potential JSON strings
     for (const [key, value] of Object.entries(args)) {
-      if (typeof value === 'string') {
-        // Try to parse potential JSON strings
-        try {
-          // Check if the string looks like JSON (starts with {, [, or ")
-          const trimmedValue = value.trim();
-          if (trimmedValue.startsWith('{') || trimmedValue.startsWith('[') || trimmedValue.startsWith('"')) {
-            const parsedValue = JSON.parse(value);
-            result[key] = parsedValue;
-          } else {
-            // Not a JSON-like string, keep as string
-            result[key] = value;
-          }
-        } catch (e) {
-          console.log('JSON parsing error for key:', key, 'value:', value, 'error:', e);
-          // Not valid JSON, keep as string
-          result[key] = value;
-        }
-      } else if (Array.isArray(value)) {
-        // Preserve arrays properly
-        result[key] = value.map((item) =>
-          typeof item === 'object' && item !== null
-            ? this.processStringifiedJsonArgs(item as Record<string, unknown>)
-            : item
-        );
-      } else if (value !== null && typeof value === 'object') {
-        // Recursively process nested objects
-        result[key] = this.processStringifiedJsonArgs(value as Record<string, unknown>);
-      } else {
-        // Keep other types as-is
-        result[key] = value;
-      }
+      result[key] = this.processSingleValue(value);
     }
 
     return result;
   }
 
   /**
-   * Derives an example input structure from a tool's inputSchema
-   * This helps the LLM understand how to format requests properly
+   * 处理单个值的JSON字符串解析
+   */
+  private processSingleValue(value: unknown): unknown {
+    if (typeof value === 'string') {
+      return this.parseJsonString(value);
+    } else if (Array.isArray(value)) {
+      return value.map((item) => this.processSingleValue(item));
+    } else if (value !== null && typeof value === 'object') {
+      return this.processStringifiedJsonArgs(value as Record<string, unknown>);
+    } else {
+      return value;
+    }
+  }
+
+  /**
+   * 如果字符串看起来像JSON则解析JSON字符串
+   */
+  private parseJsonString(value: string): unknown {
+    const trimmedValue = value.trim();
+    if (trimmedValue.startsWith('{') || trimmedValue.startsWith('[') || trimmedValue.startsWith('"')) {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        console.error(`JSON解析错误 (客户端: ${this.clientName}):`, e);
+        return value;
+      }
+    }
+    return value;
+  }
+
+  /**
+   * 从工具的inputSchema推导示例输入结构
+   * 这有助于LLM理解如何正确格式化请求
    */
   private deriveExampleInput(inputSchema: any, toolName: string): string | null {
     if (!inputSchema) return null;
 
     try {
-      // Handle special cases for better guidance
       if (toolName.toLowerCase().includes('asana_create')) {
-        return '{ "params": { "data": { "name": "Task name", "notes": "Task description" } } }';
+        return '{ "params": { "data": { "name": "任务名称", "notes": "任务描述" } } }';
       }
 
       if (inputSchema.type === 'object' && inputSchema.properties) {
-        // Build a minimal example object
-        const example: Record<string, any> = {};
-        const props = inputSchema.properties;
-
-        // Add required properties first
-        if (Array.isArray(inputSchema.required)) {
-          inputSchema.required.forEach((key: string) => {
-            if (key in props) {
-              if (props[key].type === 'object' && props[key].properties) {
-                example[key] = this.createExampleObject(props[key]);
-              } else if (props[key].type === 'string') {
-                example[key] = `"Example ${key}"`;
-              } else if (props[key].type === 'number') {
-                example[key] = 123;
-              } else if (props[key].type === 'boolean') {
-                example[key] = true;
-              } else {
-                example[key] = null;
-              }
-            }
-          });
-        }
-
+        const example = this.createExampleObject(inputSchema);
         return JSON.stringify(example, null, 2);
       }
 
       return null;
     } catch (error) {
-      console.error('Error creating example input:', error);
+      console.error(`创建示例输入时出错 (客户端: ${this.clientName}):`, error);
       return null;
     }
   }
 
   /**
-   * Creates an example object from an object schema
+   * 从对象模式创建示例对象
    */
   private createExampleObject(schema: any): Record<string, any> {
     const result: Record<string, any> = {};
@@ -387,29 +348,45 @@ export class MCPClient implements MCPClientInterface {
 
     const props = schema.properties;
 
-    // Add required properties
     if (Array.isArray(schema.required)) {
       schema.required.forEach((key: string) => {
         if (key in props) {
-          if (props[key].type === 'object' && props[key].properties) {
-            result[key] = this.createExampleObject(props[key]);
-          } else if (props[key].type === 'string') {
-            result[key] = `Example ${key}`;
-          } else if (props[key].type === 'number') {
-            result[key] = 123;
-          } else if (props[key].type === 'boolean') {
-            result[key] = true;
-          } else {
-            result[key] = null;
-          }
+          result[key] = this.createExampleValue(props[key]);
         }
       });
     }
 
     return result;
   }
+
   /**
-   * Create the appropriate transport based on type
+   * 根据模式类型创建示例值
+   */
+  private createExampleValue(propertySchema: any): any {
+    if (propertySchema.type === 'object' && propertySchema.properties) {
+      return this.createExampleObject(propertySchema);
+    } else if (propertySchema.type === 'string') {
+      return `示例 ${propertySchema.title || '值'}`;
+    } else if (propertySchema.type === 'number') {
+      return 123;
+    } else if (propertySchema.type === 'boolean') {
+      return true;
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * 清理工具缓存，强制重新获取工具列表
+   * 用于刷新客户端状态时使用
+   */
+  public clearToolsCache(): void {
+    this.toolsCache = null;
+    console.log(`已清理工具缓存 (客户端: ${this.clientName})`);
+  }
+
+  /**
+   * 根据类型创建适当的传输
    */
   private createTransport(
     type: TransportType
@@ -419,7 +396,6 @@ export class MCPClient implements MCPClientInterface {
         return new StdioClientTransport(this.stdioConfig);
       case 'streamable-http':
         return new StreamableHTTPClientTransport(this.serverUrl, this.headers);
-
       case 'sse':
       default:
         return new SSEClientTransport(this.serverUrl, this.headers);

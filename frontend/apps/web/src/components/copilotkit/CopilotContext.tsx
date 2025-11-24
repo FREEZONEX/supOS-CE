@@ -2,7 +2,6 @@ import {
   useCopilotAction,
   useCopilotReadable,
   useCoAgent,
-  useCopilotChat,
   type CatchAllActionRenderProps,
 } from '@copilotkit/react-core';
 import { type FC, type ReactNode, useEffect, useState } from 'react';
@@ -12,7 +11,7 @@ import { useLocation } from 'react-router';
 import MermaidCom from './sub-com/MermaidCom.tsx';
 import { attempt, isError } from 'lodash-es';
 import { useBaseStore } from '@/stores/base';
-import MCPToolCall from '@/components/copilotkit/McpToolCall.tsx';
+import MCPToolCall from './sub-com/McpToolCall.tsx';
 
 const JSONParse = (str: string | null) => {
   let json = attempt(JSON.parse, str);
@@ -62,25 +61,6 @@ const CopilotContext: FC<{ children: ReactNode; copilotCatRef: any }> = ({ child
   useEffect(() => {
     setPage(location.pathname);
   }, [location.pathname]);
-  const { setMcpServers } = useCopilotChat();
-  useEffect(() => {
-    setMcpServers([
-      {
-        endpoint: 'stdio://npx/-y/@supos-os-edge/demo-mcp-server',
-      },
-      // {
-      // Try a sample MCP server at https://mcp.composio.dev/
-      // endpoint: 'see://http://localhost:3000/mcp',
-      // },
-      // {
-      //   endpoint:
-      //     'stdio://npx/-y/@sup-platform/mcp-server?env=SUPOS_API_URL:http://100.100.100.22:33893,SUPOS_API_KEY:2550783a8c884f219c6e22376220d55c',
-      // },
-      // {
-      //   endpoint: 'streamable-http://http://localhost:3000/mcp?clientName=supos-mcp-server',
-      // },
-    ]);
-  }, [setMcpServers]);
   // 获取mcpclient存储的本地配置
   const mcpConfigStr: any = useLocalStorage(STORAGE_KEY);
   const modelConfigStr: any = useLocalStorage(STORAGE_MODEL_KEY);
@@ -114,11 +94,12 @@ const CopilotContext: FC<{ children: ReactNode; copilotCatRef: any }> = ({ child
 
   // 数据可读
   useCopilotReadable({
-    description: 'pages是页面集合，',
+    description: 'pages是页面集合;mcpServiceList是目前已有的mcp服务器列表，如果没有不要调用;',
     value: {
       pages: routeMap,
       operations: AVAILABLE_OPERATIONS_PER_PAGE,
       currentPage,
+      mcpServiceList: [],
     },
   });
 

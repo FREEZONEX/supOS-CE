@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { mcpManager } from '@/utils';
+import { convertConfigToUrl, mcpManager } from '@/utils';
 
 const mcpRouter = express.Router();
 
@@ -7,13 +7,46 @@ const mcpRouter = express.Router();
 mcpRouter.get('/list', (_: Request, res: Response) => {
   try {
     res.status(200).json({
-      status: 'ok',
-      list: mcpManager.getMCPClientCache(),
-      size: mcpManager.getMCPClientCount(),
+      code: 200,
+      data: mcpManager.getMCPClientCache(),
+      msg: 'success',
     });
   } catch (e) {
     res.status(500).json({
       error: e,
+    });
+  }
+});
+
+// 新增mcp客户端
+mcpRouter.post('/add', async (req: Request, res: Response) => {
+  try {
+    const endpoint = convertConfigToUrl(req.body);
+    if (!endpoint) {
+      return res.status(400).json({
+        code: 400,
+        data: null,
+        msg: '缺少必需的参数: name',
+      });
+    }
+    const config = {
+      endpoint,
+    };
+    await mcpManager.getOrCreateMCPClient(config);
+    return res.status(200).json({
+      code: 200,
+      data: {
+        endpoint: endpoint,
+        isConnected: true,
+        lastUsed: Date.now(),
+      },
+      msg: `MCP客户端 ${endpoint} 创建成功`,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      code: 500,
+      data: null,
+      msg: `创建MCP客户端失败: ${e instanceof Error ? e.message : String(e)}`,
     });
   }
 });
@@ -25,8 +58,9 @@ mcpRouter.post('/refresh', async (req: Request, res: Response) => {
 
     if (!endpoint) {
       return res.status(400).json({
-        success: false,
-        message: '缺少必需的参数: endpoint',
+        code: 400,
+        data: null,
+        msg: '缺少必需的参数: endpoint',
       });
     }
 
@@ -34,20 +68,22 @@ mcpRouter.post('/refresh', async (req: Request, res: Response) => {
 
     if (result.success) {
       return res.status(200).json({
-        success: true,
-        message: result.message,
+        code: 200,
+        data: null,
+        msg: result.message,
       });
     } else {
       return res.status(400).json({
-        success: false,
-        message: result.message,
+        code: 400,
+        data: null,
+        msg: result.message,
       });
     }
   } catch (e) {
-    console.error('刷新MCP客户端失败:', e);
     return res.status(500).json({
-      success: false,
-      message: `刷新MCP客户端失败: ${e instanceof Error ? e.message : String(e)}`,
+      code: 500,
+      data: null,
+      msg: `刷新MCP客户端失败: ${e instanceof Error ? e.message : String(e)}`,
     });
   }
 });
@@ -59,8 +95,9 @@ mcpRouter.post('/restart', async (req: Request, res: Response) => {
 
     if (!endpoint) {
       return res.status(400).json({
-        success: false,
-        message: '缺少必需的参数: endpoint',
+        code: 400,
+        data: null,
+        msg: '缺少必需的参数: endpoint',
       });
     }
 
@@ -68,20 +105,22 @@ mcpRouter.post('/restart', async (req: Request, res: Response) => {
 
     if (result.success) {
       return res.status(200).json({
-        success: true,
-        message: result.message,
+        code: 200,
+        data: null,
+        msg: result.message,
       });
     } else {
       return res.status(400).json({
-        success: false,
-        message: result.message,
+        code: 400,
+        data: null,
+        msg: result.message,
       });
     }
   } catch (e) {
-    console.error('重启MCP客户端失败:', e);
     return res.status(500).json({
-      success: false,
-      message: `重启MCP客户端失败: ${e instanceof Error ? e.message : String(e)}`,
+      code: 500,
+      data: null,
+      msg: `重启MCP客户端失败: ${e instanceof Error ? e.message : String(e)}`,
     });
   }
 });
@@ -93,8 +132,9 @@ mcpRouter.post('/stop', async (req: Request, res: Response) => {
 
     if (!endpoint) {
       return res.status(400).json({
-        success: false,
-        message: '缺少必需的参数: endpoint',
+        code: 400,
+        data: null,
+        msg: '缺少必需的参数: endpoint',
       });
     }
 
@@ -102,20 +142,51 @@ mcpRouter.post('/stop', async (req: Request, res: Response) => {
 
     if (result.success) {
       return res.status(200).json({
-        success: true,
-        message: result.message,
+        code: 200,
+        data: null,
+        msg: result.message,
       });
     } else {
       return res.status(400).json({
-        success: false,
-        message: result.message,
+        code: 400,
+        data: null,
+        msg: result.message,
       });
     }
   } catch (e) {
-    console.error('停止MCP客户端失败:', e);
     return res.status(500).json({
-      success: false,
-      message: `停止MCP客户端失败: ${e instanceof Error ? e.message : String(e)}`,
+      code: 500,
+      data: null,
+      msg: `停止MCP客户端失败: ${e instanceof Error ? e.message : String(e)}`,
+    });
+  }
+});
+
+// 删除某个mcp
+mcpRouter.post('/delete', async (req: Request, res: Response) => {
+  try {
+    const { endpoint } = req.body;
+
+    if (!endpoint) {
+      return res.status(400).json({
+        code: 400,
+        data: null,
+        msg: '缺少必需的参数: endpoint',
+      });
+    }
+
+    await mcpManager.removeMCPClient(endpoint);
+
+    return res.status(200).json({
+      code: 200,
+      data: null,
+      msg: `MCP客户端 ${endpoint} 删除成功`,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      code: 500,
+      data: null,
+      msg: `删除MCP客户端失败: ${e instanceof Error ? e.message : String(e)}`,
     });
   }
 });

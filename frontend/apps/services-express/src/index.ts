@@ -6,6 +6,11 @@ import { ServerManager } from '@/server';
 // 创建Express应用
 const app = express();
 
+// 解析 Content-Type: application/json
+app.use(express.json());
+// 解析 Content-Type: application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true }));
+
 // 注册所有路由
 registerRoutes(app);
 

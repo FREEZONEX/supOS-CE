@@ -1,4 +1,4 @@
-import { TransportConfig } from '@/types';
+import { HttpConfig, McpServerConfig, StdioConfig, TransportConfig } from '@/types';
 
 const getParams = (urlString: string) => {
   try {
@@ -81,9 +81,11 @@ export function parseTransportUrl(urlString: string): TransportConfig {
           }
         }
 
+        const clientName = url.searchParams.get('clientName');
+
         return {
           transportType: 'stdio',
-          clientName: args[1] || args[0] || 'stdio',
+          clientName: clientName || args[1] || args[0] || 'stdio',
           serverUrl: 'http://localhost:3000',
           stdioConfig: {
             command,
@@ -98,5 +100,68 @@ export function parseTransportUrl(urlString: string): TransportConfig {
     }
   } catch (error) {
     throw new Error(`URL解析错误: ${error instanceof Error ? error.message : '未知错误'}`);
+  }
+}
+/**
+ * 转换stdio配置
+ */
+function convertStdioConfig(name: string, config: StdioConfig): string {
+  const { command, args, env = [] } = config;
+
+  // 构建路径部分：command/arg1/arg2...
+  const path = [command, ...args].join('/');
+
+  // 构建查询参数[2](@ref)
+  const params = new URLSearchParams();
+  params.append('clientName', name);
+
+  if (env.length > 0) {
+    const envString = env.map((e) => `${e.key}:${e.value}`).join(',');
+    params.append('env', envString);
+  }
+
+  return `stdio://${path}?${params.toString()}`;
+}
+
+/**
+ * 转换streamable-http配置
+ */
+function convertStreamableHttpConfig(name: string, config: HttpConfig): string {
+  if (!config.baseUrl) {
+    throw new Error('streamable-http配置缺少baseUrl');
+  }
+
+  const params = new URLSearchParams();
+  params.append('clientName', name);
+
+  return `streamable-http://${config.baseUrl}?${params.toString()}`;
+}
+
+/**
+ * 转换sse配置
+ */
+function convertSseConfig(config: HttpConfig): string {
+  if (!config.url) {
+    throw new Error('sse配置缺少url');
+  }
+
+  return `sse://${config.url}`;
+}
+
+export function convertConfigToUrl(config: McpServerConfig): string {
+  const { name, transportType, config: transportConfig } = config;
+
+  switch (transportType) {
+    case 'stdio':
+      return convertStdioConfig(name, transportConfig as StdioConfig);
+
+    case 'streamable-http':
+      return convertStreamableHttpConfig(name, transportConfig as HttpConfig);
+
+    case 'sse':
+      return convertSseConfig(transportConfig as HttpConfig);
+
+    default:
+      return '';
   }
 }

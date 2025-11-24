@@ -1,5 +1,5 @@
 import { ChatBot, Close, WatsonHealthAiResultsLow } from '@carbon/icons-react';
-import { Tooltip } from 'antd';
+import { Button, Tooltip } from 'antd';
 import {
   type ComponentProps,
   type CSSProperties,
@@ -21,6 +21,8 @@ import ChatInput from '../copilotkit/sub-com/ChatInput.tsx';
 import styles from './CustomCopilotChat.module.scss';
 import classNames from 'classnames';
 import { useLocation } from 'react-router';
+import ProModal from '@/components/pro-modal';
+import { McpSetting } from '@/components/copilotkit/mcp-management';
 
 interface CustomCopilotChatProps extends ComponentProps<typeof CopilotChat> {
   style?: CSSProperties;
@@ -36,6 +38,7 @@ const CustomCopilotChat = forwardRef<CopilotRefProps | undefined, CustomCopilotC
     const [isWelt, setWelt] = useState(true);
     const [weltDirection, setWeltDirection] = useState<any>('right');
     const [maxDistance, setMaxDistance] = useState(0);
+    const [mcpSettingVisible, setMcpSettingVisible] = useState(false);
     const divRef = useRef<HTMLDivElement>(null);
     const draggableRef = useRef<any>(null);
     const pathname = useLocation().pathname;
@@ -56,6 +59,9 @@ const CustomCopilotChat = forwardRef<CopilotRefProps | undefined, CustomCopilotC
               <ChatBot size={16} color="var(--supos-theme-color)" />
             </div>
             <span>ChatBot</span>
+            <Button size="small" type="dashed" onClick={() => setMcpSettingVisible(true)}>
+              MCP Setting
+            </Button>
             <Close size={18} color="var(--supos-theme-color)" className="icon-close" onClick={() => setOpen(false)} />
           </div>
           <div
@@ -173,6 +179,15 @@ const CustomCopilotChat = forwardRef<CopilotRefProps | undefined, CustomCopilotC
               <ChatBot size={36} color="var(--supos-theme-color)" className="icon" />
             )}
           </div>
+          <ProModal
+            title="MCP服务器配置"
+            open={mcpSettingVisible}
+            onCancel={() => setMcpSettingVisible(false)}
+            width={800}
+            destroyOnHidden
+          >
+            <McpSetting />
+          </ProModal>
         </Draggable>
       </Tooltip>
     );

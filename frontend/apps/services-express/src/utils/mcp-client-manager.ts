@@ -1,6 +1,6 @@
 import { MCPClient } from './mcp-client';
 import { parseTransportUrl } from './path';
-import { McpClientOptions } from '@/types';
+import { McpClientOptions, TransportConfig } from '@/types';
 
 // MCP客户端缓存条目接口
 interface MCPClientEntry {
@@ -43,22 +43,22 @@ export class MCPClientManager {
       const entry = this.mcpClientCache.get(key);
       if (entry) {
         try {
-          // 断开连接
+          // 断开连接并清理MCP内部服务
           if (entry.isConnected) {
             await entry.client.close();
           }
         } catch (error) {
-          console.error(`Error disconnecting MCP client for key ${key}:`, error);
+          console.error(`清理MCP客户端连接时出错 (端点: ${entry.endpoint}):`, error);
         } finally {
           // 从缓存中删除
           this.mcpClientCache.delete(key);
-          console.log(`Cleaned up expired MCP client for endpoint: ${entry.endpoint}`);
+          console.log(`已清理过期MCP客户端 (端点: ${entry.endpoint})`);
         }
       }
     }
 
     if (expiredKeys.length > 0) {
-      console.log(`Cleaned up ${expiredKeys.length} expired MCP clients`);
+      console.log(`已清理 ${expiredKeys.length} 个过期MCP客户端`);
     }
   }
 
@@ -69,18 +69,18 @@ export class MCPClientManager {
     try {
       // 如果客户端未连接，尝试重新连接
       if (!entry.isConnected) {
-        console.log(`Reconnecting MCP client for endpoint: ${entry.endpoint}`);
+        console.log(`正在重新连接MCP客户端 (端点: ${entry.endpoint})`);
         await entry.client.connect();
         entry.isConnected = true;
         entry.lastUsed = Date.now();
-        console.log(`Successfully reconnected MCP client for endpoint: ${entry.endpoint}`);
+        console.log(`成功重新连接MCP客户端 (端点: ${entry.endpoint})`);
       }
 
       // 更新最后使用时间
       entry.lastUsed = Date.now();
       return true;
     } catch (error) {
-      console.error(`Error checking/reparing MCP client for endpoint ${entry.endpoint}:`, error);
+      console.error(`检查/修复MCP客户端时出错 (端点: ${entry.endpoint}):`, error);
       // 标记为未连接，将在下次调用时尝试重新连接
       entry.isConnected = false;
       return false;
@@ -91,7 +91,7 @@ export class MCPClientManager {
    * 创建新的MCP客户端
    */
   private async createNewMCPClient(config: any, props: any): Promise<MCPClient> {
-    console.log(`Creating new MCP client for endpoint: ${config.endpoint}`);
+    console.log(`正在创建新的MCP客户端 (端点: ${config.endpoint})`);
 
     // 创建客户端配置
     const clientOptions: McpClientOptions = {
@@ -108,7 +108,7 @@ export class MCPClientManager {
     // 连接到服务器
     await mcpClient.connect();
 
-    console.log(`Successfully created and connected MCP client for endpoint: ${config.endpoint}`);
+    console.log(`成功创建并连接MCP客户端 (端点: ${config.endpoint})`);
     return mcpClient;
   }
 
@@ -123,7 +123,7 @@ export class MCPClientManager {
     const cachedEntry = this.mcpClientCache.get(cacheKey);
 
     if (cachedEntry) {
-      console.log(`Found cached MCP client for endpoint: ${endpoint}`);
+      console.log(`找到缓存的MCP客户端 (端点: ${endpoint})`);
 
       // 检查和修复客户端连接
       const isHealthy = await this.checkAndRepairClient(cachedEntry);
@@ -134,7 +134,7 @@ export class MCPClientManager {
       } else {
         // 健康检查失败，从缓存中移除
         this.mcpClientCache.delete(cacheKey);
-        console.log(`Removed unhealthy MCP client from cache for endpoint: ${endpoint}`);
+        console.log(`从缓存中移除不健康的MCP客户端 (端点: ${endpoint})`);
       }
     }
 
@@ -151,7 +151,7 @@ export class MCPClientManager {
     };
 
     this.mcpClientCache.set(cacheKey, newEntry);
-    console.log(`Cached new MCP client for endpoint: ${endpoint}`);
+    console.log(`已缓存新的MCP客户端 (端点: ${endpoint})`);
 
     return mcpClient;
   }
@@ -165,16 +165,16 @@ export class MCPClientManager {
 
     if (entry) {
       try {
-        // 断开连接
+        // 断开连接并清理MCP内部服务
         if (entry.isConnected) {
           await entry.client.close();
         }
       } catch (error) {
-        console.error(`Error disconnecting MCP client for endpoint ${endpoint}:`, error);
+        console.error(`断开MCP客户端连接时出错 (端点: ${endpoint}):`, error);
       } finally {
         // 从缓存中删除
         this.mcpClientCache.delete(cacheKey);
-        console.log(`Removed MCP client from cache for endpoint: ${endpoint}`);
+        console.log(`已从缓存中移除MCP客户端 (端点: ${endpoint})`);
       }
     }
   }
@@ -196,18 +196,22 @@ export class MCPClientManager {
       await this.removeMCPClient(endpoint);
     }
 
-    console.log('Removed all MCP clients from cache');
+    console.log('已清理所有MCP客户端缓存');
   }
 
   /**
    * 获取只读的MCP客户端缓存视图
    */
-  getMCPClientCache(): ReadonlyArray<Readonly<Omit<MCPClientEntry, 'client'>>> {
-    return Array.from(this.mcpClientCache.entries()).map(([key, entry]) => ({
-      endpoint: entry.endpoint || key,
-      lastUsed: entry.lastUsed,
-      isConnected: entry.isConnected,
-    }));
+  getMCPClientCache(): ReadonlyArray<Readonly<Omit<MCPClientEntry & TransportConfig, 'client'>>> {
+    return Array.from(this.mcpClientCache.entries()).map(([key, entry]) => {
+      const config = parseTransportUrl(entry.endpoint);
+      return {
+        endpoint: entry.endpoint || key,
+        lastUsed: entry.lastUsed,
+        isConnected: entry.isConnected,
+        ...config,
+      };
+    });
   }
 
   /**
@@ -216,8 +220,7 @@ export class MCPClientManager {
    * @returns 刷新结果
    */
   async refreshMCPClient(endpoint: string): Promise<{ success: boolean; message: string }> {
-    const cacheKey = endpoint;
-    const entry = this.mcpClientCache.get(cacheKey);
+    const entry = this.mcpClientCache.get(endpoint);
 
     if (!entry) {
       return { success: false, message: `MCP客户端 ${endpoint} 不存在` };
@@ -239,7 +242,7 @@ export class MCPClientManager {
       entry.lastUsed = Date.now();
 
       // 清除工具缓存，强制重新获取工具列表
-      (entry.client as any).toolsCache = null;
+      entry.client.clearToolsCache();
 
       console.log(`成功刷新MCP客户端: ${endpoint}`);
       return { success: true, message: `MCP客户端 ${endpoint} 刷新成功` };
@@ -306,8 +309,7 @@ export class MCPClientManager {
    * @returns 停止结果
    */
   async stopMCPClient(endpoint: string): Promise<{ success: boolean; message: string }> {
-    const cacheKey = endpoint;
-    const entry = this.mcpClientCache.get(cacheKey);
+    const entry = this.mcpClientCache.get(endpoint);
 
     if (!entry) {
       return { success: false, message: `MCP客户端 ${endpoint} 不存在` };
