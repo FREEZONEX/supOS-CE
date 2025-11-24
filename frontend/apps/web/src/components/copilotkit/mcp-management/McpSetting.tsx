@@ -105,7 +105,7 @@ const McpSetting = () => {
           margin: '15px auto',
         }}
       />
-      <ProCardContainer minWidth={200} hiddenEmpty={false}>
+      <ProCardContainer minWidth={200}>
         {mcpList?.length > 0 ? (
           mcpList?.map((d) => {
             return (
