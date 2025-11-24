@@ -8,6 +8,7 @@ import (
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+	noderedclient "backend/share/clients/nodered"
 	"backend/share/clients/nodered/templates"
 	"backend/share/spring"
 	"context"
@@ -27,12 +28,28 @@ var (
 	mockTemplateErr  error
 )
 
+type sourceFlowRepo interface {
+	FindAvailableFlowName(ctx context.Context, base string, flowType string) (string, int, error)
+	Insert(ctx context.Context, data *dao.NoderedSourceFlow) error
+	FindOne(ctx context.Context, id int64) (*dao.NoderedSourceFlow, error)
+	Update(ctx context.Context, data *dao.NoderedSourceFlow) error
+	ReplaceModels(ctx context.Context, parentID int64, aliases []string) error
+	SelectByAliases(ctx context.Context, aliases []string) ([]*dao.NoderedSourceFlow, error)
+	Delete(ctx context.Context, id int64) error
+}
+
+type flowTopRepo interface {
+	Delete(ctx context.Context, id int64) error
+}
+
 // SourceFlowService listens to UNS lifecycle events and provisions Node-RED source flows automatically.
 type SourceFlowService struct {
-	log    logx.Logger
-	svcCtx *svc.ServiceContext
-	create func(context.Context, *dao.NoderedSourceFlowRepo, string, *types.CreateTopicDto) error
-	repoFn func(context.Context) *dao.NoderedSourceFlowRepo
+	log       logx.Logger
+	svcCtx    *svc.ServiceContext
+	create    func(context.Context, sourceFlowRepo, string, *types.CreateTopicDto) error
+	delete    func(context.Context, sourceFlowRepo, flowTopRepo, *dao.NoderedSourceFlow) error
+	repoFn    func(context.Context) sourceFlowRepo
+	topRepoFn func(context.Context) flowTopRepo
 }
 
 func init() {
@@ -43,8 +60,12 @@ func init() {
 			svcCtx: spring.GetBean[*svc.ServiceContext](),
 		}
 		svc.create = svc.createMockFlow
-		svc.repoFn = func(ctx context.Context) *dao.NoderedSourceFlowRepo {
+		svc.delete = svc.deleteFlow
+		svc.repoFn = func(ctx context.Context) sourceFlowRepo {
 			return dao.NewNoderedSourceFlowRepo(ctx)
+		}
+		svc.topRepoFn = func(ctx context.Context) flowTopRepo {
+			return dao.NewNoderedFlowTopRepo(ctx)
 		}
 		return svc
 	})
@@ -74,7 +95,7 @@ func (s *SourceFlowService) OnEventBatchCreateTableEvent(ev *event.BatchCreateTa
 
 	repoFactory := s.repoFn
 	if repoFactory == nil {
-		repoFactory = func(ctx context.Context) *dao.NoderedSourceFlowRepo {
+		repoFactory = func(ctx context.Context) sourceFlowRepo {
 			return dao.NewNoderedSourceFlowRepo(ctx)
 		}
 	}
@@ -117,7 +138,7 @@ func loadMockTemplate() (string, error) {
 	return mockTemplate, mockTemplateErr
 }
 
-func (s *SourceFlowService) createMockFlow(ctx context.Context, repo *dao.NoderedSourceFlowRepo, tpl string, dto *types.CreateTopicDto) error {
+func (s *SourceFlowService) createMockFlow(ctx context.Context, repo sourceFlowRepo, tpl string, dto *types.CreateTopicDto) error {
 	if s.svcCtx == nil || s.svcCtx.SnowFlake == nil {
 		return fmt.Errorf("service context not ready")
 	}
@@ -204,4 +225,111 @@ func buildPayloadFromFields(fields []*types.FieldDefine) string {
 		return ""
 	}
 	return "\n" + strings.Join(parts, ",\n")
+}
+
+// OnEventRemoveTopicsEvent cleans up Node-RED flows associated with deleted UNS topics.
+func (s *SourceFlowService) OnEventRemoveTopicsEvent(ev *event.RemoveTopicsEvent) error {
+	if ev == nil || !ev.WithFlow {
+		return nil
+	}
+	ctx := ev.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	var aliases []string
+	for _, t := range ev.Topics {
+		if t == nil {
+			continue
+		}
+		if alias := strings.TrimSpace(t.GetAlias()); alias != "" {
+			aliases = append(aliases, alias)
+		}
+	}
+	if len(aliases) == 0 {
+		return nil
+	}
+
+	repoFactory := s.repoFn
+	if repoFactory == nil {
+		repoFactory = func(ctx context.Context) sourceFlowRepo {
+			return dao.NewNoderedSourceFlowRepo(ctx)
+		}
+	}
+	repo := repoFactory(ctx)
+	if repo == nil {
+		return fmt.Errorf("source flow repo not ready")
+	}
+	flows, err := repo.SelectByAliases(ctx, aliases)
+	if err != nil {
+		return err
+	}
+	if len(flows) == 0 {
+		return nil
+	}
+	topRepoFactory := s.topRepoFn
+	if topRepoFactory == nil {
+		topRepoFactory = func(ctx context.Context) flowTopRepo {
+			return dao.NewNoderedFlowTopRepo(ctx)
+		}
+	}
+	topRepo := topRepoFactory(ctx)
+	deleter := s.delete
+	if deleter == nil {
+		deleter = s.deleteFlow
+	}
+
+	seen := make(map[int64]struct{}, len(flows))
+	var errs []error
+	for _, f := range flows {
+		if f == nil {
+			continue
+		}
+		if _, ok := seen[f.ID]; ok {
+			continue
+		}
+		seen[f.ID] = struct{}{}
+		if err := deleter(ctx, repo, topRepo, f); err != nil {
+			s.log.Errorf("delete flow on UNS removal failed, flowID=%d, name=%s, err=%v", f.ID, f.FlowName, err)
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+	return nil
+}
+
+func (s *SourceFlowService) deleteFlow(ctx context.Context, repo sourceFlowRepo, topRepo flowTopRepo, flow *dao.NoderedSourceFlow) error {
+	if repo == nil || flow == nil {
+		return nil
+	}
+	if err := repo.ReplaceModels(ctx, flow.ID, nil); err != nil {
+		return err
+	}
+
+	var client *noderedclient.Client
+	if s != nil && s.svcCtx != nil {
+		client = s.svcCtx.SourceNodeRed
+	}
+	if client != nil {
+		if flowID := strings.TrimSpace(flow.FlowID); flowID != "" {
+			var out map[string]any
+			code, body, errs := client.DoJSON(ctx, "DELETE", "/flow/"+flowID, nil, &out)
+			if len(errs) > 0 {
+				return errors.Join(errs...)
+			}
+			if code != 200 && code != 204 && code != 404 {
+				return fmt.Errorf("delete nodered flow %s failed, code=%d body=%s", flowID, code, string(body))
+			}
+		}
+	} else {
+		s.log.Infof("node-red client missing, skip runtime delete for flow %d", flow.ID)
+	}
+
+	if topRepo != nil {
+		if err := topRepo.Delete(ctx, flow.ID); err != nil {
+			return err
+		}
+	}
+	return repo.Delete(ctx, flow.ID)
 }
