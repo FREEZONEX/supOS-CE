@@ -8,6 +8,7 @@ import (
 	"backend/internal/common/utils/finddatautil"
 	"backend/internal/repo/event/subDev"
 	"backend/internal/types"
+	"backend/share/base"
 	"backend/share/spring"
 	"context"
 	"encoding/json"
@@ -74,7 +75,7 @@ func (u *UnsMessageConsumer) OnMsg(ctx context.Context, topic string, msgId int,
 		u.sendErrMsg(def, strPayload, err.Error())
 		return
 	}
-	u.sendData(u.procDataAndSendWs(def, data, nil))
+	u.sendData(u.procDataAndSendWs(def, data, strPayload, nil))
 }
 
 // OnMessageByAlias 处理单个消息
@@ -91,7 +92,7 @@ func (u *UnsMessageConsumer) OnMessageByAlias(alias, payload string) {
 		u.sendErrMsg(def, payload, err.Error())
 		return
 	}
-	u.sendData(u.procDataAndSendWs(def, data, nil))
+	u.sendData(u.procDataAndSendWs(def, data, payload, nil))
 }
 
 // OnBatchMessage 处理批量消息
@@ -103,15 +104,17 @@ func (u *UnsMessageConsumer) OnBatchMessage(payloads map[string]map[string]any) 
 			u.log.Debugf("Unknown alias[%s]\n", alias)
 			continue
 		}
-		messages = u.procDataAndSendWs(def, data, messages)
+		messages = u.procDataAndSendWs(def, data, "", messages)
 	}
 	u.sendData(messages)
 }
 
-func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data any, messages []serviceApi.TopicMessage) []serviceApi.TopicMessage {
+func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data any, strPayload string, messages []serviceApi.TopicMessage) []serviceApi.TopicMessage {
 	list, erMsg := procData(def, data)
-	u.sendToWebsocket(def, list, "", erMsg)
-	messages = append(messages, serviceApi.TopicMessage{UnsId: def.Id, DataSrcId: types.SrcJdbcType(def.DataSrcID), Data: list})
+	u.sendToWebsocket(def, list, strPayload, erMsg)
+	if len(list) > 0 {
+		messages = append(messages, serviceApi.TopicMessage{UnsId: def.Id, DataSrcId: types.SrcJdbcType(def.DataSrcID), Data: list})
+	}
 
 	if len(list) > 0 && len(erMsg) == 0 {
 		calcDef, calcData, calcErr := u.calcService.TryCalculate(u.defService, def, list[len(list)-1])
@@ -147,10 +150,12 @@ func (u *UnsMessageConsumer) OnMessageByAliasOnUpdate(aliasVqtMap map[string]str
 	u.sendData(msgs)
 }
 func (u *UnsMessageConsumer) sendData(unsData []serviceApi.TopicMessage) {
-	if u.sink == nil {
-		u.sink = spring.GetBean[serviceApi.IDataSinkService]()
+	if len(unsData) > 0 {
+		if u.sink == nil {
+			u.sink = spring.GetBean[serviceApi.IDataSinkService]()
+		}
+		u.sink.Sink(unsData)
 	}
-	u.sink.Sink(unsData)
 }
 
 func (u *UnsMessageConsumer) sendErrMsg(def *types.CreateTopicDto, payload string, errMsg string) {
@@ -172,6 +177,18 @@ func (u *UnsMessageConsumer) getWsSender() serviceApi.IWebsocketSender {
 func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{}, errMsg string) {
 	fds := def.GetFieldDefines()
 	CT := def.GetTimestampField()
+	if base.P2v(def.DataType) == constants.JsonbType {
+		jsonbFiled := "json"
+		if vm, ok := data.(map[string]any); ok {
+			if _, has := vm[jsonbFiled]; !has {
+				bs, _ := json.Marshal(data)
+				vm = map[string]any{jsonbFiled: string(bs)}
+			}
+			list = []map[string]any{vm}
+			setLastData(list, CT, fds)
+			return
+		}
+	}
 	rs := finddatautil.FindDataList(data, 1, fds)
 	list = rs.List
 	if Ef, Lf := rs.ErrorField, rs.ToLongField; len(list) == 0 || Ef != "" || Lf != "" {
@@ -230,8 +247,8 @@ func setLastData(list []map[string]interface{}, CT string, fds *types.FieldDefin
 			vStr := ""
 			if str, isStr := v.(string); isStr {
 				vStr = str
-			} else {
-				vStr = fmt.Sprintf("%v", v)
+			} else if v != nil {
+				vStr = fmt.Sprint(v)
 			}
 			fd.LastValue = vStr
 			fd.LastTime = lastUpdateTime

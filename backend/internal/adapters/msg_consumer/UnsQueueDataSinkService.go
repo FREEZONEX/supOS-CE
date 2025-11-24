@@ -133,8 +133,10 @@ func (s *UnsQueueDataSinkService) fetchData() {
 				continue
 			}
 			for _, m := range msgs {
-				msgToSend = append(msgToSend, m)
-				size += len(m.Data)
+				if m != nil {
+					msgToSend = append(msgToSend, m)
+					size += len(m.Data)
+				}
 			}
 			if size >= fetchSize {
 				//上车

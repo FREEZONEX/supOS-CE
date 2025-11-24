@@ -68,15 +68,20 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 	{
 		srcUns.Id = 0
 		srcUns.PathType = src.PathType
-		newAlias := PathUtil.GenerateAliasWithRandom(srcUns.Name)
-		if src.PathType == constants.PathTypeDir {
-			parentAliasMap[src.Alias] = newAlias
-		}
-		srcUns.Alias = newAlias
-		if tar != nil {
-			srcUns.ParentAlias = &tar.Alias
+		if req.TargetId != req.SourceId {
+			newAlias := PathUtil.GenerateAliasWithRandom(srcUns.Name)
+			if src.PathType == constants.PathTypeDir {
+				parentAliasMap[src.Alias] = newAlias
+			}
+			srcUns.Alias = newAlias
+			if tar != nil {
+				srcUns.ParentAlias = &tar.Alias
+			} else {
+				srcUns.ParentAlias = nil
+			}
 		} else {
-			srcUns.ParentAlias = nil
+			srcUns.Alias = src.Alias
+			parentAliasMap[src.Alias] = src.Alias
 		}
 	}
 	var positioningUns = srcUns //返回给前端的定位UNS
