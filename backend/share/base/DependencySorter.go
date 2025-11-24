@@ -10,16 +10,40 @@ func SorByDependency[T any, R cmp.Ordered](
 	less func(T, T) bool,
 	keyFunc func(T) R,
 	valueFunc func(T) R,
-) {
+) (okValues, errorValues []T) {
 	gf := buildReverseGraph(deps, keyFunc, valueFunc)
-	lm := calculateLevels(gf)
+	lm := CalculateLevels(gf)
+
+	if len(lm) < len(gf) {
+		errorValues = make([]T, 0, len(deps)-len(lm))
+		okValues = make([]T, 0, len(lm))
+		kM := make(map[R]T)
+		for _, d := range deps {
+			kM[keyFunc(d)] = d
+		}
+		for k := range lm {
+			v, has := kM[k]
+			delete(kM, k)
+			if has {
+				okValues = append(okValues, v)
+			}
+		}
+		for _, d := range kM {
+			errorValues = append(errorValues, d)
+		}
+		if len(okValues) == 0 {
+			return
+		}
+	} else {
+		okValues = deps
+	}
 	arr := dgSlice{
-		size: len(deps),
+		size: len(okValues),
 		swap: func(i, j int) {
-			deps[i], deps[j] = deps[j], deps[i]
+			okValues[i], okValues[j] = okValues[j], okValues[i]
 		},
 		less: func(i, j int) (cmp bool) {
-			m, n := deps[i], deps[j]
+			m, n := okValues[i], okValues[j]
 			a, b := keyFunc(m), keyFunc(n)
 			rs := lm[a] - lm[b]
 			if rs != 0 {
@@ -31,6 +55,7 @@ func SorByDependency[T any, R cmp.Ordered](
 		},
 	}
 	sort.Sort(arr)
+	return
 }
 
 type dgSlice struct {
@@ -68,7 +93,7 @@ func buildReverseGraph[T any, R cmp.Ordered](
 	return graph
 }
 
-func calculateLevels[R cmp.Ordered](
+func CalculateLevels[R cmp.Ordered](
 	graph map[R][]R,
 ) map[R]int {
 	levelMap := make(map[R]int)

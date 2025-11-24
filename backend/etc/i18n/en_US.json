@@ -29,6 +29,7 @@
   "common.collector": "Collector",
   "common.pagesize": "The pageSize must be greater than 0.",
   "common.pageno": "The pageNo must be greater than 0.",
+  "uns.circularDependency": "uns circular dependency",
   "uns.dataType.1": "Time Series",
   "uns.dataType.2": "Relational",
   "uns.dataType.3": "Real-time Calculation",

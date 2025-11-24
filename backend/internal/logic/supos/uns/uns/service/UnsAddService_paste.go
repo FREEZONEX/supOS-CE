@@ -14,6 +14,7 @@ import (
 
 	"gitee.com/unitedrhino/share/stores"
 	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
 )
 
 /**
@@ -58,100 +59,14 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 		return
 	}
 	src, tar := idMap[req.SourceId], idMap[req.TargetId]
-	srcUns := UnsConverter.Po2Dto(src)
-	parentAliasMap := make(map[string]string, 64)
-	if nf := req.NewFile; nf != nil {
-		nf.Id = 0
-		nf.Alias = ""
-		_ = copier.CopyWithOption(srcUns, nf, copier.Option{IgnoreEmpty: true})
-	}
-	{
-		srcUns.Id = 0
-		srcUns.PathType = src.PathType
-		if req.TargetId != req.SourceId {
-			newAlias := PathUtil.GenerateAliasWithRandom(srcUns.Name)
-			if src.PathType == constants.PathTypeDir {
-				parentAliasMap[src.Alias] = newAlias
-			}
-			srcUns.Alias = newAlias
-			if tar != nil {
-				srcUns.ParentAlias = &tar.Alias
-			} else {
-				srcUns.ParentAlias = nil
-			}
-		} else {
-			srcUns.Alias = src.Alias
-			parentAliasMap[src.Alias] = src.Alias
-		}
-	}
+	srcUns, parentAliasMap := u.getSrcUns(src, req, tar)
 	var positioningUns = srcUns //返回给前端的定位UNS
 	countChildren := int64(0)
 	if src.PathType == constants.PathTypeDir {
-		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
-		MaxId := int64(0)
-		queryMaxId := &MaxId
-		for loop := true; loop; {
-			poList, _ := u.unsMapper.ListByLayRec(db, src.LayRec+"/", page, queryMaxId)
-			if countChildren == 0 {
-				queryMaxId = nil
-			}
-			if len(poList) == 0 {
-				break
-			}
-			page.Page++
-			list := make([]*types.CreateTopicDto, 0, 1+len(poList))
-			if countChildren == 0 {
-				list = append(list, srcUns)
-			}
-
-			for _, po := range poList {
-				if po.Id > MaxId {
-					u.log.Infof("复制自己文件结束: id=%d > %d, len(list)=%d", po.Id, MaxId, len(list))
-					loop = false
-					break
-				}
-				newAlias := PathUtil.GenerateAliasWithRandom(po.Name)
-				if po.PathType == constants.PathTypeDir {
-					parentAliasMap[po.Alias] = newAlias
-				}
-				unsDto := UnsConverter.Po2Dto(po)
-				list = append(list, unsDto)
-				unsDto.Id = 0
-				unsDto.ParentId = nil
-				unsDto.Alias = newAlias
-				if pAlias := unsDto.ParentAlias; pAlias != nil {
-					if newA := parentAliasMap[*pAlias]; newA != "" {
-						unsDto.ParentAlias = &newA
-					}
-				}
-				flags := unsDto.WithFlags
-				if flags != nil {
-					var fl int32 = (*flags) & (^constants.UnsFlagWithFlow)
-					unsDto.WithFlags = &fl
-				}
-			}
-			if len(list) == 0 {
-				loop = false
-				break
-			}
-			if countChildren == 0 && u.sysConfig.EnableAutoCategorization && base.P2v(src.DataType) > 0 && len(list) > 1 {
-				positioningUns = list[1]
-			}
-			srcAlias := srcUns.Alias
-			tipMap := u.CreateModelAndInstance(ctx, list, false)
-			if len(tipMap) > 0 {
-				resp.Code, resp.Msg = 400, fmt.Sprintf("%+v", tipMap)
-				return
-			}
-			if countChildren == 0 && srcAlias != srcUns.Alias {
-				u.log.Infof("修正别名: %s -> %s", srcAlias, srcUns.Alias)
-				parentAliasMap[src.Alias] = srcUns.Alias
-			}
-			listSize := int64(len(poList))
-			countChildren += listSize
-			if listSize < page.Size {
-				break
-			}
+		var done bool
+		countChildren, done = u.copyChildren(ctx, db, src, srcUns, &positioningUns, parentAliasMap, resp)
+		if done {
+			return resp, nil
 		}
 	}
 	if countChildren == 0 {
@@ -170,4 +85,118 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 		}
 	}
 	return
+}
+
+func (u *UnsAddService) copyChildren(ctx context.Context,
+	db *gorm.DB,
+	src *dao.UnsNamespace,
+	srcUns *types.CreateTopicDto,
+	positioningUns **types.CreateTopicDto,
+	parentAliasMap map[string]string,
+	resp *types.CreateUnsResp) (int64, bool) {
+
+	countChildren := int64(0)
+	page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
+	MaxId := int64(0)
+	queryMaxId := &MaxId
+	for loop := true; loop; {
+		poList, _ := u.unsMapper.ListByLayRec(db, src.LayRec+"/", page, queryMaxId)
+		if countChildren == 0 {
+			queryMaxId = nil
+		}
+		if len(poList) == 0 {
+			break
+		}
+		page.Page++
+		list := make([]*types.CreateTopicDto, 0, 1+len(poList))
+		if countChildren == 0 {
+			list = append(list, srcUns)
+		}
+
+		for _, po := range poList {
+			if po.Id > MaxId {
+				u.log.Infof("复制自己文件结束: id=%d > %d, len(list)=%d", po.Id, MaxId, len(list))
+				loop = false
+				break
+			}
+			newAlias := PathUtil.GenerateAliasWithRandom(po.Name)
+			if po.PathType == constants.PathTypeDir {
+				parentAliasMap[po.Alias] = newAlias
+			}
+			unsDto := UnsConverter.Po2Dto(po)
+			list = append(list, unsDto)
+			unsDto.Id = 0
+			unsDto.ParentId = nil
+			unsDto.Alias = newAlias
+			if pAlias := unsDto.ParentAlias; pAlias != nil {
+				if newA := parentAliasMap[*pAlias]; newA != "" {
+					unsDto.ParentAlias = &newA
+				}
+			}
+			flags := unsDto.WithFlags
+			if flags != nil {
+				var fl int32 = (*flags) & (^constants.UnsFlagWithFlow)
+				unsDto.WithFlags = &fl
+			}
+		}
+		if len(list) == 0 {
+			loop = false
+			break
+		}
+		if countChildren == 0 && u.sysConfig.EnableAutoCategorization && base.P2v(src.DataType) > 0 && len(list) > 1 {
+			*positioningUns = list[1]
+		}
+		srcAlias := srcUns.Alias
+		tipMap := u.CreateModelAndInstance(ctx, list, false)
+		if len(tipMap) > 0 {
+			resp.Code, resp.Msg = 400, fmt.Sprintf("%+v", tipMap)
+			return 0, true
+		}
+		if countChildren == 0 && srcAlias != srcUns.Alias {
+			u.log.Infof("修正别名: %s -> %s", srcAlias, srcUns.Alias)
+			parentAliasMap[src.Alias] = srcUns.Alias
+		}
+		listSize := int64(len(poList))
+		countChildren += listSize
+		if listSize < page.Size {
+			break
+		}
+	}
+	return countChildren, false
+}
+
+func (u *UnsAddService) getSrcUns(src *dao.UnsNamespace, req *types.PasteRequestVO, tar *dao.UnsNamespace) (*types.CreateTopicDto, map[string]string) {
+	srcUns := UnsConverter.Po2Dto(src)
+	parentAliasMap := make(map[string]string, 64)
+	if nf := req.NewFile; nf != nil {
+		nf.Id = 0
+		nf.Alias = ""
+		nf.ParentAlias = nil
+		nf.ParentId = nil
+		_ = copier.CopyWithOption(srcUns, nf, copier.Option{IgnoreEmpty: true})
+	}
+	{
+		srcUns.Id = 0
+		srcUns.ParentId = nil
+		srcUns.ParentAlias = nil
+		srcUns.PathType = src.PathType
+
+		if req.TargetId != req.SourceId || src.PathType == constants.PathTypeFile || base.P2v(src.DataType) == 0 || !u.sysConfig.EnableAutoCategorization {
+			newAlias := PathUtil.GenerateAliasWithRandom(srcUns.Name)
+			if src.PathType == constants.PathTypeDir {
+				parentAliasMap[src.Alias] = newAlias
+			}
+			srcUns.Alias = newAlias
+			if tar != nil {
+				srcUns.ParentAlias = &tar.Alias
+			} else {
+				srcUns.ParentAlias = nil
+			}
+		} else {
+			srcUns.Alias = src.Alias
+			srcUns.ParentAlias = src.ParentAlias
+			parentAliasMap[src.Alias] = src.Alias
+		}
+	}
+	return srcUns, parentAliasMap
 }

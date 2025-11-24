@@ -90,13 +90,20 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	aliasMap := make(map[string]*dao.UnsNamespace)
 	folders := base.MapValues(paramFolders)
 	if len(folders) > 1 {
-		base.SorByDependency(folders, func(a, b *types.CreateTopicDto) bool {
+		var loopFolders []*types.CreateTopicDto
+		folders, loopFolders = base.SorByDependency(folders, func(a, b *types.CreateTopicDto) bool {
 			return a.Index < b.Index
 		}, func(t *types.CreateTopicDto) string {
 			return t.Alias
 		}, func(t *types.CreateTopicDto) string {
 			return base.P2v(t.ParentAlias)
 		})
+		if len(loopFolders) > 0 {
+			msg := I18nUtils.GetMessage("uns.circularDependency")
+			for _, folder := range loopFolders {
+				errTipMap[folder.GainBatchIndex()] = msg + ": " + folder.Alias
+			}
+		}
 	}
 	createTime := time.Now()
 	allUns := func(alias string) *dao.UnsNamespace {

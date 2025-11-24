@@ -4,6 +4,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/share/base"
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -270,8 +271,16 @@ func (p UnsNamespaceRepo) ListAlarmRules(db *gorm.DB, key string, page *stores.P
 func (p UnsNamespaceRepo) ListByLayRec(db *gorm.DB, layRec string, page *stores.PageInfo, maxId *int64) (results []*UnsNamespace, err error) {
 	db = p.model(db).Where("lay_rec like '" + escapeSQL(layRec) + "%'").Where("status=1")
 	if maxId != nil {
-		err = db.WithContext(context.Background()).Select("MAX(id) as id").Scan(maxId).Error
-		if err != nil || *maxId == 0 {
+		var sqlMaxId sql.NullInt64
+		err = db.WithContext(context.Background()).Select("MAX(id) as id").Scan(&sqlMaxId).Error
+		if err != nil {
+			return
+		} else if sqlMaxId.Valid {
+			*maxId = sqlMaxId.Int64
+			if *maxId == 0 {
+				return
+			}
+		} else {
 			return
 		}
 	}

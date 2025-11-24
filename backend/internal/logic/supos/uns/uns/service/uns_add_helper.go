@@ -275,7 +275,10 @@ func checkTopicDto(errTipMap map[string]string,
 			return
 		}
 	}
-
+	if alias != "" && alias == base.P2v(d.ParentAlias) {
+		errTipMap[batchIndex] = I18nUtils.GetMessage("uns.circularDependency")
+		return
+	}
 	if pathType == constants.PathTypeDir { // 当前是文件夹
 		put(d)
 	} else if pathType == constants.PathTypeFile { // 当前是文件

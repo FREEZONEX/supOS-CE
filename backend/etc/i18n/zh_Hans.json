@@ -29,6 +29,7 @@
   "common.collector": "采集器",
   "common.pagesize": "pageSize必须大于0",
   "common.pageno": "pageNo必须大于0",
+  "uns.circularDependency": "UNS出现循环依赖",
   "uns.dataType.1": "时序类型",
   "uns.dataType.2": "关系类型",
   "uns.dataType.3": "实时计算",

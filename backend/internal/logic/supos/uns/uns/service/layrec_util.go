@@ -72,7 +72,7 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 		}
 	}
 	list := base.MapValues(allNodes)
-	base.SorByDependency(list, func(a, b *dao.UnsNamespace) bool {
+	list, erList := base.SorByDependency(list, func(a, b *dao.UnsNamespace) bool {
 		return a.Id < b.Id
 	}, func(t *dao.UnsNamespace) int64 {
 		return t.Id
@@ -80,6 +80,11 @@ func setLayRecAndPath(updateTime time.Time, addFiles map[int64]*dao.UnsNamespace
 		return base.P2vWithDefault(t.ParentId, -1)
 	})
 	logx.Debug("setLayRecAndPath: list=", list)
+	if len(erList) > 0 {
+		logx.Errorf("setLayRecAndPath: 存在循环依赖: %+v", base.Map[*dao.UnsNamespace, int64](erList, func(e *dao.UnsNamespace) int64 {
+			return e.Id
+		}))
+	}
 	// 处理所有节点
 	for _, node := range list {
 		id := node.Id
@@ -272,9 +277,11 @@ func calculateDescendants(nodeId int64,
 	// 递归计算所有子节点的子孙节点数
 	if vs, exists := childrenMap[nodeId]; exists {
 		for _, childId := range vs {
-			rs := calculateDescendants(childId, childrenMap, directChildrenCountMap, result)
-			for i := 0; i < len(totalDescendants); i++ {
-				totalDescendants[i] += rs[i]
+			if childId != nodeId {
+				rs := calculateDescendants(childId, childrenMap, directChildrenCountMap, result)
+				for i := 0; i < len(totalDescendants); i++ {
+					totalDescendants[i] += rs[i]
+				}
 			}
 		}
 	}
