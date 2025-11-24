@@ -709,6 +709,7 @@ func (d *diskQueue) ioLoop() {
 			count++
 			d.writeResponseChan <- d.writeOne(dataWrite)
 		case <-syncTicker.C:
+			syncTicker.Reset(d.syncTimeout)
 			if count == 0 {
 				// avoid sync when there's no activity
 				continue

@@ -9,6 +9,33 @@ func Map[E any, M any](arr []E, op func(e E) M) (rs []M) {
 	}
 	return rs
 }
+func MapDistinct[E any, K comparable](arr []E, op func(e E) K) (rs []K) {
+	if len(arr) > 0 {
+		rsMap := NewLinkedHashMap[K, int]()
+		for i, v := range arr {
+			k := op(v)
+			rsMap.Put(k, i)
+		}
+		rs = rsMap.Keys()
+	}
+	return rs
+}
+func MapDistinctFree[E any, K comparable](arr []E, op func(e E) K) (rs []K) {
+	if len(arr) > 0 {
+		rsMap := make(map[K]int)
+		for i, v := range arr {
+			k := op(v)
+			rsMap[k] = i
+		}
+		rs = make([]K, len(rsMap))
+		i := 0
+		for k := range rsMap {
+			rs[i] = k
+			i++
+		}
+	}
+	return rs
+}
 func MapFilter[K comparable, V any](m map[K]V, f func(V) bool) (rs map[K]V) {
 	rs = make(map[K]V, len(m))
 	if len(m) > 0 {

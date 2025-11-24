@@ -333,7 +333,7 @@ func setJdbcType(unsDto *types.CreateTopicDto) {
 		switch *dataType {
 		case constants.CalculationHistType, constants.CalculationRealType, constants.TimeSequenceType:
 			jdbcType = types.SrcJdbcTypeTimeScaleDB.Id()
-		case constants.AlarmRuleType, constants.RelationType, constants.MergeType:
+		case constants.AlarmRuleType, constants.RelationType, constants.MergeType, constants.JsonbType:
 			jdbcType = types.SrcJdbcTypePostgresql.Id()
 		default:
 			jdbcType = types.SrcJdbcTypeNone.Id()
