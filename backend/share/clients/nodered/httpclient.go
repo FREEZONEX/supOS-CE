@@ -60,7 +60,8 @@ func (c Client) DoJSON(ctx context.Context, method, path string, reqBody any, ou
 	case "PUT":
 		resp, body, errs = greq.Put(c.url(path)).Send(reqBody).EndStruct(out)
 	case "DELETE":
-		resp, body, errs = greq.Delete(c.url(path)).EndStruct(out)
+		// Delete often returns an empty body; using EndStruct can emit unexpected EOF errors.
+		resp, body, errs = greq.Delete(c.url(path)).EndBytes()
 	default:
 		errs = append(errs, fmt.Errorf("unsupported method: %s", method))
 	}
