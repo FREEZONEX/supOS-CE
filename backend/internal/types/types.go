@@ -642,7 +642,7 @@ type MakeSingleLabelReq struct {
 }
 
 type MarkTopRequest struct {
-	ID int64 `json:"id"`
+	ID string `json:"id"`
 }
 
 type MockInstanceTopologyReq struct {

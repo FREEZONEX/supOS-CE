@@ -30,7 +30,7 @@ func NewMarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MarkTopLo
 	}
 }
 
-func (l *MarkTopLogic) MarkTop(id int64, userID string) (*types.JsonResult, error) {
+func (l *MarkTopLogic) MarkTop(id string, userID string) (*types.JsonResult, error) {
 	mark := &relationDB.DashboardMarkModel{
 		ID:     id,
 		UserID: userID,
