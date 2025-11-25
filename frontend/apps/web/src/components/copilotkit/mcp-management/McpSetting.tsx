@@ -10,7 +10,7 @@ import { useTranslate } from '@/hooks';
 import ComButton from '@/components/com-button';
 import { formatTimestamp } from '@/utils';
 import ProModal from '@/components/pro-modal';
-import McpTypeForm from '@/components/copilotkit/mcp-management/McpTypeForm.tsx';
+import McpTypeForm from './McpTypeForm.tsx';
 
 const McpSetting = () => {
   const [mcpList, setMcpList] = useState<any[]>([]);
