@@ -30,6 +30,30 @@ require (
 )
 
 require (
+	gitee.com/unitedrhino/driver-go/v3 v3.30.2 // indirect
+	github.com/alibabacloud-go/debug v1.0.0 // indirect
+	github.com/alibabacloud-go/tea v1.3.9 // indirect
+	github.com/aws/aws-sdk-go v1.55.8 // indirect
+	github.com/dolthub/maphash v0.1.0 // indirect
+	github.com/gammazero/deque v0.2.1 // indirect
+	github.com/go-ini/ini v1.67.0 // indirect
+	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/hibiken/asynq v0.25.1 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
+	github.com/maypok86/otter v1.2.4 // indirect
+	github.com/minio/crc64nvme v1.0.1 // indirect
+	github.com/minio/md5-simd v1.1.2 // indirect
+	github.com/minio/minio-go/v7 v7.0.91 // indirect
+	github.com/nats-io/nats.go v1.43.0 // indirect
+	github.com/nats-io/nkeys v0.4.11 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
+	github.com/rs/xid v1.6.0 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
+)
+
+require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	gitee.com/unitedrhino/squirrel v1.20.7 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
