@@ -26,7 +26,7 @@ func NewListAttachmentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Li
 }
 
 func (l *ListAttachmentLogic) ListAttachment(req *types.ListAttachmentReq) (resp *types.ListAttachmentResp, err error) {
-	repo := relationDB.NewUnsAttachmentRepo(l.svcCtx)
+	repo := relationDB.NewUnsAttachmentRepo(l.ctx)
 
 	list, err := repo.FindByUnsAlias(l.ctx, req.Alias)
 	if err != nil {

@@ -31,7 +31,7 @@ func NewAttachmentPreviewLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *AttachmentPreviewLogic) AttachmentPreview(req *types.AttachmentPreviewReq) (resp *types.AttachmentPreviewResp, err error) {
-	repo := relationDB.NewUnsAttachmentRepo(l.svcCtx)
+	repo := relationDB.NewUnsAttachmentRepo(l.ctx)
 
 	attachments, err := repo.FindByAttachmentPath(l.ctx, req.ObjectName)
 	if err != nil {

@@ -41,7 +41,7 @@ func (l *AttachmentUploadLogic) AttachmentUpload(req *types.AttachmentUploadReq)
 	if len(files) == 0 {
 		return nil, errors.Parameter.AddMsg("没有上传文件")
 	}
-	repo := dao.NewUnsAttachmentRepo(l.svcCtx)
+	repo := dao.NewUnsAttachmentRepo(l.ctx)
 	unsRepo := dao.NewUnsNamespaceRepo()
 	db := dao.GetDb(l.ctx)
 
@@ -67,9 +67,9 @@ func (l *AttachmentUploadLogic) AttachmentUpload(req *types.AttachmentUploadReq)
 			extensionName = extensionName[1:]
 		}
 		if extensionName != "" {
-			attachmentName += "."+extensionName
+			attachmentName += "." + extensionName
 		}
-		filePath := req.Alias+"/"+ attachmentName
+		filePath := req.Alias + "/" + attachmentName
 		fi, err := f.Open()
 		if err != nil {
 			continue
@@ -100,7 +100,7 @@ func (l *AttachmentUploadLogic) AttachmentUpload(req *types.AttachmentUploadReq)
 
 		if err := repo.Insert(l.ctx, attachment); err != nil {
 			// 如果数据库保存失败，删除已保存的文件
-			//l.svcCtx.OssClient.PublicBucket().Delete(l.ctx, filePath, common.OptionKv{})
+			l.svcCtx.OssClient.PublicBucket().Delete(l.ctx, filePath, common.OptionKv{})
 			return nil, err
 		}
 

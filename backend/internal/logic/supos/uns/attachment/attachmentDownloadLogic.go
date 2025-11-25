@@ -31,15 +31,15 @@ func NewAttachmentDownloadLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 
-func (l *AttachmentDownloadLogic) AttachmentDownload(req *types.AttachmentDownloadReq,w http.ResponseWriter, r *http.Request) error {
-	repo := relationDB.NewUnsAttachmentRepo(l.svcCtx)
+func (l *AttachmentDownloadLogic) AttachmentDownload(req *types.AttachmentDownloadReq, w http.ResponseWriter, r *http.Request) error {
+	repo := relationDB.NewUnsAttachmentRepo(l.ctx)
 
-	attachment, err := repo.FindOneByFilter(l.ctx,relationDB.UnsAttachmentFilter{AttachmentPath: req.ObjectName})
+	attachment, err := repo.FindOneByFilter(l.ctx, relationDB.UnsAttachmentFilter{AttachmentPath: req.ObjectName})
 	if err != nil {
 		return err
 	}
-	tmpFile:=fmt.Sprintf("/tmp/%s",req.ObjectName)
-	err=l.svcCtx.OssClient.PublicBucket().GetObjectLocal(l.ctx,req.ObjectName,tmpFile)
+	tmpFile := fmt.Sprintf("/tmp/%s", req.ObjectName)
+	err = l.svcCtx.OssClient.PublicBucket().GetObjectLocal(l.ctx, req.ObjectName, tmpFile)
 	if err != nil {
 		return err
 	}

@@ -26,12 +26,12 @@ func NewAttachmentDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *AttachmentDeleteLogic) AttachmentDelete(req *types.AttachmentDeleteReq) error {
-	repo := dao.NewUnsAttachmentRepo(l.svcCtx)
+	repo := dao.NewUnsAttachmentRepo(l.ctx)
 	attachment, err := repo.FindOneByFilter(l.ctx, dao.UnsAttachmentFilter{AttachmentPath: req.ObjectName})
 	if err != nil {
 		return err
 	}
-	err=l.svcCtx.OssClient.Delete(l.ctx,attachment.AttachmentPath,common.OptionKv{})
+	err = l.svcCtx.OssClient.Delete(l.ctx, attachment.AttachmentPath, common.OptionKv{})
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,6 @@ func (l *AttachmentDeleteLogic) AttachmentDelete(req *types.AttachmentDeleteReq)
 	if err := repo.Delete(l.ctx, attachment.ID); err != nil {
 		return err
 	}
-
 
 	return nil
 }
