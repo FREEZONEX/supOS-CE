@@ -5,9 +5,11 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/repo/relationDB"
 	_ "backend/share/result"
+	"os"
 
 	"gitee.com/unitedrhino/share/conf"
 	"gitee.com/unitedrhino/share/i18ns"
+	"gitee.com/unitedrhino/share/oss"
 	"gitee.com/unitedrhino/share/stores"
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -27,6 +29,7 @@ type ServiceContext struct {
 	InitCtxsWare   rest.Middleware
 	CheckTokenWare rest.Middleware
 	SnowFlake      *utils.SnowFlake
+	OssClient      *oss.Client
 	Keycloak       *clients.KeycloakClient
 	SourceNodeRed  *noderedclient.Client
 	EventNodeRed   *noderedclient.Client
@@ -55,9 +58,14 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	keycloakClient := clients.InitKeycloakClient(c.OAuthKeyCloak)
 
 	common.InitSnowflake(1)
-
+	ossClient, err := oss.NewOssClient(c.OssConf)
+	if err != nil {
+		logx.Errorf("NewOss err err:%v", err)
+		os.Exit(-1)
+	}
 	return &ServiceContext{
 		Config:         c,
+		OssClient:      ossClient,
 		CheckTokenWare: middleware.NewCheckTokenWareMiddleware(keycloakClient, c.OAuthKeyCloak.SuposHome, c.OAuthKeyCloak.Realm).Handle,
 		InitCtxsWare:   middleware.NewInitCtxsWareMiddleware().Handle,
 		SnowFlake:      utils.NewSnowFlake(1),

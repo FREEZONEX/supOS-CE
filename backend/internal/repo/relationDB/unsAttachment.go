@@ -17,12 +17,18 @@ func NewUnsAttachmentRepo(in any) *UnsAttachmentRepo {
 }
 
 type UnsAttachmentFilter struct {
-	//todo 添加过滤字段
+	UnsAlias       string // 关联模型实例别名
+	AttachmentPath string // 附件存储路径
 }
 
 func (p UnsAttachmentRepo) fmtFilter(ctx context.Context, f UnsAttachmentFilter) *gorm.DB {
 	db := p.db.WithContext(ctx)
-	//todo 添加条件
+	if f.UnsAlias != "" {
+		db = db.Where("uns_alias = ?", f.UnsAlias)
+	}
+	if f.AttachmentPath != "" {
+		db = db.Where("attachment_path = ?", f.AttachmentPath)
+	}
 	return db
 }
 
@@ -91,4 +97,28 @@ func (d UnsAttachmentRepo) UpdateWithField(ctx context.Context, f UnsAttachmentF
 	db := d.fmtFilter(ctx, f)
 	err := db.Model(&UnsAttachment{}).Updates(updates).Error
 	return stores.ErrFmt(err)
+}
+
+// FindByUnsAlias 根据模型实例别名查询附件列表
+func (p UnsAttachmentRepo) FindByUnsAlias(ctx context.Context, unsAlias string) ([]*UnsAttachment, error) {
+	var results []*UnsAttachment
+	err := p.db.WithContext(ctx).
+		Where("uns_alias = ?", unsAlias).
+		Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
+
+// FindByAttachmentPath 根据附件存储路径查询附件列表
+func (p UnsAttachmentRepo) FindByAttachmentPath(ctx context.Context, attachmentPath string) ([]*UnsAttachment, error) {
+	var results []*UnsAttachment
+	err := p.db.WithContext(ctx).
+		Where("attachment_path = ?", attachmentPath).
+		Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
 }
