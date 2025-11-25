@@ -19,7 +19,7 @@ export function registerRoutes(app: Express) {
       timestamp: new Date().toISOString(),
       endpoints: {
         health: '/open-api/health',
-        mcpManagement: '/mcp-management',
+        mcpManagement: '/mcp/*',
       },
     });
   });

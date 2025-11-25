@@ -152,7 +152,7 @@ app.delete('/mcp', async (req: Request, res: Response) => {
 // Start the server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  logger.error(`MCP Streamable HTTP Server listening on port ${PORT}`);
+  logger.error(`MCP Streamable HTTP Server listening on (http://localhost:${PORT}/mcp)`);
 });
 
 // Handle server shutdown
