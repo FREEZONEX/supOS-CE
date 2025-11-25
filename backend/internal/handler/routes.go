@@ -542,7 +542,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				},
 			}...,
 		),
-		rest.WithPrefix("/inter-api/supos/uns/attachment"),
+		rest.WithPrefix("/inter-api/supos/uns"),
 	)
 
 	server.AddRoutes(

@@ -2470,10 +2470,10 @@
         ]
       }
     },
-    "/inter-api/supos/uns/attachment/attachment": {
+    "/inter-api/supos/uns/attachment": {
       "get": {
         "summary": "模板实例附件下载",
-        "operationId": "getInter-apiSuposUnsAttachmentAttachment",
+        "operationId": "getInter-apiSuposUnsAttachment",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2509,7 +2509,7 @@
       },
       "delete": {
         "summary": "模板实例附件删除",
-        "operationId": "deleteInter-apiSuposUnsAttachmentAttachment",
+        "operationId": "deleteInter-apiSuposUnsAttachment",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2545,7 +2545,7 @@
       },
       "post": {
         "summary": "模板实例附件上传",
-        "operationId": "postInter-apiSuposUnsAttachmentAttachment",
+        "operationId": "postInter-apiSuposUnsAttachment",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2598,10 +2598,10 @@
         ]
       }
     },
-    "/inter-api/supos/uns/attachment/attachment/preview": {
+    "/inter-api/supos/uns/attachment/preview": {
       "get": {
         "summary": "模板实例附件预览",
-        "operationId": "getInter-apiSuposUnsAttachmentAttachmentPreview",
+        "operationId": "getInter-apiSuposUnsAttachmentPreview",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -2636,10 +2636,10 @@
         ]
       }
     },
-    "/inter-api/supos/uns/attachment/attachments": {
+    "/inter-api/supos/uns/attachments": {
       "get": {
         "summary": "获取模板实例附件列表",
-        "operationId": "getInter-apiSuposUnsAttachmentAttachments",
+        "operationId": "getInter-apiSuposUnsAttachments",
         "responses": {
           "200": {
             "description": "A successful response.",

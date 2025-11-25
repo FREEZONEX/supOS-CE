@@ -8,7 +8,7 @@ info(
 
 @server(
     group: supos/uns/attachment
-    prefix: /inter-api/supos/uns/attachment
+    prefix: /inter-api/supos/uns
     middleware:  CheckTokenWare,InitCtxsWare
 )
 service backend {
