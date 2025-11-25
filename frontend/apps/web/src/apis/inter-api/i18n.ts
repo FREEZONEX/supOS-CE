@@ -12,7 +12,7 @@ const api = new ApiWrapper(baseUrl);
 
 export const getLangListApi = async (params?: { key?: string }) =>
   api.get('/languages', { params }).then((res) => {
-    return (res || [])?.map((item: any) => ({
+    return res?.list?.map((item: any) => ({
       ...item,
       label: item.languageName,
       value: item.languageCode,
