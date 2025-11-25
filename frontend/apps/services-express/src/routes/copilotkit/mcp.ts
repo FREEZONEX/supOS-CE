@@ -19,28 +19,76 @@ mcpRouter.get('/list', (_: Request, res: Response) => {
 });
 
 // 新增mcp客户端
+// 新增mcp客户端（支持单个或批量添加）
 mcpRouter.post('/add', async (req: Request, res: Response) => {
   try {
-    const endpoint = convertConfigToUrl(req.body);
-    if (!endpoint) {
+    const configs = Array.isArray(req.body) ? req.body : [req.body];
+
+    if (configs.length === 0) {
       return res.status(400).json({
         code: 400,
         data: null,
-        msg: '缺少必需的参数: name',
+        msg: '缺少MCP配置参数',
       });
     }
-    const config = {
-      endpoint,
-    };
-    await mcpManager.getOrCreateMCPClient(config);
+
+    const results = [];
+    const errors = [];
+
+    for (const config of configs) {
+      try {
+        const endpoint = convertConfigToUrl(config);
+        if (!endpoint) {
+          errors.push({
+            config,
+            error: '缺少必需的参数: name',
+          });
+          continue;
+        }
+
+        const clientConfig = {
+          endpoint,
+        };
+
+        await mcpManager.getOrCreateMCPClient(clientConfig);
+
+        results.push({
+          endpoint: endpoint,
+          isConnected: true,
+          lastUsed: Date.now(),
+        });
+      } catch (e) {
+        errors.push({
+          config,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+
+    if (results.length === 0 && errors.length > 0) {
+      return res.status(400).json({
+        code: 400,
+        data: null,
+        msg: '所有MCP配置添加失败',
+        errors: errors.map((e) => e.error),
+      });
+    }
+
+    const successCount = results.length;
+    const errorCount = errors.length;
+
     return res.status(200).json({
       code: 200,
       data: {
-        endpoint: endpoint,
-        isConnected: true,
-        lastUsed: Date.now(),
+        results,
+        errors: errorCount > 0 ? errors : undefined,
+        summary: {
+          total: configs.length,
+          success: successCount,
+          failed: errorCount,
+        },
       },
-      msg: `MCP客户端 ${endpoint} 创建成功`,
+      msg: `成功添加 ${successCount} 个MCP客户端${errorCount > 0 ? `，失败 ${errorCount} 个` : ''}`,
     });
   } catch (e) {
     return res.status(500).json({

@@ -58,7 +58,16 @@ npx @supos-os-edge/demo-mcp-server streamableHttp
 ```json
 {
   "mcpServers": {
-    "demo-mcp-server": {
+    "demo-streamable": {
+      "url": "http://localhost:3000/mcp",
+      "transportType": "streamable-http"
+    },
+    "demo-sse": {
+      "url": "http://localhost:3001/sse",
+      "transportType": "sse"
+    },
+    "demo-stdio": {
+      "transportType": "stdio",
       "command": "npx",
       "args": ["-y", "@supos-os-edge/demo-mcp-server"]
     }

@@ -16,29 +16,18 @@ export interface McpServerConfig {
     // SSE 配置
     url?: string;
     headers?: Record<string, string>;
-
-    // Streamable HTTP 配置
-    baseUrl?: string;
-    sessionId?: string;
-
     // Stdio 配置
     command?: string;
     args?: string[];
     env?: Record<string, string>;
-
     // 通用配置
     timeout?: number;
     retryCount?: number;
   };
 }
 
-interface McpTransportFormProps {
-  transportType: 'sse' | 'streamable-http' | 'stdio';
-  form: any;
-  editingServer?: McpServerConfig | null;
-}
-
-export const McpTransportForm: FC<McpTransportFormProps> = ({ transportType }) => {
+export const McpTransportForm: FC = () => {
+  const transportType = Form.useWatch('transportType');
   const renderSseConfig = () => (
     <>
       <Form.Item name={['config', 'url']} label="URL" rules={[{ required: true, message: '请输入SSE服务器URL' }]}>
@@ -73,7 +62,7 @@ export const McpTransportForm: FC<McpTransportFormProps> = ({ transportType }) =
 
   const renderStreamableHttpConfig = () => (
     <>
-      <Form.Item name={['config', 'baseUrl']} label="URL" rules={[{ required: true, message: '请输入URL' }]}>
+      <Form.Item name={['config', 'url']} label="URL" rules={[{ required: true, message: '请输入URL' }]}>
         <Input placeholder="例如: http://localhost:3001" />
       </Form.Item>
     </>

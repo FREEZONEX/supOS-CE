@@ -1,4 +1,4 @@
-import { App, Button, Divider, Empty, Flex, Form, Input, Select, Space, Tag } from 'antd';
+import { App, Button, Divider, Empty, Flex, Form, Radio, Space, Tag } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import ProCardContainer from '@/components/pro-card/ProCardContainer.tsx';
 import ProCard from '@/components/pro-card/ProCard.tsx';
@@ -10,14 +10,13 @@ import { useTranslate } from '@/hooks';
 import ComButton from '@/components/com-button';
 import { formatTimestamp } from '@/utils';
 import ProModal from '@/components/pro-modal';
-import { McpTransportForm } from './McpTransportForm.tsx';
+import McpTypeForm from './McpTypeForm.tsx';
 
 const McpSetting = () => {
   const [mcpList, setMcpList] = useState<any[]>([]);
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const formatMessage = useTranslate();
-  const [transportType, setTransportType] = useState<'sse' | 'streamable-http' | 'stdio'>('stdio');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getMcpListFn = () => {
@@ -36,13 +35,45 @@ const McpSetting = () => {
   };
 
   const handleAddServer = () => {
-    setTransportType('stdio');
     setIsModalOpen(true);
   };
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
-    return addMcp(values).then(() => {
+    const { json, type, ...restValues } = values;
+    let requestData: any = [];
+    if (type === 'json') {
+      Object.entries(JSON.parse(json)?.mcpServers).forEach(([key, value]: any) => {
+        if (value.transportType === 'stdio') {
+          requestData.push({
+            transportType: value.transportType,
+            name: key,
+            config: {
+              args: value.args || [],
+              env: Object.keys(value.env || {}).map((key) => {
+                return {
+                  key: key,
+                  value: value?.env?.[key],
+                };
+              }),
+              command: value.command || 'npx',
+            },
+          });
+        } else {
+          requestData.push({
+            transportType: value.transportType,
+            name: key,
+            config: {
+              url: value.url,
+            },
+          });
+        }
+      });
+    } else {
+      // Form模式：单个配置
+      requestData = restValues;
+    }
+    return addMcp(requestData).then(() => {
       handleModalCancel();
       message.success(formatMessage('uns.newSuccessfullyAdded'));
       getMcpListFn();
@@ -53,30 +84,15 @@ const McpSetting = () => {
     <div>
       <ProModal title="新增" destroyOnHidden width={500} open={isModalOpen} onCancel={handleModalCancel}>
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label="服务器名称" rules={[{ required: true, message: '请输入服务器名称' }]}>
-            <Input placeholder="请输入服务器名称" />
-          </Form.Item>
-          <Form.Item name="transportType" label="传输模式" initialValue="stdio">
-            <Select
-              onChange={(value: any) => setTransportType(value)}
+          <Form.Item name="type" initialValue="form">
+            <Radio.Group
               options={[
-                {
-                  label: 'sse',
-                  value: 'sse',
-                },
-                {
-                  label: 'streamable-http',
-                  value: 'streamable-http',
-                },
-                {
-                  label: 'stdio',
-                  value: 'stdio',
-                },
+                { value: 'form', label: 'Form' },
+                { value: 'json', label: 'Json' },
               ]}
             />
           </Form.Item>
-          <McpTransportForm transportType={transportType} form={form} />
-
+          <McpTypeForm />
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
               <Button onClick={handleModalCancel}>取消</Button>
@@ -114,7 +130,7 @@ const McpSetting = () => {
                   title: d?.clientName,
                   titleDescription: formatTimestamp(d?.lastUsed),
                 }}
-                key={d.enpoint}
+                key={d.clientName}
                 item={d}
                 description={false}
                 statusHeader={{

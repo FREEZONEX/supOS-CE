@@ -30,7 +30,6 @@ export interface StdioConfig {
 }
 
 export interface HttpConfig {
-  baseUrl?: string;
   url?: string;
 }
 

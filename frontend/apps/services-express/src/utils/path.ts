@@ -127,14 +127,14 @@ function convertStdioConfig(name: string, config: StdioConfig): string {
  * 转换streamable-http配置
  */
 function convertStreamableHttpConfig(name: string, config: HttpConfig): string {
-  if (!config.baseUrl) {
+  if (!config.url) {
     throw new Error('streamable-http配置缺少baseUrl');
   }
 
   const params = new URLSearchParams();
   params.append('clientName', name);
 
-  return `streamable-http://${config.baseUrl}?${params.toString()}`;
+  return `streamable-http://${config.url}?${params.toString()}`;
 }
 
 /**
