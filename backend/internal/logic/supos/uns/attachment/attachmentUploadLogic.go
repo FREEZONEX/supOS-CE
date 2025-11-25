@@ -46,7 +46,7 @@ func (l *AttachmentUploadLogic) AttachmentUpload(req *types.AttachmentUploadReq)
 	db := dao.GetDb(l.ctx)
 
 	// 检查 UNS 是否存在
-	uns, err := unsRepo.GetByAlias(db, req.Alias)
+	_, err = unsRepo.GetByAlias(db, req.Alias)
 	if err != nil {
 		if errors.Cmp(err, errors.NotFind) {
 			logx.Errorf("找不到 UNS: %s", req.Alias)
@@ -72,11 +72,13 @@ func (l *AttachmentUploadLogic) AttachmentUpload(req *types.AttachmentUploadReq)
 		filePath := req.Alias + "/" + attachmentName
 		fi, err := f.Open()
 		if err != nil {
+			l.Error(err)
 			continue
 		}
 		defer fi.Close()
 		_, err = l.svcCtx.OssClient.PublicBucket().Upload(l.ctx, filePath, fi, common.OptionKv{})
 		if err != nil {
+			l.Error(err)
 			continue
 		}
 		//// 写入文件（这里需要实际的文件数据）
@@ -124,9 +126,9 @@ func (l *AttachmentUploadLogic) AttachmentUpload(req *types.AttachmentUploadReq)
 	//*flags = *flags | constants.UnsFlagWithAttachment
 	//uns.Flags = flags
 
-	if err := unsRepo.Update(db, uns); err != nil {
-		return nil, err
-	}
+	//if err := unsRepo.Update(db, uns); err != nil {
+	//	return nil, err
+	//}
 
 	resp = &types.AttachmentUploadResp{
 		List: boList,
