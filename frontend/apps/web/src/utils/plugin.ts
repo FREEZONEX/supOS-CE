@@ -1,5 +1,4 @@
 import { loadRemote, registerRemotes } from '@module-federation/enhanced/runtime';
-import { getProperties } from 'properties-file';
 import { getPlugI18Api } from '@/apis/inter-api/uns.ts';
 
 // 获取通用的Remotes 相关信息  name：/Alert
@@ -69,6 +68,6 @@ export const preloadPluginLang = async (remoteList: { name: string; backendName:
       lang,
       remoteList?.map((m) => m.backendName)
     );
-    return getProperties(message);
+    return message?.message || {};
   }
 };

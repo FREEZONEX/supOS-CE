@@ -140,7 +140,6 @@ export const getSystemI18Api = async (lang: string) =>
     params: {
       lang,
     },
-    [CustomAxiosConfigEnum.NoCode]: true,
   });
 
 // 获取插件语言
@@ -150,7 +149,6 @@ export const getPlugI18Api = async (lang: string, pluginId: string[]) =>
       lang,
       pluginId,
     },
-    [CustomAxiosConfigEnum.NoCode]: true,
   });
 
 // ====================== 国际化相关 - end ================

@@ -47,7 +47,6 @@
     "js-cookie": "catalog:util",
     "mermaid": "^11.5.0",
     "pinyin-pro": "^3.26.0",
-    "properties-file": "catalog:util",
     "qs": "catalog:util",
     "react": "catalog:framework",
     "react-cookie": "catalog:util",

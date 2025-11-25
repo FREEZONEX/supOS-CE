@@ -1,6 +1,5 @@
 import localZhCN from '@/locale/zh-CN.json';
 import localEnUS from '@/locale/en-US.json';
-import { getProperties } from 'properties-file';
 import { getSystemI18Api } from '@/apis/inter-api/uns.ts';
 
 type I18n = 'zh-CN' | 'en-US';
@@ -101,7 +100,8 @@ export const loadMessages = async (lang: I18n) => {
     let backEndMessages = {};
     try {
       const content = await getSystemI18Api(lang);
-      backEndMessages = getProperties(content);
+      backEndMessages = content?.messages || {};
+      // backEndMessages = content;
     } catch (e) {
       console.log(e);
     }

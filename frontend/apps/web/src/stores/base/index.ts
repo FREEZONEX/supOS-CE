@@ -300,3 +300,11 @@ const fetchUserLanguage = async (info: { userId?: string; lang?: string }) => {
     return import.meta.env.REACT_APP_LOCAL_LANG || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
   }
 };
+
+// 关键：启用HMR支持
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    // 这里可以接受模块自身更新，也可以选择性地处理状态合并
+    console.log('Store module was hot-updated.');
+  });
+}
