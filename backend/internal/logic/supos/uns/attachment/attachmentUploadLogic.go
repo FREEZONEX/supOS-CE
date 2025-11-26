@@ -37,8 +37,14 @@ func NewAttachmentUploadLogic(ctx context.Context, svcCtx *svc.ServiceContext, r
 }
 
 func (l *AttachmentUploadLogic) AttachmentUpload(req *types.AttachmentUploadReq) (resp *types.AttachmentUploadResp, err error) {
+	err = l.r.ParseForm()
+	if err != nil {
+		return nil, errors.Parameter.AddMsg("解析表单失败")
+	}
+
 	files := l.r.MultipartForm.File["files"]
 	if len(files) == 0 {
+		l.Error(l.r.MultipartForm.File)
 		return nil, errors.Parameter.AddMsg("没有上传文件")
 	}
 	repo := dao.NewUnsAttachmentRepo(l.ctx)
