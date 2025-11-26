@@ -1,11 +1,6 @@
 import { App, Empty, Flex, Image, Tooltip } from 'antd';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import {
-  deleteAttachments,
-  getAttachment,
-  getAttachmentsList,
-  previewAttachment,
-} from '@/apis/inter-api/attachments.ts';
+import { deleteAttachments, getAttachment, getAttachmentsList } from '@/apis/inter-api/attachments.ts';
 import { Close, Download, View } from '@carbon/icons-react';
 import { useTranslate } from '@/hooks';
 import ComCopy from '@/components/com-copy';
@@ -24,9 +19,8 @@ const DocumentList = forwardRef<DocumentListRef | undefined, { alias: string }>(
   const request = () => {
     if (!alias) return;
     getAttachmentsList({ alias }).then((data: any) => {
-      console.log(data);
       setData(
-        data?.map((item: any) => {
+        data?.list?.map((item: any) => {
           const lastDotIndex = item.originalName.lastIndexOf('.');
           const _label = item.originalName.slice(0, lastDotIndex);
           const _type = item.originalName.slice(lastDotIndex + 1);
@@ -63,7 +57,7 @@ const DocumentList = forwardRef<DocumentListRef | undefined, { alias: string }>(
   };
 
   const onPreview = (item: any) => {
-    previewAttachment({ objectName: item?.attachmentPath }).then((data: any) => {
+    getAttachment({ objectName: item?.attachmentPath }).then((data: any) => {
       const url = window.URL.createObjectURL(new Blob([data]));
       setImageUrl(url);
       setVisible(true);

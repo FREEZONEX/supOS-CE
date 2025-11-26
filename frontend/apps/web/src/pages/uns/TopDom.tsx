@@ -1,15 +1,14 @@
-import { Badge, Button, Flex } from 'antd';
+import { Button, Flex } from 'antd';
 import { Copy, Rss } from '@carbon/icons-react';
 import { ButtonPermission } from '@/common-types/button-permission';
 import { getTreeStoreSnapshot, useTreeStore, useTreeStoreRef } from './store/treeStore';
 import { useClipboard, useTranslate } from '@/hooks';
-import { type FC, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { type FC, type ReactNode, useCallback, useRef } from 'react';
 import { ExportModal, ImportModal } from '@/pages/uns/components';
 import { AuthButton, AuthWrapper } from '@/components/auth';
 import ComBreadcrumb from '@/components/com-breadcrumb';
 import ComText from '@/components/com-text';
 import { useBaseStore } from '@/stores/base';
-import { getUnsExportRecordsApi } from '@/apis/inter-api/uns';
 
 interface TopDomProps {
   setCurrentUnusedTopicNode: any;
@@ -29,17 +28,11 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
     selectedNode: state.selectedNode,
     setSelectedNode: state.setSelectedNode,
   }));
-  const [exportRecords, setExportRecords] = useState([]);
 
   useClipboard(
     copyPathRef as any,
     currentTreeMapType === 'all' ? breadcrumbList.slice(-1)?.[0]?.path : currentUnusedTopicNode.path
   );
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability
-    getRecords?.();
-  }, []);
 
   const getTopicBreadcrumb = useCallback(
     (pArr: any[], addonAfter?: ReactNode | false) => (
@@ -81,12 +74,6 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
   const { loadData } = getTreeStoreSnapshot(stateRef, (state) => ({
     loadData: state.loadData,
   }));
-
-  const getRecords = () => {
-    return getUnsExportRecordsApi().then((data) => {
-      setExportRecords(data);
-    });
-  };
 
   return (
     <div className="chartTop">
@@ -138,18 +125,16 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
           {formatMessage('common.import')}
         </AuthButton>
         <AuthWrapper auth={ButtonPermission['uns.unsExport']}>
-          <Badge dot={exportRecords?.some((s: any) => !s.confirm)}>
-            <Button
-              color="default"
-              variant="filled"
-              style={{ background: '#c6c6c6', color: '#161616' }}
-              onClick={() => {
-                exportRef.current?.setOpen(true);
-              }}
-            >
-              {formatMessage('uns.export')}
-            </Button>
-          </Badge>
+          <Button
+            color="default"
+            variant="filled"
+            style={{ background: '#c6c6c6', color: '#161616' }}
+            onClick={() => {
+              exportRef.current?.setOpen(true);
+            }}
+          >
+            {formatMessage('uns.export')}
+          </Button>
         </AuthWrapper>
       </div>
       <ImportModal importRef={importRef} initTreeData={loadData} />

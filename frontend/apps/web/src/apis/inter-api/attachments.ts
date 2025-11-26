@@ -8,9 +8,6 @@ const api = new ApiWrapper(baseUrl);
 
 // 获取列表
 export const getAttachmentsList = async (params?: Record<string, unknown>) => api.get('/attachments', { params });
-// 预览
-export const previewAttachment = async (params?: Record<string, unknown>) =>
-  api.get('/attachment/preview', { params, responseType: 'blob', [CustomAxiosConfigEnum.NoCode]: true });
 // 删除
 export const deleteAttachments = async (params?: Record<string, unknown>) => api.delete('/attachment', { params });
 // 下载
