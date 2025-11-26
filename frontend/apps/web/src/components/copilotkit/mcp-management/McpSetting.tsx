@@ -1,4 +1,4 @@
-import { App, Button, Divider, Empty, Flex, Form, Radio, Space, Tag } from 'antd';
+import { App, Button, Divider, Empty, Flex, Form, Popover, Radio, Space, Tag } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import ProCardContainer from '@/components/pro-card/ProCardContainer.tsx';
 import ProCard from '@/components/pro-card/ProCard.tsx';
@@ -145,6 +145,25 @@ const McpSetting = () => {
                     color: d?.isConnected ? '#6FDC8C' : '#A8A8A8',
                   },
                 }}
+                secondaryDescription={
+                  <Popover
+                    content={
+                      <div style={{ maxHeight: 200, width: 200, overflow: 'auto' }}>
+                        {d?.tools?.map((t: any) => {
+                          return (
+                            <div key={t.name}>
+                              {t.name}:{t.description}
+                              <Divider style={{ margin: '4px 0' }} />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    }
+                    trigger="hover"
+                  >
+                    <Button type="link">tools({d?.tools?.length || 0})</Button>
+                  </Popover>
+                }
                 actions={(record) => {
                   return [
                     {

@@ -3,17 +3,32 @@ import { convertConfigToUrl, mcpManager } from '@/utils';
 
 const mcpRouter = express.Router();
 
-// mcp列表
-mcpRouter.get('/list', (_: Request, res: Response) => {
+// mcp列表（包含工具信息）
+mcpRouter.get('/list', async (_: Request, res: Response) => {
   try {
+    const mcpCache = mcpManager.getMCPClientCache();
+    // 合并MCP客户端信息和工具信息
+    const enhancedData = await Promise.all(
+      mcpCache.map(async (item) => {
+        const toolsResult = await mcpManager.getToolsListByEndpoint(item.endpoint);
+        const tools = toolsResult.success ? toolsResult.data.flatMap((item) => item.tools) : [];
+        return {
+          ...item,
+          tools: tools,
+        };
+      })
+    );
     res.status(200).json({
       code: 200,
-      data: mcpManager.getMCPClientCache(),
+      data: enhancedData,
       msg: 'success',
     });
   } catch (e) {
+    console.error('获取MCP列表时发生错误:', e);
     res.status(500).json({
+      code: 500,
       error: e,
+      msg: `获取MCP列表失败: ${e instanceof Error ? e.message : String(e)}`,
     });
   }
 });

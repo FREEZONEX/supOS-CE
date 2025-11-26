@@ -213,6 +213,72 @@ export class MCPClientManager {
       };
     });
   }
+  /**
+   * 根据endpoint获取特定MCP客户端的工具列表
+   */
+  async getToolsListByEndpoint(endpoint?: string): Promise<{
+    success: boolean;
+    data: Array<{
+      endpoint: string;
+      tools: Array<{
+        name: string;
+        description: string;
+      }>;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const result: Array<{
+        endpoint: string;
+        tools: Array<{
+          name: string;
+          description: string;
+        }>;
+      }> = [];
+
+      // 如果指定了endpoint，只获取该endpoint的工具列表
+      if (endpoint) {
+        const entry = this.mcpClientCache.get(endpoint);
+        if (entry && entry.isConnected) {
+          try {
+            const toolsMap = await entry.client.tools();
+            const tools = Object.entries(toolsMap).map(([name, tool]) => ({
+              name,
+              description: tool.description || '',
+            }));
+            result.push({ endpoint, tools });
+          } catch (error) {
+            console.error(`获取工具列表失败 (端点: ${endpoint}):`, error);
+          }
+        }
+      } else {
+        // 获取所有已连接客户端的工具列表
+        for (const [endpointKey, entry] of this.mcpClientCache.entries()) {
+          if (entry.isConnected) {
+            try {
+              const toolsMap = await entry.client.tools();
+              const tools = Object.entries(toolsMap).map(([name, tool]) => ({
+                name,
+                description: tool.description || '',
+              }));
+              result.push({ endpoint: endpointKey, tools });
+            } catch (error) {
+              console.error(`获取工具列表失败 (端点: ${endpointKey}):`, error);
+            }
+          }
+        }
+      }
+
+      return { success: true, data: result };
+    } catch (error) {
+      console.error('获取工具列表失败:', error);
+      return {
+        success: false,
+        data: [],
+        error: `获取工具列表失败: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  }
 
   /**
    * 刷新指定的MCP客户端 - 通过重新连接来刷新状态
