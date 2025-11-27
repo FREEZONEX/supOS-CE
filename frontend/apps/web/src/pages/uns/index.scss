@@ -14,7 +14,7 @@
     font-weight: bold;
     // background: #f4f4f4;
     cursor: pointer;
-    border-bottom: 1px solid var(--supos-table-tr-color);
+    border-bottom: 1px solid #e0e0e0;
     background-color: var(--supos-charttop-bg-color);
   }
 
@@ -30,8 +30,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
-      border-bottom: 1px solid var(--supos-table-tr-color);
+      padding: 0 24px;
+      border-bottom: 1px solid #e0e0e0;
       // background: #f4f4f4;
       background: var(--supos-charttop-bg-color);
       flex-shrink: 0;
@@ -252,7 +252,7 @@
     justify-content: space-between;
     align-items: center;
     background-color: var(--supos-bg-color);
-    border-bottom: 1px solid var(--supos-home-border-color);
+    border-bottom: 1px solid #e0e0e0;
     cursor: pointer;
 
     &:hover {
@@ -264,12 +264,12 @@
     &.ant-splitter > .ant-splitter-bar .ant-splitter-bar-dragger {
       &:hover {
         &::before {
-          background-color: var(--supos-theme-color);
+          background-color: #e0e0e0;
         }
       }
 
       &::before {
-        background-color: var(--supos-home-border-color);
+        background-color: #e0e0e0;
         height: 1px;
         transform: none;
         left: 0;

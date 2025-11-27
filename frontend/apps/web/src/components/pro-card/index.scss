@@ -5,6 +5,10 @@
   color: var(--supos-table-first-color);
 }
 
+.pro-card-border {
+  border: 1px solid #e0e0e0;
+}
+
 .pro-card-hover {
   &:hover {
     background: var(--supos-card-hover-bg);

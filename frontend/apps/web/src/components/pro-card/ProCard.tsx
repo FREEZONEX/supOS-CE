@@ -29,11 +29,18 @@ const ProCard: FC<ProCardProps> = ({
   iconBg = true,
   item,
   actionConfig,
+  border = false,
 }) => {
   const formatMessage = useTranslate();
   const [checked, setChecked] = useState(false);
   const [clickLoading, setClickLoading] = useState(false);
-  const cardClassName = cx('pro-card', classNames?.card, checked && 'pro-card-checked', allowHover && 'pro-card-hover');
+  const cardClassName = cx(
+    'pro-card',
+    classNames?.card,
+    checked && 'pro-card-checked',
+    border && 'pro-card-border',
+    allowHover && 'pro-card-hover'
+  );
   const { allowCheck, statusInfo, statusTag, pinOptions } = statusHeader || {};
   const actionNum = actionConfig?.num ?? 2;
   const {

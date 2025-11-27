@@ -1,5 +1,5 @@
 import { Button, Flex } from 'antd';
-import { Copy, Rss } from '@carbon/icons-react';
+import { Copy, Rss, Workspace } from '@carbon/icons-react';
 import { ButtonPermission } from '@/common-types/button-permission';
 import { getTreeStoreSnapshot, useTreeStore, useTreeStoreRef } from './store/treeStore';
 import { useClipboard, useTranslate } from '@/hooks';
@@ -14,20 +14,29 @@ interface TopDomProps {
   setCurrentUnusedTopicNode: any;
   unusedTopicBreadcrumbList: any;
   currentUnusedTopicNode: any;
+  changeCurrentPath: any;
 }
-const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcrumbList, currentUnusedTopicNode }) => {
+const TopDom: FC<TopDomProps> = ({
+  setCurrentUnusedTopicNode,
+  unusedTopicBreadcrumbList,
+  currentUnusedTopicNode,
+  changeCurrentPath,
+}) => {
   const systemInfo = useBaseStore((state) => state.systemInfo);
   const formatMessage = useTranslate();
   const exportRef = useRef<any>(null);
   const importRef = useRef<any>(null);
   const copyPathRef = useRef(null);
-  const { treeType, currentTreeMapType, breadcrumbList, selectedNode, setSelectedNode } = useTreeStore((state) => ({
-    treeType: state.treeType,
-    currentTreeMapType: state.currentTreeMapType,
-    breadcrumbList: state.breadcrumbList,
-    selectedNode: state.selectedNode,
-    setSelectedNode: state.setSelectedNode,
-  }));
+  const { treeType, currentTreeMapType, breadcrumbList, selectedNode, setSelectedNode, treeMap } = useTreeStore(
+    (state) => ({
+      treeType: state.treeType,
+      currentTreeMapType: state.currentTreeMapType,
+      breadcrumbList: state.breadcrumbList,
+      selectedNode: state.selectedNode,
+      setSelectedNode: state.setSelectedNode,
+      treeMap: state.treeMap,
+    })
+  );
 
   useClipboard(
     copyPathRef as any,
@@ -71,13 +80,18 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
   );
 
   const stateRef = useTreeStoreRef();
-  const { loadData } = getTreeStoreSnapshot(stateRef, (state) => ({
+  const { loadData, setTreeMap } = getTreeStoreSnapshot(stateRef, (state) => ({
     loadData: state.loadData,
+    setTreeMap: state.setTreeMap,
   }));
 
   return (
     <div className="chartTop">
-      {treeType === 'uns' ? (
+      {treeMap ? (
+        <div className="treemapTitle" style={{ padding: 0 }}>
+          {formatMessage('home.dashboard')}
+        </div>
+      ) : treeType === 'uns' ? (
         <div className="chartTopL">
           {currentTreeMapType === 'all' && selectedNode?.id
             ? getTopicBreadcrumb(
@@ -126,9 +140,6 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
         </AuthButton>
         <AuthWrapper auth={ButtonPermission['uns.unsExport']}>
           <Button
-            color="default"
-            variant="filled"
-            style={{ background: '#c6c6c6', color: '#161616' }}
             onClick={() => {
               exportRef.current?.setOpen(true);
             }}
@@ -136,6 +147,16 @@ const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcr
             {formatMessage('uns.export')}
           </Button>
         </AuthWrapper>
+        <Button
+          title={formatMessage('home.dashboard')}
+          style={{ padding: 8 }}
+          onClick={() => {
+            setTreeMap(true);
+            changeCurrentPath();
+          }}
+        >
+          <Workspace size={16} />
+        </Button>
       </div>
       <ImportModal importRef={importRef} initTreeData={loadData} />
       <ExportModal exportRef={exportRef} />

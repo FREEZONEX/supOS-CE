@@ -53,4 +53,5 @@ export interface ProCardProps {
   actionConfig?: {
     num?: number;
   };
+  border?: boolean;
 }

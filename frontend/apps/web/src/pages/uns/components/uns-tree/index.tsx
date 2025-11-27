@@ -1,5 +1,5 @@
 import { type Key, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { App, Button, Divider, Flex, Popover, Radio } from 'antd';
+import { App, Button, Divider, Dropdown, Flex, Popover, Radio } from 'antd';
 import { getTreeStoreSnapshot, ROOT_NODE_ID, useTreeStore, useTreeStoreRef } from '../../store/treeStore';
 import type { TTreeType } from '../../store/types';
 import useTranslate from '@/hooks/useTranslate';
@@ -17,6 +17,7 @@ import {
   WatsonHealth3DCurveAutoColon,
   SendAlt,
   ChartLine,
+  AddLarge,
 } from '@carbon/icons-react';
 import Icon from '@ant-design/icons';
 import { ButtonPermission } from '@/common-types/button-permission';
@@ -26,7 +27,7 @@ import { getInstanceInfo, getModelInfo, pasteUns } from '@/apis/inter-api/uns';
 import { useViewLabelModal } from '@/pages/uns/components';
 import ReverseModal from '@/pages/uns/components/reverse-modal';
 import type { UnsTreeNode } from '@/pages/uns/types';
-import { filterPermissionToList } from '@/utils/auth';
+import { filterPermissionToList, hasPermission } from '@/utils/auth';
 import ComClickTrigger from '@/components/com-click-trigger';
 import ProSearch from '@/components/pro-search';
 import ProTree, { type ProTreeProps } from '@/components/pro-tree';
@@ -36,6 +37,8 @@ import { useUnsContext } from '@/pages/uns/UnsContext';
 import StatusDot from './StatusDot';
 import { useBaseStore } from '@/stores/base';
 import { getTargetNode } from '@/utils';
+import { useI18nStore } from '@/stores/i18n-store.ts';
+import ComButton from '@/components/com-button';
 
 const renderOperationDom = (type: string) => {
   switch (type) {
@@ -71,6 +74,9 @@ const Operation = () => {
   } = useBaseStore((state) => ({
     systemInfo: state.systemInfo,
   }));
+  const { lang } = useI18nStore((state) => ({
+    lang: state.lang,
+  }));
   const { message } = App.useApp();
   const [reverserOpen, setReverserOpen] = useState<boolean>(false); //复制的topic
 
@@ -86,40 +92,48 @@ const Operation = () => {
       title?: string;
       id?: string;
       disabled?: boolean;
+      // Dropdown配置
+      items?: any[];
+      auth?: string[] | string;
     }>([
       {
-        title: formatMessage('uns.newFile'),
-        auth: ButtonPermission['uns.fileAdd'],
+        title: formatMessage('UserManagement.add'),
         onClick: () => {
           operationFns?.setOptionOpen?.('addFile', selectedNode);
         },
-        buttonType: 'DocumentAdd',
+        buttonType: 'Dropdown',
         showTreeType: 'uns',
-        key: 'addFile',
-        disabled: !!selectedNode?.mount,
+        key: 'unsAdd',
+        items: [
+          {
+            label: formatMessage('uns.newFile'),
+            auth: ButtonPermission['uns.fileAdd'],
+            onClick: () => {
+              operationFns?.setOptionOpen?.('addFile', selectedNode);
+            },
+            key: 'addFile',
+            disabled: !!selectedNode?.mount,
+          },
+          {
+            label: formatMessage('uns.newFolder'),
+            auth: ButtonPermission['uns.folderAdd'],
+            onClick: () => {
+              operationFns?.setOptionOpen?.('addFolder', selectedNode);
+            },
+            key: 'addFolder',
+            disabled: !!selectedNode?.mount || hasTopicType,
+          },
+          // {
+          //   label: formatMessage('uns.batchGeneration'),
+          //   auth: ButtonPermission['uns.batchGeneration'],
+          //   onClick: () => {
+          //     setReverserOpen(true);
+          //   },
+          //   key: 'batchGeneration',
+          //   disabled: !!selectedNode?.mount || hasTopicType,
+          // },
+        ],
       },
-      {
-        title: formatMessage('uns.newFolder'),
-        auth: ButtonPermission['uns.folderAdd'],
-        onClick: () => {
-          operationFns?.setOptionOpen?.('addFolder', selectedNode);
-        },
-        buttonType: 'FolderAdd',
-        showTreeType: 'uns',
-        key: 'addFolder',
-        disabled: !!selectedNode?.mount || hasTopicType,
-      },
-      // {
-      //   title: formatMessage('uns.batchGeneration'),
-      //   auth: ButtonPermission['uns.batchGeneration'],
-      //   onClick: () => {
-      //     setReverserOpen(true);
-      //   },
-      //   buttonType: 'RepoArtifact',
-      //   showTreeType: 'uns',
-      //   key: 'batchGeneration',
-      //   disabled: !!selectedNode?.mount || hasTopicType,
-      // },
       {
         title: formatMessage('uns.addTemplate'),
         auth: ButtonPermission['uns.templateAdd'],
@@ -151,28 +165,48 @@ const Operation = () => {
         key: 'reNew',
       },
     ])?.filter((item) => !item.showTreeType || item.showTreeType === treeType);
-  }, [treeType, operationFns, loadData, selectedNode]);
+  }, [treeType, operationFns, loadData, selectedNode, lang]);
   return (
     <>
-      {options?.map((item) => (
-        <span
-          style={{
-            height: 32,
-            width: 32,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: item.disabled ? 'not-allowed' : 'pointer',
-            color: item.disabled ? 'var(--supos-select-d-color)' : 'var(--supos-text-color)',
-          }}
-          id={item.id}
-          onClick={item.disabled ? undefined : item.onClick}
-          key={item.key}
-          title={item.title}
-        >
-          {renderOperationDom(item.buttonType)}
-        </span>
-      ))}
+      {options?.map((item) => {
+        if (item.buttonType === 'Dropdown') {
+          const items: any = item.items?.filter((f) => hasPermission(f.auth));
+          if (items?.length === 0) return null;
+          return (
+            <Dropdown menu={{ items }} placement="bottom" key={item.key}>
+              <Button
+                style={{
+                  background: 'var(--supos-switchwrap-bg-color)',
+                  padding: '7px',
+                }}
+                color="default"
+                variant="filled"
+                title={item.title}
+              >
+                <AddLarge />
+              </Button>
+            </Dropdown>
+          );
+        } else {
+          return (
+            <ComButton
+              style={{
+                background: 'var(--supos-switchwrap-bg-color)',
+                padding: '7px',
+              }}
+              auth={item.auth}
+              color="default"
+              variant="filled"
+              id={item.id}
+              onClick={item.disabled ? undefined : item.onClick}
+              key={item.key}
+              title={item.title}
+            >
+              {renderOperationDom(item.buttonType)}
+            </ComButton>
+          );
+        }
+      })}
       {reverserOpen && (
         <ReverseModal
           reverserOpen={reverserOpen}
@@ -318,7 +352,7 @@ const Search = () => {
         if (isComposingRef.current) return;
         onSearchChange();
       }}
-      style={{ borderRadius: '3px', flex: 1 }}
+      style={{ borderRadius: '3px', flex: 1, backgroundColor: 'transparent', border: '1px solid #E0E0E0' }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           loadData({ reset: true });
@@ -362,12 +396,7 @@ const UnsTypeSearch = () => {
   return (
     treeType === 'uns' && (
       <Popover placement="bottomLeft" title="" content={popoverContent} trigger="hover">
-        <Button
-          icon={<Filter />}
-          style={{ flexShrink: 0, background: 'var(--supos-switchwrap-bg-color)' }}
-          color="default"
-          variant="filled"
-        />
+        <Button icon={<Filter />} style={{ flexShrink: 0 }} />
       </Popover>
     )
   );
@@ -385,7 +414,7 @@ const TreeHeader = () => {
 
       <Divider
         style={{
-          background: '#c6c6c6',
+          background: '#e0e0e0',
           margin: '16px 0 10px',
         }}
       />

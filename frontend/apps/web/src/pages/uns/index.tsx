@@ -139,6 +139,7 @@ const Module = () => {
       <ComContent>
         <div className="chartWrap">
           <TopDom
+            changeCurrentPath={changeCurrentPath}
             setCurrentUnusedTopicNode={setCurrentUnusedTopicNode}
             unusedTopicBreadcrumbList={unusedTopicBreadcrumbList}
             currentUnusedTopicNode={currentUnusedTopicNode}

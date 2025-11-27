@@ -190,7 +190,7 @@ const UnusedTopicTree: FC<UnusedTopicTreeProps> = ({
           </span>
         </div>
       </Flex>
-      <Divider style={{ borderColor: '#c6c6c6', margin: '16px 0 10px 0' }} />
+      <Divider style={{ borderColor: '#e0e0e0', margin: '16px 0 10px 0' }} />
       <ComTree
         ref={treeRef}
         height={treeHeight}

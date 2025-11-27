@@ -10,7 +10,9 @@ export { default as useTranslate } from './useTranslate';
 export { default as useFormValue } from './useFormValue';
 export { default as useSimpleRequest } from './useSimpleRequest';
 export { default as useLangChange } from './useLangChange';
+export { default as useSSE } from './useSSE';
 
 export * from './useGuideSteps';
 export * from './useMatchRouter';
 export * from './useTips';
+export * from './useSSE';

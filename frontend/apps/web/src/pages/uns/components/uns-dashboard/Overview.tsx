@@ -16,6 +16,7 @@ const Overview: FC<OverviewProps> = ({ overviewList }) => {
         {overviewList?.map((d: any) => {
           return (
             <ProCard
+              border
               key={d.key}
               header={{
                 title: formatMessage(d.label),
@@ -34,6 +35,9 @@ const Overview: FC<OverviewProps> = ({ overviewList }) => {
               styles={{
                 secondaryDescription: {
                   lineHeight: 1,
+                },
+                card: {
+                  background: 'transparent',
                 },
                 headerTitle: {
                   fontSize: 16,

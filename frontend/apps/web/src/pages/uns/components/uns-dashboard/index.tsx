@@ -64,7 +64,7 @@ const UnsDashboard = () => {
   return (
     <div className={styles['unsDashboard']}>
       <Overview overviewList={overviewList} />
-      <Divider style={{ background: 'rgb(198, 198, 198)', flexShrink: 0 }} />
+      <Divider style={{ background: '#e0e0e0', flexShrink: 0 }} />
       {isH5 ? null : <Topology datas={datas} />}
     </div>
   );
