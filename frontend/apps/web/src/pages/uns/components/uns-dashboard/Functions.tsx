@@ -13,9 +13,8 @@ import styles from './index.module.scss';
 
 const Functions = () => {
   const formatMessage = useTranslate();
-  const { homeTree, homeTabGroup } = useBaseStore((state) => ({
+  const { homeTree } = useBaseStore((state) => ({
     homeTree: state.homeTree,
-    homeTabGroup: state.homeTabGroup,
   }));
   const list = homeTree?.map?.((item) => {
     if (item.children && item.children.length) {
@@ -34,9 +33,8 @@ const Functions = () => {
   const handleClickItem = (item: ResourceProps) => {
     handleNavigate(item);
   };
-  console.log(homeTree, homeTabGroup);
   return (
-    <Flex vertical gap={24}>
+    <Flex vertical gap={24} style={{ marginBottom: 24 }}>
       <Flex justify="space-between" align="center">
         <ComEllipsis className={styles['title']}>{formatMessage('uns.functions')}</ComEllipsis>
         <Segmented<string>

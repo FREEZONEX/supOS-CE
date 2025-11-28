@@ -25,20 +25,18 @@ const Item = ({ item, height = 32, ellipsis = true }: any) => {
       };
   return (
     <div key={item.key}>
-      <Flex justify="space-between" align="center">
-        <ComEllipsis style={{ fontWeight: 400, fontSize: 12, color: '#525252' }}>
+      <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
+        <ComEllipsis style={{ fontWeight: 400, fontSize: 12, lineHeight: '20px', color: '#525252' }}>
           {formatMessage(item.label)}
         </ComEllipsis>
-        {item?.extra && <div style={{ flexShrink: 0 }}>{item?.extra}</div>}
+        {item?.extra && <div style={{ flexShrink: 0, lineHeight: 1 }}>{item?.extra}</div>}
       </Flex>
       <Flex
         title={item.text || formatMessage('uns.selectTopic')}
-        style={{
-          margin: '12px 0',
-        }}
         align="center"
         justify="space-between"
         gap={6}
+        style={item.style}
       >
         <pre
           style={{
@@ -67,6 +65,7 @@ const MQTT = () => {
     {
       key: 'url',
       label: 'uns.MQTTUrl',
+      style: { marginBottom: 8 },
       text: `mqtt://${window.location.hostname}:${wsPort}`,
     },
     {
@@ -101,7 +100,7 @@ const MQTT = () => {
           })}
         </Flex>
         <Flex vertical className={styles['mqtt-item']}>
-          <ComEllipsis style={{ fontWeight: 400, fontSize: 12, color: '#525252' }}>
+          <ComEllipsis style={{ fontWeight: 400, fontSize: 12, lineHeight: '20px', color: '#525252', marginBottom: 8 }}>
             {formatMessage('uns.topic')}
           </ComEllipsis>
           <SearchSelect
@@ -109,8 +108,8 @@ const MQTT = () => {
               type: 2,
             }}
             style={{
-              margin: '12px 0',
               width: '100%',
+              marginBottom: 8,
             }}
             placeholder={formatMessage('common.select')}
             onChange={(e) => {
@@ -143,7 +142,7 @@ const MQTT = () => {
             labelInValue
           />
           <Item
-            height={110}
+            height={125}
             ellipsis={false}
             item={{
               key: 'payload',
@@ -151,8 +150,10 @@ const MQTT = () => {
               text: payloadInfo,
               extra: topicInfo?.withSave2db ? (
                 <Button
+                  // type="link"
                   title={formatMessage('uns.databaseInfo')}
                   size="small"
+                  style={{ height: 20 }}
                   onClick={() => modalRef.current?.onOpen(topicInfo)}
                 >
                   <DataBase />
