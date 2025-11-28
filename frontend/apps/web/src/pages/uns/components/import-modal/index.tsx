@@ -470,7 +470,7 @@ const Module: FC<ImportModalProps> = (props) => {
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open(`/inter-api/supos/uns/excel/template/download?fileType=json`, '_self');
+                      window.open(`/inter-api/supos/uns/importExport/template/download?fileType=json`, '_self');
                     }}
                   >
                     <Download />
