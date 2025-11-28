@@ -8,41 +8,51 @@ import { Copy, Download } from '@carbon/icons-react';
 import { useTreeStore } from '@/pages/uns/components/export-modal/treeStore.tsx';
 import { blobToJsonUsingTextMethod, downloadFn } from '@/utils/blob';
 import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
+import { downloadUnsFile } from '@/apis/inter-api';
+import ComButton from '@/components/com-button';
 
 export const CodeDom = () => {
   const formatMessage = useTranslate();
   const ref = useRef<HTMLDivElement>(null);
   const size = useSize(ref);
   const [jsonValue, setJsonValue] = useState<any>();
-  const [isDownload, setIsDownload] = useState<boolean>(false);
 
-  const { jsonData } = useTreeStore((state) => ({
-    jsonData: state.jsonData,
+  const { smallFile, filePath, setLoading } = useTreeStore((state) => ({
+    smallFile: state.smallFile,
+    filePath: state.filePath,
+    setLoading: state.setLoading,
   }));
 
   useEffect(() => {
-    if (jsonData) {
-      setIsDownload(jsonData?.size / 1024 / 1024 > 5);
-      blobToJsonUsingTextMethod(jsonData).then((data) => {
-        setJsonValue(data);
+    if (smallFile && filePath) {
+      downloadUnsFile({ path: filePath }).then((jsonData) => {
+        blobToJsonUsingTextMethod(jsonData)
+          .then((data) => {
+            setJsonValue(data);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
       });
     }
-  }, [jsonData]);
+  }, [filePath, smallFile]);
   const { copy } = useClipboard();
 
   return (
     <>
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        {isDownload ? (
-          <Button
+        {!smallFile ? (
+          <ComButton
             type="primary"
             onClick={() => {
-              downloadFn({ data: jsonData, name: 'uns.json' });
+              return downloadUnsFile({ path: filePath }).then((jsonData) => {
+                downloadFn({ data: jsonData, name: 'uns.json' });
+              });
             }}
           >
             <Download />
             {formatMessage('common.download')}
-          </Button>
+          </ComButton>
         ) : (
           <div
             style={{

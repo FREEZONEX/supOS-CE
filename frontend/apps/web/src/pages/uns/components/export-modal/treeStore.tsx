@@ -50,6 +50,8 @@ export type TreeStoreState = {
   allChecked: boolean;
   jsonData?: any;
   lazyTree: boolean;
+  smallFile: boolean;
+  filePath?: string;
 };
 
 export type TreeStoreActions = {
@@ -76,6 +78,8 @@ export type TreeStoreActions = {
   setCheckedKeys: (newCheckedKeys: ((checkedKeys: Key[]) => Key[] | void) | Key[]) => void;
   setLoading: (value: TreeStoreState['loading']) => void;
   setJsonData: (value: TreeStoreState['jsonData']) => void;
+  setFilePath: (value: TreeStoreState['filePath']) => void;
+  setSmallFile: (value: TreeStoreState['smallFile']) => void;
   // 设置异步加载的key
   setLoadedKeys: (newLoadedKeys: ((loadedKeys: Key[]) => Key[] | void) | Key[]) => void;
   // loadingKeys相关操作
@@ -123,6 +127,7 @@ const initialState = {
   selectedNode: undefined,
   checkedKeys: [],
   lazyTree: false,
+  smallFile: true,
 };
 
 // 根节点的特殊ID
@@ -281,6 +286,8 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
       setScrollTreeNode: (scrollTreeNode) => set({ scrollTreeNode }),
       setLoading: (loading) => set({ loading }),
       setJsonData: (jsonData) => set({ jsonData }),
+      setFilePath: (filePath) => set({ filePath }),
+      setSmallFile: (smallFile) => set({ smallFile }),
       setCheckedKeys: (next) =>
         set((state) => {
           if (typeof next === 'function') {

@@ -29,11 +29,7 @@ export const bindDashboardForUns = async (data: any) => api.post(`/dashboard/bin
 export const markDashboard = async (id: string) => api.post('/dashboard/mark', { id });
 export const unmarkDashboard = async (id: string) => api.delete(`/dashboard/unmark?id=${id}`);
 export const deleteDashboard = async (uid: string) => api.delete(`/dashboard/${uid}`); // 删除dashboard
-export const importExcel = async (data: any) =>
-  api.upload(`/excel/template/import`, data, {
-    method: 'post',
-  }); //导入excel
-export const exportExcel = async (data: any) => api.post('/excel/data/export', data); //导出excel
+export const exportExcel = async (data: any) => api.post('/importExport/exportPath', data); //导出excel
 export const searchRestField = async (data: any) => api.post('/searchRestField', data); // 从RestApi搜系模型字段
 export const getDashboardDetail = async (id: any) => api.get(`/dashboard/${id}`); // 获取dashboard详情
 
@@ -165,7 +161,7 @@ export const unsExportRecordConfirmApi = async (params?: Record<string, unknown>
 
 // 文件下载
 export const downloadUnsFile = async (params?: Record<string, unknown>) =>
-  api.get('/excel/download', { params, responseType: 'blob', [CustomAxiosConfigEnum.NoCode]: true });
+  api.get('/importExport/file/download', { params, responseType: 'blob', [CustomAxiosConfigEnum.NoCode]: true });
 
 export const detectIfRemoveApi = (params: { id: any }) => api.get('/detectIfRemove', { params });
 

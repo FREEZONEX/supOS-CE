@@ -15,7 +15,7 @@ import { useTreeStore } from './treeStore.tsx';
 import { type FC, type Key, memo, useCallback, useEffect, useRef } from 'react';
 import { useBaseStore } from '@/stores/base';
 import type { UnsTreeNode } from '../../types.tsx';
-import { downloadUnsFile, exportExcel } from '@/apis/inter-api/uns';
+import { exportExcel } from '@/apis/inter-api/uns';
 import { processedCheckedKeys } from '@/pages/uns/store/utils.ts';
 import { getParamsForArray } from '@/utils';
 
@@ -101,8 +101,9 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
     setScrollTreeNode,
     allChecked,
     setAllChecked,
-    setJsonData,
     setLoading,
+    setSmallFile,
+    setFilePath,
   } = useTreeStore((state) => ({
     loadData: state.loadData,
     treeData: state.treeData,
@@ -119,8 +120,9 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
     setScrollTreeNode: state.setScrollTreeNode,
     allChecked: state.allChecked,
     setAllChecked: state.setAllChecked,
-    setJsonData: state.setJsonData,
     setLoading: state.setLoading,
+    setSmallFile: state.setSmallFile,
+    setFilePath: state.setFilePath,
   }));
 
   const {
@@ -285,6 +287,7 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
           {formatMessage('common.reset')}
         </ComButton>
         <ComButton
+          loading={loading}
           disabled={checkedKeys?.length === 0 && !allChecked}
           type="primary"
           onClick={() => {
@@ -306,20 +309,23 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
                 ...params,
                 ...getParamsForArray(matchedNodes as any[], 'pathType', {
                   groups: {
-                    0: 'models',
-                    2: 'instances',
+                    0: 'folders',
+                    2: 'files',
                   },
                   extract: 'id',
                 }),
               };
             }
             return exportExcel(params)
-              .then((filePath) => {
-                return downloadUnsFile({ path: filePath }).then((data) => {
-                  setJsonData(data);
-                });
+              .then(({ filePath, smallFile }) => {
+                setSmallFile(smallFile);
+                setFilePath(filePath);
+                if (!smallFile) {
+                  setLoading(false);
+                }
               })
-              .finally(() => {
+              .catch((e) => {
+                console.log(e);
                 setLoading(false);
               });
           }}

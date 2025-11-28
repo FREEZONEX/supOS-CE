@@ -5,13 +5,11 @@ import ProModal from '@/components/pro-modal';
 import ComRadio from '@/components/com-radio';
 import ComEllipsis from '@/components/com-ellipsis';
 import ComButton from '@/components/com-button';
-import { importExcel } from '@/apis/inter-api';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
-import { useSize, useWebSocket } from 'ahooks';
+import { useSize } from 'ahooks';
 import { Copy, Download, FolderAdd } from '@carbon/icons-react';
 import cx from 'classnames';
-import { getToken } from '@/utils';
 import InlineLoading from '@/components/inline-loading';
 import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
 import styles from '@/theme/codemirror.module.scss';
@@ -187,6 +185,7 @@ const placeholder = `{
     }
   ]
 }`;
+
 const Module: FC<ImportModalProps> = (props) => {
   const { importRef, initTreeData } = props;
   const [open, setOpen] = useState(false);
@@ -200,75 +199,91 @@ const Module: FC<ImportModalProps> = (props) => {
   const uploadRef = useRef<any>(null);
   const timer = useRef<NodeJS.Timeout>();
   const [socketData, setSocketData] = useState<SocketDataType>({});
-  const [socketUrl, setSocketUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   useImperativeHandle(importRef, () => ({
     setOpen: setOpen,
   }));
 
-  // 创建 WebSocket 连接
-  const { readyState, disconnect, sendMessage } = useWebSocket(
-    socketUrl, // 初始 URL 为 null，表示不立即连接
-    {
-      reconnectLimit: 0,
-      onMessage: (event) => {
-        if (event.data === 'pong') return;
-        const data = JSON.parse(event.data);
-        setSocketData(data);
-        if (data.finished) initTreeData({ reset: true });
-      },
-      onError: (error) => console.error('WebSocket error:', error),
-    }
-  );
+  function processChunk(rawChunk: any) {
+    // 分割多个事件
+    const events = rawChunk.split('\n\n');
+    events.forEach((event: any) => {
+      const lines = event.split('\n');
+      lines.forEach((line: string) => {
+        if (line.includes('code')) {
+          try {
+            const data = JSON.parse(line);
+            console.log(data);
+            setSocketData(data);
+            if (data.finished) initTreeData({ reset: true });
+          } catch (e) {
+            console.error('Error parsing JSON:', e);
+          }
+        }
+      });
+    });
+  }
 
-  const save = () => {
-    if (type === 'json') {
-      if (jsonValue) {
-        setLoading(true);
-        importExcel({
-          value: new Blob([jsonValue], { type: 'application/json' }),
-          name: 'file',
-          fileName: 'uns.json',
-        })
-          .then((data) => {
-            if (data) {
-              const protocol = location.protocol.includes('https') ? 'wss' : 'ws';
-              // 创建 WebSocket 连接
-              setSocketUrl(
-                `${protocol}://${location.host}/inter-api/supos/uns/ws?file=${encodeURIComponent(data)}&token=${getToken()}`
-              );
-            }
-          })
-          .catch(() => {
-            resetUploadStatus();
-          });
+  const save = async () => {
+    try {
+      const fd = new FormData();
+
+      if (type == 'json') {
+        if (jsonValue) {
+          fd.append('file', new Blob([jsonValue], { type: 'application/json' }), 'uns.json');
+        } else {
+          message.warning(formatMessage('uns.pleaseJSON'));
+          return;
+        }
       } else {
-        message.warning(formatMessage('uns.pleaseJSON'));
+        if (fileList.length) {
+          fd.append('file', fileList[0] as any, fileList[0].name);
+        } else {
+          message.warning(formatMessage('uns.pleaseUploadTheFile'));
+          return;
+        }
       }
-    } else {
-      if (fileList.length) {
-        setLoading(true);
-        importExcel({
-          value: fileList[0],
-          name: 'file',
-          fileName: fileList[0].name,
-        })
-          .then((data) => {
-            if (data) {
-              const protocol = location.protocol.includes('https') ? 'wss' : 'ws';
-              // 创建 WebSocket 连接
-              setSocketUrl(
-                `${protocol}://${location.host}/inter-api/supos/uns/ws?file=${encodeURIComponent(data)}&token=${getToken()}`
-              );
-            }
-          })
-          .catch(() => {
-            resetUploadStatus();
-          });
-      } else {
-        message.warning(formatMessage('uns.pleaseUploadTheFile'));
+      setLoading(true);
+      const response = await fetch('/inter-api/supos/uns/importExport/import', {
+        method: 'POST',
+        body: fd,
+      });
+
+      if (!response.ok) {
+        setLoading(false);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const reader = response.body?.getReader();
+      if (reader) {
+        const decoder = new TextDecoder('utf-8');
+        // 递归读取流数据
+        function readStream() {
+          reader!
+            .read()
+            .then(({ done, value }) => {
+              if (done) {
+                setLoading(false);
+                return;
+              }
+              // 处理流数据块
+              const chunk = decoder.decode(value, { stream: true });
+              processChunk(chunk);
+              // 继续读取下一个数据块
+              readStream();
+            })
+            .catch((error) => {
+              console.error('Stream reading error:', error);
+              setLoading(false);
+            });
+        }
+
+        readStream();
+      }
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
     }
   };
 
@@ -296,7 +311,6 @@ const Module: FC<ImportModalProps> = (props) => {
 
   const resetUploadStatus = () => {
     setLoading(false);
-    setSocketUrl('');
     setSocketData({});
     setFileList([]);
     setJsonValue(undefined);
@@ -310,8 +324,7 @@ const Module: FC<ImportModalProps> = (props) => {
   };
 
   useEffect(() => {
-    if (socketData.finished && disconnect) {
-      disconnect();
+    if (socketData.finished) {
       clearInterval(timer.current);
       if (socketData.code === 200) {
         // message.success(formatMessage('uns.importFinished'));
@@ -324,7 +337,7 @@ const Module: FC<ImportModalProps> = (props) => {
       modal.confirm({
         title: formatMessage('uns.PartialDataImportFailed'),
         onOk() {
-          window.open(`/inter-api/supos/uns/excel/download?path=${socketData.errTipFile}`, '_self');
+          window.open(`/inter-api/supos/uns/importExport/file/download?path=${socketData.errTipFile}`, '_self');
         },
         okButtonProps: {
           title: formatMessage('common.confirm'),
@@ -336,29 +349,6 @@ const Module: FC<ImportModalProps> = (props) => {
     }
   }, [socketData]);
 
-  useEffect(() => {
-    if (readyState === 1) {
-      timer.current = setInterval(() => {
-        if (sendMessage && readyState === 1) {
-          sendMessage('ping');
-        } else {
-          clearInterval(timer.current);
-        }
-      }, 30000);
-    }
-    return () => {
-      clearInterval(timer.current);
-    };
-  }, [readyState]);
-
-  useEffect(() => {
-    return () => {
-      if (disconnect) {
-        disconnect();
-      }
-      clearInterval(timer.current);
-    };
-  }, []);
   const { copy } = useClipboard();
 
   if (!open) return null;
