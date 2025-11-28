@@ -746,6 +746,8 @@ const messages = {
   'uns.additionalSettings': '额外设置',
   'uns.optionalBehaviors': '可选行为',
   'uns.pleaseSelectForExport': '请选择UNS的文件或者文件夹。',
+  'uns.functions': '功能',
+  'uns.mqttDescription': '查看您的 MQTT 代理的详细连接信息，包括 URL、端口、主题和消息负载。',
 
   //公共通用模块
   'common.url': '地址',

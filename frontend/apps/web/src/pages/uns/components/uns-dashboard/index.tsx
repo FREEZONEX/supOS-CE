@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Divider } from 'antd';
 import Overview from './Overview.tsx';
 import { useUnsContext } from '@/pages/uns/UnsContext.tsx';
@@ -9,13 +8,10 @@ import type { OverviewListProps } from './type';
 import Icon from '@ant-design/icons';
 import PackageTop from '@/components/svg-components/PackageTop.tsx';
 import styles from './index.module.scss';
-import { useMediaSize } from '@/hooks';
-import Topology from './Topology.tsx';
+import Functions from '@/pages/uns/components/uns-dashboard/Functions.tsx';
 
 const UnsDashboard = () => {
   const { topologyData } = useUnsContext();
-  const [datas, setDatas] = useState({});
-  const { isH5 } = useMediaSize();
   const [overviewList, setOverviewList] = useImmer<OverviewListProps[]>([
     { key: 'messageInThroughput', label: 'uns.messageIn', icon: <Package size={24} />, value: 0, unit: 'uns.msgUnit' },
     {
@@ -57,15 +53,14 @@ const UnsDashboard = () => {
         return item;
       });
     });
-
-    setDatas(topologyData.protocol || {});
   }, [topologyData]);
 
   return (
     <div className={styles['unsDashboard']}>
       <Overview overviewList={overviewList} />
       <Divider style={{ background: '#e0e0e0', flexShrink: 0 }} />
-      {isH5 ? null : <Topology datas={datas} />}
+      <Functions />
+      {/*{isH5 ? null : <Topology datas={datas} />}*/}
     </div>
   );
 };
