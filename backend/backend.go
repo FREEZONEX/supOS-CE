@@ -15,6 +15,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -35,7 +36,10 @@ func main() {
 	logx.Info(msg) // 输出:  Unsupported protocol: vewwrfw3.
 	*/
 
-	server := rest.MustNewServer(c.RestConf)
+	server := rest.MustNewServer(
+		c.RestConf,
+		rest.WithFileServer("/files/", http.Dir("/data")),
+	)
 	defer server.Stop()
 
 	if lv := c.LoggerLevel; lv != "" {
