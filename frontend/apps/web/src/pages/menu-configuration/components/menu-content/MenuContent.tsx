@@ -142,7 +142,7 @@ const MenuContent = () => {
                       fileList?.map((item: any) => ({ value: item?.file, name: 'files', fileName: item?.file?.name })),
                       { alias: '__templates__' }
                     ).then((data) => {
-                      form.setFieldValue('icon', data?.[0]?.attachmentPath);
+                      form.setFieldValue('icon', data?.list?.[0]?.attachmentPath);
                     });
                   } else {
                     form.setFieldValue('icon', undefined);
@@ -243,7 +243,7 @@ const MenuContent = () => {
                       fileList?.map((item: any) => ({ value: item?.file, name: 'files', fileName: item?.file?.name })),
                       { alias: '__templates__' }
                     ).then((data) => {
-                      form.setFieldValue('icon', data?.[0]?.attachmentPath);
+                      form.setFieldValue('icon', data?.list?.[0]?.attachmentPath);
                     });
                   } else {
                     form.setFieldValue('icon', undefined);
