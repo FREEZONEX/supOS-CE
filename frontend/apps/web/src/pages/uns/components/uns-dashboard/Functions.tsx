@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Flex, Segmented } from 'antd';
 import ComEllipsis from '@/components/com-ellipsis';
 import useTranslate from '@/hooks/useTranslate.ts';
-import { useBaseStore } from '@/stores/base';
+import { fetchBaseStore, useBaseStore } from '@/stores/base';
 import ProCardContainer from '@/components/pro-card/ProCardContainer.tsx';
 import ProCard from '@/components/pro-card/ProCard.tsx';
 import IconImage from '@/components/icon-image';
@@ -10,8 +10,15 @@ import type { ResourceProps } from '@/stores/types.ts';
 import { useMenuNavigate } from '@/hooks';
 import { useThemeStore } from '@/stores/theme-store.ts';
 import styles from './index.module.scss';
+import { useActivate } from '@/contexts/tabs-lifecycle-context.ts';
 
 const Functions = () => {
+  useActivate(() => {
+    fetchBaseStore?.();
+  });
+  useEffect(() => {
+    fetchBaseStore?.();
+  }, []);
   const formatMessage = useTranslate();
   const { homeTree } = useBaseStore((state) => ({
     homeTree: state.homeTree,
