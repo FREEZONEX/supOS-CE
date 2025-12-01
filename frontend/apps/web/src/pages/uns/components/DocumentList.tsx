@@ -81,7 +81,7 @@ const DocumentList = forwardRef<DocumentListRef | undefined, { alias: string }>(
                 )}
                 {item.isPic && (
                   <ComCopy
-                    textToCopy={`${location.origin}/inter-api/supos/uns/attachment/preview?objectName=${item?.attachmentPath}`}
+                    textToCopy={`${location.origin}/inter-api/supos/uns/attachment?objectName=${item?.attachmentPath}`}
                     title={formatMessage('common.copy')}
                   />
                 )}

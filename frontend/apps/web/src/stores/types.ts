@@ -125,7 +125,7 @@ export interface ResourceProps {
   // icon 不写类型默认svg, 不传默认使用code
   /**
    * 历史icon 为 xxx.svg
-   * 最终路由为 `/inter-api/supos/uns/attachment/preview?objectName=${encodeURI(icon)}`
+   * 最终路由为 `/inter-api/supos/uns/attachment?objectName=${encodeURI(icon)}`
    * 上传icon 为 /uns/xxxx.svg
    * 最终路由为 `/files/system/resource/supos/${encodeURI(selectNode.icon)}`
    * */
