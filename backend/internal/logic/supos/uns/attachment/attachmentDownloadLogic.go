@@ -57,7 +57,7 @@ func (l *AttachmentDownloadLogic) AttachmentDownload(req *types.AttachmentDownlo
 	// 设置响应头
 	// Content-Disposition 用于指定文件名
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", attachment.AttachmentName))
-	c := mime.TypeByExtension(path.Ext(attachment.ExtensionName))
+	c := mime.TypeByExtension(path.Ext(attachment.AttachmentName))
 	if c != "" {
 		w.Header().Set("Content-Type", c)
 	} else {
