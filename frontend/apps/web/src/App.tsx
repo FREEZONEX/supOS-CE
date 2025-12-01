@@ -16,7 +16,6 @@ import { fetchBaseStore, useBaseStore } from '@/stores/base';
 import { setThemeBySystem, ThemeType, useThemeStore } from '@/stores/theme-store.ts';
 import { cleanupI18nSubscriptions } from './stores/i18n-store.ts';
 import Cookies from 'js-cookie';
-import { useTranslate } from '@/hooks';
 import { useI18nStore } from '@/stores/i18n-store';
 import { CookiesProvider } from 'react-cookie';
 
@@ -30,8 +29,6 @@ function App() {
   }));
   const _theme = useThemeStore((state) => state._theme);
   const lang = useI18nStore((state) => state.lang);
-
-  const formatMessage = useTranslate();
 
   useEffect(() => {
     const isOmc = isInIframe([], 'webview');
@@ -72,7 +69,8 @@ function App() {
       if (systemInfo?.themeConfig?.browseTitle) {
         document.title = systemInfo.themeConfig.browseTitle;
       } else {
-        document.title = `${systemInfo.appTitle} ${formatMessage('common.excellence')}`;
+        document.title = `${systemInfo.appTitle}`;
+        // document.title = `${systemInfo.appTitle} ${formatMessage('common.excellence')}`;
       }
       // const baseUrl = `${getBaseUrl()}${systemInfo?.themeConfig?.browseIcon || `${STORAGE_PATH}${MENU_TARGET_PATH}/logo-ico.svg`}`;
       // const themeExists = await checkImageExists(baseUrl);
