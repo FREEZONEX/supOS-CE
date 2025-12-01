@@ -101,13 +101,13 @@ const FormContent: FC<FormContentProps> = ({
             ...(isFormTopic
               ? []
               : [
-                  { label: 'JSONB', value: 8 },
+                  { label: formatMessage('uns.jsonb'), value: 8 },
                   // { label: formatMessage('uns.aggregation'), value: 6 },
                   // { label: formatMessage('uns.reference'), value: 7 },
                 ]),
           ];
         case 2:
-          return [{ label: 'JSONB', value: 8 }];
+          return [{ label: formatMessage('uns.jsonb'), value: 8 }];
         case 3:
           return [
             { label: formatMessage('uns.timeSeries'), value: 1 },
@@ -123,7 +123,7 @@ const FormContent: FC<FormContentProps> = ({
     } else {
       return [
         { label: formatMessage('uns.timeSeries'), value: 1 },
-        { label: 'JSONB', value: 8 },
+        { label: formatMessage('uns.jsonb'), value: 8 },
         { label: formatMessage('uns.relational'), value: 2 },
         ...(isFormTopic
           ? []
@@ -345,8 +345,8 @@ const FormContent: FC<FormContentProps> = ({
           },
         });
 
-        if ([1, 2].includes(dataType)) {
-          //选择时序或关系型
+        if ([1, 2, 8].includes(dataType)) {
+          //选择时序或关系型或jsonb
           if (isFormTopic) {
             formItemList.push({
               formType: 'topicToUnsFieldsList',
@@ -361,6 +361,7 @@ const FormContent: FC<FormContentProps> = ({
             });
           }
         }
+
         if (dataType === 3) {
           //选择计算
           formItemList.push(

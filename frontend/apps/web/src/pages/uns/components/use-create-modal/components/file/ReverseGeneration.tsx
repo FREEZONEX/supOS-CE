@@ -16,9 +16,11 @@ const { TextArea } = Input;
 
 export interface ReverseGenerationProps {
   types?: string[];
+  // 只有json情况
+  onlyJson?: boolean;
 }
 
-const ReverseGeneration: FC<ReverseGenerationProps> = ({ types }) => {
+const ReverseGeneration: FC<ReverseGenerationProps> = ({ types, onlyJson }) => {
   const form = Form.useFormInstance();
   const formatMessage = useTranslate();
 
@@ -168,7 +170,13 @@ const ReverseGeneration: FC<ReverseGenerationProps> = ({ types }) => {
       <Form.Item name="jsonList" hidden initialValue={[]}>
         <Input />
       </Form.Item>
-      <Form.Item name="source" label={formatMessage('uns.source')} rules={[{ required: true }]}>
+      <Form.Item
+        name="source"
+        hidden={onlyJson}
+        initialValue={onlyJson ? 'json' : undefined}
+        label={formatMessage('uns.source')}
+        rules={[{ required: true }]}
+      >
         <Select
           options={options}
           onChange={() => {

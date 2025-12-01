@@ -648,6 +648,7 @@ const messages = {
   'uns.clearMsg': '清除消息',
   'uns.reimport': '重新导入',
   'uns.reference': '引用',
+  'uns.jsonb': 'JSONB',
   'uns.referenceTarget': '引用目标',
   'uns.fileType': '文件类型',
   'uns.guideVideo1Title': '从UNS模型开始',

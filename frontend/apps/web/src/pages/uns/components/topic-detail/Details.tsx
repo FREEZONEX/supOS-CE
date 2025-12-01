@@ -24,7 +24,7 @@ const Details: FC<DetailsProps> = ({ instanceInfo, updateTime, websocketData }) 
     4: formatMessage('uns.historicalCalculation'),
     6: formatMessage('uns.aggregation'),
     7: formatMessage('uns.reference'),
-    8: 'JSONB',
+    8: formatMessage('uns.jsonb'),
   };
   const renderProtocolTable = (protocol: { [key: string]: any }) => {
     if (instanceInfo.dataType === 4) return <History protocol={protocol} dataPath={instanceInfo.dataPath} />;
