@@ -4,12 +4,6 @@
 )
 service backend {
 
-	@doc (
-		summary: "UNS 导入 (流式返回消息)"
-	)
-	@handler import
-    post /import (UploadReq) returns ()
-
     @doc (
         summary: "UNS 导出,返回文件路径"
     )

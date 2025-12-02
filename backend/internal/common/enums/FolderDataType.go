@@ -12,7 +12,7 @@ const (
 	NORMAL FolderDataType = iota
 	STATE
 	ACTION
-	METRICS //时序 计算 聚合 引用
+	METRIC //时序 计算 聚合 引用
 )
 
 // FolderDataType 映射关系
@@ -21,7 +21,7 @@ var (
 		"NORMAL", "uns.folder.type.normal", // Name,ShowName(i18n)
 		"STATE", "uns.folder.type.state",
 		"ACTION", "uns.folder.type.action",
-		"METRICS", "uns.folder.type.metrics",
+		"METRIC", "uns.folder.type.metrics",
 	}
 )
 
@@ -49,7 +49,7 @@ func GetFolderDataTypeByName(name string) (FolderDataType, bool) {
 	name = strings.ToUpper(name)
 	for i := 0; i < len(folderDataTypeNames); i += 2 {
 		if folderDataTypeNames[i] == name {
-			return FolderDataType(i), true
+			return FolderDataType(i / 2), true
 		}
 	}
 	return NORMAL, false
@@ -78,7 +78,7 @@ func IsTypeMatched(parentDataType, fileDataType *int16) bool {
 			dt == constants.CitingType
 	case ACTION.TypeIndex():
 		return dt == constants.JsonbType
-	case METRICS.TypeIndex():
+	case METRIC.TypeIndex():
 		return dt == constants.TimeSequenceType ||
 			dt == constants.CalculationRealType ||
 			dt == constants.CalculationHistType ||
@@ -101,7 +101,7 @@ func GetDefaultParentType(fileDataType *int16) int16 {
 	case constants.JsonbType:
 		return ACTION.TypeIndex()
 	case constants.TimeSequenceType, constants.CalculationRealType, constants.CalculationHistType:
-		return METRICS.TypeIndex()
+		return METRIC.TypeIndex()
 	default:
 		return STATE.TypeIndex()
 	}

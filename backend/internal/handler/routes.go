@@ -699,12 +699,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: suposunsimportExport.FileDownloadHandler(serverCtx),
 			},
 			{
-				// UNS 导入 (流式返回消息)
-				Method:  http.MethodPost,
-				Path:    "/import",
-				Handler: suposunsimportExport.ImportHandler(serverCtx),
-			},
-			{
 				// 下载模版
 				Method:  http.MethodGet,
 				Path:    "/template/download",

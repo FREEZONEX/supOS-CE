@@ -939,7 +939,7 @@ func (w *wrappedEventStatusAware) BeforeEvent(N int, i int, listenerName string)
 	if i > 1 && N > 0 {
 		progress = float64(int((1000.0 * (float64(i) - 1) / float64(N)))) / 10.0
 	}
-	w.statusConsumer(common.NewRunningStatusWithProgress(N+1, i, listenerName, _startMsg).SetProgress(progress))
+	w.statusConsumer(common.NewRunningStatusWithProgress(N, i, listenerName, _startMsg).SetProgress(progress))
 	w.t0 = time.Now().UnixMilli()
 }
 func (w *wrappedEventStatusAware) AfterEvent(N int, i int, listenerName string, err error) {
@@ -949,6 +949,6 @@ func (w *wrappedEventStatusAware) AfterEvent(N int, i int, listenerName string, 
 		code = 500
 		msg = _errMsg + err.Error()
 	}
-	w.statusConsumer(common.NewRunningStatusWithProgress(N+1, i, listenerName, msg).
+	w.statusConsumer(common.NewRunningStatusWithProgress(N, i, listenerName, msg).
 		SetSpendMills(time.Now().UnixMilli() - w.t0).SetCode(code))
 }

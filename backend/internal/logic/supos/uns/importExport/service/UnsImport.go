@@ -86,11 +86,13 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 					Topics:     nodes,
 					FromImport: true,
 					StatusConsumer: func(status *common.RunningStatus) {
-						if status.Progress != nil && progress < 80 {
-							if status.N != nil {
-								progress += 1 / float64(*status.N)
-							} else {
-								progress += 0.1
+						if progress < 80 {
+							if status.Code > 0 {
+								if status.N != nil {
+									progress += 1 / float64(*status.N)
+								} else {
+									progress += 0.1
+								}
 							}
 							progressStatus := &common.RunningStatus{Code: 200, Msg: status.Msg, Task: status.Task, SpendMills: status.SpendMills}
 							progressStatus.SetProgress(progress)
@@ -161,7 +163,7 @@ func logErrImports(errTipMap map[string]string, nodes []*types.CreateTopicDto, f
 	var indexMap = make(map[int]*FileData, len(errTipMap))
 	for k, v := range errTipMap {
 		if n, er := integerutil.ExtractTailNumbers(k); er == nil {
-			i := int(n) + 1
+			i := int(n)
 			fileData := vo2DataVo(nodes[i])
 			fileData.Error = v
 			indexMap[i] = fileData

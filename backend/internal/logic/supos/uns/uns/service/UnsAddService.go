@@ -52,15 +52,15 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	// 对文件进行归类
 	errTipMap = make(map[string]string, len(args.Topics))
-	if u.sysConfig.EnableAutoCategorization {
-		args.Topics = u.appendCategoryFolders(ctx, args.Topics, errTipMap)
-	}
-	u.log.Debugf("[%d] args: %+v", len(args.Topics), args)
 	for i, topic := range args.Topics {
 		if topic.Index == 0 {
 			topic.Index = i
 		}
 	}
+	if u.sysConfig.EnableAutoCategorization {
+		args.Topics = u.appendCategoryFolders(ctx, args.Topics, errTipMap)
+	}
+	u.log.Debugf("[%d] args: %+v", len(args.Topics), args)
 	topicDtos := args.Topics
 	pathMap := initParamsUns(topicDtos, errTipMap)
 	if len(pathMap) == 0 {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	imexport "backend/internal/handler/supos/uns/importExport"
 	unsHandler "backend/internal/handler/supos/uns/uns"
 	"backend/internal/svc"
 	"net/http"
@@ -9,6 +10,12 @@ import (
 )
 
 func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoute(rest.Route{
+		Method:  http.MethodPost,
+		Path:    "/inter-api/supos/uns/importExport/import",
+		Handler: imexport.ImportHandler(serverCtx),
+	}, rest.WithTimeout(0))
+
 	server.AddRoute(rest.Route{
 		Method:  http.MethodGet,
 		Path:    "/inter-api/supos/uns/newMsg",
