@@ -26,7 +26,7 @@ interface SocketDataType {
   code?: number;
   finished?: boolean;
   msg?: string;
-  progress?: number;
+  progress?: string;
   task?: string;
   errTipFile?: string;
 }
@@ -386,7 +386,7 @@ const Module: FC<ImportModalProps> = (props) => {
                 <div className="loadingWrap">
                   <InlineLoading
                     status={finished ? (code === 200 ? 'finished' : 'error') : 'active'}
-                    description={`${formatMessage('common.importProgress')}：${progress || 0}%${msg || task ? '，' : ''}${finished ? msg : task || ''}`}
+                    description={`${formatMessage('common.importProgress')}：${progress || '0'}%${msg || task ? '，' : ''}${finished ? msg : task || ''}`}
                   />
                 </div>
               ) : type === 'json' ? (
