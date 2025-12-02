@@ -86,12 +86,19 @@ type fieldTypeSlice []FieldType
 func (x fieldTypeSlice) Len() int           { return len(x) }
 func (x fieldTypeSlice) Less(i, j int) bool { return x[i] < x[j] }
 func (x fieldTypeSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+
+var fieldTypeOrdinals = make(map[string]int, 16)
+
 func init() {
 	sortedFieldTypes = make([]FieldType, len(fieldTypes))
 	for i, v := range fieldTypes {
 		sortedFieldTypes[i] = v
+		fieldTypeOrdinals[v.Name()] = i
 	}
 	sort.Sort(fieldTypeSlice(sortedFieldTypes))
+}
+func (f FieldType) GetOrdinal() int {
+	return fieldTypeOrdinals[f.Name()]
 }
 
 // GetFieldTypeByNameIgnoreCase finds a FieldType by its name, case-insensitively.

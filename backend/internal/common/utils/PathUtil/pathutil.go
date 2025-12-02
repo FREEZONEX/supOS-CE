@@ -131,8 +131,10 @@ func GenerateFileAlias(path string) string {
 
 	aliasPath = strings.ReplaceAll(aliasPath, "/", "_")
 	aliasPath = strings.ReplaceAll(aliasPath, "-", "_")
-	aliasPath = generatePinyinAlias(aliasPath)
-
+	piny := generatePinyinAlias(aliasPath)
+	if len(piny) > 0 {
+		aliasPath = piny
+	}
 	if len(aliasPath) > 0 && !isLetter(aliasPath[0]) {
 		aliasPath = "_" + aliasPath
 	}

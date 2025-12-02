@@ -46,6 +46,7 @@
   "global.import.error.version": "文件版本错误",
   "global.import.error.format": "文件格式错误",
   "uns.import.not.xlsx": "导入失败，文件类型不是xlsx或json",
+  "uns.import.not.json": "导入失败，文件类型不是 json",
   "uns.import.template.error": "导入失败，文件模板错误",
   "uns.import.excel.empty": "导入失败，导入的excel数据为空",
   "uns.import.error": "导入异常",

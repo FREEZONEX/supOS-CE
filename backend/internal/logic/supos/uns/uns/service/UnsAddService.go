@@ -55,6 +55,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	if u.sysConfig.EnableAutoCategorization {
 		args.Topics = u.appendCategoryFolders(ctx, args.Topics, errTipMap)
 	}
+	u.log.Debugf("[%d] args: %+v", len(args.Topics), args)
 	for i, topic := range args.Topics {
 		if topic.Index == 0 {
 			topic.Index = i

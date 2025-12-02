@@ -1,6 +1,10 @@
 package integerutil
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+	"unicode"
+)
 
 // ParseInt parses a string to an *int32. It returns nil if parsing fails.
 // This function defaults to parsing in base 10.
@@ -51,4 +55,23 @@ func GetInt32WithDefault(num *int32, defaultValue int32) int32 {
 		return *num
 	}
 	return defaultValue
+}
+
+var noTailNumber = fmt.Errorf("no trailing numbers found")
+
+func ExtractTailNumbers(s string) (int64, error) {
+	numbers := ""
+	for i := len(s) - 1; i >= 0; i-- {
+		if unicode.IsDigit(rune(s[i])) {
+			numbers = string(s[i]) + numbers
+		} else {
+			break
+		}
+	}
+
+	if numbers == "" {
+		return 0, noTailNumber
+	}
+
+	return strconv.ParseInt(numbers, 10, 64)
 }

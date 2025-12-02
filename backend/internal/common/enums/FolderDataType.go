@@ -1,6 +1,9 @@
 package enums
 
-import "backend/internal/common/constants"
+import (
+	"backend/internal/common/constants"
+	"strings"
+)
 
 // FolderDataType 文件夹数据类型
 type FolderDataType int16
@@ -41,6 +44,15 @@ func (fdt FolderDataType) String() string {
 		i = 0
 	}
 	return folderDataTypeNames[i*2+1]
+}
+func GetFolderDataTypeByName(name string) (FolderDataType, bool) {
+	name = strings.ToUpper(name)
+	for i := 0; i < len(folderDataTypeNames); i += 2 {
+		if folderDataTypeNames[i] == name {
+			return FolderDataType(i), true
+		}
+	}
+	return NORMAL, false
 }
 
 // GetFolderDataType 根据索引获取FolderDataType

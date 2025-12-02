@@ -14,6 +14,7 @@ type Config struct {
 	Database      conf.Database
 	OssConf       conf.OssConf      `json:",optional"`
 	LoggerLevel   string            `json:"loggerLevel,optional" `
+	Export        ExportConfig      `json:"export,optional"`
 	GrafanaUrl    string            `json:"grafanaUrl,optional,default=http://grafana:3000"`
 	PersistentUrl map[string]string `json:"persistent_url,optional"`
 	DevLink       conf.EventConf
@@ -22,6 +23,14 @@ type Config struct {
 	OAuthKeyCloak clients.KeycloakConfig `json:",optional" `
 	NodeRed       nodered.NodeRedConfig  `json:",optional" `
 	Kong          clients.KongConfig     `json:",optional" mapstructure:"Kong"`
+}
+
+// ExportConfig UNS 导入导出配置
+type ExportConfig struct {
+	BuffeSize int `json:"buffeSize,optional,default=4096"`
+	BatchSize int `json:"batchSize,optional,default=1000"`
+	// 导出认定为小文件的最大数据行数
+	LimitSmallFileRows int64 `json:"limitSmallFileRows,optional,default=10000"`
 }
 
 // ElasticsearchConfig represents Elasticsearch adapter configuration

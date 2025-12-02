@@ -10,6 +10,7 @@ import (
 	"backend/share/spring"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 	"strconv"
 	"strings"
@@ -47,16 +48,24 @@ func init() {
 
 // WsSubscription represents a WebSocket subscription
 type WsSubscription struct {
-	Conn      *websocket.Conn
+	conn      io.Writer
 	UnsIds    *sync.Map // map[int64]bool
 	Topics    *sync.Map // map[string]bool
 	AliasSet  *sync.Map // map[string]bool
 	WriteLock sync.Mutex
 }
+type wsWriter struct {
+	conn *websocket.Conn
+}
 
-func newWsSubscription(conn *websocket.Conn) *WsSubscription {
+func (w wsWriter) Write(b []byte) (n int, err error) {
+	err = w.conn.WriteMessage(websocket.TextMessage, b)
+	n = len(b)
+	return
+}
+func newWsSubscription(w io.Writer) *WsSubscription {
 	return &WsSubscription{
-		Conn:     conn,
+		conn:     w,
 		UnsIds:   &sync.Map{},
 		Topics:   &sync.Map{},
 		AliasSet: &sync.Map{},
@@ -72,8 +81,8 @@ func (s *WebsocketService) GetSessionCount() int {
 	return count
 }
 
-func (s *WebsocketService) AddSession(sessionId string, conn *websocket.Conn) {
-	s.sessions.Store(sessionId, newWsSubscription(conn))
+func (s *WebsocketService) AddSession(sessionId string, w io.Writer) {
+	s.sessions.Store(sessionId, newWsSubscription(w))
 }
 
 // TryAddSession tries to add a session with limit check (thread-safe)
@@ -91,7 +100,7 @@ func (s *WebsocketService) TryAddSession(sessionId string, conn *websocket.Conn,
 		return false
 	}
 
-	s.AddSession(sessionId, conn)
+	s.AddSession(sessionId, wsWriter{conn: conn})
 	return true
 }
 
@@ -118,11 +127,11 @@ func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL
 		if globalTopology := queryParams.Get("globalTopology"); globalTopology != "" {
 			subscriptionVal, _ := s.sessions.Load(sessionId)
 			if subscription, ok := subscriptionVal.(*WsSubscription); ok {
-				s.topologySessions.Store(sessionId, subscription.Conn)
+				s.topologySessions.Store(sessionId, subscription.conn)
 				logx.Infof("topology subscription: %s", sessionId)
 
 				// Publish initial topology message
-				s.publishTopologyMessage(subscription.Conn)
+				s.publishTopologyMessage(subscription.conn)
 			}
 			return
 		}
@@ -155,7 +164,7 @@ func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL
 			sessions.Store(sessionId, true)
 
 			// Publish initial message
-			s.publishMessage(subscription.Conn, id)
+			s.publishMessage(subscription.conn, id)
 		}
 	}
 
@@ -180,7 +189,7 @@ func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL
 			sessions.Store(sessionId, true)
 
 			// Publish initial message
-			s.publishMessageByTopic(subscription.Conn, decodedTopic)
+			s.publishMessageByTopic(subscription.conn, decodedTopic)
 		}
 	}
 }
@@ -302,23 +311,23 @@ func (s *WebsocketService) HandleSessionClosed(sessionId string) {
 	logx.Infof("session removed: %s", sessionId)
 }
 
-func (s *WebsocketService) publishMessage(conn *websocket.Conn, id int64) {
+func (s *WebsocketService) publishMessage(conn io.Writer, id int64) {
 	msg := s.getTopicLastMessage(id)
-	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+	if _, err := conn.Write(msg); err != nil {
 		logx.Errorf("failed to sendWs: id=%d, err=%v", id, err)
 	}
 }
 
-func (s *WebsocketService) publishMessageByTopic(conn *websocket.Conn, topic string) {
+func (s *WebsocketService) publishMessageByTopic(conn io.Writer, topic string) {
 	msg := s.getTopicLastMessageByPath(topic)
-	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+	if _, err := conn.Write(msg); err != nil {
 		logx.Errorf("failed to sendWs: topic=%s, err=%v", topic, err)
 	}
 }
 
-func (s *WebsocketService) publishTopologyMessage(conn *websocket.Conn) {
+func (s *WebsocketService) publishTopologyMessage(conn io.Writer) {
 	msg := s.topologyService.GetLastMsg()
-	if err := conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+	if _, err := conn.Write([]byte(msg)); err != nil {
 		logx.Errorf("failed to send topology message: %v", err)
 	}
 }
@@ -346,7 +355,7 @@ func (s *WebsocketService) sendCmdMessage(msg string, status int, sessionId stri
 
 	subscription.WriteLock.Lock()
 	defer subscription.WriteLock.Unlock()
-	if err := subscription.Conn.WriteMessage(websocket.TextMessage, []byte(response)); err != nil {
+	if _, err := subscription.conn.Write([]byte(response)); err != nil {
 		logx.Errorf("failed to send command message: %v", err)
 	}
 }
@@ -386,7 +395,7 @@ func (s *WebsocketService) SendMessage(wsMsg serviceApi.WebsocketMessage) {
 					subscription := subscriptionVal.(*WsSubscription)
 					subscription.WriteLock.Lock()
 					defer subscription.WriteLock.Unlock()
-					if err := subscription.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+					if _, err := subscription.conn.Write(msg); err != nil {
 						logx.Errorf("fail to sendMessage to[%s], unsId=%d", sessionId, unsId)
 					}
 				}
@@ -405,7 +414,7 @@ func (s *WebsocketService) SendMessage(wsMsg serviceApi.WebsocketMessage) {
 					subscription := subscriptionVal.(*WsSubscription)
 					subscription.WriteLock.Lock()
 					defer subscription.WriteLock.Unlock()
-					if err := subscription.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+					if _, err := subscription.conn.Write(msg); err != nil {
 						logx.Errorf("fail to sendMessage to[%s], topic=%s", sessionId, path)
 					}
 				}
@@ -506,7 +515,7 @@ func (s *WebsocketService) OnEventUnsTopologyChangeEvent(e *event.UnsTopologyCha
 		if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
 			subscription := subscriptionVal.(*WsSubscription)
 			subscription.WriteLock.Lock()
-			if err := subscription.Conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+			if _, err := subscription.conn.Write([]byte(msg)); err != nil {
 				logx.Errorf("fail to send topology update to session[%s]: %v", sessionId, err)
 			}
 			subscription.WriteLock.Unlock()

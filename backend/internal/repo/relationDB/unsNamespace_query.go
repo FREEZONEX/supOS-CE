@@ -27,6 +27,21 @@ func (p UnsNamespaceRepo) ListByIds(db *gorm.DB, ids []int64) (results []*UnsNam
 	}
 	return results, nil
 }
+func (p UnsNamespaceRepo) PageListByIds(db *gorm.DB, ids []int64, page, pageSize int) (results []*UnsNamespace, er error) {
+	pageVo := &stores.PageInfo{Page: int64(page), Size: int64(pageSize), Orders: []stores.OrderBy{{Field: "lay_rec"}}}
+	err := pageVo.ToGorm(p.model(db)).Where("id IN ? ", ids).Where("status = 1").Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
+func (p UnsNamespaceRepo) ListLayRecByIds(db *gorm.DB, ids []int64) (results []string, er error) {
+	err := p.model(db).Select([]string{"lay_rec"}).Where("id IN ? ", ids).Where("status = 1").Scan(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
 
 // AllByAlias 忽略逻辑删除标志的按alias查询
 func (p UnsNamespaceRepo) AllByAlias(db *gorm.DB, alias []string) (results []*UnsNamespace, er error) {
@@ -192,6 +207,42 @@ func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAnd
 	}
 	return
 }
+func (p UnsNamespaceRepo) CountChildrenTree(db *gorm.DB, folderIds []int64) (int64, error) {
+	var count sql.NullInt64
+	err := db.Raw(`SELECT SUM(sub_count) FROM (
+    SELECT (
+        SELECT COUNT(*) 
+        FROM uns_namespace 
+        WHERE lay_rec LIKE CONCAT(u.lay_rec, '%') and status=1
+    ) as sub_count
+    FROM uns_namespace u
+    WHERE id IN (?) ) counts`, folderIds).Scan(&count).Error
+	if err != nil {
+		return -1, stores.ErrFmt(err)
+	}
+	return count.Int64, nil
+}
+func (p UnsNamespaceRepo) ListAll(db *gorm.DB, pathTypes []int16, page, pageSize int) (results []*UnsNamespace, err error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize > 1000 {
+		pageSize = 1000
+	} else if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+	db = p.model(db)
+	if len(pathTypes) > 0 {
+		db = db.Where("path_type IN (?)", pathTypes)
+	}
+	db = db.Where("status=1 and id>0").Order("lay_rec").Offset(offset).Limit(pageSize)
+	err = db.Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
 func (p UnsNamespaceRepo) ListFileByTemplateId(db *gorm.DB, templateId int64) (results []*UnsNamespace, err error) {
 	err = p.model(db).Where("model_id = ? ", templateId).
 		Where("path_type = ?", 2).
@@ -299,9 +350,12 @@ func (p UnsNamespaceRepo) ExistsForbiddenFiles(db *gorm.DB, layRec string, pData
 		Where("status=1").First(&rs).Error
 	return err == nil
 }
+func (p UnsNamespaceRepo) PageListByLayRecs(db *gorm.DB, layRecs []string, page, pageSize int) (results []*UnsNamespace, err error) {
+	pageVo := &stores.PageInfo{Page: int64(page), Size: int64(pageSize), Orders: []stores.OrderBy{{Field: "lay_rec"}}}
+	return p.ListByLayRecs(db, layRecs, pageVo)
+}
 func (p UnsNamespaceRepo) ListByLayRecs(db *gorm.DB, layRecs []string, page *stores.PageInfo) (results []*UnsNamespace, err error) {
 	db = p.model(db)
-	db = page.ToGorm(db)
 	sql := &base.StringBuilder{}
 	sql.Grow(80 * len(layRecs))
 	sql.Append("select * from ").Append(TableNameUnsNamespace).Append(" WHERE ")
@@ -313,6 +367,32 @@ func (p UnsNamespaceRepo) ListByLayRecs(db *gorm.DB, layRecs []string, page *sto
 		sql.Append("lay_rec like '").Append(layRec).Append("%'")
 	}
 	sql.Append(" ) and status=1")
+	if page != nil {
+		if page.Page < 1 {
+			page.Page = 1
+		}
+		if page.Size < 1 {
+			page.Size = 10
+		}
+		offset := (page.Page - 1) * page.Size
+		if len(page.Orders) > 0 {
+			sql.Append(" ORDER BY  ")
+			for i, ord := range page.Orders {
+				if i > 0 {
+					sql.Append(", ")
+				}
+				sql.Append("\"").Append(ord.Field).Append("\"")
+				if ord.Sort == stores.OrderDesc {
+					sql.Append(" DESC ")
+				} else {
+					sql.Append(" ASC ")
+				}
+			}
+		} else {
+			sql.Append(" ORDER BY lay_rec ASC ")
+		}
+		sql.Append(" LIMIT ").Long(page.Size).Append(" OFFSET ").Long(offset)
+	}
 	err = db.Raw(sql.String()).Find(&results).Error
 	return
 }

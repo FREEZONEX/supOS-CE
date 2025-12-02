@@ -11,7 +11,7 @@ type LogWrapperConsumer struct {
 	target       func(*RunningStatus) // Target consumer function
 	finished     *bool                // Last finished status
 	lastTask     string               // Last task name
-	lastProgress *float64             // Last progress value
+	lastProgress *Float3              // Last progress value
 }
 
 // NewLogWrapperConsumer creates a new LogWrapperConsumer
@@ -32,8 +32,8 @@ func (l *LogWrapperConsumer) Accept(status *RunningStatus) {
 	if status.Task != "" {
 		l.lastTask = status.Task
 	}
-	if status.Progress != nil {
-		l.lastProgress = status.Progress
+	if progress := status.Progress; progress != nil {
+		l.lastProgress = progress
 	}
 
 	// Call target consumer
@@ -53,6 +53,6 @@ func (l *LogWrapperConsumer) GetLastTask() string {
 }
 
 // GetLastProgress returns the last progress value
-func (l *LogWrapperConsumer) GetLastProgress() *float64 {
+func (l *LogWrapperConsumer) GetLastProgress() *Float3 {
 	return l.lastProgress
 }

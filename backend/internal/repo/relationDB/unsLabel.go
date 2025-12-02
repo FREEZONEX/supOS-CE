@@ -46,6 +46,24 @@ func (p UnsLabelRepo) ListByIds(db *gorm.DB, ids []int64) ([]*UnsLabel, error) {
 	}
 	return results, nil
 }
+func (p UnsLabelRepo) ListAll(db *gorm.DB, page, pageSize int) ([]*UnsLabel, error) {
+	var results []*UnsLabel
+	if page < 1 {
+		page = 1
+	}
+	if pageSize > 1000 {
+		pageSize = 1000
+	} else if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+	db = db.Model(&UnsLabel{}).Order("id").Offset(offset).Limit(pageSize)
+	err := db.Find(&results).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return results, nil
+}
 func (p UnsLabelRepo) ListByUnsId(db *gorm.DB, unsId int64) (result []*UnsLabel, err error) {
 	err = db.Model(&UnsLabel{}).Raw(`
        select ul.id ,ul.label_name from uns_label ul join  uns_label_ref rf on ul.id = rf.label_id where rf.uns_id =? 

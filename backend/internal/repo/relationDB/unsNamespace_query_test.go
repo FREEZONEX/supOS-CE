@@ -10,6 +10,38 @@ import (
 	"gitee.com/unitedrhino/share/stores"
 )
 
+func TestListByLayRecs(t *testing.T) {
+	db := stores.GetCommonConn(t.Context())
+	dao := NewUnsNamespaceRepo()
+	page := &stores.PageInfo{Page: 1, Size: 10, Orders: []stores.OrderBy{{Field: "lay_rec"}}}
+	layRecs := []string{"1960575789291339779", "1965675474571513856"}
+	rs, err := dao.ListByLayRecs(db, layRecs, page)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	index := 0
+	t.Log(index, len(rs), rs)
+	for len(rs) > 0 {
+		index++
+		page.Page++
+		rs, err = dao.ListByLayRecs(db, layRecs, page)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(index, len(rs), rs)
+	}
+
+}
+func TestLabelListAll(t *testing.T) {
+	db := stores.GetCommonConn(t.Context())
+	var lb UnsLabelRepo
+	lbs, err := lb.ListAll(db, 3, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(lbs)
+}
 func TestUnsQuery(t *testing.T) {
 	dao := NewUnsNamespaceRepo()
 	db := stores.GetCommonConn(t.Context())
@@ -28,6 +60,7 @@ func TestUnsQuery(t *testing.T) {
 		jbs, _ = json.Marshal(unsPos)
 		t.Log(len(unsPos), string(jbs), err)
 	}
+
 }
 func TestListInTemplate(t *testing.T) {
 	dao := NewUnsNamespaceRepo()

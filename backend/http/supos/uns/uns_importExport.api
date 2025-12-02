@@ -1,0 +1,69 @@
+@server (
+	prefix: /inter-api/supos/uns/importExport
+	group:  supos/uns/importExport
+)
+service backend {
+
+	@doc (
+		summary: "UNS 导入 (流式返回消息)"
+	)
+	@handler import
+    post /import (UploadReq) returns ()
+
+    @doc (
+        summary: "UNS 导出,返回文件路径"
+    )
+    @handler exportPath
+    post /exportPath (ExportReq) returns (ExportResp)
+
+	@doc (
+		summary: "下载模版"
+	)
+	@handler templateDownload
+	get /template/download (TemplateDownloadReq) returns ()
+
+	@doc (
+		summary: "文件下载"
+	)
+	@handler fileDownload
+	get /file/download (FileDownloadReq) returns ()
+
+    @doc (
+        summary: "UNS 上传文件"
+    )
+    @handler upload
+    post /upload (UploadReq) returns (StringResult)
+}
+
+type (
+	// 文件上传请求
+	UploadReq  {
+		File string `form:"file,multipart/form-data"`
+	}
+    // 导出请求
+    ExportReq  {
+        UserId     string  `json:"userId,optional"`
+        Language   string   `json:"language,optional"`
+        ExportType string  `json:"exportType,optional"`
+        FileType   string  `json:"fileType,optional"`
+        Folders    []int64 `json:"folders,string,optional"`
+        Files      []int64 `json:"files,string,optional"`
+    }
+    ExportPathResult {
+       SmallFile bool    `json:"smallFile"`
+       FilePath  string  `json:"filePath"`
+    }
+    ExportResp {
+      BaseResult
+      Data *ExportPathResult `json:"data"`
+    }
+
+	// 模版下载请求
+	TemplateDownloadReq  {
+		FileType string `form:"fileType"`
+	}
+	// 文件下载请求
+	FileDownloadReq  {
+		Path string `form:"path"`
+	}
+)

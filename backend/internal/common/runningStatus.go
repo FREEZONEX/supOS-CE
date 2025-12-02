@@ -2,26 +2,36 @@ package common
 
 import (
 	"backend/internal/common/I18nUtils"
+	"strconv"
 )
 
 // RunningStatus represents running status information
 type RunningStatus struct {
-	Module     string   `json:"module,omitempty"`     // 模块 uns sourceFlow eventFlow dashboard
-	Code       int      `json:"code"`                 // 状态码 200表示成功
-	Msg        string   `json:"msg,omitempty"`        // 消息
-	ErrTipFile string   `json:"errTipFile,omitempty"` // 错误提示文件
-	N          *int     `json:"n,omitempty"`          // 总数
-	I          *int     `json:"i,omitempty"`          // 当前索引
-	Task       string   `json:"task,omitempty"`       // 任务名称
-	SpendMills *int64   `json:"spendMills,omitempty"` // 耗时毫秒
-	Finished   *bool    `json:"finished,omitempty"`   // 是否完成
-	Progress   *float64 `json:"progress,omitempty"`   // 进度：0-100
+	Module     string  `json:"module,omitempty"`     // 模块 uns sourceFlow eventFlow dashboard
+	Code       int     `json:"code"`                 // 状态码 200表示成功
+	Msg        string  `json:"msg,omitempty"`        // 消息
+	ErrTipFile string  `json:"errTipFile,omitempty"` // 错误提示文件
+	N          *int    `json:"n,omitempty"`          // 总数
+	I          *int    `json:"i,omitempty"`          // 当前索引
+	Task       string  `json:"task,omitempty"`       // 任务名称
+	SpendMills *int64  `json:"spendMills,omitempty"` // 耗时毫秒
+	Finished   *bool   `json:"finished,omitempty"`   // 是否完成
+	Progress   *Float3 `json:"progress,omitempty"`   // 进度：0-100
 
 	StartTime    *int64 `json:"startTime,omitempty"`    // 开始时间
 	EndTime      *int64 `json:"endTime,omitempty"`      // 结束时间
 	TotalCount   int    `json:"totalCount,omitempty"`   // 总数量
 	ErrorCount   int    `json:"errorCount,omitempty"`   // 错误数量
 	SuccessCount int    `json:"successCount,omitempty"` // 成功数量
+}
+
+// 自定义浮点类型，保留3位小数
+type Float3 float64
+
+func (f Float3) MarshalJSON() ([]byte, error) {
+	// 格式化为保留3位小数的字符串
+	formatted := strconv.FormatFloat(float64(f), 'f', 3, 64)
+	return []byte(formatted), nil
 }
 
 // NewRunningStatus creates a new RunningStatus with default values
@@ -64,7 +74,7 @@ func NewRunningStatusWithProgress(n, i int, task, msg string) *RunningStatus {
 func (r *RunningStatus) SetSpendMills(spend int64) *RunningStatus {
 	r.SpendMills = &spend
 	if r.N != nil && *r.N > 0 && r.I != nil {
-		progress := float64(1000*float64(*r.I)/float64(*r.N)) / 10.0
+		progress := Float3(1000*float64(*r.I)/float64(*r.N)) / 10.0
 		r.Progress = &progress
 	}
 	return r
@@ -72,7 +82,8 @@ func (r *RunningStatus) SetSpendMills(spend int64) *RunningStatus {
 
 // SetProgress sets the progress value
 func (r *RunningStatus) SetProgress(progress float64) *RunningStatus {
-	r.Progress = &progress
+	prog := Float3(progress)
+	r.Progress = &prog
 	return r
 }
 

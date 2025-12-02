@@ -404,11 +404,12 @@ type (
 	}
 	ParseJson2UnsResp {
 		BaseResult
-		Data []OuterStructureVo `json:"data"`
+		Data []*OuterStructureVo `json:"data"`
 	}
 	OuterStructureVo {
-		DataPath string        `json:"dataPath"`
-		Fields   []FieldDefine `json:"fields"`
+         DataPath  string            `json:"dataPath"`
+         Fields    []*FieldDefine    `json:"fields,omitempty"`
+         ValueMap  map[string]interface{}    `json:"valueMap,omitempty"`
 	}
 	ParseJson2TreeUnsResp {
 		BaseResult
@@ -610,7 +611,7 @@ type (
 	}
 	StringResult {
 		BaseResult
-		Data string `json:"data,optional"`
+		Data string `json:"data,optional,omitempty"`
 	}
 	CreateUnsResult {
 		Id           string `json:"id"`

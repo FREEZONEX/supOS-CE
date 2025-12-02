@@ -312,6 +312,9 @@ func checkTopicDto(errTipMap map[string]string,
 		d.ParentId = &templateRootID
 		d.ParentAlias = &templateRootAlias
 		put(d)
+	} else {
+		errTipMap[batchIndex] = I18nUtils.GetMessage("uns.import.type.error")
+		return
 	}
 
 	if d.Frequency != "" {
@@ -508,8 +511,12 @@ func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, bat
 	}
 
 	if unsDto.PathType == constants.PathTypeFile && len(instance.Fields) == 0 {
-		errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.empty")
-		return true
+		if base.P2v(unsDto.DataType) == constants.JsonbType {
+			instance.Fields = []*types.FieldDefine{{Name: "json", Type: types.FieldTypeString}}
+		} else {
+			errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.empty")
+			return true
+		}
 	}
 
 	return false
@@ -937,7 +944,7 @@ func (w *wrappedEventStatusAware) BeforeEvent(N int, i int, listenerName string)
 }
 func (w *wrappedEventStatusAware) AfterEvent(N int, i int, listenerName string, err error) {
 	msg := _endMsg
-	code := 0
+	code := 200
 	if err != nil {
 		code = 500
 		msg = _errMsg + err.Error()

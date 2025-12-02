@@ -46,6 +46,7 @@
   "global.import.error.version": "File version error.",
   "global.import.error.format": "File format error.",
   "uns.import.not.xlsx": "Import failed. File type is not XLSX/JSON.",
+  "uns.import.not.json": "Import failed. File type is not JSON.",
   "uns.import.template.error": "Import failed. Incorrect template.",
   "uns.import.excel.empty": "Import failed. The imported Excel is empty.",
   "uns.import.error": "Import error.",

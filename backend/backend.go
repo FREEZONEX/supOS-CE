@@ -15,7 +15,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"net/http"
 
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -31,15 +30,9 @@ func main() {
 	var c config.Config
 	var confFile = "etc/backend.yaml"
 	utils.ConfMustLoad(confFile, &c)
-	/* 下面是使用示例
-	msg := i18ns.LocalizeMsg("nodered.protocol.unsupported", "vewwrfw3")
-	logx.Info(msg) // 输出:  Unsupported protocol: vewwrfw3.
-	*/
+	c.RestConf.MaxBytes = max(c.RestConf.MaxBytes, 1<<30) //http body最大限制最少1G
 
-	server := rest.MustNewServer(
-		c.RestConf,
-		rest.WithFileServer("/files/", http.Dir("/data")),
-	)
+	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 
 	if lv := c.LoggerLevel; lv != "" {
@@ -48,6 +41,7 @@ func main() {
 
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
+	handler.RegisterExtHandlers(server, ctx)
 	server.PrintRoutes()
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	spring.RegisterBean[*svc.ServiceContext](ctx)

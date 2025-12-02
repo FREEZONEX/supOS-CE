@@ -1,6 +1,7 @@
 package sourceflow
 
 import (
+	"backend/internal/logic/supos/auth"
 	"context"
 	"strings"
 
@@ -27,17 +28,7 @@ func LoadFlowByType(ctx context.Context, repo *relationDB.NoderedSourceFlowRepo,
 }
 
 func resolveUserID(ctx context.Context) string {
-	if ctx == nil {
-		return "guest"
-	}
-	if v := ctx.Value(apiutil.UserKey); v != nil {
-		if user, ok := v.(*vo.UserInfoVo); ok && user != nil {
-			if sub := strings.TrimSpace(user.Sub); sub != "" {
-				return sub
-			}
-		}
-	}
-	return "guest"
+	return auth.ResolveUserID(ctx)
 }
 
 func resolveUser(ctx context.Context) *vo.UserInfoVo {
