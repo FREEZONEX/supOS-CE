@@ -17,6 +17,12 @@ func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	}, rest.WithTimeout(0))
 
 	server.AddRoute(rest.Route{
+		Method:  http.MethodPost,
+		Path:    "/inter-api/supos/uns/importExport/export",
+		Handler: imexport.ExportHandler(serverCtx),
+	}, rest.WithTimeout(0))
+
+	server.AddRoute(rest.Route{
 		Method:  http.MethodGet,
 		Path:    "/inter-api/supos/uns/newMsg",
 		Handler: unsHandler.PushNewMsgHandler(serverCtx),

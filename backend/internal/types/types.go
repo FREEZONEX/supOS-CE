@@ -415,12 +415,13 @@ type ExportPathResult struct {
 }
 
 type ExportReq struct {
-	UserId     string  `json:"userId,optional,omitempty,omitzero"`
-	Language   string  `json:"language,optional,omitempty,omitzero"`
-	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
-	FileType   string  `json:"fileType,optional,omitempty,omitzero"`
-	Folders    []int64 `json:"folders,string,optional,omitempty,omitzero"`
-	Files      []int64 `json:"files,string,optional,omitempty,omitzero"`
+	CheckSmallFile *bool   `json:"checkSmallFile,optional,omitempty,omitzero"`
+	UserId         string  `json:"userId,optional,omitempty,omitzero"`
+	Language       string  `json:"language,optional,omitempty,omitzero"`
+	ExportType     string  `json:"exportType,optional,omitempty,omitzero"`
+	FileType       string  `json:"fileType,optional,omitempty,omitzero"`
+	Folders        []int64 `json:"folders,string,optional,omitempty,omitzero"`
+	Files          []int64 `json:"files,string,optional,omitempty,omitzero"`
 }
 
 type ExportResp struct {

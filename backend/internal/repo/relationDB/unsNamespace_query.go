@@ -209,7 +209,7 @@ func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAnd
 }
 func (p UnsNamespaceRepo) CountAll(db *gorm.DB) (int64, error) {
 	var count sql.NullInt64
-	err := p.model(db).Select("count(*)").Where("status = 1").Scan(&count).Error
+	err := p.model(db).Select("count(*)").Where("status = 1 and id>10 and (data_type is null OR data_type<>5 )").Scan(&count).Error
 	if err != nil {
 		return -1, stores.ErrFmt(err)
 	}
@@ -246,7 +246,7 @@ func (p UnsNamespaceRepo) ListAll(db *gorm.DB, pathTypes []int16, page, pageSize
 	if len(pathTypes) > 0 {
 		db = db.Where("path_type IN (?)", pathTypes)
 	}
-	db = db.Where("status=1 and id>0").Order("lay_rec").Offset(offset).Limit(pageSize)
+	db = db.Where("status=1 and id>10 and (data_type is null OR data_type<>5 )").Order("lay_rec").Offset(offset).Limit(pageSize)
 	err = db.Find(&results).Error
 	if err != nil {
 		return nil, stores.ErrFmt(err)

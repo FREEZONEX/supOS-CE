@@ -6574,6 +6574,9 @@
             "schema": {
               "type": "object",
               "properties": {
+                "checkSmallFile": {
+                  "type": "boolean"
+                },
                 "exportType": {
                   "type": "string"
                 },
@@ -11842,7 +11845,7 @@
       }
     }
   },
-  "x-date": "2025-12-02 16:20:18",
+  "x-date": "2025-12-03 16:09:35",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
