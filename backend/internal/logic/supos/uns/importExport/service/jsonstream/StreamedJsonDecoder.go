@@ -1,6 +1,7 @@
 package jsonstream
 
 import (
+	"backend/internal/common/I18nUtils"
 	"bufio"
 	"encoding/json"
 	"fmt"
@@ -50,21 +51,19 @@ func DecodeStreamedJson[Node any, TreeNode any](
 		propName, isString := fieldName.(string)
 		if !isString {
 			// 跳过未知字段的值
-			if err := skipValue(decoder); err != nil {
-				return err
-			}
+			continue
 		}
 
 		// 读取数组开始标记
 		t, err := decoder.Token()
 		if err != nil {
+			if je, is := err.(*json.SyntaxError); is {
+				return fmt.Errorf("%s: %d: %v", I18nUtils.GetMessage("uns.import.json.error"), je.Offset, je.Error())
+			}
 			return err
 		}
 		if t != json.Delim('[') {
-			// 跳过未知字段的值
-			if err := skipValue(decoder); err != nil {
-				return err
-			}
+			continue // 跳过未知字段的值
 		}
 
 		// 解析数组
@@ -161,38 +160,5 @@ func decodeArray[Node any, TreeNode any](
 	if t != json.Delim(']') {
 		return fmt.Errorf("expected array end, got %v", t)
 	}
-	return nil
-}
-
-// 跳过未知字段的值
-func skipValue(decoder *json.Decoder) error {
-	t, err := decoder.Token()
-	if err != nil {
-		return err
-	}
-
-	switch t {
-	case json.Delim('['), json.Delim('{'):
-		// 对于数组或对象，需要递归跳过所有内容
-		for {
-			if !decoder.More() {
-				break
-			}
-			if err := skipValue(decoder); err != nil {
-				return err
-			}
-		}
-		// 读取结束标记
-		endToken, err := decoder.Token()
-		if err != nil {
-			return err
-		}
-		if (t == json.Delim('[') && endToken != json.Delim(']')) ||
-			(t == json.Delim('{') && endToken != json.Delim('}')) {
-			return fmt.Errorf("unexpected end token %v", endToken)
-		}
-	}
-	// 对于其他类型（字符串、数字、布尔、null），已经读取了值，无需额外处理
-
 	return nil
 }

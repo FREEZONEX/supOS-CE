@@ -34,6 +34,24 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 			l.log.Error("导入进度发送失败:", er)
 		}
 	}
+	createErrorFile := func() bool {
+		if errFile != nil {
+			return false
+		}
+		var tarPath string
+		var err error
+		tarPath, errFileRelativePath = destFile("err_"+file.FileName, 0)
+		_ = os.MkdirAll(filepath.Dir(tarPath), os.ModeDir)
+		errFile, err = os.Create(tarPath)
+		if err != nil {
+			l.log.Error("创建错误提示文件失败", err, tarPath)
+		} else {
+			errBufWriter = bufio.NewWriter(errFile)
+			_ = errBufWriter.WriteByte('[')
+			errJsonEncoder = json.NewEncoder(errBufWriter)
+		}
+		return errFile != nil
+	}
 	l.log.Infof("UNS导入: %s (size=%d)\n", file.FileName, file.Size)
 	//
 	FILE_SIZE := file.Size
@@ -102,22 +120,8 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 				})
 				if len(errTipMap) > 0 {
 					countErr += len(errTipMap)
-					var first = false
-					if errFile == nil {
-						first = true
-						var tarPath string
-						var err error
-						tarPath, errFileRelativePath = destFile("err_"+file.FileName, 0)
-						_ = os.MkdirAll(filepath.Dir(tarPath), os.ModeDir)
-						errFile, err = os.Create(tarPath)
-						if err != nil {
-							l.log.Error("创建错误提示文件失败", err, tarPath)
-						} else {
-							errBufWriter = bufio.NewWriter(errFile)
-							_ = errBufWriter.WriteByte('[')
-							errJsonEncoder = json.NewEncoder(errBufWriter)
-						}
-					}
+					first := errFile == nil
+					createErrorFile()
 					logErrImports(errTipMap, nodes, first, errBufWriter, errJsonEncoder)
 				}
 			}
@@ -137,6 +141,12 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 		})
 	if er != nil {
 		l.log.Error("JsonDecodeError", er)
+		first := errFile == nil
+		createErrorFile()
+		if !first {
+			_ = errBufWriter.WriteByte(',')
+		}
+		_ = errJsonEncoder.Encode(er.Error())
 	}
 	status := &common.RunningStatus{Code: 200, Msg: I18nUtils.GetMessage("uns.import.rs.ok"), Task: I18nUtils.GetMessage("uns.create.task.name.final")}
 	status.SetProgress(100)
