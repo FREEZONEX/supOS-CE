@@ -7,7 +7,6 @@ import {
   checkDashboardIsExist,
   getDashboardByUns,
 } from '@/apis/inter-api/uns';
-import { useWebSocket } from 'ahooks';
 import { Button, Collapse, Flex, theme, Typography, App, Space } from 'antd';
 import Icon, { FullscreenOutlined } from '@ant-design/icons';
 import { CaretRight, Document, Code, TableSplit, SendAlt, ChartLine } from '@carbon/icons-react';
@@ -35,6 +34,7 @@ import { useBaseStore } from '@/stores/base';
 import EditButton from '@/pages/uns/components/EditButton.tsx';
 import screenfull from 'screenfull';
 import { CustomAxiosConfigEnum } from '@/utils';
+import useSSE from '@/hooks/useSSE.ts';
 
 const { Title } = Typography;
 
@@ -138,9 +138,9 @@ const Module: FC<FileDetailProps> = (props) => {
     return digits === 0 ? intPart : `${intPart}.${dec}`;
   };
 
-  useWebSocket(
+  useSSE(
     instanceInfo.id && wsTimeStamp
-      ? `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/inter-api/supos/uns/newMsg?id=${instanceInfo.id}&t=${wsTimeStamp}&token=${getToken()}`
+      ? `/inter-api/supos/uns/newMsg?id=${instanceInfo.id}&t=${wsTimeStamp}&token=${getToken()}`
       : '',
     {
       onMessage: (event) => {
