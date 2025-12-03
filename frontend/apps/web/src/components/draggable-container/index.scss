@@ -1,0 +1,20 @@
+.custom-draggable {
+  position: relative;
+
+  .navHandle {
+    display: none;
+  }
+
+  &:hover {
+    .navHandle {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: move;
+    }
+  }
+}

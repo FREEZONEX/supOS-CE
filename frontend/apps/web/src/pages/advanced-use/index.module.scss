@@ -1,0 +1,70 @@
+.home-title {
+  padding: 32px 36px 30px;
+  background-color: var(--supos-home-bg-color);
+}
+
+.menu-item {
+  width: 317px;
+  height: 156px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: var(--supos-uns-button-color);
+  padding: 24px;
+  cursor: pointer;
+
+  :global {
+    .item-content {
+      flex: 1;
+      padding: 0 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    .label {
+      color: var(--supos-table-first-color);
+      font-size: 20px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 22px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    .version {
+      color: var(--supos-table-first-color);
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 18px;
+      letter-spacing: 0.16px;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: var(--supos-table-first-color);
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 18.2px;
+      letter-spacing: 0.16px;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: -webkit-box; /* 设置为弹性盒模型 */
+      -webkit-box-orient: vertical; /* 设置为竖直排列 */
+      -webkit-line-clamp: 4; /* 显示 4 行，超过部分显示省略号 */
+      text-overflow: ellipsis; /* 超出部分显示省略号 */
+    }
+  }
+}
+
+.content-section {
+  overflow-y: auto;
+  padding: 16px;
+}

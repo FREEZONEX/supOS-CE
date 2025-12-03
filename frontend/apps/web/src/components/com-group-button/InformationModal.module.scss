@@ -1,0 +1,49 @@
+.information-modal {
+  :global {
+    // 调整弹窗容器
+    .ant-modal {
+      top: 50px !important;
+      max-width: 500px;
+      margin: 0 auto;
+
+      &-content {
+        // background: var(--supos-modal-color);
+        height: 70vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      &-body {
+        flex: 1;
+        padding: 0;
+        overflow-y: auto;
+      }
+    }
+
+    // 隐藏全屏相关元素
+    .header-controls .control-button[aria-label='fullscreen'] {
+      display: none;
+    }
+
+    .custom-pagination-info {
+      border-top: 1px solid rgb(198 198 198);
+      padding-top: 1rem;
+      background-color: var(--supos-promodal-bg-pg-color) !important;
+
+      .ant-pagination-item,
+      .ant-pagination-options-quick-jumper,
+      .ant-pagination-options-quick-jumper input {
+        background-color: rgb(255 255 255 / -92%) !important ;
+      }
+
+      .ant-pagination-item-active,
+      .ant-pagination-options-quick-jumper input:focus-within {
+        border-color: var(--supos-theme-color) !important;
+      }
+
+      .ant-pagination-item-active a {
+        color: var(--supos-theme-color) !important;
+      }
+    }
+  }
+}

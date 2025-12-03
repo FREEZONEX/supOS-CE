@@ -1,0 +1,19 @@
+.com-click-trigger {
+  display: inline-block;
+  position: relative;
+  user-select: none;
+
+  &-counter {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: rgb(0 0 0 / 60%);
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 12px;
+    line-height: 1;
+    min-width: 20px;
+    text-align: center;
+  }
+}

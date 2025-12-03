@@ -1,0 +1,22 @@
+{
+  "name": "@supos-os-edge/scripts",
+  "version": "1.0.0",
+  "description": "平台执行脚本",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "supos-scripts": "./dist/bin.js"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch"
+  },
+  "keywords": [],
+  "author": "zhengfayue",
+  "license": "ISC",
+  "devDependencies": {
+    "@supos-os-edge/typescript-config": "workspace:^",
+    "tencentcloud-sdk-nodejs-tmt": "catalog:util",
+    "tsdown": "catalog:build"
+  }
+}

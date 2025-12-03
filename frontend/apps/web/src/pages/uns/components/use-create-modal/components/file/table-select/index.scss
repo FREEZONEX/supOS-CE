@@ -1,0 +1,14 @@
+.table-select-popup {
+  .ant-select-tree-node-content-wrapper {
+    padding-inline-start: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    .ant-select-tree-icon__customize {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}

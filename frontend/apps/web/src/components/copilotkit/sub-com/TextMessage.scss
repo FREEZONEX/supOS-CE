@@ -1,0 +1,40 @@
+.text-message {
+  color: var(--supos-message-color);
+  padding: 14px;
+  overflow-wrap: break-word;
+  max-width: 80%;
+  margin-bottom: 20px;
+  border-radius: 3px;
+
+  pre code {
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  &.text-message-user {
+    margin-left: auto;
+    background-color: var(--supos-blue-color-10);
+  }
+
+  &.text-message-assistant {
+    margin-right: auto;
+    background-color: var(--supos-gray-color-10-message);
+    position: relative;
+
+    .icon {
+      background-color: var(--supos-bg-color);
+      width: 24px;
+      height: 24px;
+      position: absolute;
+      left: -10px;
+      top: -10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+    }
+  }
+}

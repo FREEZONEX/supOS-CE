@@ -1,0 +1,24 @@
+.dot-pattern {
+  width: 100%;
+  //aspect-ratio: 1 / 1;
+  height: 100%;
+  //max-height: 85vh;
+  background-color: #f4f4f4;
+  // background-color: var(--supos-charttop-bg-color);
+  padding: 0.75rem;
+}
+
+.cm-code-editor {
+  width: var(--cdm-c-width);
+  height: var(--cdm-c-height);
+}
+
+.selected-row {
+  background-color: rgb(172 174 177) !important;
+}
+
+.carft-table {
+  .ant-table-thead {
+    display: none;
+  }
+}

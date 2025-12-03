@@ -1,0 +1,18 @@
+.permission {
+  .menu-bar {
+    :global {
+      .ant-checkbox-label {
+        font-size: 15px;
+        font-weight: 700;
+      }
+    }
+  }
+
+  .operation-bar {
+    :global {
+      .ant-checkbox-label {
+        font-weight: 700;
+      }
+    }
+  }
+}

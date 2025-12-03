@@ -1,0 +1,50 @@
+{
+  "name": "@supos-os-edge/demo-mcp-server",
+  "version": "1.0.4",
+  "description": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsdown --watch",
+    "build": "tsdown && shx chmod +x dist/*.js",
+    "prepare": "pnpm run build",
+    "start": "node dist/index.js",
+    "start:sse": "node dist/transport/sse.js",
+    "start:streamableHttp": "node dist/transport/streamableHttp.js",
+    "inspector": "npx -y @modelcontextprotocol/inspector npx @supos-os-edge/demo-mcp-server"
+  },
+  "bin": {
+    "@supos-os-edge/demo-mcp-server": "dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "catalog:ai",
+    "cors": "catalog:server",
+    "express": "catalog:server",
+    "zod": "catalog:util",
+    "zod-to-json-schema": "catalog:util",
+    "node-fetch": "catalog:util"
+  },
+  "devDependencies": {
+    "@types/cors": "catalog:type",
+    "@types/express": "catalog:type",
+    "@types/node-fetch": "catalog:type",
+    "shx": "catalog:dev",
+    "typescript": "catalog:lint",
+    "tsdown": "catalog:build"
+  },
+  "keywords": [
+    "mcp",
+    "supos-edge"
+  ],
+  "author": "zhengfayue",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

@@ -1,0 +1,82 @@
+.app-url-preview {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px dashed rgb(47 52 59 / 20%);
+  padding: 14px 0;
+  margin-left: 14px;
+
+  :global {
+    .single-url {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 1px 2px 1px 0;
+    }
+
+    .url {
+      font-size: 20px;
+      font-style: normal;
+      font-weight: 500;
+      flex-grow: 0;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 8px;
+      width: 150px;
+      flex-shrink: 0;
+    }
+
+    .box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-left: 32px;
+      flex: 1;
+      border-radius: 3px;
+      background: var(--supos-tag-color);
+      padding: 4px 16px;
+      overflow: hidden;
+    }
+
+    .icon {
+      cursor: pointer;
+      border-radius: 3px;
+      padding: 4px 8px;
+      margin-left: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 32px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .icon-blue {
+      background-color: var(--supos-theme-color);
+      color: #fff;
+
+      &:hover {
+        background-color: var(--supos-theme-button-hover-color);
+      }
+
+      &:active {
+        background: var(--supos-theme-button-active-color);
+        color: white;
+      }
+    }
+
+    .icon-grey {
+      background: #f4f4f4;
+      color: #000;
+
+      &:hover {
+        background: #ebebeb;
+      }
+
+      &:active {
+        background: #b2acac;
+      }
+    }
+  }
+}

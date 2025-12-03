@@ -1,0 +1,31 @@
+{
+  "name": "services-express",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Services API server built with Express v5",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "scripts": {
+    "dev": "tsdown --watch",
+    "build": "tsdown",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "express": "catalog:server",
+    "dockerode": "catalog:server",
+    "openai": "catalog:ai",
+    "@copilotkit/runtime": "catalog:ai",
+    "@langchain/anthropic": "catalog:ai",
+    "@langchain/ollama": "catalog:ai",
+    "@langchain/openai": "catalog:ai",
+    "dotenv": "catalog:dev",
+    "@modelcontextprotocol/sdk": "catalog:ai"
+  },
+  "devDependencies": {
+    "@types/express": "catalog:type",
+    "@types/dockerode": "catalog:type",
+    "@types/node": "catalog:type",
+    "tsdown": "catalog:build"
+  }
+}

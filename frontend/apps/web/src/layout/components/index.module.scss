@@ -1,0 +1,12 @@
+.tabs-layout {
+  height: 100%;
+
+  :global {
+    .ant-tabs-content,
+    .ant-tabs-tabpane,
+    .ant-tabs-content-holder {
+      height: 100%;
+      // color: var(--font-text-color);
+    }
+  }
+}

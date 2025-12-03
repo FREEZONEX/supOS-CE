@@ -13,3 +13,9 @@
 .vscode/launch.json
 AGENTS.md
 backend/.env
+**/*.local
+**/.__mf__temp
+**/properties-output
+**/.env
+**/.env.production
+.trae

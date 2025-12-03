@@ -1,0 +1,145 @@
+.shepherd-custom-classes.shepherd-element {
+  z-index: 10001 !important;
+  border-radius: 3px;
+  box-shadow: 0 6px 12px 0 rgb(0 0 0 / 20%);
+
+  &[data-popper-placement='bottom'],
+  &[data-popper-placement='bottom-start'],
+  &[data-popper-placement='bottom-end'] {
+    margin-top: 24px !important;
+  }
+
+  &[data-popper-placement='left'],
+  &[data-popper-placement='left-start'],
+  &[data-popper-placement='left-end'] {
+    margin-left: -24px !important;
+  }
+
+  &[data-popper-placement='right'],
+  &[data-popper-placement='right-start'],
+  &[data-popper-placement='right-end'] {
+    margin-left: 24px !important;
+  }
+
+  &[data-popper-placement='top'],
+  &[data-popper-placement='top-start'],
+  &[data-popper-placement='top-end'] {
+    margin-bottom: 24px !important;
+  }
+
+  &.no-attach {
+    margin: 0 !important;
+  }
+
+  &.shepherd-has-title .shepherd-content .shepherd-header {
+    background: #fff;
+    padding: 16px 20px 0;
+
+    .shepherd-cancel-icon {
+      line-height: 18px;
+    }
+
+    .shepherd-title {
+      font-weight: bold;
+    }
+  }
+
+  .shepherd-text {
+    padding: 8px 20px;
+    color: rgb(0 0 0 / 60%);
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .shepherd-arrow::before {
+    background-color: #fff !important;
+  }
+
+  .shepherd-button {
+    font-size: 12px;
+    padding: 8px 14px;
+    background: var(--supos-theme-color);
+    position: relative;
+
+    &:not(:disabled):hover {
+      background: var(--supos-theme-button-hover-color);
+    }
+
+    &.prev-class {
+      padding: 7px 10px;
+      background-color: #fff;
+      color: rgb(0 0 0 / 40%);
+
+      &:hover {
+        background-color: #fff !important;
+        color: rgb(0 0 0 / 40%);
+      }
+    }
+
+    &.back-class {
+      background-color: rgb(29 119 254 / 10%);
+      color: var(--supos-theme-color);
+
+      &:hover {
+        background-color: rgb(29 119 254 / 20%);
+        color: var(--supos-theme-color);
+      }
+    }
+
+    &.checkbox-class {
+      position: absolute;
+      left: 20px;
+      padding: 7px 0;
+    }
+  }
+
+  .shepherd-footer {
+    padding: 0 20px 16px;
+    position: relative;
+  }
+
+  .checkbox-label {
+    position: absolute;
+    left: 0;
+    padding: 0 0 0 20px;
+    line-height: 19px;
+    white-space: nowrap;
+  }
+
+  .user-guide-list {
+    list-style: disc;
+    padding: 0 20px;
+  }
+}
+
+.shepherd-modal-overlay-container {
+  z-index: 10000 !important;
+  pointer-events: auto !important;
+}
+
+.guide-video-classes.shepherd-element {
+  max-width: 900px;
+
+  .shepherd-text {
+    padding: 16px;
+  }
+
+  .guide-video {
+    width: 100%;
+    height: auto;
+  }
+
+  .video-title {
+    font-size: 26px;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+    margin: 10px;
+  }
+
+  .video-info {
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+}

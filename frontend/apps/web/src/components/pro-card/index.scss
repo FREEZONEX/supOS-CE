@@ -1,0 +1,71 @@
+.pro-card {
+  padding: 16px;
+  background-color: var(--supos-card-bg);
+  border-radius: 3px;
+  color: var(--supos-table-first-color);
+}
+
+.pro-card-border {
+  border: 1px solid #e0e0e0;
+}
+
+.pro-card-hover {
+  &:hover {
+    background: var(--supos-card-hover-bg);
+  }
+
+  &:active {
+    background-color: var(--supos-card-active-bg);
+  }
+
+  &.pro-card-checked {
+    background-color: var(--supos-card-active-bg);
+  }
+}
+
+.pro-card-status-header {
+  height: 34px;
+  padding-bottom: 12px;
+}
+
+.pro-card-header {
+  height: 40px;
+
+  .header-title {
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 22px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .title-description {
+    opacity: 0.6;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.pro-card-description {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: 0.16px;
+  margin-top: 12px;
+}
+
+.pro-card-secondary-description {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: 0.16px;
+  flex: 1;
+  overflow: hidden;
+}

@@ -1,0 +1,11 @@
+.controlled-dropdown {
+  .ant-dropdown-menu {
+    height: auto;
+    max-height: 50vh;
+    overflow: auto;
+  }
+
+  .ant-dropdown-menu .ant-dropdown-menu-item-divider {
+    background-color: #c6c6c6;
+  }
+}

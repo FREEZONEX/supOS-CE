@@ -1,0 +1,28 @@
+.dashboard-table-list {
+  .ant-table-row {
+    .list-operation {
+      gap: 0;
+      display: none;
+    }
+
+    &:hover {
+      .list-operation {
+        display: inline-flex;
+      }
+    }
+
+    .ant-btn-link {
+      padding: 0;
+      margin-right: 10px;
+      max-width: 80%;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      display: inline-block;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}

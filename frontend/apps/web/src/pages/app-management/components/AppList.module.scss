@@ -1,0 +1,109 @@
+.app-list {
+  padding: 40px;
+  overflow: auto;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 32px 27px;
+
+  :global {
+    .add-card {
+      width: 208px;
+      height: 198px;
+      flex-shrink: 0;
+      border-radius: 3px;
+      background-color: var(--supos-uns-button-color);
+      box-shadow: 0 4px 4px 0 rgb(0 0 0 / 25%);
+      display: flex;
+      transition: background-color 0.3s; /* 添加过渡效果 */
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+
+      &:hover {
+        background-color: var(--supos-card-hover-color);
+        font-weight: 600;
+      }
+
+      &:active {
+        background-color: var(--supos-card-active-color);
+        font-weight: 600;
+      }
+    }
+
+    .card {
+      width: 208px;
+      height: 198px;
+      flex-shrink: 0;
+      border-radius: 3px;
+      background-color: var(--supos-uns-button-color);
+      box-shadow: 0 4px 4px 0 rgb(0 0 0 / 25%);
+      display: flex;
+      padding: 0 12px 15px;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      position: relative;
+
+      .icon {
+        position: absolute;
+        top: -16px;
+        right: -16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 32px;
+        background: var(--supos-card-hover-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--supos-icon-color);
+      }
+
+      &:hover {
+        background-color: var(--supos-card-hover-color);
+      }
+    }
+
+    .name {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex: 1;
+      // color: #050b14;
+      color: var(--supos-switchwrap-active-text-color);
+      font-size: 20px;
+      font-style: normal;
+      font-weight: 400;
+      letter-spacing: 0.16px;
+      text-transform: capitalize;
+
+      .name-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.5;
+      }
+    }
+  }
+}
+
+.modal {
+  z-index: 1;
+
+  :global {
+    .add-button {
+      border-radius: 3px;
+      background: #000;
+      display: flex;
+      color: #fff;
+      padding: 8px 16px;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      align-self: stretch;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+  }
+}

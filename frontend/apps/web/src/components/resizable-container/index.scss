@@ -1,0 +1,15 @@
+@import url('react-resizable/css/styles.css');
+
+.resizable-container {
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.resizable-hover-handles .react-resizable-handle {
+  display: none;
+}
+
+.resizable-hover-handles:hover .react-resizable-handle {
+  display: block;
+}

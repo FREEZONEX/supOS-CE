@@ -1,0 +1,53 @@
+# --------------------------------------
+# Stage 1: Build the web application
+# --------------------------------------
+FROM node:22-alpine AS web-builder
+
+RUN npm config set registry https://registry.npmmirror.com/
+
+WORKDIR /app
+
+# Copy package files
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY apps ./apps
+COPY packages ./packages
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Then install all dependencies
+RUN pnpm install
+
+# build
+RUN pnpm run build:web
+RUN pnpm run build:servicesExpress
+
+# --------------------------------------
+# Stage 2: Create final runtime image
+# --------------------------------------
+FROM node:22-alpine
+
+RUN npm config set registry https://registry.npmmirror.com/
+
+WORKDIR /app
+
+# Install serve for static file serving
+RUN npm install -g serve concurrently pnpm
+
+# Copy web build artifacts
+COPY --from=web-builder /app/apps/web/dist ./web-dist
+COPY --from=web-builder /app/apps/services-express/dist ./services-express-dist
+COPY --from=web-builder /app/apps/services-express/package.json ./services-express-dist/
+COPY --from=web-builder /app/pnpm-workspace.yaml ./services-express-dist/
+
+WORKDIR /app/services-express-dist
+RUN pnpm install --production
+WORKDIR /app
+
+# Expose ports (web:3000, services:4000)
+EXPOSE 3000 4000
+
+# Start both services concurrently
+CMD ["concurrently", \
+    "serve -s /app/web-dist -l 3000", \
+    "node /app/services-express-dist/index.js"]

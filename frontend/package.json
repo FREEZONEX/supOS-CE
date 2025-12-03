@@ -6,8 +6,17 @@
   "scripts": {
     "prepare": "cd .. && husky frontend/.husky",
     "lint": "eslint .",
+    "intl:once": "turbo run intl:once",
+    "intl:watch": "turbo run intl:watch",
+    "properties:convert": "turbo run properties:convert",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter ./apps/web",
+    "dev:servicesExpress": "turbo run dev --filter ./apps/services-express",
+    "start:servicesExpress": "turbo run start --filter ./apps/services-express",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter ./apps/web",
+    "build:scripts": "turbo run build --filter ./packages/scripts",
+    "build:servicesExpress": "turbo run build --filter ./apps/services-express",
     "clean": "rimraf --glob \"**/node_modules\"  || exit 0"
   },
   "lint-staged": {
@@ -20,6 +29,9 @@
     "*.{json,md}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "lodash-es": "catalog:util"
   },
   "devDependencies": {
     "@eslint/js": "catalog:lint",
@@ -41,6 +53,7 @@
     "@commitlint/cli": "catalog:lint",
     "@commitlint/config-conventional": "catalog:lint",
     "@commitlint/prompt-cli": "catalog:lint",
+    "@types/lodash-es": "catalog:type",
     "lint-staged": "catalog:lint",
     "husky": "catalog:lint",
     "turbo": "catalog:build",

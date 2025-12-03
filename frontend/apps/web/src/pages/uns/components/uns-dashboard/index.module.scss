@@ -1,0 +1,55 @@
+.unsDashboard {
+  padding: 24px 24px 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+}
+
+.overview {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.overview-item {
+  width: calc((100% - 16px) / 2);
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: 0.16px;
+}
+
+.mqtt {
+  border: 1px solid #e0e0e0;
+  padding: 16px 0;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.mqtt-item {
+  width: 50%;
+  height: 100%;
+  padding: 0 16px;
+
+  &:first-child {
+    border-right: 1px dotted #e0e0e0;
+  }
+}
+
+@media (width <= 1200px) {
+  .overview-item {
+    width: 100%;
+  }
+
+  .mqtt-item {
+    width: 100%;
+    height: auto;
+
+    &:first-child {
+      border-right: none;
+    }
+  }
+}

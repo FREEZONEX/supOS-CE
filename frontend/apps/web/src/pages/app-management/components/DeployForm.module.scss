@@ -1,0 +1,10 @@
+.deploy-form {
+  :global {
+    .ant-form-item .ant-form-item-label > label {
+      color: #000;
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 600;
+    }
+  }
+}
