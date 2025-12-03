@@ -36,12 +36,12 @@ type (
 	}
     // 导出请求
     ExportReq  {
-        UserId     string  `json:"userId,optional"`
-        Language   string   `json:"language,optional"`
-        ExportType string  `json:"exportType,optional"`
-        FileType   string  `json:"fileType,optional"`
-        Folders    []int64 `json:"folders,string,optional"`
-        Files      []int64 `json:"files,string,optional"`
+        UserId     string  `json:"userId,optional,omitempty,omitzero"`
+        Language   string   `json:"language,optional,omitempty,omitzero"`
+        ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+        FileType   string  `json:"fileType,optional,omitempty,omitzero"`
+        Folders    []int64 `json:"folders,string,optional,omitempty,omitzero"`
+        Files      []int64 `json:"files,string,optional,omitempty,omitzero"`
     }
     ExportPathResult {
        SmallFile bool    `json:"smallFile"`

@@ -50,11 +50,10 @@ func init() {
 }
 func (l *UnsImportExportService) FileDownload(req *types.FileDownloadReq, r *http.Request, w http.ResponseWriter) error {
 	req.Path = strings.Replace(req.Path, "\\", "/", -1)
-	l.log.Info("下载：", req.Path)
-	if l.tryExportByParamFile(req.Path, w) {
+	if l.tryExportByParamFile(r.Context(), req.Path, w) {
 		return nil
 	}
-
+	l.log.Info("下载：", req.Path)
 	var httpRequest = *r
 	httpRequest.Method = http.MethodGet
 	path := filepath.Join(constants.RootPath, req.Path)
