@@ -31,7 +31,7 @@ func DecodeStreamedJson[Node any, TreeNode any](
 	{
 		startChar, err := decoder.Token()
 		if err != nil {
-			return err
+			return jsonErr(err)
 		}
 		if startChar == json.Delim('[') {
 			return decodeArray(decoder, reader, batchSize, getChildren, node2tree, "", batchConsumer)
@@ -45,7 +45,7 @@ func DecodeStreamedJson[Node any, TreeNode any](
 		// 读取字段名
 		fieldName, er := decoder.Token()
 		if er != nil {
-			return er
+			return jsonErr(er)
 		}
 
 		propName, isString := fieldName.(string)
@@ -57,10 +57,7 @@ func DecodeStreamedJson[Node any, TreeNode any](
 		// 读取数组开始标记
 		t, err := decoder.Token()
 		if err != nil {
-			if je, is := err.(*json.SyntaxError); is {
-				return fmt.Errorf("%s: %d: %v", I18nUtils.GetMessage("uns.import.json.error"), je.Offset, je.Error())
-			}
-			return err
+			return jsonErr(err)
 		}
 		if t != json.Delim('[') {
 			continue // 跳过未知字段的值
@@ -76,7 +73,7 @@ func DecodeStreamedJson[Node any, TreeNode any](
 	// 读取对象结束标记
 	t, err := decoder.Token()
 	if err != nil {
-		return err
+		return jsonErr(err)
 	}
 	if t != json.Delim('}') {
 		return fmt.Errorf("expected object end, got %v", t)
@@ -84,7 +81,12 @@ func DecodeStreamedJson[Node any, TreeNode any](
 
 	return nil
 }
-
+func jsonErr(err error) error {
+	if je, is := err.(*json.SyntaxError); is {
+		return fmt.Errorf("%s: %d: %v", I18nUtils.GetMessage("uns.import.json.error"), je.Offset, je.Error())
+	}
+	return err
+}
 func decodeArray[Node any, TreeNode any](
 	decoder *json.Decoder,
 	loggedReader *loggedReader,
