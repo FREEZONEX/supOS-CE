@@ -455,7 +455,9 @@ func getTemplate(topicDto *types.CreateTopicDto, existsUns func(string) *dao.Uns
 func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, batchIndex string, instance *dao.UnsNamespace, template *dao.UnsNamespace) bool {
 	insFs := unsDto.Fields
 	jdbcType := types.SrcJdbcType(unsDto.DataSrcID)
-
+	if len(insFs) == 0 && base.P2v(unsDto.DataType) == constants.JsonbType {
+		insFs = []*types.FieldDefine{{Name: "json", Type: types.FieldTypeString}}
+	}
 	addSystemField := jdbcType != 0 && unsDto.PathType == constants.PathTypeFile && base.P2v(unsDto.DataType) != constants.AlarmRuleType
 
 	if len(insFs) > 0 {
@@ -511,12 +513,8 @@ func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, bat
 	}
 
 	if unsDto.PathType == constants.PathTypeFile && len(instance.Fields) == 0 {
-		if base.P2v(unsDto.DataType) == constants.JsonbType {
-			instance.Fields = []*types.FieldDefine{{Name: "json", Type: types.FieldTypeString}}
-		} else {
-			errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.empty")
-			return true
-		}
+		errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.empty")
+		return true
 	}
 
 	return false
