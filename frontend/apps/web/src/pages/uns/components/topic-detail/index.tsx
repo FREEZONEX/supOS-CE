@@ -140,7 +140,7 @@ const Module: FC<FileDetailProps> = (props) => {
 
   useWebSocket(
     instanceInfo.id && wsTimeStamp
-      ? `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/inter-api/supos/uns/ws?id=${instanceInfo.id}&t=${wsTimeStamp}&token=${getToken()}`
+      ? `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/inter-api/supos/uns/newMsg?id=${instanceInfo.id}&t=${wsTimeStamp}&token=${getToken()}`
       : '',
     {
       onMessage: (event) => {
