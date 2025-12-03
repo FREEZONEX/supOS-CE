@@ -265,7 +265,6 @@ const Module: FC<ImportModalProps> = (props) => {
             .read()
             .then(({ done, value }) => {
               if (done) {
-                setLoading(false);
                 return;
               }
               // 处理流数据块
