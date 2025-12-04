@@ -709,7 +709,7 @@
   "uns.optionalBehaviors": "Optional Behaviors",
   "uns.pleaseSelectForExport": "Please select the UNS path or topic.",
   "uns.functions": "Functions",
-  "uns.mqttDescription": "View detailed connection information for your MQTT broker, including url, ports, topic and payloads.",
+  "uns.mqttDescription": "View connection details and configuration.",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

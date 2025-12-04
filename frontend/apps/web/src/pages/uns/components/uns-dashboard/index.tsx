@@ -1,4 +1,4 @@
-import { Divider } from 'antd';
+import { Divider, Flex } from 'antd';
 import Overview from './Overview.tsx';
 import { useUnsContext } from '@/pages/uns/UnsContext.tsx';
 import { useDeepCompareEffect } from 'ahooks';
@@ -8,7 +8,8 @@ import type { OverviewListProps } from './type';
 import Icon from '@ant-design/icons';
 import PackageTop from '@/components/svg-components/PackageTop.tsx';
 import styles from './index.module.scss';
-import Functions from '@/pages/uns/components/uns-dashboard/Functions.tsx';
+import Functions from './Functions.tsx';
+import MQTT from './MQTT.tsx';
 
 const UnsDashboard = () => {
   const { topologyData } = useUnsContext();
@@ -59,8 +60,14 @@ const UnsDashboard = () => {
     <div className={styles['unsDashboard']}>
       <Overview overviewList={overviewList} />
       <Divider style={{ background: '#e0e0e0', flexShrink: 0 }} />
-      <Functions />
-      {/*{isH5 ? null : <Topology datas={datas} />}*/}
+      <Flex gap={16}>
+        <div className={styles['mqtt-wrapper']}>
+          <MQTT />
+        </div>
+        <div className={styles['functions-wrapper']}>
+          <Functions />
+        </div>
+      </Flex>
     </div>
   );
 };
