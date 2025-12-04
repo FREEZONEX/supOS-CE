@@ -2,6 +2,7 @@ import { Form, Input, Space, Button } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { FC } from 'react';
 import type { FieldItem } from '@/pages/uns/types.tsx';
+import { useTranslate } from '@/hooks';
 
 export interface McpServerConfig {
   id: string;
@@ -27,11 +28,12 @@ export interface McpServerConfig {
 }
 
 export const McpTransportForm: FC = () => {
+  const formatMessage = useTranslate();
   const transportType = Form.useWatch('transportType');
   const renderSseConfig = () => (
     <>
-      <Form.Item name={['config', 'url']} label="URL" rules={[{ required: true, message: '请输入SSE服务器URL' }]}>
-        <Input placeholder="例如: http://localhost:3000/mcp" />
+      <Form.Item name={['config', 'url']} label="URL" rules={[{ required: true }]}>
+        <Input placeholder={`${formatMessage('copilotkit.example')}: http://localhost:3000/sse`} />
       </Form.Item>
       {/*<Form.Item label="请求头" style={{ marginBottom: 0 }}>*/}
       {/*  <Form.List name={['config', 'headers']}>*/}
@@ -62,8 +64,8 @@ export const McpTransportForm: FC = () => {
 
   const renderStreamableHttpConfig = () => (
     <>
-      <Form.Item name={['config', 'url']} label="URL" rules={[{ required: true, message: '请输入URL' }]}>
-        <Input placeholder="例如: http://localhost:3001" />
+      <Form.Item name={['config', 'url']} label="URL" rules={[{ required: true }]}>
+        <Input placeholder={`${formatMessage('copilotkit.example')}: http://localhost:3001/mcp`} />
       </Form.Item>
     </>
   );
@@ -78,25 +80,25 @@ export const McpTransportForm: FC = () => {
 
   const renderStdioConfig = () => (
     <>
-      <Form.Item name={['config', 'command']} label="命令" rules={[{ required: true, message: '请输入命令' }]}>
-        <Input placeholder="例如: npx" />
+      <Form.Item name={['config', 'command']} label={formatMessage('common.name')} rules={[{ required: true }]}>
+        <Input placeholder={`${formatMessage('copilotkit.example')}: npx`} />
       </Form.Item>
 
-      <Form.Item label="参数" style={{ marginBottom: 0 }}>
+      <Form.Item label={formatMessage('copilotkit.params')} style={{ marginBottom: 0 }}>
         <Form.List name={['config', 'args']} rules={[{ validator: validateFieldsRequired }]}>
           {(fields, { add, remove }, { errors }) => (
             <>
               {fields.map(({ key, name, ...restField }) => (
                 <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                  <Form.Item {...restField} name={name} rules={[{ required: true, message: '请输入参数' }]}>
-                    <Input placeholder="参数值" />
+                  <Form.Item {...restField} name={name} rules={[{ required: true }]}>
+                    <Input />
                   </Form.Item>
                   <MinusCircleOutlined onClick={() => remove(name)} />
                 </Space>
               ))}
               <Form.Item>
                 <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                  添加参数
+                  {formatMessage('copilotkit.add') + formatMessage('copilotkit.params')}
                 </Button>
               </Form.Item>
               <Form.ErrorList errors={errors} />
@@ -105,28 +107,24 @@ export const McpTransportForm: FC = () => {
         </Form.List>
       </Form.Item>
 
-      <Form.Item label="环境变量" style={{ marginBottom: 0 }}>
+      <Form.Item label={formatMessage('copilotkit.env')} style={{ marginBottom: 0 }}>
         <Form.List name={['config', 'env']}>
           {(fields, { add, remove }) => (
             <>
               {fields.map(({ key, name, ...restField }) => (
                 <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
                   <Form.Item {...restField} name={[name, 'key']} rules={[{ required: true, message: '请输入变量名' }]}>
-                    <Input placeholder="变量名" />
+                    <Input />
                   </Form.Item>
-                  <Form.Item
-                    {...restField}
-                    name={[name, 'value']}
-                    rules={[{ required: true, message: '请输入变量值' }]}
-                  >
-                    <Input placeholder="变量值" />
+                  <Form.Item {...restField} name={[name, 'value']} rules={[{ required: true }]}>
+                    <Input />
                   </Form.Item>
                   <MinusCircleOutlined onClick={() => remove(name)} />
                 </Space>
               ))}
               <Form.Item>
                 <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                  添加环境变量
+                  {formatMessage('copilotkit.add') + formatMessage('copilotkit.env')}
                 </Button>
               </Form.Item>
             </>

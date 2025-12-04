@@ -23,6 +23,7 @@ import classNames from 'classnames';
 import { useLocation } from 'react-router';
 import ProModal from '@/components/pro-modal';
 import { McpSetting } from '@/components/copilotkit/mcp-management';
+import { useTranslate } from '@/hooks';
 
 interface CustomCopilotChatProps extends ComponentProps<typeof CopilotChat> {
   style?: CSSProperties;
@@ -42,11 +43,11 @@ const CustomCopilotChat = forwardRef<CopilotRefProps | undefined, CustomCopilotC
     const divRef = useRef<HTMLDivElement>(null);
     const draggableRef = useRef<any>(null);
     const pathname = useLocation().pathname;
+    const formatMessage = useTranslate();
 
     useImperativeHandle(ref, () => ({ setOpen }));
     useEffect(() => {
       if (open) {
-        // eslint-disable-next-line react-hooks/immutability
         handleScroll();
       }
     }, [open]);
@@ -60,7 +61,7 @@ const CustomCopilotChat = forwardRef<CopilotRefProps | undefined, CustomCopilotC
             </div>
             <span>ChatBot</span>
             <Button size="small" type="dashed" onClick={() => setMcpSettingVisible(true)}>
-              MCP Setting
+              {formatMessage('copilotkit.mcpSetting')}
             </Button>
             <Close size={18} color="var(--supos-theme-color)" className="icon-close" onClick={() => setOpen(false)} />
           </div>
@@ -180,7 +181,7 @@ const CustomCopilotChat = forwardRef<CopilotRefProps | undefined, CustomCopilotC
             )}
           </div>
           <ProModal
-            title="MCP服务器配置"
+            title={formatMessage('copilotkit.mcpSetting')}
             open={mcpSettingVisible}
             onCancel={() => setMcpSettingVisible(false)}
             width={800}

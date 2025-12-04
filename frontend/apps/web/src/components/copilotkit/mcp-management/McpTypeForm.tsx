@@ -3,6 +3,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
 import { json } from '@codemirror/lang-json';
 import { McpTransportForm } from './McpTransportForm.tsx';
+import { useTranslate } from '@/hooks';
 const placeholder = JSON.stringify(
   {
     mcpServers: {
@@ -27,8 +28,9 @@ const placeholder = JSON.stringify(
 const McpTypeForm = () => {
   const type = Form.useWatch('type');
   const form = Form.useFormInstance();
+  const formatMessage = useTranslate();
   return type === 'json' ? (
-    <Form.Item name="json" rules={[{ required: true, message: '请输入Json配置' }]}>
+    <Form.Item name="json" rules={[{ required: true }]}>
       <CodeMirror
         style={{
           border: '1px solid rgb(198, 198, 198)',
@@ -50,10 +52,10 @@ const McpTypeForm = () => {
     </Form.Item>
   ) : (
     <>
-      <Form.Item name="name" label="服务器名称" rules={[{ required: true, message: '请输入服务器名称' }]}>
-        <Input placeholder="请输入服务器名称" />
+      <Form.Item name="name" label={formatMessage('common.name')} rules={[{ required: true }]}>
+        <Input />
       </Form.Item>
-      <Form.Item name="transportType" label="传输模式" initialValue="stdio">
+      <Form.Item name="transportType" label={formatMessage('copilotkit.transportMode')} initialValue="stdio">
         <Select
           options={[
             {
