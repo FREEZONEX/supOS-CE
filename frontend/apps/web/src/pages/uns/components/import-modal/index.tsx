@@ -441,11 +441,16 @@ const Module: FC<ImportModalProps> = (props) => {
                     value={jsonValue}
                     height={(size?.height || 32) - 32 + 'px'}
                     extensions={[json()]}
-                    onKeyDown={(e) => {
-                      // 监听Ctrl+P快捷键
-                      if (e.ctrlKey && e.key === 'p') {
+                    onKeyDownCapture={(e) => {
+                      if (e.ctrlKey && e.key === 'Enter') {
                         e.preventDefault();
+                        e.stopPropagation();
                         setJsonValue(placeholder);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.ctrlKey && e.key === 'Enter') {
+                        e.preventDefault();
                       }
                     }}
                   />

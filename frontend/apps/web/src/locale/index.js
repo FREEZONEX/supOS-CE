@@ -717,7 +717,7 @@ const messages = {
   'uns.gateway': '网关',
   'uns.device': '设备',
   'uns.gaugingPoint': '测点',
-  'uns.ctrlPQuickApplyExample': 'Ctrl+P 快速应用示例',
+  'uns.ctrlPQuickApplyExample': 'Ctrl+Enter 快速应用示例',
   'uns.dbEngine': '数据库引擎',
   'uns.host': '主机',
   'uns.port': '端口',

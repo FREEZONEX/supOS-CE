@@ -205,11 +205,16 @@ const ReverseGeneration: FC<ReverseGenerationProps> = ({ types, onlyJson }) => {
               placeholder={exampleJson}
               rows={8}
               allowClear
-              onKeyDown={(e) => {
-                if (e.ctrlKey && e.code === 'KeyP') {
+              onKeyDownCapture={(e) => {
+                if (e.ctrlKey && e.code === 'Enter') {
                   if (jsonData) return;
                   e.preventDefault();
                   form.setFieldValue('jsonData', exampleJson);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                  e.preventDefault();
                 }
               }}
             />

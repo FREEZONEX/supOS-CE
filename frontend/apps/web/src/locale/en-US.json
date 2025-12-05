@@ -679,7 +679,7 @@
   "uns.gateway": "Gateway",
   "uns.device": "Device",
   "uns.gaugingPoint": "Measuring points",
-  "uns.ctrlPQuickApplyExample": "Ctrl+P Quick Apply Example",
+  "uns.ctrlPQuickApplyExample": "Ctrl+Enter Quick Apply Example",
   "uns.dbEngine": "DB Engine",
   "uns.host": "Host",
   "uns.port": "Port",
