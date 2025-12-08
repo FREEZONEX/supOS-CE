@@ -485,11 +485,16 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
               allowClear
               placeholder={exampleJson}
               style={{ height: fullScreen ? 'calc(100vh - 305px)' : '300px' }}
-              onKeyDown={(e) => {
-                if (e.ctrlKey && e.code === 'KeyP') {
+              onKeyDownCapture={(e) => {
+                if (e.ctrlKey && e.code === 'Enter') {
                   if (jsonData) return;
                   e.preventDefault();
                   form.setFieldsValue({ jsonData: exampleJson });
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                  e.preventDefault();
                 }
               }}
             />

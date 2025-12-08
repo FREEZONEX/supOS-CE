@@ -34,9 +34,9 @@ func NewParseJson2unsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Par
 	}
 }
 
-func (l *ParseJson2unsLogic) ParseJson2uns(req *types.JsonBodyReq) (resp *types.ParseJson2UnsResp, err error) {
+func (l *ParseJson2unsLogic) ParseJson2uns(req []byte) (resp *types.ParseJson2UnsResp, err error) {
 	var data interface{}
-	err = json.Unmarshal([]byte(req.Json), &data)
+	err = json.Unmarshal(req, &data)
 	resp = &types.ParseJson2UnsResp{}
 	resp.Code, resp.Msg = 200, "OK"
 	if err != nil {
@@ -138,6 +138,14 @@ func guessType(o interface{}) types.FieldType {
 	case bool:
 		return types.FieldTypeBoolean
 	case string:
+		_, er := strconv.ParseInt(v, 10, 64)
+		if er == nil {
+			return types.FieldTypeLong
+		}
+		_, er = strconv.ParseFloat(v, 64)
+		if er == nil {
+			return types.FieldTypeDouble
+		}
 		if parseDate(v) != nil {
 			return types.FieldTypeDatetime
 		}

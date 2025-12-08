@@ -15,8 +15,10 @@ var NeedInitColumn bool
 
 //go:embed migrations_sqls/*
 var sqlFiles embed.FS
+var dbConfig conf.Database
 
 func Migrate(c conf.Database) error {
+	dbConfig = c
 	// return nil
 	//if c.IsInitTable == false {
 	//	return nil

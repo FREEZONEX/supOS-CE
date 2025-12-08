@@ -82,7 +82,13 @@ const McpSetting = () => {
 
   return (
     <div>
-      <ProModal title="新增" destroyOnHidden width={500} open={isModalOpen} onCancel={handleModalCancel}>
+      <ProModal
+        title={formatMessage('copilotkit.add')}
+        destroyOnHidden
+        width={500}
+        open={isModalOpen}
+        onCancel={handleModalCancel}
+      >
         <Form form={form} layout="vertical">
           <Form.Item name="type" initialValue="form">
             <Radio.Group
@@ -95,9 +101,9 @@ const McpSetting = () => {
           <McpTypeForm />
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
-              <Button onClick={handleModalCancel}>取消</Button>
+              <Button onClick={handleModalCancel}>{formatMessage('common.cancel')}</Button>
               <ComButton onClick={handleSubmit} type="primary" htmlType="submit">
-                添加
+                {formatMessage('common.save')}
               </ComButton>
             </Space>
           </Form.Item>
@@ -112,7 +118,7 @@ const McpSetting = () => {
             return handleAddServer();
           }}
         >
-          添加服务器
+          {formatMessage('copilotkit.add')}
         </ComButton>
       </Flex>
       <Divider

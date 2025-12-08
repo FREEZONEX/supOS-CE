@@ -7,11 +7,9 @@ package buffer
 // Simple byte buffer for marshaling data.
 
 import (
-	"backend/share/base/bits"
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"unicode/utf8"
 )
 
@@ -26,7 +24,6 @@ type ByteBuffer struct {
 	size      int
 	mark      int
 	lastRead  readOp // last read operation, so that Unread* can work correctly.
-	byteOrder bits.ByteOrder
 	fixedSize int
 }
 
@@ -81,19 +78,6 @@ func (b *ByteBuffer) Rewind() {
 	b.mark = -1
 }
 
-// 实现 Readerable 接口
-func (b *ByteBuffer) ReadShort() (rs int16, e error) {
-	offset := b.off
-	rs = b.byteOrder.GetShort(b.buf[offset : offset+2])
-	b.off += 2
-	return rs, e
-}
-func (b *ByteBuffer) ReadUint16() (rs uint16, e error) {
-	offset := b.off
-	rs = b.byteOrder.Uint16(b.buf[offset : offset+2])
-	b.off += 2
-	return rs, e
-}
 func (b *ByteBuffer) ReadInt8() (rs int8, e error) {
 	offset := b.off
 	rs = int8(b.buf[offset])
@@ -101,31 +85,6 @@ func (b *ByteBuffer) ReadInt8() (rs int8, e error) {
 	return rs, e
 }
 
-func (b *ByteBuffer) ReadInt() (rs int, e error) {
-	offset := b.off
-	rs = b.byteOrder.GetInt(b.buf[offset : offset+4])
-	b.off += 4
-	return rs, e
-}
-func (b *ByteBuffer) ReadLong() (rs int64, e error) {
-	offset := b.off
-	rs = b.byteOrder.GetLong(b.buf[offset : offset+8])
-	b.off += 8
-	return rs, e
-}
-func (b *ByteBuffer) ReadDouble() (rs float64, e error) {
-	offset := b.off
-	num := b.byteOrder.Uint64(b.buf[offset : offset+8])
-	rs = math.Float64frombits(num)
-	b.off += 8
-	return rs, e
-}
-func (b *ByteBuffer) ReadUint32() (uint32, error) {
-	offset := b.off
-	rs := b.byteOrder.Uint32(b.buf[offset : offset+4])
-	b.off += 4
-	return rs, nil
-}
 func (b *ByteBuffer) ReadArray(length int) (rs []byte, e error) {
 	offset := b.off
 	rs = b.buf[offset : offset+length]
@@ -231,58 +190,9 @@ func (b *ByteBuffer) Put(offset int, value byte) {
 func (b *ByteBuffer) PutLast(value byte) {
 	b.buf[b.off-1] = value
 }
-func (b *ByteBuffer) PutShort(offset int, value int16) {
-	b.byteOrder.PutShort(b.buf[offset:offset+2], value)
-}
-func (b *ByteBuffer) PutInt(offset int, value int) {
-	b.byteOrder.PutInt(b.buf[offset:offset+4], value)
-}
-func (b *ByteBuffer) PutLong(offset int, value int64) {
-	b.byteOrder.PutLong(b.buf[offset:offset+8], value)
-}
-func (b *ByteBuffer) PutUnsignedInt(offset int, value int64) {
-	b.PutInt(offset, (int)(value&0xffffffff))
-}
-func (b *ByteBuffer) PutLongCurPos(value int64) {
-	b.PutLong(b.off, value)
-}
-func (b *ByteBuffer) PutIntCurPos(value int) {
-	b.PutInt(b.off, value)
-}
-func (b *ByteBuffer) WriteInt(value int) {
-	b.PutInt(b.off, value)
-	b.off += 4
-}
 
-func (b *ByteBuffer) WriteLong(value int64) {
-	b.PutLong(b.off, value)
-	b.off += 4
-}
-func (b *ByteBuffer) GetUnsignedInt(offset int) uint32 {
-	return b.byteOrder.Uint32(b.buf[offset : offset+4])
-}
 func (b *ByteBuffer) Get(offset int) byte {
 	return b.buf[offset]
-}
-func (b *ByteBuffer) GetShort(offset int) int16 {
-	rs := b.byteOrder.GetShort(b.buf[offset : offset+2])
-	return rs
-}
-func (b *ByteBuffer) GetShortIt() int16 {
-	rs := b.byteOrder.GetShort(b.buf[b.off : b.off+2])
-	return rs
-}
-func (b *ByteBuffer) GetByte() byte {
-	return b.buf[b.off]
-}
-
-func (b *ByteBuffer) GetInt(offset int) int {
-	rs := b.byteOrder.GetInt(b.buf[offset : offset+4])
-	return rs
-}
-func (b *ByteBuffer) GetLong(offset int) int64 {
-	rs := b.byteOrder.GetLong(b.buf[offset : offset+8])
-	return rs
 }
 
 // Bytes returns a slice of length b.Size() holding the unread portion of the buffer.
@@ -749,23 +659,15 @@ func (b *ByteBuffer) UnreadByte() error {
 // In most cases, new(Buffer) (or just declaring a Buffer variable) is
 // sufficient to initialize a Buffer.
 func NewBuffer(buf []byte) *ByteBuffer {
-	return &ByteBuffer{buf: buf, byteOrder: bits.BigEndian, mark: -1}
+	return &ByteBuffer{buf: buf, mark: -1}
 }
 func (b *ByteBuffer) FixedSize() int {
 	return b.fixedSize
 }
 func NewBufferWithFixedSize(fixedSize int) *ByteBuffer {
-	return &ByteBuffer{fixedSize: fixedSize, buf: make([]byte, fixedSize), byteOrder: bits.BigEndian, mark: -1}
+	return &ByteBuffer{fixedSize: fixedSize, buf: make([]byte, fixedSize), mark: -1}
 }
-func NewByteBuffer() *ByteBuffer { return &ByteBuffer{byteOrder: bits.BigEndian, mark: -1} }
-
-func (b *ByteBuffer) Order(byteOrder bits.ByteOrder) *ByteBuffer {
-	b.byteOrder = byteOrder
-	return b
-}
-func (b *ByteBuffer) GetOrder() bits.ByteOrder {
-	return b.byteOrder
-}
+func NewByteBuffer() *ByteBuffer { return &ByteBuffer{mark: -1} }
 
 // NewBufferString creates and initializes a new Buffer using string s as its
 // initial contents. It is intended to prepare a buffer to read an existing

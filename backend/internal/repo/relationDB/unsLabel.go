@@ -167,7 +167,7 @@ func (p UnsLabelRepo) MultiInsert(db *gorm.DB, data []*UnsLabel) error {
 	return stores.ErrFmt(err)
 }
 
-func (d UnsLabelRepo) UpdateWithField(db *gorm.DB, f UnsLabelFilter, updates map[string]any) error {
+func (p UnsLabelRepo) UpdateWithField(db *gorm.DB, f UnsLabelFilter, updates map[string]any) error {
 	err := db.Model(&UnsLabel{}).Updates(updates).Error
 	return stores.ErrFmt(err)
 }

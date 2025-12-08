@@ -29,7 +29,17 @@ export const bindDashboardForUns = async (data: any) => api.post(`/dashboard/bin
 export const markDashboard = async (id: string) => api.post('/dashboard/mark', { id });
 export const unmarkDashboard = async (id: string) => api.delete(`/dashboard/unmark?id=${id}`);
 export const deleteDashboard = async (uid: string) => api.delete(`/dashboard/${uid}`); // 删除dashboard
-export const exportExcel = async (data: any) => api.post('/importExport/exportPath', data); //导出excel
+/**
+ * 首次传入 checkSmallFile: true ,
+ * 如果是小文件，直接返回下载内容
+ * 大文件 返回 {code: 200, Msg: "ok"} 再次传入参数就为下载内容（checkSmallFile不传）
+ * 完全没数据返回 code: 204
+ * 错误信息返回 code: 300
+ */
+export const exportExcel = async (data: any) =>
+  api.post('/importExport/export', data, {
+    [CustomAxiosConfigEnum.NoCode]: true,
+  }); //导出excel
 export const searchRestField = async (data: any) => api.post('/searchRestField', data); // 从RestApi搜系模型字段
 export const getDashboardDetail = async (id: any) => api.get(`/dashboard/${id}`); // 获取dashboard详情
 

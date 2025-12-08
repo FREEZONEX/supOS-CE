@@ -10,6 +10,7 @@ import (
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -116,6 +117,13 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 		if err := JsonUtil.FromJson(protocolStr, &protocol); err == nil {
 			if frequency, ok := protocol["frequency"].(string); ok {
 				unsDto.FrequencySeconds = GetFrequencySeconds(frequency)
+			}
+			if jsf, has := protocol["jsf"]; has {
+				if str, isStr := jsf.(string); isStr {
+					JsonUtil.FromJson(str, &unsDto.JsonFields)
+				} else {
+					JsonUtil.FromJson(fmt.Sprint(jsf), &unsDto.JsonFields)
+				}
 			}
 			unsDto.Protocol = protocol
 		}

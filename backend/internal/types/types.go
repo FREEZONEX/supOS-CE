@@ -208,6 +208,7 @@ type CreateTopicDto struct {
 	DataType                      *int16                    `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"` // Data type and fields
 	ParentDataType                *int16                    `json:"parentDataType,optional,string,omitempty"`
 	Fields                        []*FieldDefine            `json:"fields,optional"`
+	JsonFields                    []*FieldDefine            `json:"jsonFields,optional"` // jsonb 预定义字段，存在protocol
 	DataSrcID                     int16                     `json:"-"`
 	TableName                     string                    `json:"-"` // Table fields
 	TbFieldName                   string                    `json:"-"`
@@ -415,12 +416,13 @@ type ExportPathResult struct {
 }
 
 type ExportReq struct {
-	UserId     string  `json:"userId,optional"`
-	Language   string  `json:"language,optional"`
-	ExportType string  `json:"exportType,optional"`
-	FileType   string  `json:"fileType,optional"`
-	Folders    []int64 `json:"folders,string,optional"`
-	Files      []int64 `json:"files,string,optional"`
+	CheckSmallFile *bool   `json:"checkSmallFile,optional,omitempty,omitzero"`
+	UserId         string  `json:"userId,optional,omitempty,omitzero"`
+	Language       string  `json:"language,optional,omitempty,omitzero"`
+	ExportType     string  `json:"exportType,optional,omitempty,omitzero"`
+	FileType       string  `json:"fileType,optional,omitempty,omitzero"`
+	Folders        []int64 `json:"folders,string,optional,omitempty,omitzero"`
+	Files          []int64 `json:"files,string,optional,omitempty,omitzero"`
 }
 
 type ExportResp struct {
@@ -573,6 +575,7 @@ type InstanceDetail struct {
 	DataPath         *string                `json:"dataPath"`
 	PathType         int16                  `json:"pathType"`
 	Fields           []*FieldDefine         `json:"fields"`
+	JsonFields       []*FieldDefine         `json:"jsonFields"`
 	CreateTime       int64                  `json:"createTime"`
 	UpdateTime       int64                  `json:"updateTime"`
 	Protocol         map[string]interface{} `json:"protocol"`
@@ -633,10 +636,6 @@ type IsExistReq struct {
 
 type IsExistRequest struct {
 	Alias string `form:"alias"`
-}
-
-type JsonBodyReq struct {
-	Json string `json:"json"`
 }
 
 type JsonResult struct {
@@ -808,7 +807,7 @@ type PaginationDTO struct {
 
 type ParseJson2TreeUnsResp struct {
 	BaseResult
-	Data []TreeOuterStructureVo `json:"data"`
+	Data []*TreeOuterStructureVo `json:"data"`
 }
 
 type ParseJson2UnsResp struct {
@@ -1257,10 +1256,10 @@ type TopicTreeResult struct {
 }
 
 type TreeOuterStructureVo struct {
-	Name     string                 `json:"name"`
-	DataPath string                 `json:"dataPath"`
-	Fields   []FieldDefine          `json:"fields"`
-	Children []TreeOuterStructureVo `json:"children"`
+	Name     string                  `json:"name"`
+	DataPath string                  `json:"dataPath"`
+	Fields   []FieldDefine           `json:"fields"`
+	Children []*TreeOuterStructureVo `json:"children"`
 }
 
 type UnmarkRequest struct {

@@ -40,6 +40,7 @@ type (
         DataType       *int16            `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"`// Data type and fields
         ParentDataType *int16            `json:"parentDataType,optional,string,omitempty"`
         Fields         []*FieldDefine    `json:"fields,optional"`
+        JsonFields     []*FieldDefine    `json:"jsonFields,optional"`// jsonb 预定义字段，存在protocol
         // SrcJdbcType 数据类型
         DataSrcID      int16       `json:"-"`
 
@@ -331,6 +332,7 @@ type (
 		DataPath         *string                 `json:"dataPath"`
 		PathType         int16                    `json:"pathType"`
 		Fields           []*FieldDefine          `json:"fields"`
+		JsonFields       []*FieldDefine          `json:"jsonFields"`
 		CreateTime       int64                  `json:"createTime"`
 		UpdateTime       int64                  `json:"updateTime"`
 		Protocol         map[string]interface{} `json:"protocol"`
@@ -399,9 +401,6 @@ type (
 		Comment    string `json:"comment"`
 	}
 
-	JsonBodyReq {
-		Json string `json:"json"`
-	}
 	ParseJson2UnsResp {
 		BaseResult
 		Data []*OuterStructureVo `json:"data"`
@@ -413,13 +412,13 @@ type (
 	}
 	ParseJson2TreeUnsResp {
 		BaseResult
-		Data []TreeOuterStructureVo `json:"data"`
+		Data []*TreeOuterStructureVo `json:"data"`
 	}
 	TreeOuterStructureVo {
 		Name     string                 `json:"name"`
 		DataPath string                 `json:"dataPath"`
 		Fields   []FieldDefine          `json:"fields"`
-		Children []TreeOuterStructureVo `json:"children"`
+		Children []*TreeOuterStructureVo `json:"children"`
 	}
 
 	StreamOptions  {}
@@ -699,13 +698,13 @@ service backend {
 		summary: "外部JSON定义转uns字段定义"
 	)
 	@handler parseJson2uns
-	post /uns/json2fs (JsonBodyReq) returns (ParseJson2UnsResp)
+	post /uns/json2fs (string) returns (ParseJson2UnsResp)
 
 	@doc (
 		summary: "外部JSON定义转树结构uns字段定义"
 	)
 	@handler parseJson2TreeUns
-	post /uns/json2fs/tree (JsonBodyReq) returns (ParseJson2TreeUnsResp)
+	post /uns/json2fs/tree (string) returns (ParseJson2TreeUnsResp)
 
 	@doc (
 		summary: "创建文件夹和文件"

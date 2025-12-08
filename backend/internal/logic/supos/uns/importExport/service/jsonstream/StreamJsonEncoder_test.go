@@ -13,11 +13,12 @@ import (
 
 type IdNode struct {
 	ID       int64     `json:"id"`
+	ParentId int64     `json:"parentId,omitzero"`
 	Name     string    `json:"name"`
 	Children []*IdNode `json:"children,omitempty"`
 
 	parent *IdNode `json:"-"`
-	Path   string  `json:"path"`
+	Path   string  `json:"path,omitempty"`
 }
 
 func (node *IdNode) getPath() string {
@@ -42,6 +43,9 @@ func (node *IdNode) getPath() string {
 
 func nodeGetId(node *IdNode) int64 {
 	return node.ID
+}
+func nodeGetParentId(node *IdNode) int64 {
+	return node.ParentId
 }
 func nodeGetChildren(node *IdNode) []*IdNode {
 	return node.Children

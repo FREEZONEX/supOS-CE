@@ -13,20 +13,20 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// UploadHandler UNS 上传文件
-func UploadHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// ExportHandler UNS 导出
+func ExportHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req, err := types.FormFile(r, "file")
-		if err != nil {
+		var req types.ExportReq
+		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := importExport.NewUploadLogic(r.Context(), svcCtx)
-		resp, err := l.Upload(req)
+		l := importExport.NewExportLogic(r.Context(), svcCtx)
+		resp, err := l.Export(w, &req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
-		} else {
+		} else if resp != nil {
 			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}

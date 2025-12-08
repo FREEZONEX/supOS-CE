@@ -2,40 +2,26 @@ import CodeMirror from '@uiw/react-codemirror';
 import { Button, Flex } from 'antd';
 import { useClipboard, useTranslate } from '@/hooks';
 import { useSize } from 'ahooks';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { json } from '@codemirror/lang-json';
 import { Copy, Download } from '@carbon/icons-react';
 import { useTreeStore } from '@/pages/uns/components/export-modal/treeStore.tsx';
-import { blobToJsonUsingTextMethod, downloadFn } from '@/utils/blob';
+import { downloadFn } from '@/utils/blob';
 import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
-import { downloadUnsFile } from '@/apis/inter-api';
+import { exportExcel } from '@/apis/inter-api';
 import ComButton from '@/components/com-button';
 
 export const CodeDom = () => {
   const formatMessage = useTranslate();
   const ref = useRef<HTMLDivElement>(null);
   const size = useSize(ref);
-  const [jsonValue, setJsonValue] = useState<any>();
 
-  const { smallFile, filePath, setLoading } = useTreeStore((state) => ({
+  const { smallFile, jsonData, params } = useTreeStore((state) => ({
     smallFile: state.smallFile,
-    filePath: state.filePath,
-    setLoading: state.setLoading,
+    jsonData: state.jsonData,
+    params: state.params,
   }));
 
-  useEffect(() => {
-    if (smallFile && filePath) {
-      downloadUnsFile({ path: filePath }).then((jsonData) => {
-        blobToJsonUsingTextMethod(jsonData)
-          .then((data) => {
-            setJsonValue(data);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      });
-    }
-  }, [filePath, smallFile]);
   const { copy } = useClipboard();
 
   return (
@@ -45,8 +31,8 @@ export const CodeDom = () => {
           <ComButton
             type="primary"
             onClick={() => {
-              return downloadUnsFile({ path: filePath }).then((jsonData) => {
-                downloadFn({ data: jsonData, name: 'uns.json' });
+              return exportExcel(params).then((jsonData) => {
+                downloadFn({ data: JSON.stringify(jsonData), name: 'uns.json' });
               });
             }}
           >
@@ -74,7 +60,7 @@ export const CodeDom = () => {
                 cursor: 'pointer',
               }}
               onClick={() => {
-                copy(jsonValue);
+                copy(jsonData);
               }}
             >
               <Copy />
@@ -82,7 +68,7 @@ export const CodeDom = () => {
             <CodeMirror
               // onChange={setJsonValue}
               theme={codemirrorTheme}
-              value={jsonValue}
+              value={jsonData}
               editable={false}
               height={(size?.height || 32) - 32 + 'px'}
               extensions={[json()]}
@@ -95,7 +81,7 @@ export const CodeDom = () => {
         <Button
           type="primary"
           onClick={() => {
-            copy(jsonValue);
+            copy(jsonData);
           }}
         >
           <Copy />

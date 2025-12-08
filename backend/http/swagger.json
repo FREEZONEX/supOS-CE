@@ -3992,6 +3992,58 @@
                         "type": "integer"
                       },
                       "initValue": {},
+                      "jsonFields": {
+                        "description": "jsonb 预定义字段，存在protocol",
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "name",
+                            "type"
+                          ],
+                          "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
+                            "decimal": {
+                              "type": "integer"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "index": {
+                              "type": "string"
+                            },
+                            "lowerLimit": {
+                              "type": "number"
+                            },
+                            "maxLen": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "remark": {
+                              "type": "string"
+                            },
+                            "tbValueName": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "unique": {
+                              "type": "boolean"
+                            },
+                            "unit": {
+                              "type": "string"
+                            },
+                            "upperLimit": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
                       "labelNames": {
                         "type": "array",
                         "items": {
@@ -6209,6 +6261,58 @@
                         "type": "integer"
                       },
                       "initValue": {},
+                      "jsonFields": {
+                        "description": "jsonb 预定义字段，存在protocol",
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "name",
+                            "type"
+                          ],
+                          "properties": {
+                            "-": {
+                              "type": "integer"
+                            },
+                            "decimal": {
+                              "type": "integer"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "index": {
+                              "type": "string"
+                            },
+                            "lowerLimit": {
+                              "type": "number"
+                            },
+                            "maxLen": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "remark": {
+                              "type": "string"
+                            },
+                            "tbValueName": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "unique": {
+                              "type": "boolean"
+                            },
+                            "unit": {
+                              "type": "string"
+                            },
+                            "upperLimit": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
                       "labelNames": {
                         "type": "array",
                         "items": {
@@ -6553,88 +6657,6 @@
         }
       }
     },
-    "/inter-api/supos/uns/importExport/exportPath": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "UNS 导出,返回文件路径",
-        "operationId": "supos/Uns/ImportExportExportPath",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "exportType": {
-                  "type": "string"
-                },
-                "fileType": {
-                  "type": "string"
-                },
-                "files": {
-                  "type": "array",
-                  "items": {
-                    "type": "integer"
-                  }
-                },
-                "folders": {
-                  "type": "array",
-                  "items": {
-                    "type": "integer"
-                  }
-                },
-                "language": {
-                  "type": "string"
-                },
-                "userId": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "object",
-                  "required": [
-                    "smallFile",
-                    "filePath"
-                  ],
-                  "properties": {
-                    "filePath": {
-                      "type": "string"
-                    },
-                    "smallFile": {
-                      "type": "boolean"
-                    }
-                  }
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/inter-api/supos/uns/importExport/file/download": {
       "get": {
         "produces": [
@@ -6687,48 +6709,6 @@
         }
       }
     },
-    "/inter-api/supos/uns/importExport/upload": {
-      "post": {
-        "consumes": [
-          "application/x-www-form-urlencoded"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "UNS 上传文件",
-        "operationId": "supos/Uns/ImportExportUpload",
-        "parameters": [
-          {
-            "type": "string",
-            "name": "file",
-            "in": "formData",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "string"
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/inter-api/supos/uns/instance": {
       "get": {
         "produces": [
@@ -6769,6 +6749,7 @@
                     "dataPath",
                     "pathType",
                     "fields",
+                    "jsonFields",
                     "createTime",
                     "updateTime",
                     "protocol",
@@ -6879,6 +6860,57 @@
                     },
                     "id": {
                       "type": "string"
+                    },
+                    "jsonFields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "type"
+                        ],
+                        "properties": {
+                          "-": {
+                            "type": "integer"
+                          },
+                          "decimal": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "index": {
+                            "type": "string"
+                          },
+                          "lowerLimit": {
+                            "type": "number"
+                          },
+                          "maxLen": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "remark": {
+                            "type": "string"
+                          },
+                          "tbValueName": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "unique": {
+                            "type": "boolean"
+                          },
+                          "unit": {
+                            "type": "string"
+                          },
+                          "upperLimit": {
+                            "type": "number"
+                          }
+                        }
+                      }
                     },
                     "labelList": {
                       "type": "array",
@@ -7051,9 +7083,6 @@
     },
     "/inter-api/supos/uns/json2fs": {
       "post": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -7062,24 +7091,6 @@
         ],
         "summary": "外部JSON定义转uns字段定义",
         "operationId": "supos/Uns/UnsParseJson2uns",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "json"
-              ],
-              "properties": {
-                "json": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "",
@@ -7171,9 +7182,6 @@
     },
     "/inter-api/supos/uns/json2fs/tree": {
       "post": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -7182,24 +7190,6 @@
         ],
         "summary": "外部JSON定义转树结构uns字段定义",
         "operationId": "supos/Uns/UnsParseJson2TreeUns",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "json"
-              ],
-              "properties": {
-                "json": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "",
@@ -8393,6 +8383,58 @@
                   "type": "integer"
                 },
                 "initValue": {},
+                "jsonFields": {
+                  "description": "jsonb 预定义字段，存在protocol",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "-": {
+                        "type": "integer"
+                      },
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
                 "labelNames": {
                   "type": "array",
                   "items": {
@@ -9033,6 +9075,58 @@
                       "type": "integer"
                     },
                     "initValue": {},
+                    "jsonFields": {
+                      "description": "jsonb 预定义字段，存在protocol",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "type"
+                        ],
+                        "properties": {
+                          "-": {
+                            "type": "integer"
+                          },
+                          "decimal": {
+                            "type": "integer"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "index": {
+                            "type": "string"
+                          },
+                          "lowerLimit": {
+                            "type": "number"
+                          },
+                          "maxLen": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "remark": {
+                            "type": "string"
+                          },
+                          "tbValueName": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "unique": {
+                            "type": "boolean"
+                          },
+                          "unit": {
+                            "type": "string"
+                          },
+                          "upperLimit": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
                     "labelNames": {
                       "type": "array",
                       "items": {
@@ -11842,7 +11936,7 @@
       }
     }
   },
-  "x-date": "2025-12-02 16:20:18",
+  "x-date": "2025-12-08 10:11:10",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

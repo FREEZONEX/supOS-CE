@@ -102,8 +102,9 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
     allChecked,
     setAllChecked,
     setLoading,
+    setJsonData,
+    setParams,
     setSmallFile,
-    setFilePath,
   } = useTreeStore((state) => ({
     loadData: state.loadData,
     treeData: state.treeData,
@@ -121,8 +122,9 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
     allChecked: state.allChecked,
     setAllChecked: state.setAllChecked,
     setLoading: state.setLoading,
+    setJsonData: state.setJsonData,
+    setParams: state.setParams,
     setSmallFile: state.setSmallFile,
-    setFilePath: state.setFilePath,
   }));
 
   const {
@@ -294,7 +296,7 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
             setLoading(true);
             let params: any = {
               fileType: 'json',
-              async: false,
+              checkSmallFile: true,
             };
             if (allChecked) {
               params['exportType'] = 'ALL';
@@ -314,18 +316,36 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
                   },
                   extract: 'id',
                 }),
+                checkSmallFile: true,
               };
             }
             return exportExcel(params)
-              .then(({ filePath, smallFile }) => {
-                setSmallFile(smallFile);
-                setFilePath(filePath);
-                if (!smallFile) {
-                  setLoading(false);
+              .then((info) => {
+                if (info?.code) {
+                  //
+                  if (info.code === 200) {
+                    setParams({
+                      ...params,
+                      checkSmallFile: undefined,
+                    });
+                    setSmallFile(false);
+                  } else {
+                    setParams(undefined);
+                    setJsonData(undefined);
+                    setSmallFile(true);
+                  }
+                } else {
+                  // code不存在，就直接是数据
+                  try {
+                    setJsonData(JSON.stringify(info, null, 2));
+                  } catch (e) {
+                    console.log(e);
+                    setJsonData(undefined);
+                  }
+                  setSmallFile(true);
                 }
               })
-              .catch((e) => {
-                console.log(e);
+              .finally(() => {
                 setLoading(false);
               });
           }}

@@ -3,7 +3,6 @@ import { Flex, Segmented } from 'antd';
 import ComEllipsis from '@/components/com-ellipsis';
 import useTranslate from '@/hooks/useTranslate.ts';
 import { fetchBaseStore, useBaseStore } from '@/stores/base';
-import ProCardContainer from '@/components/pro-card/ProCardContainer.tsx';
 import ProCard from '@/components/pro-card/ProCard.tsx';
 import IconImage from '@/components/icon-image';
 import type { ResourceProps } from '@/stores/types.ts';
@@ -42,9 +41,10 @@ const Functions = () => {
   };
   return (
     <Flex vertical gap={24} style={{ marginBottom: 24 }}>
-      <Flex justify="space-between" align="center">
+      <Flex justify="space-between" align="center" gap={16}>
         <ComEllipsis className={styles['title']}>{formatMessage('uns.functions')}</ComEllipsis>
         <Segmented<string>
+          style={{ overflowX: 'auto' }}
           options={homeTree?.map((item) => ({
             label: item.showName,
             value: item.id,
@@ -55,7 +55,7 @@ const Functions = () => {
           }}
         />
       </Flex>
-      <ProCardContainer minWidth={300}>
+      <Flex gap={16} wrap={true}>
         {list
           ?.find((f) => f.id === groupId)
           ?.children?.map?.((c: any) => {
@@ -65,7 +65,7 @@ const Functions = () => {
               unsMenuId = 'home_route_uns';
             }
             return (
-              <div id={unsMenuId} key={c.id}>
+              <div id={unsMenuId} key={c.id} className={styles['functions-item']}>
                 <ProCard
                   header={{
                     title: c.showName,
@@ -85,7 +85,7 @@ const Functions = () => {
               </div>
             );
           })}
-      </ProCardContainer>
+      </Flex>
     </Flex>
   );
 };

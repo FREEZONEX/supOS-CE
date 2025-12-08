@@ -37,6 +37,7 @@ type FileData struct {
 	DisplayName       string               `json:"displayName,omitempty"`
 	TemplateAlias     string               `json:"templateAlias,omitempty"`
 	Fields            []*types.FieldDefine `json:"fields,omitempty"`
+	JsonFields        []*types.FieldDefine `json:"jsonFields,optional"`
 	DataType          string               `json:"dataType,omitempty"`
 	Refers            string               `json:"refers,omitempty"`
 	Expression        string               `json:"expression,omitempty"`
@@ -50,8 +51,10 @@ type FileData struct {
 	Children          []*FileData          `json:"children,omitempty"`
 	Error             string               `json:"error,omitempty"`
 
-	parent *FileData
-	path   string
+	parent   *FileData
+	path     string
+	id       int64
+	parentId int64
 }
 
 func (node *FileData) getPath() string {
@@ -71,6 +74,12 @@ func nodeGetChildren(node *FileData) []*FileData {
 func nodeSetChildren(node *FileData, children []*FileData) {
 	node.Children = children
 }
+func nodeGetId(node *FileData) int64 {
+	return node.id
+}
+func nodeGetParentId(node *FileData) int64 {
+	return node.parentId
+}
 
 func node2vo(i, parent *FileData) *types.CreateTopicDto {
 	i.parent = parent
@@ -78,10 +87,11 @@ func node2vo(i, parent *FileData) *types.CreateTopicDto {
 		i.Alias = PathUtil.GenerateFileAlias(i.getPath())
 	}
 	vo := &types.CreateTopicDto{
-		Alias:  i.Alias,
-		Name:   i.Name,
-		Fields: i.Fields,
-		Path:   i.getPath(),
+		Alias:      i.Alias,
+		Name:       i.Name,
+		Fields:     i.Fields,
+		JsonFields: i.JsonFields,
+		Path:       i.getPath(),
 	}
 
 	if parent != nil {
@@ -144,7 +154,7 @@ func vo2DataVo(unsPo *types.CreateTopicDto) *FileData {
 }
 func uns2DataVo(unsPo bo.UnsInfo) *FileData {
 
-	data := &FileData{}
+	data := &FileData{id: unsPo.GetId(), parentId: base.P2vWithDefault(unsPo.GetParentId(), -1)}
 
 	data.Alias = unsPo.GetAlias()
 	data.DisplayName = unsPo.GetDisplayName()

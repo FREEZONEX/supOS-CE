@@ -4,6 +4,8 @@ import (
 	"backend/internal/common"
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
+	"backend/internal/common/utils/datetimeutils"
+	"backend/internal/common/utils/fileutil"
 	"backend/internal/common/utils/integerutil"
 	"backend/internal/logic/supos/uns/importExport/service/jsonstream"
 	"backend/internal/logic/supos/uns/uns/bo"
@@ -40,7 +42,9 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 		}
 		var tarPath string
 		var err error
-		tarPath, errFileRelativePath = destFile("err_"+file.FileName, 0)
+		errFileRelativePath = filepath.Join(constants.ImportErr, fmt.Sprintf("err_%s_%s", datetimeutils.DateSimple(), file.FileName))
+		tarPath = filepath.Join(fileutil.GetFileRootPath(), errFileRelativePath)
+
 		_ = os.MkdirAll(filepath.Dir(tarPath), os.ModeDir)
 		errFile, err = os.Create(tarPath)
 		if err != nil {
