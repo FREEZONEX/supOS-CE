@@ -69,7 +69,8 @@ pipeline {
                     dir("${SOURCE_CODE}/deploy") {
 
                         sh '''
-
+                        ls -all
+                        mkdir -p ./images
                         scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/act_runner-nightly.tar.xz" ./images/
                         
                         // 将整个 deploy 目录压缩成 zip 包
