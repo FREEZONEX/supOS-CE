@@ -1,5 +1,7 @@
 package types
 
+import "backend/internal/common/utils/JsonUtil"
+
 // InstanceDetail 实现 UnsDetail 接口
 func (i *InstanceDetail) SetId(id string) {
 	i.Id = id
@@ -51,6 +53,20 @@ func (i *InstanceDetail) SetUpdateTime(updateTime int64) {
 
 func (i *InstanceDetail) SetProtocol(protocol map[string]interface{}) {
 	i.Protocol = protocol
+	if len(protocol) > 0 {
+		if jsf, has := protocol["jsf"]; has {
+			delete(protocol, "jsf")
+			jsonFs := ""
+			if str, isStr := jsf.(string); isStr {
+				jsonFs = str
+			} else {
+				jsonFs, _ = JsonUtil.ToJson(jsf)
+			}
+			if len(jsonFs) > 0 {
+				_ = JsonUtil.FromJson(jsonFs, &i.JsonFields)
+			}
+		}
+	}
 }
 
 func (i *InstanceDetail) SetModelDescription(modelDescription string) {

@@ -386,7 +386,17 @@ func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 		instance.Refers = unsDto.Refers
 	}
 	//instance.CalculationType = unsDto.CalculationType
-
+	if len(unsDto.JsonFields) > 0 {
+		protocol := unsDto.Protocol
+		if protocol == nil {
+			protocol = make(map[string]interface{})
+			unsDto.Protocol = protocol
+		}
+		jsfStr, er := JsonUtil.ToJson(unsDto.JsonFields)
+		if er == nil {
+			protocol["jsf"] = jsfStr
+		}
+	}
 	if protocol := unsDto.Protocol; protocol != nil && len(protocol) > 0 {
 		if protocolType, exists := protocol["protocol"]; exists && protocolType != nil {
 			instance.ProtocolType = base.V2p(fmt.Sprintf("%v", protocolType))

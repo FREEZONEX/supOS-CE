@@ -57,6 +57,7 @@ const (
 	PluginUpgradeTempPath = PluginPath + "/upgrade-temp"
 	PluginFrontendPath    = RootPath + "/plugins-frontend"
 	LogPath               = "/logs"
+	ImportErr             = "/import_err/"
 	UploadRoot            = "/upload/"
 	ExportRoot            = "/export/"
 

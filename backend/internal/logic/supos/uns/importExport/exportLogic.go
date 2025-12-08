@@ -30,6 +30,6 @@ func NewExportLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ExportLogi
 	}
 }
 
-func (l *ExportLogic) Export(w http.ResponseWriter, req *types.ExportReq) (*types.JsonResult, error) {
+func (l *ExportLogic) Export(w http.ResponseWriter, req *types.ExportReq) (*types.BaseResult, error) {
 	return spring.GetBean[*service.UnsImportExportService]().Export(l.ctx, w, req)
 }

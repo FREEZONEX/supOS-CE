@@ -4,11 +4,11 @@
 package uns
 
 import (
+	"io"
 	"net/http"
 
 	"backend/internal/logic/supos/uns/uns"
 	"backend/internal/svc"
-	"backend/internal/types"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
@@ -16,14 +16,13 @@ import (
 // 外部JSON定义转uns字段定义
 func ParseJson2unsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.JsonBodyReq
-		if err := httpx.Parse(r, &req); err != nil {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
-
 		l := uns.NewParseJson2unsLogic(r.Context(), svcCtx)
-		resp, err := l.ParseJson2uns(&req)
+		resp, err := l.ParseJson2uns(body)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

@@ -1,0 +1,184 @@
+package relationDB
+
+import (
+	"backend/share/base"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"strconv"
+	"strings"
+	"sync"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var selectColumns = []string{"id", "parent_id", "model_id", "alias", "name", "display_name",
+	"expression", "description", "label_ids",
+	"protocol", "refers", "data_type", "parent_data_type", "with_flags", "fields"}
+
+func (p UnsNamespaceRepo) ExportCsv(pathTypes []int16, w io.Writer) error {
+	dbPool := getDbPool()
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	query := fmt.Sprintf(`COPY 
+           (SELECT %s FROM uns_namespace WHERE path_type in(%s) and status=1 and id>1000  and (data_type is null OR data_type<>5 ) order by lay_rec asc) 
+            TO STDOUT WITH CSV HEADER`, strings.Join(selectColumns, ","),
+		strings.Join(base.Map(pathTypes, func(e int16) string {
+			return strconv.Itoa(int(e))
+		}), ","))
+	_, err = conn.Conn().PgConn().CopyTo(context.Background(), w, query)
+	return err
+}
+func (p UnsNamespaceRepo) ExportCsvByIds(ids []int64, w io.Writer) error {
+	dbPool := getDbPool()
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	query := fmt.Sprintf(`COPY 
+           (SELECT %s FROM uns_namespace WHERE id in(%s) and status=1 and id>1000  and (data_type is null OR data_type<>5 ) order by lay_rec asc) 
+            TO STDOUT WITH CSV HEADER`, strings.Join(selectColumns, ","),
+		strings.Join(base.Map(ids, func(e int64) string {
+			return strconv.FormatInt(e, 10)
+		}), ","))
+	_, err = conn.Conn().PgConn().CopyTo(context.Background(), w, query)
+	return err
+}
+func (p UnsNamespaceRepo) ExportCsvByFolderIds(folderIds []int64, w io.Writer) error {
+	dbPool := getDbPool()
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	query := base.StringBuilder{}
+	query.Grow(64 + 32*len(folderIds))
+	query.Append("COPY (SELECT ")
+	for i, col := range selectColumns {
+		if i > 0 {
+			query.Append(", ")
+		}
+		query.Append(col)
+	}
+	query.Append(" FROM ").Append(TableNameUnsNamespace).Append(" WHERE (")
+	for i, id := range folderIds {
+		if i > 0 {
+			query.Append(" OR ")
+		}
+		query.Append("lay_rec like '").Long(id).Append("%'")
+	}
+	query.Append(") and status=1 and id>1000  and (data_type is null OR data_type<>5 ) order by lay_rec asc)").
+		Append("TO STDOUT WITH CSV HEADER")
+	_, err = conn.Conn().PgConn().CopyTo(context.Background(), w, query.String())
+	return err
+}
+func (p UnsNamespaceRepo) Csv2Model(headers, vs []string) *UnsNamespace {
+	po := &UnsNamespace{}
+	for i, h := range headers {
+		if cvt, has := exportFunctions[h]; has {
+			cvt(po, vs[i])
+		}
+	}
+	return po
+}
+
+var _dbPool *pgxpool.Pool
+var dbPoolOnce sync.Once
+
+func getDbPool() *pgxpool.Pool {
+	if _dbPool == nil {
+		dbPoolOnce.Do(func() {
+			pool, er := pgxpool.New(context.Background(), dbConfig.DSN)
+			if er != nil {
+				log.Panicln("pg init Err", er)
+			} else {
+				_dbPool = pool
+			}
+		})
+	}
+	return _dbPool
+}
+
+var exportFunctions = make(map[string]func(po *UnsNamespace, val string), 32)
+
+func init() {
+	exportFunctions["id"] = func(po *UnsNamespace, val string) {
+		id, _ := strconv.ParseInt(val, 10, 64)
+		po.Id = id
+	}
+	exportFunctions["parent_id"] = func(po *UnsNamespace, val string) {
+		pid, er := strconv.ParseInt(val, 10, 64)
+		if er == nil {
+			po.ParentId = &pid
+		}
+	}
+	exportFunctions["model_id"] = func(po *UnsNamespace, val string) {
+		mid, er := strconv.ParseInt(val, 10, 64)
+		if er == nil {
+			po.ModelId = &mid
+		}
+	}
+	exportFunctions["alias"] = func(po *UnsNamespace, val string) {
+		po.Alias = val
+	}
+	exportFunctions["name"] = func(po *UnsNamespace, val string) {
+		po.Name = val
+	}
+	exportFunctions["display_name"] = func(po *UnsNamespace, val string) {
+		if len(val) > 0 {
+			po.DisplayName = &val
+		}
+	}
+	exportFunctions["expression"] = func(po *UnsNamespace, val string) {
+		if len(val) > 0 {
+			po.Expression = &val
+		}
+	}
+	exportFunctions["label_ids"] = func(po *UnsNamespace, val string) {
+		if len(val) > 0 && val[0] == '{' {
+			_ = json.Unmarshal([]byte(val), &po.LabelIds)
+		}
+	}
+	exportFunctions["protocol"] = func(po *UnsNamespace, val string) {
+		if len(val) > 0 && val[0] == '{' {
+			po.Protocol = &val
+		}
+	}
+	exportFunctions["refers"] = func(po *UnsNamespace, val string) {
+		if len(val) > 0 && val[0] == '[' {
+			_ = json.Unmarshal([]byte(val), &po.Refers)
+		}
+	}
+	exportFunctions["data_type"] = func(po *UnsNamespace, val string) {
+		dt, er := strconv.Atoi(val)
+		if er == nil {
+			po.DataType = base.V2p(int16(dt))
+		}
+	}
+	exportFunctions["parent_data_type"] = func(po *UnsNamespace, val string) {
+		dt, er := strconv.Atoi(val)
+		if er == nil {
+			po.ParentDataType = base.V2p(int16(dt))
+		}
+	}
+	exportFunctions["with_flags"] = func(po *UnsNamespace, val string) {
+		dt, er := strconv.Atoi(val)
+		if er == nil {
+			po.WithFlags = base.V2p(int32(dt))
+		}
+	}
+	exportFunctions["fields"] = func(po *UnsNamespace, val string) {
+		if len(val) > 0 {
+			_ = json.Unmarshal([]byte(val), &po.Fields)
+		}
+	}
+}

@@ -171,7 +171,7 @@ type ProtocolCount struct {
 }
 
 // CountByPathType returns count grouped by path_type
-func (p *UnsNamespaceRepo) CountByPathType(db *gorm.DB) ([]PathTypeCount, error) {
+func (p UnsNamespaceRepo) CountByPathType(db *gorm.DB) ([]PathTypeCount, error) {
 	var results []PathTypeCount
 	err := p.model(db).
 		Model(&UnsNamespace{}).
@@ -183,7 +183,7 @@ func (p *UnsNamespaceRepo) CountByPathType(db *gorm.DB) ([]PathTypeCount, error)
 }
 
 // CountByProtocolType returns count grouped by protocol_type
-func (p *UnsNamespaceRepo) CountByProtocolType(db *gorm.DB) ([]ProtocolCount, error) {
+func (p UnsNamespaceRepo) CountByProtocolType(db *gorm.DB) ([]ProtocolCount, error) {
 	var results []ProtocolCount
 	err := p.model(db).
 		Model(&UnsNamespace{}).

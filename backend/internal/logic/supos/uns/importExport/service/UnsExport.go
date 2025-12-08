@@ -7,7 +7,7 @@ import (
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
-	"cmp"
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -19,8 +19,8 @@ import (
 
 const EXPORT_TYPE_ALL = "ALL"
 
-func (l *UnsImportExportService) Export(ctx context.Context, w http.ResponseWriter, req *types.ExportReq) (resp *types.JsonResult, err error) {
-	resp = &types.JsonResult{Code: 200, Msg: "ok"}
+func (l *UnsImportExportService) Export(ctx context.Context, w http.ResponseWriter, req *types.ExportReq) (resp *types.BaseResult, err error) {
+	resp = &types.BaseResult{Code: 200, Msg: "ok"}
 	if EXPORT_TYPE_ALL != req.ExportType && len(req.Files)+len(req.Folders) == 0 {
 		resp.Code, resp.Msg = 400, "NoArgs"
 		return
@@ -45,92 +45,87 @@ func (l *UnsImportExportService) Export(ctx context.Context, w http.ResponseWrit
 			}
 			countRows += count
 		}
-		resp.Msg = fmt.Sprintf("%d VS %d", countRows, limitSmallFileRows)
 		if countRows == 0 {
-			resp.Code, resp.Msg = 200, "NoData"
+			resp.Code, resp.Msg = 204, "NoData"
+			return
+		} else if countRows < limitSmallFileRows {
+			l.doExport(w, datetimeutils.DateSimple()+".json", req, fmt.Sprintf("%d VS %d", countRows, limitSmallFileRows))
+			return nil, nil
 		} else {
-			resp.Data = countRows < limitSmallFileRows
+			resp.Msg = fmt.Sprintf("%d VS %d", countRows, limitSmallFileRows)
 		}
 		return
 	} else {
-		l.doExport(w, datetimeutils.DateSimple()+".json", req)
+		l.doExport(w, datetimeutils.DateSimple()+".json", req, "")
 		return nil, nil
 	}
 }
 
-func (l *UnsImportExportService) doExport(w http.ResponseWriter, attachmentName string, req *types.ExportReq) {
+func (l *UnsImportExportService) doExport(w http.ResponseWriter, attachmentName string, req *types.ExportReq, msg string) {
 	// 设置附件下载头
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Disposition", `attachment; filename=UNS_`+attachmentName)
 	w.Header().Set("Transfer-Encoding", "chunked")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-
-	fmt.Fprintln(w, "{") //开始 JSON 对象
-	//if flusher, ok := w.(http.Flusher); ok {
-	//	flusher.Flush()
-	//}
+	if len(msg) > 0 {
+		w.Header().Set("X-Msg", msg)
+	}
 	l.streamedExportUns(w, req)
 }
 
-func labelGetId(lb *dao.UnsLabel) int64 {
-	return lb.ID
-}
-func labelGetParentId(lb *dao.UnsLabel) int64 {
-	return -1
-}
 func label2FileData(lb *dao.UnsLabel) *FileData {
 	return &FileData{Name: lb.LabelName}
+}
+func (l *UnsImportExportService) labelCsv2FileData(headers, values []string) *FileData {
+	label := l.labelMapper.Csv2Model(headers, values)
+	return label2FileData(label)
+}
+func (l *UnsImportExportService) unsCsv2FileData(headers, values []string) *FileData {
+	uns := l.unsMapper.Csv2Model(headers, values)
+	return po2DataVo(uns)
 }
 
 // 流式写入json 返回给客户端
 func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *types.ExportReq) {
+	fmt.Fprintln(out, "{") //开始 JSON 对象
+	//if flusher, ok := w.(http.Flusher); ok {
+	//	flusher.Flush()
+	//}
+	jsonWriter := bufio.NewWriter(out)
 	if EXPORT_TYPE_ALL == exportReq.ExportType {
-		hasData := false
 		{
-			encoder := jsonstream.NewStreamJsonEncoder(out, nodeGetChildren, nodeSetChildren, labelGetId, labelGetParentId, label2FileData)
-			hasData = queryDbAndSendJson(out, encoder, Label, func(page, pageSize int) ([]*dao.UnsLabel, error) {
-				return l.labelMapper.ListAll(dao.GetDb(context.Background()), page, pageSize)
-			})
-		}
-		{
-			if hasData {
-				fmt.Fprint(out, ",")
-			}
-			encoder := jsonstream.NewStreamJsonEncoder(out, nodeGetChildren, nodeSetChildren, poGetId, poGetParentId, po2DataVo)
-			hasTemplate := queryDbAndSendJson(out, encoder, Template, func(page, pageSize int) ([]*dao.UnsNamespace, error) {
-				return l.unsMapper.ListAll(dao.GetDb(context.Background()), []int16{constants.PathTypeTemplate}, page, pageSize)
-			})
-			if !hasTemplate {
-				fmt.Fprintf(out, `"%s": []`, Template)
-			} else {
-				hasData = true
+			fmt.Fprintf(out, `"%s":`, Label)
+			_, err := jsonstream.Csv2JsonStream(l.labelMapper.ExportCsv, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.labelCsv2FileData, true)
+			if err != nil {
+				l.log.Error("Label Csv2JsonStream err:", err)
 			}
 		}
 		{
-			if hasData {
-				fmt.Fprint(out, ",")
+			fmt.Fprintf(out, `,"%s":`, Template)
+			_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
+				return l.unsMapper.ExportCsv([]int16{constants.PathTypeTemplate}, writer)
+			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, true)
+			if err != nil {
+				l.log.Error("Template Csv2JsonStream err:", err)
 			}
-			encoder := jsonstream.NewStreamJsonEncoder(out, nodeGetChildren, nodeSetChildren, poGetId, poGetParentId, po2DataVo)
-			hasUns := queryDbAndSendJson(out, encoder, UNS, func(page, pageSize int) ([]*dao.UnsNamespace, error) {
-				return l.unsMapper.ListAll(dao.GetDb(context.Background()), []int16{constants.PathTypeDir, constants.PathTypeFile}, page, pageSize)
-			})
-			if !hasUns {
-				fmt.Fprintf(out, `"%s": []`, UNS)
-			} else {
-				hasData = true
+		}
+		{
+			fmt.Fprintf(out, `,"%s":`, UNS)
+			_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
+				return l.unsMapper.ExportCsv([]int16{constants.PathTypeDir, constants.PathTypeFile}, writer)
+			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, true)
+			if err != nil {
+				l.log.Error("UNS Csv2JsonStream err:", err)
 			}
 		}
 	} else if len(exportReq.Folders)+len(exportReq.Files) > 0 {
 		fmt.Fprintf(out, `"%s":`, UNS)
-		encoder := jsonstream.NewStreamJsonEncoder(out, nodeGetChildren, nodeSetChildren, poGetId, poGetParentId, po2DataVo)
-		hashDir, hasFile := false, false
-		if len(exportReq.Folders) > 0 {
-			layRecPrev := base.Map[int64, string](exportReq.Folders, func(e int64) string {
-				return strconv.FormatInt(e, 10)
-			})
-			hashDir = queryDbAndSendJson(out, encoder, "", func(page, pageSize int) ([]*dao.UnsNamespace, error) {
-				return l.unsMapper.PageListByLayRecs(dao.GetDb(context.Background()), layRecPrev, page, pageSize)
-			})
+		var countUns = 0
+		var err error
+		if folderIds := exportReq.Folders; len(folderIds) > 0 {
+			countUns, err = jsonstream.Csv2JsonStream(func(writer io.Writer) error {
+				return l.unsMapper.ExportCsvByFolderIds(folderIds, writer)
+			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, false)
 		}
 		if len(exportReq.Files) > 0 {
 			layRecs, _ := l.unsMapper.ListLayRecByIds(dao.GetDb(context.Background()), exportReq.Files)
@@ -146,35 +141,16 @@ func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *typ
 			}
 			idValues := base.MapKeys(ids)
 			sort.Sort(base.LongSlice(idValues))
-			hasFile = queryDbAndSendJson(out, encoder, "", func(page, pageSize int) ([]*dao.UnsNamespace, error) {
-				return l.unsMapper.PageListByIds(dao.GetDb(context.Background()), idValues, page, pageSize)
-			})
+			if countUns > 0 {
+				err = jsonWriter.WriteByte(',')
+			}
+			countUns, err = jsonstream.Csv2JsonStream(func(writer io.Writer) error {
+				return l.unsMapper.ExportCsvByIds(idValues, writer)
+			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, false)
 		}
-		if hashDir || hasFile {
-			_ = jsonstream.WriteBatch(encoder, nil, true)
+		if err != nil {
+			l.log.Error("UNS Csv2JsonStream err:", err)
 		}
 	}
 	fmt.Fprintln(out, "}")
-}
-func queryDbAndSendJson[Node any, ID cmp.Ordered, TreeNode any](
-	out io.Writer,
-	encoder *jsonstream.StreamJsonEncoder[Node, ID, TreeNode],
-	propName string,
-	pageQuery func(page, pageSize int) ([]*TreeNode, error)) bool {
-	page, pageSize := 1, 1000
-	for {
-		list, er := pageQuery(page, pageSize)
-		if er != nil || len(list) == 0 {
-			break
-		}
-		if page == 1 && propName != "" {
-			fmt.Fprintf(out, `"%s":`, propName)
-		}
-		page++
-		_ = jsonstream.WriteBatch(encoder, list, false)
-	}
-	if page > 1 && propName != "" {
-		_ = jsonstream.WriteBatch(encoder, nil, true)
-	}
-	return page > 1
 }

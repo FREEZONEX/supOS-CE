@@ -687,12 +687,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
-				// UNS 导出,返回文件路径
-				Method:  http.MethodPost,
-				Path:    "/exportPath",
-				Handler: suposunsimportExport.ExportPathHandler(serverCtx),
-			},
-			{
 				// 文件下载
 				Method:  http.MethodGet,
 				Path:    "/file/download",
@@ -703,12 +697,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodGet,
 				Path:    "/template/download",
 				Handler: suposunsimportExport.TemplateDownloadHandler(serverCtx),
-			},
-			{
-				// UNS 上传文件
-				Method:  http.MethodPost,
-				Path:    "/upload",
-				Handler: suposunsimportExport.UploadHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/inter-api/supos/uns/importExport"),

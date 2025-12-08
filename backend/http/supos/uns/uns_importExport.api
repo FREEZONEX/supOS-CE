@@ -4,12 +4,6 @@
 )
 service backend {
 
-    @doc (
-        summary: "UNS 导出,返回文件路径"
-    )
-    @handler exportPath
-    post /exportPath (ExportReq) returns (ExportResp)
-
 	@doc (
 		summary: "下载模版"
 	)
@@ -21,12 +15,6 @@ service backend {
 	)
 	@handler fileDownload
 	get /file/download (FileDownloadReq) returns ()
-
-    @doc (
-        summary: "UNS 上传文件"
-    )
-    @handler upload
-    post /upload (UploadReq) returns (StringResult)
 }
 
 type (
