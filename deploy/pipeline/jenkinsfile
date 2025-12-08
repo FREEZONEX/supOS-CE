@@ -49,9 +49,9 @@ pipeline {
                         sh "mkdir -p ./deploy/images"
                         // 构建 Docker 镜像
                         dockerImage = docker.build("${FULL_IMAGE_TAG}", "-f ./deploy/Dockerfile-Compose .")
-                        dockerImage.tag("suposce/supos-edge-platform:${TAG}")
 
                         sh """
+                            docker tag ${FULL_IMAGE_TAG} "suposce/supos-edge-platform:${TAG}"
                             docker save  suposce/supos-edge-platform:${TAG} | xz -z -T0 -v >./deploy/images/supos-edge-platform.tar.xz
                         """
                     }
