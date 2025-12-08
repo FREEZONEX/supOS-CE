@@ -1,4 +1,4 @@
-﻿Name: backend
+﻿﻿Name: backend
 Host: 0.0.0.0
 Port: 8080
 CpuThreshold: 0
@@ -6,15 +6,16 @@ Timeout: 20000
 
 Database:
   DBType: pgsql
-  DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres?search_path=supos
-
-loggerLevel: debug
+  DSN: postgres://postgres:postgres@postgresql:5432/postgres?search_path=supos
 
 persistent_url:
-  postgresql: postgres://postgres:postgres@100.100.100.20:31014/postgres
-  timescaledb: postgres://postgres:postgres@100.100.100.20:31014/postgres
+  postgresql: postgres://postgres:postgres@tsdb:5432/postgres
+  timescaledb: postgres://postgres:postgres@tsdb:5432/postgres
 
-KeycloakDSN: postgres://postgres:postgres@100.100.100.20:31014/keycloak
+export:
+  limitSmallFileRows: 10000
+
+KeycloakDSN: postgres://postgres:postgres@postgresql:5432/keycloak
 CacheRedis:
   - Host: localhost:6379
     Pass:
@@ -30,32 +31,35 @@ DevLink:
   Mode: mqtt
   SubMode: emq
   Mqtt:
-    ClientID: uns.rpc
+    ClientID: supos_server
     Pass: uns
     User: unssvr
     Brokers:
-      - tcp://127.0.0.1:1883
+      - tcp://emqx:1883
     OpenApi:
-      Host: http://127.0.0.1:18083
+      Host: http://emqx:18083
       ApiKey: 69b84915bc0d50db
       SecretKey: nzREWI29BQjrY9A1gsgczHEUhDr3kJXonkUE9A7hueCB4G
 OssConf:
   OssType: local # 如果不需要minio,可以填写local,默认存储路径为 ../oss
-  PublicBucketName:
-  PrivateBucketName:
-  TemporaryBucketName:
-  StorePath: /uns
+  PublicBucketName: tier0-upload-public
+  PrivateBucketName: tier0-upload
+  TemporaryBucketName: tier0-upload-temp
+  AccessKeyID: ${ossAk}
+  AccessKeySecret: ${ossSk}
+  Location:
+  Region: ap-southeast-1
 OAuthKeyCloak:
-    Realm: supos
-    ClientName: supos
-    ClientID: NULL
-    ClientSecret: VaOS2makbDhJJsLlYPt4Wl87bo9VzXiO
-    AuthorizationGrantType: authorization_code
-    RedirectURI: http://office.unibutton.com:11488/inter-api/supos/auth/token
-    SuposHome: http://office.unibutton.com:11488/home
-    IssuerURI: http://office.unibutton.com:11488/keycloak/home/auth
-    # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
-    RefreshTokenTime: "60"
+  Realm: supos
+  ClientName: supos
+  ClientID: supos
+  ClientSecret: VaOS2makbDhJJsLlYPt4Wl87bo9VzXiO
+  AuthorizationGrantType: authorization_code
+  RedirectURI: http://100.100.100.22:34098/inter-api/supos/auth/token
+  SuposHome: http://100.100.100.22:34098/home
+  IssuerURI: http://keycloak:8080
+  # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
+  RefreshTokenTime: "60"
 NodeRed:
   Source:
     Host: nodered

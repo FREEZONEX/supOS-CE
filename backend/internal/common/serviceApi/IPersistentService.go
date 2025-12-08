@@ -23,4 +23,7 @@ type IPersistentService interface {
 	GetDataSrcId() types.SrcJdbcType
 
 	GetDataSourceProperties() DataSourceProperties
+
+	// FillLastRecord 填充最后一条记录
+	FillLastRecord(uns *types.CreateTopicDto)
 }

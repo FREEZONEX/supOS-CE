@@ -9,6 +9,7 @@ import (
 	"backend/internal/logic/supos/uns/system"
 	_ "backend/internal/logic/supos/uns/topology/service" // 导入触发 init() 注册
 	_ "backend/internal/logic/supos/uns/uns/service"
+	"os"
 
 	"backend/internal/svc"
 	"backend/share/spring"
@@ -29,6 +30,9 @@ func main() {
 	logx.DisableStat()
 	var c config.Config
 	var confFile = "etc/backend.yaml"
+	if info, er := os.Stat("../deploy/"); er == nil && info.IsDir() {
+		confFile = "etc/backend-local.yaml"
+	}
 	utils.ConfMustLoad(confFile, &c)
 	c.RestConf.MaxBytes = max(c.RestConf.MaxBytes, 1<<30) //http body最大限制最少1G
 

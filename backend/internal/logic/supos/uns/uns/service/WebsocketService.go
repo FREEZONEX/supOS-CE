@@ -452,8 +452,14 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 				if hasDm {
 					v, has = dm[name]
 				}
-				if lv := f.LastValue; !has && len(lv) > 0 {
-					v = lv
+				if lv := f.LastValue; !has && lv != nil {
+					if f.Type == types.FieldTypeDatetime {
+						if date, isDate := lv.(time.Time); isDate {
+							v = date.UnixMilli()
+						}
+					} else {
+						v = lv
+					}
 				}
 				if v != nil {
 					switch f.Type {

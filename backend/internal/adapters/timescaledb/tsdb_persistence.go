@@ -184,7 +184,7 @@ func copyDataToTempTable(conn *pgxpool.Conn, batchSize int, tableInfo *tableProc
 			}
 			rows[j] = row
 		}
-		logx.Debugf("%s: rows: %+v", tableInfo.def.Alias, rows)
+		//logx.Debugf("%s: rows: %+v", tableInfo.def.Alias, rows)
 
 		// 执行COPY
 		_, err := conn.CopyFrom(

@@ -105,6 +105,7 @@ const useOptionModal = ({
         const detail: any = await getInfo({ id: pasteNode.id });
         if (isPasteFolder) {
           const { description, pathName: name, fields, extend, displayName } = detail || {};
+
           form.setFieldsValue({
             displayName,
             description,
@@ -121,7 +122,7 @@ const useOptionModal = ({
             description,
             pathName: name,
             modelId,
-            fields,
+            jsonFields,
             dataType,
             protocol = {},
             labelList,
@@ -137,6 +138,11 @@ const useOptionModal = ({
             parentDataType,
             pathType,
           } = detail || {};
+          let { fields } = detail || {};
+
+          if (dataType === 8) {
+            fields = jsonFields;
+          }
 
           const backfillForm: { [key: string]: any } = {
             displayName,
@@ -323,7 +329,7 @@ const useOptionModal = ({
                 ...(enableAutoCategorization
                   ? {
                       parentDataType: _topicType || 1,
-                      dataType: _topicType === 1 ? 2 : _topicType === 2 ? 8 : _topicType === 3 ? 1 : 2,
+                      dataType: _topicType === 1 ? 8 : _topicType === 2 ? 8 : _topicType === 3 ? 1 : 8,
                     }
                   : {}),
               });
