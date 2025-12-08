@@ -50,10 +50,10 @@ pipeline {
                         // 构建 Docker 镜像
                         dockerImage = docker.build("${FULL_IMAGE_TAG}", "-f ./deploy/Dockerfile-Compose .")
 
-                        sh """
+                        sh '''
                             docker tag ${FULL_IMAGE_TAG} "suposce/supos-edge-platform:${TAG}"
                             docker save  suposce/supos-edge-platform:${TAG} | xz -z -T0 -v >./deploy/images/supos-edge-platform.tar.xz
-                        """
+                        '''
                     }
                     
                     // 推送镜像到远程仓库
@@ -70,7 +70,7 @@ pipeline {
 
                         sh '''
 
-                        scp -i /var/jenkins_home/ssh/id_rsa root@172.21.2.148:/home/images/edge/*.tar.xz ./images/
+                        scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar.xz" ./images/
                         
                         // 将整个 deploy 目录压缩成 zip 包
                         rm -rf ./pipeline
