@@ -1,0 +1,873 @@
+[
+  {
+    "id": "c9d1450c9cd74091",
+    "type": "tab",
+    "label": "Data Simulator",
+    "disabled": false,
+    "info": "The initialization process is for Simulator"
+  },
+  {
+    "id": "fee507a89bb6f9dd",
+    "type": "http in",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "url": "/mock/opcua",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 450,
+    "y": 300,
+    "wires": [
+      [
+        "a998fa55157998e4"
+      ]
+    ]
+  },
+  {
+    "id": "46f3a9a018205cc2",
+    "type": "http response",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Response",
+    "statusCode": "",
+    "headers": {},
+    "x": 760,
+    "y": 360,
+    "wires": []
+  },
+  {
+    "id": "a998fa55157998e4",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Package parameter",
+    "func": "// 从 msg.payload 中提取 variableName 和 dataType\nvar variableName = msg.payload.variableName;\nvar dataType = msg.payload.dataType;\nvar variableRange = msg.payload.variableRange;\n\nvar rangePattern = /^\\d+(\\.\\d+)?-\\d+(\\.\\d+)?$/; // 正则表达式匹配数字范围格式，如 10-20 或 10.5-20.3\nif (!rangePattern.test(variableRange)) {\n    // 格式不正确时返回 400 状态码\n    msg.statusCode = 400;  // 设置 HTTP 状态码\n    msg.payload = { \n        error: `Invalid range format: ${variableRange}. Expected format: 'number-number'.`\n    };  // 返回错误信息\n    return msg;  // 直接返回错误消息，不继续执行后续节点\n}\n\nlet valArray = flow.get('valArray') || [];\n\n// 检查 valArray 中是否已经存在相同 variableName 的元素\nlet index = valArray.findIndex(item => item.variableName === variableName);\n\nif (index !== -1) {\n    // 如果找到相同的 variableName，覆盖该元素\n    valArray[index] = {\n        variableName: variableName,\n        dataType: dataType,\n        variableRange: variableRange\n    };\n    node.warn(\"重复元素已覆盖\");\n} else {\n    // 如果没有找到相同的 variableName，添加新元素\n    const newObject = {\n        variableName: variableName,\n        dataType: dataType,\n        variableRange: variableRange\n    };\n    valArray.push(newObject);\n}\n\n// 将更新后的数组存回 flow 变量\nflow.set('valArray', valArray);\nnode.warn(valArray);\n\nmsg.statusCode = 200;\nmsg.payload = {\n    \"variableName\": `${variableName}`,\n    \"dataType\": `${dataType}`\n}\n// 返回消息\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 710,
+    "y": 300,
+    "wires": [
+      [
+        "46f3a9a018205cc2",
+        "a64724b752a8fc30"
+      ]
+    ]
+  },
+  {
+    "id": "d18db7b62ce3b2a6",
+    "type": "OpcUa-Server",
+    "z": "b3e3eee397d5c8a3",
+    "port": "53889",
+    "name": "SERVER",
+    "endpoint": "",
+    "users": "",
+    "nodesetDir": "",
+    "autoAcceptUnknownCertificate": true,
+    "registerToDiscovery": false,
+    "constructDefaultAddressSpace": true,
+    "allowAnonymous": true,
+    "endpointNone": true,
+    "endpointSign": true,
+    "endpointSignEncrypt": true,
+    "endpointBasic128Rsa15": true,
+    "endpointBasic256": true,
+    "endpointBasic256Sha256": true,
+    "maxNodesPerBrowse": 0,
+    "maxNodesPerHistoryReadData": 0,
+    "maxNodesPerHistoryReadEvents": 0,
+    "maxNodesPerHistoryUpdateData": 0,
+    "maxNodesPerRead": 0,
+    "maxNodesPerWrite": 0,
+    "maxNodesPerMethodCall": 0,
+    "maxNodesPerRegisterNodes": 0,
+    "maxNodesPerNodeManagement": 0,
+    "maxMonitoredItemsPerCall": 0,
+    "maxNodesPerHistoryUpdateEvents": 0,
+    "maxNodesPerTranslateBrowsePathsToNodeIds": 0,
+    "maxConnectionsPerEndpoint": 20,
+    "maxMessageSize": 4096,
+    "maxBufferSize": 4096,
+    "maxSessions": 20,
+    "x": 1240,
+    "y": 340,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "5db94e0fc79ae64d",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Set global variables",
+    "func": "flow.set('valArray', []);\n\n// 获取现有的 flow 数据，若没有则初始化为空数组\nlet valArray = flow.get('valArray') || [];\n\n// 创建新的对象\nconst newObject = {\n    \"variableName\": \"realTimePower\",\n    \"dataType\": \"Float\",\n    \"variableRange\": \"20-100\"\n};\n\nconst newObject2 = {\n    \"variableName\": \"irradiance\",\n    \"dataType\": \"Float\",\n    \"variableRange\": \"0-500\"\n};\n\nconst newObject3 = {\n    \"variableName\": \"operationStatus\",\n    \"dataType\": \"Float\",\n    \"variableRange\": \"0-1\"\n};\n\n// 将新对象添加到数组中\nvalArray.push(newObject);\nvalArray.push(newObject2);\nvalArray.push(newObject3);\n\n// 将更新后的数组存回 flow 变量\nflow.set('valArray', valArray);\nnode.warn(valArray);\n// 返回消息\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 670,
+    "y": 660,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "8ca056e88f6a35d2",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "5",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 440,
+    "y": 660,
+    "wires": [
+      [
+        "5db94e0fc79ae64d"
+      ]
+    ]
+  },
+  {
+    "id": "3e18dc4c0e19f014",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Analog data transmission",
+    "func": "// 获取现有的 flow 数据，如果没有则初始化为空数组\nlet valArray = flow.get('valArray') || [];\n\n// 如果 valArray 数组为空，直接返回当前的 msg\nif (valArray.length === 0) {\n    return msg;  // 直接返回 msg，终止后续处理\n}\n// 定义 variables 数组\nlet variables = valArray.map(item => {\n    // 生成一个随机值，根据 variableRange 生成一个范围\n    let minVariableRange = Math.min(...item.variableRange.split('-').map(Number)); // 获取 variableRange 范围的最小值\n    let maxVariableRange = Math.max(...item.variableRange.split('-').map(Number)); // 获取 variableRange 范围的最大值\n    // let randomValue = (Math.random() * (maxVariableRange - minVariableRange) + minVariableRange).toFixed(2); // 在范围内生成随机值\n\n    // 判断范围是否是 0 到 1\n    let randomValue;\n    if (minVariableRange === 0 && maxVariableRange === 1) {\n        // 如果范围是 0 到 1，直接返回 0 或 1\n        randomValue = Math.random() < 0.5 ? 0 : 1;\n    } else {\n        // 否则，按常规方式生成随机浮动值\n        randomValue = (Math.random() * (maxVariableRange - minVariableRange) + minVariableRange).toFixed(2);\n    }\n\n\n    // 返回每个元素的新结构\n    return {\n        name: item.variableName,\n        value: randomValue,\n        dataType: item.dataType\n    };\n});\n\n// 创建多个 msg 对象\nlet messages = variables.map(variable => {\n    let msg = {\n        payload: {\n            messageType: \"Variable\",\n            namespace: 1,\n            variableName: variable.name,\n            variableValue: variable.value,\n            dataType: variable.dataType\n        }\n    };\n    return msg;\n});\n\n// 返回多个消息\nreturn [messages];\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 790,
+    "y": 460,
+    "wires": [
+      [
+        "d18db7b62ce3b2a6"
+      ]
+    ]
+  },
+  {
+    "id": "21260a4a64b8427b",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "clean valArray",
+    "func": "flow.set('valArray', []);\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 660,
+    "y": 540,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "57c06ee444100875",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 430,
+    "y": 540,
+    "wires": [
+      [
+        "21260a4a64b8427b"
+      ]
+    ]
+  },
+  {
+    "id": "6437e04d97b14ead",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Scheduled tasks",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "2",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "30",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 470,
+    "y": 460,
+    "wires": [
+      [
+        "3e18dc4c0e19f014"
+      ]
+    ]
+  },
+  {
+    "id": "a64724b752a8fc30",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Create UA variable",
+    "func": "var variableName = msg.payload.variableName;\nvar dataType = msg.payload.dataType;\n\nmsg = {};\n// 构造 msg.topic 和 msg.payload\nmsg.topic = `ns=1;s=${variableName};datatype=${dataType};value=1`;\n\n// 可选：设置 NodeId 等其他参数\nmsg.payload = {\n    opcuaCommand: \"addVariable\"\n};\nmsg.variableName =variableName;\n// 返回消息\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 930,
+    "y": 300,
+    "wires": [
+      [
+        "d18db7b62ce3b2a6"
+      ]
+    ]
+  },
+  {
+    "id": "ab9a8c238969a24e",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Manually set variable",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "{\"variableName\":\"humidity\",\"dataType\":\"Float\",\"variableRange\":\"0-1\"}",
+    "payloadType": "json",
+    "x": 480,
+    "y": 360,
+    "wires": [
+      [
+        "a998fa55157998e4"
+      ]
+    ]
+  },
+  {
+    "id": "93cedb9f2d5fb8d4",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Initialize UA variables",
+    "func": "//本地获取变量数组\nlet valArray = flow.get('valArray') || [];\n\n\nlet messages = valArray.map(variable => {\n    let msg = {\n        payload: {\n             opcuaCommand: \"addVariable\"\n        },\n        topic : `ns=1;s=${variable.variableName};datatype=${variable.dataType};value=1`\n    };\n    return msg;\n});\n\n\n// 返回多个消息\nreturn [messages];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 760,
+    "y": 200,
+    "wires": [
+      [
+        "52cbe9e0f6682ec2",
+        "d18db7b62ce3b2a6"
+      ]
+    ]
+  },
+  {
+    "id": "3bac4144bfb5a37f",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Initialize variables in 15 seconds",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "15",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 490,
+    "y": 200,
+    "wires": [
+      [
+        "93cedb9f2d5fb8d4"
+      ]
+    ]
+  },
+  {
+    "id": "130d6f5b12ca66c8",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "View global variables",
+    "func": "// 获取现有的 flow 数据，如果没有则初始化为空数组\nlet valArray = flow.get('valArray') || [];\nnode.warn(valArray);\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 680,
+    "y": 600,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "ddefdcd15b18f384",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 430,
+    "y": 600,
+    "wires": [
+      [
+        "130d6f5b12ca66c8"
+      ]
+    ]
+  },
+  {
+    "id": "8957b9da1711a6f4",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Restart Server",
+    "func": "// 可选：设置 NodeId 等其他参数\nmsg.payload = {\n    opcuaCommand: \"restartOPCUAServer\"\n}\n// 返回消息\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 960,
+    "y": 140,
+    "wires": [
+      [
+        "d18db7b62ce3b2a6"
+      ]
+    ]
+  },
+  {
+    "id": "29d0540ba1d357d9",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 520,
+    "y": 140,
+    "wires": [
+      [
+        "8957b9da1711a6f4"
+      ]
+    ]
+  },
+  {
+    "id": "52cbe9e0f6682ec2",
+    "type": "debug",
+    "z": "b3e3eee397d5c8a3",
+    "name": "debug 9",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 960,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "f6c0cec1a919d880",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Go",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      },
+      {
+        "p": "type",
+        "v": "4",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": "",
+    "topic": "",
+    "payload": "warehouse",
+    "payloadType": "str",
+    "x": 450,
+    "y": 760,
+    "wires": [
+      [
+        "b543e66db56cb055"
+      ]
+    ]
+  },
+  {
+    "id": "b543e66db56cb055",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "SELECT Data",
+    "func": "let sql = '';\nlet tabName = flow.get(\"tabName\");\nlet type = msg.type;\n\nif (type == 1) {\n    sql = \"SELECT DATE(\\\"submitTime\\\") AS date, COUNT(*) AS orderCount, SUM(skucount) AS skuCount FROM \\\"\" + tabName + \"\\\" GROUP BY DATE(\\\"submitTime\\\") ORDER BY date\"\n} else if (type == 2) {\n    sql = \"SELECT customer , COUNT(*) AS total_orders, SUM(skuCount) AS total_sku_count FROM \\\"\" + tabName + \"\\\" GROUP BY customer ORDER BY total_orders DESC\"\n} else if (type == 3) {\n    sql = \"SELECT TO_CHAR(\\\"submitTime\\\", 'YYYY-MM') AS date, COUNT(*) AS orderCount, SUM(CASE WHEN \\\"userMaterialStatus\\\" = 0 THEN 1 ELSE 0 END) AS userMaterialCount FROM \\\"\" + tabName + \"\\\" GROUP BY date ORDER BY date DESC\"\n} else if (type == 4) {\n    sql = \"SELECT COUNT(*) AS total_orders, SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS in_transit_orders, ROUND(CAST(RANDOM() * 100 AS NUMERIC), 2) AS total_production_progress, SUM(CASE WHEN status = 1 THEN skucount ELSE 0 END) AS sku_in_production, ROUND(CAST(RANDOM() * 100 AS NUMERIC), 2) AS total_storage_progress, ROUND(100.0 * SUM(CASE WHEN \\\"userMaterialStatus\\\" = 0 THEN 1 ELSE 0 END) / COUNT(*), 2) AS unclaimed_material_ratio FROM \\\"\" + tabName + \"\\\"\"\n} else if (type == 5) {\n    sql = \"SELECT TO_CHAR(\\\"submitTime\\\", 'YYYY-MM') AS month, COUNT(*) AS total_orders, SUM(\\\"receivableAmount\\\") AS total_receivable, SUM(\\\"collectedAmount\\\") AS total_collected, SUM(\\\"overdueAmount\\\") AS total_overdue FROM \\\"\" + tabName + \"\\\" GROUP BY month ORDER BY month\"\n}\n\nmsg.query = sql;\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 640,
+    "y": 760,
+    "wires": [
+      [
+        "a4d7873889c85c64"
+      ]
+    ]
+  },
+  {
+    "id": "a4d7873889c85c64",
+    "type": "postgresql",
+    "z": "b3e3eee397d5c8a3",
+    "name": "PostgreSQL",
+    "query": "",
+    "postgreSQLConfig": "532d732a0b3fef6e",
+    "split": false,
+    "rowsPerMsg": 1,
+    "outputs": 1,
+    "x": 950,
+    "y": 800,
+    "wires": [
+      [
+        "6506be030bd6b6bc"
+      ]
+    ]
+  },
+  {
+    "id": "bb3dfd8baf518ad8",
+    "type": "http in",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "url": "/mock/order/statistics",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 310,
+    "y": 840,
+    "wires": [
+      [
+        "493e58c7f35c9258",
+        "8afc5608ea0ebc2f"
+      ]
+    ]
+  },
+  {
+    "id": "493e58c7f35c9258",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "SELECT Data",
+    "func": "let sql = '';\nlet tabName = flow.get(\"tabName\");\nlet type = msg.req.query.type;\n\nif(type == 1){\n    sql = \"SELECT DATE(\\\"submitTime\\\") AS date, COUNT(*) AS orderCount, SUM(skucount) AS skuCount FROM \\\"\" + tabName +\"\\\" GROUP BY DATE(\\\"submitTime\\\") ORDER BY date\"\n} else if (type == 2){\n    sql = \"SELECT customer , COUNT(*) AS total_orders, SUM(skuCount) AS total_sku_count FROM \\\"\" + tabName +\"\\\" GROUP BY customer ORDER BY total_orders DESC\"\n} else if (type == 3) {\n    sql = \"SELECT TO_CHAR(\\\"submitTime\\\", 'YYYY-MM') AS date, COUNT(*) AS orderCount, SUM(CASE WHEN \\\"userMaterialStatus\\\" = 0 THEN 1 ELSE 0 END) AS userMaterialCount FROM \\\"\" + tabName +\"\\\" GROUP BY date ORDER BY date DESC\"\n} else if (type == 4) {\n    sql = \"SELECT COUNT(*) AS total_orders, SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS in_transit_orders, ROUND(CAST(RANDOM() * 100 AS NUMERIC), 2) AS total_production_progress, SUM(CASE WHEN status = 1 THEN skucount ELSE 0 END) AS sku_in_production, ROUND(CAST(RANDOM() * 100 AS NUMERIC), 2) AS total_storage_progress, ROUND(100.0 * SUM(CASE WHEN \\\"userMaterialStatus\\\" = 0 THEN 1 ELSE 0 END) / COUNT(*), 2) AS unclaimed_material_ratio FROM \\\"\" + tabName + \"\\\"\"\n} else if (type == 5) {\n    sql = \"SELECT TO_CHAR(\\\"submitTime\\\", 'YYYY-MM') AS month, COUNT(*) AS total_orders, SUM(\\\"receivableAmount\\\") AS total_receivable, SUM(\\\"collectedAmount\\\") AS total_collected, SUM(\\\"overdueAmount\\\") AS total_overdue FROM \\\"\" + tabName +\"\\\" GROUP BY month ORDER BY month\"\n}\n\nmsg.query = sql;\nreturn msg;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 660,
+    "y": 840,
+    "wires": [
+      [
+        "a4d7873889c85c64"
+      ]
+    ]
+  },
+  {
+    "id": "6506be030bd6b6bc",
+    "type": "http response",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "statusCode": "200",
+    "headers": {},
+    "x": 1200,
+    "y": 800,
+    "wires": []
+  },
+  {
+    "id": "8afc5608ea0ebc2f",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Query table name",
+    "func": "msg.query = \"SELECT tablename FROM pg_tables WHERE schemaname = 'public' and tablename like '%_dingdan_shengchandi%'\";\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 450,
+    "y": 940,
+    "wires": [
+      [
+        "50fe0bfa94d5654b"
+      ]
+    ]
+  },
+  {
+    "id": "2c4603e73682c81d",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 270,
+    "y": 940,
+    "wires": [
+      [
+        "8afc5608ea0ebc2f"
+      ]
+    ]
+  },
+  {
+    "id": "50fe0bfa94d5654b",
+    "type": "postgresql",
+    "z": "b3e3eee397d5c8a3",
+    "name": "pg",
+    "query": "",
+    "postgreSQLConfig": "532d732a0b3fef6e",
+    "split": false,
+    "rowsPerMsg": 1,
+    "outputs": 1,
+    "x": 610,
+    "y": 940,
+    "wires": [
+      [
+        "40715eb9d0d714fd"
+      ]
+    ]
+  },
+  {
+    "id": "40715eb9d0d714fd",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Set the order table name",
+    "func": "let tname = msg.payload[0].tablename;\nif (tname != '' && tname != null) {\n    flow.set('tabName', tname);\n}\n// 返回消息\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 850,
+    "y": 940,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "f53cd28403db334c",
+    "type": "debug",
+    "z": "b3e3eee397d5c8a3",
+    "name": "debug 12",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "false",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1400,
+    "y": 1180,
+    "wires": []
+  },
+  {
+    "id": "f0c293b4e53b4401",
+    "type": "modbus-server",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "logEnabled": false,
+    "hostname": "0.0.0.0",
+    "serverPort": 10502,
+    "responseDelay": 100,
+    "delayUnit": "ms",
+    "coilsBufferSize": 10000,
+    "holdingBufferSize": 10000,
+    "inputBufferSize": 10000,
+    "discreteBufferSize": 10000,
+    "showErrors": false,
+    "showStatusActivities": false,
+    "x": 1140,
+    "y": 1180,
+    "wires": [
+      [
+        "f53cd28403db334c"
+      ],
+      [
+        "f53cd28403db334c"
+      ],
+      [
+        "f53cd28403db334c"
+      ],
+      [
+        "f53cd28403db334c"
+      ],
+      [
+        "f53cd28403db334c"
+      ]
+    ]
+  },
+  {
+    "id": "525ff80e73c82f26",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "holding",
+    "func": "msg.payload = {\n    'value': msg.payload,\n    'register': 'holding',\n    'address': 0,\n    'disableMsgOutput': 0\n};\nreturn msg;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 960,
+    "y": 1180,
+    "wires": [
+      [
+        "f0c293b4e53b4401"
+      ]
+    ]
+  },
+  {
+    "id": "6f216a0fd19386e8",
+    "type": "inject",
+    "z": "b3e3eee397d5c8a3",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "2",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "5",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 300,
+    "y": 1180,
+    "wires": [
+      [
+        "c3f8b57c82ebb492"
+      ]
+    ]
+  },
+  {
+    "id": "c3f8b57c82ebb492",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "function 6",
+    "func": "// 生成一个随机的 16 位整数（取值范围：0 到 65535）\nlet randomInt = Math.floor(Math.random() * 65536);\n\n// 创建一个 Buffer，Modbus 采用 Big-Endian 方式存储 16 位整数\nmsg.payload = [randomInt];\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 500,
+    "y": 1180,
+    "wires": [
+      [
+        "33eb543bceece088"
+      ]
+    ]
+  },
+  {
+    "id": "33eb543bceece088",
+    "type": "buffer-maker",
+    "z": "b3e3eee397d5c8a3",
+    "name": "Unsigned",
+    "specification": "spec",
+    "specificationType": "ui",
+    "items": [
+      {
+        "data": "payload",
+        "dataType": "msg",
+        "name": "item1",
+        "length": -1,
+        "type": "uint16be"
+      }
+    ],
+    "swap1": "",
+    "swap2": "",
+    "swap3": "",
+    "swap1Type": "swap",
+    "swap2Type": "swap",
+    "swap3Type": "swap",
+    "msgProperty": "payload",
+    "msgPropertyType": "str",
+    "x": 700,
+    "y": 1180,
+    "wires": [
+      [
+        "525ff80e73c82f26"
+      ]
+    ]
+  },
+  {
+    "id": "f003f1ed6b9652cf",
+    "type": "catch",
+    "z": "b3e3eee397d5c8a3",
+    "name": "ignore opcua server error",
+    "scope": [
+      "d18db7b62ce3b2a6"
+    ],
+    "uncaught": false,
+    "x": 990,
+    "y": 500,
+    "wires": [
+      [
+        "c1c38f3d018fb5eb"
+      ]
+    ]
+  },
+  {
+    "id": "c1c38f3d018fb5eb",
+    "type": "function",
+    "z": "b3e3eee397d5c8a3",
+    "name": "function 7",
+    "func": "// 如果包含 indexOf 错误就不处理\nif (msg.error && msg.error.message.includes(\"indexOf\")) {\n    return null; // 忽略\n}\nreturn msg; // 其他错误继续处理\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1220,
+    "y": 500,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "532d732a0b3fef6e",
+    "type": "postgreSQLConfig",
+    "name": "supos",
+    "host": "postgresql",
+    "hostFieldType": "str",
+    "port": 5432,
+    "portFieldType": "num",
+    "database": "postgres",
+    "databaseFieldType": "str",
+    "ssl": "false",
+    "sslFieldType": "bool",
+    "applicationName": "",
+    "applicationNameType": "str",
+    "max": 10,
+    "maxFieldType": "num",
+    "idle": 1000,
+    "idleFieldType": "num",
+    "connectionTimeout": 10000,
+    "connectionTimeoutFieldType": "num",
+    "user": "postgres",
+    "userFieldType": "str",
+    "password": "postgres",
+    "passwordFieldType": "str"
+  }
+]

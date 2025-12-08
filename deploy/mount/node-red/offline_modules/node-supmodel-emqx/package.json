@@ -1,0 +1,19 @@
+{
+  "name": "node-red-node-supmodel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Minghe Zhuang"
+  },
+  "license": "Apache-2.0",
+  "description": "",
+  "node-red": {
+    "nodes": {
+      "supmodel": "supmodel.js"
+    }
+  }
+}

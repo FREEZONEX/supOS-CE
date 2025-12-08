@@ -1,0 +1,12 @@
+{
+  "modelConverter": {
+    "label_name": "Name",
+    "node_name": "Data Converter",
+    "model_label_name": "Select Model",
+    "source_data_root_dir": "Data root directory",
+    "source_data_root_dir_example": "example: list.data",
+    "model_input_placeholder": "Enter model name...",
+    "mapping_input_key_placeholder": "example: student.name",
+    "select_uns_column": "Select column ..."
+  }
+}

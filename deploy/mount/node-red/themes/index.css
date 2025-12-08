@@ -1,0 +1,38 @@
+/*头隐藏样式*/
+.red-ui-editor #red-ui-header {
+    display: none;
+}
+
+.red-ui-editor #red-ui-main-container {
+    top: 0;
+}
+
+/*tabs隐藏样式*/
+.red-ui-editor .red-ui-tabs-menu {
+    display: none !important;
+}
+
+.red-ui-editor #red-ui-workspace-chart {
+    top: 0 !important;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    z-index: 99;
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background: #d3d3d3;
+}
+
+::-webkit-scrollbar-track {
+    margin: 4px 0;
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a5a5a5;
+}

@@ -1,0 +1,372 @@
+
+
+<script type="text/html" data-template-name="modelConverter">
+    
+    <style id="model-selector-style">
+
+        .dropdown-model {
+            font-family: Arial, sans-serif;
+            /* background-color: #f4f4f4; */
+            position: relative; 
+        }
+
+        .select-dropdown-model {
+            width: 70%;
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 104px;
+            right: 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown {
+            font-family: Arial, sans-serif;
+            /* background-color: #f4f4f4; */
+            /* position: relative; */
+        }
+
+        .search-input {
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .search-input-mc {
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .select-dropdown {
+            width: 43%;
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 28px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .select-dropdown.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .select-dropdown div, .select-dropdown-model div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .select-dropdown div:hover, .select-dropdown-model div:hover {
+            background-color: #f0f0f0;
+        }
+
+        .select-dropdown div.selected, .select-dropdown-model div.selected {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tv"></i> <span data-i18n="modelConverter.label_name"></span></label>
+        <input type="text" id="node-input-name">
+    </div>
+
+    <div class="dropdown-model form-row">
+        <!-- <label for="node-input-selectedModel"><i class="fa fa-tag"></i> <span data-i18n="supmodel.model_label_name"></span></label> -->
+        <label for="search-input-mc"><i class="fa fa-tag"></i> <span data-i18n="modelConverter.model_label_name"></span></label>
+        <input type="text" class="search-input-mc" data-i18n="[placeholder]modelConverter.model_input_placeholder" required />
+        <div class="select-dropdown-model">
+            
+            
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-folder-o"></i> <span data-i18n="modelConverter.source_data_root_dir"></label>
+        <input type="text" class="data-root" data-i18n="[placeholder]modelConverter.source_data_root_dir_example">
+    </div>
+
+    <div class="form-row node-input-headers-container-row">
+        <ol id="node-input-headers-container"></ol>
+    </div>
+    
+</script>
+
+
+<script type="text/html" data-help-name="modelConverter">
+    <p data-i18n="modelConverter.model_select_help_tip"></p>
+</script>
+
+
+<!-- <script src="./modelCommon.js"></script> -->
+<script type="text/javascript">
+    
+
+(function() {
+    var supmodelCommon = {
+        queryInstanceTopics: function(input, func) {
+            var start = 1;
+            var size = 100;
+            const node = this;
+            var encodeUrl = encodeURI('/inter-api/supos/uns/search?k=' + input + '&p=' + start + '&sz=' + size + '&orderBy=createTime');
+            $.ajax({
+                url: encodeUrl,
+                type: 'GET',
+                dataType: 'json',
+                beforeSend: function() {
+                    // modelList = [];
+                    // $('#errorMsg').empty();
+                },
+                success: function(data) {
+                    if (data.code == 200 || data.code == 0) {
+                        // modelList = data.data;
+                        func(data.data);
+                    } else {
+                        func([]);
+                    }
+                    
+                },
+                error: function(err) {
+                    // modelList = [];
+                    func([]);
+                    
+                }
+            });
+        },
+        
+        queryModelSchema: function(modelTopic, func) {
+            const node = this;
+            var encodeUrl = encodeURI('/inter-api/supos/uns/instance?topic=' + modelTopic);
+            $.ajax({
+                url: encodeUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.code == 200 || data.code == 0) {
+                        func(data.data);
+                    } else {
+                        func({});
+                    }
+                },
+                error: function(err) {
+                    func({});
+                }
+            });
+        },
+
+        initEvent: function(node) {
+            $('.search-input-mc').off('focus input');
+            $('.search-input-mc').on('focus input', function() {
+                var $thisInput = $(this);
+                var searchParam = $thisInput.val();
+                var $dropDiv = $thisInput.parent().children('div').first();
+                supmodelCommon.queryInstanceTopics(searchParam, function(models) {
+                    $dropDiv.empty();
+                    if (models && models.length > 0) {
+                        models.forEach(m => {
+                            $dropDiv.append('<div value="' + m +'">' + m + '</div>');
+                        });
+                        // 点击选项后关闭下拉框
+                        $dropDiv.children('div').on('click', function() {
+                            var textContent = $(this).attr('value');
+                            $thisInput.val(textContent);
+                            $dropDiv.css('display', 'none');
+                            // 查询实例详情
+                            supmodelCommon.queryModelSchema(textContent, function(data) {
+                                let fields = data.fields;
+                                node.fields = [];
+                                for (let i in fields) {
+                                    node.fields.push(fields[i].name);
+                                }
+                                supmodelCommon.refreshDropList(node.fields);
+                            });
+
+                        });
+                    } 
+
+                });
+                $dropDiv.css('display', 'block');
+            });
+            document.addEventListener('click', function(event) {
+                const dropdown = document.querySelector(".select-dropdown-model");
+                const input = document.querySelector(".search-input-mc");
+                if (dropdown && event.target !== input) {
+                    dropdown.style.display = "none";
+                }
+            });
+        },
+        refreshDropList: function(fields) {
+            $('.select-dropdown').each(function() {
+                $(this).empty();
+                for (let i in fields) {
+                    $('<div/>').text(fields[i]).appendTo($(this));
+                }
+            });
+        }
+    };
+
+    RED.nodes.registerType('modelConverter', {
+        category: 'supNodes',
+        color: '#66CDAA',
+        defaults: {
+            name: { value: "" },
+            fieldMapping: { value: [] },
+            selectedModelTopic: { value: "" },
+            fields: { value: [] },
+            dataRoot: { value: "" } // 数据根目录
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-cogs",
+        label: function () {
+            var nodeName = this._('modelConverter.node_name');
+            return this.name || nodeName;
+        },
+        paletteLabel: function () {
+            return this._('modelConverter.node_name');
+        },
+        oneditprepare: function () {
+            const node = this;
+
+            supmodelCommon.initEvent(node);
+            
+            const headerList = $("#node-input-headers-container").css('min-height', '450px').css('min-width', '450px').editableList({
+                addItem: function (container, i, header) {
+                    
+                    const row = $('<div/>').css({
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        display: 'flex'
+                    }).appendTo(container);
+
+                    const {keyValue, valueValue} = header;
+
+                    const propertNameCell = $('<div/>').css({ 'flex-grow': 1 }).appendTo(row);
+                    $('<input/>', { class: "node-input-header-name", type: "text", style: "width: 100%", placeholder: "example: student.name", value: keyValue }).appendTo(propertNameCell);
+                        // .typedInput({ types:  { value: "text/plain", label: "text/plain", hasValue: false } });
+
+                    const propertyValueCell = $('<div/>', {class: 'dropdown'}).css({ 'flex-grow': 1, 'margin-left': '10px' }).appendTo(row);
+                    $('<input/>', { class: "search-input node-input-header-value", type: "text", style: "width: 100%", placeholder: "Select...", value: valueValue}).appendTo(propertyValueCell);
+                    const propertyValueOptions = $('<div/>', {class: "select-dropdown"}).css({ 'flex-grow': 1, 'margin-left': '10px' }).appendTo(propertyValueCell);
+                    
+                    
+                    var options = node.fields;
+                    for(let i = 0; i < options.length; i++) {
+                        $('<div/>').text(options[i]).appendTo(propertyValueOptions);
+                    }
+
+                    const $searchInput = $('.dropdown').find('.search-input');
+                    const $dropdownContent = $('.dropdown').find('.select-dropdown');
+                    
+                    // 移除输入框事件
+                    $searchInput.off('input focus');
+                    // 输入框输入事件
+                    $searchInput.on('input focus', function () {
+                        const filter = $(this).val().toUpperCase();
+                        let hasMatch = false;
+                        if (!filter) {
+                            $dropdownContent.removeClass('show');
+                            $(this).parent().find('div').addClass('show');
+                        }
+                        $(this).parent().find('div').children('div').each(function () {
+                            const text = $(this).text().toUpperCase();
+                            if (text.indexOf(filter) > -1) {
+                                $(this).show();
+                                hasMatch = true;
+                            } else {
+                                $(this).hide();
+                            }
+                            
+                        });
+
+                        // 显示或隐藏下拉框
+                        if (hasMatch) {
+                            $dropdownContent.removeClass('show');
+                            $(this).parent().find('div').addClass('show');
+                        } else {
+                            $(this).parent().find('div').removeClass('show');
+                        }
+                    });
+
+                    // 点击选项时，将选项内容填入输入框
+                    $dropdownContent.on('click', 'div', function () {
+                        $(this).parent().parent().find('input').val($(this).text());
+                        $dropdownContent.removeClass('show');
+                    });
+
+                    // 点击页面其他位置时隐藏下拉框
+                    $(document).on('click', function (e) {
+                        if (!$(e.target).closest($('.dropdown')).length) {
+                            $dropdownContent.removeClass('show');
+                        }
+                    });
+                    
+                },
+                sortable: true,
+                removable: true
+            });
+            if (node.fieldMapping) {
+                for (let index = 0; index < node.fieldMapping.length; index++) {
+                    const element = node.fieldMapping[index];
+                    headerList.editableList('addItem', element);
+                }
+            }
+            if (node.selectedModelTopic) {
+                $('.search-input-mc').val(node.selectedModelTopic);
+            }
+            if (node.dataRoot) {
+                $('.data-root').val(node.dataRoot);
+            }
+            
+        },
+        oneditsave: function () {
+            const fieldMapping = $("#node-input-headers-container").editableList('items');
+            const node = this;
+            node.fieldMapping = [];
+            fieldMapping.each(function(i) {
+                const header = $(this);
+                const keyValue = header.find(".node-input-header-name").val();
+                const valueValue = header.find(".node-input-header-value").val();
+                node.fieldMapping.push({
+                    keyValue, valueValue
+                })
+            });
+            node.selectedModelTopic = $('.search-input-mc').val();
+            node.dataRoot = $('.data-root').val();
+        },
+        oneditresize: function(size) {
+            // const dlg = $("#dialog-form");
+            // const expandRow = dlg.find('.node-input-headers-container-row');
+            // let height = dlg.height() - 5;
+            // if(expandRow && expandRow.length){
+            //     const siblingRows = dlg.find('> .form-row:not(.node-input-headers-container-row)');
+            //     for (let i = 0; i < siblingRows.size(); i++) {
+            //         const cr = $(siblingRows[i]);
+            //         if(cr.is(":visible"))
+            //             height -= cr.outerHeight(true);
+            //     }
+            //     $("#node-input-headers-container").editableList('height',height);
+            // }
+        }
+        
+    });
+
+})();
+</script>
