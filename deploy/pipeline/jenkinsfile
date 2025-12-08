@@ -1,0 +1,104 @@
+pipeline {
+    // 运行环境配置：使用任何可用的 Jenkins Agent
+    agent any 
+
+    // 环境变量配置
+    environment {
+        SOURCE_CODE_URL = "https://gitee.com/supos-community-edition/sup-os-edge.git"
+        IMAGE_NAME = "supos-edge-platform" // 替换为你的应用镜像名称
+        REGISTRY = "eco-registry.supos.com/sup9bnlh" // 替换为你的Docker仓库地址 (例如：docker.io, hub.mycompany.com)
+        FULL_IMAGE_TAG = "${REGISTRY}/${IMAGE_NAME}:${TAG}"
+        TAG = "${params.TAG}"
+        SOURCE_PATH = "/var/jenkins_home/SourceCodes"
+        SOURCE_DIR = "supos-edge"
+        SOURCE_CODE = "${SOURCE_PATH}/${SOURCE_DIR}"
+        CREDENTIALS_ID = '26d0e415-9908-4c00-84dd-98ef04c6f201' // 替换为你的 Jenkins SSH 凭证 ID
+
+    }
+
+    stages {
+        // --------------------------------------------------------------------------------------------------
+        stage('Clone-Source-Code') {
+            steps {
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: "${TAG}"]], 
+                    extensions: [
+                        [$class: 'CloneOption', depth: 1,shallow: true,timeout: 3600],
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "${SOURCE_CODE}"]
+                    ],
+                    userRemoteConfigs: [[credentialsId: "${CREDENTIALS_ID}", url: "${SOURCE_CODE_URL}"]]])
+
+                script {
+                    //currentBuild.displayName = "#${env.BUILD_NUMBER} - ${BUILD_USER}"
+                    sh '''
+                        #!/bin/bash
+
+                        cd "${WORKSPACE}"
+                        cp -r "${SOURCE_CODE}" ./
+                        ls -l "${SOURCE_DIR}"
+                    '''
+                }
+            }
+        }
+        // --------------------------------------------------------------------------------------------------
+        stage('2. 构建镜像') {
+            steps {
+                script {
+                    echo "--> 正在构建镜像: ${FULL_IMAGE_TAG}"
+                    cd "${SOURCE_CODE}"
+
+                    // 构建 Docker 镜像
+                    docker build -t "${FULL_IMAGE_TAG}"  -f "./deploy/Dockerfile-Compose" .
+                    
+                    // 推送镜像到远程仓库
+                    docker tag "${FULL_IMAGE_TAG}" "suposce/supos-edge-platform:${TAG}"
+                    docker push "${FULL_IMAGE_TAG}"
+                }
+            }
+        }
+        // --------------------------------------------------------------------------------------------------
+        stage('3. 准备部署包') {
+            steps {
+                script {                    
+
+                    sh '''
+
+                    cd "${SOURCE_CODE}/deploy"
+                    mkdir images
+                    docker save  suposce/supos-edge-platform:${TAG} | xz -z -T0 -v >./images/supos-edge-platform.tar.xz
+
+                    scp -i /var/jenkins_home/ssh/id_rsa root@172.21.2.148:/home/images/edge/*.tar.xz ./images/
+                    
+                    // 将整个 deploy 目录压缩成 zip 包
+                    rm -rf ./pipeline
+                    OS_VERSION=$(grep 'OS_VERSION=' .env | cut -d'=' -f2)
+                    DATE=$(date +%y%m%d%H)
+                    ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
+                    mkdir supOS-edge-${OS_VERSION}-${DATE} && mv ${ZipDirAndFileLists} supOS-edge-${OS_VERSION}-${DATE}
+
+                    /var/jenkins_home/paks/zip -q -r -y supOS-edge-${OS_VERSION}-${DATE}.zip supOS-edge-${OS_VERSION}-${DATE}
+                    md5sum supOS-edge-${OS_VERSION}-${DATE}.zip > supOS-edge-${OS_VERSION}-${DATE}.zip.md5
+                    chmod 664 supOS-${OS_VERSION}-${DATE}.zip*
+
+                    '''
+                }
+            }
+        }
+        // --------------------------------------------------------------------------------------------------
+        stage('4. 传输部署包') {
+            steps {
+                script {                    
+                    sh '''
+                    cd "${SOURCE_CODE}/deploy"
+                    ls -all
+                    
+                    OS_VERSION=$(grep 'OS_VERSION=' .env | cut -d'=' -f2)
+                    scp -i /var/jenkins_home/ssh/id_rsa supOS-${OS_VERSION}-${DATE}.zip* root@172.21.2.136:/home/deploy-packages/edge/${OS_VERSION}/
+
+                    echo "--> 传输完成！"
+                    '''
+                }
+            }
+        }
+    }
+}

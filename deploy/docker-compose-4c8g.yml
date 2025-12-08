@@ -18,7 +18,7 @@ services:
       - OPENAI_API_MODEL=${OPENAI_API_MODEL}
       - REACT_APP_OS_LANG=${LANGUAGE}
     volumes:
-      - ${VOLUMES_PATH}/edge/etc/:/gobackend/etc/
+      - ${VOLUMES_PATH}/edge/etc/:/app/go-edge/etc/
     networks:
       - default_network
     restart: always
