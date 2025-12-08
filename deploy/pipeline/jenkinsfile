@@ -44,6 +44,7 @@ pipeline {
         stage('2. 构建镜像') {
             steps {
                 script {
+                    sh '''
                     echo "--> 正在构建镜像: ${FULL_IMAGE_TAG}"
                     cd "${SOURCE_CODE}"
 
@@ -53,6 +54,7 @@ pipeline {
                     // 推送镜像到远程仓库
                     docker tag "${FULL_IMAGE_TAG}" "suposce/supos-edge-platform:${TAG}"
                     docker push "${FULL_IMAGE_TAG}"
+                    '''
                 }
             }
         }
