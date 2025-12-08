@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 )
 
 // FieldType represents the data type of a field.
@@ -62,6 +63,29 @@ func (f FieldType) DefaultValue() any {
 		return float64(0)
 	case FieldTypeBoolean:
 		return false
+	case FieldTypeDatetime:
+		return time.Now()
+	case FieldTypeString:
+		return ""
+	}
+	return nil
+}
+func (f FieldType) ZeroValue() any {
+	switch f {
+	case FieldTypeInteger:
+		return 0
+	case FieldTypeLong:
+		return int64(0)
+	case FieldTypeFloat:
+		return float32(0)
+	case FieldTypeDouble:
+		return float64(0)
+	case FieldTypeBoolean:
+		return false
+	case FieldTypeDatetime:
+		return time.Time{}
+	case FieldTypeString:
+		return ""
 	}
 	return nil
 }

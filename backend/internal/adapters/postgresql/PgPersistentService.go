@@ -75,6 +75,31 @@ func (p *PgPersistentService) OnEventUpdateInstanceEvent7(evt *event.UpdateInsta
 func (p *PgPersistentService) OnEventRemoveTopicsEvent7(evt *event.RemoveTopicsEvent) {
 	OnRemove(p.log, p.dbPool, dsId, evt)
 }
+func (p *PgPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
+	table, ct := uns.GetTable(), uns.GetTimestampField()
+	rows, er := p.dbPool.Query(context.Background(), fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, table, ct))
+	if er != nil {
+		p.log.Error("fail to get last record", er, uns.GetAlias())
+		return
+	}
+	valuePointers := make([]interface{}, len(rows.FieldDescriptions()))
+	fd := uns.GetFieldDefines().FieldsMap
+	for i, f := range rows.FieldDescriptions() {
+		if field, has := fd[f.Name]; has {
+			field.LastValue = types.FieldType(field.Type).ZeroValue()
+			valuePointers[i] = &field.LastValue
+		} else {
+			var obj any
+			valuePointers[i] = &obj
+		}
+	}
+	if rows.Next() {
+		er = rows.Scan(valuePointers...)
+		if er != nil {
+			p.log.Error("fail to Scan last record", er, uns.GetAlias())
+		}
+	}
+}
 
 type errLogger interface {
 	Error(...any)

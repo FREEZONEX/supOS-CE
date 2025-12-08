@@ -436,20 +436,20 @@ type Field struct {
 }
 
 type FieldDefine struct {
-	Name        string   `json:"name"`
-	Type        string   `json:"type"`
-	Unique      *bool    `json:"unique,optional,omitempty"`
-	Index       *string  `json:"index,optional,omitempty"`
-	DisplayName *string  `json:"displayName,optional,omitempty"`
-	Remark      *string  `json:"remark,optional,omitempty"`
-	MaxLen      *int     `json:"maxLen,optional,omitempty"`
-	TbValueName *string  `json:"tbValueName,optional,omitempty"`
-	Unit        *string  `json:"unit,optional,omitempty"`
-	UpperLimit  *float64 `json:"upperLimit,optional,omitempty"`
-	LowerLimit  *float64 `json:"lowerLimit,optional,omitempty"`
-	Decimal     *int     `json:"decimal,optional,omitempty"`
-	LastValue   string   `json:"-,optional"`
-	LastTime    int64    `json:"-,optional"`
+	Name        string      `json:"name"`
+	Type        string      `json:"type"`
+	Unique      *bool       `json:"unique,optional,omitempty"`
+	Index       *string     `json:"index,optional,omitempty"`
+	DisplayName *string     `json:"displayName,optional,omitempty"`
+	Remark      *string     `json:"remark,optional,omitempty"`
+	MaxLen      *int        `json:"maxLen,optional,omitempty"`
+	TbValueName *string     `json:"tbValueName,optional,omitempty"`
+	Unit        *string     `json:"unit,optional,omitempty"`
+	UpperLimit  *float64    `json:"upperLimit,optional,omitempty"`
+	LowerLimit  *float64    `json:"lowerLimit,optional,omitempty"`
+	Decimal     *int        `json:"decimal,optional,omitempty"`
+	LastValue   interface{} `json:"-,optional"`
+	LastTime    int64       `json:"-,optional"`
 }
 
 type FieldDefines struct {

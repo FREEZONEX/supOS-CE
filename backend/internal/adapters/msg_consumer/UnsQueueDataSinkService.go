@@ -24,8 +24,8 @@ type UnsQueueDataSinkService struct {
 	log                  logx.Logger
 	queue                diskqueue.Interface
 	run                  bool
-	once                 sync.Once
 	defService           serviceApi.IUnsDefinitionService
+	once                 sync.Once
 	persistentServiceMap map[types.SrcJdbcType]serviceApi.IPersistentService
 }
 

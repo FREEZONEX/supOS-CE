@@ -12,7 +12,6 @@ import (
 	"backend/share/spring"
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -145,7 +144,9 @@ func (u *UnsMessageConsumer) OnMessageByAliasOnUpdate(aliasVqtMap map[string]str
 		}
 		list, erMsg := procData(def, data)
 		u.sendToWebsocket(def, list, "", erMsg)
-		msgs = append(msgs, serviceApi.TopicMessage{UnsId: def.Id, DataSrcId: types.SrcJdbcType(def.DataSrcID), Data: list})
+		if base.P2v(def.Save2Db) {
+			msgs = append(msgs, serviceApi.TopicMessage{UnsId: def.Id, DataSrcId: types.SrcJdbcType(def.DataSrcID), Data: list})
+		}
 	}
 	u.sendData(msgs)
 }
@@ -244,13 +245,7 @@ func setLastData(list []map[string]interface{}, CT string, fds *types.FieldDefin
 	for fieldName, v := range lastMap {
 		fd := fds.FieldsMap[fieldName]
 		if fd != nil {
-			vStr := ""
-			if str, isStr := v.(string); isStr {
-				vStr = str
-			} else if v != nil {
-				vStr = fmt.Sprint(v)
-			}
-			fd.LastValue = vStr
+			fd.LastValue = v
 			fd.LastTime = lastUpdateTime
 		}
 	}

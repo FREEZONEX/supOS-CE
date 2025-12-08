@@ -6,9 +6,11 @@ import (
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
+	"backend/share/base"
 	"backend/share/spring"
 	"context"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -17,9 +19,11 @@ import (
 )
 
 type UnsDefinitionService struct {
-	log       logx.Logger
-	unsMapper dao.UnsNamespaceRepo
-	cache     *cache.Cache // map[int64]*types.CreateTopicDto
+	log                  logx.Logger
+	unsMapper            dao.UnsNamespaceRepo
+	cache                *cache.Cache // map[int64]*types.CreateTopicDto
+	once                 sync.Once
+	persistentServiceMap map[types.SrcJdbcType]serviceApi.IPersistentService
 }
 
 func init() {
@@ -65,7 +69,20 @@ func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.CreateTopi
 	return
 }
 func (u *UnsDefinitionService) fillLastValue(uns *types.CreateTopicDto) {
-	//TODO: 查询数据库表最新的一条数据，填充字段的 lastValue
+	// 查询数据库表最新的一条数据，填充字段的 lastValue
+	if u.persistentServiceMap == nil {
+		u.once.Do(func() {
+			u.persistentServiceMap = base.MapArrayToMap(spring.GetBeansOfType[serviceApi.IPersistentService](),
+				func(e serviceApi.IPersistentService) (ok bool, k types.SrcJdbcType, v serviceApi.IPersistentService) {
+					return true, e.GetDataSrcId(), e
+				})
+		})
+	}
+	psv, has := u.persistentServiceMap[types.SrcJdbcType(uns.DataSrcID)]
+	if !has {
+		return
+	}
+	psv.FillLastRecord(uns)
 }
 func (u *UnsDefinitionService) DeleteByIds(ids []int64) error {
 	for _, id := range ids {
