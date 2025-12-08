@@ -32,7 +32,7 @@ export const CodeDom = () => {
             type="primary"
             onClick={() => {
               return exportExcel(params).then((jsonData) => {
-                downloadFn({ data: jsonData, name: 'uns.json' });
+                downloadFn({ data: JSON.stringify(jsonData), name: 'uns.json' });
               });
             }}
           >
