@@ -598,7 +598,7 @@
   "uns.last1year": "过去1年",
   "uns.copyTip": "请先复制文件夹或文件！",
   "uns.attributeGenerationMethod": "属性生成方式",
-  "uns.reverseGeneration": "逆向生成",
+  "uns.reverseGeneration": "自动解析",
   "uns.TableNoFieldsTip": "该表没有字段，请换一个！",
   "uns.noFieldsTip": "请获取键列表！",
   "uns.noTablesTip": "暂无表数据",

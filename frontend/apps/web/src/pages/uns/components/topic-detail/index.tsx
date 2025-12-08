@@ -188,6 +188,9 @@ const Module: FC<FileDetailProps> = (props) => {
     return getInstanceInfo({ id })
       .then(async (data: any) => {
         if (data?.id) {
+          if (data?.dataType === 8 && data?.jsonFields?.length > 0) {
+            data.fields = data?.jsonFields;
+          }
           data?.fields?.forEach((field: FieldItem) => {
             //特殊处理挂载文件的异常数据
             if (['STRING', 'BOOLEAN'].includes(field.type) && Number(field.decimal) < 0) {
@@ -241,7 +244,12 @@ const Module: FC<FileDetailProps> = (props) => {
         ),
       },
       {
-        key: [1, 2, 3, 6, 7].includes(instanceInfo.dataType) ? 'definition' : '',
+        key:
+          instanceInfo?.dataType === 8 && instanceInfo?.jsonFields?.length > 0
+            ? 'definition'
+            : [1, 2, 3, 6, 7].includes(instanceInfo.dataType)
+              ? 'definition'
+              : '',
         label: formatMessage('uns.definition'),
         children: <Definition instanceInfo={instanceInfo} />,
         style: panelStyle,
@@ -259,14 +267,14 @@ const Module: FC<FileDetailProps> = (props) => {
         key: [1, 2, 3, 6, 7, 8].includes(instanceInfo.dataType) ? 'payload' : '',
         label: formatMessage('uns.payload'),
         children:
-          instanceInfo.dataType === 8 || !showPayloadTable ? (
+          (instanceInfo.dataType === 8 && instanceInfo?.jsonFields?.length === 0) || !showPayloadTable ? (
             <RawData payload={websocketData?.data} />
           ) : (
             <Payload websocketData={websocketData} fields={instanceInfo.fields || []} />
           ),
         style: panelStyle,
         extra:
-          instanceInfo.dataType === 8 ? null : (
+          instanceInfo.dataType === 8 && instanceInfo?.jsonFields?.length === 0 ? null : (
             <Button
               style={{ border: '1px solid #C6C6C6' }}
               color="default"

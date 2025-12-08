@@ -26,8 +26,8 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
   const form = Form.useFormInstance();
   const attributeType = useFormValue('attributeType', form);
 
-  const renderContent = (defaultType?: number) => {
-    switch (defaultType || attributeType) {
+  const renderContent = () => {
+    switch (attributeType) {
       case 1:
         return (
           <FieldsFormList
@@ -41,7 +41,7 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
       case 2:
         return <ModelFieldsForm options={(templateList || []).slice(1)} types={types} />;
       case 3:
-        return <ReverseGeneration onlyJson types={types} />;
+        return <ReverseGeneration require={dataType !== 8} onlyJson types={types} />;
       default:
         return null;
     }
@@ -53,39 +53,29 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
         <Form.Item
           name="attributeType"
           label={formatMessage('uns.attributeGenerationMethod')}
-          initialValue={dataType === 8 ? 3 : 1}
-          hidden={dataType === 8}
+          initialValue={1}
           tooltip={{
             title: (
               <div>
-                {dataType === 8 ? (
-                  <>
-                    <span>• {formatMessage('uns.reverseGeneration')}</span> —&nbsp;
-                    {formatMessage('uns.attributeGenerationMethodTooltip-ReverseGeneration')}
-                  </>
-                ) : (
-                  <>
-                    <span>• {formatMessage('common.custom')}</span> —&nbsp;
-                    {formatMessage('uns.attributeGenerationMethodTooltip-Custom')}
-                    <br />
-                    <span>• {formatMessage('common.template')}</span> —&nbsp;
-                    {formatMessage('uns.attributeGenerationMethodTooltip-Template')}
-                  </>
-                )}
+                <span>• {formatMessage('common.custom')}</span> —&nbsp;
+                {formatMessage('uns.attributeGenerationMethodTooltip-Custom')}
+                <br />
+                <span>• {formatMessage('common.template')}</span> —&nbsp;
+                {formatMessage('uns.attributeGenerationMethodTooltip-Template')}
+                <br />
+                <span>• {formatMessage('uns.reverseGeneration')}</span> —&nbsp;
+                {formatMessage('uns.attributeGenerationMethodTooltip-ReverseGeneration')}
               </div>
             ),
           }}
           className={lang === 'en-US' ? 'customLabelStyle' : ''}
         >
           <ComRadio
-            options={
-              dataType === 8
-                ? [{ label: formatMessage('uns.reverseGeneration'), value: 3 }]
-                : [
-                    { label: formatMessage('common.custom'), value: 1 },
-                    { label: formatMessage('common.template'), value: 2 },
-                  ]
-            }
+            options={[
+              { label: formatMessage('common.custom'), value: 1 },
+              { label: formatMessage('common.template'), value: 2 },
+              { label: formatMessage('uns.reverseGeneration'), value: 3 },
+            ]}
             onChange={() => {
               form.setFieldsValue({
                 fields: [{}],
@@ -103,8 +93,8 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
             }}
           />
         </Form.Item>
-        {dataType !== 8 ? <Divider style={{ borderColor: '#c6c6c6' }} dashed /> : null}
-        {renderContent(dataType === 8 ? 3 : undefined)}
+        <Divider style={{ borderColor: '#c6c6c6' }} dashed />
+        {renderContent()}
       </div>
     </>
   );

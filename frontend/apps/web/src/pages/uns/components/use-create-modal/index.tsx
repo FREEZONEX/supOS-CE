@@ -104,7 +104,13 @@ const useOptionModal = ({
         const getInfo = isPasteFolder ? getModelInfo : getInstanceInfo;
         const detail: any = await getInfo({ id: pasteNode.id });
         if (isPasteFolder) {
-          const { description, pathName: name, fields, extend, displayName } = detail || {};
+          const { description, pathName: name, jsonFields, extend, displayName } = detail || {};
+          let { fields } = detail || {};
+
+          if (dataType === 8) {
+            fields = jsonFields;
+          }
+
           form.setFieldsValue({
             displayName,
             description,
@@ -121,7 +127,7 @@ const useOptionModal = ({
             description,
             pathName: name,
             modelId,
-            fields,
+            jsonFields,
             dataType,
             protocol = {},
             labelList,
@@ -137,6 +143,11 @@ const useOptionModal = ({
             parentDataType,
             pathType,
           } = detail || {};
+          let { fields } = detail || {};
+
+          if (dataType === 8) {
+            fields = jsonFields;
+          }
 
           const backfillForm: { [key: string]: any } = {
             displayName,

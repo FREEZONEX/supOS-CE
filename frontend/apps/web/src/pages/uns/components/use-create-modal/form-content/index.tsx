@@ -97,7 +97,7 @@ const FormContent: FC<FormContentProps> = ({
       switch (parentDataType) {
         case 1:
           return [
-            { label: formatMessage('uns.relational'), value: 2 },
+            // { label: formatMessage('uns.relational'), value: 2 },
             ...(isFormTopic
               ? []
               : [
@@ -122,7 +122,7 @@ const FormContent: FC<FormContentProps> = ({
       }
     } else {
       return [
-        { label: formatMessage('uns.timeSeries'), value: 1 },
+        // { label: formatMessage('uns.timeSeries'), value: 1 },
         { label: formatMessage('uns.jsonb'), value: 8 },
         { label: formatMessage('uns.relational'), value: 2 },
         ...(isFormTopic
@@ -270,7 +270,7 @@ const FormContent: FC<FormContentProps> = ({
                 };
                 switch (e.target.value) {
                   case 1:
-                    Object.assign(resetObj, { dataType: 2, ...(dataType !== 1 ? attributeTypeObj : {}) });
+                    Object.assign(resetObj, { dataType: 8, ...(dataType !== 1 ? attributeTypeObj : {}) });
                     break;
                   case 2:
                     Object.assign(resetObj, { dataType: 8, ...attributeTypeObj });
@@ -290,7 +290,8 @@ const FormContent: FC<FormContentProps> = ({
           formProps: {
             name: 'dataType',
             label: formatMessage('uns.databaseType'),
-            initialValue: enableAutoCategorization ? 2 : 1,
+            initialValue: enableAutoCategorization ? 8 : 8,
+            hidden: !!enableAutoCategorization,
             tooltip: {
               title: (
                 <div>

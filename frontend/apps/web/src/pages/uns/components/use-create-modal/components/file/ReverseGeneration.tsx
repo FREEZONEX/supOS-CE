@@ -18,9 +18,10 @@ export interface ReverseGenerationProps {
   types?: string[];
   // 只有json情况
   onlyJson?: boolean;
+  require?: boolean;
 }
 
-const ReverseGeneration: FC<ReverseGenerationProps> = ({ types, onlyJson }) => {
+const ReverseGeneration: FC<ReverseGenerationProps> = ({ types, onlyJson, require }) => {
   const form = Form.useFormInstance();
   const formatMessage = useTranslate();
 
@@ -54,8 +55,11 @@ const ReverseGeneration: FC<ReverseGenerationProps> = ({ types, onlyJson }) => {
   }, [jsonList]);
 
   const validatorJson = (_: any, value: any) => {
-    if (!value) return Promise.reject(new Error(formatMessage('uns.pleaseEnterJSON')));
+    if (!value && require) return Promise.reject(new Error(formatMessage('uns.pleaseEnterJSON')));
     try {
+      if (!value && !require) {
+        return Promise.resolve();
+      }
       const jsonVal = JSON.parse(value);
       if (['[object Object]', '[object Array]'].includes(Object.prototype.toString.call(jsonVal))) {
         return Promise.resolve();

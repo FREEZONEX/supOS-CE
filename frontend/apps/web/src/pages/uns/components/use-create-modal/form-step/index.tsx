@@ -143,7 +143,7 @@ const FormStep: FC<FormStepProps> = ({
               pathType: 2,
               extend: extendToObj(extend),
               labelNames: tags?.map(({ label, value }: { label: string; value: string }) => label || value) || [],
-              fields: [1, 2, 3].includes(dataType) ? fields : undefined,
+              fields: [1, 2, 3, 8].includes(dataType) ? fields : undefined,
               addDashBoard,
               parentDataType,
             };
@@ -371,7 +371,14 @@ const FormStep: FC<FormStepProps> = ({
               setLoading(false);
             });
         } else {
-          addRequest({ ...data })
+          const finalData = [2, 8].includes(data?.dataType)
+            ? {
+                ...data,
+                fields: [1, 2, 3].includes(dataType) ? fields : undefined,
+                jsonFields: [8].includes(dataType) ? fields : undefined,
+              }
+            : data;
+          addRequest(finalData)
             .then((res: any) => {
               message.success(formatMessage('uns.newSuccessfullyAdded'));
               if (isFormTopic) {
