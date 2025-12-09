@@ -19,7 +19,7 @@ pipeline {
 
     stages {
         // --------------------------------------------------------------------------------------------------
-        stage('Clone-Source-Code') {
+        stage('1. 克隆源码') {
             steps {
                 checkout([$class: 'GitSCM', 
                     branches: [[name: "${TAG}"]], 
