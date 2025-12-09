@@ -10,6 +10,7 @@ import (
 	"backend/share/spring"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -75,28 +76,53 @@ func (p *PgPersistentService) OnEventUpdateInstanceEvent7(evt *event.UpdateInsta
 func (p *PgPersistentService) OnEventRemoveTopicsEvent7(evt *event.RemoveTopicsEvent) {
 	OnRemove(p.log, p.dbPool, dsId, evt)
 }
+
 func (p *PgPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
-	table, ct := uns.GetTable(), uns.GetTimestampField()
-	rows, er := p.dbPool.Query(context.Background(), fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, table, ct))
+	FillLastRecord(p.log, uns, func() (pgx.Rows, error) {
+		return p.dbPool.Query(context.Background(), fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.GetTable(), uns.GetTimestampField()))
+	})
+}
+func FillLastRecord(log errLogger, uns *types.CreateTopicDto, query func() (pgx.Rows, error)) {
+	ct := uns.GetTimestampField()
+	rows, er := query()
 	if er != nil {
-		p.log.Error("fail to get last record", er, uns.GetAlias())
+		log.Error("fail to get last record", er, uns.GetAlias())
 		return
 	}
+	values := make([]interface{}, len(rows.FieldDescriptions()))
 	valuePointers := make([]interface{}, len(rows.FieldDescriptions()))
 	fd := uns.GetFieldDefines().FieldsMap
+	ctIndex := -1
 	for i, f := range rows.FieldDescriptions() {
+		var obj any
 		if field, has := fd[f.Name]; has {
-			field.LastValue = types.FieldType(field.Type).ZeroValue()
-			valuePointers[i] = &field.LastValue
-		} else {
-			var obj any
-			valuePointers[i] = &obj
+			if f.Name == ct && field.Type == types.FieldTypeDatetime {
+				ctIndex = i
+			}
+			obj = types.FieldType(field.Type).ZeroValue()
 		}
+		values[i] = obj
+		valuePointers[i] = &obj
 	}
 	if rows.Next() {
 		er = rows.Scan(valuePointers...)
 		if er != nil {
-			p.log.Error("fail to Scan last record", er, uns.GetAlias())
+			log.Error("fail to Scan last record", er, uns.GetAlias())
+		} else {
+			var updateTime int64
+			if ctIndex >= 0 {
+				if tm, is := values[ctIndex].(time.Time); is {
+					updateTime = tm.UnixMilli()
+				}
+			}
+			for i, f := range rows.FieldDescriptions() {
+				if field, has := fd[f.Name]; has {
+					field.LastValue = values[i]
+					if updateTime > 0 {
+						field.LastTime = updateTime
+					}
+				}
+			}
 		}
 	}
 }
