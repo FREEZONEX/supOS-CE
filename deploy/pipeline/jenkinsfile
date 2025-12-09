@@ -77,7 +77,7 @@ pipeline {
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
                         ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
-                        mkdir supOS-edge-${VERSION}-${DATE} && cp ${ZipDirAndFileLists} supOS-edge-${VERSION}-${DATE}
+                        mkdir supOS-edge-${VERSION}-${DATE} && cp -r ${ZipDirAndFileLists} supOS-edge-${VERSION}-${DATE}
 
                         /var/jenkins_home/paks/zip -q -r -y supOS-edge-${VERSION}-${DATE}.zip supOS-edge-${VERSION}-${DATE}
                         md5sum supOS-edge-${VERSION}-${DATE}.zip > supOS-edge-${VERSION}-${DATE}.zip.md5
