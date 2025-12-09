@@ -9,6 +9,7 @@ import (
 	"backend/internal/logic/supos/uns/system"
 	_ "backend/internal/logic/supos/uns/topology/service" // 导入触发 init() 注册
 	_ "backend/internal/logic/supos/uns/uns/service"
+	"net/http"
 	"os"
 
 	"backend/internal/svc"
@@ -36,7 +37,7 @@ func main() {
 	utils.ConfMustLoad(confFile, &c)
 	c.RestConf.MaxBytes = max(c.RestConf.MaxBytes, 1<<30) //http body最大限制最少1G
 
-	server := rest.MustNewServer(c.RestConf)
+	server := rest.MustNewServer(c.RestConf, rest.WithFileServer("/files/", http.Dir("/data")))
 	defer server.Stop()
 
 	if lv := c.LoggerLevel; lv != "" {
