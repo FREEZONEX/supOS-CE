@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // ListResult holds the result of a single found data list within a larger structure.
@@ -129,7 +130,7 @@ func TypeMatchScore(vHolder *any, fieldType types.FieldType, maxStrLen int) int 
 	} else if fieldType == types.FieldTypeDatetime {
 		if isNumber(val.Kind()) {
 			score = 97
-		} else if strVal := fmt.Sprintf("%v", obj); len(strVal) > 4 && strVal[5] != '-' {
+		} else if strVal := fmt.Sprintf("%v", obj); len(strVal) > 4 && unicode.IsDigit(rune(strVal[4])) {
 			long, NaN := strconv.ParseInt(strVal, 10, 64)
 			if NaN == nil {
 				*vHolder = long

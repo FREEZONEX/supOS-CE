@@ -84,7 +84,13 @@ const Module: FC<FileDetailProps> = (props) => {
   const { isH5 } = useMediaSize();
 
   const longToJavaHex = (value: string, fullLength = false) => {
-    const bigIntValue = BigInt(value);
+    let bigIntValue;
+    try {
+      bigIntValue = BigInt(value);
+    } catch (e) {
+      console.log(e);
+      bigIntValue = BigInt(JSON.parse(value));
+    }
 
     // 获取对应的无符号 64 位表示（补码兼容）
     const mask64 = 0xffffffffffffffffn;
@@ -147,6 +153,7 @@ const Module: FC<FileDetailProps> = (props) => {
         const dataJson = event.data;
         if (isJsonString(dataJson)) {
           const data = JSON.parse(dataJson);
+          console.log(data);
           if (qualityName && data?.data?.[qualityName]) {
             //质量码做特殊处理
             data.data[qualityName] = longToJavaHex(data.data[qualityName]);

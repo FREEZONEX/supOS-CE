@@ -101,6 +101,7 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 	unsDto.AddDashBoard = boPt(constants.WithDashBoard(withFlags))
 	unsDto.Save2Db = boPt(constants.WithSave2db(withFlags))
 	unsDto.RetainTableWhenDeleteInstance = boPt(constants.WithRetainTableWhenDeleteInstance(withFlags))
+	unsDto.AccessLevel = constants.WithReadOnly(withFlags)
 	unsDto.ParentAlias = p.ParentAlias
 	unsDto.ParentId = p.ParentId
 	unsDto.Name = p.Name

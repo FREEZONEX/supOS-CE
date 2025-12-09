@@ -16,14 +16,14 @@ import (
 // 批量写文件实时值
 func BatchUpdateFileHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.UpdateFileDTO
+		var req []types.UpdateFileDTO
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
 		l := uns.NewBatchUpdateFileLogic(r.Context(), svcCtx)
-		resp, err := l.BatchUpdateFile(&req)
+		resp, err := l.BatchUpdateFile(req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

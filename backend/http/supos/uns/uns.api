@@ -560,9 +560,13 @@ type (
 		Alias string                 `json:"alias"`
 		Data  map[string]interface{} `json:"data"`
 	}
+	UnsDataResponse {
+		BaseResult
+		Data *UnsDataResponseVo `json:"data,omitzero"`
+	}
 	UnsDataResponseVo {
-		NotExists   []string          `json:"notExists"`
-		ErrorFields map[string]string `json:"errorFields"`
+        NotExists   []string          `json:"notExists,omitempty"`
+        ErrorFields map[string]string `json:"errorFields,omitempty"`
 	}
 	ParserTopicPayloadReq {
 		Topic string `form:"topic"`
@@ -794,7 +798,7 @@ service backend {
 		summary: "批量写文件实时值"
 	)
 	@handler batchUpdateFile
-	post /uns/file/current/batchUpdate (UpdateFileDTO) returns (UnsDataResponseVo)
+	post /uns/file/current/batchUpdate (UpdateFileDTO) returns (UnsDataResponse)
 
 	@doc (
 		summary: "外部topic payload解析"

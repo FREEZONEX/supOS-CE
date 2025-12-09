@@ -139,6 +139,7 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dt
 		dto.SetWithSave2db(constants.WithSave2db(flags))
 		dto.SetSave2db(constants.WithSave2db(flags))
 		dto.SetSubscribeEnable(constants.WithSubscribeEnable(flags))
+		dto.SetAccessLevel(constants.WithReadOnly(flags))
 	}
 	dto.SetProtocol(file.GetProtocolMap())
 	// 设置标签列表

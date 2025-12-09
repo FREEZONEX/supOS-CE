@@ -41,8 +41,8 @@ const Index = () => {
                   <>
                     <Paragraph style={{ marginBottom: 0 }}>
                       {formatMessage('aboutus.expectation', { appTitle: systemInfo.appTitle })}
-                      <a href="https://www.supos.ai/" target="_blank">
-                        www.supos.ai
+                      <a href="https://tier0.app" target="_blank">
+                        tier0.app
                       </a>
                     </Paragraph>
                     <Paragraph style={{ marginBottom: 0 }}>

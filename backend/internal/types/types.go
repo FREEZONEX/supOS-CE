@@ -1288,9 +1288,14 @@ type UnsByLabelPageResp struct {
 	Data     []FileVo `json:"data"`
 }
 
+type UnsDataResponse struct {
+	BaseResult
+	Data *UnsDataResponseVo `json:"data,omitzero"`
+}
+
 type UnsDataResponseVo struct {
-	NotExists   []string          `json:"notExists"`
-	ErrorFields map[string]string `json:"errorFields"`
+	NotExists   []string          `json:"notExists,omitempty"`
+	ErrorFields map[string]string `json:"errorFields,omitempty"`
 }
 
 type UnsHistoryQueryResult struct {
