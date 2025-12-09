@@ -95,8 +95,7 @@ pipeline {
                         sh '''
                         ls -all
                         
-                        OS_VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
-                        scp -i /var/jenkins_home/ssh/id_rsa supOS-${OS_VERSION}-${DATE}.zip* root@172.21.2.136:/home/deploy-packages/edge/${OS_VERSION}/
+                        scp -i /var/jenkins_home/ssh/id_rsa supOS-edge-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${OS_VERSION}/
 
                         echo "--> 传输完成！"
                         '''
