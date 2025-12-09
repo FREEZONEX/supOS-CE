@@ -21,6 +21,12 @@ pipeline {
         // --------------------------------------------------------------------------------------------------
         stage('1. 克隆源码') {
             steps {
+                script {
+                    echo "--> 清理工作空间 ${WORKSPACE}..."
+                    // 最佳实践：在克隆前清理工作空间
+                    cleanWs() 
+                }
+                
                 checkout([$class: 'GitSCM', 
                     branches: [[name: "${TAG}"]], 
                     extensions: [
@@ -109,14 +115,10 @@ pipeline {
     post {
             always {
                 // 1. 清理工作空间
-                cleanWs(
-                    cleanWhenAborted: true,
-                    cleanWhenFailure: true,
-                    cleanWhenNotBuilt: true,
-                    cleanWhenSuccess: true,
-                    cleanWhenUnstable: true,
-                    deleteDirs: true
-                )
+                cleanWs()
+                dir("${env.WORKSPACE}@tmp") {
+                    deleteDir()
+                } 
                 
                 // 2. 清理 Docker
                 sh '''
