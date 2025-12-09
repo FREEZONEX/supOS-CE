@@ -13,6 +13,7 @@ pipeline {
         SOURCE_DIR = "supos-edge"
         SOURCE_CODE = "${SOURCE_PATH}/${SOURCE_DIR}"
         CREDENTIALS_ID = '26d0e415-9908-4c00-84dd-98ef04c6f201' // 替换为你的 Jenkins SSH 凭证 ID
+        VERSION=''
 
     }
 
@@ -67,20 +68,29 @@ pipeline {
             steps {
                 script {                    
                     dir("${SOURCE_CODE}/deploy") {
+                        // 读取版本号
+                        def version = sh(
+                            script: '''
+                                grep 'OS_VERSION=' .env.default | cut -d'=' -f2 | tr -d '\\r" ' | xargs
+                            ''',
+                            returnStdout: true
+                        ).trim()
+                        
+                        // 保存到环境变量
+                        env.VERSION = version
 
                         sh '''
-                        ls -all
+
                         scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar.xz" ./images/
                         rm -rf ./pipeline && rm -f Dockerfile-Compose
-                        
-                        OS_VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
+
                         DATE=$(date +%y%m%d%H)
                         ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
-                        mkdir supOS-edge-${OS_VERSION}-${DATE} && mv ${ZipDirAndFileLists} supOS-edge-${OS_VERSION}-${DATE}
+                        mkdir supOS-edge-${env.VERSION}-${DATE} && mv ${ZipDirAndFileLists} supOS-edge-${env.VERSION}-${DATE}
 
-                        /var/jenkins_home/paks/zip -q -r -y supOS-edge-${OS_VERSION}-${DATE}.zip supOS-edge-${OS_VERSION}-${DATE}
-                        md5sum supOS-edge-${OS_VERSION}-${DATE}.zip > supOS-edge-${OS_VERSION}-${DATE}.zip.md5
-                        chmod 664 supOS-edge-${OS_VERSION}-${DATE}.zip*
+                        /var/jenkins_home/paks/zip -q -r -y supOS-edge-${env.VERSION}-${DATE}.zip supOS-edge-${env.VERSION}-${DATE}
+                        md5sum supOS-edge-${env.VERSION}-${DATE}.zip > supOS-edge-${env.VERSION}-${DATE}.zip.md5
+                        chmod 664 supOS-edge-${env.VERSION}-${DATE}.zip*
 
                         '''
                     }
@@ -95,7 +105,7 @@ pipeline {
                         sh '''
                         ls -all
                         
-                        scp -i /var/jenkins_home/ssh/id_rsa supOS-edge-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${OS_VERSION}/
+                        scp -i /var/jenkins_home/ssh/id_rsa supOS-edge-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${env.VERSION}/
 
                         echo "--> 传输完成！"
                         '''
