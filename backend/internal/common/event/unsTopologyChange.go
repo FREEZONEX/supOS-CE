@@ -4,4 +4,5 @@ package event
 // It does not contain any data.
 type UnsTopologyChangeEvent struct {
 	ApplicationEvent
+	TopologyMsg []byte
 }
