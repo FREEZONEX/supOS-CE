@@ -176,7 +176,7 @@ func (p UnsNamespaceRepo) CountByPathType(db *gorm.DB) ([]PathTypeCount, error) 
 	err := p.model(db).
 		Model(&UnsNamespace{}).
 		Select("path_type, COUNT(*) as count").
-		Where("status = 1").
+		Where("status = 1 and id>1000").
 		Group("path_type").
 		Find(&results).Error
 	return results, stores.ErrFmt(err)

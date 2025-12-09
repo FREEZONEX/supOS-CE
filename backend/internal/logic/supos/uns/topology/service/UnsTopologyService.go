@@ -3,13 +3,16 @@ package service
 import (
 	"backend/internal/common/event"
 	"backend/internal/common/event/mount"
+	"backend/internal/common/serviceApi"
 	"backend/internal/common/utils/topologylog"
+	"backend/internal/config"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/spring"
 	"context"
 	"encoding/json"
-	"runtime"
+	"io"
+	"net/http"
 	"sync"
 	"time"
 
@@ -28,37 +31,44 @@ type UnsTopologyService struct {
 	globalTopologyDirty bool
 	stopChan            chan struct{}
 	unsMapper           dao.UnsNamespaceRepo
+	httpClient          http.Client
+	log                 logx.Logger
+	conf                config.Config
+	wsService           serviceApi.IWebsocketSender
 }
 
 func NewUnsTopologyService() *UnsTopologyService {
 	s := &UnsTopologyService{
 		globalTopologyDirty: true,
 		stopChan:            make(chan struct{}),
-		unsMapper:           dao.NewUnsNamespaceRepo(),
+		log:                 logx.WithContext(context.Background()),
 	}
+	s.httpClient.Timeout = 700 * time.Millisecond
 	return s
 }
 
 // startRefreshTask starts background goroutine to refresh topology statistics periodically
 func (s *UnsTopologyService) startRefreshTask() {
-	if runtime.GOOS == "windows" {
-		logx.Info("Windows environment detected, skipping topology refresh task")
-		return
-	}
+	//if runtime.GOOS == "windows" {
+	//	logx.Info("Windows environment detected, skipping topology refresh task")
+	//	return
+	//}
 
 	go func() {
-		time.Sleep(2 * time.Second)
-		s.refresh()
-
-		ticker := time.NewTicker(10 * time.Second)
+		ticker := time.NewTicker(2 * time.Second)
 		defer ticker.Stop()
 
 		for {
 			select {
 			case <-ticker.C:
-				s.refresh()
+				ticker.Reset(10 * time.Second)
+				if s.wsService.HasTopologies() {
+					s.refresh()
+				} else {
+					s.log.Debug("Not refreshing topologies")
+				}
 			case <-s.stopChan:
-				logx.Info("Topology refresh task stopped")
+				logx.Error("Topology refresh task stopped")
 				return
 			}
 		}
@@ -114,6 +124,7 @@ func (s *UnsTopologyService) refresh() {
 	} else {
 		logx.Errorf("failed to count alarms: %v", err)
 	}
+	s.statisticsMQTT(topologyData)
 
 	// Query mount status
 	topologyData.MountStatus = s.doCountMountStatus(ctx)
@@ -138,6 +149,51 @@ func (s *UnsTopologyService) refresh() {
 	logx.Debugf("Topology statistics refreshed: %s", s.topologyJson)
 }
 
+type MqttStats struct {
+	AllConnections       int64 `json:"connections"`       // Total MQTT connections
+	LiveConnections      int64 `json:"live_connections"`  // Active MQTT connections
+	MessageInThroughput  int64 `json:"received_msg_rate"` // Messages/sec into MQTT broker
+	MessageOutThroughput int64 `json:"sent_msg_rate"`     // Messages/sec out of MQTT broker
+}
+
+func (s *UnsTopologyService) statisticsMQTT(data *types.GlobalTopologyData) {
+	apiConfig := s.conf.DevLink.Mqtt.OpenApi
+	url := apiConfig.Host + "/api/v5/monitor_current"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		s.log.Error("Error creating request: ", err)
+		return
+	}
+	req.SetBasicAuth(apiConfig.ApiKey, apiConfig.SecretKey)
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		s.log.Error("Error making request: ", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 200 {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			s.log.Error("Error reading response body: ", err)
+			return
+		}
+		s.log.Debug("Received mqtt response: ", string(body), url)
+		var mqttStats MqttStats
+		err = json.Unmarshal(body, &mqttStats)
+		if err != nil {
+			s.log.Error("Error parsing JSON:", err)
+			return
+		}
+		data.AllConnections = mqttStats.AllConnections
+		data.LiveConnections = mqttStats.LiveConnections
+		data.MessageInThroughput = mqttStats.MessageInThroughput
+		data.MessageOutThroughput = mqttStats.MessageOutThroughput
+	} else {
+		s.log.Error("HTTP request failed with status code:", resp.StatusCode)
+	}
+}
+
 // Stop stops the background refresh task
 func (s *UnsTopologyService) Stop() {
 	close(s.stopChan)
@@ -145,9 +201,6 @@ func (s *UnsTopologyService) Stop() {
 
 // GetLastMsg returns the last topology message as JSON string
 func (s *UnsTopologyService) GetLastMsg() string {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
 	if s.topologyJson != "" {
 		return s.topologyJson
 	}
@@ -189,6 +242,8 @@ func (s *UnsTopologyService) GainTopologyDataOfFile(unsId int64) []types.Instanc
 // OnEventContextRefreshedEvent handles application startup event
 func (s *UnsTopologyService) OnEventContextRefreshedEvent(e *event.ContextRefreshedEvent) error {
 	logx.Info("context refreshed, starting topology background task")
+	s.conf = e.SvcContext.Config
+	s.wsService = spring.GetBean[serviceApi.IWebsocketSender]()
 	s.startRefreshTask()
 	return nil
 }

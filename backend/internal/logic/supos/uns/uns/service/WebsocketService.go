@@ -27,7 +27,8 @@ type WebsocketService struct {
 	idToSessionsMap    *sync.Map // map[int64]*sync.Map (unsId -> map[sessionId]bool)
 	topicToSessionsMap *sync.Map // map[string]*sync.Map (topic -> map[sessionId]bool)
 	aliasToSessionsMap *sync.Map // map[string]*sync.Map (alias -> map[sessionId]subValueObj)
-	topologySessions   *sync.Map // map[string]*websocket.Conn (sessionId -> conn)
+	tpLock             sync.RWMutex
+	topologySessions   map[string]io.Writer // map[string]*websocket.Conn (sessionId -> conn)
 	unsQueryService    *UnsQueryService
 	topologyService    *service.UnsTopologyService
 }
@@ -39,7 +40,7 @@ func init() {
 			idToSessionsMap:    &sync.Map{},
 			topicToSessionsMap: &sync.Map{},
 			aliasToSessionsMap: &sync.Map{},
-			topologySessions:   &sync.Map{},
+			topologySessions:   make(map[string]io.Writer, 8),
 			unsQueryService:    spring.GetBean[*UnsQueryService](),
 			topologyService:    spring.GetBean[*service.UnsTopologyService](),
 		}
@@ -103,7 +104,11 @@ func (s *WebsocketService) TryAddSession(sessionId string, conn *websocket.Conn,
 	s.AddSession(sessionId, wsWriter{conn: conn})
 	return true
 }
-
+func (s *WebsocketService) HasTopologies() bool {
+	s.tpLock.RLock()
+	defer s.tpLock.RUnlock()
+	return len(s.topologySessions) > 0
+}
 func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL) {
 	queryParams, err := url.ParseQuery(req.RawQuery)
 	if err != nil {
@@ -127,7 +132,10 @@ func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL
 		if globalTopology := queryParams.Get("globalTopology"); globalTopology != "" {
 			subscriptionVal, _ := s.sessions.Load(sessionId)
 			if subscription, ok := subscriptionVal.(*WsSubscription); ok {
-				s.topologySessions.Store(sessionId, subscription.conn)
+				s.tpLock.Lock()
+				s.topologySessions[sessionId] = subscription.conn
+				s.tpLock.Unlock()
+
 				logx.Infof("topology subscription: %s", sessionId)
 
 				// Publish initial topology message
@@ -303,25 +311,26 @@ func (s *WebsocketService) HandleSessionClosed(sessionId string) {
 	})
 
 	// Remove from topologySessions
-	s.topologySessions.Delete(sessionId)
-
+	s.tpLock.Lock()
+	delete(s.topologySessions, sessionId)
+	s.tpLock.Unlock()
 	// Remove session
 	s.sessions.Delete(sessionId)
 
 	logx.Infof("session removed: %s", sessionId)
 }
 
-func (s *WebsocketService) publishMessage(conn io.Writer, id int64) {
-	msg := s.getTopicLastMessage(id)
-	if _, err := conn.Write(msg); err != nil {
-		logx.Errorf("failed to sendWs: id=%d, err=%v", id, err)
-	}
-}
-
 func (s *WebsocketService) publishMessageByTopic(conn io.Writer, topic string) {
 	msg := s.getTopicLastMessageByPath(topic)
 	if _, err := conn.Write(msg); err != nil {
 		logx.Errorf("failed to sendWs: topic=%s, err=%v", topic, err)
+	}
+}
+
+func (s *WebsocketService) publishMessage(conn io.Writer, id int64) {
+	msg := s.getTopicLastMessage(id)
+	if _, err := conn.Write(msg); err != nil {
+		logx.Errorf("failed to sendWs: id=%d, err=%v", id, err)
 	}
 }
 
@@ -516,8 +525,10 @@ func (s *WebsocketService) OnEventUnsTopologyChangeEvent(e *event.UnsTopologyCha
 	msg := topologyService.GetLastMsg()
 
 	// Send to all topology subscribers
-	s.topologySessions.Range(func(key, value any) bool {
-		sessionId := key.(string)
+	s.tpLock.RLock()
+	sessionIds := base.MapKeys(s.topologySessions)
+	s.tpLock.RUnlock()
+	for _, sessionId := range sessionIds {
 		if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
 			subscription := subscriptionVal.(*WsSubscription)
 			subscription.WriteLock.Lock()
@@ -526,9 +537,7 @@ func (s *WebsocketService) OnEventUnsTopologyChangeEvent(e *event.UnsTopologyCha
 			}
 			subscription.WriteLock.Unlock()
 		}
-		return true
-	})
-
+	}
 	return nil
 }
 
