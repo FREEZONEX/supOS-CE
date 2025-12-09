@@ -4,8 +4,15 @@ set -e
 
 # --- 1. Initialization ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-sed -i 's/\r$//' "$SCRIPT_DIR/../.env" # Clean .env file
-source "$SCRIPT_DIR/../.env"          # Load initial environment variables
+
+ENV_FILE="$SCRIPT_DIR/../.env.default"
+if [ -f "$SCRIPT_DIR/../.env" ]; then
+  ENV_FILE="$SCRIPT_DIR/../.env"
+fi
+
+
+sed -i 's/\r$//' "$ENV_FILE" # Clean .env file
+source "$ENV_FILE"          # Load initial environment variables
 source "$SCRIPT_DIR/global/log.sh"
 source "$SCRIPT_DIR/global/choose-profile-command.sh"
 platform=$(uname -s)
@@ -60,7 +67,7 @@ fi
 
 # --- 7. Main Execution: Start services and run post-init scripts ---
 info "Starting Docker containers in detached mode..."
-if ! docker compose --env-file "$SCRIPT_DIR/../.env" --env-file "$SCRIPT_DIR/../.env.tmp" --project-name supos "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d; then
+if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" --project-name supos "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d; then
     error "Failed to start Docker containers. Please check the logs above."
     exit 1
 fi

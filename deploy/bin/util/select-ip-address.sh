@@ -5,18 +5,22 @@
 # 2. It immediately validates if the selected IP is a loopback address.
 
 info "Configuring network IP address (ENTRANCE_DOMAIN)..."
+ENV_FILE="$SCRIPT_DIR/../.env.default"
+if [ -f "$SCRIPT_DIR/../.env" ]; then
+  ENV_FILE="$SCRIPT_DIR/../.env"
+fi
 
 # --- Part 1: IP Selection ---
 if [[ "$platform" == MINGW64* ]]; then
     # IP selection logic for Windows
-    sed -i -e "s/^OS_PLATFORM_TYPE=.*/OS_PLATFORM_TYPE=windows/" "$SCRIPT_DIR/../.env"
-    current_entrance_domain=$(grep '^ENTRANCE_DOMAIN=' "$SCRIPT_DIR/../.env" | cut -d '=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    sed -i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$SCRIPT_DIR/../.env"
+    sed -i -e "s/^OS_PLATFORM_TYPE=.*/OS_PLATFORM_TYPE=windows/" "$ENV_FILE"
+    current_entrance_domain=$(grep '^ENTRANCE_DOMAIN=' "$ENV_FILE" | cut -d '=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    sed -i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$ENV_FILE"
 
     # --- [BUG FIX] ---
     # The original logic repeatedly added slashes. This new logic is robust.
     # It removes all leading slashes and then prepends exactly two.
-    current_os_login_path=$(grep '^OS_LOGIN_PATH=' "$SCRIPT_DIR/../.env" | cut -d '=' -f2-)
+    current_os_login_path=$(grep '^OS_LOGIN_PATH=' "$ENV_FILE" | cut -d '=' -f2-)
     if [[ "$current_os_login_path" =~ ^/ ]]; then
         # Remove all leading slashes, then add two back.
         path_without_slashes=$(echo "$current_os_login_path" | sed 's|^/*||')
@@ -25,7 +29,7 @@ if [[ "$platform" == MINGW64* ]]; then
         # Only write to the file if a change was actually made.
         if [ "$current_os_login_path" != "$modified_os_login_path" ]; then
             info "Correcting OS_LOGIN_PATH for Windows compatibility."
-            sed -i "s|^OS_LOGIN_PATH=.*|OS_LOGIN_PATH=$modified_os_login_path|" "$SCRIPT_DIR/../.env"
+            sed -i "s|^OS_LOGIN_PATH=.*|OS_LOGIN_PATH=$modified_os_login_path|" "$ENV_FILE"
         fi
     fi
     # --- [END BUG FIX] ---
@@ -47,8 +51,8 @@ else
     # IP selection menu for Linux/macOS
     ips=($(hostname -I | awk '{print $1, $2, $3}'))
     echo -e "\nAvailable options for ENTRANCE_DOMAIN:"
-    current_entrance_domain=$(grep '^ENTRANCE_DOMAIN=' "$SCRIPT_DIR/../.env" | cut -d '=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    sed -i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$SCRIPT_DIR/../.env"
+    current_entrance_domain=$(grep '^ENTRANCE_DOMAIN=' "$ENV_FILE" | cut -d '=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    sed -i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$ENV_FILE"
     echo "0). Keep current: $current_entrance_domain (default)"
     for i in "${!ips[@]}"; do echo "$((i+1))). ${ips[$i]}"; done
     echo "$((${#ips[@]}+1))). Custom IP address (enter manually)"
@@ -68,8 +72,8 @@ fi
 
 if [ "$selected_ip" != "$current_entrance_domain" ]; then
     escaped_selected_ip=$(sed 's/[&]/\\&/g' <<< "$selected_ip")
-    sed -i "s|^ENTRANCE_DOMAIN=.*|ENTRANCE_DOMAIN=$escaped_selected_ip|" "$SCRIPT_DIR/../.env"
-    source "$SCRIPT_DIR/../.env"
+    sed -i "s|^ENTRANCE_DOMAIN=.*|ENTRANCE_DOMAIN=$escaped_selected_ip|" "$ENV_FILE"
+    source "$ENV_FILE"
 fi
 
 
@@ -86,7 +90,7 @@ if [[ "$trimmed_ip" == "127.0.0.1" || "$trimmed_ip" == "localhost" ]]; then
     error "Aborted by user."
     exit 1
   fi
-  sed -i -E -e 's/^OS_AUTH_ENABLE=.*/OS_AUTH_ENABLE=false/' "$SCRIPT_DIR/../.env"
+  sed -i -E -e 's/^OS_AUTH_ENABLE=.*/OS_AUTH_ENABLE=false/' "$ENV_FILE"
   warn "Authentication disabled due to loopback address."
 else
   info "IP address is valid."

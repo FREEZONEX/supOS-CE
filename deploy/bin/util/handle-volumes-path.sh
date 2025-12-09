@@ -4,6 +4,10 @@
 # It respects any user-defined custom paths.
 
 info "Checking storage path (VOLUMES_PATH)..."
+ENV_FILE="$SCRIPT_DIR/../.env.default"
+if [ -f "$SCRIPT_DIR/../.env" ]; then
+  ENV_FILE="$SCRIPT_DIR/../.env"
+fi
 
 if [[ "$platform" == MINGW64* ]]; then
     # On Windows, correct the path if it's empty or set to the Linux default.
@@ -11,8 +15,8 @@ if [[ "$platform" == MINGW64* ]]; then
         info "Path is unset or is Linux default. Setting the correct path for Windows."
         default_path="$HOME/volumes/supos/data"
         info "Default storage path for Windows is set to: $default_path"
-        sed -i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$default_path|" "$SCRIPT_DIR/../.env"
-        source "$SCRIPT_DIR/../.env" # Reload .env for the current session
+        sed -i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$default_path|" "$ENV_FILE"
+        source "$ENV_FILE" # Reload .env for the current session
     else
         info "Using user-defined VOLUMES_PATH from .env: $VOLUMES_PATH"
     fi
@@ -22,8 +26,8 @@ else
         info "VOLUMES_PATH is unset. Setting the default path for Linux."
         default_path="/volumes/supos/data"
         info "Default storage path for Linux is set to: $default_path"
-        sed -i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$default_path|" "$SCRIPT_DIR/../.env"
-        source "$SCRIPT_DIR/../.env" # Reload .env for the current session
+        sed -i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$default_path|" "$ENV_FILE"
+        source "$ENV_FILE" # Reload .env for the current session
     else
         info "Using existing VOLUMES_PATH from .env: $VOLUMES_PATH"
     fi

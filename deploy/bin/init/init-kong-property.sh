@@ -2,17 +2,21 @@
 # ... comments ...
 set -e
 ROOT_DIR=$1
+ENV_FILE="$ROOT_DIR/.env.default"
+if [ -f "$ROOT_DIR/.env" ]; then
+  ENV_FILE="$ROOT_DIR/.env"
+fi
 # ---------------------------------------------------------------------------
 # 0. Normalise .env line endings (Windows → Unix)
 # ---------------------------------------------------------------------------
 # Use the new variable name
-sed -i 's/\r$//' "$ROOT_DIR/.env"
+sed -i 's/\r$//' "$ENV_FILE"
 
 # ---------------------------------------------------------------------------
 # 1. Load variables from .env
 # ---------------------------------------------------------------------------
 # Use the new variable name
-export $(grep -v '^#' "$ROOT_DIR/.env" | xargs)
+export $(grep -v '^#' "$ENV_FILE" | xargs)
 
 # ---------------------------------------------------------------------------
 # 2. Build BASE_URL

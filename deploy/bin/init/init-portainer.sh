@@ -4,8 +4,12 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+ENV_FILE="$SCRIPT_DIR/../../.env.default"
+if [ -f "$SCRIPT_DIR/../../.env" ]; then
+  ENV_FILE="$SCRIPT_DIR/../../.env"
+fi
 source $SCRIPT_DIR/../global/log.sh
-source $SCRIPT_DIR/../../.env
+source $ENV_FILE
 source $SCRIPT_DIR/../../.env.tmp
 
 #info "start to init portainer OAuth ..."
