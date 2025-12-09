@@ -6396,17 +6396,32 @@
             "schema": {
               "type": "object",
               "properties": {
-                "errorFields": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
                   "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
+                  "required": [
+                    "notExists",
+                    "errorFields"
+                  ],
+                  "properties": {
+                    "errorFields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "notExists": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
                   }
                 },
-                "notExists": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
+                "msg": {
+                  "type": "string"
                 }
               }
             }
@@ -12304,7 +12319,7 @@
       }
     }
   },
-  "x-date": "2025-12-09 13:35:39",
+  "x-date": "2025-12-09 16:07:23",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

@@ -119,7 +119,7 @@ func (s *UnsQueueDataSinkService) fetchData() {
 				//上车
 				size = 0
 				s.persistence(msgToSend)
-				msgToSend = msgToSend[:]
+				msgToSend = msgToSend[:0]
 			}
 		case msg := <-s.queue.ReadChan():
 			var list TopicMessageList
@@ -142,7 +142,7 @@ func (s *UnsQueueDataSinkService) fetchData() {
 				//上车
 				size = 0
 				s.persistence(msgToSend)
-				msgToSend = msgToSend[:]
+				msgToSend = msgToSend[:0]
 			}
 		}
 	}
