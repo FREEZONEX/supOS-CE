@@ -79,20 +79,23 @@ pipeline {
                         // 保存到环境变量
                         env.VERSION = version
 
-                        sh '''
+                        sh """
 
                         scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar.xz" ./images/
                         rm -rf ./pipeline && rm -f Dockerfile-Compose
 
-                        DATE=$(date +%y%m%d%H)
-                        ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
-                        mkdir supOS-edge-${env.VERSION}-${DATE} && mv ${ZipDirAndFileLists} supOS-edge-${env.VERSION}-${DATE}
+                        DATE=\$(date +%y%m%d%H)
+                        ZipDirAndFileLists=\$(ls -a | sed -e 's/^\\.\\$//g' -e 's/^\\.\\.$//g' -e 's/^\\.git.*//g' |egrep -v '^\\$')
+                        PACKAGE_DIR="supOS-edge-${env.VERSION}-\$DATE"
+                        mkdir "\$PACKAGE_DIR" && mv \${ZipDirAndFileLists} "\$PACKAGE_DIR"
 
-                        /var/jenkins_home/paks/zip -q -r -y supOS-edge-${env.VERSION}-${DATE}.zip supOS-edge-${env.VERSION}-${DATE}
-                        md5sum supOS-edge-${env.VERSION}-${DATE}.zip > supOS-edge-${env.VERSION}-${DATE}.zip.md5
-                        chmod 664 supOS-edge-${env.VERSION}-${DATE}.zip*
+                        /var/jenkins_home/paks/zip -q -r -y "\$PACKAGE_DIR.zip" "\$PACKAGE_DIR"
+                            
+                        md5sum "\$PACKAGE_DIR.zip" > "\$PACKAGE_DIR.zip.md5"
 
-                        '''
+                        chmod 664 supOS-edge-${env.VERSION}-\${DATE}.zip*
+
+                        """
                     }
                 }
             }
@@ -102,13 +105,13 @@ pipeline {
             steps {
                 script {      
                     dir("${SOURCE_CODE}/deploy") {            
-                        sh '''
+                        sh """
                         ls -all
                         
                         scp -i /var/jenkins_home/ssh/id_rsa supOS-edge-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${env.VERSION}/
 
                         echo "--> 传输完成！"
-                        '''
+                        """
                     }
                 }
             }
