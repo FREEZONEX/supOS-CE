@@ -47,17 +47,15 @@ pipeline {
         stage('2. 构建镜像') {
             steps {
                 script {
-                    dir("${WORKSPACE}/supos-edge") {
-                        echo "--> 正在构建镜像: ${FULL_IMAGE_TAG}"
-                        sh "mkdir -p ./deploy/images"
-                        // 构建 Docker 镜像
-                        dockerImage = docker.build("${FULL_IMAGE_TAG}", "-f ./deploy/Dockerfile-Compose .")
+                    echo "--> 正在构建镜像: ${FULL_IMAGE_TAG}"
+                    sh "mkdir -p ./deploy/images"
+                    // 构建 Docker 镜像
+                    dockerImage = docker.build("${FULL_IMAGE_TAG}", "-f ./deploy/Dockerfile-Compose .")
 
-                        sh '''
-                            docker tag ${FULL_IMAGE_TAG} "suposce/supos-edge-platform:${TAG}"
-                            docker save  suposce/supos-edge-platform:${TAG} | xz -z -T0 -v >./deploy/images/supos-edge-platform.tar.xz
-                        '''
-                    }
+                    sh '''
+                        docker tag ${FULL_IMAGE_TAG} "suposce/supos-edge-platform:${TAG}"
+                        docker save  suposce/supos-edge-platform:${TAG} | xz -z -T0 -v >./deploy/images/supos-edge-platform.tar.xz
+                    '''
                     
                     // 推送镜像到远程仓库
                     // docker push "${FULL_IMAGE_TAG}"
@@ -69,7 +67,7 @@ pipeline {
         stage('3. 准备部署包') {
             steps {
                 script {                    
-                    dir("${WORKSPACE}/supos-edge/deploy") {
+                    dir("deploy") {
                         
                         sh '''
                         ls -all
@@ -94,7 +92,7 @@ pipeline {
         stage('4. 传输部署包') {
             steps {
                 script {      
-                    dir("${WORKSPACE}/supos-edge/deploy") {            
+                    dir("deploy") {            
                         sh '''
                         ls -all
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
