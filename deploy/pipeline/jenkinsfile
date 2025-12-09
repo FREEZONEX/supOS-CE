@@ -38,7 +38,7 @@ pipeline {
                     //currentBuild.displayName = "#${env.BUILD_NUMBER} - ${BUILD_USER}"
                     sh '''
                         #!/bin/bash
-                        ls -l "${WORKSPACE}/supos-edge"
+                        ls -l "${WORKSPACE}"
                     '''
                 }
             }
