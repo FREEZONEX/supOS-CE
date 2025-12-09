@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"runtime"
 	"sync"
 	"time"
 
@@ -49,10 +50,10 @@ func NewUnsTopologyService() *UnsTopologyService {
 
 // startRefreshTask starts background goroutine to refresh topology statistics periodically
 func (s *UnsTopologyService) startRefreshTask() {
-	//if runtime.GOOS == "windows" {
-	//	logx.Info("Windows environment detected, skipping topology refresh task")
-	//	return
-	//}
+	if runtime.GOOS == "windows" {
+		logx.Info("Windows environment detected, skipping topology refresh task")
+		return
+	}
 
 	go func() {
 		ticker := time.NewTicker(2 * time.Second)
