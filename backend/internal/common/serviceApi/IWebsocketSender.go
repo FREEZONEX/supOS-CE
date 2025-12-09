@@ -12,4 +12,6 @@ type WebsocketMessage struct {
 }
 type IWebsocketSender interface {
 	SendMessage(msg WebsocketMessage)
+
+	HasTopologies() bool
 }
