@@ -6,7 +6,8 @@ import ComRadio from '@/components/com-radio';
 import ComEllipsis from '@/components/com-ellipsis';
 import ComButton from '@/components/com-button';
 import CodeMirror from '@uiw/react-codemirror';
-import { json } from '@codemirror/lang-json';
+import { json, jsonParseLinter } from '@codemirror/lang-json';
+import { linter, lintGutter } from '@codemirror/lint';
 import { useSize } from 'ahooks';
 import { Copy, Download, FolderAdd } from '@carbon/icons-react';
 import cx from 'classnames';
@@ -215,7 +216,6 @@ const Module: FC<ImportModalProps> = (props) => {
         if (line.includes('code')) {
           try {
             const data = JSON.parse(line);
-            console.log(data);
             setSocketData(data);
             if (data.finished) initTreeData({ reset: true });
           } catch (e) {
@@ -232,6 +232,13 @@ const Module: FC<ImportModalProps> = (props) => {
 
       if (type == 'json') {
         if (jsonValue) {
+          try {
+            JSON.parse(jsonValue);
+          } catch (e) {
+            console.log(e);
+            message.error(formatMessage('uns.errorInTheSyntaxOfTheJSON'));
+            return;
+          }
           fd.append('file', new Blob([jsonValue], { type: 'application/json' }), 'uns.json');
         } else {
           message.warning(formatMessage('uns.pleaseJSON'));
@@ -274,7 +281,7 @@ const Module: FC<ImportModalProps> = (props) => {
               readStream();
             })
             .catch((error) => {
-              console.error('Stream reading error:', error);
+              console.error(error);
               setLoading(false);
             });
         }
@@ -282,7 +289,7 @@ const Module: FC<ImportModalProps> = (props) => {
         readStream();
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setLoading(false);
     }
   };
@@ -440,7 +447,7 @@ const Module: FC<ImportModalProps> = (props) => {
                     onChange={setJsonValue}
                     value={jsonValue}
                     height={(size?.height || 32) - 32 + 'px'}
-                    extensions={[json()]}
+                    extensions={[json(), linter(jsonParseLinter()), lintGutter()]}
                     onKeyDownCapture={(e) => {
                       if (e.ctrlKey && e.key === 'Enter') {
                         e.preventDefault();

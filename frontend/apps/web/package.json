@@ -23,6 +23,7 @@
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/lang-xml": "^6.1.0",
+    "@codemirror/lint": "^6.9.0",
     "@copilotkit/react-core": "catalog:ai",
     "@copilotkit/react-ui": "catalog:ai",
     "@dnd-kit/core": "catalog:util",
