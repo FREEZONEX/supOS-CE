@@ -103,7 +103,9 @@ pipeline {
                 }
             }
         }
-        post {
+        
+    }
+    post {
             always {
                 // 1. 清理工作空间
                 cleanWs(
@@ -130,6 +132,14 @@ pipeline {
                 '''
             
             }
+            success {
+                echo "✅ 构建成功: ${JOB_NAME} #${BUILD_NUMBER}"
+                // 可以添加成功通知
+            }
+            
+            failure {
+                echo "❌ 构建失败: ${JOB_NAME} #${BUILD_NUMBER}"
+                // 可以添加失败通知
+            }
         }
-    }
 }
