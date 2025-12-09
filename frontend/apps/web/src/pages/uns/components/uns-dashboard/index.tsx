@@ -61,11 +61,11 @@ const UnsDashboard = () => {
       <Overview overviewList={overviewList} />
       <Divider style={{ background: '#e0e0e0', flexShrink: 0 }} />
       <Flex gap={16}>
-        <div className={styles['mqtt-wrapper']}>
-          <MQTT />
-        </div>
         <div className={styles['functions-wrapper']}>
           <Functions />
+        </div>
+        <div className={styles['mqtt-wrapper']}>
+          <MQTT />
         </div>
       </Flex>
     </div>
