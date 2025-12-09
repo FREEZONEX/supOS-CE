@@ -72,10 +72,8 @@ pipeline {
                         ls -all
                         scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar.xz" ./images/
                         rm -rf ./pipeline
-
-                        cat .env
                         
-                        OS_VERSION=$(awk -F'=' '/^OS_VERSION=/ {print $2}' .env | tr -d '\r\n' | xargs)
+                        OS_VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
                         ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
                         mkdir supOS-edge-${OS_VERSION}-${DATE} && mv ${ZipDirAndFileLists} supOS-edge-${OS_VERSION}-${DATE}
@@ -97,7 +95,7 @@ pipeline {
                         sh '''
                         ls -all
                         
-                        OS_VERSION=$(awk -F'=' '/^OS_VERSION=/ {print $2}' .env | tr -d '\r\n' | xargs)
+                        OS_VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         scp -i /var/jenkins_home/ssh/id_rsa supOS-${OS_VERSION}-${DATE}.zip* root@172.21.2.136:/home/deploy-packages/edge/${OS_VERSION}/
 
                         echo "--> 传输完成！"
