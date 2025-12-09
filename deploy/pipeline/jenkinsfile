@@ -30,8 +30,7 @@ pipeline {
                 checkout([$class: 'GitSCM', 
                     branches: [[name: "${TAG}"]], 
                     extensions: [
-                        [$class: 'CloneOption', depth: 1,shallow: true,timeout: 3600],
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: "${SOURCE_CODE}"]
+                        [$class: 'CloneOption', depth: 1,shallow: true,timeout: 3600]
                     ],
                     userRemoteConfigs: [[credentialsId: "${CREDENTIALS_ID}", url: "${SOURCE_CODE_URL}"]]])
 
@@ -39,10 +38,7 @@ pipeline {
                     //currentBuild.displayName = "#${env.BUILD_NUMBER} - ${BUILD_USER}"
                     sh '''
                         #!/bin/bash
-
-                        cd "${WORKSPACE}"
-                        cp -r "${SOURCE_CODE}" ./
-                        ls -l "${SOURCE_DIR}"
+                        ls -l "${WORKSPACE}/supos-edge"
                     '''
                 }
             }
@@ -51,7 +47,7 @@ pipeline {
         stage('2. 构建镜像') {
             steps {
                 script {
-                    dir("${SOURCE_CODE}") {
+                    dir("${WORKSPACE}/supos-edge") {
                         echo "--> 正在构建镜像: ${FULL_IMAGE_TAG}"
                         sh "mkdir -p ./deploy/images"
                         // 构建 Docker 镜像
@@ -73,7 +69,7 @@ pipeline {
         stage('3. 准备部署包') {
             steps {
                 script {                    
-                    dir("${SOURCE_CODE}/deploy") {
+                    dir("${WORKSPACE}/supos-edge/deploy") {
                         
                         sh '''
                         ls -all
@@ -98,7 +94,7 @@ pipeline {
         stage('4. 传输部署包') {
             steps {
                 script {      
-                    dir("${SOURCE_CODE}/deploy") {            
+                    dir("${WORKSPACE}/supos-edge/deploy") {            
                         sh '''
                         ls -all
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
