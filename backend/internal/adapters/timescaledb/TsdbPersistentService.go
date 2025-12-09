@@ -10,6 +10,7 @@ import (
 	"backend/share/spring"
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -74,33 +75,15 @@ func (p *TsdbPersistentService) OnEventRemoveTopicsEvent9(evt *event.RemoveTopic
 	postgresql.OnRemove(p.log, p.dbPool, dsId, evt)
 }
 func (p *TsdbPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
-	sql := base.StringBuilder{}
-	sql.Grow(256)
-	sql.Append(`SELECT * FROM "`).Append(uns.GetTable()).Append(`" `)
-	if tbF := uns.GetTbFieldName(); tbF != "" {
-		sql.Append(`WHERE "`).Append(tbF).Append(`"= `).Long(uns.Id)
-	}
-	sql.Append(` ORDER BY "`).Append(uns.GetTimestampField()).Append(`" DESC LIMIT 1`)
-	rows, er := p.dbPool.Query(context.Background(), sql.String())
-	if er != nil {
-		p.log.Error("fail to get last record", er, uns.GetAlias())
-		return
-	}
-	valuePointers := make([]interface{}, len(rows.FieldDescriptions()))
-	fd := uns.GetFieldDefines().FieldsMap
-	for i, f := range rows.FieldDescriptions() {
-		if field, has := fd[f.Name]; has {
-			field.LastValue = types.FieldType(field.Type).ZeroValue()
-			valuePointers[i] = &field.LastValue
-		} else {
-			var obj any
-			valuePointers[i] = &obj
+	query := func() (pgx.Rows, error) {
+		sql := base.StringBuilder{}
+		sql.Grow(256)
+		sql.Append(`SELECT * FROM "`).Append(uns.GetTable()).Append(`" `)
+		if tbF := uns.GetTbFieldName(); tbF != "" {
+			sql.Append(`WHERE "`).Append(tbF).Append(`"= `).Long(uns.Id)
 		}
+		sql.Append(` ORDER BY "`).Append(uns.GetTimestampField()).Append(`" DESC LIMIT 1`)
+		return p.dbPool.Query(context.Background(), sql.String())
 	}
-	if rows.Next() {
-		er = rows.Scan(valuePointers...)
-		if er != nil {
-			p.log.Error("fail to Scan last record", er, uns.GetAlias())
-		}
-	}
+	postgresql.FillLastRecord(p.log, uns, query)
 }
