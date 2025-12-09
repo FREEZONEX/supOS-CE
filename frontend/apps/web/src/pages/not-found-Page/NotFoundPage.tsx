@@ -4,7 +4,7 @@ import useNavigateForIframe from '@/hooks/useNavigateForIframe';
 
 const NotFoundPage = () => {
   const formatMessage = useTranslate();
-  const { security, onClick } = useNavigateForIframe({ path: '/home' });
+  const { security, onClick } = useNavigateForIframe({ path: '/uns' });
 
   return (
     <Result
