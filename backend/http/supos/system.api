@@ -17,10 +17,17 @@ service backend {
 
     @doc "日志级别配置"
     @handler logConfig
-    get /log/:level (LogConfigRequest) returns (LogConfigResponse)
+    get /uns/log/:level (LogConfigRequest) returns (LogConfigResponse)
+
+    @doc "获取UNS定义"
+    @handler getUns
+    get /uns/def/:uns (GetDefRequest) returns (*CreateTopicDto)
 }
 
 type (
+    GetDefRequest {
+        Uns string `path:"uns,optional"`
+    }
     LogConfigRequest {
         Level string `path:"level,optional"`
     }

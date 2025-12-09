@@ -222,7 +222,7 @@ func (r *UnsRemoveService) deleteAndSendEventWithCall(ctx context.Context, req t
 
 	if er == nil {
 		withFlow, withDashboard := defaultFalse(req.WithFlow), defaultFalse(req.WithDashboard)
-		delEvent := event.NewRemoveTopicsEvent(dao.SetDb(ctx, tx), time.Now(), withFlow, withDashboard,
+		delEvent := event.NewRemoveTopicsEvent(context.Background(), time.Now(), withFlow, withDashboard,
 			files,
 			unsGroups[constants.PathTypeTemplate],
 			unsGroups[constants.PathTypeDir],
@@ -234,7 +234,10 @@ func (r *UnsRemoveService) deleteAndSendEventWithCall(ctx context.Context, req t
 			tx.Commit()
 		}
 	} else if withTx {
+		r.log.Error("UNS删除回滚:", er)
 		tx.Rollback()
+	} else {
+		r.log.Error("UNS删除失败:", er)
 	}
 	return
 }

@@ -2,8 +2,8 @@ syntax = "v1"
 
 import "common.api" //公共结构体定义
 import "supos/external.api"
-import "supos/system.api"
 import "supos/uns.api"
+import "supos/system.api"
 import "supos/devtools.api"
 import "supos/example.api"
 import "supos/global.api"

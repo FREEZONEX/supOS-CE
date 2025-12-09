@@ -797,16 +797,22 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
-					// 日志级别配置
-					Method:  http.MethodGet,
-					Path:    "/log/:level",
-					Handler: suposunssystem.LogConfigHandler(serverCtx),
-				},
-				{
 					// 获取系统配置
 					Method:  http.MethodGet,
 					Path:    "/systemConfig",
 					Handler: suposunssystem.SystemConfigHandler(serverCtx),
+				},
+				{
+					// 获取UNS定义
+					Method:  http.MethodGet,
+					Path:    "/uns/def/:uns",
+					Handler: suposunssystem.GetUnsHandler(serverCtx),
+				},
+				{
+					// 日志级别配置
+					Method:  http.MethodGet,
+					Path:    "/uns/log/:level",
+					Handler: suposunssystem.LogConfigHandler(serverCtx),
 				},
 			}...,
 		),

@@ -486,6 +486,10 @@ type GetByUnsRequest struct {
 	UnsAlias string `form:"unsAlias"`
 }
 
+type GetDefRequest struct {
+	Uns string `path:"uns,optional"`
+}
+
 type GetInstanceTopologyReq struct {
 	UnsId int64 `form:"unsId,optional"`
 }
