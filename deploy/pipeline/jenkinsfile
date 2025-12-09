@@ -71,8 +71,8 @@ pipeline {
                         sh '''
                         ls -all
                         scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar.xz" ./images/
+                        rm -rf ./pipeline
                         
-                        // 将整个 deploy 目录压缩成 zip 包
                         OS_VERSION=$(grep 'OS_VERSION=' .env | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
                         ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
