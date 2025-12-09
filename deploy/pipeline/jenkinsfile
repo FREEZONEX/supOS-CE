@@ -71,7 +71,7 @@ pipeline {
                         sh '''
                         ls -all
                         scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar.xz" ./images/
-                        rm -rf ./pipeline
+                        rm -rf ./pipeline && rm -f Dockerfile-Compose
                         
                         OS_VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
@@ -101,6 +101,34 @@ pipeline {
                         '''
                     }
                 }
+            }
+        }
+        post {
+            always {
+                // 1. 清理工作空间
+                cleanWs(
+                    cleanWhenAborted: true,
+                    cleanWhenFailure: true,
+                    cleanWhenNotBuilt: true,
+                    cleanWhenSuccess: true,
+                    cleanWhenUnstable: true,
+                    deleteDirs: true
+                )
+                
+                // 2. 清理 Docker
+                sh '''
+                    echo "=== 清理 Docker 资源 ==="
+                    # 清理容器
+                    docker container prune -f 2>/dev/null || true
+                    # 清理镜像
+                    docker image prune -f 2>/dev/null || true
+                    # 清理卷
+                    docker volume prune -f 2>/dev/null || true
+                    # 清理网络
+                    docker network prune -f 2>/dev/null || true
+                    echo "Docker 清理完成"
+                '''
+            
             }
         }
     }
