@@ -27,7 +27,7 @@ func init() {
 type UnsTopologyService struct {
 	mu                  sync.RWMutex
 	globalTopologyData  *types.GlobalTopologyData
-	topologyJson        string // JSON representation of globalTopologyData
+	topologyJson        []byte // JSON representation of globalTopologyData
 	globalTopologyDirty bool
 	stopChan            chan struct{}
 	unsMapper           dao.UnsNamespaceRepo
@@ -138,13 +138,13 @@ func (s *UnsTopologyService) refresh() {
 	s.globalTopologyDirty = false
 
 	if jsonBytes, err := json.Marshal(topologyData); err == nil {
-		s.topologyJson = string(jsonBytes)
+		s.topologyJson = jsonBytes
 	} else {
 		logx.Errorf("failed to marshal topology data: %v", err)
-		s.topologyJson = "{}"
+		s.topologyJson = []byte("{}")
 	}
 
-	spring.PublishEvent(&event.UnsTopologyChangeEvent{})
+	spring.PublishEvent(&event.UnsTopologyChangeEvent{TopologyMsg: s.topologyJson})
 
 	logx.Debugf("Topology statistics refreshed: %s", s.topologyJson)
 }
@@ -200,11 +200,14 @@ func (s *UnsTopologyService) Stop() {
 }
 
 // GetLastMsg returns the last topology message as JSON string
-func (s *UnsTopologyService) GetLastMsg() string {
-	if s.topologyJson != "" {
+func (s *UnsTopologyService) GetLastMsg() []byte {
+	if s.topologyJson == nil {
+		s.refresh()
+	}
+	if len(s.topologyJson) > 0 {
 		return s.topologyJson
 	}
-	return "{}"
+	return []byte("{}")
 }
 
 // UpdateTopologyState updates a specific node's state
@@ -248,8 +251,15 @@ func (s *UnsTopologyService) OnEventContextRefreshedEvent(e *event.ContextRefres
 	return nil
 }
 
-// OnEventNamespaceChangeEvent handles namespace change events
-func (s *UnsTopologyService) OnEventNamespaceChangeEvent(e *event.NamespaceChangeEvent) error {
+func (s *UnsTopologyService) OnEventBatchCreateTableEvent(e *event.BatchCreateTableEvent) error {
+	logx.Infof("namespace change detected, scheduling topology refresh")
+	go func() {
+		time.Sleep(1 * time.Second)
+		s.RefreshTopology()
+	}()
+	return nil
+}
+func (s *UnsTopologyService) OnEventRemoveTopicsEvent(e *event.RemoveTopicsEvent) error {
 	logx.Infof("namespace change detected, scheduling topology refresh")
 	go func() {
 		time.Sleep(1 * time.Second)
@@ -274,7 +284,7 @@ func (s *UnsTopologyService) RemoveFromGlobalTopologyData(topic string) {
 	s.globalTopologyData.ICMPStates = newStates
 
 	if jsonBytes, err := json.Marshal(s.globalTopologyData); err == nil {
-		s.topologyJson = string(jsonBytes)
+		s.topologyJson = jsonBytes
 	} else {
 		logx.Errorf("failed to marshal topology data: %v", err)
 	}
@@ -293,13 +303,13 @@ func (s *UnsTopologyService) OnEventMountStatusChangeEvent(e *mount.MountStatusC
 		s.globalTopologyData.MountStatus = mountStatus
 
 		if jsonBytes, err := json.Marshal(s.globalTopologyData); err == nil {
-			s.topologyJson = string(jsonBytes)
+			s.topologyJson = jsonBytes
 		} else {
 			logx.Errorf("failed to marshal topology data: %v", err)
 		}
 	}
 
-	spring.PublishEvent(&event.UnsTopologyChangeEvent{})
+	spring.PublishEvent(&event.UnsTopologyChangeEvent{TopologyMsg: s.topologyJson})
 	return nil
 }
 

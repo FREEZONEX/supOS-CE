@@ -336,7 +336,7 @@ func (s *WebsocketService) publishMessage(conn io.Writer, id int64) {
 
 func (s *WebsocketService) publishTopologyMessage(conn io.Writer) {
 	msg := s.topologyService.GetLastMsg()
-	if _, err := conn.Write([]byte(msg)); err != nil {
+	if _, err := conn.Write(msg); err != nil {
 		logx.Errorf("failed to send topology message: %v", err)
 	}
 }
@@ -519,11 +519,6 @@ func (s *WebsocketService) OnEventUnsTopologyChangeEvent(e *event.UnsTopologyCha
 	if s.topologySessions == nil {
 		return nil
 	}
-
-	// Get topology service
-	topologyService := spring.GetBean[*service.UnsTopologyService]()
-	msg := topologyService.GetLastMsg()
-
 	// Send to all topology subscribers
 	s.tpLock.RLock()
 	sessionIds := base.MapKeys(s.topologySessions)
@@ -532,7 +527,7 @@ func (s *WebsocketService) OnEventUnsTopologyChangeEvent(e *event.UnsTopologyCha
 		if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
 			subscription := subscriptionVal.(*WsSubscription)
 			subscription.WriteLock.Lock()
-			if _, err := subscription.conn.Write([]byte(msg)); err != nil {
+			if _, err := subscription.conn.Write(e.TopologyMsg); err != nil {
 				logx.Errorf("fail to send topology update to session[%s]: %v", sessionId, err)
 			}
 			subscription.WriteLock.Unlock()
