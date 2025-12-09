@@ -75,7 +75,7 @@ pipeline {
 
                         cat .env
                         
-                        OS_VERSION=$(grep '^OS_VERSION=' .env | cut -d'=' -f2- | sed "s/['\"\s]//g" | tr -d '\r\n')
+                        OS_VERSION=$(awk -F'=' '/^OS_VERSION=/ {print $2}' .env | tr -d '\r\n' | xargs)
                         DATE=$(date +%y%m%d%H)
                         ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
                         mkdir supOS-edge-${OS_VERSION}-${DATE} && mv ${ZipDirAndFileLists} supOS-edge-${OS_VERSION}-${DATE}
