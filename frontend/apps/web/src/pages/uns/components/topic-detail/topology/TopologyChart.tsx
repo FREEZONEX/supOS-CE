@@ -17,16 +17,15 @@ import {
 import ReactDOM from 'react-dom/client'; // React 18 使用 'react-dom/client'
 import { Graph } from '@antv/x6';
 import { debounce } from 'lodash-es';
-import { data, findDate, markupLine } from '@/pages/uns/components/topic-detail/topology/data.ts';
+import { findDate } from '@/pages/uns/components/topic-detail/topology/data.ts';
 import { useBaseStore } from '@/stores/base';
-import { bindDashboardForUns, getTopologyStatus } from '@/apis/inter-api';
+import { bindDashboardForUns } from '@/apis/inter-api';
 import { getSearchParamsString } from '@/utils';
 import { bindFlowForUns, createFlow, goFlow } from '@/apis/inter-api/flow.ts';
 import { useNavigate } from 'react-router';
 import { useTranslate } from '@/hooks';
 import { useDeepCompareEffect } from 'ahooks';
 import { getRefreshList, getSourceList } from '@/apis/chat2db';
-import error from '@/assets/uns/error.svg';
 
 register({
   shape: TypeEnum.NodeRed,
@@ -56,30 +55,17 @@ register({
   component: Apps,
 });
 
-const orderList = ['pushOriginalData', 'pushMqtt', 'pullMqttOrDataPersistence']; //自定义循序
-const xxIndexMap = orderList.reduce((acc: any, cur: any, index: number) => {
-  acc[cur] = index;
-  return acc;
-}, {});
-const compareByXxOrder = (a: any, b: any) => {
-  const indexA = xxIndexMap[a.topologyNode];
-  const indexB = xxIndexMap[b.topologyNode];
-  return indexA - indexB;
-};
-
 const TopologyChart = ({ instanceInfo, dashboardInfo, getFileDetail }: any) => {
   const topologyContainerRef = useRef<any>(null);
   const topologyRef = useRef<Graph>(undefined);
   const dashboardType = useBaseStore((state) => state.dashboardType);
   const modeState = useRef<any>([]);
   const [active, setActive] = useState<any>('');
-  const [activeInfo, setActiveInfo] = useState<any>();
   const navigate = useNavigate();
   const [datas, setDatas] = useState<any>({});
   const { message } = App.useApp();
   const interls = useRef<any>(null);
   const formatMessage = useTranslate();
-  const [errorState, setErrorState] = useState<any>(false);
 
   const initTopology = () => {
     if (topologyRef.current) return topologyRef.current;
@@ -213,89 +199,7 @@ const TopologyChart = ({ instanceInfo, dashboardInfo, getFileDetail }: any) => {
       }
     };
   }, []);
-  // 更新状态
-  const updateNodeState = (edgeId: string, status = false, marked = true) => {
-    if (!topologyRef.current) return;
-    const edge: any = topologyRef.current.getCellById(edgeId);
-    if (status) {
-      edge?.attr('line/stroke', 'red'); // 更新边的颜色
-      edge?.attr('line/style/animation', ''); // 清除动画
-      edge?.setLabels(markupLine); //追加label
-    } else {
-      edge?.attr('line/stroke', 'var(--supos-theme-color)'); // 更新边的颜色
-      edge?.attr('line/style/animation', 'ant-line 60s infinite linear'); // 清除动画
-      edge?.setLabels({}); //追加label
-    }
-    // 是否去除叉叉
-    if (!marked) {
-      edge?.setLabels({}); //追加label
-    }
-  };
 
-  const getTopologyState = async () => {
-    getTopologyStatus({
-      id: instanceInfo?.id || '',
-    }).then((res: any) => {
-      const flag = res.filter((item: any) => item.eventCode != '0');
-      if (flag.length > 0) {
-        setErrorState(true);
-      } else {
-        setErrorState(false);
-      }
-      const sortedData = res.sort(compareByXxOrder);
-      for (let i = 0; i < sortedData.length; i++) {
-        if (sortedData[i].eventCode !== '0') {
-          for (let j = i + 1; j < sortedData.length; j++) {
-            sortedData[j].marked = true;
-          }
-          break; // 找到第一个eventCode不等于0的元素并处理后就可以退出循环了
-        }
-      }
-      //合并pullMqtt和dataPersistence的报错信息
-      const errNode = sortedData.find((e: any) => e.eventCode !== '0');
-      if (errNode && ['pullMqtt', 'dataPersistence'].includes(errNode.topologyNode)) {
-        sortedData.push({ ...errNode, topologyNode: 'pullMqttOrDataPersistence' });
-      } else {
-        sortedData.push({
-          topologyNode: 'pullMqttOrDataPersistence',
-          eventCode: '0',
-          eventMessage: null,
-          eventTime: null,
-          marked: errNode ? true : false,
-        });
-      }
-      sortedData.push({
-        topologyNode: TypeEnum.Apps + '1',
-        eventCode: '0',
-        eventMessage: null,
-        eventTime: null,
-        marked: errNode ? true : false,
-      });
-      modeState.current = sortedData;
-      data.edges.map((item: any) => {
-        sortedData.map((item2: any) => {
-          if (item.id === item2.topologyNode && item2.eventCode != '0' && !item2.marked) {
-            updateNodeState(item.id, true, true);
-            clearInterval(interls.current);
-          } else if (item.id === item2.topologyNode && item2.eventCode == '0' && item2.marked) {
-            updateNodeState(item.id, true, false);
-          } else if (item.id === item2.topologyNode && item2.eventCode == '0' && !item2.marked) {
-            updateNodeState(item.id, false, true);
-          }
-        });
-      });
-      return sortedData;
-    });
-  };
-
-  // 获取拓扑状态
-  const getTopologyStateData = async () => {
-    try {
-      await getTopologyState();
-    } catch (error) {
-      console.error('Error fetching topology state:', error);
-    }
-  };
   useDeepCompareEffect(() => {
     if (topologyRef.current) {
       topologyRef.current.dispose?.();
@@ -423,14 +327,13 @@ const TopologyChart = ({ instanceInfo, dashboardInfo, getFileDetail }: any) => {
       // getTopologyState();
       const xx = modeState.current?.filter((item: any) => item.topologyNode == cell.id && item.eventCode != 0) || [];
       console.log('click', modeState.current, cell, xx);
-      setActiveInfo(xx[0]);
       modeState.current = [];
     };
     // 设置事件监听器
     topologyRef.current!.on('node:click', nodeClickFn);
     topologyRef.current!.on('edge:click', edgeClickFn);
     interls.current = setInterval(() => {
-      getTopologyStateData();
+      // getTopologyStateData();
     }, 2000);
     // 清理事件监听器
     return () => {
@@ -500,18 +403,6 @@ const TopologyChart = ({ instanceInfo, dashboardInfo, getFileDetail }: any) => {
           {active == TypeEnum.DataBase ? <DataBaseDetail instanceInfo={instanceInfo} /> : ''}
         </div>
       )}
-      {/*  错误状态 */}
-      {errorState &&
-        activeInfo?.eventMessage &&
-        ['pushOriginalData', 'pushMqtt', 'pullMqttOrDataPersistence'].includes(active) && (
-          <div className={styles['detailTable']} style={{ alignItems: 'center' }}>
-            <div className={styles['error']}>
-              <img src={error} />
-              {/* <span>Your connection encountered an issue during the modeling phase.</span> */}
-              <span>{activeInfo?.eventMessage}</span>
-            </div>
-          </div>
-        )}
     </Flex>
   );
 };

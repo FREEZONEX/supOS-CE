@@ -38,8 +38,8 @@ DevLink:
       - tcp://emqx:1883
     OpenApi:
       Host: http://emqx:18083
-      ApiKey: 69b84915bc0d50db
-      SecretKey: nzREWI29BQjrY9A1gsgczHEUhDr3kJXonkUE9A7hueCB4G
+      ApiKey: b441dbabd9bd5c26
+      SecretKey: 59CdRlRvDaygamiil6789A2JvbXfO9ADRcLEcgxB9CYVv5Y
 OssConf:
   OssType: local # 如果不需要minio,可以填写local,默认存储路径为 ../oss
   PublicBucketName: tier0-upload-public
