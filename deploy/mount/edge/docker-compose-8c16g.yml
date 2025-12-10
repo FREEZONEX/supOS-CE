@@ -70,11 +70,11 @@ services:
       - service_logo=nodered-original.svg
       - service_description=aboutus.nodeRedDescription
       - FLOWS=/data/flows.json
-      - USE_ALIAS_AS_TOPIC=${USE_ALIAS_PATH_AS_TOPIC}
+      - TZ=UTC
       - TIMESTAMP_NAME=timeStamp
       - QUALITY_NAME=quality
-      - TZ=UTC
       - OS_LANG=${LANGUAGE}
+      - USE_ALIAS_AS_TOPIC=${USE_ALIAS_PATH_AS_TOPIC}
       - NODE_OPTIONS=--openssl-legacy-provider
       - NODE_HTTP_API_PREFIX=/nodered-api
     volumes:
@@ -110,9 +110,9 @@ services:
       - default_network
   mcpclient:
     container_name: mcpclient
+    image: suposce/supos-ce-mcpclient:RELEASE.2025-06-16T07-08-29Z
     profiles:
       - mcpclient
-    image: suposce/supos-ce-mcpclient:RELEASE.2025-06-16T07-08-29Z
     ports:
       - "32893:3000"
       - "32894:8123"
@@ -121,7 +121,7 @@ services:
       - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
       - AGENT_DEPLOYMENT_URL=${AGENT_DEPLOYMENT_URL}
       - SUPOS_API_KEY=${SUPOS_API_KEY}
-      - SUPOS_API_URL=${BASE_URL}
+      - SUPOS_API_URL=${SUPOS_API_URL}
       - SUPOS_MQTT_URL=${SUPOS_MQTT_URL}
       - SUPOS_PG_URL=postgresql://postgres:postgres@postgresql:5432/postgres
     healthcheck:
@@ -173,21 +173,6 @@ services:
         condition: service_healthy  # 依赖 PostgreSQL 的健康状态
     networks:
       - default_network
-  portainer:
-    image: portainer/portainer-ce:2.23.0
-    container_name: portainer
-    environment:
-      service_logo: portainer.svg
-    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC"
-    ports:
-      - "8000:8000"
-      - "9443:9443"
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${VOLUMES_PATH}/portainer:/data
-    networks:
-      - default_network
   postgresql:
     image: timescale/timescaledb:2.20.0-pg17
     container_name: postgresql
@@ -217,6 +202,34 @@ services:
     restart: always
     networks:
       - default_network
+  tsdb:
+    image: timescale/timescaledb:2.20.0-pg17
+    container_name: tsdb
+    environment:
+      TZ: UTC  # 设置容器时区
+      service_logo: postgresql-original.svg
+      service_description: aboutus.postgresqlDescription
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "2345:5432"
+    volumes:
+      - ${VOLUMES_PATH}/tsdb/conf/postgresql.conf:/etc/postgresql/custom.conf
+      - ${VOLUMES_PATH}/tsdb/data:/var/lib/postgresql/data # 持久化数据
+      - ${VOLUMES_PATH}/tsdb/init-scripts:/docker-entrypoint-initdb.d  # 加载初始化脚本
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/custom.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+      start_interval: 60s
+    restart: always
+    networks:
+      - default_network
   keycloak:
     image: keycloak/keycloak:26.0  # 使用 Keycloak 的最新镜像
     container_name: keycloak
@@ -226,7 +239,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 1G
         reservations:
           memory: 512M
     environment:
@@ -269,37 +282,9 @@ services:
         exec 3<>/dev/tcp/localhost/8080"
       interval: 10s
       timeout: 5s
-      retries: 60
+      retries: 120
       start_period: 120s    # 新增：给予2分钟的启动宽限期
       start_interval: 10s   # 新增：宽限期内的检查间隔
-    restart: always
-    networks:
-      - default_network
-  tsdb:
-    image: timescale/timescaledb:2.20.0-pg17
-    container_name: tsdb
-    environment:
-      TZ: UTC  # 设置容器时区
-      service_logo: postgresql-original.svg
-      service_description: aboutus.postgresqlDescription
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "2345:5432"
-    volumes:
-      - ${VOLUMES_PATH}/tsdb/conf/postgresql.conf:/etc/postgresql/custom.conf
-      - ${VOLUMES_PATH}/tsdb/data:/var/lib/postgresql/data # 持久化数据
-      - ${VOLUMES_PATH}/tsdb/init-scripts:/docker-entrypoint-initdb.d  # 加载初始化脚本
-    command:
-      - postgres
-      - -c
-      - config_file=/etc/postgresql/custom.conf
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-      start_interval: 60s
     restart: always
     networks:
       - default_network
@@ -309,7 +294,7 @@ services:
     environment:
       KONG_WORKER_STATE_UPDATE_FREQUENCY: 30
       KONG_DB_CACHE_TTL: 600
-      KONG_NGINX_WORKER_PROCESSES: 2
+      KONG_NGINX_WORKER_PROCESSES: 4
       KONG_LUA_GC_PAUSE: 100            # 提高暂停率，降低 GC 触发频率
       KONG_LUA_GC_STEPMUL: 200          # 增加单次回收强度
       service_logo: konga-original.svg
@@ -324,7 +309,6 @@ services:
       KONG_SSL_CERT_KEY: /etc/kong/ssl/private.key
       KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
       KONG_PLUGINS: bundled,supos-auth-checker,supos-url-transformer
-      KONG_PG_POOL_SIZE: 2
       KONG_LOG_LEVEL: error
     volumes:
       - ${VOLUMES_PATH}/kong/certificationfile:/etc/kong/ssl:ro
@@ -349,16 +333,26 @@ services:
     restart: always  # 确保 Kong 自动重启
     networks:
       - default_network
+  portainer:
+    image: portainer/portainer-ce:2.23.0
+    container_name: portainer
+    environment:
+      service_logo: portainer.svg
+    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC"
+    ports:
+      - "8000:8000"
+      - "9443:9443"
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${VOLUMES_PATH}/portainer:/data
+    networks:
+      - default_network
   konga:
     image: suposce/konga:1.0.0
     container_name: konga
     environment:
-      # DB_ADAPTER: mysql           # 使用 MySQL 作为数据库
-      # DB_HOST: konga_mysql_database # MySQL 容器的主机名
-      # DB_USER: konga               # MySQL 用户
-      # DB_PASSWORD: konga           # MySQL 用户密码
-      # DB_DATABASE: konga          # MySQL 数据库名
-      # NODE_ENV: production           # 设置 NODE_ENV 为生产环境
+      NODE_ENV: production           # 设置 NODE_ENV 为生产环境
       NO_AUTH: "true"             # 禁用认证
       KONGA_SEED_KONG_NODE_DATA_SOURCE_FILE: /node.data
     ports:
@@ -371,9 +365,9 @@ services:
       - default_network
   minio:
     image: minio/minio:RELEASE.2024-12-18T13-15-44Z
-    container_name: minio
     profiles:
       - minio
+    container_name: minio
     environment:
       - service_logo=minio-original.svg
       - service_description=aboutus.minioDescription
@@ -399,3 +393,56 @@ services:
     restart: always
     networks:
       - default_network
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    profiles:
+      - gitea
+    ports:
+      - "3030:3000"
+      - "2222:22"
+    environment:
+      - service_logo=gitea.svg
+      - GITEA__server__ROOT_URL=${BASE_URL}/gitea/home/
+      - GITEA__oauth2__ENABLED=true
+      - GITEA__oauth2__ENABLE_OAUTH2_REGISTER=true
+      - GITEA__service__ALLOW_USER_REGISTRATION=true
+      - GITEA__oauth2__ALLOW_USER_REGISTRATION=true
+      - GITEA__oauth2__ENABLE_OAUTH2_LOGIN=true
+      - GITEA__service__ENABLE_CAPTCHA=false
+      - GITEA__service__REQUIRE_EMAIL_CONFIRMATION=false
+      - GITEA__service__ALLOW_ONLY_EXTERNAL_REGISTRATION=true
+      - GITEA__server__SSH_DOMAIN=${ENTRANCE_PROTOCOL}
+      - GITEA__server__SSH_PORT=2222
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__oauth2_client__ACCOUNT_LINKING=auto
+      - GITEA__oauth2_client__ENABLE_AUTO_REGISTRATION=true
+    volumes:
+      - ${VOLUMES_PATH}/gitea:/data
+    restart: always
+    networks:
+      - default_network
+  runner:
+    image: gitea/act_runner:nightly
+    container_name: gitea_runner
+    profiles:
+      - gitea
+    environment:
+      CONFIG_FILE: /config.yaml
+      GITEA_INSTANCE_URL: "http://gitea:3000"  # Your Gitea server URL
+      GITEA_RUNNER_REGISTRATION_TOKEN: "RD6FfsRrcbfU2BsOrR0h27EqGHze2SQAc9TMmmgY"
+      GITEA_RUNNER_NAME: "my-runner"
+      GITEA_RUNNER_LABELS: "my-runner"
+    volumes:
+      - ${VOLUMES_PATH}/gitearunner/data:/data
+      - ${VOLUMES_PATH}/gitearunner/config.yaml:/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 11223:11223
+    depends_on:
+      - gitea
+    restart: always
+    networks:
+      - default_network
+volumes:
+  plugin_front:

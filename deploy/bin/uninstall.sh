@@ -18,12 +18,12 @@ if [ "$OS_RESOURCE_SPEC" == "1" ]; then
 fi
 
 # 卸载所有服务
-command="--profile fuxa --profile grafana --profile minio --profile elk  --profile eventflow"
+command="--profile fuxa --profile grafana --profile minio --profile eventflow"
 
 if [ -f $SCRIPT_DIR/../.env.tmp ]; then 
-  docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../.env.tmp --project-name supos $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/backend/system/active-services.txt
+  docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../.env.tmp --project-name supos $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/edge/active-services.txt
 else 
-  docker compose --env-file $ENV_FILE --project-name supos $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/backend/system/active-services.txt
+  docker compose --env-file $ENV_FILE --project-name supos $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/edge/active-services.txt
 fi
 
 # 删除所有容器

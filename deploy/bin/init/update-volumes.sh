@@ -22,24 +22,17 @@ cp -r $SCRIPT_DIR/../mount/node-red/override/* $VOLUMES_PATH/node-red/override/
 cp -r $SCRIPT_DIR/../mount/node-red/template $VOLUMES_PATH/node-red/
 
 mkdir -p $VOLUMES_PATH/eventflow/ && cp -r $SCRIPT_DIR/../mount/eventflow/* $VOLUMES_PATH/eventflow/
-cp -r $SCRIPT_DIR/../mount/filebeat/*.yml $VOLUMES_PATH/filebeat/
 cp -r $SCRIPT_DIR/../mount/postgresql/* $VOLUMES_PATH/postgresql/
-cp -r $SCRIPT_DIR/../mount/backend/* $VOLUMES_PATH/backend/
-mkdir -p $VOLUMES_PATH/fuxa/appdata/ && cp $SCRIPT_DIR/../mount/fuxa/appdata/settings.js $VOLUMES_PATH/fuxa/appdata/
 
-cp $SCRIPT_DIR/../mount/plugins/package/*.tar.gz $VOLUMES_PATH/plugins/package/
 
 chown 999:0 -R $VOLUMES_PATH/postgresql
 chown 1000:1000 -R $VOLUMES_PATH/emqx
 chown 1000:0 -R $VOLUMES_PATH/keycloak
 chown 755:0 -R $VOLUMES_PATH/grafana
 
-cp $SCRIPT_DIR/../docker-compose-8c16g.yml $VOLUMES_PATH/backend/system/
-if [ -f "$SCRIPT_DIR/../builds.yaml" ]; then
-  cp $SCRIPT_DIR/../builds.yaml $VOLUMES_PATH/backend/system/
-fi
+cp $SCRIPT_DIR/../docker-compose-8c16g.yml $VOLUMES_PATH/edge
 if [ -f $SCRIPT_DIR/global/active-services.txt ]; then
-  mv $SCRIPT_DIR/global/active-services.txt $VOLUMES_PATH/backend/system/
+  mv $SCRIPT_DIR/global/active-services.txt $VOLUMES_PATH/edge
 fi
 
 # 设置.sh文件为可执行文件

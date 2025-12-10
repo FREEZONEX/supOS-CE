@@ -173,7 +173,7 @@ services:
   read_timeout: 60000
   retries: 5
   port: 8080
-  host: backend
+  host: supos-edge-platform
 - name: event-flow-proxy
   tags: []
   ca_certificates: ~
@@ -191,7 +191,7 @@ services:
   read_timeout: 60000
   retries: 5
   port: 8080
-  host: backend
+  host: supos-edge-platform
 - name: elastic
   tags: []
   ca_certificates: ~
@@ -227,7 +227,7 @@ services:
   read_timeout: 60000
   retries: 5
   port: 8080
-  host: backend
+  host: supos-edge-platform
 - name: gateway
   tags: []
   ca_certificates: ~
@@ -246,7 +246,7 @@ services:
   retries: 5
   port: 8070
   host: gateway
-- name: backend
+- name: supos-edge-platform
   tags: []
   ca_certificates: ~
   path: /inter-api/supos/
@@ -263,7 +263,7 @@ services:
   read_timeout: 300000
   retries: 5
   port: 8080
-  host: backend
+  host: supos-edge-platform
 - name: minio
   tags: []
   ca_certificates: ~
@@ -317,7 +317,7 @@ services:
   read_timeout: 60000
   retries: 5
   port: 8080
-  host: backend
+  host: supos-edge-platform
 - name: TDengineUI
   tags: []
   ca_certificates: ~
@@ -354,7 +354,7 @@ services:
   retries: 5
   port: 18083
   host: emqx
-- name: frontend
+- name: supos-edge-platform
   tags:
   - root:frontend
   - Home:1
@@ -381,7 +381,7 @@ services:
   read_timeout: 60000
   retries: 5
   port: 3000
-  host: frontend
+  host: supos-edge-platform
 - name: eventflow-backend
   tags: []
   ca_certificates: ~
@@ -417,7 +417,7 @@ services:
   read_timeout: 60000
   retries: 5
   port: 8080
-  host: backend
+  host: supos-edge-platform
 - name: fuxa
   tags: []
   ca_certificates: ~
@@ -453,7 +453,7 @@ services:
   read_timeout: 60000
   retries: 5
   port: 8080
-  host: backend
+  host: supos-edge-platform
 - name: keycloak
   tags: []
   ca_certificates: ~
@@ -985,7 +985,7 @@ routes:
   - http
   - https
   id: 3794799e-0c23-4065-a88d-7a08c46fbaf4
-  name: backend
+  name: supos-edge-platform
   response_buffering: true
   tags: ~
   destinations: ~
@@ -1892,7 +1892,7 @@ routes:
   - http
   - https
   id: c2dececa-99f4-45e1-9859-01e88352bd58
-  name: frontend
+  name: supos-edge-platform
   response_buffering: true
   tags: ~
   destinations: ~
@@ -3708,7 +3708,7 @@ upstreams:
   updated_at: 1758346462
   hash_fallback_header: ~
   hash_on_cookie_path: /
-- name: frontend
+- name: supos-edge-platform
   hash_on: none
   healthchecks:
     passive:
@@ -3872,7 +3872,7 @@ upstreams:
   updated_at: 1758346462
   hash_fallback_header: ~
   hash_on_cookie_path: /
-- name: backend
+- name: supos-edge-platform
   hash_on: none
   healthchecks:
     passive:
@@ -4188,7 +4188,7 @@ targets:
   tags: ~
   id: 7c5e8a1d-6022-42b6-83b7-b1f39739b9df
   weight: 100
-  target: frontend:3001
+  target: supos-edge-platform:3001
 - created_at: 1729739753.711
   updated_at: 1758346462.946
   upstream: ab6fb6a2-97b9-45e7-b508-46df2df5203e
@@ -4216,7 +4216,7 @@ targets:
   tags: ~
   id: e401fd6b-6a87-41be-a501-6456afeb14d3
   weight: 100
-  target: backend:8080
+  target: supos-edge-platform:8080
 - created_at: 1731459990.339
   updated_at: 1758346462.955
   upstream: 09fa87e7-1cf1-4fc3-9ad6-6861572a8ef4
@@ -4230,21 +4230,21 @@ targets:
   tags: ~
   id: ef3e3b44-a490-40e8-afac-2b9e2d202643
   weight: 100
-  target: frontend:3000
+  target: supos-edge-platform:3000
 - created_at: 1729914781.603
   updated_at: 1758346462.951
   upstream: 747a43cc-42c4-457a-abac-518c2fe537b3
   tags: ~
   id: f4e24691-4181-42a6-b32c-6c7e8cd92077
   weight: 100
-  target: frontend:4000
+  target: supos-edge-platform:4000
 - created_at: 1749280900.4
   updated_at: 1758346462.949
   upstream: 3c840281-aeb3-4969-8ea4-cc12d45423a1
   tags: ~
   id: f6a73dfa-96f1-4bd4-969f-a46592a5ac49
   weight: 100
-  target: frontend:3002
+  target: supos-edge-platform:3002
 keyauth_credentials:
 - created_at: 1758346492
   id: 5bfc410b-ec4b-4371-a6dd-6775e38c5dc1

@@ -165,7 +165,7 @@ module.exports = function (RED) {
         }
 
         function queryModelSchema(topic) {
-            var encodeUrl = encodeURI('http://backend:8080/inter-api/supos/uns/instance?topic=' + topic);
+            var encodeUrl = encodeURI('http://supos-edge-platform:8080/inter-api/supos/uns/instance?topic=' + topic);
             return axios.get(encodeUrl).then(res => {
                 return res;
             }).catch(e => console.log(e.message));

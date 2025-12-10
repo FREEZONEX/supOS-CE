@@ -70,7 +70,7 @@ chooseProfile2() {
         read -p "Step 1: Do you want to install Grafana? [y/n]: " choicegrafana; choicegrafana=${choicegrafana:-Y}
         if [[ $choicegrafana =~ ^[Yy] ]]; then profileCommand+="--profile grafana "; activeServices+=",grafana"; fi
         read -p "Step 2: Do you want to install MinIO? [y/n]: " choiceminio; choiceminio=${choiceminio:-Y}
-        if [[ $choiceminio =~ ^[Yy] ]]; then profileCommand+="--profile minio "; activeServices+=",minio"; 
+        if [[ $choiceminio =~ ^[Yy] ]]; then profileCommand+="--profile minio "; activeServices+=",minio"; fi
         read -p "Step 3: Do you want to install MCP-Client? [y/N]: " choicemcp; choicemcp=${choicemcp:-N}
         if [[ $choicemcp =~ ^[Yy] ]]; then profileCommand+="--profile mcpclient "; activeServices+=",mcpclient"; fi
         read -p "Step 4: Do you want to install Gitea? [y/N]: " choiceGitea; choiceGitea=${choiceGitea:-N}

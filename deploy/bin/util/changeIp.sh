@@ -32,7 +32,7 @@ docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d kong -c "$
 docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d kong -c "$KONG_SQL_2" >/dev/null
 docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d keycloak -c "$KEYCLOAK_SQL" >/dev/null
 
-command=$(sed -n '2p' $VOLUMES_PATH/backend/system/active-services.txt)
+command=$(sed -n '2p' $VOLUMES_PATH/edge/active-services.txt)
 source $SCRIPT_DIR/set-temp-env.sh "$SCRIPT_DIR/../.." "$command"
 source $SCRIPT_DIR/../init/init-kong-property.sh "$SCRIPT_DIR/../../" && cp $SCRIPT_DIR/../../mount/kong/kong_config.yml $VOLUMES_PATH/kong/
 
@@ -40,14 +40,14 @@ info "IP修改成功, 正在重启服务..."
 
 docker restart keycloak >/dev/null
 
-docker rm -f backend
+docker rm -f supos-edge-platform
 docker rm -f kong
 
 DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../../docker-compose-8c16g.yml
 if [ "$OS_RESOURCE_SPEC" == "1" ]; then
   DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../../docker-compose-4c8g.yml
 fi
-docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../../.env.tmp -p supos -f $DOCKER_COMPOSE_FILE up -d backend kong
+docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../../.env.tmp -p supos -f $DOCKER_COMPOSE_FILE up -d supos-edge-platform kong
 
 sleep 15s
 

@@ -24,7 +24,7 @@ source "$SCRIPT_DIR/util/handle-volumes-path.sh"
 source "$SCRIPT_DIR/util/select-ip-address.sh"
 
 # --- 3. Dependency Installation ---
-source "$SCRIPT_DIR/deb/install-docker.sh" && source $SCRIPT_DIR/deb/install-yq.sh
+source "$SCRIPT_DIR/deb/install-docker.sh"
 
 # --- 4. Service Profile Selection ---
 # This script will set the 'command' variable for docker-compose
@@ -54,7 +54,7 @@ fi
 
 # After volumes are created, copy the service config file to its final destination.
 SOURCE_CONFIG_FILE="$SCRIPT_DIR/global/active-services.txt"
-FINAL_CONFIG_FILE="$VOLUMES_PATH/backend/system/active-services.txt"
+FINAL_CONFIG_FILE="$VOLUMES_PATH/edge/active-services.txt"
 if [ -f "$SOURCE_CONFIG_FILE" ]; then
     info "Activating selected service profile..."
     mkdir -p "$(dirname "$FINAL_CONFIG_FILE")"

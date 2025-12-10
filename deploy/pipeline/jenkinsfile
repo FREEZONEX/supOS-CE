@@ -6,8 +6,10 @@ pipeline {
     environment {
         SOURCE_CODE_URL = "https://gitee.com/supos-community-edition/sup-os-edge.git"
         IMAGE_NAME = "supos-edge-platform" // 替换为你的应用镜像名称
-        REGISTRY = "eco-registry.supos.com/sup9bnlh" // 替换为你的Docker仓库地址 (例如：docker.io, hub.mycompany.com)
-        FULL_IMAGE_TAG = "${REGISTRY}/${IMAGE_NAME}:${TAG}"
+        DOCKER_REGISTRY = "eco-registry.supos.com" // 替换为你的Docker仓库地址 (例如：docker.io, hub.mycompany.com)
+        DOCKER_USERNAME = "admin"
+        DOCKER_PASSWORD = "Supos1304@"
+        FULL_IMAGE_TAG = "${DOCKER_REGISTRY}/sup9bnlh/${IMAGE_NAME}:${TAG}"
         TAG = "${params.TAG}"
         SOURCE_PATH = "/var/jenkins_home/SourceCodes"
         SOURCE_DIR = "supos-edge"
@@ -55,10 +57,13 @@ pipeline {
                     sh '''
                         docker tag ${FULL_IMAGE_TAG} "suposce/supos-edge-platform:${TAG}"
                         docker save  suposce/supos-edge-platform:${TAG} | xz -z -T0 -v >./deploy/images/supos-edge-platform.tar.xz
+
+                        echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY"
+                        docker push "${FULL_IMAGE_TAG}"
                     '''
                     
-                    // 推送镜像到远程仓库
-                    // docker push "${FULL_IMAGE_TAG}"
+                    
+                    
                     
                 }
             }
