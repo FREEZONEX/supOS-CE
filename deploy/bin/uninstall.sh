@@ -27,7 +27,7 @@ else
 fi
 
 # 删除所有容器
-docker ps -a -q --filter "network=supos_default_network" | xargs --no-run-if-empty docker rm -f > /dev/null 2>&1
+docker ps -a -q --filter "network=supos_edge_network" | xargs --no-run-if-empty docker rm -f > /dev/null 2>&1
 
 rm -f $SCRIPT_DIR/../.env.tmp > /dev/null 2>&1
 

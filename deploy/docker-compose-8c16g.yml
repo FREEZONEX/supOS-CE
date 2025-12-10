@@ -1,7 +1,7 @@
 version: '3.8'
 
 networks:
-  default_network:
+  edge_network:
     driver: bridge
 
 services:
@@ -20,7 +20,7 @@ services:
     volumes:
       - ${VOLUMES_PATH}/edge/etc/:/app/go-edge/etc/
     networks:
-      - default_network
+      - edge_network
     restart: always
   marimo:
     image: suposce/marimo:latest
@@ -32,7 +32,7 @@ services:
       - ${VOLUMES_PATH}/marimo/data:/app
     restart: always
     networks:
-      - default_network
+      - edge_network
   emqx:
     image: emqx/emqx:5.8
     container_name: emqx
@@ -59,7 +59,7 @@ services:
       - ${VOLUMES_PATH}/emqx/config/acl.conf:/opt/emqx/etc/acl.conf
     restart: always
     networks:
-      - default_network
+      - edge_network
   nodered:
     image: nodered/node-red:4.0.8-22
     container_name: nodered
@@ -84,7 +84,7 @@ services:
       - emqx
     restart: always
     networks:
-      - default_network
+      - edge_network
   eventflow:
     image: nodered/node-red:4.0.8-22
     container_name: eventflow
@@ -107,7 +107,7 @@ services:
       - ${VOLUMES_PATH}/eventflow:/data  # 使用当前目录的 data 目录
     restart: always
     networks:
-      - default_network
+      - edge_network
   mcpclient:
     container_name: mcpclient
     image: suposce/supos-ce-mcpclient:RELEASE.2025-06-16T07-08-29Z
@@ -133,7 +133,7 @@ services:
       interval: 30s
       retries: 10
     networks:
-      - default_network
+      - edge_network
   grafana:
     image: grafana/grafana:11.4.0
     profiles:
@@ -172,7 +172,7 @@ services:
       postgresql:
         condition: service_healthy  # 依赖 PostgreSQL 的健康状态
     networks:
-      - default_network
+      - edge_network
   postgresql:
     image: timescale/timescaledb:2.20.0-pg17
     container_name: postgresql
@@ -201,7 +201,7 @@ services:
       start_interval: 10s
     restart: always
     networks:
-      - default_network
+      - edge_network
   tsdb:
     image: timescale/timescaledb:2.20.0-pg17
     container_name: tsdb
@@ -229,7 +229,7 @@ services:
       start_interval: 60s
     restart: always
     networks:
-      - default_network
+      - edge_network
   keycloak:
     image: keycloak/keycloak:26.0  # 使用 Keycloak 的最新镜像
     container_name: keycloak
@@ -287,7 +287,7 @@ services:
       start_interval: 10s   # 新增：宽限期内的检查间隔
     restart: always
     networks:
-      - default_network
+      - edge_network
   kong:
     image: kong:3.9.0
     container_name: kong
@@ -332,7 +332,7 @@ services:
              kong start"
     restart: always  # 确保 Kong 自动重启
     networks:
-      - default_network
+      - edge_network
   portainer:
     image: portainer/portainer-ce:2.23.0
     container_name: portainer
@@ -347,7 +347,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${VOLUMES_PATH}/portainer:/data
     networks:
-      - default_network
+      - edge_network
   konga:
     image: suposce/konga:1.0.0
     container_name: konga
@@ -362,7 +362,7 @@ services:
       - ${VOLUMES_PATH}/konga/node.data:/node.data  # 持久化数据库数据
     restart: always
     networks:
-      - default_network
+      - edge_network
   minio:
     image: minio/minio:RELEASE.2024-12-18T13-15-44Z
     profiles:
@@ -392,7 +392,7 @@ services:
         condition: service_healthy
     restart: always
     networks:
-      - default_network
+      - edge_network
   gitea:
     image: gitea/gitea:latest
     container_name: gitea
@@ -421,7 +421,7 @@ services:
       - ${VOLUMES_PATH}/gitea:/data
     restart: always
     networks:
-      - default_network
+      - edge_network
   runner:
     image: gitea/act_runner:nightly
     container_name: gitea_runner
@@ -443,4 +443,4 @@ services:
       - gitea
     restart: always
     networks:
-      - default_network
+      - edge_network

@@ -30,7 +30,7 @@ healthRouter.get('/health', (_: Request, res: Response) => {
   });
 
   const filters = {
-    network: ['supos_default_network'], // 网络名称或 ID
+    network: ['supos_edge_network'], // 网络名称或 ID
   };
   docker.listContainers({ all: true, filters: filters }, (err, containers: any) => {
     if (err) throw err;
