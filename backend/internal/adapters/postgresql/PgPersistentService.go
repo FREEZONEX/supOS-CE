@@ -83,44 +83,32 @@ func (p *PgPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
 	})
 }
 func FillLastRecord(log errLogger, uns *types.CreateTopicDto, query func() (pgx.Rows, error)) {
-	ct := uns.GetTimestampField()
 	rows, er := query()
 	if er != nil {
 		log.Error("fail to get last record", er, uns.GetAlias())
 		return
 	}
-	values := make([]interface{}, len(rows.FieldDescriptions()))
-	valuePointers := make([]interface{}, len(rows.FieldDescriptions()))
-	fd := uns.GetFieldDefines().FieldsMap
-	ctIndex := -1
-	for i, f := range rows.FieldDescriptions() {
-		var obj any
-		if field, has := fd[f.Name]; has {
-			if f.Name == ct && field.Type == types.FieldTypeDatetime {
-				ctIndex = i
-			}
-			obj = types.FieldType(field.Type).ZeroValue()
-		}
-		values[i] = obj
-		valuePointers[i] = &obj
-	}
+
 	if rows.Next() {
-		er = rows.Scan(valuePointers...)
+		values, er := rows.Values()
 		if er != nil {
 			log.Error("fail to Scan last record", er, uns.GetAlias())
 		} else {
+			ct := uns.GetTimestampField()
 			var updateTime int64
-			if ctIndex >= 0 {
-				if tm, is := values[ctIndex].(time.Time); is {
-					updateTime = tm.UnixMilli()
+			for i, f := range rows.FieldDescriptions() {
+				if f.Name == ct {
+					if tm, is := values[i].(time.Time); is {
+						updateTime = tm.UnixMilli()
+					}
+					break
 				}
 			}
+			fd := uns.GetFieldDefines().FieldsMap
 			for i, f := range rows.FieldDescriptions() {
 				if field, has := fd[f.Name]; has {
 					field.LastValue = values[i]
-					if updateTime > 0 {
-						field.LastTime = updateTime
-					}
+					field.LastTime = updateTime
 				}
 			}
 		}

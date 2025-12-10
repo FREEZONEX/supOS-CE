@@ -128,3 +128,26 @@ func (f *FieldDefine) GetLowerLimit() *float64 {
 func (f *FieldDefine) GetDecimal() *int {
 	return f.Decimal
 }
+
+var UnsLastValueFill func(uns *CreateTopicDto)
+
+func (f *FieldDefine) GetLastValue() interface{} {
+	if f.LastTime == 0 {
+		f.tryFillLastValue()
+	}
+	return f.LastValue
+}
+func (f *FieldDefine) GetLastTime() int64 {
+	if f.LastTime == 0 {
+		f.tryFillLastValue()
+	}
+	return f.LastTime
+}
+func (f *FieldDefine) tryFillLastValue() {
+	if uns, ok := f.Uns.(*CreateTopicDto); ok && UnsLastValueFill != nil {
+		UnsLastValueFill(uns)
+		if f.LastTime == 0 {
+			f.LastTime = -1
+		}
+	}
+}

@@ -115,7 +115,7 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 	}
 	if len(protocolStr) > 2 && protocolStr[0] == '{' {
 		var protocol map[string]interface{}
-		if err := JsonUtil.FromJson(protocolStr, &protocol); err == nil {
+		if err := JsonUtil.FromJson(protocolStr, &protocol); err == nil && len(protocol) > 0 {
 			if frequency, ok := protocol["frequency"].(string); ok {
 				unsDto.FrequencySeconds = GetFrequencySeconds(frequency)
 			}
@@ -141,7 +141,13 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 
 	fields := p.Fields
 	unsDto.Fields = fields
-
+	if len(fields) > 0 {
+		for _, field := range fields {
+			if field.IsSystemField() {
+				field.SystemField = base.OptionalTrue
+			}
+		}
+	}
 	//if dto.DataType != nil && *dto.DataType == constants.AlarmRuleType && p.PathType == 2 {
 	//	var ruleDefine AlarmRuleDefine
 	//	if err := JsonUtil.FromJson(p.Protocol, &ruleDefine); err == nil {

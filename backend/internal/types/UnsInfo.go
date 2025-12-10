@@ -1,9 +1,4 @@
-package bo
-
-import (
-	dao "backend/internal/repo/relationDB"
-	"backend/internal/types"
-)
+package types
 
 type UnsInfo interface {
 	GetId() int64
@@ -28,8 +23,8 @@ type UnsInfo interface {
 	GetTbFieldName() string
 	GetParentDataType() *int16
 	GetPathType() int16
-	GetRefers() []*types.InstanceField
-	GetFields() []*types.FieldDefine
+	GetRefers() []*InstanceField
+	GetFields() []*FieldDefine
 	GetRefUns() map[int64]int
 	GetCreateAt() int64
 	GetUpdateAt() int64
@@ -37,9 +32,6 @@ type UnsInfo interface {
 	GetExtendFieldFlags() *int32
 	GetMountType() *int16
 	GetMountSource() string
-	GetSrcJdbcType() types.SrcJdbcType
+	GetSrcJdbcType() SrcJdbcType
 	GetStatus() *int16
 }
-
-var _ UnsInfo = &types.CreateTopicDto{}
-var _ UnsInfo = &dao.UnsNamespace{}

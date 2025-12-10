@@ -461,10 +461,12 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 				if hasDm {
 					v, has = dm[name]
 				}
-				if lv := f.LastValue; !has && lv != nil {
+				if lv := f.GetLastValue(); !has && lv != nil {
 					if f.Type == types.FieldTypeDatetime {
 						if date, isDate := lv.(time.Time); isDate {
 							v = date.UnixMilli()
+						} else if long, isLong := lv.(int64); isLong {
+							v = long
 						}
 					} else {
 						v = lv
@@ -473,11 +475,11 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 				if v != nil {
 					switch f.Type {
 					case types.FieldTypeDouble, types.FieldTypeLong:
-						v = fmt.Sprintf(`"%v"`, v)
+						v = fmt.Sprint(v)
 					}
 					data[name] = v
 				}
-				if lt := f.LastTime; lt > 0 {
+				if lt := f.GetLastTime(); lt > 0 {
 					dt[name] = lt
 				}
 			}

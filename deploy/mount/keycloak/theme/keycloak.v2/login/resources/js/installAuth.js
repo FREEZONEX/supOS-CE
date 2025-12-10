@@ -92,7 +92,7 @@ const getFormValues = (ignoreItems = []) => {
 
 const initInstallAuth = async () => {
   const confirmBtn = document.getElementById("submitAuth");
- 
+
   // 行业下拉框
   // const industrySelect = document.getElementById("industryCode");
   // const verifyCodeFormItem = document.getElementById("verifyCodeFormItem");
@@ -226,28 +226,34 @@ const mainBox = document.getElementById("main");
 const loadingWrap = document.getElementById("loadingWrap");
 loadingWrap.style.display = "flex";
 
-request(`/inter-api/supos/license/state`)
-  .then((data) => {
-    state = data.state;
-    isOnline = data.online;
-
-    // 0-未授权未激活  1-已授权未激活 2-未授权已激活（一般不会有）3-已激活已授权
-    if (state === 1) {
-      installAuthBox.style.display = "block";
-      mainBox.style.display = "none";
-      loginContainer.style.alignItems = "center";
-      loginContainer.style.gridTemplateAreas = '"main"';
-      initInstallAuth();
-    } else {
-      installAuthBox.style.display = "none";
-      mainBox.style.display = "block";
-    }
-    loadingWrap.style.display = "none";
-    loadingWrap.parentNode.removeChild(loadingWrap);
-  })
-  .catch(() => {
-    installAuthBox.style.display = "none";
-    mainBox.style.display = "block";
-    loadingWrap.style.display = "none";
-    loadingWrap.parentNode.removeChild(loadingWrap);
-  });
+(function() {
+  installAuthBox.style.display = "none";
+  mainBox.style.display = "block";
+  loadingWrap.style.display = "none";
+  loadingWrap.parentNode.removeChild(loadingWrap);
+})()
+// request(`/inter-api/supos/license/state`)
+//   .then((data) => {
+//     state = data.state;
+//     isOnline = data.online;
+//
+//     // 0-未授权未激活  1-已授权未激活 2-未授权已激活（一般不会有）3-已激活已授权
+//     if (state === 1) {
+//       installAuthBox.style.display = "block";
+//       mainBox.style.display = "none";
+//       loginContainer.style.alignItems = "center";
+//       loginContainer.style.gridTemplateAreas = '"main"';
+//       initInstallAuth();
+//     } else {
+//       installAuthBox.style.display = "none";
+//       mainBox.style.display = "block";
+//     }
+//     loadingWrap.style.display = "none";
+//     loadingWrap.parentNode.removeChild(loadingWrap);
+//   })
+//   .catch(() => {
+//     installAuthBox.style.display = "none";
+//     mainBox.style.display = "block";
+//     loadingWrap.style.display = "none";
+//     loadingWrap.parentNode.removeChild(loadingWrap);
+//   });

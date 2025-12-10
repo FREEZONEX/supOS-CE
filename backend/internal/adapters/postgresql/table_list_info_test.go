@@ -1,13 +1,17 @@
 package postgresql
 
 import (
+	"backend/internal/common"
 	"backend/internal/types"
+	"backend/share/base"
 	"context"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 func TestListTableInfo(t *testing.T) {
@@ -72,4 +76,39 @@ func TestPgTempTable(t *testing.T) {
 		panic(err)
 	}
 	t.Log(tag.RowsAffected())
+}
+func TestFillLastRecord(t *testing.T) {
+	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@100.100.100.20:31014/postgres")
+	if err != nil {
+		panic(err)
+	}
+	defer pool.Close()
+	fields := []*types.FieldDefine{
+		{
+			Name:   "timeStamp",
+			Type:   types.FieldTypeDatetime,
+			Unique: base.OptionalTrue,
+		},
+		{
+			Name:   "tm",
+			Type:   types.FieldTypeLong,
+			Unique: base.OptionalTrue,
+		},
+		{
+			Name: "wq",
+			Type: types.FieldTypeDouble,
+		},
+		{
+			Name: "status",
+			Type: types.FieldTypeLong,
+		}}
+	uns := &types.CreateTopicDto{
+		Alias:  "akseqxajk8",
+		Fields: fields,
+	}
+	common.InitSnowflake(123)
+	pgQuery := func() (pgx.Rows, error) {
+		return pool.Query(context.Background(), fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.GetTable(), uns.GetTimestampField()))
+	}
+	FillLastRecord(logx.WithContext(context.Background()), uns, pgQuery)
 }

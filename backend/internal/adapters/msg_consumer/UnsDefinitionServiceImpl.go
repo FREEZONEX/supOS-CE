@@ -10,7 +10,6 @@ import (
 	"backend/share/spring"
 	"context"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -22,7 +21,6 @@ type UnsDefinitionService struct {
 	log                  logx.Logger
 	unsMapper            dao.UnsNamespaceRepo
 	cache                *cache.Cache // map[int64]*types.CreateTopicDto
-	once                 sync.Once
 	persistentServiceMap map[types.SrcJdbcType]serviceApi.IPersistentService
 }
 
@@ -58,8 +56,7 @@ func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.CreateTopi
 		db := dao.GetDb(ctx)
 		po, _ := u.unsMapper.SelectById(db, id)
 		if po != nil {
-			rs = UnsConverter.Po2Dto(po)
-			u.fillLastValue(rs)
+			rs = po2dto(po)
 			c.Set(idStr, rs, 10*time.Minute)
 			c.Set(keyAliasPrev+po.Alias, idStr, 10*time.Minute)
 		} else {
@@ -67,22 +64,6 @@ func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.CreateTopi
 		}
 	}
 	return
-}
-func (u *UnsDefinitionService) fillLastValue(uns *types.CreateTopicDto) {
-	// 查询数据库表最新的一条数据，填充字段的 lastValue
-	if u.persistentServiceMap == nil {
-		u.once.Do(func() {
-			u.persistentServiceMap = base.MapArrayToMap(spring.GetBeansOfType[serviceApi.IPersistentService](),
-				func(e serviceApi.IPersistentService) (ok bool, k types.SrcJdbcType, v serviceApi.IPersistentService) {
-					return true, e.GetDataSrcId(), e
-				})
-		})
-	}
-	psv, has := u.persistentServiceMap[types.SrcJdbcType(uns.DataSrcID)]
-	if !has {
-		return
-	}
-	psv.FillLastRecord(uns)
 }
 func (u *UnsDefinitionService) DeleteByIds(ids []int64) error {
 	for _, id := range ids {
@@ -150,8 +131,7 @@ func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query 
 		db := dao.GetDb(ctx)
 		po, _ := query(db, arg)
 		if po != nil {
-			rs = UnsConverter.Po2Dto(po)
-			u.fillLastValue(rs)
+			rs = po2dto(po)
 			idStr := strconv.FormatInt(po.Id, 10)
 			c.Set(key, idStr, 10*time.Minute)
 			c.Set(idStr, rs, 10*time.Minute)
@@ -165,4 +145,29 @@ func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query 
 		}
 	}
 	return
+}
+func po2dto(po *dao.UnsNamespace) *types.CreateTopicDto {
+	rs := UnsConverter.Po2Dto(po)
+	fields := rs.Fields
+	if len(fields) > 0 {
+		for _, field := range fields {
+			field.Uns = rs
+		}
+	}
+	return rs
+}
+func (u *UnsDefinitionService) OnEventContextRefreshedEvent1(_ *event.ContextRefreshedEvent) {
+	u.persistentServiceMap = base.MapArrayToMap(spring.GetBeansOfType[serviceApi.IPersistentService](),
+		func(e serviceApi.IPersistentService) (ok bool, k types.SrcJdbcType, v serviceApi.IPersistentService) {
+			return true, e.GetDataSrcId(), e
+		})
+	types.UnsLastValueFill = u.fillUnsLastValue
+}
+func (u *UnsDefinitionService) fillUnsLastValue(uns *types.CreateTopicDto) {
+	// 查询数据库表最新的一条数据，填充字段的 lastValue
+	psv, has := u.persistentServiceMap[types.SrcJdbcType(uns.DataSrcID)]
+	if !has {
+		return
+	}
+	psv.FillLastRecord(uns)
 }

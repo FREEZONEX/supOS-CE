@@ -250,7 +250,7 @@ func setLastData(list []map[string]interface{}, CT string, fds *types.FieldDefin
 		}
 	}
 }
-func (u *UnsMessageConsumer) OnEventContextRefreshedEvent0(ev *event.ContextRefreshedEvent) {
+func (u *UnsMessageConsumer) OnEventContextRefreshedEvent10(ev *event.ContextRefreshedEvent) {
 	if sv := ev.SvcContext; sv != nil && len(sv.Config.DevLink.Mqtt.Brokers) > 0 && sv.Config.DevLink.Mode == "mqtt" {
 		go func() {
 			cli, er := subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)

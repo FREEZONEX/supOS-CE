@@ -1,6 +1,9 @@
 package bo
 
-import "backend/internal/types"
+import (
+	dao "backend/internal/repo/relationDB"
+	"backend/internal/types"
+)
 
 // UnsDetail 接口定义
 type UnsDetail interface {
@@ -46,3 +49,5 @@ type UnsDetail interface {
 
 var _ UnsDetail = &types.InstanceDetail{}
 var _ UnsDetail = &types.ModelDetail{}
+var _ types.UnsInfo = &types.CreateTopicDto{}
+var _ types.UnsInfo = &dao.UnsNamespace{}

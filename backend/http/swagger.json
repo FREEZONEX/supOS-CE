@@ -1024,12 +1024,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -1050,6 +1049,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -1389,12 +1391,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -1415,6 +1416,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -3907,12 +3911,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -3933,6 +3936,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -3967,12 +3973,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -3993,6 +3998,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -4062,12 +4070,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -4088,6 +4095,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -4594,12 +4604,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -4620,6 +4629,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -5441,12 +5453,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -5467,6 +5478,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -5501,12 +5515,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -5527,6 +5540,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -5596,12 +5612,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -5622,6 +5637,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -5801,12 +5819,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -5827,6 +5844,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -5902,12 +5922,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -5928,6 +5947,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -6175,12 +6197,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -6201,6 +6222,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -6559,12 +6583,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -6585,6 +6608,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -6619,12 +6645,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -6645,6 +6670,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -6714,12 +6742,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -6740,6 +6767,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -7164,12 +7194,11 @@
                         "type": "object",
                         "required": [
                           "name",
-                          "type"
+                          "type",
+                          "-"
                         ],
                         "properties": {
-                          "-": {
-                            "type": "integer"
-                          },
+                          "-": {},
                           "decimal": {
                             "type": "integer"
                           },
@@ -7190,6 +7219,9 @@
                           },
                           "remark": {
                             "type": "string"
+                          },
+                          "systemField": {
+                            "type": "boolean"
                           },
                           "tbValueName": {
                             "type": "string"
@@ -7218,12 +7250,11 @@
                         "type": "object",
                         "required": [
                           "name",
-                          "type"
+                          "type",
+                          "-"
                         ],
                         "properties": {
-                          "-": {
-                            "type": "integer"
-                          },
+                          "-": {},
                           "decimal": {
                             "type": "integer"
                           },
@@ -7244,6 +7275,9 @@
                           },
                           "remark": {
                             "type": "string"
+                          },
+                          "systemField": {
+                            "type": "boolean"
                           },
                           "tbValueName": {
                             "type": "string"
@@ -7470,12 +7504,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -7496,6 +7529,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -7602,12 +7638,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -7628,6 +7663,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -8396,12 +8434,11 @@
                         "type": "object",
                         "required": [
                           "name",
-                          "type"
+                          "type",
+                          "-"
                         ],
                         "properties": {
-                          "-": {
-                            "type": "integer"
-                          },
+                          "-": {},
                           "decimal": {
                             "type": "integer"
                           },
@@ -8422,6 +8459,9 @@
                           },
                           "remark": {
                             "type": "string"
+                          },
+                          "systemField": {
+                            "type": "boolean"
                           },
                           "tbValueName": {
                             "type": "string"
@@ -8541,12 +8581,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -8567,6 +8606,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -8713,12 +8755,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -8739,6 +8780,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -8773,12 +8817,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -8799,6 +8842,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -8868,12 +8914,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -8894,6 +8939,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -9067,12 +9115,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -9093,6 +9140,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -9405,12 +9455,11 @@
                         "type": "object",
                         "required": [
                           "name",
-                          "type"
+                          "type",
+                          "-"
                         ],
                         "properties": {
-                          "-": {
-                            "type": "integer"
-                          },
+                          "-": {},
                           "decimal": {
                             "type": "integer"
                           },
@@ -9431,6 +9480,9 @@
                           },
                           "remark": {
                             "type": "string"
+                          },
+                          "systemField": {
+                            "type": "boolean"
                           },
                           "tbValueName": {
                             "type": "string"
@@ -9465,12 +9517,11 @@
                         "type": "object",
                         "required": [
                           "name",
-                          "type"
+                          "type",
+                          "-"
                         ],
                         "properties": {
-                          "-": {
-                            "type": "integer"
-                          },
+                          "-": {},
                           "decimal": {
                             "type": "integer"
                           },
@@ -9491,6 +9542,9 @@
                           },
                           "remark": {
                             "type": "string"
+                          },
+                          "systemField": {
+                            "type": "boolean"
                           },
                           "tbValueName": {
                             "type": "string"
@@ -9560,12 +9614,11 @@
                         "type": "object",
                         "required": [
                           "name",
-                          "type"
+                          "type",
+                          "-"
                         ],
                         "properties": {
-                          "-": {
-                            "type": "integer"
-                          },
+                          "-": {},
                           "decimal": {
                             "type": "integer"
                           },
@@ -9586,6 +9639,9 @@
                           },
                           "remark": {
                             "type": "string"
+                          },
+                          "systemField": {
+                            "type": "boolean"
                           },
                           "tbValueName": {
                             "type": "string"
@@ -9967,12 +10023,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -9993,6 +10048,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -10176,12 +10234,11 @@
                         "type": "object",
                         "required": [
                           "name",
-                          "type"
+                          "type",
+                          "-"
                         ],
                         "properties": {
-                          "-": {
-                            "type": "integer"
-                          },
+                          "-": {},
                           "decimal": {
                             "type": "integer"
                           },
@@ -10202,6 +10259,9 @@
                           },
                           "remark": {
                             "type": "string"
+                          },
+                          "systemField": {
+                            "type": "boolean"
                           },
                           "tbValueName": {
                             "type": "string"
@@ -10335,12 +10395,11 @@
                     "type": "object",
                     "required": [
                       "name",
-                      "type"
+                      "type",
+                      "-"
                     ],
                     "properties": {
-                      "-": {
-                        "type": "integer"
-                      },
+                      "-": {},
                       "decimal": {
                         "type": "integer"
                       },
@@ -10361,6 +10420,9 @@
                       },
                       "remark": {
                         "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
                       },
                       "tbValueName": {
                         "type": "string"
@@ -10533,12 +10595,11 @@
                         "type": "object",
                         "required": [
                           "name",
-                          "type"
+                          "type",
+                          "-"
                         ],
                         "properties": {
-                          "-": {
-                            "type": "integer"
-                          },
+                          "-": {},
                           "decimal": {
                             "type": "integer"
                           },
@@ -10559,6 +10620,9 @@
                           },
                           "remark": {
                             "type": "string"
+                          },
+                          "systemField": {
+                            "type": "boolean"
                           },
                           "tbValueName": {
                             "type": "string"
@@ -11077,12 +11141,11 @@
                           "type": "object",
                           "required": [
                             "name",
-                            "type"
+                            "type",
+                            "-"
                           ],
                           "properties": {
-                            "-": {
-                              "type": "integer"
-                            },
+                            "-": {},
                             "decimal": {
                               "type": "integer"
                             },
@@ -11103,6 +11166,9 @@
                             },
                             "remark": {
                               "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
                             },
                             "tbValueName": {
                               "type": "string"
@@ -12319,7 +12385,7 @@
       }
     }
   },
-  "x-date": "2025-12-09 16:07:23",
+  "x-date": "2025-12-10 10:10:23",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

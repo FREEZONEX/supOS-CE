@@ -64,7 +64,7 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 	return
 }
 
-func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dto bo.UnsDetail, setMount bool) {
+func (l *UnsQueryService) setDetailInfo(ctx context.Context, file types.UnsInfo, dto bo.UnsDetail, setMount bool) {
 	fs := file.GetRefers()
 	var origPo *types.CreateTopicDto
 	var db *gorm.DB
@@ -87,8 +87,8 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dt
 	}
 	dto.SetPathType(unsTarget.GetPathType())
 	// 设置字段
-	if fields := unsTarget.GetFields(); fields != nil {
-		fieldDefines := getDisplayFields(unsTarget, unsTarget.GetFields())
+	if fields := unsTarget.GetFields(); len(fields) > 0 {
+		fieldDefines := getDisplayFields(unsTarget, fields)
 		dto.SetFields(fieldDefines)
 	}
 
@@ -169,7 +169,7 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file bo.UnsInfo, dt
 		}
 	}
 }
-func getDisplayFields(unsInfo bo.UnsInfo, fields []*types.FieldDefine) []*types.FieldDefine {
+func getDisplayFields(unsInfo types.UnsInfo, fields []*types.FieldDefine) []*types.FieldDefine {
 	dataType := unsInfo.GetDataType()
 	if dataType == nil {
 		return fields
@@ -191,13 +191,16 @@ func filterFieldsForTimeSequence(fields []*types.FieldDefine) []*types.FieldDefi
 		// 保留不包含系统字段前缀且没有表值名称的字段
 		if !strings.HasPrefix(name, constants.SystemFieldPrev) && tbValueName == nil {
 			result = append(result, fd)
+			if fd.IsSystemField() {
+				fd.SystemField = base.OptionalTrue
+			}
 		}
 	}
 
 	return result
 }
 
-func filterFieldsForOtherTypes(unsInfo bo.UnsInfo, fields []*types.FieldDefine) []*types.FieldDefine {
+func filterFieldsForOtherTypes(unsInfo types.UnsInfo, fields []*types.FieldDefine) []*types.FieldDefine {
 	jdbcType := unsInfo.GetSrcJdbcType()
 	if jdbcType == 0 {
 		return fields
@@ -212,6 +215,9 @@ func filterFieldsForOtherTypes(unsInfo bo.UnsInfo, fields []*types.FieldDefine) 
 		// 跳过时间戳字段、质量字段和系统字段
 		if fd == ct || fd == qos || strings.HasPrefix(fd.GetName(), constants.SystemFieldPrev) {
 			continue
+		}
+		if fd.IsSystemField() {
+			fd.SystemField = base.OptionalTrue
 		}
 		result = append(result, fd)
 	}

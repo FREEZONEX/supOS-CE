@@ -40,11 +40,10 @@
 }
 
 .supos-login-slogan {
-  width: 300px;
+  width: 150px;
 }
 
 .pf-v5-c-login-l-t-right {
-  display: none;
   width: 80px;
   height: 80px;
   background-image: url("../img/login-arrow.svg");
@@ -60,7 +59,7 @@
 
 .supos-logo {
   height: 40px;
-  width: 150px;
+  width: 100px;
   margin-right: 10px;
 }
 
@@ -140,7 +139,7 @@ div.kc-logo-text span {
 }
 
 .pf-v5-c-button.pf-m-primary {
-  background-color: rgb(148, 197, 24);
+  background-color: #94c618;
   border-radius: 0;
   cursor: pointer;
 }
