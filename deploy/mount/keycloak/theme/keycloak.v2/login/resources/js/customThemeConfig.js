@@ -8,9 +8,6 @@ const checkUrl = (dom, url, defaultUrl) => {
       this.src = defaultUrl;
     };
   }else{
-    if (defaultUrl) {
-      dom.style.display = "none";
-    }
     dom.src = defaultUrl;
   }
 };
@@ -25,6 +22,12 @@ export const handleTheme = async (keycloakUrl, lang) => {
 
   const favicon = document.getElementById("dynamic-favicon");
 
+  function edgeMode () {
+      loginLeft.style.background = `url(${keycloakUrl}/img/login-background.svg) no-repeat center / cover`;
+      document.body.style.opacity = 1;
+
+  }
+  edgeMode()
   function updateDarkMode(isEnabled, themeConfig) {
     const {
       brightBackgroundIcon,
@@ -54,17 +57,18 @@ export const handleTheme = async (keycloakUrl, lang) => {
       if (logoDom && loginArrowDom && sloganDom) {
         checkUrl(
           logoDom,
-          darkLogoIcon || `${keycloakUrl}/img/supos-logo-dark.svg`,
+          darkLogoIcon || "/files/system/resource/supos/logo-dark.png",
           `${keycloakUrl}/img/supos-logo-dark.svg`
         );
         checkUrl(
           sloganDom,
           darkSloganIcon,
+          `${keycloakUrl}/img/slogan-dark-${lang}.png`
         );
         loginArrowDom.style.backgroundImage = `url(${keycloakUrl}/img/login-arrow-dark.svg)`;
-        loginLeft.style.background = darkBackgroundIcon
+        loginLeft.style.backgroundImage = darkBackgroundIcon
           ? `url(${darkBackgroundIcon})`
-          : `url(${keycloakUrl}/img/login-background.png) center center / cover no-repeat`;
+          : `url(${keycloakUrl}/img/login-background.png)`;
       }
     } else {
       //亮色主题
@@ -72,7 +76,7 @@ export const handleTheme = async (keycloakUrl, lang) => {
       if (logoDom && loginArrowDom && sloganDom) {
         checkUrl(
           logoDom,
-          brightLogoIcon || `${keycloakUrl}/img/supos-logo.svg`,
+          brightLogoIcon || "/files/system/resource/supos/logo-light.png",
           `${keycloakUrl}/img/supos-logo.svg`
         );
         checkUrl(
@@ -82,9 +86,9 @@ export const handleTheme = async (keycloakUrl, lang) => {
         );
         loginArrowDom.style.backgroundImage = `url(${keycloakUrl}/img/login-arrow.svg)`;
 
-        loginLeft.style.background = brightBackgroundIcon
+        loginLeft.style.backgroundImage = brightBackgroundIcon
           ? `url(${brightBackgroundIcon})`
-          : `url(${keycloakUrl}/img/login-background.png) center center / cover no-repeat`;
+          : `url(${keycloakUrl}/img/login-background.png)`;
       }
     }
   }
@@ -97,17 +101,17 @@ export const handleTheme = async (keycloakUrl, lang) => {
     );
   };
 
-  try {
-    const themeConfig = await request(`/inter-api/supos/theme/getConfig`);
-    if (themeConfig) {
-      updateDarkMode(themeConfig?.loginPageType, themeConfig);
-    } else {
-      useDefaultTheme();
-    }
-    document.body.style.opacity = 1;
-  } catch (err) {
-    useDefaultTheme();
-    document.body.style.opacity = 1;
-    console.log(err);
-  }
+  // try {
+  //   const themeConfig = await request(`/inter-api/supos/theme/getConfig`);
+  //   if (themeConfig) {
+  //     updateDarkMode(themeConfig?.loginPageType, themeConfig);
+  //   } else {
+  //     useDefaultTheme();
+  //   }
+  //   document.body.style.opacity = 1;
+  // } catch (err) {
+  //   useDefaultTheme();
+  //   document.body.style.opacity = 1;
+  //   console.log(err);
+  // }
 };
