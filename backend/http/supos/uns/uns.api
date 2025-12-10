@@ -133,8 +133,10 @@ type (
         UpperLimit  *float64 `json:"upperLimit,optional,omitempty"`
         LowerLimit  *float64 `json:"lowerLimit,optional,omitempty"`
         Decimal     *int     `json:"decimal,optional,omitempty"`
+        SystemField *bool    `json:"systemField,optional,omitempty"`
         LastValue   interface{}   `json:"-,optional"`
         LastTime    int64    `json:"-,optional"`
+        uns         interface{} `json:"-"`
     }
      FieldDefines  {
         FieldsMap     map[string]*FieldDefine // Field name -> FieldDefine

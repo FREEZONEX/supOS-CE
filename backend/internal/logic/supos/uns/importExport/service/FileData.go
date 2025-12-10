@@ -5,7 +5,6 @@ import (
 	"backend/internal/common/enums"
 	"backend/internal/common/serviceApi"
 	"backend/internal/common/utils/PathUtil"
-	"backend/internal/logic/supos/uns/uns/bo"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
@@ -152,7 +151,7 @@ func po2DataVo(unsPo *dao.UnsNamespace) *FileData {
 func vo2DataVo(unsPo *types.CreateTopicDto) *FileData {
 	return uns2DataVo(unsPo)
 }
-func uns2DataVo(unsPo bo.UnsInfo) *FileData {
+func uns2DataVo(unsPo types.UnsInfo) *FileData {
 
 	data := &FileData{id: unsPo.GetId(), parentId: base.P2vWithDefault(unsPo.GetParentId(), -1)}
 
