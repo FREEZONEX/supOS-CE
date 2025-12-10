@@ -83,6 +83,8 @@ COPY --from=web-builder /app/pnpm-workspace.yaml ./services-express-dist/
 WORKDIR /app/services-express-dist
 RUN pnpm install --production
 
+WORKDIR /app/go-edge
+
 # Expose ports for web and services
 EXPOSE 3000 4000 8080
 
@@ -90,4 +92,4 @@ EXPOSE 3000 4000 8080
 CMD ["concurrently", \
     "serve -s /app/web-dist -l 3000", \
     "node /app/services-express-dist/index.js", \
-    "/app/go-edge/backend"]
+    "./backend"]
