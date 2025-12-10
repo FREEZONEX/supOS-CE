@@ -2,9 +2,14 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
-source $SCRIPT_DIR/global/log.sh
-source $SCRIPT_DIR/../.env
 
+ENV_FILE="$SCRIPT_DIR/../.env.default"
+if [ -f "$SCRIPT_DIR/../.env" ]; then
+  ENV_FILE="$SCRIPT_DIR/../.env"
+fi
+
+source $ENV_FILE
+source $SCRIPT_DIR/global/log.sh
 # Handle force flag
 if [ "$1" = "-f" ]; then
   FORCE=true

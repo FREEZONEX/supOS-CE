@@ -78,6 +78,8 @@ pipeline {
                         ls -all
                         scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar.xz" ./images/
                         rm -rf ./pipeline && rm -f Dockerfile-Compose
+
+                        cp -r ../backend/etc ./mount/edge/
                         
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
