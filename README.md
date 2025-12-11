@@ -57,7 +57,7 @@
    ```
 2. Navigate to the `Tier0` directory and edit environment variables in the `.env` file.
    ```bash
-   cd Tier0
+   cd Tier0-Edge
    vi .env
    ```
    - Update `VOLUMES_PATH` (directory for storing project data).
@@ -78,7 +78,7 @@
    ```
 2. Navigate to the `Tier0` directory and edit environment variables in the `.env` file.
    ```bash
-   cd Tier0
+   cd Tier0-Edge
    vi .env
    ```
    - Update `OS_PLATFORM_TYPE` = windows
