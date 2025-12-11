@@ -19,6 +19,14 @@ pipeline {
 
     }
 
+    parameters {
+        booleanParam(
+            name: 'OnlyBuildImage', 
+            defaultValue: false, 
+            description: '是否只构建镜像，不打包部署文件'
+        )
+    }
+
     stages {
         // --------------------------------------------------------------------------------------------------
         stage('1. 克隆源码') {
@@ -70,6 +78,11 @@ pipeline {
         }
         // --------------------------------------------------------------------------------------------------
         stage('3. 准备部署包') {
+            when {
+                expression { 
+                    return !params.OnlyBuildImage 
+                }
+            }
             steps {
                 script {                    
                     dir("deploy") {
@@ -97,6 +110,11 @@ pipeline {
         }
         // --------------------------------------------------------------------------------------------------
         stage('4. 传输部署包') {
+            when {
+                expression { 
+                    return !params.OnlyBuildImage 
+                }
+            }
             steps {
                 script {      
                     dir("deploy") {            
