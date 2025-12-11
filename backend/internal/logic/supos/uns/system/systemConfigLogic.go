@@ -258,7 +258,7 @@ func loadComposeFile() ([]byte, error) {
 }
 
 func loadActiveServicesLine() (string, error) {
-	if custom := strings.TrimSpace("/data/system/active-services.txt"); custom != "" {
+	if custom := strings.TrimSpace("/app/go-edge/system/active-services.txt"); custom != "" {
 		data, err := os.ReadFile(custom)
 		if err != nil {
 			return "", err

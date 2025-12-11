@@ -56,7 +56,7 @@ func FetchUserInfo(ctx context.Context, kc *clients.KeycloakClient, accessToken 
 			}
 		}
 	}
-
+	logx.WithContext(ctx).Info("keycloakrepo not Enabled")
 	user, err := loadUserInfoFromKeycloak(ctx, kc, sub, claims, accessToken, defaultHome)
 	if err != nil {
 		return nil, sub, err

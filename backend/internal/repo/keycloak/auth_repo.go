@@ -81,12 +81,14 @@ func (r *AuthRepo) BuildUserInfo(ctx context.Context, realm string, userID strin
 
 	attrs, err := r.getUserAttributes(ctx, userID)
 	if err != nil {
+		logx.WithContext(ctx).Errorf("BuildUserInfo getUserAttributes err %v", err)
 		return nil, err
 	}
 	applyAttributesFromMap(user, attrs)
 
 	roles, err := r.getRoles(ctx, realm, userID)
 	if err != nil {
+		logx.WithContext(ctx).Errorf("BuildUserInfo getRoles err %v", err)
 		return nil, err
 	}
 
