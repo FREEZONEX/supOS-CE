@@ -223,7 +223,7 @@ func (kc *KeycloakClient) GetAdminToken() (string, error) {
 	apiURL := fmt.Sprintf("%s/realms/master/protocol/openid-connect/token", kc.config.IssuerURI)
 	form := url.Values{
 		"username":   {"admin"},
-		"password":   {"supos"},
+		"password":   {"tier0"},
 		"grant_type": {"password"},
 		"client_id":  {"admin-cli"},
 	}
