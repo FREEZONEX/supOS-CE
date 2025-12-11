@@ -28,6 +28,7 @@ services:
       - OAUTH_REFRESH_TOKEN_TIME=${OAUTH_REFRESH_TOKEN_TIME}
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
+      - /etc/docker/certs:/certs
     networks:
       - edge_network
     restart: always
