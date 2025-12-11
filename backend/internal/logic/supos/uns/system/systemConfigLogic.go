@@ -223,7 +223,7 @@ func buildContainerMap() (map[string]*sysconfig.ContainerInfo, error) {
 func loadComposeFile() ([]byte, error) {
 	candidates := []string{
 		// strings.TrimSpace(os.Getenv("SYS_OS_COMPOSE_PATH")),
-		"/data/system",
+		"/app/go-edge/system",
 	}
 	for _, candidate := range candidates {
 		if candidate == "" {
