@@ -719,7 +719,7 @@ routes:
   methods: ~
   https_redirect_status_code: 426
   service: f8fd7fd2-d8f6-47d7-9c54-aa51a24a68ad
-  strip_path: true
+  strip_path: false
   paths:
   - /copilotkit
   created_at: 1729748378
