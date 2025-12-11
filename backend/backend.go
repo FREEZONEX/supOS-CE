@@ -1,6 +1,13 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
 	_ "backend/internal/adapters/grafana"
 	_ "backend/internal/adapters/msg_consumer" // 手动导入 adapter
 	"backend/internal/common/event"
@@ -9,19 +16,12 @@ import (
 	"backend/internal/logic/supos/uns/system"
 	_ "backend/internal/logic/supos/uns/topology/service" // 导入触发 init() 注册
 	_ "backend/internal/logic/supos/uns/uns/service"
-	"net/http"
-	"os"
-
 	"backend/internal/svc"
 	"backend/share/spring"
-	"context"
-	"flag"
-	"fmt"
 
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
 	_ "github.com/zeromicro/go-zero/core/proc" //开启pprof采集 https://mp.weixin.qq.com/s/yYFM3YyBbOia3qah3eRVQA
-
 	"github.com/zeromicro/go-zero/rest"
 )
 
@@ -56,5 +56,31 @@ func main() {
 		_ = spring.PublishEvent(&event.ContextClosedEvent{SvcContext: ctx})
 	}()
 	fmt.Printf("Started server at %s:%d...\n", c.Host, c.Port)
-	server.Start()
+	server.StartWithOpts(withSwaggerBinaryContentType())
+}
+
+// withSwaggerBinaryContentType forces the swagger yaml downloads to use application/octet-stream.
+func withSwaggerBinaryContentType() rest.StartOption {
+	return func(svr *http.Server) {
+		if svr == nil || svr.Handler == nil {
+			return
+		}
+
+		handler := svr.Handler
+		svr.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if isSwaggerBinaryFile(r.URL.Path) {
+				w.Header().Set("Content-Type", "application/octet-stream")
+			}
+			handler.ServeHTTP(w, r)
+		})
+	}
+}
+
+func isSwaggerBinaryFile(path string) bool {
+	switch strings.ToLower(path) {
+	case "/files/system/resource/swagger/supos.yaml", "/files/system/resource/swagger/supos-en.yaml":
+		return true
+	default:
+		return false
+	}
 }
