@@ -41,20 +41,20 @@ export const getLangList = async () => {
       {
         hasUsed: true,
         id: 1,
-        languageCode: 'zh_CN',
+        languageCode: 'zh-CN',
         languageName: '中文（简体）',
         languageType: 1,
         label: '中文（简体）',
-        value: 'zh_CN',
+        value: 'zh-CN',
       },
       {
         hasUsed: true,
         id: 2,
-        languageCode: 'en_US',
+        languageCode: 'en-US',
         languageName: 'English',
         languageType: 1,
         label: 'English',
-        value: 'en_US',
+        value: 'en-US',
       },
     ];
     useI18nStore.setState({
@@ -155,7 +155,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       storageOpt.set('personInfo', {
         username: info?.preferredUsername,
       });
-      const containerList = filterContainerList(systemInfo?.containerMap);
+      const containerList = filterContainerList(systemInfo?.containerMap || {});
       // 个人用户设置
       const currentUserInfo = {
         ...info,
