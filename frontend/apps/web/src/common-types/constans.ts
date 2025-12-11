@@ -13,9 +13,9 @@ export const SUPOS_USER_TIPS_ENABLE = 'SUPOS_USER_TIPS_ENABLE'; // tips是否需
 // cookie里面的code
 export const SUPOS_COMMUNITY_TOKEN = 'supos_community_token';
 export const OMC_MODEL = 'omc_model';
-export const LOGIN_URL = '/supos-login';
+export const LOGIN_URL = '/tier0-login';
 // 默认的title名称
-export const APP_TITLE = 'supOS';
+export const APP_TITLE = 'Tier0';
 // 存储的固定位置 /minio/inter  /files/system/resource
 export const STORAGE_PATH = '/files/system/resource';
 export const CUSTOM_MENU_ICON = '/inter-api/supos/uns/attachment'; // 自定义上传icon位置

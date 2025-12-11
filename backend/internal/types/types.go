@@ -207,8 +207,8 @@ type CreateTopicDto struct {
 	ParentId                      *int64                    `json:"parentId,string,optional,omitempty"`
 	DataType                      *int16                    `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"` // Data type and fields
 	ParentDataType                *int16                    `json:"parentDataType,optional,string,omitempty"`
-	Fields                        []*FieldDefine            `json:"fields,optional"`
-	JsonFields                    []*FieldDefine            `json:"jsonFields,optional"` // jsonb 预定义字段，存在protocol
+	Fields                        []*FieldDefine            `json:"fields,optional,omitempty"`
+	JsonFields                    []*FieldDefine            `json:"jsonFields,optional,omitempty"` // jsonb 预定义字段，存在protocol
 	DataSrcID                     int16                     `json:"-"`
 	TableName                     string                    `json:"-"` // Table fields
 	TbFieldName                   string                    `json:"-"`
@@ -576,15 +576,15 @@ type InstanceDetail struct {
 	Alias            string                 `json:"alias"`
 	ParentAlias      *string                `json:"parentAlias,omitempty"`
 	Path             string                 `json:"path,omitempty"`
-	DataType         *int16                 `json:"dataType"`
-	ParentDataType   *int16                 `json:"parentDataType"`
-	DataPath         *string                `json:"dataPath"`
+	DataType         *int16                 `json:"dataType,omitempty"`
+	ParentDataType   *int16                 `json:"parentDataType,omitempty"`
+	DataPath         *string                `json:"dataPath,omitempty"`
 	PathType         int16                  `json:"pathType"`
-	Fields           []*FieldDefine         `json:"fields"`
-	JsonFields       []*FieldDefine         `json:"jsonFields"`
-	CreateTime       int64                  `json:"createTime"`
-	UpdateTime       int64                  `json:"updateTime"`
-	Protocol         map[string]interface{} `json:"protocol"`
+	Fields           []*FieldDefine         `json:"fields,omitempty"`
+	JsonFields       []*FieldDefine         `json:"jsonFields,omitempty"`
+	CreateTime       int64                  `json:"createTime,omitzero"`
+	UpdateTime       int64                  `json:"updateTime,omitzero"`
+	Protocol         map[string]interface{} `json:"protocol,omitempty"`
 	ModelDescription string                 `json:"modelDescription,omitempty"`
 	Description      string                 `json:"description,omitempty"`
 	WithFlow         bool                   `json:"withFlow"`
@@ -594,14 +594,14 @@ type InstanceDetail struct {
 	SubscribeEnable  bool                   `json:"subscribeEnable"`
 	Expression       string                 `json:"expression,omitempty"`
 	ShowExpression   string                 `json:"showExpression,omitempty"`
-	Refers           []InstanceField        `json:"refers"`
-	LabelList        []LabelVo              `json:"labelList"`
+	Refers           []InstanceField        `json:"refers,omitempty"`
+	LabelList        []LabelVo              `json:"labelList,omitempty"`
 	Name             string                 `json:"name,omitempty"`
 	DisplayName      string                 `json:"displayName,omitempty"`
 	PathName         string                 `json:"pathName,omitempty"`
 	ModelId          string                 `json:"modelId,omitempty"`
 	ModelName        string                 `json:"modelName,omitempty"`
-	Extend           map[string]interface{} `json:"extend"`
+	Extend           map[string]interface{} `json:"extend,omitempty"`
 	Payload          string                 `json:"payload,omitempty"`
 	TemplateName     string                 `json:"templateName,omitempty"`
 	TemplateAlias    string                 `json:"templateAlias,omitempty"`
