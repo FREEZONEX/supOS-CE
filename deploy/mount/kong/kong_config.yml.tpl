@@ -437,7 +437,7 @@ services:
   client_certificate: ~
   read_timeout: 60000
 - name: login
-  path: /realms/supos/protocol/openid-connect/auth
+  path: /realms/tier0/protocol/openid-connect/auth
   protocol: http
   tags: []
   ca_certificates: ~
@@ -1430,7 +1430,7 @@ routes:
   service: e3e88607-311a-4c23-a9c7-bb879efc463e
   strip_path: true
   paths:
-  - /supos-login
+  - /tier0-login
   created_at: 1732108769
   updated_at: 1764811192
   response_buffering: true
@@ -1935,7 +1935,7 @@ plugins:
   updated_at: 1764811192
   config:
     enable_deny_check: true
-    login_url: ${BASE_URL}/keycloak/home/auth/realms/supos/protocol/openid-connect/auth?client_id=supos&redirect_uri=${BASE_URL}/inter-api/supos/auth/token&response_type=code&scope=openid
+    login_url: ${BASE_URL}/keycloak/home/auth/realms/tier0/protocol/openid-connect/auth?client_id=tier0&redirect_uri=${BASE_URL}/inter-api/supos/auth/token&response_type=code&scope=openid
     forbidden_url: /403
     enable_resource_check: true
     whitelist_paths:
