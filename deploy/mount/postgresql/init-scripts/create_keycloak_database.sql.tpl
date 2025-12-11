@@ -1061,8 +1061,8 @@ CREATE TABLE "public"."credential" (
 -- ----------------------------
 -- Records of credential
 -- ----------------------------
-INSERT INTO "public"."credential" VALUES ('d3c688d7-ec6c-4ccb-be70-9e0634124421', NULL, 'password', '0d9340a7-4bf5-4bee-9cfd-c707dfe18a22', 1750217451325, '我的密码', '{"value":"xKCL2W4PCp2mPpSDRq4EUeNKr8V4jDugHSPdfHrbla4=","salt":"fxlzXa4K1NSKlRbONiHZ9A==","additionalParameters":{}}', '{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}', 10);
-INSERT INTO "public"."credential" VALUES ('588747a6-3f05-497a-bc78-81b7fe3d0e93', NULL, 'password', '66b5114b-0083-48aa-860a-06f1c06ce4c4', 1746512526549, 'My password', '{"value":"75zzlRwO66cfDFCPnpNS3XAZ+HF7nTR+cbj/jVSsAcA=","salt":"y5WNIOmeIfBYdGecbhKQ0Q==","additionalParameters":{}}', '{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}', 10);
+INSERT INTO "public"."credential" ("id", "salt", "type", "user_id", "created_date", "user_label", "secret_data", "credential_data", "priority") VALUES ('588747a6-3f05-497a-bc78-81b7fe3d0e93', NULL, 'password', '66b5114b-0083-48aa-860a-06f1c06ce4c4', 1765442429591, 'My password', '{"value":"/wPtR9Qs9jL4+nSBUxfx47yKU7DBIEDVlP7XQYw2cYE=","salt":"dyZFJBc90AUJ5svYHIsimA==","additionalParameters":{}}', '{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}', 10);
+INSERT INTO "public"."credential" ("id", "salt", "type", "user_id", "created_date", "user_label", "secret_data", "credential_data", "priority") VALUES ('d3c688d7-ec6c-4ccb-be70-9e0634124421', NULL, 'password', '0d9340a7-4bf5-4bee-9cfd-c707dfe18a22', 1765442455518, 'My password', '{"value":"LRq0wFuXl/tppDffITW7Z/5vOu9gCY+YonY1uYnfKyY=","salt":"LBy46GXTqLaj9yYjB3+jnA==","additionalParameters":{}}', '{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}', 10);
 
 -- ----------------------------
 -- Table structure for databasechangelog
@@ -3371,7 +3371,7 @@ CREATE TABLE "public"."user_entity" (
 -- ----------------------------
 INSERT INTO "public"."user_entity" VALUES ('0d9340a7-4bf5-4bee-9cfd-c707dfe18a22', 'yuwenhao@freezonex.io', 'yuwenhao@freezonex.io', 'f', 't', NULL, NULL, NULL, 'ef0cad76-cbcc-4c42-92d7-ef8685b7e724', 'admin', 1729679951639, NULL, 0);
 INSERT INTO "public"."user_entity" VALUES ('92209a7e-1e8d-486e-9e27-92585f68e5a8', NULL, 'e4b65485-792f-4bb1-b087-f83b00435a77', 'f', 't', NULL, NULL, NULL, '8920b375-d705-4d30-8a71-52d9c14ec4ba', 'service-account-supos', 1733364065211, 'a7b53e5e-3567-470a-9da1-94cc0c7f18e6', 0);
-INSERT INTO "public"."user_entity" VALUES ('66b5114b-0083-48aa-860a-06f1c06ce4c4', NULL, '7b2fe8c0-47f1-4bbd-bcf1-58ee824dc516', 'f', 't', NULL, NULL, NULL, '8920b375-d705-4d30-8a71-52d9c14ec4ba', 'supos', 1734059221040, NULL, 0);
+INSERT INTO "public"."user_entity" VALUES ('66b5114b-0083-48aa-860a-06f1c06ce4c4', NULL, '7b2fe8c0-47f1-4bbd-bcf1-58ee824dc516', 'f', 't', NULL, NULL, NULL, '8920b375-d705-4d30-8a71-52d9c14ec4ba', 'tier0', 1734059221040, NULL, 0);
 
 -- ----------------------------
 -- Table structure for user_federation_config
