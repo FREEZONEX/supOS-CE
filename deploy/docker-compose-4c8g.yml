@@ -27,7 +27,7 @@ services:
       - OAUTH_ISSUER_URI=${OAUTH_ISSUER_URI}
       - OAUTH_REFRESH_TOKEN_TIME=${OAUTH_REFRESH_TOKEN_TIME}
     volumes:
-      - ${VOLUMES_PATH}/edge/etc/:/app/go-edge/etc/
+      - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
     networks:
       - edge_network
     restart: always
