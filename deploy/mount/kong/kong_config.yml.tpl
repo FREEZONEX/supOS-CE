@@ -1935,7 +1935,7 @@ plugins:
   updated_at: 1764811192
   config:
     enable_deny_check: true
-    login_url: ${BASE_URL}/keycloak/home/auth/realms/tier0/protocol/openid-connect/auth?client_id=supos&redirect_uri=${BASE_URL}/inter-api/supos/auth/token&response_type=code&scope=openid
+    login_url: ${BASE_URL}/keycloak/home/auth/realms/tier0/protocol/openid-connect/auth?client_id=tier0&redirect_uri=${BASE_URL}/inter-api/supos/auth/token&response_type=code&scope=openid
     forbidden_url: /403
     enable_resource_check: true
     whitelist_paths:
