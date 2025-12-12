@@ -87,9 +87,7 @@ func loadUserInfoFromKeycloak(ctx context.Context, kc *clients.KeycloakClient, s
 		user.Enabled = info.Enabled
 		user.FirstName = trimString(info.FirstName)
 	}
-	if user.HomePage == "" {
-		user.HomePage = defaultHome
-	}
+	user.HomePage = defaultHome
 
 	// Enrich with admin user profile if possible.
 	adminProfile, err := kc.FetchUser(preferredUsername)
@@ -159,9 +157,9 @@ func applyUserAttributes(user *vo.UserInfoVo, attrs map[string]any) {
 	if user == nil || attrs == nil {
 		return
 	}
-	if v := attributeString(attrs, "homePage"); v != "" {
-		user.HomePage = v
-	}
+	// if v := attributeString(attrs, "homePage"); v != "" {
+	// 	user.HomePage = v
+	// }
 	if v := attributeString(attrs, "phone"); v != "" {
 		user.Phone = v
 	}
