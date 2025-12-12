@@ -28,6 +28,7 @@ services:
       - OAUTH_ISSUER_URI=${OAUTH_ISSUER_URI}
       - OAUTH_REFRESH_TOKEN_TIME=${OAUTH_REFRESH_TOKEN_TIME}
       - SYS_OS_APP_TITLE=${OS_NAME}
+      - SYS_OS_LOGIN_PATH=${OS_LOGIN_PATH}
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
       - /etc/docker/certs:/certs
