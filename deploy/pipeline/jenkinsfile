@@ -89,7 +89,7 @@ pipeline {
                         
                         sh '''
                         ls -all
-                        scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar.xz" ./images/
+                        scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar*" ./images/
                         rm -rf ./pipeline && rm -f Dockerfile-Compose
 
                         cp -r ../backend/etc ./mount/edge/
