@@ -106,15 +106,6 @@ const Operation = () => {
         key: 'unsAdd',
         items: [
           {
-            label: formatMessage('uns.newFile'),
-            auth: ButtonPermission['uns.fileAdd'],
-            onClick: () => {
-              operationFns?.setOptionOpen?.('addFile', selectedNode);
-            },
-            key: 'addFile',
-            disabled: !!selectedNode?.mount,
-          },
-          {
             label: formatMessage('uns.newFolder'),
             auth: ButtonPermission['uns.folderAdd'],
             onClick: () => {
@@ -122,6 +113,15 @@ const Operation = () => {
             },
             key: 'addFolder',
             disabled: !!selectedNode?.mount || hasTopicType,
+          },
+          {
+            label: formatMessage('uns.newFile'),
+            auth: ButtonPermission['uns.fileAdd'],
+            onClick: () => {
+              operationFns?.setOptionOpen?.('addFile', selectedNode);
+            },
+            key: 'addFile',
+            disabled: !!selectedNode?.mount,
           },
           // {
           //   label: formatMessage('uns.batchGeneration'),

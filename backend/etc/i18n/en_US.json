@@ -343,6 +343,7 @@
   "menu.desc.PluginManagement": "Manage plugins via install, update, enable, disable, and more.",
   "menu.desc.PRIDE": "PRIDE plugin package enables custom business features for PRIDE.",
   "menu.desc.Connection": "Register and manage third-party data sources.",
+  "menu.desc.Marimo": "Transform data, train models, and run SQL queries with python",
   "menu.servicename.invalid": "Invalid service name. Only combinations of English letters, numbers, underscores and hyphens are allowed. Cannot exceed 64 characters.",
   "menu.name.null": "The menu name cannot be empty.",
   "menu.name.invalid": "Invalid menu names. Only English letters and underscores are allowed. Cannot exceed 64 characters.",

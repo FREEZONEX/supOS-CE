@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	TYPE_FILE     = "file"
-	TYPE_FOLDER   = "folder"
+	TYPE_FILE     = "topic"
+	TYPE_FOLDER   = "path"
 	TYPE_TEMPLATE = "template"
 )
 const (
@@ -36,7 +36,7 @@ type FileData struct {
 	DisplayName       string               `json:"displayName,omitempty"`
 	TemplateAlias     string               `json:"templateAlias,omitempty"`
 	Fields            []*types.FieldDefine `json:"fields,omitempty"`
-	JsonFields        []*types.FieldDefine `json:"jsonFields,optional"`
+	JsonFields        []*types.FieldDefine `json:"jsonFields,omitempty"`
 	DataType          string               `json:"dataType,omitempty"`
 	Refers            string               `json:"refers,omitempty"`
 	Expression        string               `json:"expression,omitempty"`

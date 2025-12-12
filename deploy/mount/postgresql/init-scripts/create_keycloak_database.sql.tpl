@@ -1061,8 +1061,8 @@ CREATE TABLE "public"."credential" (
 -- ----------------------------
 -- Records of credential
 -- ----------------------------
-INSERT INTO "public"."credential" VALUES ('d3c688d7-ec6c-4ccb-be70-9e0634124421', NULL, 'password', '0d9340a7-4bf5-4bee-9cfd-c707dfe18a22', 1750217451325, '我的密码', '{"value":"xKCL2W4PCp2mPpSDRq4EUeNKr8V4jDugHSPdfHrbla4=","salt":"fxlzXa4K1NSKlRbONiHZ9A==","additionalParameters":{}}', '{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}', 10);
-INSERT INTO "public"."credential" VALUES ('588747a6-3f05-497a-bc78-81b7fe3d0e93', NULL, 'password', '66b5114b-0083-48aa-860a-06f1c06ce4c4', 1746512526549, 'My password', '{"value":"75zzlRwO66cfDFCPnpNS3XAZ+HF7nTR+cbj/jVSsAcA=","salt":"y5WNIOmeIfBYdGecbhKQ0Q==","additionalParameters":{}}', '{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}', 10);
+INSERT INTO "public"."credential" ("id", "salt", "type", "user_id", "created_date", "user_label", "secret_data", "credential_data", "priority") VALUES ('588747a6-3f05-497a-bc78-81b7fe3d0e93', NULL, 'password', '66b5114b-0083-48aa-860a-06f1c06ce4c4', 1765442429591, 'My password', '{"value":"/wPtR9Qs9jL4+nSBUxfx47yKU7DBIEDVlP7XQYw2cYE=","salt":"dyZFJBc90AUJ5svYHIsimA==","additionalParameters":{}}', '{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}', 10);
+INSERT INTO "public"."credential" ("id", "salt", "type", "user_id", "created_date", "user_label", "secret_data", "credential_data", "priority") VALUES ('d3c688d7-ec6c-4ccb-be70-9e0634124421', NULL, 'password', '0d9340a7-4bf5-4bee-9cfd-c707dfe18a22', 1765442455518, 'My password', '{"value":"LRq0wFuXl/tppDffITW7Z/5vOu9gCY+YonY1uYnfKyY=","salt":"LBy46GXTqLaj9yYjB3+jnA==","additionalParameters":{}}', '{"hashIterations":5,"algorithm":"argon2","additionalParameters":{"hashLength":["32"],"memory":["7168"],"type":["id"],"version":["1.3"],"parallelism":["1"]}}', 10);
 
 -- ----------------------------
 -- Table structure for databasechangelog
@@ -2440,7 +2440,7 @@ CREATE TABLE "public"."realm" (
 -- Records of realm
 -- ----------------------------
 INSERT INTO "public"."realm" VALUES ('ef0cad76-cbcc-4c42-92d7-ef8685b7e724', 1800, 300, 108000, 'keycloak.v3', 'keycloak.v2', 'keycloak', 't', 'f', 0, 'keycloak.v2', 'master', 0, NULL, 'f', 'f', 'f', 'f', 'EXTERNAL', 1800, 36000, 'f', 'f', 'b478982d-7f85-498c-8b83-2903d6c1116a', 1800, 't', 'LANGUAGE_VAR', 'f', 'f', 'f', 'f', 0, 1, 30, 6, 'HmacSHA1', 'totp', 'a6b294ac-ffaa-4f9e-accd-9f6d38c2f634', '6e0df28a-8860-4037-b9ca-0efcae55b8b4', 'd6da9d19-cb71-4841-9cfa-90a111d1b292', '4759605b-ec2d-48ad-9754-49e4be8ba93a', '7e12f5b6-3b89-41fb-b40b-2d1731f02c14', 2592000, 'f', 1800, 't', 'f', '3d8206dd-13aa-46b4-a0fc-444e5b9af4a6', 0, 'f', 0, 0, '78bdec9a-4238-4f2f-8c9b-2d9ca2c802cc');
-INSERT INTO "public"."realm" VALUES ('8920b375-d705-4d30-8a71-52d9c14ec4ba', 7200, 43200, 43200, 'keycloak.v3', 'keycloak.v2', 'keycloak', 't', 'f', 60, 'wenhao', 'supos', 0, NULL, 'f', 'f', 'f', 'f', 'EXTERNAL', 43200, 43200, 'f', 'f', 'c7e2b1e8-0574-4441-b337-caa811fc3a75', 86400, 't', 'LANGUAGE_VAR', 'f', 'f', 'f', 'f', 0, 1, 30, 6, 'HmacSHA1', 'totp', 'e007fedd-2171-44f9-826f-fa91f76ffe20', '88e45fd1-dc20-4df7-a4f7-47325ceb7e02', '13eaac88-bd3c-4309-ac4c-e7aef4b566da', '7f6ac3fc-86b5-48dc-9984-16b5b26b449b', '7b041d92-f8f9-46ac-81a0-a712cb0dc122', 2592000, 'f', 7200, 'f', 't', '67631c78-793f-4605-98e3-be7756eba483', 0, 'f', 43200, 43200, 'b51711f1-2430-4a24-8493-ab1d9b0dde6f');
+INSERT INTO "public"."realm" VALUES ('8920b375-d705-4d30-8a71-52d9c14ec4ba', 7200, 43200, 43200, 'keycloak.v3', 'keycloak.v2', 'keycloak', 't', 'f', 60, 'wenhao', 'tier0', 0, NULL, 'f', 'f', 'f', 'f', 'EXTERNAL', 43200, 43200, 'f', 'f', 'c7e2b1e8-0574-4441-b337-caa811fc3a75', 86400, 't', 'LANGUAGE_VAR', 'f', 'f', 'f', 'f', 0, 1, 30, 6, 'HmacSHA1', 'totp', 'e007fedd-2171-44f9-826f-fa91f76ffe20', '88e45fd1-dc20-4df7-a4f7-47325ceb7e02', '13eaac88-bd3c-4309-ac4c-e7aef4b566da', '7f6ac3fc-86b5-48dc-9984-16b5b26b449b', '7b041d92-f8f9-46ac-81a0-a712cb0dc122', 2592000, 'f', 7200, 'f', 't', '67631c78-793f-4605-98e3-be7756eba483', 0, 'f', 43200, 43200, 'b51711f1-2430-4a24-8493-ab1d9b0dde6f');
 
 -- ----------------------------
 -- Table structure for realm_attribute
@@ -3371,7 +3371,7 @@ CREATE TABLE "public"."user_entity" (
 -- ----------------------------
 INSERT INTO "public"."user_entity" VALUES ('0d9340a7-4bf5-4bee-9cfd-c707dfe18a22', 'yuwenhao@freezonex.io', 'yuwenhao@freezonex.io', 'f', 't', NULL, NULL, NULL, 'ef0cad76-cbcc-4c42-92d7-ef8685b7e724', 'admin', 1729679951639, NULL, 0);
 INSERT INTO "public"."user_entity" VALUES ('92209a7e-1e8d-486e-9e27-92585f68e5a8', NULL, 'e4b65485-792f-4bb1-b087-f83b00435a77', 'f', 't', NULL, NULL, NULL, '8920b375-d705-4d30-8a71-52d9c14ec4ba', 'service-account-supos', 1733364065211, 'a7b53e5e-3567-470a-9da1-94cc0c7f18e6', 0);
-INSERT INTO "public"."user_entity" VALUES ('66b5114b-0083-48aa-860a-06f1c06ce4c4', NULL, '7b2fe8c0-47f1-4bbd-bcf1-58ee824dc516', 'f', 't', NULL, NULL, NULL, '8920b375-d705-4d30-8a71-52d9c14ec4ba', 'supos', 1734059221040, NULL, 0);
+INSERT INTO "public"."user_entity" VALUES ('66b5114b-0083-48aa-860a-06f1c06ce4c4', NULL, '7b2fe8c0-47f1-4bbd-bcf1-58ee824dc516', 'f', 't', NULL, NULL, NULL, '8920b375-d705-4d30-8a71-52d9c14ec4ba', 'tier0', 1734059221040, NULL, 0);
 
 -- ----------------------------
 -- Table structure for user_federation_config

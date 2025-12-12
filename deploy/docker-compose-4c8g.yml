@@ -6,7 +6,7 @@ networks:
 
 services:
   supos-edge-platform:
-    image: suposce/supos-edge-platform:1.0.0-T1
+    image: suposce/supos-edge-platform:1.0.0-T2
     container_name: supos-edge-platform
     ports:
       - "3010:3000"
@@ -14,8 +14,9 @@ services:
       - "3001:3001"
       - "3002:3002"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_API_MODEL=${OPENAI_API_MODEL}
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_TYPE=${LLM_TYPE}
       - REACT_APP_OS_LANG=${LANGUAGE}
       - OAUTH_REDIRECT_URI=${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}:${ENTRANCE_SSL_PORT}/inter-api/supos/auth/token
       - OAUTH_SUPOS_HOME=${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}:${ENTRANCE_SSL_PORT}/uns
@@ -26,6 +27,7 @@ services:
       - OAUTH_GRANT_TYPE=${OAUTH_GRANT_TYPE}
       - OAUTH_ISSUER_URI=${OAUTH_ISSUER_URI}
       - OAUTH_REFRESH_TOKEN_TIME=${OAUTH_REFRESH_TOKEN_TIME}
+      - SYS_OS_APP_TITLE=${OS_NAME}
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
       - /etc/docker/certs:/certs

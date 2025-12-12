@@ -46,7 +46,7 @@ const RootRedirect = () => {
   const params = qs.parse(window.location.search, { ignoreQueryPrefix: true });
   useEffect(() => {
     if (params?.isLogin) {
-      window.location.href = currentUserInfo?.homePage || '/home';
+      window.location.href = currentUserInfo?.homePage || '/uns';
     } else {
       if (Cookies.get(OMC_MODEL)) {
         console.warn('omc——cookie失效');

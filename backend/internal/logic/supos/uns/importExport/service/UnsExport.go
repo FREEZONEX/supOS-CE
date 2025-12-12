@@ -118,39 +118,91 @@ func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *typ
 				l.log.Error("UNS Csv2JsonStream err:", err)
 			}
 		}
-	} else if len(exportReq.Folders)+len(exportReq.Files) > 0 {
-		fmt.Fprintf(out, `"%s":`, UNS)
-		var countUns = 0
-		var err error
-		if folderIds := exportReq.Folders; len(folderIds) > 0 {
-			countUns, err = jsonstream.Csv2JsonStream(func(writer io.Writer) error {
-				return l.unsMapper.ExportCsvByFolderIds(folderIds, writer)
+	} else if dirIds, fileIds := exportReq.Folders, exportReq.Files; len(dirIds) > 0 || len(fileIds) > 0 {
+		fmt.Fprintf(out, `"%s":[`, UNS)
+		dirLayRecs, ids := l.getLayAndIds(dirIds, fileIds)
+		if len(dirLayRecs) > 0 || len(ids) > 0 {
+			countUns, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
+				return l.unsMapper.ExportCsvByLayRecAndIds(dirLayRecs, ids, writer)
 			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, false)
+			l.log.Info("UNS Csv2JsonStream:", err, countUns)
 		}
-		if len(exportReq.Files) > 0 {
-			layRecs, _ := l.unsMapper.ListLayRecByIds(dao.GetDb(context.Background()), exportReq.Files)
-			ids := make(map[int64]bool, len(layRecs))
-			for _, layerRec := range layRecs {
-				parts := strings.Split(layerRec, "/")
+		fmt.Fprintln(out, "]")
+	}
+	fmt.Fprintln(out, "}")
+}
+func (l *UnsImportExportService) getLayAndIds(dirIds, fileIds []int64) (layRec []string, ids []int64) {
+	layRecs, err := l.unsMapper.ListLayRecByIds(dao.GetDb(context.Background()), append(dirIds, fileIds...))
+	if len(layRecs) == 0 {
+		l.log.Error("UNS Mapper ListLayRecByIds:", err)
+		return
+	}
+	return getLayAndIdsInner(dirIds, fileIds, layRecs)
+}
+
+func getLayAndIdsInner(dirIds, fileIds []int64, layRecs []string) (layRec []string, ids []int64) {
+
+	dirMap := make(map[int64]string, len(dirIds))
+	for _, id := range dirIds {
+		dirMap[id] = ""
+	}
+	fMap := make(map[int64]string, len(fileIds))
+
+	dirIdMap := make(map[int64]int, len(dirIds))
+	fileIdMap := make(map[int64]int, len(fileIds))
+	for _, layerRec := range layRecs {
+		parts := strings.Split(layerRec, "/")
+		var idMap map[int64]int
+		{
+			id, _ := strconv.ParseInt(parts[len(parts)-1], 10, 64)
+			if _, has := dirMap[id]; has {
+				idMap = dirIdMap
+				dirMap[id] = layerRec
+			} else {
+				idMap = fileIdMap
+				fMap[id] = layerRec
+			}
+			idMap[id] += 1
+		}
+		for i := len(parts) - 2; i >= 0; i-- {
+			id, _ := strconv.ParseInt(parts[i], 10, 64)
+			idMap[id] += 1
+		}
+	}
+	dirLayRecs := base.Filter(base.MapValues(dirMap), func(e string) bool {
+		return len(e) > 0
+	})
+	sort.Strings(dirLayRecs)
+
+	for id := range fileIdMap {
+		if dirIdMap[id] > 0 {
+			delete(fileIdMap, id)
+		}
+	}
+	if len(fMap) > 0 && len(dirLayRecs) > 0 {
+		for _, fileLayRec := range fMap {
+			i := base.BinarySearchArray(dirLayRecs, fileLayRec, func(a, b string) int {
+				if strings.HasPrefix(b, a) {
+					return 0
+				} else {
+					return strings.Compare(a, b)
+				}
+			})
+			if i >= 0 {
+				parts := strings.Split(fileLayRec, "/")
 				for _, part := range parts {
-					num, err := strconv.ParseInt(part, 10, 64)
-					if err == nil {
-						ids[num] = true
+					id, _ := strconv.ParseInt(part, 10, 64)
+					countUsed := fileIdMap[id]
+					if countUsed > 0 {
+						fileIdMap[id] -= 1
+						if countUsed == 1 {
+							delete(fileIdMap, id)
+						}
 					}
 				}
 			}
-			idValues := base.MapKeys(ids)
-			sort.Sort(base.LongSlice(idValues))
-			if countUns > 0 {
-				err = jsonWriter.WriteByte(',')
-			}
-			countUns, err = jsonstream.Csv2JsonStream(func(writer io.Writer) error {
-				return l.unsMapper.ExportCsvByIds(idValues, writer)
-			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, false)
-		}
-		if err != nil {
-			l.log.Error("UNS Csv2JsonStream err:", err)
 		}
 	}
-	fmt.Fprintln(out, "}")
+
+	return dirLayRecs, base.MapKeys(fileIdMap)
 }
