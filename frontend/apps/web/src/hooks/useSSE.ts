@@ -129,7 +129,7 @@ const useSSE = (url: string, options: UseServerSentEventsOptions = {}): UseServe
 
       // 创建EventSource实例
       const eventSource = new EventSource(url, {
-        withCredentials: credentials === 'include',
+        withCredentials: true,
       });
       console.log('SSE连接建立:', url);
 
