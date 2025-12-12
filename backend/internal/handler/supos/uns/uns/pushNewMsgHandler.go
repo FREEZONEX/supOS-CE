@@ -24,7 +24,8 @@ func (s *sse_writer) Write(p []byte) (n int, err error) {
 func PushNewMsgHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Credentials", "true") // 必须有
+		w.Header().Set("Vary", "Origin")                           // 防止 CDN 缓存错误的源
 
 		ctx, cancel := context.WithCancel(r.Context())
 		defer cancel()
