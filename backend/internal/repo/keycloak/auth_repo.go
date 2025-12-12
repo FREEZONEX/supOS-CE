@@ -75,9 +75,7 @@ func (r *AuthRepo) BuildUserInfo(ctx context.Context, realm string, userID strin
 	user.Enabled = entity.Enabled
 	user.EmailVerified = entity.EmailVerified
 	user.FirstName = strings.TrimSpace(entity.FirstName)
-	if user.HomePage == "" {
-		user.HomePage = defaultHome
-	}
+	user.HomePage = defaultHome
 
 	attrs, err := r.getUserAttributes(ctx, userID)
 	if err != nil {
@@ -296,9 +294,9 @@ func applyAttributesFromMap(user *vo.UserInfoVo, attrs map[string]string) {
 	if user == nil || len(attrs) == 0 {
 		return
 	}
-	if v := strings.TrimSpace(attrs["homePage"]); v != "" {
-		user.HomePage = v
-	}
+	// if v := strings.TrimSpace(attrs["homePage"]); v != "" {
+	// 	user.HomePage = v
+	// }
 	if v := strings.TrimSpace(attrs["phone"]); v != "" {
 		user.Phone = v
 	}

@@ -71,15 +71,16 @@ func (l *TokenLogic) Token(req *types.TokenCallbackReq) (*TokenResult, error) {
 		})
 	}
 
-	userInfo, _, err := l.fetchUserInfo(tokenResp.AccessToken, false)
-	if err != nil {
-		l.Errorf("load user info failed: %v", err)
-	}
+	// userInfo, _, err := l.fetchUserInfo(tokenResp.AccessToken, false)
+	// _ = userInfo
+	// if err != nil {
+	// 	l.Errorf("load user info failed: %v", err)
+	// }
 
 	redirect := l.svcCtx.Config.OAuthKeyCloak.SuposHome
-	if userInfo != nil && strings.TrimSpace(userInfo.HomePage) != "" {
-		redirect = userInfo.HomePage
-	}
+	// if userInfo != nil && strings.TrimSpace(userInfo.HomePage) != "" {
+	// 	redirect = userInfo.HomePage
+	// }
 
 	cookie := &http.Cookie{
 		Name:     constants.AccessTokenKey,

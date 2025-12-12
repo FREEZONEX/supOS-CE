@@ -23,9 +23,14 @@ func (s *sse_writer) Write(p []byte) (n int, err error) {
 // PushNewMsgHandler 推送最新消息
 func PushNewMsgHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			origin = "*" // 兜底，但不推荐
+		}
 		w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
 		w.Header().Set("Access-Control-Allow-Credentials", "true") // 必须有
 		w.Header().Set("Vary", "Origin")                           // 防止 CDN 缓存错误的源
+		w.Header().Set("Access-Control-Allow-Origin", origin)
 
 		ctx, cancel := context.WithCancel(r.Context())
 		defer cancel()
@@ -34,12 +39,12 @@ func PushNewMsgHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		keepAliveTicker := time.NewTicker(10 * time.Second)
 		defer keepAliveTicker.Stop()
 		// 持续监听并推送事件
-		for {
+		for flusher := w.(http.Flusher); ; {
 			select {
 			case msg := <-sseWriter.msgChan:
 				// 发送事件数据
 				_, err := fmt.Fprintf(w, "data: %s\n\n", msg)
-				w.(http.Flusher).Flush()
+				flusher.Flush()
 				logx.Debug("push new message to sse-writer: ", msg, err)
 				if err != nil {
 					cancel()
@@ -50,7 +55,7 @@ func PushNewMsgHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 				if err != nil {
 					cancel()
 				} else {
-					w.(http.Flusher).Flush()
+					flusher.Flush()
 				}
 			case <-ctx.Done():
 				// 客户端断开连接
