@@ -5,9 +5,9 @@ networks:
     driver: bridge
 
 services:
-  supos-edge-platform:
+  uns:
     image: suposce/supos-edge-platform:1.0.0-T3
-    container_name: supos-edge-platform
+    container_name: uns
     ports:
       - "3010:3000"
       - "4000:4000"
@@ -352,7 +352,7 @@ services:
       - "8444:8444"
     depends_on:
       - emqx
-      - supos-edge-platform
+      - uns
       - keycloak
       - postgresql
     command: >
