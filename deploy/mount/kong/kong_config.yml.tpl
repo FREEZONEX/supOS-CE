@@ -2002,7 +2002,7 @@ plugins:
   config:
     append:
       querystring:
-      - client_id:supos
+      - client_id:tier0
       - response_type:code
       - scope:openid
       - redirect_uri:${BASE_URL}/inter-api/supos/auth/token
