@@ -21,9 +21,14 @@ pipeline {
 
     parameters {
         booleanParam(
-            name: 'OnlyBuildImage', 
+            name: 'Only_Build_Image', 
             defaultValue: false, 
             description: '是否只构建镜像，不打包部署文件'
+        )
+        booleanParam(
+            name: 'Auto_Deploy', 
+            defaultValue: false, 
+            description: '自动部署到supos-community-edge'
         )
     }
 
@@ -69,10 +74,6 @@ pipeline {
                         echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY"
                         docker push "${FULL_IMAGE_TAG}"
                     '''
-                    
-                    
-                    
-                    
                 }
             }
         }
@@ -80,7 +81,7 @@ pipeline {
         stage('3. 准备部署包') {
             when {
                 expression { 
-                    return !params.OnlyBuildImage 
+                    return !params.Only_Build_Image 
                 }
             }
             steps {
@@ -112,7 +113,7 @@ pipeline {
         stage('4. 传输部署包') {
             when {
                 expression { 
-                    return !params.OnlyBuildImage 
+                    return !params.Only_Build_Image 
                 }
             }
             steps {
@@ -124,7 +125,55 @@ pipeline {
                         scp -i /var/jenkins_home/ssh/id_rsa supOS-edge-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${VERSION}/
 
                         echo "--> 传输完成！"
+                        rm -f supOS-edge-*.zip*
                         '''
+                    }
+                }
+            }
+        }
+        stage('5. 部署到edge服务器') {
+            when {
+                expression { 
+                    return params.Auto_Deploy 
+                }
+            }
+            steps {
+                script {      
+                    dir("deploy") {            
+                        sh """
+
+                        exec_ssh() {
+                            ssh -o StrictHostKeyChecking=no \
+                                -o ConnectTimeout=10 \
+                                -i /var/jenkins_home/ssh/id_rsa \
+                                root@172.21.9.198 "\$1"
+                        }
+
+                        if [ \$Only_Build_Image = false ]; then
+
+                            sed -i 's|image: suposce/supos-edge-platform:|image: suposce/supos-edge-platform:latest|g' docker-compose-4c8g.yml
+                            sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
+                            sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
+
+                            scp -i /var/jenkins_home/ssh/id_rsa ./* root@172.21.9.198:/root/edge/supos-deploy-edge/
+                            exec_ssh "cd /root/edge/supos-deploy-edge/ && ./bin/uninstall.sh && docker rmi -f suposce/supos-edge-platform:latest"
+                            exec_ssh "cd /root/edge/supos-deploy-edge/ && ./bin/install.sh"
+
+                        fi
+
+                        if [ \$Only_Build_Image = true ]; then
+
+                            exec_ssh "
+                                docker rm -f \$(docker ps -a | grep 'supos-edge-platform' | awk '{print \$1}') || true
+                                docker images | grep 'supos-edge-platform' | awk '{print \$1 ":" \$2}' | xargs -r docker rmi
+                                docker pull \${FULL_IMAGE_TAG}
+                                docker tag \${FULL_IMAGE_TAG} suposce/supos-edge-platform:latest
+                                cd /root/edge/supos-deploy-edge/ && docker compose -f docker-compose-4c8g.yml -p supos --env-file .env.default --env-file .env.tmp up -d supos-edge-platform
+                            "
+                        fi
+                        
+
+                        """
                     }
                 }
             }
