@@ -5,7 +5,7 @@ networks:
     driver: bridge
 
 services:
-  uns:
+  supos-edge-platform:
     image: suposce/supos-edge-platform:1.0.0-T3
     container_name: uns
     ports:
