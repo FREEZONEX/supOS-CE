@@ -5,9 +5,9 @@ networks:
     driver: bridge
 
 services:
-  supos-edge-platform:
+  uns:
     image: suposce/supos-edge-platform:1.0.0-T3
-    container_name: supos-edge-platform
+    container_name: uns
     ports:
       - "3010:3000"
       - "4000:4000"
@@ -18,8 +18,8 @@ services:
       - LLM_API_KEY=${LLM_API_KEY}
       - LLM_TYPE=${LLM_TYPE}
       - REACT_APP_OS_LANG=${LANGUAGE}
-      - OAUTH_REDIRECT_URI=${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}:${ENTRANCE_SSL_PORT}/inter-api/supos/auth/token
-      - OAUTH_SUPOS_HOME=${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}:${ENTRANCE_SSL_PORT}/uns
+      - OAUTH_REDIRECT_URI=${BASE_URL}/inter-api/supos/auth/token
+      - OAUTH_SUPOS_HOME=${BASE_URL}/uns
       - OAUTH_REALM=${OAUTH_REALM}
       - OAUTH_CLIENT_NAME=${OAUTH_CLIENT_NAME}
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
@@ -352,7 +352,7 @@ services:
       - "8444:8444"
     depends_on:
       - emqx
-      - supos-edge-platform
+      - uns
       - keycloak
       - postgresql
     command: >
