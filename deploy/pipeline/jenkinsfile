@@ -151,12 +151,14 @@ pipeline {
 
                         if [ \$Only_Build_Image = false ]; then
 
-                            sed -i 's|image: suposce/supos-edge-platform:|image: suposce/supos-edge-platform:latest|g' docker-compose-4c8g.yml
+                            sed -i 's|image: suposce/supos-edge-platform:[^[:space:]]*|image: suposce/supos-edge-platform:latest|g' docker-compose-4c8g.yml
                             sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
                             sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
 
+                            rm -f ./bin/install.sh
+
                             scp -i /var/jenkins_home/ssh/id_rsa -r ./* root@172.21.9.198:/root/edge/supos-deploy-edge/
-                            exec_ssh "cd /root/edge/supos-deploy-edge/ && bash ./bin/uninstall.sh && docker rmi -f suposce/supos-edge-platform:latest"
+                            exec_ssh "cd /root/edge/supos-deploy-edge/ && bash ./bin/uninstall.sh && docker images | grep 'supos-edge-platform' | awk '{print \$1 ":" \$2}' | xargs -r docker rmi"
                             exec_ssh "cd /root/edge/supos-deploy-edge/ && bash ./bin/install.sh"
 
                         fi
