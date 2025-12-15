@@ -3308,8 +3308,8 @@ CREATE TABLE "public"."user_attribute" (
 -- ----------------------------
 INSERT INTO "public"."user_attribute" VALUES ('is_temporary_admin', 'true', '0d9340a7-4bf5-4bee-9cfd-c707dfe18a22', '0aec3e55-afa5-445b-9a5c-7a9e6831ea8a', NULL, NULL, NULL);
 INSERT INTO "public"."user_attribute" VALUES ('locale', 'en', '0d9340a7-4bf5-4bee-9cfd-c707dfe18a22', 'd1e522d0-bf12-44f2-9c6c-bd02142d0c8f', NULL, NULL, NULL);
-INSERT INTO "public"."user_attribute" VALUES ('firstTimeLogin', '0', '66b5114b-0083-48aa-860a-06f1c06ce4c4', 'ee4aeb11-50e6-4fc6-a451-a609b7a0e2b1', NULL, NULL, NULL);
-INSERT INTO "public"."user_attribute" VALUES ('tipsEnable', '0', '66b5114b-0083-48aa-860a-06f1c06ce4c4', '05a97492-1c04-49da-a3db-070981d55c97', NULL, NULL, NULL);
+INSERT INTO "public"."user_attribute" VALUES ('firstTimeLogin', '1', '66b5114b-0083-48aa-860a-06f1c06ce4c4', 'ee4aeb11-50e6-4fc6-a451-a609b7a0e2b1', NULL, NULL, NULL);
+INSERT INTO "public"."user_attribute" VALUES ('tipsEnable', '1', '66b5114b-0083-48aa-860a-06f1c06ce4c4', '05a97492-1c04-49da-a3db-070981d55c97', NULL, NULL, NULL);
 
 
 -- ----------------------------

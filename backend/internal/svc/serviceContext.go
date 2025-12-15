@@ -66,7 +66,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:         c,
 		OssClient:      ossClient,
-		CheckTokenWare: middleware.NewCheckTokenWareMiddleware(keycloakClient, c.OAuthKeyCloak.SuposHome, c.OAuthKeyCloak.Realm).Handle,
+		CheckTokenWare: middleware.NewCheckTokenWareMiddleware(keycloakClient, "/uns", c.OAuthKeyCloak.Realm).Handle,
 		InitCtxsWare:   middleware.NewInitCtxsWareMiddleware().Handle,
 		SnowFlake:      utils.NewSnowFlake(1),
 		I18n:           mf,

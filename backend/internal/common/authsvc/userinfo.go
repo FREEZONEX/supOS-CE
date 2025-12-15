@@ -47,6 +47,9 @@ func FetchUserInfo(ctx context.Context, kc *clients.KeycloakClient, accessToken 
 			logx.WithContext(ctx).Errorf("init keycloak repo failed: %v", err)
 		} else if repo != nil {
 			if user, err := repo.BuildUserInfo(ctx, realm, sub, defaultHome); err == nil && user != nil {
+				if err := updateFirstLogin(ctx, kc, user); err != nil {
+					logx.WithContext(ctx).Errorf("update first login attributes failed: %v", err)
+				}
 				if cache.UserInfoCache != nil {
 					cache.UserInfoCache.Set(sub, user)
 				}
@@ -60,6 +63,9 @@ func FetchUserInfo(ctx context.Context, kc *clients.KeycloakClient, accessToken 
 	user, err := loadUserInfoFromKeycloak(ctx, kc, sub, claims, accessToken, defaultHome)
 	if err != nil {
 		return nil, sub, err
+	}
+	if err := updateFirstLogin(ctx, kc, user); err != nil {
+		logx.WithContext(ctx).Errorf("update first login attributes failed: %v", err)
 	}
 	if user != nil && cache.UserInfoCache != nil {
 		cache.UserInfoCache.Set(sub, user)
@@ -87,7 +93,9 @@ func loadUserInfoFromKeycloak(ctx context.Context, kc *clients.KeycloakClient, s
 		user.Enabled = info.Enabled
 		user.FirstName = trimString(info.FirstName)
 	}
-	user.HomePage = defaultHome
+	if user.HomePage == "" {
+		user.HomePage = defaultHome
+	}
 
 	// Enrich with admin user profile if possible.
 	adminProfile, err := kc.FetchUser(preferredUsername)
@@ -202,4 +210,43 @@ func attributeString(attrs map[string]any, key string) string {
 
 func trimString(val string) string {
 	return strings.TrimSpace(val)
+}
+
+func updateFirstLogin(ctx context.Context, kc *clients.KeycloakClient, user *vo.UserInfoVo) error {
+	if kc == nil || user == nil || strings.TrimSpace(user.Sub) == "" {
+		return nil
+	}
+	if user.FirstTimeLogin != 1 {
+		return nil
+	}
+
+	attrs := map[string]string{
+		"firstTimeLogin": "0",
+		"phone":          trimString(user.Phone),
+		"tipsEnable":     strconv.Itoa(user.TipsEnable),
+		"source":         trimString(user.Source),
+	}
+
+	payload := map[string]any{
+		"attributes": convertAttributesPayload(attrs),
+	}
+	if email := trimString(user.Email); email != "" {
+		payload["email"] = email
+	}
+
+	return kc.UpdateUser(user.Sub, payload)
+}
+
+func convertAttributesPayload(attrs map[string]string) map[string]any {
+	if len(attrs) == 0 {
+		return map[string]any{}
+	}
+	payload := make(map[string]any, len(attrs))
+	for key, val := range attrs {
+		if strings.TrimSpace(key) == "" {
+			continue
+		}
+		payload[key] = []string{val}
+	}
+	return payload
 }
