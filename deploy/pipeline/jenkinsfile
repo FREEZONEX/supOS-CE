@@ -27,7 +27,7 @@ pipeline {
         )
         booleanParam(
             name: 'Auto_Deploy', 
-            defaultValue: false, 
+            defaultValue: true, 
             description: '自动部署到supos-community-edge'
         )
     }
