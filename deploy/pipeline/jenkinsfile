@@ -125,7 +125,7 @@ pipeline {
                         scp -i /var/jenkins_home/ssh/id_rsa supOS-edge-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${VERSION}/
 
                         echo "--> 传输完成！"
-                        rm -f supOS-edge-*.zip*
+                        rm -f supOS-edge-*.zip* && rm -rf supOS-edge-${VERSION}-*
                         '''
                     }
                 }
