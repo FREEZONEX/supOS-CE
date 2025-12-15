@@ -312,11 +312,12 @@ func applyAttributesFromMap(user *vo.UserInfoVo, attrs map[string]string) {
 			user.FirstTimeLogin = 1
 		}
 	}
-	if v := strings.TrimSpace(attrs["tipsEnable"]); v != "" {
-		if iv, err := strconv.Atoi(v); err == nil {
-			user.TipsEnable = iv
-		}
-	}
+	user.TipsEnable = user.FirstTimeLogin
+	// if v := strings.TrimSpace(attrs["tipsEnable"]); v != "" {
+	// 	if iv, err := strconv.Atoi(v); err == nil {
+	// 		user.TipsEnable = iv
+	// 	}
+	// }
 }
 
 func collectCompositeRoleIDs(roles []*authdto.RoleDto) []string {

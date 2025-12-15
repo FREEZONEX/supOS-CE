@@ -223,7 +223,7 @@ func updateFirstLogin(ctx context.Context, kc *clients.KeycloakClient, user *vo.
 	attrs := map[string]string{
 		"firstTimeLogin": "0",
 		"phone":          trimString(user.Phone),
-		"tipsEnable":     strconv.Itoa(user.TipsEnable),
+		"tipsEnable":     "0",
 		"source":         trimString(user.Source),
 	}
 
