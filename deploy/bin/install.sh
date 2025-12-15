@@ -92,12 +92,12 @@ echo -e "🎉  All services are up and running!"
 echo -e "👉  Open the platform in your browser:\n"
 
 if [[ "$ENTRANCE_PORT" == "80" || "$ENTRANCE_PORT" == "443" ]]; then
-  PLATFORM_URL="${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}/home"
+  PLATFORM_URL="${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}/uns"
 else
-  PLATFORM_URL="${BASE_URL}/home"
+  PLATFORM_URL="${BASE_URL}/uns"
 fi
 
 echo -e "      $PLATFORM_URL\n"
-echo -e "    Default user name: supos\n"
-echo -e "            password: supos\n"
+echo -e "    Default user name: tier0\n"
+echo -e "            password: tier0\n"
 echo -e "============================================================"
