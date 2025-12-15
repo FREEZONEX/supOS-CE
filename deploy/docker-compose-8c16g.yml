@@ -336,7 +336,7 @@ services:
       - "8444:8444"
     depends_on:
       - emqx
-      - uns
+      - supos-edge-platform
       - keycloak
       - postgresql
     command: >
