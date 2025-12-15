@@ -41,14 +41,13 @@ info "IP修改成功, 正在重启服务..."
 docker restart keycloak >/dev/null
 
 docker rm -f supos-edge-platform
-docker rm -f uns
 docker rm -f kong
 
 DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../../docker-compose-8c16g.yml
 if [ "$OS_RESOURCE_SPEC" == "1" ]; then
   DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../../docker-compose-4c8g.yml
 fi
-docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../../.env.tmp -p supos -f $DOCKER_COMPOSE_FILE up -d uns kong
+docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../../.env.tmp -p supos -f $DOCKER_COMPOSE_FILE up -d supos-edge-platform kong
 
 sleep 15s
 

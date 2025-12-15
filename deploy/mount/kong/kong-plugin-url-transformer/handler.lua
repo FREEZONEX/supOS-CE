@@ -7,7 +7,7 @@ local plugin = {
     VERSION = "1.0.0",  -- 插件版本
 }
 
-local auth_url = "http://uns:8080/inter-api/supos/auth/userinfo"
+local auth_url = "http://supos-edge-platform:8080/inter-api/supos/auth/userinfo"
 
 -- 重定向函数
 local function authorized(redirect_url)
