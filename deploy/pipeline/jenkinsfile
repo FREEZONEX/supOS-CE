@@ -155,7 +155,7 @@ pipeline {
                             sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
                             sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
 
-                            rm -f install.sh
+                            rm -f ./bin/install.sh
 
                             scp -i /var/jenkins_home/ssh/id_rsa -r ./* root@172.21.9.198:/root/edge/supos-deploy-edge/
                             exec_ssh "cd /root/edge/supos-deploy-edge/ && bash ./bin/uninstall.sh && docker rmi -f suposce/supos-edge-platform:latest"
