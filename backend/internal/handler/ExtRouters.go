@@ -25,6 +25,21 @@ func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoute(rest.Route{
 		Method:  http.MethodGet,
 		Path:    "/inter-api/supos/uns/newMsg",
-		Handler: unsHandler.PushNewMsgHandler(serverCtx),
+		Handler: unsHandler.PushNewMsgHandler(serverCtx, false),
 	}, rest.WithSSE(), rest.WithTimeout(0))
+
+	server.AddRoute(rest.Route{
+		Method:  http.MethodGet,
+		Path:    "/inter-api/supos/uns/push",
+		Handler: unsHandler.PushNewMsgHandler(serverCtx, true),
+	}, rest.WithSSE(), rest.WithTimeout(0))
+
+	server.AddRoute(rest.Route{
+		Method: http.MethodGet,
+		Path:   "/inter-api/supos/uns/pushdemo",
+		Handler: func(w http.ResponseWriter, request *http.Request) {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.Write([]byte("data: Hello World\n\n"))
+		},
+	}, rest.WithTimeout(0))
 }
