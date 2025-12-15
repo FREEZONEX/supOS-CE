@@ -1947,7 +1947,7 @@ plugins:
     - ^/locale.*$
     - ^/logo.*$
     - ^/gitea.*git.*$
-    - ^/supos-login.*$
+    - ^/tier0-login.*$
     - ^/403$
     - ^/open-api/.*$
     - ^/keycloak.*$
