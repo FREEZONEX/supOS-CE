@@ -20,7 +20,7 @@ return {
                   "^/gitea.*git.*$",
                   "^/logo.*$",
                   "^/files.*$",
-                  "^/supos-login.*$",
+                  "^/tier0-login.*$",
                   "^/nodered.*$",
                   "^/inter-api/supos/cascade.*$",
                   "^/inter-api/supos/license.*$",
@@ -34,7 +34,7 @@ return {
           -- 是否启用拒绝策略资源权限检查
           { enable_deny_check = { type = "boolean", default = true } },
           -- 登录页URL
-          { login_url = { type = "string", default = "/supos-login"} },
+          { login_url = { type = "string", default = "/tier0-login"} },
           -- 403页面URL
           { forbidden_url = { type = "string", default = "/403"} },
         },
