@@ -34,6 +34,9 @@ services:
       - /etc/docker/certs:/certs
     networks:
       - edge_network
+    depends_on:
+      - emqx
+      - postgresql
     restart: always
   marimo:
     image: suposce/marimo:latest
