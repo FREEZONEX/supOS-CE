@@ -6,7 +6,6 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 
-	"gitee.com/unitedrhino/share/i18ns"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -37,7 +36,7 @@ func (l *GetLanguagesLogic) GetLanguages(req *types.GetLanguagesReq) (resp *type
 			HasUsed:      true,
 		}
 		vo.LanguageCode = it.String()
-		lang, ok := i18ns.GetLangInfoByCode(vo.LanguageCode)
+		lang, ok := GetLangInfoByCode(vo.LanguageCode)
 		if ok {
 			vo.LanguageName = lang.NativeName
 		}
