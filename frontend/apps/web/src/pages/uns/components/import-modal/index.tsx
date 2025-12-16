@@ -38,36 +38,36 @@ const placeholder = `{
   "UNS": [
     {
       "name": "v1",
-      "type": "folder",
+      "type": "path",
       "children": [
         {
           "name": "Plant_Name",
-          "type": "folder",
+          "type": "path",
           "children": [
             {
               "name": "SMT-Area-1",
-              "type": "folder",
+              "type": "path",
               "children": [
                 {
                   "name": "SMT-Line-1",
-                  "type": "folder",
+                  "type": "path",
                   "children": [
                     {
                       "name": "Printer-Cell",
-                      "type": "folder",
+                      "type": "path",
                       "children": [
                         {
                           "name": "Printer01",
-                          "type": "folder",
+                          "type": "path",
                           "children": [
                             {
                               "name": "State",
-                              "type": "folder",
+                              "type": "path",
                               "topicType": "STATE",
                               "children": [
                                 {
                                   "name": "current_job",
-                                  "type": "file",
+                                  "type": "topic",
                                   "topicType": "STATE",
                                   "dataType": "RELATION_TYPE",
                                   "generateDashboard": "FALSE",
@@ -98,7 +98,7 @@ const placeholder = `{
                                 },
                                 {
                                   "name": "alarm_status",
-                                  "type": "file",
+                                  "type": "topic",
                                   "topicType": "STATE",
                                   "dataType": "JSONB_TYPE",
                                   "generateDashboard": "FALSE",
@@ -109,12 +109,12 @@ const placeholder = `{
                             },
                             {
                               "name": "Action",
-                              "type": "folder",
+                              "type": "path",
                               "topicType": "ACTION",
                               "children": [
                                 {
                                   "name": "start_job",
-                                  "type": "file",
+                                  "type": "topic",
                                   "topicType": "ACTION",
                                   "dataType": "JSONB_TYPE",
                                   "generateDashboard": "FALSE",
@@ -123,7 +123,7 @@ const placeholder = `{
                                 },
                                 {
                                   "name": "stop_job",
-                                  "type": "file",
+                                  "type": "topic",
                                   "topicType": "ACTION",
                                   "dataType": "JSONB_TYPE",
                                   "generateDashboard": "FALSE",
@@ -134,12 +134,12 @@ const placeholder = `{
                             },
                             {
                               "name": "Metric",
-                              "type": "folder",
+                              "type": "path",
                               "topicType": "METRIC",
                               "children": [
                                 {
                                   "name": "board_cycle_time",
-                                  "type": "file",
+                                  "type": "topic",
                                   "topicType": "METRIC",
                                   "dataType": "TIME_SEQUENCE_TYPE",
                                   "generateDashboard": "TRUE",
@@ -154,7 +154,7 @@ const placeholder = `{
                                 },
                                 {
                                   "name": "boards_count",
-                                  "type": "file",
+                                  "type": "topic",
                                   "topicType": "METRIC",
                                   "dataType": "TIME_SEQUENCE_TYPE",
                                   "generateDashboard": "TRUE",
