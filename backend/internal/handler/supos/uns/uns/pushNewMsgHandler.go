@@ -2,7 +2,6 @@ package uns
 
 import (
 	unsService "backend/internal/logic/supos/uns/uns"
-	"backend/internal/svc"
 	"context"
 	"fmt"
 	"net/http"
@@ -12,28 +11,31 @@ import (
 )
 
 type sse_writer struct {
+	closed  bool
 	msgChan chan string
 }
 
+var errorSseClosed = fmt.Errorf("SseClosed")
+
 func (s *sse_writer) Write(p []byte) (n int, err error) {
+	if s.closed {
+		return 0, errorSseClosed
+	}
 	s.msgChan <- string(p)
 	return len(p), nil
 }
 
 // PushNewMsgHandler 推送最新消息
-func PushNewMsgHandler(svcCtx *svc.ServiceContext, async bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
-		flusher := w.(http.Flusher)
-		_, _ = fmt.Fprint(w, "data: Connected\n\n")
-		flusher.Flush()
+func PushNewMsgHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-transform")
+	w.Header().Set("X-Accel-Buffering", "no") // 禁用Nginx缓冲
 
-		if async {
-			go listen(w, r, flusher)
-		} else {
-			listen(w, r, flusher)
-		}
-	}
+	flusher := w.(http.Flusher)
+	_, _ = fmt.Fprint(w, "data: Connected\n\n")
+	flusher.Flush()
+
+	listen(w, r, flusher)
 }
 
 func listen(w http.ResponseWriter, r *http.Request, flusher http.Flusher) {
@@ -64,6 +66,7 @@ func listen(w http.ResponseWriter, r *http.Request, flusher http.Flusher) {
 			}
 		case <-ctx.Done():
 			// 客户端断开连接
+			sseWriter.closed = true
 			onClose()
 			close(sseWriter.msgChan)
 			return
