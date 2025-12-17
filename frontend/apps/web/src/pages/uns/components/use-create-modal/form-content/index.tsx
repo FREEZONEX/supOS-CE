@@ -79,6 +79,8 @@ const FormContent: FC<FormContentProps> = ({
           value: item.id,
         }));
         setTemplateList([{ label: formatMessage('common.custom'), value: 'custom' }].concat(_res));
+      } else {
+        setTemplateList([{ label: formatMessage('common.custom'), value: 'custom' }]);
       }
     });
   }, [open]);
