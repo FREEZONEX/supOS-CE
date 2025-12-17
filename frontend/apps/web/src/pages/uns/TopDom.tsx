@@ -148,7 +148,7 @@ const TopDom: FC<TopDomProps> = ({
           </Button>
         </AuthWrapper>
         <Button
-          title={formatMessage('home.dashboard')}
+          title={formatMessage('uns.backOverview')}
           style={{ padding: 8 }}
           onClick={() => {
             setTreeMap(true);

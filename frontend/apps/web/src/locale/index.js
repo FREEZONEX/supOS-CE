@@ -749,6 +749,7 @@ const messages = {
   'uns.pleaseSelectForExport': '请选择UNS的文件或者文件夹。',
   'uns.functions': '功能',
   'uns.mqttDescription': '查看连接详细信息和配置。',
+  'uns.backOverview': '返回概述',
 
   //公共通用模块
   'common.url': '地址',
