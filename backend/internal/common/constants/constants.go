@@ -48,6 +48,9 @@ const (
 	MaxPageSize     = 1000
 	SQLBatchSize    = 200
 
+	// homepage
+	DefaultHomepage = "/uns"
+
 	// Paths (composed at compile time)
 	RootPath              = "/data"
 	PluginPath            = RootPath + "/plugins"

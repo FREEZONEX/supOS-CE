@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -59,7 +60,7 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateReq) (*types.Operation
 	attributes := map[string]any{
 		"firstTimeLogin": []string{"1"},
 		"tipsEnable":     []string{"1"},
-		"homePage":       []string{"/home"},
+		"homePage":       []string{constants.DefaultHomepage},
 	}
 	if phone := strings.TrimSpace(req.Phone); phone != "" {
 		attributes["phone"] = []string{phone}
