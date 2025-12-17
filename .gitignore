@@ -10,7 +10,7 @@
 **/dist
 **/.turbo
 **/.vite
-.vscode/launch.json
+.vscode
 AGENTS.md
 backend/.env
 **/*.local
