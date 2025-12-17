@@ -153,7 +153,7 @@ pipeline {
                         if [ \$Only_Build_Image = false ]; then
 
                             sed -i "s|image: suposce/supos-edge-platform:[^[:space:]]*|image: \${FULL_IMAGE_TAG}|g" docker-compose-4c8g.yml
-                            sed -i "s|\$\{ENTRANCE_PORT:-8088\}:8000|8088:8000|g" docker-compose-4c8g.yml
+                            sed -i 's|\\$\\{ENTRANCE_PORT:-8088\\}:8000|8088:8000|g' docker-compose-4c8g.yml
                             sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
                             sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
 
