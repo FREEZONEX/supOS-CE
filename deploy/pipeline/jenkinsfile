@@ -20,18 +20,18 @@ pipeline {
 
     }
 
-    parameters {
-        booleanParam(
-            name: 'Only_Build_Image', 
-            defaultValue: false, 
-            description: '是否只构建镜像，不打包部署文件'
-        )
-        booleanParam(
-            name: 'Auto_Deploy', 
-            defaultValue: true, 
-            description: '自动部署到supos-community-edge'
-        )
-    }
+    // parameters {
+    //     booleanParam(
+    //         name: 'Only_Build_Image', 
+    //         defaultValue: false, 
+    //         description: '是否只构建镜像，不打包部署文件'
+    //     )
+    //     booleanParam(
+    //         name: 'Auto_Deploy', 
+    //         defaultValue: true, 
+    //         description: '自动部署到supos-community-edge'
+    //     )
+    // }
 
     stages {
         // --------------------------------------------------------------------------------------------------
@@ -140,7 +140,11 @@ pipeline {
             }
             steps {
                 script {      
-                    dir("deploy") {            
+                    if (params.Clean_data) {
+                        rm -rf /volumes/supos/data
+                    } 
+                    dir("deploy") {      
+
                         sh """
 
                         exec_ssh() {
