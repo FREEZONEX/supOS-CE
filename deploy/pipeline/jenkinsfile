@@ -159,8 +159,12 @@ pipeline {
                             rm -f ./bin/install.sh
 
                             scp -i /var/jenkins_home/ssh/id_rsa -r ./* \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
-                            exec_ssh "cd /root/edge/supos-deploy-edge/ && bash ./bin/uninstall.sh && docker images | grep 'supos-edge-platform' | awk '{print \$1 ":" \$2}' | xargs -r docker rmi"
-                            exec_ssh "cd /root/edge/supos-deploy-edge/ && bash ./bin/install.sh"
+                            exec_ssh '
+                                        cd /root/edge/supos-deploy-edge/ 
+                                        bash ./bin/uninstall.sh 
+                                        docker rmi -f \${FULL_IMAGE_TAG}
+                                        bash ./bin/install.sh
+                            '
 
                         fi
 
@@ -168,11 +172,10 @@ pipeline {
                             sed -i "s|image: suposce/supos-edge-platform:[^[:space:]]*|image: \${FULL_IMAGE_TAG}|g" docker-compose-4c8g.yml
                             scp -i /var/jenkins_home/ssh/id_rsa docker-compose-4c8g.yml \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
 
-                            exec_ssh "
-                                docker rm -f \$(docker ps -a | grep 'supos-edge-platform' | awk '{print \$1}') || true
-                                docker images | grep 'supos-edge-platform' | awk '{print \$1 ":" \$2}' | xargs -r docker rmi
-                                cd /root/edge/supos-deploy-edge/ && docker compose -f docker-compose-4c8g.yml -p supos --env-file .env.default --env-file .env.tmp up -d uns
-                            "
+                            exec_ssh '
+                                docker rm -f uns
+                                cd /root/edge/supos-deploy-edge/ && docker compose -f docker-compose-4c8g.yml -p supos --env-file .env.default --env-file .env.tmp up -d --pull always uns
+                            '
                         fi
                         
 
