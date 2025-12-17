@@ -1,6 +1,6 @@
 # SupOS Edge Frontend
 
-现代化的前端项目，基于 pnpm monorepo 架构，使用 React 19、Vite、TypeScript 等现代技术栈。
+现代化的前端项目，基于 pnpm monorepo 架构，使用 React 18、Vite、TypeScript 等现代技术栈。
 
 ## 🚀 技术栈
 
@@ -159,7 +159,3 @@ pnpm clean  # 清理node_modules
 2. 提交前运行 `pnpm lint` 确保代码质量
 3. 使用规范的 Git 提交信息
 4. 确保所有测试通过
-
-## 📄 许可证
-
-本项目基于 SupOS Edge 项目的许可证。
