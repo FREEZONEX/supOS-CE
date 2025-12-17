@@ -116,6 +116,7 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
       ellipsis: true,
       titleIntlId: 'common.operation',
       render: (_: any, record: any) => {
+        if (record?.preferredUsername === 'tier0') return null;
         return (
           <Flex>
             {record?.enabled ? (
@@ -240,7 +241,7 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
                   key: 'resetpassword',
                   auth: ButtonPermission['UserManagement.resetPassword'],
                   onClick: () => onOpen?.(record),
-                  disabled: ldapEnable && record?.preferredUsername !== 'supos',
+                  disabled: ldapEnable && record?.preferredUsername !== 'tier0',
                   label: formatMessage('account.resetpassword'),
                   extra: (
                     <Flex style={{ height: '100%' }} align="center">
@@ -248,7 +249,7 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
                     </Flex>
                   ),
                 },
-                record?.preferredUsername !== 'supos'
+                record?.preferredUsername !== 'tier0'
                   ? {
                       key: 'delete',
                       auth: ButtonPermission['UserManagement.delete'],
@@ -274,7 +275,7 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
                           },
                         });
                       },
-                      disabled: (ldapEnable && record?.preferredUsername !== 'supos') || record?.source === 'external',
+                      disabled: (ldapEnable && record?.preferredUsername !== 'tier0') || record?.source === 'external',
                       label: formatMessage('common.delete'),
                       extra: (
                         <Flex style={{ height: '100%' }} align="center">

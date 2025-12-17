@@ -34,7 +34,7 @@ func (l *RoleListLogic) RoleList() ([]types.RoleDetail, error) {
 	roles, err := kc.GetAllRoles()
 	if err != nil {
 		l.Errorf("failed to load roles from keycloak: %v", err)
-		return nil, errors.System.WithMsg("failed to load roles")
+		return nil, errors.System.WithMsg(fmt.Sprintf("failed to load roles: %v", err))
 	}
 
 	roleByName := make(map[string]*clients.KeycloakRoleInfoDto, len(roles))
@@ -66,14 +66,14 @@ func (l *RoleListLogic) RoleList() ([]types.RoleDetail, error) {
 			allowResources, err = repo.GetRoleAllowResources(l.ctx, role.ID)
 			if err != nil {
 				l.Errorf("load allow resources for role %s failed: %v", role.ID, err)
-				return nil, errors.System.WithMsg("failed to load role resources")
+				return nil, errors.System.WithMsg(fmt.Sprintf("failed to load role resources: %v", err))
 			}
 		}
 		if denyRole := roleByName[fmt.Sprintf("deny-%s", role.Name)]; denyRole != nil && repo != nil {
 			denyResources, err = repo.GetRoleDenyResources(l.ctx, denyRole.ID)
 			if err != nil {
 				l.Errorf("load deny resources for role %s failed: %v", denyRole.ID, err)
-				return nil, errors.System.WithMsg("failed to load role resources")
+				return nil, errors.System.WithMsg(fmt.Sprintf("failed to load role resources: %v", err))
 			}
 		}
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
 	"backend/internal/common/serviceApi"
@@ -10,6 +11,7 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 )
@@ -80,25 +82,61 @@ func nodeGetParentId(node *FileData) int64 {
 	return node.parentId
 }
 
-func node2vo(i, parent *FileData) *types.CreateTopicDto {
-	i.parent = parent
-	if i.Alias == "" {
-		i.Alias = PathUtil.GenerateFileAlias(i.getPath())
+func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
+	if i.Name == "" {
+		i.Error = "Empty " + prop
+		return nil
 	}
+	if prop == Label {
+		return &types.CreateTopicDto{Name: i.Name}
+	}
+
 	vo := &types.CreateTopicDto{
 		Alias:      i.Alias,
 		Name:       i.Name,
 		Fields:     i.Fields,
 		JsonFields: i.JsonFields,
-		Path:       i.getPath(),
+	}
+	switch prop {
+	case Template:
+		vo.PathType = constants.PathTypeTemplate
+	case UNS:
+		switch i.Type {
+		case TYPE_FILE, "file":
+			vo.PathType = constants.PathTypeFile
+			if os.Getenv("SYS_OS_ENABLE_AUTO_CATEGORIZATION") == "true" {
+				if i.ParentDataType == "" {
+					i.Error = I18nUtils.GetMessage("uns.excel.parentDataType.is.blank")
+					return nil
+				}
+			}
+		case TYPE_FOLDER, "folder":
+			vo.PathType = constants.PathTypeDir
+			if i.Name == "label" || i.Name == "template" {
+				i.Error = I18nUtils.GetMessage("uns.folder.reserved.word")
+				return nil
+			}
+			if len(i.Name) > 63 {
+				i.Error = I18nUtils.GetMessage("uns.folder.length.limit.exceed")
+				return nil
+			}
+		default:
+			i.Error = I18nUtils.GetMessage("uns.import.type.error")
+			return nil
+		}
 	}
 
+	if vo.Alias == "" {
+		vo.Alias = PathUtil.GenerateFileAlias(i.getPath())
+	}
+	i.parent = parent
 	if parent != nil {
 		if parent.Alias == "" {
 			parent.Alias = PathUtil.GenerateFileAlias(parent.getPath())
 		}
 		vo.ParentAlias = &parent.Alias
 	}
+	vo.Path = i.getPath()
 	if len(i.DisplayName) > 0 {
 		vo.DisplayName = &i.DisplayName
 	}
@@ -111,35 +149,21 @@ func node2vo(i, parent *FileData) *types.CreateTopicDto {
 	if len(i.Label) > 0 {
 		vo.LabelNames = strings.Split(i.Label, ",")
 	}
-	switch i.Type {
-	case TYPE_FILE:
-		vo.PathType = constants.PathTypeFile
-	case TYPE_FOLDER:
-		vo.PathType = constants.PathTypeDir
-	case TYPE_TEMPLATE:
-		vo.PathType = constants.PathTypeTemplate
-	default:
-		vo.PathType = -1
+	if len(i.DataType) > 0 {
+		dt := enums.DataTypeInt(i.DataType)
+		if dt >= 0 {
+			vo.DataType = base.V2p(dt)
+		} else {
+			i.Error = I18nUtils.GetMessage("uns.import.dataType.error")
+			return nil
+		}
 	}
-
 	if len(i.ParentDataType) > 0 {
 		if pdt, ok := enums.GetFolderDataTypeByName(i.ParentDataType); ok {
 			vo.ParentDataType = base.V2p(int16(pdt))
 		}
 	}
-	if len(i.DataType) > 0 {
-		dt := enums.DataTypeInt(i.DataType)
-		if dt >= 0 {
-			vo.DataType = base.V2p(dt)
-		}
-	}
 	return vo
-}
-func poGetId(node *dao.UnsNamespace) int64 {
-	return node.Id
-}
-func poGetParentId(node *dao.UnsNamespace) int64 {
-	return base.P2vWithDefault(node.ParentId, -1)
 }
 
 var initDefOnce sync.Once

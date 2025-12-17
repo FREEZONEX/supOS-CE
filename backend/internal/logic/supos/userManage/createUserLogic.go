@@ -2,6 +2,7 @@ package userManage
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"backend/internal/common/constants"
@@ -29,6 +30,9 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateReq) (*types.Operation
 	username := strings.TrimSpace(req.Username)
 	if username == "" {
 		return nil, errors.Parameter.WithMsg("user.username.empty")
+	}
+	if len(username) < 3 || len(username) > 30 {
+		return nil, errors.Parameter.WithMsg("user.username.invalid")
 	}
 	password := strings.TrimSpace(req.Password)
 	if password == "" {
@@ -91,7 +95,7 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateReq) (*types.Operation
 	userID, err := kc.CreateUser(userPayload)
 	if err != nil {
 		l.Errorf("failed to create keycloak user %s: %v", username, err)
-		return nil, errors.System.WithMsg("failed to create user")
+		return nil, errors.System.WithMsg(fmt.Sprintf("failed to create user: %v", err))
 	}
 	createdUserID = userID
 	cleanup = true
