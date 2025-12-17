@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"backend/internal/common/constants"
 	"backend/internal/common/enums"
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -133,7 +134,7 @@ func (l *UserPageLogic) UserPage(req *types.UserManagePageReq) (*types.UserManag
 			Sub:               row.ID,
 			FirstTimeLogin:    1,
 			TipsEnable:        1,
-			HomePage:          "/home",
+			HomePage:          constants.DefaultHomepage,
 		}
 
 		if attrs := attrMap[row.ID]; len(attrs) > 0 {
