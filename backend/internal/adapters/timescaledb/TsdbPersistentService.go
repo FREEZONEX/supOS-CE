@@ -34,7 +34,7 @@ func init() {
 			log.Info("timescaledb url not found in config")
 			return nil
 		}
-		pool, er := pgxpool.New(ctx, url)
+		pool, er := postgresql.NewPool(ctx, url)
 		if er != nil {
 			log.Error("timescaledb init fail", er)
 			return nil
