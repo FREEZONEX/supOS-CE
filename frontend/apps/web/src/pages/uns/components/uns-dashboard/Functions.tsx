@@ -41,7 +41,7 @@ const Functions = () => {
   };
   return (
     <Flex vertical gap={24} style={{ marginBottom: 24 }}>
-      <Flex justify="space-between" align="center" gap={16}>
+      <Flex justify="space-between" align="flex-start" gap={16}>
         <ComEllipsis className={styles['title']}>{formatMessage('uns.functions')}</ComEllipsis>
         <Segmented<string>
           style={{ overflowX: 'auto' }}
