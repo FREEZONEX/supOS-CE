@@ -18,6 +18,7 @@ import (
 	"golang.org/x/text/language"
 
 	cache "backend/internal/common/cache"
+	"backend/internal/common/constants"
 	"backend/internal/config"
 	keycloakrepo "backend/internal/repo/keycloak"
 	"backend/share/clients"
@@ -66,7 +67,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:         c,
 		OssClient:      ossClient,
-		CheckTokenWare: middleware.NewCheckTokenWareMiddleware(keycloakClient, "/uns", c.OAuthKeyCloak.Realm).Handle,
+		CheckTokenWare: middleware.NewCheckTokenWareMiddleware(keycloakClient, constants.DefaultHomepage, c.OAuthKeyCloak.Realm).Handle,
 		InitCtxsWare:   middleware.NewInitCtxsWareMiddleware().Handle,
 		SnowFlake:      utils.NewSnowFlake(1),
 		I18n:           mf,

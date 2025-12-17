@@ -145,7 +145,7 @@ func NewUserAttributeVo() *UserAttributeVo {
 	return &UserAttributeVo{
 		FirstTimeLogin: 1,
 		TipsEnable:     1,
-		HomePage:       "/uns",
+		HomePage:       constants.DefaultHomepage,
 	}
 }
 
@@ -193,7 +193,7 @@ func Guest() *UserInfoVo {
 	user.Enabled = true
 	user.FirstTimeLogin = 0
 	user.TipsEnable = 0
-	user.HomePage = "/uns"
+	user.HomePage = constants.DefaultHomepage
 	return user
 }
 
