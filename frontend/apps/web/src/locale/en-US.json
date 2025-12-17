@@ -710,6 +710,7 @@
   "uns.pleaseSelectForExport": "Please select the UNS path or topic.",
   "uns.functions": "Functions",
   "uns.mqttDescription": "View connection details and configuration.",
+  "uns.backOverview": "Back to overview",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

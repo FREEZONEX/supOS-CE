@@ -5,7 +5,7 @@ networks:
     driver: bridge
 
 services:
-  uns:
+  supos-edge-platform:
     image: suposce/supos-edge-platform:1.0.0-T3
     container_name: uns
     ports:
@@ -34,6 +34,9 @@ services:
       - /etc/docker/certs:/certs
     networks:
       - edge_network
+    depends_on:
+      - emqx
+      - postgresql
     restart: always
   marimo:
     image: suposce/marimo:latest
@@ -352,7 +355,7 @@ services:
       - "8444:8444"
     depends_on:
       - emqx
-      - uns
+      - supos-edge-platform
       - keycloak
       - postgresql
     command: >

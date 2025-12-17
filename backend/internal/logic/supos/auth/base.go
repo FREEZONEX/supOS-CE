@@ -63,5 +63,5 @@ func (l *baseAuthLogic) fetchUserInfo(accessToken string, allowCache bool) (*vo.
 	if kc == nil {
 		return nil, "", errors.System.WithMsg("keycloak client not configured")
 	}
-	return authsvc.FetchUserInfo(l.ctx, kc, accessToken, allowCache, l.svcCtx.Config.OAuthKeyCloak.SuposHome, l.svcCtx.Config.OAuthKeyCloak.Realm)
+	return authsvc.FetchUserInfo(l.ctx, kc, accessToken, allowCache, "/uns", l.svcCtx.Config.OAuthKeyCloak.Realm)
 }
