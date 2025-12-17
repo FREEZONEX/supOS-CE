@@ -1,6 +1,6 @@
 import type { ContainerItemProps, ResourceProps } from './types.ts';
 import { frontendPathList } from '@/routers';
-import { getToken, storageOpt } from '@/utils';
+import { storageOpt } from '@/utils';
 import {
   SUPOS_USER_GUIDE_ROUTES,
   SUPOS_USER_LAST_LOGIN_ENABLE,
@@ -206,9 +206,9 @@ export function guideConfig({ systemInfo, menuGroup, info }: { systemInfo: any; 
   //         1).判断是否免登 2).是否为刚登录 3).判断用户是否支持展示
   const lastLoginEnable = storageOpt.getOrigin(SUPOS_USER_LAST_LOGIN_ENABLE);
 
-  const token = getToken();
+  // 用户是guest表明登录成功
+  const token = info?.sub === 'guest' ? undefined : 'login';
   const isLoginEnable = isBoolean(systemInfo?.authEnable) && !isEmpty(token);
-
   // 获取上次免登录状态和当前比较，如果发生改变，则说明用户登录发生变化,或者systemInfo?.authEnable获取失败则清除缓存
   if (!isBoolean(systemInfo?.authEnable) || lastLoginEnable !== `${isLoginEnable}`) {
     storageOpt.remove(SUPOS_USER_GUIDE_ROUTES);
