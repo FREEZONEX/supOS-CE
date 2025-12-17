@@ -140,8 +140,10 @@ pipeline {
             }
             steps {
                 script {      
+                    echo "Clean_data 参数值: ${params.Clean_data}"
                     if (params.Clean_data) {
-                        rm -rf /volumes/supos/data
+                        sh "rm -rf /volumes/supos/data"
+                        echo "--> 已清理数据卷 /volumes/supos/data"
                     } 
                     dir("deploy") {      
 
