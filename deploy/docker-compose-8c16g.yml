@@ -36,7 +36,8 @@ services:
       - edge_network
     depends_on:
       - emqx
-      - postgresql
+      - postgresql:
+          condition: service_healthy 
     restart: always
   marimo:
     image: suposce/marimo:latest
