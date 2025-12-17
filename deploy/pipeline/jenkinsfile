@@ -152,7 +152,7 @@ pipeline {
 
                         if [ \$Only_Build_Image = false ]; then
 
-                            sed -i 's|image: suposce/supos-edge-platform:[^[:space:]]*|image: \${FULL_IMAGE_TAG}|g' docker-compose-4c8g.yml
+                            sed -i "s|image: suposce/supos-edge-platform:[^[:space:]]*|image: \${FULL_IMAGE_TAG}|g" docker-compose-4c8g.yml
                             sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
                             sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
 
@@ -165,7 +165,7 @@ pipeline {
                         fi
 
                         if [ \$Only_Build_Image = true ]; then
-                            sed -i 's|image: suposce/supos-edge-platform:[^[:space:]]*|image: \${FULL_IMAGE_TAG}|g' docker-compose-4c8g.yml
+                            sed -i "s|image: suposce/supos-edge-platform:[^[:space:]]*|image: \${FULL_IMAGE_TAG}|g" docker-compose-4c8g.yml
                             scp -i /var/jenkins_home/ssh/id_rsa docker-compose-4c8g.yml \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
 
                             exec_ssh "
