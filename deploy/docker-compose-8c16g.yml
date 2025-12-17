@@ -263,7 +263,7 @@ services:
       service_description: aboutus.keycloakDescription
       service_redirect_url: /keycloak/home/
       service_account: admin
-      service_password: supos
+      service_password: tier0
       KC_SSL_REQUIRED: none  # 不要求 SSL
       KC_PROXY: passthrough                       # 设置代理模式
       KC_HOSTNAME: "${ENTRANCE_DOMAIN}"              # 指定主机名
