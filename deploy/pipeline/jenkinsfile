@@ -140,21 +140,20 @@ pipeline {
             }
             steps {
                 script {      
-                    echo "Clean_Data 参数值: ${params.Clean_Data}"
-                    if (params.Clean_Data) {
-                        sh "rm -rf /volumes/supos/data"
-                        echo "--> 已清理数据卷 /volumes/supos/data"
-                    } 
+                    
                     dir("deploy") {      
-
                         sh """
-
                         exec_ssh() {
                             ssh -o StrictHostKeyChecking=no \
                                 -o ConnectTimeout=10 \
                                 -i /var/jenkins_home/ssh/id_rsa \
                                 \$DEPLOY_SSH_SERVER "\$1"
                         }
+                        echo "Clean_Data 参数值: \${params.Clean_Data}"
+                        if [ \"\${params.Clean_Data}\" = \"true\" ]; then
+                            exec_ssh 'rm -rf /volumes/supos/data'
+                            echo "--> 已清理数据卷 /volumes/supos/data"
+                        fi 
 
                         if [ \$Only_Build_Image = false ]; then
 
