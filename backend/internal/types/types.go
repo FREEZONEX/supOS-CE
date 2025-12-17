@@ -216,7 +216,7 @@ type CreateTopicDto struct {
 	HasBlobField                  bool                      `json:"-"`
 	ReferUns                      string                    `json:"referUns,optional,omitzero"` // Reference fields
 	ReferIds                      []int64                   `json:"referIds,optional,omitzero"`
-	RefUns                        map[int64]int             `json:"refUns,optional"`
+	RefUns                        map[int64]int             `json:"refUns,optional,omitempty"`
 	LayRec                        string                    `json:"-"`
 	ReferTable                    string                    `json:"referTable,optional,omitzero"`
 	RefFields                     []*FieldDefine            `json:"refFields,optional,omitzero"`
@@ -226,9 +226,9 @@ type CreateTopicDto struct {
 	Expression                    *string                   `json:"expression,optional,omitzero" validate:"max=255"`
 	CompileExpression             interface{}               `json:"-"`
 	StreamOptions                 *StreamOptions            `json:"streamOptions,optional,omitzero"`
-	DataPath                      *string                   `json:"dataPath,optional"`
-	Protocol                      map[string]interface{}    `json:"protocol,optional"`
-	ProtocolType                  *string                   `json:"protocolType,optional"`
+	DataPath                      *string                   `json:"dataPath,optional,omitempty"`
+	Protocol                      map[string]interface{}    `json:"protocol,optional,omitempty"`
+	ProtocolType                  *string                   `json:"protocolType,optional,omitzero"`
 	ProtocolBean                  interface{}               `json:"-"`
 	WithFlags                     *int32                    `json:"withFlags,optional,omitempty"` // Flags and options
 	AddFlow                       *bool                     `json:"addFlow,optional,omitempty"`

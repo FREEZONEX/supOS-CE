@@ -65,84 +65,90 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 	prevTask := ""
 	//
 	countUns, countErr := 0, 0
-	er := jsonstream.DecodeStreamedJson(file.Reader, l.exportConfig.BuffeSize, l.exportConfig.BatchSize,
-		nodeGetChildren, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
-			if prevReadSize != readSize {
-				if prevReadSize > readSize {
-					progress += 20 * float64(prevReadSize-readSize) / TOTAL_SIZE
-				} else {
-					newProgress := 20 * float64(readSize) / TOTAL_SIZE
-					if newProgress <= progress {
-						if propName == prevTask {
-							progress += 2
-						} else {
-							progress += 20
-							prevTask = propName
-						}
+	er := jsonstream.DecodeJsonTreeToFlat(file.Reader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
+		if prevReadSize != readSize {
+			if prevReadSize > readSize {
+				progress += 20 * float64(prevReadSize-readSize) / TOTAL_SIZE
+			} else {
+				newProgress := 20 * float64(readSize) / TOTAL_SIZE
+				if newProgress <= progress {
+					if propName == prevTask {
+						progress += 2
 					} else {
-						progress = newProgress
-					}
-				}
-				status := &common.RunningStatus{Code: 200, Task: propName}
-				status.SetProgress(progress)
-				pushStatus(status)
-				prevReadSize = readSize
-			}
-			switch propName {
-			case Label:
-				labelNames := base.Map[*types.CreateTopicDto, string](nodes, func(e *types.CreateTopicDto) string {
-					return e.Name
-				})
-				_, er := l.labelService.CreateBatch(context.Background(), labelNames)
-				if er != nil {
-					l.log.Error("创建标签失败", er)
-				}
-			case Template, UNS:
-				countUns += len(nodes)
-				if propName == Template {
-					for _, n := range nodes {
-						n.PathType = constants.PathTypeTemplate
-					}
-				}
-				errTipMap := l.unsAddService.CreateModelAndInstancesInner(context.Background(), bo.CreateModelInstancesArgs{
-					Topics:     nodes,
-					FromImport: true,
-					StatusConsumer: func(status *common.RunningStatus) {
-						if progress < 80 {
-							if status.Code > 0 {
-								if status.N != nil {
-									progress += 1 / float64(*status.N)
-								} else {
-									progress += 0.1
-								}
-							}
-							progressStatus := &common.RunningStatus{Code: 200, Msg: status.Msg, Task: status.Task, SpendMills: status.SpendMills}
-							progressStatus.SetProgress(progress)
-							pushStatus(progressStatus)
-						}
-					},
-				})
-				if len(errTipMap) > 0 {
-					countErr += len(errTipMap)
-					first := errFile == nil
-					createErrorFile()
-					logErrImports(errTipMap, nodes, first, errBufWriter, errJsonEncoder)
-				}
-			}
-			if progress < 95 {
-				if propName == prevTask {
-					if readSize == FILE_SIZE {
-						progress += 1
+						progress += 20
+						prevTask = propName
 					}
 				} else {
-					progress += 20
+					progress = newProgress
 				}
-				progressStatus := &common.RunningStatus{Code: 200, Task: propName}
-				progressStatus.SetProgress(progress)
-				pushStatus(progressStatus)
 			}
-			prevTask = propName
-		})
+			status := &common.RunningStatus{Code: 200, Task: propName}
+			status.SetProgress(progress)
+			pushStatus(status)
+			prevReadSize = readSize
+		}
+		switch propName {
+		case Label:
+			labelNames := base.Map[*types.CreateTopicDto, string](nodes, func(e *types.CreateTopicDto) string {
+				return e.Name
+			})
+			_, er := l.labelService.CreateBatch(context.Background(), labelNames)
+			if er != nil {
+				l.log.Error("创建标签失败", er)
+			}
+		case Template, UNS:
+			countUns += len(nodes)
+			if propName == Template {
+				for _, n := range nodes {
+					n.PathType = constants.PathTypeTemplate
+				}
+			}
+			errTipMap := l.unsAddService.CreateModelAndInstancesInner(context.Background(), bo.CreateModelInstancesArgs{
+				Topics:     nodes,
+				FromImport: true,
+				StatusConsumer: func(status *common.RunningStatus) {
+					if progress < 80 {
+						if status.Code > 0 {
+							if status.N != nil {
+								progress += 1 / float64(*status.N)
+							} else {
+								progress += 0.1
+							}
+						}
+						progressStatus := &common.RunningStatus{Code: 200, Msg: status.Msg, Task: status.Task, SpendMills: status.SpendMills}
+						progressStatus.SetProgress(progress)
+						pushStatus(progressStatus)
+					}
+				},
+			})
+			if len(errTipMap) > 0 {
+				countErr += len(errTipMap)
+				first := errFile == nil
+				createErrorFile()
+				logErrImports(errTipMap, nodes, first, errBufWriter, errJsonEncoder)
+			}
+		}
+		if progress < 95 {
+			if propName == prevTask {
+				if readSize == FILE_SIZE {
+					progress += 1
+				}
+			} else {
+				progress += 20
+			}
+			progressStatus := &common.RunningStatus{Code: 200, Task: propName}
+			progressStatus.SetProgress(progress)
+			pushStatus(progressStatus)
+		}
+		prevTask = propName
+	}, func(errNode *FileData) {
+		first := errFile == nil
+		createErrorFile()
+		if !first {
+			_ = errBufWriter.WriteByte(',')
+		}
+		_ = errJsonEncoder.Encode(errNode)
+	})
 	if er != nil {
 		l.log.Error("JsonDecodeError", er)
 		first := errFile == nil

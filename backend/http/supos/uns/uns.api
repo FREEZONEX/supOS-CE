@@ -53,7 +53,7 @@ type (
         ReferUns     string         `json:"referUns,optional,omitzero"` // Reference fields
 
         ReferIds     []int64        `json:"referIds,optional,omitzero"`
-        RefUns       map[int64]int  `json:"refUns,optional"`
+        RefUns       map[int64]int  `json:"refUns,optional,omitempty"`
         LayRec       string         `json:"-"`
         ReferTable   string         `json:"referTable,optional,omitzero"`
         RefFields    []*FieldDefine `json:"refFields,optional,omitzero"`
@@ -67,9 +67,9 @@ type (
         StreamOptions     *StreamOptions   `json:"streamOptions,optional,omitzero"`
 
         // Protocol fields
-        DataPath     *string         `json:"dataPath,optional"`
-        Protocol     map[string]interface{} `json:"protocol,optional"`
-        ProtocolType *string         `json:"protocolType,optional"`
+        DataPath     *string         `json:"dataPath,optional,omitempty"`
+        Protocol     map[string]interface{} `json:"protocol,optional,omitempty"`
+        ProtocolType *string         `json:"protocolType,optional,omitzero"`
         ProtocolBean interface{}            `json:"-"`
 
 
