@@ -23,6 +23,39 @@ func TestDecodeStreamedJson(t *testing.T) {
 		t.Fatalf("Error parsing JSON: %v\n", err)
 	}
 }
+func TestLabelImport(t *testing.T) {
+	__json := `{
+"Label":[
+{"name":"L1"},
+{"name":"seqx"},
+{"name":"fas"}
+],"Template":[
+{"name":"wet_it","alias":"__1c200aefe8b248e6b640","fields":[{"name":"wet","type":"FLOAT"},{"name":"d111","type":"INTEGER"}],"description":"湿度模版9","frequency":"1m"},
+{"name":"wet_it","alias":"__76b5c7a847454fc4b77a","fields":[{"name":"wet","type":"FLOAT"},{"name":"csdw","type":"LONG"}],"description":"湿度2"},
+{"name":"312312","alias":"__69bd7f8b4b594a708f62","fields":[{"name":"wet","type":"FLOAT"},{"name":"val","type":"LONG"}],"description":"湿度2fads"},
+{"name":"aaa","alias":"T__9ede38958a724b1993a0","fields":[{"name":"g","type":"FLOAT","displayName":"a","remark":"b"},{"name":"val11","type":"INTEGER"}]},
+{"name":"文件夹","alias":"Twenjianjia_293658187a4d43cea27f","fields":[{"name":"a","type":"DATETIME"}]},
+{"name":"文件2","alias":"Twenjian_8ff63f10b0d044e792ba","fields":[{"name":"a","type":"DATETIME"}]},
+{"name":"AlarmTemplate","alias":"_alarm_model","fields":[{"name":"current_value","type":"FLOAT"},{"name":"is_alarm","type":"BOOLEAN"},{"name":"limit_value","type":"FLOAT"},{"name":"read_status","type":"BOOLEAN"},{"name":"uns","type":"LONG"},{"name":"uns_path","type":"STRING","maxLen":512}],"description":"Alarm Model"}
+],"UNS":[
+ {"type":"folder","name":"状态","alias":"_state_","displayName":"状态","children":[{"type":"file","name":"121","alias":"_121_77ffd11e5c784f3b8396","fields":[{"name":"json","type":"STRING"}],"dataType":"JSONB_TYPE","generateDashboard":"TRUE","enableHistory":"FALSE","mockData":"FALSE","topicType":"STATE"}]}
+ ]
+}
+`
+	bigJson := bytes.NewBuffer([]byte(__json))
+	err := jsonstream.DecodeJsonTreeToFlat(bigJson, 100, node2vo, func(rd int64, propName string, ns []*types.CreateTopicDto) {
+		jsonBytes, _ := json.Marshal(ns)
+		t.Logf("readSize=%d, prop=%s , Nodes[%d]: %v", rd, propName, len(ns), string(jsonBytes))
+	}, func(node *FileData) {
+		err := node.Error
+		node.Error = ""
+		jsonBytes, _ := json.Marshal(node)
+		t.Log("ErrorNode: ", err, string(jsonBytes))
+	})
+	if err != nil {
+		t.Fatalf("Error parsing JSON: %v\n", err)
+	}
+}
 
 var __realJson = `
 {

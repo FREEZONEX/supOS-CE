@@ -26,6 +26,7 @@ func TestCsv2JsonStream(t *testing.T) {
 	}
 	t.Log("countNodes:", countNodes)
 	t.Log(jsonWriter.String())
+
 }
 func Test_getLayAndIdsInner(t *testing.T) {
 	layRec, ids := getLayAndIdsInner([]int64{3}, []int64{4, 5}, []string{"1/2/3", "1/2/3/4", "1/2/5"})

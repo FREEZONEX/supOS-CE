@@ -136,6 +136,8 @@ func removePortIfDefault(rawURL string) string {
 	return rawURL
 }
 
+var Tier0ClientID = "a7b53e5e-3567-470a-9da1-94cc0c7f18e6"
+
 type KeycloakClient struct {
 	config     KeycloakConfig
 	httpClient *http.Client
@@ -160,15 +162,16 @@ func InitKeycloakClient(config KeycloakConfig) *KeycloakClient {
 			tokenCache: cache.New(10*time.Minute, 15*time.Minute),
 		}
 
-		if kc.config.SuposClientID == "" {
-			if err := kc.resolveSuposClientID(); err != nil {
-				logx.Errorf("failed to resolve Keycloak client uuid for clientId %q: %v", kc.config.ClientID, err)
-				// panic(fmt.Errorf("resolve Keycloak client uuid: %w", err))
-				fmt.Println("KeycloakConfig init failed!!!")
-				keycloakClient = kc
-				return
-			}
-		}
+		// if kc.config.SuposClientID == "" {
+		// 	if err := kc.resolveSuposClientID(); err != nil {
+		// 		logx.Errorf("failed to resolve Keycloak client uuid for clientId %q: %v", kc.config.ClientID, err)
+		// 		// panic(fmt.Errorf("resolve Keycloak client uuid: %w", err))
+		// 		fmt.Println("KeycloakConfig init failed!!!")
+		// 		keycloakClient = kc
+		// 		return
+		// 	}
+		// }
+		kc.config.SuposClientID = Tier0ClientID
 		fmt.Println("KeycloakConfig init success!!!")
 		keycloakClient = kc
 	})

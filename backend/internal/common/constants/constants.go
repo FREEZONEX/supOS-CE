@@ -186,7 +186,7 @@ func init() {
 	MqttPlugin = getEnv("MQTT_PLUGIN", "emqx")
 	WSSessionLimit = getEnvAsInt("WS_SESSION_LIMIT", 50)
 	UnsOverdueDelete = getEnvAsInt("UNS_HISTORY_OVER_DUE", 7)
-	TokenMaxAge = getEnvAsInt("TOKEN_MAX_AGE", 21600)
+	TokenMaxAge = getEnvAsInt("TOKEN_MAX_AGE", 3600)
 
 	// Initialize the set of system fields
 	SystemFields = map[string]struct{}{
