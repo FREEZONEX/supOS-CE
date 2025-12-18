@@ -4,7 +4,7 @@ import { useMenuNavigate, useTranslate, useMediaSize, useLocalStorage } from '@/
 import { Divider, Menu, Splitter, Drawer, Badge } from 'antd';
 import { useNavigate, useLocation } from 'react-router';
 import { SUPOS_STORAGE_MENU_WIDTH } from '@/common-types/constans.ts';
-import HelpNav from '../components/HelpNav';
+// import HelpNav from '../components/HelpNav';
 import './index.scss';
 import LogoImg from '@/layout/custom-menu-header/components/LogoImg.tsx';
 import { useUnsTreeMapContext } from '@/UnsTreeMapContext';
@@ -236,10 +236,10 @@ const CustomMenuHeader = () => {
                 key: 'search',
                 style: { width: 'auto', padding: '0' },
               },
-              {
-                label: <HelpNav />,
-                key: 'help',
-              },
+              // {
+              //   label: <HelpNav />,
+              //   key: 'help',
+              // },
               // {
               //   label: <Task size={20} style={{ color: 'var(--supos-text-color)' }} />,
               //   title: formatMessage('common.taskCenter'),
