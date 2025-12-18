@@ -370,6 +370,7 @@
   "user.login.password.error": "密码错误",
   "user.username.null": "用户名不能为空",
   "user.username.invalid": "无效的用户名，仅支持中文、英文、数字和部分特殊符号_-.@&+，最少3个字符，最多200个字符",
+  "user.username.already.exists": "用户名已存在",
   "user.firstName.invalid": "无效的展示名，仅支持中文、英文、数字和部分特殊符号_-.@&+，最少3个字符，最多200个字符",
   "user.password.null": "密码不能为空",
   "user.not.exist": "用户不存在",

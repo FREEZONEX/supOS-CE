@@ -368,6 +368,7 @@
   "user.login.password.error": "Wrong password.",
   "user.username.null": "Username cannot be empty.",
   "user.username.invalid": "Invalid username. Only Chinese characters, English letters, numbers and some special symbols _-.@&+ are allowed. 3-200 characters in length.",
+  "user.username.already.exists": "Username already exists.",
   "user.firstName.invalid": "Invalid show name. Only supports Chinese, English, numbers and special symbols _-.@&+. 3-200 characters in length.",
   "user.password.null": "Password cannot be empty.",
   "user.not.exist": "User does not exist.",
