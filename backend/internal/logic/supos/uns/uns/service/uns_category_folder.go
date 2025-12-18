@@ -93,6 +93,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 	// 使用新的切片来存储有效元素，而不是在迭代中删除
 	validTopicDtos := make([]*types.CreateTopicDto, 0, len(dtos))
 
+	overrideFolders := make(map[string]bool)
 	for _, topicDto := range dtos {
 		if topicDto.PathType == constants.PathTypeFile && base.P2v(topicDto.DataType) != constants.AlarmRuleType {
 			// 验证 parentDataType 是否有效
@@ -203,6 +204,10 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 								}
 							}
 							topicDto.Alias = existsCategoryFolder.Alias
+							if !overrideFolders[existsCategoryFolder.Alias] {
+								overrideFolders[existsCategoryFolder.Alias] = true
+								validTopicDtos = append(validTopicDtos, topicDto)
+							}
 							findSameCategoryDir = true
 							break
 						}
