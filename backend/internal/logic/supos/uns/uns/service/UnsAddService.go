@@ -15,6 +15,7 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -358,6 +359,10 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 		Topics:              unsList,
 		FromImport:          false,
 		ThrowModelExistsErr: true,
+		StatusConsumer: func(status *common.RunningStatus) {
+			bs, _ := json.Marshal(status)
+			u.log.Infof("创建UNS[%s - %s], 进度：%v", topicDto.Name, topicDto.Alias, string(bs))
+		},
 	}
 
 	// 设置计算类型不添加流程

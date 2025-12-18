@@ -228,11 +228,14 @@ func (f *Fields) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, f)
 }
 
-func (f Fields) Value() (driver.Value, error) {
+func (f Fields) Value() (rs driver.Value, er error) {
 	if f == nil {
 		return nil, nil
 	}
-	return json.Marshal(f)
+	var bs []byte
+	bs, er = json.Marshal(f)
+	rs = string(bs)
+	return
 }
 
 type RefUns map[int64]int
@@ -249,11 +252,14 @@ func (f *RefUns) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, f)
 }
 
-func (f RefUns) Value() (driver.Value, error) {
+func (f RefUns) Value() (rs driver.Value, er error) {
 	if f == nil {
 		return nil, nil
 	}
-	return json.Marshal(f)
+	var bs []byte
+	bs, er = json.Marshal(f)
+	rs = string(bs)
+	return
 }
 
 type Refers []*types.InstanceField
@@ -270,11 +276,14 @@ func (f *Refers) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, f)
 }
 
-func (f Refers) Value() (driver.Value, error) {
+func (f Refers) Value() (rs driver.Value, er error) {
 	if f == nil {
 		return nil, nil
 	}
-	return json.Marshal(f)
+	var bs []byte
+	bs, er = json.Marshal(f)
+	rs = string(bs)
+	return
 }
 
 type LabelIds map[int64]string

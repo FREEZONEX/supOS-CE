@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -80,8 +81,13 @@ type batchTask struct {
 
 func execBatch(dbPool *pgxpool.Pool, task batchTask, defaultSchema string, retry int) error {
 	var retryTask = batchTask{}
-	br := dbPool.SendBatch(context.Background(), task.batch)
-	defer br.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	br := dbPool.SendBatch(ctx, task.batch)
+
+	defer func() {
+		br.Close()
+		cancel()
+	}()
 	for i, seg := range task.uns {
 		_, err := br.Exec()
 		if err != nil {
@@ -102,7 +108,10 @@ func execBatch(dbPool *pgxpool.Pool, task batchTask, defaultSchema string, retry
 		uns := base.Map[*tableProcessInfo, *types.CreateTopicDto](retryTask.uns, func(e *tableProcessInfo) *types.CreateTopicDto {
 			return e.def
 		})
-		tableInfoMap, _ := ListTableInfos(dbPool, uns)
+		tableInfoMap, er := ListTableInfos(dbPool, uns)
+		if er != nil {
+			return er
+		}
 		BatchCreateTables(dbPool, defaultSchema, uns, tableInfoMap)
 		return execBatch(dbPool, retryTask, defaultSchema, retry+1)
 	}

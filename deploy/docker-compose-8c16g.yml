@@ -6,7 +6,7 @@ networks:
 
 services:
   uns:
-    image: suposce/supos-edge-platform:1.0.0-T3
+    image: suposce/supos-edge-platform:1.0.0-R2
     container_name: uns
     ports:
       - "3010:3000"
@@ -35,9 +35,8 @@ services:
     networks:
       - edge_network
     depends_on:
-      - emqx
-      - postgresql:
-          condition: service_healthy 
+      postgresql:
+        condition: service_healthy
     restart: always
   marimo:
     image: suposce/marimo:latest

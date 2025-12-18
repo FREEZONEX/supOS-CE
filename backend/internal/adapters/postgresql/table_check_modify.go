@@ -4,6 +4,8 @@ import (
 	"backend/internal/types"
 	"fmt"
 	"strings"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 // 常量定义
@@ -45,7 +47,7 @@ func checkTableModify(dto *types.CreateTopicDto, dbName string, tableName string
 			newType := GetFieldType(newTypeMid) // 使用之前定义的 GetFieldType 函数
 			if oldType != newType {
 				hasTypeChanged = true
-				fmt.Printf("typeChange %s: %s->%s\n", field, oldType, newTypeMid)
+				logx.Infof("typeChange %s.%s: %s->%s\n", tableName, field, oldType, newTypeMid)
 				break
 			}
 		}

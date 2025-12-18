@@ -84,15 +84,15 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
       titleIntlId: 'account.email',
       width: 400,
     },
-    {
-      dataIndex: 'roleList',
-      ellipsis: true,
-      titleIntlId: 'account.role',
-      render: (text: any) => {
-        return text?.map((i: any) => i.roleName)?.join(',');
-      },
-      width: 200,
-    },
+    // {
+    //   dataIndex: 'roleList',
+    //   ellipsis: true,
+    //   titleIntlId: 'account.role',
+    //   render: (text: any) => {
+    //     return text?.map((i: any) => i.roleName)?.join(',');
+    //   },
+    //   width: 200,
+    // },
     {
       dataIndex: 'enabled',
       ellipsis: true,

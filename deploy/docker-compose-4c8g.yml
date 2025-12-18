@@ -6,7 +6,7 @@ networks:
 
 services:
   uns:
-    image: suposce/supos-edge-platform:1.0.0-T3
+    image: suposce/supos-edge-platform:1.0.0-R2
     container_name: uns
     ports:
       - "3010:3000"
@@ -35,9 +35,8 @@ services:
     networks:
       - edge_network
     depends_on:
-      - emqx
-      - postgresql:
-          condition: service_healthy 
+      postgresql:
+        condition: service_healthy
     restart: always
   marimo:
     image: suposce/marimo:latest
@@ -75,6 +74,12 @@ services:
       - ${VOLUMES_PATH}/emqx/config/default_api_key.conf:/opt/emqx/etc/default_api_key.conf
       - ${VOLUMES_PATH}/emqx/config/acl.conf:/opt/emqx/etc/acl.conf
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18083/api/v5/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - edge_network
   nodered:

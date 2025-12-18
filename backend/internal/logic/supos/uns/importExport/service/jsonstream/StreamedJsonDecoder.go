@@ -115,6 +115,7 @@ func DecodeJsonTreeToFlat[TreeNode any, FlatNode any](
 func accept[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode], node, parent *TreeNode, propName string) bool {
 	flat := ctx.tree2flat(propName, node, parent)
 	if flat == nil {
+		ctx.prevPropName = propName
 		ctx.errConsumer(node)
 		return false
 	}
@@ -122,6 +123,7 @@ func accept[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode], n
 		ctx.prevPropName = propName
 	}
 	sameProp := propName == ctx.prevPropName
+	prevProp := ctx.prevPropName
 	ctx.prevPropName = propName
 	if sameProp {
 		ctx.cacheBatch = append(ctx.cacheBatch, flat)
@@ -131,7 +133,7 @@ func accept[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode], n
 		}
 	} else if batch := ctx.cacheBatch; len(batch) > 0 {
 		ctx.cacheBatch = make([]*FlatNode, 0, ctx.batchSize)
-		ctx.consumer(ctx.reader.readSize, propName, batch)
+		ctx.consumer(ctx.reader.readSize, prevProp, batch)
 
 		ctx.cacheBatch = append(ctx.cacheBatch, flat)
 	} else {

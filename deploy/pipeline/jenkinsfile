@@ -152,6 +152,7 @@ pipeline {
                                 \$DEPLOY_SSH_SERVER "\$1"
                         }
                         exec_ssh '
+                            bash /root/edge/supos-deploy-edge/bin/uninstall.sh
                             rm -rf /volumes/supos/data/
                         '
                         """
@@ -179,7 +180,8 @@ pipeline {
                             scp -i /var/jenkins_home/ssh/id_rsa -r ./* \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
                             exec_ssh '
                                 cd /root/edge/supos-deploy-edge/ 
-                                bash ./bin/uninstall.sh && bash ./bin/util/clean-images.sh supos-edge-platform
+                                bash ./bin/uninstall.sh
+                                bash ./bin/util/clean-images.sh supos-edge-platform
                                 bash ./bin/install.sh
                             '
 
