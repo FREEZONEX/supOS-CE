@@ -44,6 +44,15 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateReq) (*types.Operation
 		return nil, err
 	}
 
+	existing, err := kc.FetchUser(username)
+	if err != nil {
+		l.Errorf("failed to query user by username %s: %v", username, err)
+		return nil, errors.System.WithMsg("failed to check username")
+	}
+	if existing != nil {
+		return nil, errors.Parameter.WithMsg("user.username.already.exists")
+	}
+
 	email := strings.TrimSpace(req.Email)
 	if email != "" {
 		existing, err := kc.FetchUserByEmail(email)
