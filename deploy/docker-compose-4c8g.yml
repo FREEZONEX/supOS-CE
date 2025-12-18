@@ -6,7 +6,7 @@ networks:
 
 services:
   uns:
-    image: suposce/supos-edge-platform:1.0.0-R2
+    image: suposce/supos-edge-platform:1.0.0-R3
     container_name: uns
     ports:
       - "3010:3000"
