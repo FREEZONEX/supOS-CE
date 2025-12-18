@@ -3,6 +3,7 @@ package relationDB
 import (
 	"backend/internal/common/dto"
 	"backend/internal/config"
+	"backend/share/base"
 	"encoding/json"
 	"testing"
 
@@ -10,6 +11,19 @@ import (
 	"gitee.com/unitedrhino/share/stores"
 )
 
+func TestJsonErr(t *testing.T) {
+	fs := Fields{
+		{Name: "timeStamp", Type: "DATETIME", Unique: base.OptionalTrue, SystemField: base.OptionalTrue},
+		{Name: "wet", Type: "FLOAT"},
+		{Name: "wq", Type: "LONG"},
+		{Name: "status", Type: "LONG", SystemField: base.OptionalTrue},
+	}
+	bs, er := json.Marshal(fs)
+	if er != nil {
+		t.Fatal(er)
+	}
+	t.Log(string(bs))
+}
 func TestListByLayRecs(t *testing.T) {
 	db := stores.GetCommonConn(t.Context())
 	dao := NewUnsNamespaceRepo()

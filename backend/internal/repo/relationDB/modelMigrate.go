@@ -17,6 +17,9 @@ var NeedInitColumn bool
 var sqlFiles embed.FS
 var dbConfig conf.Database
 
+func InitDbConfig(c conf.Database) {
+	dbConfig = c
+}
 func Migrate(c conf.Database) error {
 	dbConfig = c
 	// return nil

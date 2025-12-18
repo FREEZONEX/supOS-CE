@@ -95,7 +95,12 @@ func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *typ
 	if EXPORT_TYPE_ALL == exportReq.ExportType {
 		{
 			fmt.Fprintf(out, `"%s":`, Label)
-			_, err := jsonstream.Csv2JsonStream(l.labelMapper.ExportCsv, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.labelCsv2FileData, true)
+			_, err := jsonstream.Csv2JsonStream(l.labelMapper.ExportCsv, jsonWriter, nodeGetChildren, nodeSetChildren,
+				func(f *FileData) int64 {
+					return 0
+				}, func(f *FileData) int64 {
+					return -1
+				}, l.labelCsv2FileData, true)
 			if err != nil {
 				l.log.Error("Label Csv2JsonStream err:", err)
 			}
