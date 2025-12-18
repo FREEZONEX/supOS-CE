@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -128,7 +129,9 @@ func queryColumnInfo(query queryer, schema string, tables []string, allMap map[s
 		ORDER BY table_name, column_name`,
 		strings.Join(placeholders, ","))
 
-	rows, err := query.Query(context.Background(), sql, params...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	rows, err := query.Query(ctx, sql, params...)
 	if err != nil {
 		return err
 	}
@@ -175,7 +178,9 @@ func queryPrimaryKeys(query queryer, schema string, tables []string, allMap map[
 		AND tc.table_schema = $1`,
 		strings.Join(placeholders, ","))
 
-	rows, err := query.Query(context.Background(), sql, params...)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	rows, err := query.Query(ctx, sql, params...)
 	if err != nil {
 		return err
 	}

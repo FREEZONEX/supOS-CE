@@ -3,6 +3,8 @@ package postgresql
 import (
 	"fmt"
 	"testing"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func TestPaseDbUrl(t *testing.T) {
@@ -16,4 +18,10 @@ func TestPaseDbUrl(t *testing.T) {
 	fmt.Printf("Password: %s\n", result.Password)
 	fmt.Printf("Schema: %s\n", result.Schema)
 	fmt.Printf("Host: %s\n", result.HostPort)
+
+	conf, er := pgx.ParseConfig(testUrl)
+	if er != nil {
+		t.Fatal(er)
+	}
+	t.Logf("conf: %+v\n", *conf)
 }
