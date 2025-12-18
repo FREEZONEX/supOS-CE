@@ -117,11 +117,11 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	unsPoLabels := make(map[int64]*bo.UnsPoLabels, len(paramFiles)+len(paramFolders))
 	var deleteFiles []*dao.UnsNamespace
-	u.itrFiles(ctx, base.MapValues(pathMap[constants.PathTypeTemplate]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
-	u.itrFiles(ctx, folders, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+	u.itrFiles(ctx, args.SkipWhenExists, base.MapValues(pathMap[constants.PathTypeTemplate]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+	u.itrFiles(ctx, args.SkipWhenExists, folders, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
 	files := base.MapValues(pathMap[constants.PathTypeFile])
 	sort.Sort(indexedFiles(files))
-	u.itrFiles(ctx, files, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+	u.itrFiles(ctx, args.SkipWhenExists, files, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
 
 	//TODO 计算，引用，聚合等类型的 校验和处理
 	aliasToId(addFiles, allUns, pathMap)
@@ -226,6 +226,7 @@ func (x indexedFiles) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 func (u *UnsAddService) itrFiles(
 	ctx context.Context,
+	skipWhenExists bool,
 	vs []*types.CreateTopicDto,
 	createTime time.Time, allUns func(alias string) *dao.UnsNamespace,
 	dbFiles map[int64]*dao.UnsNamespace, deleteFiles []*dao.UnsNamespace,
@@ -237,8 +238,12 @@ func (u *UnsAddService) itrFiles(
 		return
 	}
 	for _, DTO := range vs {
-		po := u.trySetId(ctx, createTime, DTO, allUns, dbFiles, &deleteFiles, errTipMap)
+		po, exists := u.trySetId(ctx, skipWhenExists, createTime, DTO, allUns, dbFiles, &deleteFiles, errTipMap)
 		if po != nil {
+			if exists && skipWhenExists {
+				aliasMap[po.Alias] = po
+				continue
+			}
 			addFiles[po.Id] = po
 			aliasMap[po.Alias] = po
 			if DTO.LabelNames != nil {
@@ -407,56 +412,48 @@ func (u *UnsAddService) CreateModelAndInstance(ctx context.Context, topicDtos []
 		}
 	}
 
-	parentAliasMap := make(map[string]string)
-
-	// 处理每个topicDto
-	for i, topicDto := range topicDtos {
-		topicDto.Batch = 0
-		topicDto.Index = i
-
-		if parentAlias := topicDto.ParentAlias; parentAlias != nil {
-			batchIndex := topicDto.GainBatchIndex()
-			parentAliasMap[batchIndex] = *parentAlias
-		}
-	}
 	//db := dao.GetDb(ctx)
 	// 检查挂载文件夹
-	/*	if len(parentAliasMap) > 0 {
-		// 收集所有父别名
-		var parentAliases = base.MapValues(parentAliasMap)
-		parentUnsList, err := u.unsMapper.ListByAlias(db, parentAliases)
-		if err == nil && len(parentUnsList) > 0 {
-			mountAlias := make(map[string]bool)
+	/*
+			parentAliasMap := make(map[string]string)
 
-			for _, uns := range parentUnsList {
-				if uns.MountType != nil && MountSourceType.IsCollectorMountSource(*uns.MountType) {
-					mountAlias[uns.Alias] = true
+			// 处理每个topicDto
+			for i, topicDto := range topicDtos {
+				topicDto.Batch = 0
+				topicDto.Index = i
+
+				if parentAlias := topicDto.ParentAlias; parentAlias != nil {
+					batchIndex := topicDto.GainBatchIndex()
+					parentAliasMap[batchIndex] = *parentAlias
 				}
 			}
 
-			if len(mountAlias) > 0 {
-				rs := make(map[string]string)
-				for batchIndex, alias := range parentAliasMap {
-					if mountAlias[alias] {
-						rs[batchIndex] = I18nUtils.GetMessage("uns.mount.folder.operate")
+		if len(parentAliasMap) > 0 {
+			// 收集所有父别名
+			var parentAliases = base.MapValues(parentAliasMap)
+			parentUnsList, err := u.unsMapper.ListByAlias(db, parentAliases)
+			if err == nil && len(parentUnsList) > 0 {
+				mountAlias := make(map[string]bool)
+
+				for _, uns := range parentUnsList {
+					if uns.MountType != nil && MountSourceType.IsCollectorMountSource(*uns.MountType) {
+						mountAlias[uns.Alias] = true
 					}
 				}
-				if len(rs) > 0 {
-					return rs
+
+				if len(mountAlias) > 0 {
+					rs := make(map[string]string)
+					for batchIndex, alias := range parentAliasMap {
+						if mountAlias[alias] {
+							rs[batchIndex] = I18nUtils.GetMessage("uns.mount.folder.operate")
+						}
+					}
+					if len(rs) > 0 {
+						return rs
+					}
 				}
 			}
-		}
-	}*/
-
-	// 处理标签
-	labelsMap := make(map[string][]string)
-	for _, topicDto := range topicDtos {
-		if topicDto.LabelNames != nil && len(topicDto.LabelNames) > 0 {
-			labelsMap[topicDto.Alias] = topicDto.LabelNames
-		}
-	}
-	args.LabelsMap = labelsMap
-
+		}*/
 	rs := u.CreateModelAndInstancesInner(ctx, args)
 	u.log.Infof("[%u] UNS 处理完毕.", taskID)
 	return rs

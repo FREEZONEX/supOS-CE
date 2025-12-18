@@ -16,14 +16,14 @@ import (
 // 批量创建文件夹和文件(node-red导入专用)
 func CreateModelsForNodeRedHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.CreateUnsNodeRedDto
+		var req []*types.CreateUnsNodeRedDto
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
 		l := uns.NewCreateModelsForNodeRedLogic(r.Context(), svcCtx)
-		resp, err := l.CreateModelsForNodeRed(&req)
+		resp, err := l.CreateModelsForNodeRed(req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

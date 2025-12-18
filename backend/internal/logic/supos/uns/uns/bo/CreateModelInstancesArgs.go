@@ -13,7 +13,8 @@ type CreateModelInstancesArgs struct {
 	ThrowModelExistsErr           bool                        `json:"throwModelExistsErr"`
 	FlowName                      string                      `json:"flowName"`
 	LabelsMap                     map[string][]string         `json:"labelsMap"`
-	StatusConsumer                func(*common.RunningStatus) `json:"-"` // 使用json忽略标记
+	SkipWhenExists                bool                        `json:"skipWhenExists"` // true: 已存在的 UNS 不更新
+	StatusConsumer                func(*common.RunningStatus) `json:"-"`              // 使用json忽略标记
 }
 
 func (c *CreateModelInstancesArgs) String() string {

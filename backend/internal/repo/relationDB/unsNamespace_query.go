@@ -79,6 +79,13 @@ func (p UnsNamespaceRepo) GetByPath(db *gorm.DB, path string) (result *UnsNamesp
 	}
 	return &po, nil
 }
+func (p UnsNamespaceRepo) GetAliasByPath(db *gorm.DB, path string) (alias string) {
+	_ = p.model(db).Select([]string{"alias"}).
+		Where("pathash = hashtext(?)", path).
+		Where("path = ? ", path).
+		Where("status = 1").Scan(&alias).Error
+	return
+}
 
 // ListCategoryFolders 查询分类文件夹
 func (p UnsNamespaceRepo) ListCategoryFolders(db *gorm.DB, parentAliasList []string) (results []*UnsNamespace, err error) {
