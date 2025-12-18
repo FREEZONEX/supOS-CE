@@ -5,6 +5,7 @@ import (
 	"backend/internal/config"
 	"backend/share/base"
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"gitee.com/unitedrhino/share/conf"
@@ -23,6 +24,7 @@ func TestJsonErr(t *testing.T) {
 		t.Fatal(er)
 	}
 	t.Log(string(bs))
+	t.Log(fmt.Sprintf("%v", string(bs)))
 }
 func TestListByLayRecs(t *testing.T) {
 	db := stores.GetCommonConn(t.Context())

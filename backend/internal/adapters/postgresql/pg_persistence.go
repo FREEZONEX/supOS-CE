@@ -83,8 +83,11 @@ func execBatch(dbPool *pgxpool.Pool, task batchTask, defaultSchema string, retry
 	var retryTask = batchTask{}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	br := dbPool.SendBatch(ctx, task.batch)
-	cancel()
-	defer br.Close()
+
+	defer func() {
+		br.Close()
+		cancel()
+	}()
 	for i, seg := range task.uns {
 		_, err := br.Exec()
 		if err != nil {

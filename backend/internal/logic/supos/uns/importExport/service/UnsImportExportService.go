@@ -61,7 +61,12 @@ func (l *UnsImportExportService) FileDownload(req *types.FileDownloadReq, r *htt
 	var httpRequest = *r
 	httpRequest.Method = http.MethodGet
 	path := filepath.Join(constants.RootPath, req.Path)
-	httpRequest.URL, _ = url.ParseRequestURI(path)
+	path = strings.Replace(path, "\\", "/", -1)
+	var err error
+	httpRequest.URL, err = url.ParseRequestURI(path)
+	if err != nil {
+		return err
+	}
 	fileName := filepath.Base(path)
 	w.Header().Set("Content-Type", "application/octet-stream;charset=UTF-8")
 	w.Header().Set("Content-disposition", "attachment;filename="+fileName)

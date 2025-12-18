@@ -57,7 +57,6 @@ func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		// 执行批次
 		br := conn.SendBatch(ctx, batch)
-		cancel()
 		for i := 0; i < batch.Len(); i++ {
 			_, err := br.Exec()
 			if err != nil {
@@ -65,6 +64,7 @@ func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 			}
 		}
 		_ = br.Close()
+		cancel()
 	}
 	for i, sqlList := range base.Partition(hyperTableSQLs, constants.SQLBatchSize) {
 		batch := &pgx.Batch{}
@@ -75,7 +75,6 @@ func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		// 执行批次
 		br := conn.SendBatch(ctx, batch)
-		cancel()
 		for i := 0; i < batch.Len(); i++ {
 			_, err := br.Exec()
 			if err != nil {
@@ -83,6 +82,7 @@ func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 			}
 		}
 		_ = br.Close()
+		cancel()
 	}
 
 	return errs
