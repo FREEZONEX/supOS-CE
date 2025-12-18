@@ -152,7 +152,7 @@ pipeline {
                                 \$DEPLOY_SSH_SERVER "\$1"
                         }
                         exec_ssh '
-                            bash ./bin/uninstall.sh
+                            bash /root/edge/supos-deploy-edge/bin/uninstall.sh
                             rm -rf /volumes/supos/data/
                         '
                         """
