@@ -38,7 +38,7 @@ services:
       emqx:
         condition: service_healthy
       postgresql:
-        condition: service_healthy 
+        condition: service_healthy
     restart: always
   marimo:
     image: suposce/marimo:latest
