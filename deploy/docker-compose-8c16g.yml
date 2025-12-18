@@ -35,8 +35,6 @@ services:
     networks:
       - edge_network
     depends_on:
-      emqx:
-        condition: service_healthy
       postgresql:
         condition: service_healthy
     restart: always

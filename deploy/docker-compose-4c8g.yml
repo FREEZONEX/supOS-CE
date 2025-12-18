@@ -35,8 +35,6 @@ services:
     networks:
       - edge_network
     depends_on:
-      emqx:
-        condition: service_healthy
       postgresql:
         condition: service_healthy
     restart: always
@@ -76,6 +74,12 @@ services:
       - ${VOLUMES_PATH}/emqx/config/default_api_key.conf:/opt/emqx/etc/default_api_key.conf
       - ${VOLUMES_PATH}/emqx/config/acl.conf:/opt/emqx/etc/acl.conf
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18083/api/v5/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - edge_network
   nodered:
