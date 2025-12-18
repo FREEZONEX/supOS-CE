@@ -32,7 +32,7 @@ docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d kong -c "$
 docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d kong -c "$KONG_SQL_2" >/dev/null
 docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d keycloak -c "$KEYCLOAK_SQL" >/dev/null
 
-command=$(sed -n '2p' $VOLUMES_PATH/edge/active-services.txt)
+command=$(sed -n '2p' $VOLUMES_PATH/edge/system/active-services.txt)
 source $SCRIPT_DIR/set-temp-env.sh "$SCRIPT_DIR/../.." "$command"
 source $SCRIPT_DIR/../init/init-kong-property.sh "$SCRIPT_DIR/../../" && cp $SCRIPT_DIR/../../mount/kong/kong_config.yml $VOLUMES_PATH/kong/
 
