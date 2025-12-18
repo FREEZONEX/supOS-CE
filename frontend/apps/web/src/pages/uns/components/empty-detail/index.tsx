@@ -1,5 +1,5 @@
 import { Tag } from 'antd';
-import { ArrowRight, DocumentAdd, Folder, FolderAdd, Document } from '@carbon/icons-react';
+import { ArrowRight, AddLarge, ChartLine, WatsonHealth3DCurveAutoColon, SendAlt, Document } from '@carbon/icons-react';
 import { useTranslate } from '@/hooks';
 import './index.scss';
 
@@ -19,8 +19,7 @@ const EmptyDetail = () => {
         <li className="detailInfo-list-item">
           <Tag>
             {formatMessage('uns.guideClick')} &nbsp;
-            <DocumentAdd size={12} />
-            &nbsp;/&nbsp; <FolderAdd size={12} />
+            <AddLarge size={12} />
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
           {formatMessage('uns.guideBuildUnsWay', {
@@ -29,7 +28,7 @@ const EmptyDetail = () => {
         </li>
         <li className="detailInfo-list-item">
           <Tag>
-            {formatMessage('uns.guideRightClick')} &nbsp; <Folder size={12} />
+            {formatMessage('uns.guideClick')} &nbsp; <WatsonHealth3DCurveAutoColon size={12} />
             {formatMessage('uns.model')}
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
@@ -39,7 +38,8 @@ const EmptyDetail = () => {
         </li>
         <li className="detailInfo-list-item">
           <Tag>
-            {formatMessage('uns.guideRightClick')} &nbsp; <Document size={12} />
+            {formatMessage('uns.guideClick')} &nbsp; <ChartLine size={12} /> / <SendAlt size={12} /> /
+            <Document size={12} />
             {formatMessage('uns.instance')}
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
