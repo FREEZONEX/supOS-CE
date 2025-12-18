@@ -14,6 +14,9 @@ export default {
     colorFillTertiary: 'var(--supos-fill-tertiary)',
   },
   components: {
+    Segmented: {
+      itemHoverColor: '#161616',
+    },
     Menu: {
       itemBg: 'var(--supos-bg-color)',
       itemColor: 'var(--supos-text-color)',
