@@ -11,8 +11,6 @@ services:
     ports:
       - "3010:3000"
       - "4000:4000"
-      - "3001:3001"
-      - "3002:3002"
     environment:
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
