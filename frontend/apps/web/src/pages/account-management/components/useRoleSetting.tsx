@@ -256,7 +256,7 @@ const useRoleSetting = ({ onSaveBack }: any) => {
         allButtonData.current = extractButtonIds(buttons);
         const info =
           role?.map?.((i: any) => {
-            const denyResourceButtonList = i.denyResourceList?.filter((f: any) => f.uri?.includes('button:'));
+            const denyResourceButtonList = i.denyResourceList?.filter((f: any) => f.uri?.includes('button:')) || [];
             const resourceButtonList = i?.resourceList?.some((i: any) => i.uri?.includes('button:'))
               ? (allButtonData.current.filter((f: any) => !denyResourceButtonList.some((s: any) => s.uri === f)) ?? [])
               : [];

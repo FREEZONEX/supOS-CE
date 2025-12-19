@@ -109,7 +109,6 @@ const criteria: Criteria<DataItem> = {
 };
 
 // edge版本 用户默认支持所有的权限和菜单
-const IsSupAdmin = true;
 // 更新路由基础方法 (私有)
 const updateBaseStore = async (isFirst: boolean = false) => {
   if (isFirst) {
@@ -137,7 +136,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const allRoutes = filterRouteByUserResource(
         mapResource(resource?.filter((r: ResourceProps) => r.type !== 3)),
         userRoutesResourceList,
-        systemInfo?.authEnable && !info?.superAdmin && !IsSupAdmin
+        systemInfo?.authEnable && !info?.superAdmin
       );
       // 剔除未启用的路由
       const enableRoutes = allRoutes?.filter((f) => f.enable);
@@ -145,7 +144,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const { homeTree, homeTabGroup, homeGroup, menuGroup, menuTree } = buildResourceTrees(enableRoutes);
       const allButtonGroup = resource?.filter((r: ResourceProps) => r.type === 3);
       const _buttonList =
-        systemInfo?.authEnable === false || info?.superAdmin === true || IsSupAdmin
+        systemInfo?.authEnable === false || info?.superAdmin === true
           ? handleButtonPermissions(['button:*'], allButtonGroup) || []
           : filterArrays(
               handleButtonPermissions(denyButtonGroup?.map((i: any) => i.uri) || [], allButtonGroup) || [],
@@ -221,7 +220,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const allRoutes = filterRouteByUserResource(
         mapResource(resource.filter((r: ResourceProps) => r.type !== 3)),
         baseState?.currentUserInfo?.pageList,
-        baseState.systemInfo?.authEnable && !baseState.currentUserInfo?.superAdmin && !IsSupAdmin
+        baseState.systemInfo?.authEnable && !baseState.currentUserInfo?.superAdmin
       );
       const enableRoutes = allRoutes?.filter((f) => f.enable);
       const { homeTree, homeTabGroup, homeGroup, menuGroup, menuTree } = buildResourceTrees(enableRoutes);
@@ -300,11 +299,3 @@ const fetchUserLanguage = async (info: { userId?: string; lang?: string }) => {
     return import.meta.env.REACT_APP_LOCAL_LANG || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
   }
 };
-
-// 关键：启用HMR支持
-if (import.meta.hot) {
-  import.meta.hot.accept(() => {
-    // 这里可以接受模块自身更新，也可以选择性地处理状态合并
-    console.log('Store module was hot-updated.');
-  });
-}
