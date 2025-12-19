@@ -102,6 +102,6 @@ func (l *RoleListLogic) RoleList() ([]types.RoleDetail, error) {
 			otherRoles = append(otherRoles, detail)
 		}
 	}
-	resp := append(otherRoles, superRoles...)
+	resp := append(superRoles, otherRoles...)
 	return resp, nil
 }
