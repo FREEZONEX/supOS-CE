@@ -50,7 +50,7 @@ func init() {
 }
 func (l *SystemConfigLogic) SystemConfig() (resp *types.SystemConfigResp, err error) {
 	cfg := spring.GetBean[*sysconfig.SystemConfig]()
-	resp = mapSystemConfigToResp(cfg)
+	resp = mapSystemConfigToResp(l.ctx, cfg)
 	return
 }
 
@@ -89,7 +89,7 @@ func buildSystemConfig(logger logx.Logger) (*sysconfig.SystemConfig, error) {
 	return cfg, nil
 }
 
-func mapSystemConfigToResp(cfg *sysconfig.SystemConfig) *types.SystemConfigResp {
+func mapSystemConfigToResp(ctx context.Context, cfg *sysconfig.SystemConfig) *types.SystemConfigResp {
 	if cfg == nil {
 		return &types.SystemConfigResp{}
 	}
@@ -126,7 +126,7 @@ func mapSystemConfigToResp(cfg *sysconfig.SystemConfig) *types.SystemConfigResp 
 
 			description := strings.TrimSpace(info.Description)
 			if description != "" && !strings.EqualFold(description, "null") {
-				description = I18nUtils.GetMessage(description)
+				description = I18nUtils.GetMessageWithCtx(ctx, description)
 			} else {
 				description = ""
 			}
