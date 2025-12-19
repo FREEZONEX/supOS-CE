@@ -1,6 +1,7 @@
 package relationDB
 
 import (
+	"backend/internal/common/utils/dbpool"
 	"backend/share/base"
 	"context"
 	"encoding/json"
@@ -10,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var selectColumns = []string{"id", "path_type", "parent_id", "model_id", "alias", "name", "display_name",
@@ -32,7 +31,7 @@ func (p UnsNamespaceRepo) ExportCsv(pathTypes []int16, w io.Writer) error {
 		strings.Join(base.Map(pathTypes, func(e int16) string {
 			return strconv.Itoa(int(e))
 		}), ","))
-	_, err = conn.Conn().PgConn().CopyTo(context.Background(), w, query)
+	err = conn.CopyTo(context.Background(), w, query)
 	return err
 }
 func (p UnsNamespaceRepo) ExportCsvByIds(ids []int64, w io.Writer) error {
@@ -49,7 +48,7 @@ func (p UnsNamespaceRepo) ExportCsvByIds(ids []int64, w io.Writer) error {
 		strings.Join(base.Map(ids, func(e int64) string {
 			return strconv.FormatInt(e, 10)
 		}), ","))
-	_, err = conn.Conn().PgConn().CopyTo(context.Background(), w, query)
+	err = conn.CopyTo(context.Background(), w, query)
 	return err
 }
 func (p UnsNamespaceRepo) ExportCsvByLayRecAndIds(layRec []string, ids []int64, w io.Writer) error {
@@ -96,7 +95,7 @@ func (p UnsNamespaceRepo) ExportCsvByLayRecAndIds(layRec []string, ids []int64, 
 		return err
 	}
 	defer conn.Release()
-	_, err = conn.Conn().PgConn().CopyTo(context.Background(), w, query.String())
+	err = conn.CopyTo(context.Background(), w, query.String())
 	return err
 }
 func (p UnsNamespaceRepo) Csv2Model(headers, vs []string) *UnsNamespace {
@@ -109,13 +108,13 @@ func (p UnsNamespaceRepo) Csv2Model(headers, vs []string) *UnsNamespace {
 	return po
 }
 
-var _dbPool *pgxpool.Pool
+var _dbPool *dbpool.ExporterPool
 var dbPoolOnce sync.Once
 
-func getDbPool() *pgxpool.Pool {
+func getDbPool() *dbpool.ExporterPool {
 	if _dbPool == nil {
 		dbPoolOnce.Do(func() {
-			pool, er := pgxpool.New(context.Background(), dbConfig.DSN)
+			pool, er := dbpool.NewExporterPool(context.Background(), dbConfig.DSN, "uns")
 			if er != nil {
 				log.Panicln("pg init Err", er)
 			} else {

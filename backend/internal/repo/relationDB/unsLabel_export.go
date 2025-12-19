@@ -13,7 +13,7 @@ func (p UnsLabelRepo) ExportCsv(w io.Writer) error {
 	}
 	defer conn.Release()
 	query := `COPY (SELECT label_name FROM uns_label order by id asc) TO STDOUT WITH CSV HEADER`
-	_, err = conn.Conn().PgConn().CopyTo(context.Background(), w, query)
+	err = conn.CopyTo(context.Background(), w, query)
 	return err
 }
 func (p UnsLabelRepo) Csv2Model(headers, vs []string) *UnsLabel {

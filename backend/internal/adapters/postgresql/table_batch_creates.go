@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -84,6 +85,10 @@ func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 		_ = br.Close()
 		cancel()
 	}
-
+	if len(errs) > 0 {
+		if pool, isPool := conn.(*pgxpool.Pool); isPool {
+			logPoolError("queryPrimary rows", time.Time{}, pool, alterTableSQLs[0], errs[0])
+		}
+	}
 	return errs
 }
