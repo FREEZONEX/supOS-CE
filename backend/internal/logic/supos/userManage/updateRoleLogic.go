@@ -102,7 +102,7 @@ func (l *UpdateRoleLogic) UpdateRole(req *types.RoleSaveReq) (*types.RoleDetail,
 		denyResourceList = dtoFromURIs(denyURIs)
 	}
 
-	displayName, desc := normalizeRoleDisplay(role.ID, role.Name, role.Description)
+	displayName, desc := normalizeRoleDisplay(l.ctx, role.ID, role.Name, role.Description)
 	detail := &types.RoleDetail{
 		RoleID:           role.ID,
 		RoleName:         strings.TrimSpace(displayName),

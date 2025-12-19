@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"backend/internal/common/I18nUtils"
 	cache "backend/internal/common/cache"
 	authdto "backend/internal/common/dto/auth"
 	"backend/internal/common/enums"
@@ -181,7 +182,7 @@ func (l baseUserManageLogic) loadRolesForUsers(db *gorm.DB, userIDs []string) (m
 		if !row.ClientRole || enums.IsIgnoredRoleID(row.RoleID) || enums.IsIgnoredRoleName(row.RoleName) || strings.HasPrefix(row.RoleName, "deny-") {
 			continue
 		}
-		display, desc := normalizeRoleDisplay(row.RoleID, row.RoleName, row.Description)
+		display, desc := normalizeRoleDisplay(l.ctx, row.RoleID, row.RoleName, row.Description)
 		summary := types.RoleSummary{
 			RoleID:          row.RoleID,
 			RoleName:        strings.TrimSpace(display),
@@ -229,9 +230,9 @@ func toRoleResourceList(resources []*authdto.ResourceDto) []types.RoleResource {
 	return result
 }
 
-func normalizeRoleDisplay(roleID, roleName, description string) (display, desc string) {
+func normalizeRoleDisplay(ctx context.Context, roleID, roleName, description string) (display, desc string) {
 	if enumRole, ok := enums.RoleParse(roleID); ok {
-		return enumsDisplay(enumRole), description
+		return enumsDisplay(ctx, enumRole), description
 	}
 	if strings.TrimSpace(description) != "" {
 		return description, description
@@ -239,11 +240,8 @@ func normalizeRoleDisplay(roleID, roleName, description string) (display, desc s
 	return roleName, description
 }
 
-func enumsDisplay(role enums.RoleEnum) string {
-	if strings.TrimSpace(role.Comment) != "" {
-		return role.Comment
-	}
-	return role.Name
+func enumsDisplay(ctx context.Context, role enums.RoleEnum) string {
+	return I18nUtils.GetMessageWithCtx(ctx, role.I18nCode)
 }
 
 func stringSlice(values []types.RoleResource) []string {
