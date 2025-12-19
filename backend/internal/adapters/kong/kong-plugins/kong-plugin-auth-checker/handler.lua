@@ -30,7 +30,7 @@ local function unauthorized(redirect_url)
   else
     -- Clear browser cookie
     ngx.header["Set-Cookie"] = {
-      "supos_community_token=; Path=/; Max-Age=0; HttpOnly"
+      "supos_community_token=; Path=/; Max-Age=0;"
     }
     return ngx.redirect(redirect_url, ngx.HTTP_MOVED_TEMPORARILY)
   end

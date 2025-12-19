@@ -54,7 +54,7 @@ func (l *UserInfoLogic) UserInfo(sessionKey string) (*vo.UserInfoVo, *http.Cooki
 		Value:    sessionKey,
 		Path:     "/",
 		MaxAge:   constants.CookieMaxAge,
-		HttpOnly: true,
+		HttpOnly: false,
 		Secure:   false,
 	}
 	return userInfo, cookie, nil

@@ -87,7 +87,7 @@ func (l *TokenLogic) Token(req *types.TokenCallbackReq) (*TokenResult, error) {
 		Value:    sessionKey,
 		Path:     "/",
 		MaxAge:   constants.CookieMaxAge,
-		HttpOnly: true,
+		HttpOnly: false,
 		Secure:   false,
 	}
 
