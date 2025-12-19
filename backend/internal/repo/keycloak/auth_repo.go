@@ -205,7 +205,7 @@ SELECT r.id AS role_id,
        r.description AS role_description,
        r.client_role
 FROM keycloak_role r
-WHERE r.client = (SELECT id FROM client WHERE client_id = 'supos')
+WHERE r.client = (SELECT id FROM client WHERE client_id = 'tier0')
   AND r.id IN (
       SELECT child_role FROM composite_role WHERE composite IN ?
   )

@@ -37,16 +37,25 @@ func (l *RoleListLogic) RoleList() ([]types.RoleDetail, error) {
 		return nil, errors.System.WithMsg(fmt.Sprintf("failed to load roles: %v", err))
 	}
 
-	roleByName := make(map[string]*clients.KeycloakRoleInfoDto, len(roles))
-	for i := range roles {
-		role := roles[i]
-		roleByName[role.Name] = &role
-	}
-
 	repo, err := l.authRepo()
 	if err != nil {
 		l.Errorf("init keycloak repo failed: %v", err)
 		return nil, errors.System.WithMsg("failed to access keycloak repository")
+	}
+
+	roleByName := make(map[string]*clients.KeycloakRoleInfoDto, len(roles))
+	allowRoles := make(map[string]*clients.KeycloakRoleInfoDto)
+	orderedNames := make([]string, 0, len(roles))
+	for i := range roles {
+		role := &roles[i]
+		roleByName[role.Name] = role
+		if enums.IsIgnoredRoleID(role.ID) || enums.IsIgnoredRoleName(role.Name) || strings.HasPrefix(role.Name, "deny-") {
+			continue
+		}
+		if _, exists := allowRoles[role.Name]; !exists {
+			orderedNames = append(orderedNames, role.Name)
+		}
+		allowRoles[role.Name] = role
 	}
 
 	var (
@@ -54,12 +63,11 @@ func (l *RoleListLogic) RoleList() ([]types.RoleDetail, error) {
 		otherRoles []types.RoleDetail
 	)
 
-	for i := range roles {
-		role := roles[i]
-		if enums.IsIgnoredRoleID(role.ID) || enums.IsIgnoredRoleName(role.Name) || strings.HasPrefix(role.Name, "deny-") {
+	for _, roleName := range orderedNames {
+		role := allowRoles[roleName]
+		if role == nil {
 			continue
 		}
-
 		var allowResources []*authdto.ResourceDto
 		var denyResources []*authdto.ResourceDto
 		if repo != nil {
@@ -69,7 +77,7 @@ func (l *RoleListLogic) RoleList() ([]types.RoleDetail, error) {
 				return nil, errors.System.WithMsg(fmt.Sprintf("failed to load role resources: %v", err))
 			}
 		}
-		if denyRole := roleByName[fmt.Sprintf("deny-%s", role.Name)]; denyRole != nil && repo != nil {
+		if denyRole := roleByName[fmt.Sprintf("deny-%s", roleName)]; denyRole != nil && repo != nil {
 			denyResources, err = repo.GetRoleDenyResources(l.ctx, denyRole.ID)
 			if err != nil {
 				l.Errorf("load deny resources for role %s failed: %v", denyRole.ID, err)
