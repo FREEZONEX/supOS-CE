@@ -1134,6 +1134,7 @@ type SystemConfigResp struct {
 	Lang                 string                   `json:"lang,optional"`
 	AuthEnable           bool                     `json:"authEnable,optional"`
 	LlmType              string                   `json:"llmType,optional"`
+	EnableAi             bool                     `json:"enableAi,optional"`
 	MqttTcpPort          int64                    `json:"mqttTcpPort,optional"`
 	MqttWebsocketTslPort int64                    `json:"mqttWebsocketTslPort,optional"`
 	LoginPath            string                   `json:"loginPath,optional"`
