@@ -2,7 +2,6 @@ package userManage
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"backend/internal/svc"
@@ -80,27 +79,27 @@ func (l *UpdateUserLogic) UpdateUser(req *types.UserUpdateReq) (*types.Operation
 	if v := strings.TrimSpace(req.Phone); v != "" {
 		attributes["phone"] = v
 	}
-	if v := strings.TrimSpace(req.HomePage); v != "" {
-		attributes["homePage"] = v
-	}
+	// if v := strings.TrimSpace(req.HomePage); v != "" {
+	// 	attributes["homePage"] = v
+	// }
 	if v := strings.TrimSpace(req.Source); v != "" {
 		attributes["source"] = v
 	}
-	if req.TipsEnable != nil {
-		attributes["tipsEnable"] = strconv.Itoa(*req.TipsEnable)
-	}
-	if req.FirstTimeLogin != nil {
-		attributes["firstTimeLogin"] = strconv.Itoa(*req.FirstTimeLogin)
-	}
-	if _, ok := attributes["homePage"]; !ok {
-		attributes["homePage"] = "/home"
-	}
-	if _, ok := attributes["tipsEnable"]; !ok {
-		attributes["tipsEnable"] = "1"
-	}
-	if _, ok := attributes["firstTimeLogin"]; !ok {
-		attributes["firstTimeLogin"] = "1"
-	}
+	// if req.TipsEnable != nil {
+	// 	attributes["tipsEnable"] = strconv.Itoa(*req.TipsEnable)
+	// }
+	// if req.FirstTimeLogin != nil {
+	// 	attributes["firstTimeLogin"] = strconv.Itoa(*req.FirstTimeLogin)
+	// }
+	// if _, ok := attributes["homePage"]; !ok {
+	// 	attributes["homePage"] = "/home"
+	// }
+	// if _, ok := attributes["tipsEnable"]; !ok {
+	// 	attributes["tipsEnable"] = "1"
+	// }
+	// if _, ok := attributes["firstTimeLogin"]; !ok {
+	// 	attributes["firstTimeLogin"] = "1"
+	// }
 
 	payload := map[string]any{
 		"firstName": firstName,
