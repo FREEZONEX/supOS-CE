@@ -99,6 +99,7 @@ export interface SystemInfoProps {
 
   // 是否开启文件分类配置
   enableAutoCategorization?: boolean;
+  enableAi?: boolean;
 }
 
 /**
