@@ -48,7 +48,7 @@ func init() {
 				select {
 				case <-ticker.C:
 					stats := pool.Stat()
-					log.Info("[PG Pool Stats] Total:%d Idle:%d Acquired:%d Max:%d",
+					log.Infof("[PG Pool Stats] Total:%d Idle:%d Acquired:%d Max:%d",
 						stats.TotalConns(), stats.IdleConns(),
 						stats.AcquiredConns(), stats.MaxConns())
 				case <-ctx.Done():
