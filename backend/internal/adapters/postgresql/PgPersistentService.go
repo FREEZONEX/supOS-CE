@@ -4,6 +4,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/dbpool"
 	"backend/internal/svc"
 	"backend/internal/types"
 	"backend/share/base"
@@ -29,22 +30,6 @@ type PgPersistentService struct {
 
 const dsId = types.SrcJdbcTypePostgresql
 
-func NewPool(ctx context.Context, connString string) (*pgxpool.Pool, error) {
-	config, err := pgxpool.ParseConfig(connString)
-	if err != nil {
-		return nil, err
-	}
-	if config.ConnConfig.ConnectTimeout == 0 {
-		config.ConnConfig.ConnectTimeout = time.Second * 2
-	}
-	if config.MaxConnLifetime == time.Hour {
-		config.MaxConnLifetime = time.Minute * 10
-	}
-	if config.HealthCheckPeriod == time.Minute {
-		config.HealthCheckPeriod = 30 * time.Second
-	}
-	return pgxpool.NewWithConfig(ctx, config)
-}
 func init() {
 	spring.RegisterLazy[*PgPersistentService](func() *PgPersistentService {
 		svCtx := spring.GetBean[*svc.ServiceContext]()
@@ -55,7 +40,7 @@ func init() {
 			log.Info("postgresql url not found in config")
 			return nil
 		}
-		pool, er := NewPool(ctx, pgUrl)
+		pool, er := dbpool.NewPool(ctx, pgUrl, "uns_relation")
 		if er != nil {
 			log.Error("postgresql init fail", er)
 			return nil

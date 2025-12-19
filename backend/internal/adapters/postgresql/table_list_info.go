@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type TableInfo struct {
@@ -128,11 +130,14 @@ func queryColumnInfo(query queryer, schema string, tables []string, allMap map[s
 		AND table_schema = $1 
 		ORDER BY table_name, column_name`,
 		strings.Join(placeholders, ","))
-
+	start := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := query.Query(ctx, sql, params...)
 	if err != nil {
+		if pool, isPool := query.(*pgxpool.Pool); isPool {
+			logPoolError("queryColumnInfo", start, pool, sql, err)
+		}
 		return err
 	}
 	defer rows.Close()
@@ -141,6 +146,9 @@ func queryColumnInfo(query queryer, schema string, tables []string, allMap map[s
 		var tableName, columnName, udtName string
 		err := rows.Scan(&tableName, &columnName, &udtName)
 		if err != nil {
+			if pool, isPool := query.(*pgxpool.Pool); isPool {
+				logPoolError("queryColumnInfo rows", time.Time{}, pool, sql, err)
+			}
 			return err
 		}
 
@@ -178,10 +186,14 @@ func queryPrimaryKeys(query queryer, schema string, tables []string, allMap map[
 		AND tc.table_schema = $1`,
 		strings.Join(placeholders, ","))
 
+	start := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := query.Query(ctx, sql, params...)
 	if err != nil {
+		if pool, isPool := query.(*pgxpool.Pool); isPool {
+			logPoolError("queryPrimaryKeys", start, pool, sql, err)
+		}
 		return err
 	}
 	defer rows.Close()
@@ -192,6 +204,9 @@ func queryPrimaryKeys(query queryer, schema string, tables []string, allMap map[
 
 		err := rows.Scan(&tableName, &columnName, &isPrimary)
 		if err != nil {
+			if pool, isPool := query.(*pgxpool.Pool); isPool {
+				logPoolError("queryPrimary rows", time.Time{}, pool, sql, err)
+			}
 			return err
 		}
 
@@ -201,4 +216,17 @@ func queryPrimaryKeys(query queryer, schema string, tables []string, allMap map[
 	}
 
 	return rows.Err()
+}
+
+func logPoolError(name string, start time.Time, pool *pgxpool.Pool, sql string, err error) {
+	if !start.IsZero() {
+		duration := time.Since(start)
+		stats := pool.Stat()
+		logx.Errorf("[%s FAILED] sql:%s, err:%v, duration:%v, poolStats:(Total:%d, Idle:%d, Acquired:%d)", name,
+			sql, err, duration, stats.TotalConns(), stats.IdleConns(), stats.AcquiredConns())
+	} else {
+		stats := pool.Stat()
+		logx.Errorf("[%s FAILED] sql:%s, err:%v, poolStats:(Total:%d, Idle:%d, Acquired:%d)", name,
+			sql, err, stats.TotalConns(), stats.IdleConns(), stats.AcquiredConns())
+	}
 }
