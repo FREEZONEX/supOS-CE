@@ -15,9 +15,6 @@ func NewPool(ctx context.Context, connString, appName string) (*pgxpool.Pool, er
 		return nil, err
 	}
 	config.MinConns = 3 // 保持最小热连接
-	if _, has := config.ConnConfig.RuntimeParams["statement_timeout"]; !has {
-		config.ConnConfig.RuntimeParams["statement_timeout"] = "10000" // 10秒
-	}
 	// 1. 设置应用名，便于在数据库端监控和区分连接来源
 	config.ConnConfig.RuntimeParams["application_name"] = appName
 

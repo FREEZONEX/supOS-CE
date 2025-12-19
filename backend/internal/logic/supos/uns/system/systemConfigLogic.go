@@ -99,6 +99,7 @@ func mapSystemConfigToResp(ctx context.Context, cfg *sysconfig.SystemConfig) *ty
 		Lang:                 cfg.Lang,
 		AuthEnable:           cfg.AuthEnable,
 		LlmType:              cfg.LLMType,
+		EnableAi:             len(strings.TrimSpace(os.Getenv("LLM_API_KEY"))) > 0,
 		MqttTcpPort:          int64(cfg.MQTTTCPPort),
 		MqttWebsocketTslPort: int64(cfg.MQTTWebsocketTSLPort),
 		LoginPath:            cfg.LoginPath,
