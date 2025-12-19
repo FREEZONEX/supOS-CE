@@ -1,6 +1,6 @@
 import { Flex, message, App, Tag } from 'antd';
 import { useTranslate, usePagination, useMediaSize } from '@/hooks';
-import { Add, Delete, Edit, Password } from '@carbon/icons-react';
+import { Add, Delete, Edit, Password, UserIdentification } from '@carbon/icons-react';
 import { deleteUser, getUserManageList, updateUser } from '@/apis/inter-api/user-manage';
 import useResetPassword from '@/pages/account-management/components/useResetPassword';
 import useAddUser from '@/pages/account-management/components/useAddUser';
@@ -13,7 +13,7 @@ import { AuthButton } from '@/components/auth';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
 import ProTable from '@/components/pro-table';
-// import { useThemeStore } from '@/stores/theme-store.ts';
+import { useThemeStore } from '@/stores/theme-store.ts';
 import { useBaseStore } from '@/stores/base';
 
 const apiObj: any = {
@@ -23,9 +23,9 @@ const apiObj: any = {
 const AccountManagement: FC<PageProps> = ({ title }) => {
   const formatMessage = useTranslate();
   const ldapEnable = useBaseStore((state) => state?.systemInfo?.ldapEnable);
-  // const theme = useThemeStore((state) => state.theme);
+  const theme = useThemeStore((state) => state.theme);
 
-  // const buttonBg = theme.includes('dark') ? '#393939' : '#c6c6c6';
+  const buttonBg = theme.includes('dark') ? '#393939' : '#c6c6c6';
   const { modal } = App.useApp();
   const { isH5 } = useMediaSize();
   const { data, pagination, setLoading, loading, refreshRequest } = usePagination({
@@ -52,12 +52,12 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
   const { ModalAddDom, onAddOpen } = useAddUser({
     onSaveBack: refreshRequest,
   });
-  const { RoleModal } = useRoleSetting({
-    onSaveBack: refreshRequest,
-  });
   const onAddHandle = () => {
     onAddOpen();
   };
+  const { onRoleModalOpen, RoleModal } = useRoleSetting({
+    onSaveBack: refreshRequest,
+  });
 
   const columns: any = [
     {
@@ -84,15 +84,15 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
       titleIntlId: 'account.email',
       width: 400,
     },
-    // {
-    //   dataIndex: 'roleList',
-    //   ellipsis: true,
-    //   titleIntlId: 'account.role',
-    //   render: (text: any) => {
-    //     return text?.map((i: any) => i.roleName)?.join(',');
-    //   },
-    //   width: 200,
-    // },
+    {
+      dataIndex: 'roleList',
+      ellipsis: true,
+      titleIntlId: 'account.role',
+      render: (text: any) => {
+        return text?.map((i: any) => i.roleName)?.join(',');
+      },
+      width: 200,
+    },
     {
       dataIndex: 'enabled',
       ellipsis: true,
@@ -184,18 +184,18 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
                 <Add size={16} />
               </Flex>
             </AuthButton>
-            {/*<AuthButton*/}
-            {/*  auth={ButtonPermission['UserManagement.roleSettings']}*/}
-            {/*  style={{ height: 28, backgroundColor: buttonBg }}*/}
-            {/*  color="default"*/}
-            {/*  variant="filled"*/}
-            {/*  onClick={onRoleModalOpen}*/}
-            {/*>*/}
-            {/*  <Flex align="center" gap={6}>*/}
-            {/*    {formatMessage('account.roleSettings')}*/}
-            {/*    <UserIdentification size={16} />*/}
-            {/*  </Flex>*/}
-            {/*</AuthButton>*/}
+            <AuthButton
+              auth={ButtonPermission['UserManagement.roleSettings']}
+              style={{ height: 28, backgroundColor: buttonBg }}
+              color="default"
+              variant="filled"
+              onClick={onRoleModalOpen}
+            >
+              <Flex align="center" gap={6}>
+                {formatMessage('account.roleSettings')}
+                <UserIdentification size={16} />
+              </Flex>
+            </AuthButton>
           </>
         }
         style={{

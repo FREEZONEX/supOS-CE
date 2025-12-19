@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { App } from 'antd';
 import { useDeepCompareEffect } from 'ahooks';
-import { useGuideSteps, useTranslate } from '@/hooks';
+import { useTranslate } from '@/hooks';
 import { deleteLabel, deleteTemplate } from '@/apis/inter-api/uns';
 import { getTreeStoreSnapshot, TreeStoreProvider, useTreeStore, useTreeStoreRef } from './store/treeStore';
 import ModalContext from './ModalContext';
@@ -9,8 +9,8 @@ import TopDom from './TopDom';
 import DetailDom from './DetailDom';
 import LeftDom from './LeftDom';
 import type { UnsTreeNode } from './types';
-import { useLocation } from 'react-router';
-import { guideSteps } from './guide-steps';
+// import { useLocation } from 'react-router';
+// import { guideSteps } from './guide-steps';
 
 import './index.scss';
 import ComLayout from '@/components/com-layout';
@@ -121,9 +121,9 @@ const Module = () => {
     }
   };
 
-  const location = useLocation();
+  // const location = useLocation();
   // 新手导航步骤
-  useGuideSteps(guideSteps(), location?.state?.stepId);
+  // useGuideSteps(guideSteps(), location?.state?.stepId);
 
   return (
     <ComLayout className="unsContainer">

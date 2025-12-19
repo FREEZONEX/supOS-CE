@@ -869,7 +869,7 @@
   "text9usage": "VALUE(text)",
   "text9example": "VALUE('3.1415') returns 3.1415.",
   "aboutus.aboutus1": "About {appTitle}",
-  "aboutus.overview3": "{appTitle} is an open-source industrial data platform built on the Unified Namespace (UNS) architecture. It helps enterprises break down IT/OT barriers, ensure seamless data flow, and accelerate digital transformation with scalable solutions.",
+  "aboutus.overview3": "{appTitle} is an industrial data platform built on the Unified Namespace (UNS) architecture. It helps enterprises break down IT/OT barriers, ensure seamless data flow, and accelerate digital transformation with scalable solutions.",
   "aboutus.overview2": "{appTitle} promotes UNS to maximize data use via centralized management.",
   "aboutus.openSourceLicense": "Open Source License: MulanPSL-2.0",
   "aboutus.more": "More Information",

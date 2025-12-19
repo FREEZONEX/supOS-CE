@@ -89,7 +89,7 @@ WORKDIR /app/go-edge
 EXPOSE 3000 4000 8080
 
 # Start both services concurrently (frontend on port 3000, backend on port 4000)
-CMD ["concurrently", \
-    "serve -s /app/web-dist -l 3000", \
-    "node /app/services-express-dist/index.js", \
-    "./backend"]
+#CMD ["concurrently", \
+#    "serve -s /app/web-dist -l 3000", \
+#    "node /app/services-express-dist/index.js", \
+#    "./backend"]

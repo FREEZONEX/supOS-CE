@@ -47,6 +47,7 @@ iframe {
 /* 默认主题（明亮主题） */
 :root {
   --supos-text-color: var(--supos-t-gray-color-100);
+  --supos-anti-text-color: var(--supos-t-white-color);
   --supos-bg-color: var(--supos-t-white-color);
   --supos-header-bg-color: var(--supos-t-white-color);
   --supos-color-fill: rgb(0 0 0 / 15%);
@@ -129,6 +130,7 @@ iframe {
 .dark {
   --supos-craft-bg-color: #262626;
   --supos-text-color: var(--supos-t-white-color);
+  --supos-anti-text-color: var(--supos-t-gray-color-100);
   --supos-bg-color: var(--supos-t-gray-color-100);
   --supos-header-bg-color: var(--supos-t-gray-color-100);
   --supos-color-fill: rgb(255 255 255 / 15%);

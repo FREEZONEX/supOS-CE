@@ -5,13 +5,13 @@ import { useChangeMenuName, useTranslate } from '@/hooks';
 import '@copilotkit/react-ui/styles.css';
 import { useMemo, useRef } from 'react';
 import { CopilotOperationContext } from '@/layout/context';
-import { useTips } from '@/hooks/useTips';
-import { tips } from './tips';
+// import { useTips } from '@/hooks/useTips';
+// import { tips } from './tips';
 import { TabsContext, type TabsContextProps } from '@/contexts/tabs-context';
 import CustomCopilotChat, { type CopilotRefProps } from '@/components/copilotkit/CustomCopilotChat';
 import IframeMask from '@/components/iframe-mask';
 import CopilotContext from '@/components/copilotkit/CopilotContext';
-import { useBaseStore } from '@/stores/base';
+// import { useBaseStore } from '@/stores/base';
 import { MenuTypeEnum, PrimaryColorType, useThemeStore } from '@/stores/theme-store.ts';
 import homeFlow from '@/assets/guide/home-flow.gif';
 import homeFlowChartreuse from '@/assets/guide/home-flow-chartreuse.gif';
@@ -24,14 +24,14 @@ const Module = () => {
     menuType: state.menuType,
     primaryColor: state.primaryColor,
   }));
-  const systemInfo = useBaseStore((state) => state.systemInfo);
+  // const systemInfo = useBaseStore((state) => state.systemInfo);
   const formatMessage = useTranslate();
   const copilotCatRef = useRef<CopilotRefProps>(null);
   // 用来接收tabs的公共方法
   const tabsContextRef = useRef<TabsContextProps>(null);
   useChangeMenuName();
 
-  useTips(tips({ appTitle: systemInfo.appTitle }));
+  // useTips(tips({ appTitle: systemInfo.appTitle }));
 
   return (
     <TabsContext.Provider value={tabsContextRef as any}>
