@@ -531,18 +531,19 @@ func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, bat
 }
 func (u *UnsAddService) trySetId(
 	ctx context.Context,
+	skipWhenExists bool,
 	ct time.Time,
 	unsDto *types.CreateTopicDto,
 	existsUns func(string) *dao.UnsNamespace,
 	dbFiles map[int64]*dao.UnsNamespace,
 	deleteFiles *[]*dao.UnsNamespace,
-	errTipMap map[string]string) *dao.UnsNamespace {
+	errTipMap map[string]string) (po *dao.UnsNamespace, exists bool) {
 
 	batchIndex := unsDto.GainBatchIndex()
 	template, errMsg := getTemplate(unsDto, existsUns, dbFiles)
 	if errMsg != "" {
 		errTipMap[batchIndex] = errMsg
-		return nil
+		return nil, false
 	}
 	setJdbcType(unsDto)
 
@@ -554,7 +555,7 @@ func (u *UnsAddService) trySetId(
 				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(unsDto.PathType))),
 			)
 			errTipMap[batchIndex] = msg
-			return nil
+			return nil, base.P2v(dbPo.Status) == OK
 		}
 		unsDto.Id = dbPo.Id
 	} else {
@@ -562,6 +563,10 @@ func (u *UnsAddService) trySetId(
 	}
 
 	DB_EXISTS := dbPo != nil && base.P2v(dbPo.Status) == OK
+	if DB_EXISTS && skipWhenExists {
+		*unsDto = *UnsConverter.Po2Dto(dbPo)
+		return dbPo, true
+	}
 
 	// 创建关系型文件, 不允许新增系统字段
 	//if !DB_EXISTS && len(unsDto.Fields) > 0 &&
@@ -581,7 +586,7 @@ func (u *UnsAddService) trySetId(
 	}
 	if (!DB_EXISTS && dataType != constants.CitingType) || len(unsDto.Fields) > 0 {
 		if setFieldsErr(unsDto, errTipMap, batchIndex, newUns, template) {
-			return nil
+			return nil, DB_EXISTS
 		}
 	}
 	if len(unsDto.Fields) > 0 {
@@ -609,7 +614,7 @@ func (u *UnsAddService) trySetId(
 		checkFileFieldError := u.unsCalcService.CheckFileField(unsDto)
 		if checkFileFieldError != "" {
 			errTipMap[batchIndex] = checkFileFieldError
-			return nil
+			return nil, DB_EXISTS
 		}
 
 		if expChanged || hasRefer {
@@ -618,14 +623,14 @@ func (u *UnsAddService) trySetId(
 				err := u.unsCalcService.CheckRefers(unsDto)
 				if err != "" {
 					errTipMap[batchIndex] = err
-					return nil
+					return nil, DB_EXISTS
 				}
 			}
 			if expChanged {
 				err := u.unsCalcService.CheckComplexExpression(unsDto)
 				if err != "" {
 					errTipMap[batchIndex] = err
-					return nil
+					return nil, DB_EXISTS
 				}
 			}
 		}
@@ -657,7 +662,7 @@ func (u *UnsAddService) trySetId(
 				affected, err = u.unsMapper.ListByTemplateId(db, newUns.Id, nil)
 				if err != nil {
 					errTipMap[batchIndex] = err.Error()
-					return nil
+					return nil, DB_EXISTS
 				}
 				if len(affected) > 0 {
 					for _, f := range affected {
@@ -677,7 +682,7 @@ func (u *UnsAddService) trySetId(
 		newUns.Name = strings.TrimSpace(newUns.Name)
 		if len(newUns.Name) == 0 {
 			errTipMap[batchIndex] = I18nUtils.GetMessage("uns.name.empty")
-			return nil
+			return nil, DB_EXISTS
 		}
 		if unsDto.WithFlags == nil {
 			flag := generateFlag(unsDto.AddFlow, unsDto.Save2Db, unsDto.AddDashBoard,
@@ -715,7 +720,7 @@ func (u *UnsAddService) trySetId(
 		unsDto.Status = 1
 		newUns.Status = &OK
 	}
-	return newUns
+	return newUns, DB_EXISTS
 }
 func normalFields(fs []*types.FieldDefine) []*types.FieldDefine {
 	return base.Filter(fs, func(e *types.FieldDefine) bool {

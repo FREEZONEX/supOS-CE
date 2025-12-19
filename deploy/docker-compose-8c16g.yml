@@ -6,7 +6,7 @@ networks:
 
 services:
   uns:
-    image: suposce/supos-edge-platform:1.0.0-R2
+    image: suposce/supos-edge-platform:1.0.0-R3
     container_name: uns
     ports:
       - "3010:3000"
@@ -29,6 +29,8 @@ services:
       - OAUTH_REFRESH_TOKEN_TIME=${OAUTH_REFRESH_TOKEN_TIME}
       - SYS_OS_APP_TITLE=${OS_NAME}
       - SYS_OS_LOGIN_PATH=${OS_LOGIN_PATH}
+      - SYS_OS_LANG=${LANGUAGE}
+      - TOKEN_MAX_AGE=${TOKEN_MAX_AGE}
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
       - /etc/docker/certs:/certs
