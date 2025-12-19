@@ -92,7 +92,7 @@ services:
       - service_logo=nodered-original.svg
       - service_description=aboutus.nodeRedDescription
       - FLOWS=/data/flows.json
-      - USE_ALIAS_AS_TOPIC=${USE_ALIAS_PATH_AS_TOPIC}
+      - USE_ALIAS_AS_TOPIC=false
       - TIMESTAMP_NAME=timeStamp
       - QUALITY_NAME=quality
       - TZ=UTC
@@ -117,7 +117,7 @@ services:
       - service_logo=nodered-original.svg
       - service_description=aboutus.nodeRedDescription
       - FLOWS=/data/flows.json
-      - USE_ALIAS_AS_TOPIC=${USE_ALIAS_PATH_AS_TOPIC}
+      - USE_ALIAS_AS_TOPIC=false
       - QUALITY_NAME=status
       - TIMESTAMP_NAME=timeStamp
       - TZ=UTC
@@ -128,32 +128,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${VOLUMES_PATH}/eventflow:/data  # 使用当前目录的 data 目录
     restart: always
-    networks:
-      - edge_network
-  mcpclient:
-    container_name: mcpclient
-    profiles:
-      - mcpclient
-    image: suposce/supos-ce-mcpclient:RELEASE.2025-06-16T07-08-29Z
-    ports:
-      - "32893:3000"
-      - "32894:8123"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
-      - AGENT_DEPLOYMENT_URL=${AGENT_DEPLOYMENT_URL}
-      - SUPOS_API_KEY=${SUPOS_API_KEY}
-      - SUPOS_API_URL=${BASE_URL}
-      - SUPOS_MQTT_URL=${SUPOS_MQTT_URL}
-      - SUPOS_PG_URL=postgresql://postgres:postgres@postgresql:5432/postgres
-    healthcheck:
-      test: >
-        /bin/bash -c "
-        exec 3<>/dev/tcp/localhost/8123"
-      start_period: 30s
-      timeout: 10s
-      interval: 30s
-      retries: 10
     networks:
       - edge_network
   grafana:
