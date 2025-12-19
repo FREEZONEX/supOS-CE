@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   edge_network:
     driver: bridge
@@ -31,6 +29,16 @@ services:
       - SYS_OS_LOGIN_PATH=${OS_LOGIN_PATH}
       - SYS_OS_LANG=${LANGUAGE}
       - TOKEN_MAX_AGE=${TOKEN_MAX_AGE}
+    command: >
+      sh -c "
+        if [ -z \"$LLM_API_KEY\" ]; then
+          echo 'LLM_API_KEY为空，跳过Node.js服务启动'
+          concurrently \"serve -s /app/web-dist -l 3000\" \"./backend\"
+        else
+          echo 'LLM_API_KEY已配置，启动所有服务'
+          concurrently \"serve -s /app/web-dist -l 3000\" \"node /app/services-express-dist/index.js\" \"./backend\"
+        fi
+      "
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
       - /etc/docker/certs:/certs
