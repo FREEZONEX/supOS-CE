@@ -339,7 +339,13 @@
                     const val = $(this).text();
                     // 为了去掉头尾，取值中间项
                     if (index < (len-1) && index > 0) {
-                        $(this).html(`<input type="text" value="${val}" style="width: 100%"/>`)
+                        if (index == 4) {
+                            $(this).html(`<select disabled style="width: 100%"><option value="integer" ${val=='integer'?'selected':''}>integer</option><option value="long" ${val=='long'?'selected':''}>long</option><option value="float" ${val=='float'?'selected':''}>float</option><option value="double" ${val=='double'?'selected':''}>double</option><option value="boolean" ${val=='boolean'?'selected':''}>boolean</option><option value="datetime" ${val=='datetime'?'selected':''}>datetime</option><option value="string" ${val=='string'?'selected':''}>string</option></select>`)
+                        } else if (index == (len-2)) {
+                            $(this).html(`<input disabled type="text" value="${val}" style="width: 100%"/>`)
+                        } else {
+                            $(this).html(`<input type="text" value="${val}" style="width: 100%"/>`)
+                        }
                     }
                 });
             } else {
@@ -350,7 +356,7 @@
                 const len = $(this).closest('tr').find('td').length;
 
                 $(this).closest('tr').find('td').each(function(index) {
-                    const val = $(this).find('input').val();
+                    const val = $(this).find('input, select').val();
                     // 为了去掉头尾，取值中间项
                     if (index < (len-1) && index > 0) {
                         $(this).text(val);
@@ -737,12 +743,16 @@
                 $('#preview-tbody').prepend("<tr class='dirty'><td>0</td></tr>")
                 // 掐头去尾
                 for (let i = 1; i < len -1; i++) {
-                    $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
+                    if (i == 4) {
+                        $('#preview-tbody .dirty').append('<td><select style="width: 100%"><option value="integer">integer</option><option value="long">long</option><option value="float">float</option><option value="double">double</option><option value="boolean">boolean</option><option value="datetime">datetime</option><option value="string">string</option></select></td>')
+                    } else {
+                        $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
+                    }
                 }
                 $('#preview-tbody .dirty').append('<td><i class="fa fa-check edit" style="margin-right: 10px;"></i><i class="fa fa-remove remove"></i></dt>');
                 $('#preview-tbody .dirty .edit').on('click', function() {
                     const rowData = $(this).closest('tr').map(function() {
-                        return $(this).find("input").map(function(index) {
+                        return $(this).find("input, select").map(function(index) {
                             return $(this).val();
                         }).get();
                     }).get();
