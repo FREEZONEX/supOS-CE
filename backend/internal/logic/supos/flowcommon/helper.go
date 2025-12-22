@@ -170,6 +170,8 @@ func DeployFlow(
 		}
 	}
 
+	syncSupmodelMappings(ctx, client, flowNodes)
+
 	if len(flowNodes) > 0 {
 		aliases := aliasExtractor(flowNodes)
 		if err := repo.ReplaceModels(ctx, entityID, aliases); err != nil {
@@ -289,6 +291,49 @@ func toInterfaceSlice(nodes []map[string]any) []any {
 		}
 	}
 	return out
+}
+
+func syncSupmodelMappings(ctx context.Context, client *noderedclient.Client, nodes []map[string]any) {
+	for _, node := range nodes {
+		if node == nil {
+			continue
+		}
+		if strings.TrimSpace(fmt.Sprint(node["type"])) != "supmodel" {
+			continue
+		}
+		nodeID := strings.TrimSpace(fmt.Sprint(node["id"]))
+		if nodeID == "" {
+			continue
+		}
+		mapping := toAnySlice(node["mapping"])
+		if len(mapping) == 0 {
+			continue
+		}
+		req := map[string]any{
+			"nodeId":  nodeID,
+			"mapping": mapping,
+		}
+		var out map[string]any
+		code, body, errs := client.DoJSON(ctx, "POST", "/nodered-api/upload/tags", req, &out)
+		if len(errs) > 0 || (code != 200 && code != 201) {
+			logx.WithContext(ctx).Errorf("syncSupmodelMappings sync supmodel mapping failed: id=%s code=%d err=%v body=%s", nodeID, code, errs, string(body))
+		}
+	}
+}
+
+func toAnySlice(value any) []any {
+	switch v := value.(type) {
+	case []any:
+		return v
+	case []map[string]any:
+		res := make([]any, 0, len(v))
+		for _, item := range v {
+			res = append(res, item)
+		}
+		return res
+	default:
+		return nil
+	}
 }
 
 // ExtractAliases parses possible UNS aliases from Node-RED node definitions.

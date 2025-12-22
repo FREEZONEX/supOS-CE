@@ -5,9 +5,7 @@ const modbus = require('./modbus-bridge');
 const custom = require('./custom-bridge');
 const mqtt = require('./mqtt-bridge');
 const mock = require('./mock-bridge');
-const xlsx = require('node-xlsx');
 const fs = require("fs");
-const path = require("path");
 const formidable = require("formidable");
 
 module.exports = function (RED) {
@@ -17,18 +15,11 @@ module.exports = function (RED) {
     const storage = '/data/cache/context/global/';
     const storagePath = storage + 'global.json';
 
-    const templateCN = '/data/template/template-cn.xlsx';
-    const templateEN = '/data/template/template-en.xlsx';
+    const templateJSON = '/data/template/template.json';
 
     // 下载模板文件
     httpNode.get('/nodered-api/download/template', (req, res) => {
-        const language = process.env.OS_LANG;
-        console.log("当前语言设置： {}", language);
-        if (language == 'en-US') {
-            res.download(templateEN); // 自动处理响应头与文件流
-        } else {
-            res.download(templateCN);
-        }
+        res.download(templateJSON);
     });
 
     httpNode.get('/nodered-api/load/tags', (req, res) => {
@@ -40,40 +31,42 @@ module.exports = function (RED) {
     });
 
     httpNode.get('/nodered-api/export/tags', (req, res) => {
-        const language = process.env.OS_LANG;
-        const nodeId = req.query.nodeId; // 查询条件
-        let data = [];
-        if (language == 'en-US') {
-            // header
-            data.push(['Path(Required)','Alias','AttributeName(Required)','AttributeType(Required)','TagConfiguration(Required)']);
-        } else {
-            // header
-            data.push(['文件路径（必填）','文件别名','属性名称（必填）','属性类型（必填）','位号名（必填）']);
-        }
-        // tag array
-        let tags = loadStorage(nodeId);
-        if (tags && tags.length > 0) {
-            data.push(...tags);
-        }
-        const options = {
-            sheetOptions: {
-                '!cols': [{ wch: 35 }, { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 30 }] 
-            }
-        };
-        const buffer = xlsx.build([{ 
-            name: 'UNS Data',   // 工作表名称
-            data: data        // 数据源
-        }], options)
-        const exportExcelName = `/tmp/UNS-Mapper-${nodeId}.xlsx`;
-        fs.writeFileSync(exportExcelName, buffer);
-        res.download(exportExcelName, () => {
-            fs.unlinkSync(exportExcelName);
-        });
+        const nodeId = req.query.nodeId;
+        const tags = loadStorage(nodeId) || [];
+        const mapping = toMapping(tags);
+        const exportJsonName = `UNS-Mapper-${nodeId || 'unknown'}.json`;
+        res.setHeader('Content-Disposition', `attachment; filename="${exportJsonName}"`);
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ mapping }, null, 2));
     });
 
-    // 导入excel
+    // 导入/上传 JSON
     httpNode.post('/nodered-api/upload/tags', (req, res) => {
-        
+        const contentType = (req.headers['content-type'] || '').toLowerCase();
+        const nodeId = (req.query && req.query.nodeId) || (req.body && req.body.nodeId);
+
+        const respond = (rows) => {
+            if (!rows || rows.length === 0) {
+                res.status(400).end('mapping is empty');
+                return;
+            }
+            if (nodeId) {
+                saveGlobalStorage(nodeId, rows);
+            }
+            res.status(200).json({ data: rows });
+        };
+
+        if (contentType.indexOf('application/json') !== -1) {
+            try {
+                const rows = normalizeMappingPayload(req.body);
+                respond(rows);
+            } catch (err) {
+                console.log(err);
+                res.status(400).end("Invalid JSON payload");
+            }
+            return;
+        }
+
         const form = new formidable.IncomingForm();
         form.uploadDir = "/data/uploads"; // 设置上传目录
         form.keepExtensions = true; // 保留文件扩展名
@@ -85,26 +78,23 @@ module.exports = function (RED) {
                 return;
             }
             res.setHeader('Content-Type', 'application/json');
-            // 获取上传的 Excel 文件路径
-            const excelFile = files.file[0].filepath;
+            const uploadFile = files.file && files.file[0];
+            const jsonFilePath = uploadFile && uploadFile.filepath;
             
-            if (fs.existsSync(excelFile)) {
-                // 调用 node-xlsx 解析
-                let excelData = parseExcel(excelFile);
-                // 解析完毕之后删除文件
-                fs.unlinkSync(excelFile);
-                if (excelData) {
-                    if (excelData.length == 0) {
-                        res.status(400).end('Excel data is empty!');
-                    } else {
-                        res.status(200).json({data: excelData});
-                    }
-                } else {
-                    res.status(500).end("Excel parse failed, please check format!");
+            if (jsonFilePath && fs.existsSync(jsonFilePath)) {
+                try {
+                    const buffer = fs.readFileSync(jsonFilePath);
+                    const jsonData = JSON.parse(buffer.toString('utf-8'));
+                    const rows = normalizeMappingPayload(jsonData);
+                    fs.unlinkSync(jsonFilePath);
+                    respond(rows);
+                } catch (error) {
+                    console.log("解析json异常", error);
+                    res.status(500).end("JSON parse failed, please check format!");
                 }
             } else {
                 RED.log.error('Please confirm whether the "/data/uploads" directory exists in container.');
-                res.status(500).end("Excel upload failed!");
+                res.status(500).end("JSON upload failed!");
             }
         });
         
@@ -161,9 +151,9 @@ module.exports = function (RED) {
         let pageNo = req.query.pageNo || 1; // 起始页
         let nodeId = req.query.nodeId; // 查询条件
 
-        const excelData = loadStorage(nodeId);
+        const mappingData = loadStorage(nodeId);
 
-        res.status(200).json({data: excelData});
+        res.status(200).json({data: mappingData});
     });
 
     function saveGlobalStorage(key, data) {
@@ -209,22 +199,34 @@ module.exports = function (RED) {
                 content = "{}";
             }
             let o = JSON.parse(content);
-            return o[key];
+            return o[key] || [];
         } catch (err) {
             console.log(err);
-            return null;
+            return [];
         }
     }
 
-    function buildMappings(excelData) {
+    function buildMappings(mappingData) {
         let mappings = {};
-        if (!excelData || excelData.length == 0) {
+        if (!mappingData || mappingData.length == 0) {
             return mappings;
         }
         
-        excelData.map(row => {
+        mappingData.map(row => {
             // path, alias, propName, propType, tag
-            const [path, alias, propName, propType, tag] = row;
+            let path, alias, propName, tag;
+            if (Array.isArray(row)) {
+                [path, , propName, , tag] = row; // Alias/AttributeType deprecated
+            } else {
+                path = row?.targetTopic || row?.path;
+                // Alias not used anymore
+                alias = "";
+                propName = row?.targetField || row?.propName;
+                tag = row?.selector || row?.tag;
+            }
+            if (tag === undefined || tag === null) {
+                return;
+            }
             let props = mappings[tag] || [];
 
             props.push({
@@ -237,21 +239,70 @@ module.exports = function (RED) {
         return mappings;
     }
     
+    function normalizeMappingPayload(payload) {
+        if (payload == null) {
+            return [];
+        }
+        if (Array.isArray(payload)) {
+            return payload.map(normalizeSingleMapping).filter(Boolean);
+        }
+        if (Array.isArray(payload.mapping)) {
+            return payload.mapping.map(normalizeSingleMapping).filter(Boolean);
+        }
+        if (Array.isArray(payload.tags)) {
+            return payload.tags.map(normalizeSingleMapping).filter(Boolean);
+        }
+        if (Array.isArray(payload.data)) {
+            return payload.data.map(normalizeSingleMapping).filter(Boolean);
+        }
+        return [];
+    }
 
-    function parseExcel(filePath) {
-        try {
-            // 读取并解析 Excel 文件
-            const workbook = xlsx.parse(filePath);
-            const sheetData = workbook[0].data; // 默认取第一个工作表
-        
-            // 转换为 JSON（首行为标题）
-            const [headers, ...rows] = sheetData;
-            return rows;
-      
-        } catch (error) {
-            console.log("解析excel异常", error);
+    function normalizeSingleMapping(item) {
+        if (!item) {
             return null;
         }
+        if (Array.isArray(item)) {
+            return item;
+        }
+        const selector = toSafeString(item.selector || item.tag || item.target || item.topicIndex);
+        const targetTopic = toSafeString(item.targetTopic || item.path || item.topic);
+        const targetField = toSafeString(item.targetField || item.propName || item.field || item.property);
+        const alias = ""; // Alias no longer used
+        const propType = ""; // AttributeType no longer used
+        if (!selector && !targetTopic && !targetField) {
+            return null;
+        }
+        return [targetTopic, alias, targetField, propType, selector];
+    }
+
+    function toMapping(rows) {
+        if (!Array.isArray(rows)) {
+            return [];
+        }
+        return rows.map(row => {
+            if (Array.isArray(row)) {
+                return {
+                    selector: row[4] !== undefined ? String(row[4]) : "",
+                    targetTopic: row[0] || "",
+                    targetField: row[2] || ""
+                };
+            }
+            if (row && typeof row === 'object') {
+                return {
+                    selector: toSafeString(row.selector || row.tag),
+                    targetTopic: toSafeString(row.targetTopic || row.path),
+                    targetField: toSafeString(row.targetField || row.propName)
+                };
+            }
+        }).filter(item => item && (item.selector || item.targetTopic || item.targetField));
+    }
+
+    function toSafeString(value) {
+        if (value === undefined || value === null) {
+            return "";
+        }
+        return String(value).trim();
     }
 
     function SelectModel(config) {
@@ -266,7 +317,14 @@ module.exports = function (RED) {
         node.protocol = config.protocol;
         node.selectedModel = config.selectedModel;
         node.selectedModelAlias = config.selectedModelAlias;
-        node.models = loadStorage(node.id);
+        let models = loadStorage(node.id);
+        if (!models || models.length === 0) {
+            models = normalizeMappingPayload(config.mapping);
+            if (models && models.length > 0) {
+                saveGlobalStorage(node.id, models);
+            }
+        }
+        node.models = models;
         node.envs = {
             "field_t_var": process.env.TIMESTAMP_NAME,
             "field_q_var": process.env.QUALITY_NAME,

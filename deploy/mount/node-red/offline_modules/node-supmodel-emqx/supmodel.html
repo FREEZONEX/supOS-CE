@@ -149,7 +149,7 @@
         </div>
         <div id="supmodel-tab-mappings" style="display:none">
             <div class="form-row">
-                <input id="node-file-item" type="file" name="filename" accept=".xls,.xlsx" style="display:none"/>
+                <input id="node-file-item" type="file" name="filename" accept=".json" style="display:none"/>
                 <button class="editor-button" id="node-btn-item-import"><i class="fa fa-upload"></i> <span data-i18n="supmodel.label_import"></span></button>
                 <button class="editor-button" id="node-btn-item-export"><i class="fa fa-download"></i> <span data-i18n="supmodel.label_export"></span></button>
                 <button class="editor-button" id="node-btn-item-add"><i class="fa fa-plus"></i> <span data-i18n="supmodel.label_add_one"></span></button>
@@ -162,9 +162,7 @@
                         <tr>
                             <th data-i18n="supmodel.table_header_serial"></th>
                             <th data-i18n="supmodel.table_header_file_name"></th>
-                            <th data-i18n="supmodel.table_header_alias"></th>
                             <th data-i18n="supmodel.table_header_prop_name"></th>
-                            <th data-i18n="supmodel.table_header_prop_type"></th>
                             <th data-i18n="supmodel.table_header_tag_name"></th>
                             <th data-i18n="supmodel.table_header_operate"></th>
                         </tr>
@@ -235,7 +233,71 @@
         });
     }
 
-    const uploadExcel = (node, file) => {
+    const toSafeString = (value) => {
+        if (value === undefined || value === null) {
+            return '';
+        }
+        return (value + '').trim();
+    };
+
+    const normalizeSingleMapping = (item) => {
+        if (!item) {
+            return null;
+        }
+        if (Array.isArray(item)) {
+            return item;
+        }
+        const selector = toSafeString(item.selector || item.tag || item.target || item.topicIndex);
+        const targetTopic = toSafeString(item.targetTopic || item.path || item.topic);
+        const targetField = toSafeString(item.targetField || item.propName || item.field || item.property);
+        const alias = toSafeString(item.alias || item.targetAlias);
+        const propType = toSafeString(item.propType || item.type || "string") || "string";
+        if (!selector && !targetTopic && !targetField) {
+            return null;
+        }
+        return [targetTopic, alias, targetField, propType, selector];
+    };
+
+    const normalizeMappingPayload = (payload) => {
+        if (payload == null) {
+            return [];
+        }
+        if (Array.isArray(payload)) {
+            return payload.map(normalizeSingleMapping).filter(Boolean);
+        }
+        if (Array.isArray(payload.mapping)) {
+            return payload.mapping.map(normalizeSingleMapping).filter(Boolean);
+        }
+        if (Array.isArray(payload.tags)) {
+            return payload.tags.map(normalizeSingleMapping).filter(Boolean);
+        }
+        if (Array.isArray(payload.data)) {
+            return payload.data.map(normalizeSingleMapping).filter(Boolean);
+        }
+        return [];
+    };
+
+    const convertRowsToMapping = (rows) => {
+        if (!Array.isArray(rows)) {
+            return [];
+        }
+        return rows.map(row => {
+            return {
+                selector: row[4] !== undefined ? (row[4] + '') : '',
+                targetTopic: row[0] || '',
+                targetField: row[2] || ''
+            }
+        }).filter(item => item.selector || item.targetTopic || item.targetField);
+    };
+
+    const normalizeRowData = (rowData) => {
+        const path = rowData[0] || '';
+        const propName = rowData[1] || '';
+        const tag = rowData[2] || '';
+        return [path, '', propName, '', tag]; // Alias & AttributeType unused, keep placeholders
+    };
+
+    const uploadJson = (node, file) => {
         const formData = new FormData();
         formData.append("file", file);
         
@@ -249,8 +311,8 @@
                 $('#errorMsg').empty();
             },
             success: function(res) {
-
-                templateModels[node.id] = res.data;
+                const normalized = normalizeMappingPayload(res.data);
+                templateModels[node.id] = normalized.length > 0 ? normalized : res.data;
 
                 pagenation.pageNo = 1;
                 pagenation.totalNumber = templateModels[node.id].length;
@@ -302,7 +364,8 @@
             },
             success: function(res) {
                 if (res.data) {
-                    templateModels[nodeId] = res.data;
+                    const normalized = normalizeMappingPayload(res.data);
+                    templateModels[nodeId] = normalized.length > 0 ? normalized : res.data;
                 }
             },
             error: function(err) {
@@ -320,7 +383,8 @@
             data.map((row, index) => {
                         let start  = (pagenation.pageNo - 1) * pagenation.pageItem;
                         let id = start + index + 1;
-                        return `<tr><td>${id}</td>${row.map(cell => `<td title="${cell==null?'':cell}">${cell==null?'':cell}</td>`).join('')}<td><i class="fa fa-pencil edit" style="margin-right: 10px;" title='edit'></i><i class="fa fa-remove remove" title='delete'></i></dt></tr>`
+                        const displayRow = [row[0], row[2], row[4]];
+                        return `<tr><td>${id}</td>${displayRow.map(cell => `<td title="${cell==null?'':cell}">${cell==null?'':cell}</td>`).join('')}<td><i class="fa fa-pencil edit" style="margin-right: 10px;" title='edit'></i><i class="fa fa-remove remove" title='delete'></i></dt></tr>`
                     }
             ).join('')
         );
@@ -339,9 +403,7 @@
                     const val = $(this).text();
                     // 为了去掉头尾，取值中间项
                     if (index < (len-1) && index > 0) {
-                        if (index == 4) {
-                            $(this).html(`<select disabled style="width: 100%"><option value="integer" ${val=='integer'?'selected':''}>integer</option><option value="long" ${val=='long'?'selected':''}>long</option><option value="float" ${val=='float'?'selected':''}>float</option><option value="double" ${val=='double'?'selected':''}>double</option><option value="boolean" ${val=='boolean'?'selected':''}>boolean</option><option value="datetime" ${val=='datetime'?'selected':''}>datetime</option><option value="string" ${val=='string'?'selected':''}>string</option></select>`)
-                        } else if (index == (len-2)) {
+                        if (index == (len-2)) {
                             $(this).html(`<input disabled type="text" value="${val}" style="width: 100%"/>`)
                         } else {
                             $(this).html(`<input type="text" value="${val}" style="width: 100%"/>`)
@@ -371,7 +433,8 @@
                     }).get();
                 }).get();
 
-                templateModels[node.id][id - 1] = rowData;
+                const normalized = normalizeRowData(rowData);
+                templateModels[node.id][id - 1] = normalized;
             }
             
         });
@@ -515,20 +578,9 @@
                 if (!fname) {
                     return node._("supmodel.error_field_not_null")
                 }
-                if (!ftype) {
-                    return node._("supmodel.error_field_type_not_null")
-                }
-                if (alias && !regFileName.test(alias)) {
-                    return node._("supmodel.error_invalid_filename")
-                }
+                // Alias/AttributeType deprecated, skip validation
                 if (!regFieldName.test(fname)) {
                     return node._("supmodel.error_invalid_fieldname")
-                }
-                // 校验数据类型是否合法
-                const enumTypes = ["integer", "long", "float", "double", "boolean", "datetime", "string"]
-                let lowercaseTag = ftype.toLowerCase();
-                if ($.inArray(lowercaseTag, enumTypes) === -1) {
-                    return node._("supmodel.error_invalid_type");
                 }
             }
             if (!tag || tag == null || tag == undefined) {
@@ -551,41 +603,6 @@
         return "";
         
     }
-
-    const postBuildUnsNode = (node, rowsData, callback) => {
-        // 数据组装
-        let unsDataArray = [];
-
-        for (let i in rowsData) {
-            const [path, alias, fname, ftype, tag] = rowsData[i];
-            let unsData = {
-                "path": path || '',
-                "alias": alias || '',
-                "fieldName": fname,
-                "fieldType": ftype,
-                "tag": tag+''
-            } 
-            unsDataArray.push(unsData);
-        }
-        $.ajax({
-            url: `/inter-api/supos/uns/for/nodered`,
-            type: 'POST',
-            async: false,
-            data: JSON.stringify(unsDataArray),
-            contentType: "application/json",
-            success: function(res) {
-                if (res.data && res.data.length > 0) {
-                    templateModels[node.id] = res.data;
-                }
-                callback(node, templateModels[node.id]);
-            },
-            error: function(err) {
-                console.log(err);
-                RED.notify('uns file create failed, pls contact author', "error");
-            }
-        });
-    }
-
     
     let pagenation = 
     {
@@ -622,6 +639,9 @@
             },
             selectedModelAlias: {
                 value: ""
+            },
+            mapping: {
+                value: []
             },
             modelShowName: {
                 value: ""
@@ -663,6 +683,13 @@
             let thisModels = templateModels[node.id];
             if (!thisModels || thisModels.length == 0) {
                 loadTags(node.id)
+                thisModels = templateModels[node.id];
+            }
+            if ((!thisModels || thisModels.length == 0) && node.mapping) {
+                const normalized = normalizeMappingPayload(node.mapping);
+                if (normalized.length > 0) {
+                    templateModels[node.id] = normalized;
+                }
             }
 
             tabs = RED.tabs.create({
@@ -743,11 +770,7 @@
                 $('#preview-tbody').prepend("<tr class='dirty'><td>0</td></tr>")
                 // 掐头去尾
                 for (let i = 1; i < len -1; i++) {
-                    if (i == 4) {
-                        $('#preview-tbody .dirty').append('<td><select style="width: 100%"><option value="integer">integer</option><option value="long">long</option><option value="float">float</option><option value="double">double</option><option value="boolean">boolean</option><option value="datetime">datetime</option><option value="string">string</option></select></td>')
-                    } else {
-                        $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
-                    }
+                    $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
                 }
                 $('#preview-tbody .dirty').append('<td><i class="fa fa-check edit" style="margin-right: 10px;"></i><i class="fa fa-remove remove"></i></dt>');
                 $('#preview-tbody .dirty .edit').on('click', function() {
@@ -756,7 +779,8 @@
                             return $(this).val();
                         }).get();
                     }).get();
-                    const errorMsg = checkTable(node, [rowData]);
+                    const normalized = normalizeRowData(rowData);
+                    const errorMsg = checkTable(node, [normalized]);
                     if (errorMsg) {
                         node.tableValid = false;
                         RED.notify(errorMsg, "error");
@@ -766,7 +790,7 @@
                     if (!templateModels[node.id]) {
                         templateModels[node.id] = [];
                     }
-                    templateModels[node.id].unshift(rowData);
+                    templateModels[node.id].unshift(normalized);
                     pagenation.totalNumber += 1;
                     pagenation.pageTotal = Math.ceil(templateModels[node.id].length / pagenation.pageItem);
 				    renderTable(node, templateModels[node.id]);
@@ -784,7 +808,7 @@
 			});
 			
 			$('#node-file-item').on('change', function(e) {
-                uploadExcel(node, e.target.files[0]); // 获取选中的文件
+                uploadJson(node, e.target.files[0]); // 获取选中的文件
                 $(this).val('');
             });
 
@@ -834,7 +858,8 @@
 
             pagenation.pageNo = 1;
 
-            let thisModels = templateModels[node.id];
+            let thisModels = templateModels[node.id] || [];
+            templateModels[node.id] = thisModels;
            
             let errorMsg = checkTable(node, thisModels);
             if (errorMsg) {
@@ -854,16 +879,9 @@
                 this.modelShowName = selectedPrefix + this.modelShowName; 
             }
 
-            if (thisModels) {
-                if (thisModels.length > 0) {
-                    // build uns nodes
-                    postBuildUnsNode(node, thisModels, (node, models) => {
-                        saveTags(node, models);
-                    });
-                } else {
-                    saveTags(node, []);
-                }
-            }
+            this.mapping = convertRowsToMapping(thisModels);
+
+            saveTags(node, thisModels);
             
             if (!firstLoad) {
                 createDynamicMqttBroker(RED);
