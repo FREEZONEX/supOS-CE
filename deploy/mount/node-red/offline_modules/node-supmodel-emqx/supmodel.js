@@ -218,11 +218,11 @@ module.exports = function (RED) {
             if (Array.isArray(row)) {
                 [path, alias, propName, propType, tag] = row;
             } else {
-                path = row?.targetTopic || row?.path;
+                path = row?.topic || row?.Topic || row?.targetTopic || row?.path;
                 alias = row?.alias || row?.targetAlias;
-                propName = row?.targetField || row?.propName;
+                propName = row?.attributeName || row?.AttributeName || row?.targetField || row?.propName;
                 propType = row?.attributeType || row?.targetType || row?.propType || row?.type;
-                tag = row?.selector || row?.tag;
+                tag = row?.tagConfiguration || row?.TagConfiguration || row?.selector || row?.tag;
             }
             if (tag === undefined || tag === null) {
                 return;
@@ -266,9 +266,9 @@ module.exports = function (RED) {
         if (Array.isArray(item)) {
             return item;
         }
-        const selector = toSafeString(item.selector || item.tag || item.target || item.topicIndex);
-        const targetTopic = toSafeString(item.targetTopic || item.path || item.topic);
-        const targetField = toSafeString(item.targetField || item.propName || item.field || item.property);
+        const selector = toSafeString(item.tagConfiguration || item.TagConfiguration || item.selector || item.tag || item.target || item.topicIndex);
+        const targetTopic = toSafeString(item.topic || item.Topic || item.targetTopic || item.path || item.topic);
+        const targetField = toSafeString(item.attributeName || item.AttributeName || item.targetField || item.propName || item.field || item.property);
         const alias = toSafeString(item.alias || item.targetAlias);
         const propType = toSafeString(item.attributeType || item.targetType || item.propType || item.type);
         if (!selector && !targetTopic && !targetField) {
@@ -284,21 +284,21 @@ module.exports = function (RED) {
         return rows.map(row => {
             if (Array.isArray(row)) {
                 return {
-                    selector: row[4] !== undefined ? String(row[4]) : "",
-                    targetTopic: row[0] || "",
-                    targetField: row[2] || "",
+                    tagConfiguration: row[4] !== undefined ? String(row[4]) : "",
+                    topic: row[0] || "",
+                    attributeName: row[2] || "",
                     attributeType: row[3] || ""
                 };
             }
             if (row && typeof row === 'object') {
                 return {
-                    selector: toSafeString(row.selector || row.tag),
-                    targetTopic: toSafeString(row.targetTopic || row.path),
-                    targetField: toSafeString(row.targetField || row.propName),
+                    tagConfiguration: toSafeString(row.tagConfiguration || row.TagConfiguration || row.selector || row.tag),
+                    topic: toSafeString(row.topic || row.Topic || row.targetTopic || row.path),
+                    attributeName: toSafeString(row.attributeName || row.AttributeName || row.targetField || row.propName),
                     attributeType: toSafeString(row.attributeType || row.targetType || row.propType || row.type)
                 };
             }
-        }).filter(item => item && (item.selector || item.targetTopic || item.targetField));
+        }).filter(item => item && (item.tagConfiguration || item.topic || item.attributeName));
     }
 
     function toSafeString(value) {

@@ -119,15 +119,47 @@
             font-weight: bold;
             margin-bottom: 10px;
         }
+        .topic-tree {
+            border: 1px solid #d9d9d9;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 420px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
         .topic-tree ul {
             list-style: none;
             padding-left: 20px;
         }
         .topic-tree li {
             margin: 2px 0;
+            border-radius: 4px;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .topic-tree li:hover {
+            background: #f0f0f0;
+            box-shadow: inset 0 0 0 1px #d9d9d9;
         }
         .topic-tree label {
             cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .topic-tree input[type=checkbox] {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+        }
+        .toolbar-right {
+            float: right;
+            display: flex;
+            gap: 8px;
+        }
+        .tag-inline-input {
+            width: 80px;
+        }
+        .single-tab {
+            display: block;
         }
        
     </style>
@@ -135,19 +167,8 @@
         <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="supmodel.label_name"></span></label>
         <input type="text" id="node-config-input-name" data-i18n="[placeholder]supmodel.label_name"/>
     </div>
-    <div class="form-row">
-        <ul style="min-width: 600px; margin-bottom: 20px;" id="node-config-supmodel-tabs"></ul>
-    </div>
     <div id="node-config-supmodel-tabs-content" style="min-height:150px;min-width: 1000px;">	
-        <div id="supmodel-tab-basicinfo" style="display:none">
-
-            <div class="form-row node-input-broker">
-                <label for="node-config-input-broker"><i class="fa fa-server"></i> <span data-i18n="supmodel.label_server"></span></label>
-                <input type="text" id="node-config-input-broker" style="width: calc(100% - 300px);" disabled value="emqx">
-                <label for="node-config-input-port" style="margin-left:20px; width:43px; "> <span data-i18n="supmodel.label_port"></span></label>
-                <input type="text" id="node-config-input-port" data-i18n="[placeholder]mqtt.label.port" style="width:55px" disabled value="1883">
-            </div>
-
+        <div id="supmodel-tab-mappings" class="single-tab">
             <div class="form-row">
                 <label for="node-select-protocol"><i class="fa fa-cog"></i> <span data-i18n="supmodel.label_protocol"></label>
                 <select type="text" id="node-select-protocol" class="select-protocol" required  style="width: calc(100% - 300px);">
@@ -157,36 +178,18 @@
                     <option value="modbus">Modbus</option>
                     <option value="mqtt">MQTT</option>
                     <option value="mock">Direct</option>
-                    <!-- <option value="icmp">ICMP</option> -->
-                    <!-- <option value="custom" data-i18n="supmodel.custom_protocol"></option> -->
                 </select>
             </div>
-
-            <div class="dropdown-m form-row" style="display:none">
-                <label for="node-input-selectedModel"><i class="fa fa-cube"></i> <span data-i18n="supmodel.model_label_name"></span></label>
-                <input type="text" id="node-input-selectedModel" class="search-input-m" data-i18n="[placeholder]supmodel.model_input_placeholder"/>
-                <div class="select-dropdown-m" id="dropdownOptions"></div>
-            </div>
-            <!-- <div class="form-row">
-                <div id="errorMsg" style="position: absolute; left: 124px;"></div>
-            </div> -->
-            <!-- <div class="form-row">
-                <div style="display:inline">
-                    <label for="node-config-input-frequency"><i class="fa fa-refresh"></i> <span data-i18n="supmodel.label_frequency"></label>
-                    <input type="text" id="node-config-input-frequency" style="width: 100px;" value="100"> <span>ms</span>
-                </div>
-            </div> -->
-            <br>
-        </div>
-        <div id="supmodel-tab-mappings" style="display:none">
             <div class="form-row">
                 <input id="node-file-item" type="file" name="filename" accept=".json" style="display:none"/>
                 <button class="editor-button" id="node-btn-select-topic"><i class="fa fa-cube"></i> Select Topic</button>
                 <button class="editor-button" id="node-btn-item-add"><i class="fa fa-plus"></i> <span data-i18n="supmodel.label_add_one"></span></button>
                 <button class="editor-button" id="node-btn-item-remove"><i class="fa fa-trash"></i> <span data-i18n="supmodel.label_delete_all"></span></button>
                 <button class="editor-button" id="node-btn-item-dowbload"><i class="fa fa-arrow-circle-o-down"></i> <span data-i18n="supmodel.label_download_template"></span></button>
-                <button class="editor-button" id="node-btn-item-import" style="float:right"><i class="fa fa-upload"></i> <span data-i18n="supmodel.label_import"></span></button>
-                <button class="editor-button" id="node-btn-item-export" style="float:right; margin-left:10px;"><i class="fa fa-download"></i> <span data-i18n="supmodel.label_export"></span></button>
+                <span class="toolbar-right">
+                    <button class="editor-button" id="node-btn-item-export"><i class="fa fa-download"></i> <span data-i18n="supmodel.label_export"></span></button>
+                    <button class="editor-button" id="node-btn-item-import"><i class="fa fa-upload"></i> <span data-i18n="supmodel.label_import"></span></button>
+                </span>
             </div>
             <div id="node-table-models-form" style="margin-top:15px;border:1px solid #ddd;padding:10px">
                 <table class="node-table-models">
@@ -292,6 +295,10 @@
         return (value + '').trim();
     };
 
+    const sanitizeTagValue = (val) => {
+        return (val || '').toString().replace(/[^0-9]/g, '').slice(0, 1);
+    };
+
     const normalizeSingleMapping = (item) => {
         if (!item) {
             return null;
@@ -335,19 +342,19 @@
         }
         return rows.map(row => {
             return {
-                selector: row[4] !== undefined ? (row[4] + '') : '',
-                targetTopic: row[0] || '',
-                targetField: row[2] || '',
+                tagConfiguration: row[4] !== undefined ? (row[4] + '') : '',
+                topic: row[0] || '',
+                attributeName: row[2] || '',
                 attributeType: row[3] || ''
             }
-        }).filter(item => item.selector || item.targetTopic || item.targetField);
+        }).filter(item => item.tagConfiguration || item.topic || item.attributeName);
     };
 
     const normalizeRowData = (rowData) => {
         const topic = rowData[0] || '';
         const propName = rowData[1] || '';
         const propType = rowData[2] || '';
-        const tag = rowData[3] || '';
+        const tag = sanitizeTagValue(rowData[3] || '');
         return [topic, '', propName, propType, tag]; // Alias占位，AttributeType可为空
     };
 
@@ -361,9 +368,9 @@
             const alias = n.alias || '';
             const label = n.name || n.label || topic;
             const id = (n.id || topic || Math.random().toString(16).slice(2));
-            const icon = '<i class="fa fa-line-chart" style="margin-right:4px;"></i>';
-            return `<li>
-                <label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}"/>${icon}${label}</label>
+            const hasChild = childrenHtml ? 'has-child' : 'leaf';
+            return `<li class="${hasChild}">
+                <label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}"/><span class="tree-label">${label}</span></label>
                 ${childrenHtml}
             </li>`;
         }).join('')}</ul>`;
@@ -388,7 +395,9 @@
             },
             success: function(res) {
                 const normalized = normalizeMappingPayload(res.data);
-                templateModels[node.id] = normalized.length > 0 ? normalized : res.data;
+                const finalData = normalized.length > 0 ? normalized : res.data;
+                templateModels[node.id] = finalData;
+                rowEditable[node.id] = new Array(finalData.length).fill(true);
 
                 pagenation.pageNo = 1;
                 pagenation.totalNumber = templateModels[node.id].length;
@@ -442,6 +451,7 @@
                 if (res.data) {
                     const normalized = normalizeMappingPayload(res.data);
                     templateModels[nodeId] = normalized.length > 0 ? normalized : res.data;
+                    rowEditable[nodeId] = new Array(templateModels[nodeId].length).fill(false);
                 }
             },
             error: function(err) {
@@ -459,6 +469,8 @@
             data.map((row, index) => {
                         let start  = (pagenation.pageNo - 1) * pagenation.pageItem;
                         let id = start + index + 1;
+                        const globalIdx = id - 1;
+                        const editable = rowEditable[node.id] && rowEditable[node.id][globalIdx] === true;
                         const displayRow = [
                             row[0],
                             row[2],
@@ -466,8 +478,14 @@
                             row[4]
                         ];
                         return `<tr data-row="${index}"><td>${id}</td>${displayRow.map((cell, idx) => {
-                            const editable = idx === 3 ? 'editable' : '';
-                            return `<td class="cell ${editable}" data-col="${idx}" title="${cell==null?'':cell}">${cell==null?'':cell}</td>`
+                            if (editable) {
+                                if (idx === 3) {
+                                    return `<td><input type="number" class="tag-inline-input editable-tag" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
+                                }
+                                return `<td><input type="text" class="editable-cell" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
+                            }
+                            const editableTag = idx === 3 ? 'editable' : '';
+                            return `<td class="cell ${editableTag}" data-col="${idx}" title="${cell==null?'':cell}">${cell==null?'':cell}</td>`
                         }).join('')}<td><i class="fa fa-remove remove" title='delete'></i></dt></tr>`
                     }
             ).join('')
@@ -527,6 +545,9 @@
             let id = $(this).closest('tr').find("td:first").text();
             // 删除数组中元素
             templateModels[node.id].splice(id - 1, 1);
+            if (rowEditable[node.id]) {
+                rowEditable[node.id].splice(id - 1, 1);
+            }
             
             // 重新渲染表格
             let start  = (pagenation.pageNo - 1) * pagenation.pageItem;
@@ -546,18 +567,40 @@
         $('.cell.editable').on('dblclick', function() {
             const $td = $(this);
             const rowIdx = $td.closest('tr').data('row');
+            const globalIdx = (pagenation.pageNo -1)*pagenation.pageItem + rowIdx;
             const colIdx = Number($td.data('col'));
             const currentVal = $td.text();
-            const $input = $(`<input type="text" style="width:100%" value="${currentVal}"/>`);
+            const $input = $(`<input type="number" class="tag-inline-input" value="${currentVal}"/>`);
             $td.empty().append($input);
             $input.focus();
             $input.on('blur', function() {
-                const newVal = $(this).val();
-                let current = templateModels[node.id][rowIdx] || ['', '', '', '', ''];
+                const newVal = sanitizeTagValue($(this).val());
+                let current = templateModels[node.id][globalIdx] || ['', '', '', '', ''];
                 current[4] = newVal;
-                templateModels[node.id][rowIdx] = current;
+                templateModels[node.id][globalIdx] = current;
                 $td.text(newVal);
             });
+        });
+        $('.editable-cell').on('input', function() {
+            const rowIdx = $(this).closest('tr').data('row');
+            const colIdx = Number($(this).data('col'));
+            let current = templateModels[node.id][(pagenation.pageNo -1)*pagenation.pageItem + rowIdx] || ['', '', '', '', ''];
+            switch(colIdx) {
+                case 0: current[0] = $(this).val(); break;
+                case 1: current[2] = $(this).val(); break;
+                case 2: current[3] = $(this).val(); break;
+                case 3: current[4] = $(this).val(); break;
+            }
+            templateModels[node.id][(pagenation.pageNo -1)*pagenation.pageItem + rowIdx] = current;
+        });
+        $('.editable-tag').on('input', function() {
+            const rowIdx = $(this).closest('tr').data('row');
+            const globalIdx = (pagenation.pageNo -1)*pagenation.pageItem + rowIdx;
+            let current = templateModels[node.id][globalIdx] || ['', '', '', '', ''];
+            const newVal = sanitizeTagValue($(this).val());
+            current[4] = newVal;
+            $(this).val(newVal);
+            templateModels[node.id][globalIdx] = current;
         });
 
     };
@@ -677,7 +720,6 @@
                     // 切换到位号映射标签，并填充表格
                     const renderData = templateModels[node.id].slice(0, pagenation.pageItem);
                     renderTable(node, renderData);
-                    tabs.activateTab('supmodel-tab-mappings');
                 }
             },
             error: function(err) {
@@ -746,6 +788,7 @@
         };
     }
     let templateModels = {};
+    let rowEditable = {};
     let tabs;
     let topicTreeCache = [];
     
@@ -814,30 +857,16 @@
                 const normalized = normalizeMappingPayload(node.mapping);
                 if (normalized.length > 0) {
                     templateModels[node.id] = normalized;
+                    rowEditable[node.id] = new Array(normalized.length).fill(false);
                 }
             }
-
-            tabs = RED.tabs.create({
-                id: "node-config-supmodel-tabs",
-                onchange: function(tab) {
-                    $("#node-config-supmodel-tabs-content").children().hide();
-                    $("#" + tab.id).show();
-                }
-            });
-            tabs.addTab({
-                id: "supmodel-tab-basicinfo",
-                label: this._("supmodel.tab_basicinfo")
-            });
-            tabs.addTab({
-                id: "supmodel-tab-mappings",
-                label: this._("supmodel.tab_mappings")
-            });
-
-            // 设置推送频率
-            $("#node-config-input-frequency").spinner().val(100);
-            if (node.interval > 0) {
-                $('#node-config-input-frequency').val(node.interval);
+            if (!rowEditable[node.id]) {
+                rowEditable[node.id] = new Array((templateModels[node.id] || []).length).fill(false);
             }
+
+            $("#node-config-supmodel-tabs-content").children().hide();
+            $("#supmodel-tab-mappings").show();
+
             // 设置协议
             if (node.protocol) {
                 $('#node-select-protocol').val(node.protocol);
@@ -937,6 +966,9 @@
                     if (!templateModels[node.id]) {
                         templateModels[node.id] = [];
                     }
+                    if (!rowEditable[node.id]) {
+                        rowEditable[node.id] = [];
+                    }
                     let start = templateModels[node.id].length;
                     resArr.forEach((resWrap, idx) => {
                         const item = resWrap.item;
@@ -948,6 +980,7 @@
                         const alias = item.alias || body.alias || '';
                         if (node.protocol == 'mqtt') {
                             templateModels[node.id].push([body.path || item.topic, alias, '', '', (start + idx)+'']);
+                            rowEditable[node.id].push(true);
                         } else if (Array.isArray(body.fields)) {
                             body.fields.forEach((f, fi) => {
                                 if (f.systemField) {
@@ -956,6 +989,7 @@
                                 const fieldType = (f.type || '').toLowerCase();
                                 const tagVal = (start + idx + fi).toString();
                                 templateModels[node.id].push([body.path || item.topic, alias, f.name, fieldType, tagVal]);
+                                rowEditable[node.id].push(true);
                             });
                         }
                     });
@@ -976,11 +1010,7 @@
                 $('#preview-tbody').prepend("<tr class='dirty'><td>0</td></tr>")
                 // 掐头去尾
                 for (let i = 1; i < len -1; i++) {
-                    if (i < len -2) {
-                        $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%" disabled/></td>')
-                    } else {
-                        $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
-                    }
+                    $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
                 }
                 $('#preview-tbody .dirty').append('<td><i class="fa fa-remove remove"></i></dt>');
                 const applyInsert = () => {
@@ -1000,7 +1030,11 @@
                     if (!templateModels[node.id]) {
                         templateModels[node.id] = [];
                     }
+                    if (!rowEditable[node.id]) {
+                        rowEditable[node.id] = [];
+                    }
                     templateModels[node.id].unshift(normalized);
+                    rowEditable[node.id].unshift(true);
                     pagenation.totalNumber += 1;
                     pagenation.pageTotal = Math.ceil(templateModels[node.id].length / pagenation.pageItem);
 				    renderTable(node, templateModels[node.id]);
@@ -1013,9 +1047,10 @@
                 });
             });
 			
-			removeBtn.click(function() {
+            removeBtn.click(function() {
                 resetPage();
                 templateModels[node.id] = [];
+                rowEditable[node.id] = [];
 				renderTable(node, templateModels[node.id]);
 			});
 			
@@ -1050,6 +1085,9 @@
             if (!templateModels[node.id]) {
                 templateModels[node.id] = [];
             }
+            if (!rowEditable[node.id]) {
+                rowEditable[node.id] = new Array(templateModels[node.id].length).fill(false);
+            }
             pagenation.pageTotal = Math.ceil(templateModels[node.id].length / pagenation.pageItem);
             pagenation.totalNumber = templateModels[node.id].length;
 
@@ -1064,7 +1102,6 @@
                 node.selectedModelAlias = "";
             }
 
-            node.interval = $('#node-config-input-frequency').val();
             node.protocol = $('#node-select-protocol').val();
             node.name =  $('#node-config-input-name').val();
 
