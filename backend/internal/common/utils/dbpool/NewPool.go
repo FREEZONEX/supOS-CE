@@ -2,14 +2,50 @@ package dbpool
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
+var poolMap = make(map[string]*pgxpool.Pool, 4)
+var poolLock sync.RWMutex
+var initOnce sync.Once
+
 func NewPool(ctx context.Context, connString, appName string) (*pgxpool.Pool, error) {
+	poolLock.Lock()
+	defer poolLock.Unlock()
+	pool, err := newPool(ctx, connString, appName)
+	if err != nil {
+		return nil, err
+	}
+	poolMap[appName] = pool
+	initOnce.Do(func() {
+		go statsPool()
+	})
+	return pool, nil
+}
+func statsPool() {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			poolLock.RLock()
+			for name, pool := range poolMap {
+				stats := pool.Stat()
+				logx.Infof("[%s Stats] Total:%d Idle:%d Acquired:%d Max:%d", name,
+					stats.TotalConns(), stats.IdleConns(),
+					stats.AcquiredConns(), stats.MaxConns())
+			}
+			poolLock.RUnlock()
+		}
+	}
+}
+func newPool(ctx context.Context, connString, appName string) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
 		return nil, err

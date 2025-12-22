@@ -132,12 +132,19 @@ func OnCreate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrc
 		creates = base.Filter(creates, func(e *types.CreateTopicDto) bool {
 			return base.P2v(e.DataType) != constants.AlarmRuleType
 		})
-		tableInfoMap, er := ListTableInfos(dbPool, creates)
+		conn, er := dbPool.Acquire(context.Background())
+		if er != nil {
+			logPoolError("OnCreate:"+dataSrcId.Alias(), time.Time{}, dbPool, "getConn", er)
+			log.Error("ListTableInfos fail", er)
+			return er
+		}
+		defer conn.Release()
+		tableInfoMap, er := ListTableInfos(conn, creates)
 		if er != nil {
 			log.Error("ListTableInfos fail", er)
 			return er
 		}
-		Errors := BatchCreateTables(dbPool, defaultSchema, creates, tableInfoMap)
+		Errors := BatchCreateTables(conn, defaultSchema, creates, tableInfoMap)
 		if len(Errors) > 0 {
 			log.Error("BatchCreateTables fail", Errors)
 			return Errors[0]
@@ -150,12 +157,19 @@ func OnUpdate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrc
 		return e.FieldsChanged && e.GetSrcJdbcType() == dataSrcId
 	})
 	if len(topicList) > 0 {
-		tableInfoMap, er := ListTableInfos(dbPool, topicList)
+		conn, er := dbPool.Acquire(context.Background())
+		if er != nil {
+			logPoolError("OnUpdate:"+dataSrcId.Alias(), time.Time{}, dbPool, "getConn", er)
+			log.Error("OnUpdate fail", er)
+			return er
+		}
+		defer conn.Release()
+		tableInfoMap, er := ListTableInfos(conn, topicList)
 		if er != nil {
 			log.Error("ListTableInfos fail", er)
 			return er
 		}
-		Errors := BatchCreateTables(dbPool, defaultSchema, topicList, tableInfoMap)
+		Errors := BatchCreateTables(conn, defaultSchema, topicList, tableInfoMap)
 		if len(Errors) > 0 {
 			log.Error("BatchUpdate fail", Errors)
 			return Errors[0]
@@ -179,7 +193,16 @@ func OnRemove(log errLogger, dbPool *pgxpool.Pool, dataSrcId types.SrcJdbcType, 
 		}
 	}
 	if len(batch.QueuedQueries) > 0 {
-		br := dbPool.SendBatch(context.Background(), batch)
+		conn, er := dbPool.Acquire(context.Background())
+		if er != nil {
+			logPoolError("OnRemove:"+dataSrcId.Alias(), time.Time{}, dbPool, "getConn", er)
+			log.Error("OnRemove fail", er)
+			return
+		}
+		defer conn.Release()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		br := conn.SendBatch(ctx, batch)
+		defer cancel()
 		for i := 0; i < batch.Len(); i++ {
 			_, err := br.Exec()
 			if err != nil {

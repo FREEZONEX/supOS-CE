@@ -477,6 +477,52 @@
         $('#total-pages').text(pagenation.pageTotal);
         $('#total-number').text(pagenation.totalNumber);
         //注册删除和修改事件
+        // $('.edit').on('click', function() {
+        //     if ($(this).hasClass('fa-pencil')) {
+
+        //         $(this).removeClass("fa-pencil").addClass("fa-check");
+        //         const len = $(this).closest('tr').find('td').length;
+
+        //         $(this).closest('tr').find('td').each(function(index) {
+        //             const val = $(this).text();
+        //             // 为了去掉头尾，取值中间项
+        //             if (index < (len-1) && index > 0) {
+        //                 if (index == (len-2)) {
+        //                     $(this).html(`<input type="text" value="${val}" style="width: 100%"/>`)
+        //                 } else {
+        //                     $(this).html(`<input disabled type="text" value="${val}" style="width: 100%"/>`)
+        //                 }
+        //             }
+        //         });
+        //     } else {
+        //         let id = $(this).closest('tr').find("td:first").text();
+
+        //         $(this).removeClass("fa-check").addClass("fa-pencil");
+                
+        //         const len = $(this).closest('tr').find('td').length;
+
+        //         $(this).closest('tr').find('td').each(function(index) {
+        //             const val = $(this).find('input, select').val();
+        //             // 为了去掉头尾，取值中间项
+        //             if (index < (len-1) && index > 0) {
+        //                 $(this).text(val);
+        //             }
+        //         });
+        //         const rowData = $(this).closest('tr').map(function() {
+        //             return $(this).find("td").map(function(index) {
+        //                 // 为了去掉头尾，取值中间项
+        //                 if (index < (len-1) && index > 0) {
+        //                     return $(this).text();
+        //                 }
+        //             }).get();
+        //         }).get();
+
+        //         const normalized = normalizeRowData(rowData);
+        //         templateModels[node.id][id - 1] = normalized;
+        //     }
+            
+        // });
+
         $('.remove').on('click', function() {
             let id = $(this).closest('tr').find("td:first").text();
             // 删除数组中元素
