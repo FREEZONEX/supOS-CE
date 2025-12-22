@@ -12,6 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type tableProcessInfo struct {
@@ -54,6 +55,13 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	}
 	tbs := base.MapValues(tableInfoMap)
 	var allErrors []string
+	conn, er := dbPool.Acquire(context.Background())
+	if er != nil {
+		logPoolError("pg_persistence", time.Time{}, dbPool, "getConn", er)
+		logx.Error("pg_persistence fail", er)
+		return er
+	}
+	defer conn.Release()
 	// 分批处理大数据量
 	for _, segment := range base.Partition(tbs, batchSize) {
 		var batch = &pgx.Batch{}
@@ -62,7 +70,7 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 			batch.Queue(sql, params...)
 		}
 		// 执行批次
-		err := execBatch(dbPool, batchTask{batch: batch, uns: segment}, defaultSchema, 0)
+		err := execBatch(conn, batchTask{batch: batch, uns: segment}, defaultSchema, 0)
 		if err != nil {
 			allErrors = append(allErrors, err.Error())
 		}
@@ -79,13 +87,13 @@ type batchTask struct {
 	uns   []*tableProcessInfo
 }
 
-func execBatch(dbPool *pgxpool.Pool, task batchTask, defaultSchema string, retry int) error {
+func execBatch(conn *pgxpool.Conn, task batchTask, defaultSchema string, retry int) error {
 	var retryTask = batchTask{}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	br := dbPool.SendBatch(ctx, task.batch)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	br := conn.SendBatch(ctx, task.batch)
 
 	defer func() {
-		br.Close()
+		_ = br.Close()
 		cancel()
 	}()
 	for i, seg := range task.uns {
@@ -108,12 +116,12 @@ func execBatch(dbPool *pgxpool.Pool, task batchTask, defaultSchema string, retry
 		uns := base.Map[*tableProcessInfo, *types.CreateTopicDto](retryTask.uns, func(e *tableProcessInfo) *types.CreateTopicDto {
 			return e.def
 		})
-		tableInfoMap, er := ListTableInfos(dbPool, uns)
+		tableInfoMap, er := ListTableInfos(conn, uns)
 		if er != nil {
 			return er
 		}
-		BatchCreateTables(dbPool, defaultSchema, uns, tableInfoMap)
-		return execBatch(dbPool, retryTask, defaultSchema, retry+1)
+		BatchCreateTables(conn, defaultSchema, uns, tableInfoMap)
+		return execBatch(conn, retryTask, defaultSchema, retry+1)
 	}
 	return nil
 }

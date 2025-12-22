@@ -134,13 +134,15 @@ func queryColumnInfo(query queryer, schema string, tables []string, allMap map[s
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := query.Query(ctx, sql, params...)
+	if rows != nil {
+		defer rows.Close()
+	}
 	if err != nil {
 		if pool, isPool := query.(*pgxpool.Pool); isPool {
 			logPoolError("queryColumnInfo", start, pool, sql, err)
 		}
 		return err
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		var tableName, columnName, udtName string
@@ -190,14 +192,15 @@ func queryPrimaryKeys(query queryer, schema string, tables []string, allMap map[
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := query.Query(ctx, sql, params...)
+	if rows != nil {
+		defer rows.Close()
+	}
 	if err != nil {
 		if pool, isPool := query.(*pgxpool.Pool); isPool {
 			logPoolError("queryPrimaryKeys", start, pool, sql, err)
 		}
 		return err
 	}
-	defer rows.Close()
-
 	for rows.Next() {
 		var tableName, columnName string
 		var isPrimary bool
