@@ -16,8 +16,8 @@ source $SCRIPT_DIR/../../.env.tmp
 PORTAINER_JWT=`docker exec nodered curl -skX POST https://portainer:9443/api/auth      -H "Content-Type: application/json"      -d '{"username": "admin", "password": "adminpassword"}' | awk -F'"' '/jwt/ {print $4}'` && echo "Successfully got Portainer JWT"\
 || if [ "$1" == "--verbose" ]; then warn "Failed to obtain JWT from Portainer"; fi
 
-docker exec nodered curl -skX POST "https://portainer:9443/api/users"   -H "Authorization: Bearer $PORTAINER_JWT"   -H "Content-Type: application/json"   -d '{    "Username": "supos",    "Password": "Supos@13041304",    "Email": "supos@supos.com","Role": 1 }' > /dev/null 2>&1 && echo "Successfully created administrator 'supos'"\
-|| if [ "$1" == "--verbose" ]; then warn "Failed to create administrator 'supos'"; fi
+docker exec nodered curl -skX POST "https://portainer:9443/api/users"   -H "Authorization: Bearer $PORTAINER_JWT"   -H "Content-Type: application/json"   -d '{    "Username": "tier0",    "Password": "tier0",    "Email": "tier0@supos.com","Role": 1 }' > /dev/null 2>&1 && echo "Successfully created administrator 'tier0'"\
+|| if [ "$1" == "--verbose" ]; then warn "Failed to create administrator 'tier0'"; fi
 
 if [ "$ENTRANCE_DOMAIN" = "127.0.0.1" ] || [ "$ENTRANCE_DOMAIN" = "localhost" ]; then
   info "ENTRANCE_DOMAIN=$ENTRANCE_DOMAIN, disabling Portainer OAuth ..."
@@ -37,14 +37,14 @@ else
     -d "{
       \"authenticationMethod\": 3,
       \"oauthSettings\": {
-        \"AccessTokenURI\": \"$BASE_URL/keycloak/home/auth/realms/supos/protocol/openid-connect/token\",
+        \"AccessTokenURI\": \"$BASE_URL/keycloak/home/auth/realms/tier0/protocol/openid-connect/token\",
         \"AuthStyle\": 0,
-        \"AuthorizationURI\": \"$BASE_URL/keycloak/home/auth/realms/supos/protocol/openid-connect/auth\",
+        \"AuthorizationURI\": \"$BASE_URL/keycloak/home/auth/realms/tier0/protocol/openid-connect/auth\",
         \"ClientID\": \"$OAUTH_CLIENT_ID\",
         \"ClientSecret\": \"$OAUTH_CLIENT_SECRET\",
         \"OAuthAutoCreateUsers\": true,
         \"RedirectURI\": \"$BASE_URL/portainer/home/\",
-        \"ResourceURI\": \"$BASE_URL/keycloak/home/auth/realms/supos/protocol/openid-connect/userinfo\",
+        \"ResourceURI\": \"$BASE_URL/keycloak/home/auth/realms/tier0/protocol/openid-connect/userinfo\",
         \"SSO\": true,
         \"UserIdentifier\":\"preferred_username\",
         \"Scopes\":\"openid\"
