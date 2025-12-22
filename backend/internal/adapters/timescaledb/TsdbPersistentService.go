@@ -10,7 +10,6 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -41,21 +40,6 @@ func init() {
 			log.Error("timescaledb init fail", er)
 			return nil
 		}
-		go func() {
-			ticker := time.NewTicker(1 * time.Minute)
-			defer ticker.Stop()
-			for {
-				select {
-				case <-ticker.C:
-					stats := pool.Stat()
-					log.Infof("[PG Pool Stats] Total:%d Idle:%d Acquired:%d Max:%d",
-						stats.TotalConns(), stats.IdleConns(),
-						stats.AcquiredConns(), stats.MaxConns())
-				case <-ctx.Done():
-					return
-				}
-			}
-		}()
 		log.Info("timescaledb init success, url: ", url)
 		return &TsdbPersistentService{
 			log:           log,

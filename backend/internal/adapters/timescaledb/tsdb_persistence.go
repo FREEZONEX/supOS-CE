@@ -31,11 +31,11 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	if len(unsData) == 0 {
 		return nil
 	}
-
 	// 获取单个连接
 	ctx := context.Background()
 	conn, err := dbPool.Acquire(ctx)
 	if err != nil {
+		logPoolError("persistence", time.Time{}, dbPool, "getConn", err)
 		return fmt.Errorf("获取数据库连接失败: %v", err)
 	}
 	defer conn.Release()
@@ -75,7 +75,7 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	var allErrors []string
 
 	// 步骤1: 在一个SendBatch中创建所有临时表
-	if err := createAllTempTables(dbPool, conn, defaultSchema, tableInfos, 0); err != nil {
+	if err := createAllTempTables(conn, defaultSchema, tableInfos, 0); err != nil {
 		allErrors = append(allErrors, fmt.Sprintf("创建临时表失败: %v", err))
 		return fmt.Errorf("处理失败: %s", strings.Join(allErrors, "; "))
 	}
@@ -105,7 +105,7 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	return nil
 }
 
-func createAllTempTables(dbPool *pgxpool.Pool, conn *pgxpool.Conn, defaultSchema string, tableInfos []*tableProcessInfo, retry int) error {
+func createAllTempTables(conn *pgxpool.Conn, defaultSchema string, tableInfos []*tableProcessInfo, retry int) error {
 	batch := &pgx.Batch{}
 
 	// 为每个表添加创建临时表的操作
@@ -138,8 +138,8 @@ func createAllTempTables(dbPool *pgxpool.Pool, conn *pgxpool.Conn, defaultSchema
 			return e.def
 		})
 		tableInfoMap, _ := postgresql.ListTableInfos(conn, uns)
-		postgresql.BatchCreateTables(dbPool, defaultSchema, uns, tableInfoMap)
-		return createAllTempTables(dbPool, conn, defaultSchema, retryTables, retry+1)
+		postgresql.BatchCreateTables(conn, defaultSchema, uns, tableInfoMap)
+		return createAllTempTables(conn, defaultSchema, retryTables, retry+1)
 	}
 	return br.Close()
 }
@@ -249,4 +249,16 @@ func mergeAllTables(conn *pgxpool.Conn, tableInfos []*tableProcessInfo) error {
 	}
 
 	return br.Close()
+}
+func logPoolError(name string, start time.Time, pool *pgxpool.Pool, sql string, err error) {
+	if !start.IsZero() {
+		duration := time.Since(start)
+		stats := pool.Stat()
+		logx.Errorf("[%s FAILED] sql:%s, err:%v, duration:%v, poolStats:(Total:%d, Idle:%d, Acquired:%d)", name,
+			sql, err, duration, stats.TotalConns(), stats.IdleConns(), stats.AcquiredConns())
+	} else {
+		stats := pool.Stat()
+		logx.Errorf("[%s FAILED] sql:%s, err:%v, poolStats:(Total:%d, Idle:%d, Acquired:%d)", name,
+			sql, err, stats.TotalConns(), stats.IdleConns(), stats.AcquiredConns())
+	}
 }
