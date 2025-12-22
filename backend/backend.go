@@ -35,8 +35,6 @@ func main() {
 		confFile = "etc/backend-local.yaml"
 	}
 	utils.ConfMustLoad(confFile, &c)
-	c.RestConf.MaxBytes = max(c.RestConf.MaxBytes, 1<<30) //http body最大限制最少1G
-
 	server := rest.MustNewServer(c.RestConf, rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
 	defer server.Stop()
 
