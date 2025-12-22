@@ -1,0 +1,12 @@
+[
+    {
+      "selector": "0",
+      "targetTopic": "v1/Factory/Line1/Motor/Metric/Power",
+      "targetField": "voltage"
+    },
+    {
+      "selector": "1",
+      "targetTopic": "v1/Factory/Line1/Motor/Metric/Power",
+      "targetField": "current"
+    }
+]
