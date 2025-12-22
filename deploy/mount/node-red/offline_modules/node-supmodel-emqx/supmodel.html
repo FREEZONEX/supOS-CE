@@ -404,9 +404,9 @@
                     // 为了去掉头尾，取值中间项
                     if (index < (len-1) && index > 0) {
                         if (index == (len-2)) {
-                            $(this).html(`<input disabled type="text" value="${val}" style="width: 100%"/>`)
-                        } else {
                             $(this).html(`<input type="text" value="${val}" style="width: 100%"/>`)
+                        } else {
+                            $(this).html(`<input disabled type="text" value="${val}" style="width: 100%"/>`)
                         }
                     }
                 });
