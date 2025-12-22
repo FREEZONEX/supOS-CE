@@ -5,6 +5,7 @@ import (
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/spring"
 	"context"
 	"net/http"
 
@@ -21,23 +22,19 @@ type GetByUnsLogic struct {
 }
 
 func NewGetByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetByUnsLogic {
-	db := relationDB.GetDb(ctx)
-	// Note: UnsQueryService might be managed by spring, adjust if needed
-	unsQueryService := &unsservice.UnsQueryService{}
-
 	return &GetByUnsLogic{
-		Logger:             logx.WithContext(ctx),
-		ctx:                ctx,
-		svcCtx:             svcCtx,
-		dashboardRefMapper: relationDB.NewDashboardRefMapper(db, ctx),
-		unsQueryService:    unsQueryService,
+		Logger:          logx.WithContext(ctx),
+		ctx:             ctx,
+		svcCtx:          svcCtx,
+		unsQueryService: spring.GetBean[*unsservice.UnsQueryService](),
 	}
 }
 
 func (l *GetByUnsLogic) GetByUns(unsAlias string) (*types.JsonResult, error) {
 	// TODO: As identified before, the DTO from GetModelDefinition lacks the 'Refers' field.
 	// This logic is simplified until the UNS service provides the necessary details.
-	dashboard, err := l.dashboardRefMapper.GetByUns(unsAlias)
+	db := relationDB.GetDb(l.ctx)
+	dashboard, err := l.dashboardRefMapper.GetByUns(db, unsAlias)
 	if err != nil {
 		return &types.JsonResult{
 			Code: http.StatusInternalServerError,

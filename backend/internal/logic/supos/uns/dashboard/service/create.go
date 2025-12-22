@@ -16,8 +16,8 @@ import (
 func (s *DashboardService) Create(ctx context.Context, req *relationDB.DashboardModel, creator string) (*types.JsonResult, error) {
 	// 检查名称是否重复
 	db := relationDB.GetDb(ctx)
-	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
-	dashboards, _ := dashboardMapper.SelectByNameAndType(req.Name, req.Type)
+	dashboardMapper := relationDB.DashboardMapper{}
+	dashboards, _ := dashboardMapper.SelectByNameAndType(db, req.Name, req.Type)
 	if len(dashboards) > 0 {
 		return &types.JsonResult{
 			Code: 500,
@@ -54,7 +54,7 @@ func (s *DashboardService) Create(ctx context.Context, req *relationDB.Dashboard
 	}
 
 	// 保存到数据库
-	err := dashboardMapper.Insert(req)
+	err := dashboardMapper.Insert(db, req)
 	if err != nil {
 		s.logger.Errorf("failed to save dashboard: %v", err)
 		return &types.JsonResult{

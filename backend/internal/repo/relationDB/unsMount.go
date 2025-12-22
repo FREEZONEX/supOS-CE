@@ -12,8 +12,8 @@ type UnsMountRepo struct {
 	db *gorm.DB
 }
 
-func NewUnsMountRepo(in any) *UnsMountRepo {
-	return &UnsMountRepo{db: stores.GetCommonConn(in)}
+func NewUnsMountRepo(ctx context.Context) *UnsMountRepo {
+	return &UnsMountRepo{db: GetDb(ctx)}
 }
 
 type UnsMountFilter struct {

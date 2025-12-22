@@ -7,6 +7,7 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 	"backend/share/base"
+	"backend/share/spring"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -22,26 +23,21 @@ type CreateGrafanaByUnsLogic struct {
 	logx.Logger
 	ctx                context.Context
 	svcCtx             *svc.ServiceContext
-	dashboardMapper    *relationDB.DashboardMapper
-	dashboardRefMapper *relationDB.DashboardRefMapper
+	dashboardMapper    relationDB.DashboardMapper
+	dashboardRefMapper relationDB.DashboardRefMapper
 	unsQueryService    *unsservice.UnsQueryService
 	unsUpdateService   *unsservice.UnsUpdateService
 }
 
 func NewCreateGrafanaByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateGrafanaByUnsLogic {
-	db := relationDB.GetDb(ctx)
 	// Note: Services might be managed by spring, adjust if needed
-	unsQueryService := &unsservice.UnsQueryService{}
-	unsUpdateService := &unsservice.UnsUpdateService{}
 
 	return &CreateGrafanaByUnsLogic{
-		Logger:             logx.WithContext(ctx),
-		ctx:                ctx,
-		svcCtx:             svcCtx,
-		dashboardMapper:    relationDB.NewDashboardMapper(db, ctx),
-		dashboardRefMapper: relationDB.NewDashboardRefMapper(db, ctx),
-		unsQueryService:    unsQueryService,
-		unsUpdateService:   unsUpdateService,
+		Logger:           logx.WithContext(ctx),
+		ctx:              ctx,
+		svcCtx:           svcCtx,
+		unsQueryService:  spring.GetBean[*unsservice.UnsQueryService](),
+		unsUpdateService: spring.GetBean[*unsservice.UnsUpdateService](),
 	}
 }
 
@@ -57,8 +53,9 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	}
 	unsDef := unsResp.Data
 
+	db := relationDB.GetDb(l.ctx)
 	// 2. 检查是否已有关联的 Dashboard
-	existingDashboard, err := l.dashboardRefMapper.GetByUns(alias)
+	existingDashboard, err := l.dashboardRefMapper.GetByUns(db, alias)
 	if err != nil {
 		l.Logger.Errorf("error checking for existing dashboard for uns %s: %v", alias, err)
 		// Fall through, but log the error
@@ -103,7 +100,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 		JsonContent: dashboardJSON,
 		NeedInit:    false, // 已在 Grafana 中创建
 	}
-	if err = l.dashboardMapper.Insert(dashboard); err != nil {
+	if err = l.dashboardMapper.Insert(db, dashboard); err != nil {
 		l.Logger.Errorf("failed to save dashboard record for uns %s: %v", alias, err)
 		// 尝试回滚 Grafana 的创建操作
 		_ = grafanautil.DeleteDashboard(dashboardUID)
@@ -119,7 +116,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 		UnsAlias:    alias,
 		CreateAt:    now,
 	}
-	if err = l.dashboardRefMapper.Insert(ref); err != nil {
+	if err = l.dashboardRefMapper.Insert(db, ref); err != nil {
 		l.Logger.Errorf("failed to bind dashboard %s to uns %s: %v", dashboardUID, alias, err)
 		return &types.JsonResult{
 			Code: http.StatusInternalServerError,

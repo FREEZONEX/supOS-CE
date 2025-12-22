@@ -22,8 +22,8 @@ type NoderedSourceFlowRepo struct {
 	db *gorm.DB
 }
 
-func NewNoderedSourceFlowRepo(in any) *NoderedSourceFlowRepo {
-	return &NoderedSourceFlowRepo{db: stores.GetCommonConn(in)}
+func NewNoderedSourceFlowRepo(in context.Context) *NoderedSourceFlowRepo {
+	return &NoderedSourceFlowRepo{db: GetDb(in)}
 }
 
 type NoderedSourceFlowFilter struct {

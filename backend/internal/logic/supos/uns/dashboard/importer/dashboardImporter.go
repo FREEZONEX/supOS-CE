@@ -95,11 +95,11 @@ func (i *DashboardDataImporter) handleImportData() error {
 		ids = append(ids, dashboard.ID)
 		names = append(names, dashboard.Name)
 	}
-
+	db := relationDB.GetDb(context.Background())
 	// 检查 ID 是否已存在
 	existByID := make(map[string]bool)
 	for _, id := range ids {
-		existing, err := i.dashboardMapper.SelectById(id)
+		existing, err := i.dashboardMapper.SelectById(db, id)
 		if err != nil {
 			return err
 		}
@@ -109,7 +109,7 @@ func (i *DashboardDataImporter) handleImportData() error {
 	}
 
 	// 检查名称是否已存在
-	existingByNames, err := i.dashboardMapper.SelectByFlowNames(names)
+	existingByNames, err := i.dashboardMapper.SelectByFlowNames(db, names)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (i *DashboardDataImporter) handleImportData() error {
 	// 批量插入数据
 	if len(addList) > 0 {
 		for _, dashboard := range addList {
-			if err := i.dashboardMapper.Insert(dashboard); err != nil {
+			if err := i.dashboardMapper.Insert(db, dashboard); err != nil {
 				i.logger.Errorf("failed to insert dashboard: %v", err)
 				i.context.AddError(dashboard.ID, err.Error())
 				continue

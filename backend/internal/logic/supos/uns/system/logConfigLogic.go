@@ -4,6 +4,7 @@
 package system
 
 import (
+	"backend/internal/common/utils/loggerlevel"
 	"context"
 	"log"
 	"strings"
@@ -44,10 +45,8 @@ func (l *LogConfigLogic) LogConfig(req *types.LogConfigRequest) (resp *types.Log
 	if req.Level != "" {
 		SetLogLevel(req.Level)
 	}
-	return &types.LogConfigResponse{Level: currentLevel}, nil
+	return &types.LogConfigResponse{Level: loggerlevel.CurrentLevel}, nil
 }
-
-var currentLevel = "INFO"
 
 func SetLogLevel(level string) bool {
 	level = strings.ToLower(strings.TrimSpace(level))
@@ -66,9 +65,9 @@ func SetLogLevel(level string) bool {
 		ok = false
 	}
 	if ok {
-		currentLevel = level
+		loggerlevel.CurrentLevel = level
 		logx.SetLevel(levelInt)
 	}
-	log.Println("Set log level to ", currentLevel, ok)
+	log.Println("Set log level to ", loggerlevel.CurrentLevel, ok)
 	return ok
 }

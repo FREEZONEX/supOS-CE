@@ -12,8 +12,8 @@ type UnsAttachmentRepo struct {
 	db *gorm.DB
 }
 
-func NewUnsAttachmentRepo(in any) *UnsAttachmentRepo {
-	return &UnsAttachmentRepo{db: stores.GetCommonConn(in)}
+func NewUnsAttachmentRepo(in context.Context) *UnsAttachmentRepo {
+	return &UnsAttachmentRepo{db: GetDb(in)}
 }
 
 type UnsAttachmentFilter struct {

@@ -19,16 +19,14 @@ type PageListLogic struct {
 	logx.Logger
 	ctx             context.Context
 	svcCtx          *svc.ServiceContext
-	dashboardMapper *relationDB.DashboardMapper
+	dashboardMapper relationDB.DashboardMapper
 }
 
 func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageListLogic {
-	db := relationDB.GetDb(ctx)
 	return &PageListLogic{
-		Logger:          logx.WithContext(ctx),
-		ctx:             ctx,
-		svcCtx:          svcCtx,
-		dashboardMapper: relationDB.NewDashboardMapper(db, ctx),
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
 	}
 }
 
@@ -58,16 +56,16 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	if descOrAsc == "" || descOrAsc != "ASC" {
 		descOrAsc = "DESC"
 	}
-
+	db := relationDB.GetDb(l.ctx)
 	// 查询总数
-	total, err := l.dashboardMapper.SelectDashboardCount(keyword, req.Type)
+	total, err := l.dashboardMapper.SelectDashboardCount(db, keyword, req.Type)
 	if err != nil {
 		return nil, err
 	}
 	pageResult.Total = total
 
 	// 查询数据
-	dashboards, err := l.dashboardMapper.SelectDashboard(userID, keyword, req.Type, orderCode, descOrAsc, int64(req.PageNum), int64(req.PageSize))
+	dashboards, err := l.dashboardMapper.SelectDashboard(db, userID, keyword, req.Type, orderCode, descOrAsc, int64(req.PageNum), int64(req.PageSize))
 	if err != nil {
 		return nil, err
 	}

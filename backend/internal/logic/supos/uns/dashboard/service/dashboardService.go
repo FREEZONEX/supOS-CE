@@ -47,8 +47,9 @@ func NewDashboardService() *DashboardService {
 // InitDashboardsOnStartup 应用启动时初始化 Dashboard
 func (s *DashboardService) InitDashboardsOnStartup(ctx context.Context) {
 	go func() {
-		dashboardMapper := relationDB.NewDashboardMapper(relationDB.GetDb(ctx), ctx)
-		dashboards, err := dashboardMapper.SelectDashboardsToInit()
+		dashboardMapper := relationDB.DashboardMapper{}
+		db := relationDB.GetDb(ctx)
+		dashboards, err := dashboardMapper.SelectDashboardsToInit(db)
 		if err != nil {
 			s.logger.Errorf("failed to select dashboards to init: %v", err)
 			return
@@ -60,14 +61,14 @@ func (s *DashboardService) InitDashboardsOnStartup(ctx context.Context) {
 		}
 
 		s.logger.Infof("dashboards to initialize: %d", len(dashboards))
-		for _, db := range dashboards {
-			if db.JsonContent == "" {
+		for _, dashboard := range dashboards {
+			if dashboard.JsonContent == "" {
 				continue
 			}
 
 			var dashboardData map[string]any
-			if err := json.Unmarshal([]byte(db.JsonContent), &dashboardData); err != nil {
-				s.logger.Errorf("failed to unmarshal dashboard json content for %s: %v", db.Name, err)
+			if err := json.Unmarshal([]byte(dashboard.JsonContent), &dashboardData); err != nil {
+				s.logger.Errorf("failed to unmarshal dashboard json content for %s: %v", dashboard.Name, err)
 				continue
 			}
 
@@ -84,11 +85,11 @@ func (s *DashboardService) InitDashboardsOnStartup(ctx context.Context) {
 			// 检查 Grafana 中是否已存在
 			existing, _ := grafanautil.GetDashboardByUUID(uid)
 			if existing != nil {
-				db.NeedInit = false
-				if err := dashboardMapper.UpdateById(db); err != nil {
-					s.logger.Errorf("failed to update dashboard init status for %s: %v", db.Name, err)
+				dashboard.NeedInit = false
+				if err := dashboardMapper.UpdateById(db, dashboard); err != nil {
+					s.logger.Errorf("failed to update dashboard init status for %s: %v", dashboard.Name, err)
 				}
-				s.logger.Infof("dashboard %s already initialized", db.Name)
+				s.logger.Infof("dashboard %s already initialized", dashboard.Name)
 				continue
 			}
 
@@ -97,13 +98,13 @@ func (s *DashboardService) InitDashboardsOnStartup(ctx context.Context) {
 			jsonBytes, _ := json.Marshal(dashboardData)
 			_, err = grafanautil.CreateDashboardByBody(uid, "", string(jsonBytes))
 			if err != nil {
-				s.logger.Errorf("failed to initialize dashboard %s: %v", db.Name, err)
+				s.logger.Errorf("failed to initialize dashboard %s: %v", dashboard.Name, err)
 			} else {
-				db.NeedInit = false
-				if err := dashboardMapper.UpdateById(db); err != nil {
-					s.logger.Errorf("failed to update dashboard init status for %s after creation: %v", db.Name, err)
+				dashboard.NeedInit = false
+				if err := dashboardMapper.UpdateById(db, dashboard); err != nil {
+					s.logger.Errorf("failed to update dashboard init status for %s after creation: %v", dashboard.Name, err)
 				}
-				s.logger.Infof("dashboard %s initialized successfully", db.Name)
+				s.logger.Infof("dashboard %s initialized successfully", dashboard.Name)
 			}
 		}
 	}()
@@ -118,11 +119,11 @@ func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) e
 		return e.GetAlias()
 	})
 	s.logger.Infof("removing dashboards for topics: %v", aliasList)
-	dashboardRefMapper := relationDB.NewDashboardRefMapper(relationDB.GetDb(event.Context), event.Context)
-	dashboardMapper := relationDB.NewDashboardMapper(relationDB.GetDb(event.Context), event.Context)
-
+	dashboardRefMapper := relationDB.DashboardRefMapper{}
+	dashboardMapper := relationDB.DashboardMapper{}
+	db := relationDB.GetDb(event.Context)
 	// 1. 根据别名查询关联的 dashboard ID
-	refs, err := dashboardRefMapper.SelectByUnsAliases(aliasList)
+	refs, err := dashboardRefMapper.SelectByUnsAliases(db, aliasList)
 	if err != nil {
 		s.logger.Errorf("failed to select dashboard refs by aliases: %v", err)
 		return err
@@ -137,7 +138,7 @@ func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) e
 	}
 
 	// 2. 批量删除 dashboard
-	return dashboardMapper.DeleteBatchIds(idsToDelete)
+	return dashboardMapper.DeleteBatchIds(db, idsToDelete)
 }
 
 // OnEventCreateDashboard 通过事件创建 Dashboard
@@ -156,8 +157,8 @@ func (s *DashboardService) OnEventCreateDashboard(event *event.CreateDashboardEv
 	}
 
 	db := relationDB.GetDb(event.Context)
-	dashboardMapper := relationDB.NewDashboardMapper(db, event.Context)
-	err := dashboardMapper.Insert(dashboard)
+	dashboardMapper := relationDB.DashboardMapper{}
+	err := dashboardMapper.Insert(db, dashboard)
 	if err != nil {
 		s.logger.Errorf("failed to insert dashboard by event: %v", err)
 		return err
@@ -169,17 +170,16 @@ func (s *DashboardService) OnEventCreateDashboard(event *event.CreateDashboardEv
 		UnsAlias:    event.Name, // 假设 alias 和 name 相同
 		CreateAt:    now,
 	}
-	dashboardRefMapper := relationDB.NewDashboardRefMapper(db, event.Context)
-	return dashboardRefMapper.Insert(ref)
+	dashboardRefMapper := relationDB.DashboardRefMapper{}
+	return dashboardRefMapper.Insert(db, ref)
 }
 
 // DataExport 导出 Dashboard 数据
 func (s *DashboardService) DataExport(ctx context.Context, db *gorm.DB, exportParam *dto.DashboardExportParam) (string, error) {
-	context := &exporter.DashboardExportContext{}
-	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
+	exportCtx := &exporter.DashboardExportContext{}
 
 	// 1. 获取数据
-	err := s.fetchDataForExport(context, dashboardMapper, exportParam)
+	err := s.fetchDataForExport(ctx, exportCtx, exportParam)
 	if err != nil {
 		s.logger.Errorf("failed to fetch data for export: %v", err)
 		return "", errors.NewBuzError(500, "global.dashboard.export.error")
@@ -187,7 +187,7 @@ func (s *DashboardService) DataExport(ctx context.Context, db *gorm.DB, exportPa
 
 	// 2. 导出数据到 JSON 文件
 	exp := exporter.NewDashboardDataExporter()
-	path, err := exp.ExportData(context, s.fileRootPath)
+	path, err := exp.ExportData(exportCtx, s.fileRootPath)
 	if err != nil {
 		s.logger.Errorf("failed to export data: %v", err)
 		return "", errors.NewBuzError(500, "global.dashboard.export.error")
@@ -197,14 +197,15 @@ func (s *DashboardService) DataExport(ctx context.Context, db *gorm.DB, exportPa
 }
 
 // fetchDataForExport 为导出获取数据
-func (s *DashboardService) fetchDataForExport(context *exporter.DashboardExportContext, dashboardMapper *relationDB.DashboardMapper, exportParam *dto.DashboardExportParam) error {
+func (s *DashboardService) fetchDataForExport(ctx context.Context, dCtx *exporter.DashboardExportContext, exportParam *dto.DashboardExportParam) error {
 	var dashboards []*relationDB.DashboardModel
 	var err error
-
+	db := relationDB.GetDb(ctx)
+	var dashboardMapper relationDB.DashboardMapper
 	if len(exportParam.Ids) > 0 {
-		dashboards, err = dashboardMapper.SelectByIds(exportParam.Ids)
+		dashboards, err = dashboardMapper.SelectByIds(db, exportParam.Ids)
 	} else if exportParam.ExportType == "ALL" {
-		dashboards, err = dashboardMapper.SelectAll()
+		dashboards, err = dashboardMapper.SelectAll(db)
 	}
 	if err != nil {
 		return err
@@ -230,7 +231,7 @@ func (s *DashboardService) fetchDataForExport(context *exporter.DashboardExportC
 		dashboard.UpdateTime = time.Time{}
 	}
 
-	context.DashboardModels = dashboards
+	dCtx.DashboardModels = dashboards
 	return nil
 }
 
@@ -243,7 +244,7 @@ func (s *DashboardService) AsyncImport(ctx context.Context, db *gorm.DB, filePat
 	}
 	defer file.Close()
 
-	dashboardMapper := relationDB.NewDashboardMapper(db, ctx)
+	dashboardMapper := &relationDB.DashboardMapper{}
 	importContext := importer.NewDashboardImportContext(filePath)
 	dataImporter := importer.NewDashboardDataImporter(importContext, dashboardMapper)
 

@@ -1,52 +1,38 @@
 package relationDB
 
 import (
-	"context"
-
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 )
 
 // DashboardRefMapper Dashboard 引用关系数据访问对象
 type DashboardRefMapper struct {
-	db     *gorm.DB
-	ctx    context.Context
-	logger logx.Logger
-}
-
-// NewDashboardRefMapper 创建 DashboardRefMapper 实例
-func NewDashboardRefMapper(db *gorm.DB, ctx context.Context) *DashboardRefMapper {
-	return &DashboardRefMapper{
-		db:     db,
-		ctx:    ctx,
-		logger: logx.WithContext(ctx),
-	}
 }
 
 // Insert 插入 Dashboard 引用关系
-func (m *DashboardRefMapper) Insert(ref *DashboardRefModel) error {
-	err := m.db.WithContext(m.ctx).Create(ref).Error
+func (m *DashboardRefMapper) Insert(db *gorm.DB, ref *DashboardRefModel) error {
+	err := db.Create(ref).Error
 	if err != nil {
-		m.logger.Errorf("failed to insert dashboard ref: %v", err)
+		logx.Errorf("failed to insert dashboard ref: %v", err)
 		return err
 	}
 	return nil
 }
 
 // DeleteByDashboardId 根据 Dashboard ID 删除引用关系
-func (m *DashboardRefMapper) DeleteByDashboardId(dashboardID string) error {
-	err := m.db.WithContext(m.ctx).Where("dashboard_id = ?", dashboardID).Delete(&DashboardRefModel{}).Error
+func (m *DashboardRefMapper) DeleteByDashboardId(db *gorm.DB, dashboardID string) error {
+	err := db.Where("dashboard_id = ?", dashboardID).Delete(&DashboardRefModel{}).Error
 	if err != nil {
-		m.logger.Errorf("failed to delete dashboard ref: %v", err)
+		logx.Errorf("failed to delete dashboard ref: %v", err)
 		return err
 	}
 	return nil
 }
 
 // GetByUns 根据 UNS 别名获取 Dashboard
-func (m *DashboardRefMapper) GetByUns(unsAlias string) (*DashboardModel, error) {
+func (m *DashboardRefMapper) GetByUns(db *gorm.DB, unsAlias string) (*DashboardModel, error) {
 	var dashboard DashboardModel
-	err := m.db.WithContext(m.ctx).
+	err := db.
 		Table("uns_dashboard a").
 		Select("a.*").
 		Joins("LEFT JOIN uns_dashboard_ref b ON a.id = b.dashboard_id").
@@ -57,36 +43,36 @@ func (m *DashboardRefMapper) GetByUns(unsAlias string) (*DashboardModel, error) 
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
-		m.logger.Errorf("failed to get dashboard by uns: %v", err)
+		logx.Errorf("failed to get dashboard by uns: %v", err)
 		return nil, err
 	}
 	return &dashboard, nil
 }
 
 // SelectByUnsAlias 根据 UNS 别名查询引用关系
-func (m *DashboardRefMapper) SelectByUnsAlias(unsAlias string) (*DashboardRefModel, error) {
+func (m *DashboardRefMapper) SelectByUnsAlias(db *gorm.DB, unsAlias string) (*DashboardRefModel, error) {
 	var ref DashboardRefModel
-	err := m.db.WithContext(m.ctx).Where("uns_alias = ?", unsAlias).First(&ref).Error
+	err := db.Where("uns_alias = ?", unsAlias).First(&ref).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
-		m.logger.Errorf("failed to select dashboard ref: %v", err)
+		logx.Errorf("failed to select dashboard ref: %v", err)
 		return nil, err
 	}
 	return &ref, nil
 }
 
 // SelectByUnsAliases selects dashboard references by a list of UNS aliases.
-func (m *DashboardRefMapper) SelectByUnsAliases(aliases []string) ([]*DashboardRefModel, error) {
+func (m *DashboardRefMapper) SelectByUnsAliases(db *gorm.DB, aliases []string) ([]*DashboardRefModel, error) {
 	if len(aliases) == 0 {
 		return []*DashboardRefModel{}, nil
 	}
 
 	var refs []*DashboardRefModel
-	err := m.db.WithContext(m.ctx).Where("uns_alias IN ?", aliases).Find(&refs).Error
+	err := db.Where("uns_alias IN ?", aliases).Find(&refs).Error
 	if err != nil {
-		m.logger.Errorf("failed to select dashboard refs by aliases: %v", err)
+		logx.Errorf("failed to select dashboard refs by aliases: %v", err)
 		return nil, err
 	}
 	return refs, nil

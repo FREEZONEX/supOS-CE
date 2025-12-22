@@ -12,8 +12,8 @@ type UnsAlarmsDatumRepo struct {
 	db *gorm.DB
 }
 
-func NewUnsAlarmsDatumRepo(in any) *UnsAlarmsDatumRepo {
-	return &UnsAlarmsDatumRepo{db: stores.GetCommonConn(in)}
+func NewUnsAlarmsDatumRepo(in context.Context) *UnsAlarmsDatumRepo {
+	return &UnsAlarmsDatumRepo{db: GetDb(in)}
 }
 
 type UnsAlarmsDatumFilter struct {
