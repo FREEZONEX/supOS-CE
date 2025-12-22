@@ -221,7 +221,7 @@ module.exports = function (RED) {
                 path = row?.targetTopic || row?.path;
                 alias = row?.alias || row?.targetAlias;
                 propName = row?.targetField || row?.propName;
-                propType = row?.targetType || row?.propType || row?.type;
+                propType = row?.attributeType || row?.targetType || row?.propType || row?.type;
                 tag = row?.selector || row?.tag;
             }
             if (tag === undefined || tag === null) {
@@ -270,7 +270,7 @@ module.exports = function (RED) {
         const targetTopic = toSafeString(item.targetTopic || item.path || item.topic);
         const targetField = toSafeString(item.targetField || item.propName || item.field || item.property);
         const alias = toSafeString(item.alias || item.targetAlias);
-        const propType = toSafeString(item.targetType || item.propType || item.type);
+        const propType = toSafeString(item.attributeType || item.targetType || item.propType || item.type);
         if (!selector && !targetTopic && !targetField) {
             return null;
         }
@@ -287,7 +287,7 @@ module.exports = function (RED) {
                     selector: row[4] !== undefined ? String(row[4]) : "",
                     targetTopic: row[0] || "",
                     targetField: row[2] || "",
-                    targetType: row[3] || ""
+                    attributeType: row[3] || ""
                 };
             }
             if (row && typeof row === 'object') {
@@ -295,7 +295,7 @@ module.exports = function (RED) {
                     selector: toSafeString(row.selector || row.tag),
                     targetTopic: toSafeString(row.targetTopic || row.path),
                     targetField: toSafeString(row.targetField || row.propName),
-                    targetType: toSafeString(row.targetType || row.propType || row.type)
+                    attributeType: toSafeString(row.attributeType || row.targetType || row.propType || row.type)
                 };
             }
         }).filter(item => item && (item.selector || item.targetTopic || item.targetField));

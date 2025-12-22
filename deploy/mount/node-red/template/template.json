@@ -3,12 +3,12 @@
     "selector": "0",
     "targetTopic": "v1/Factory/Line1/Motor/Metric/Power",
     "targetField": "voltage",
-    "targetType": "float"
+    "attributeType": "float"
   },
   {
     "selector": "1",
     "targetTopic": "v1/Factory/Line1/Motor/Metric/Power",
     "targetField": "current",
-    "targetType": "float"
+    "attributeType": "float"
   }
 ]

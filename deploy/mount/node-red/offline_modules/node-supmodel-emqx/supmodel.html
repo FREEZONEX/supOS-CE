@@ -338,7 +338,7 @@
                 selector: row[4] !== undefined ? (row[4] + '') : '',
                 targetTopic: row[0] || '',
                 targetField: row[2] || '',
-                targetType: row[3] || ''
+                attributeType: row[3] || ''
             }
         }).filter(item => item.selector || item.targetTopic || item.targetField);
     };
@@ -466,8 +466,8 @@
                             row[4]
                         ];
                         return `<tr data-row="${index}"><td>${id}</td>${displayRow.map((cell, idx) => {
-                            const disabled = idx < 3 ? 'disabled' : '';
-                            return `<td><input type="text" ${disabled} value="${cell==null?'':cell}" data-col="${idx}" style="width:100%"/></td>`
+                            const editable = idx === 3 ? 'editable' : '';
+                            return `<td class="cell ${editable}" data-col="${idx}" title="${cell==null?'':cell}">${cell==null?'':cell}</td>`
                         }).join('')}<td><i class="fa fa-remove remove" title='delete'></i></dt></tr>`
                     }
             ).join('')
@@ -543,18 +543,21 @@
             renderTable(node, renderNewData);
         });
 
-        $('#preview-tbody input').on('change', function() {
-            const rowIdx = $(this).closest('tr').data('row');
-            const colIdx = Number($(this).data('col'));
-            if (rowIdx == null || colIdx == null) {
-                return;
-            }
-            let current = templateModels[node.id][rowIdx] || ['', '', '', '', ''];
-            switch(colIdx) {
-                case 3: current[4] = $(this).val(); break; // tag
-                default: break; // others are read-only
-            }
-            templateModels[node.id][rowIdx] = current;
+        $('.cell.editable').on('dblclick', function() {
+            const $td = $(this);
+            const rowIdx = $td.closest('tr').data('row');
+            const colIdx = Number($td.data('col'));
+            const currentVal = $td.text();
+            const $input = $(`<input type="text" style="width:100%" value="${currentVal}"/>`);
+            $td.empty().append($input);
+            $input.focus();
+            $input.on('blur', function() {
+                const newVal = $(this).val();
+                let current = templateModels[node.id][rowIdx] || ['', '', '', '', ''];
+                current[4] = newVal;
+                templateModels[node.id][rowIdx] = current;
+                $td.text(newVal);
+            });
         });
 
     };
