@@ -214,14 +214,14 @@ module.exports = function (RED) {
         
         mappingData.map(row => {
             // path, alias, propName, propType, tag
-            let path, alias, propName, tag;
+            let path, alias, propName, propType, tag;
             if (Array.isArray(row)) {
-                [path, , propName, , tag] = row; // Alias/AttributeType deprecated
+                [path, alias, propName, propType, tag] = row;
             } else {
                 path = row?.targetTopic || row?.path;
-                // Alias not used anymore
-                alias = "";
+                alias = row?.alias || row?.targetAlias;
                 propName = row?.targetField || row?.propName;
+                propType = row?.targetType || row?.propType || row?.type;
                 tag = row?.selector || row?.tag;
             }
             if (tag === undefined || tag === null) {
@@ -232,7 +232,8 @@ module.exports = function (RED) {
             props.push({
                 path: path,
                 alias: alias,
-                propName: propName
+                propName: propName,
+                propType: propType
             });
             mappings[tag] = props;
         });
@@ -268,8 +269,8 @@ module.exports = function (RED) {
         const selector = toSafeString(item.selector || item.tag || item.target || item.topicIndex);
         const targetTopic = toSafeString(item.targetTopic || item.path || item.topic);
         const targetField = toSafeString(item.targetField || item.propName || item.field || item.property);
-        const alias = ""; // Alias no longer used
-        const propType = ""; // AttributeType no longer used
+        const alias = toSafeString(item.alias || item.targetAlias);
+        const propType = toSafeString(item.targetType || item.propType || item.type);
         if (!selector && !targetTopic && !targetField) {
             return null;
         }
@@ -285,14 +286,16 @@ module.exports = function (RED) {
                 return {
                     selector: row[4] !== undefined ? String(row[4]) : "",
                     targetTopic: row[0] || "",
-                    targetField: row[2] || ""
+                    targetField: row[2] || "",
+                    targetType: row[3] || ""
                 };
             }
             if (row && typeof row === 'object') {
                 return {
                     selector: toSafeString(row.selector || row.tag),
                     targetTopic: toSafeString(row.targetTopic || row.path),
-                    targetField: toSafeString(row.targetField || row.propName)
+                    targetField: toSafeString(row.targetField || row.propName),
+                    targetType: toSafeString(row.targetType || row.propType || row.type)
                 };
             }
         }).filter(item => item && (item.selector || item.targetTopic || item.targetField));

@@ -94,6 +94,41 @@
             background-color: #007bff;
             color: white;
         }
+
+        .topic-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 2000;
+        }
+        .topic-modal-content {
+            width: 600px;
+            max-height: 80%;
+            overflow-y: auto;
+            margin: 50px auto;
+            background: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .topic-modal-header {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .topic-tree ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+        .topic-tree li {
+            margin: 2px 0;
+        }
+        .topic-tree label {
+            cursor: pointer;
+        }
        
     </style>
     <div class="form-row">
@@ -127,14 +162,10 @@
                 </select>
             </div>
 
-            <div class="dropdown-m form-row">
-                <!-- <label for="node-input-selectedModel"><i class="fa fa-tag"></i> <span data-i18n="supmodel.model_label_name"></span></label> -->
+            <div class="dropdown-m form-row" style="display:none">
                 <label for="node-input-selectedModel"><i class="fa fa-cube"></i> <span data-i18n="supmodel.model_label_name"></span></label>
                 <input type="text" id="node-input-selectedModel" class="search-input-m" data-i18n="[placeholder]supmodel.model_input_placeholder"/>
-                <div class="select-dropdown-m" id="dropdownOptions">
-                    
-                    
-                </div>
+                <div class="select-dropdown-m" id="dropdownOptions"></div>
             </div>
             <!-- <div class="form-row">
                 <div id="errorMsg" style="position: absolute; left: 124px;"></div>
@@ -150,25 +181,46 @@
         <div id="supmodel-tab-mappings" style="display:none">
             <div class="form-row">
                 <input id="node-file-item" type="file" name="filename" accept=".json" style="display:none"/>
-                <button class="editor-button" id="node-btn-item-import"><i class="fa fa-upload"></i> <span data-i18n="supmodel.label_import"></span></button>
-                <button class="editor-button" id="node-btn-item-export"><i class="fa fa-download"></i> <span data-i18n="supmodel.label_export"></span></button>
+                <button class="editor-button" id="node-btn-select-topic"><i class="fa fa-cube"></i> Select Topic</button>
                 <button class="editor-button" id="node-btn-item-add"><i class="fa fa-plus"></i> <span data-i18n="supmodel.label_add_one"></span></button>
                 <button class="editor-button" id="node-btn-item-remove"><i class="fa fa-trash"></i> <span data-i18n="supmodel.label_delete_all"></span></button>
                 <button class="editor-button" id="node-btn-item-dowbload"><i class="fa fa-arrow-circle-o-down"></i> <span data-i18n="supmodel.label_download_template"></span></button>
+                <button class="editor-button" id="node-btn-item-import" style="float:right"><i class="fa fa-upload"></i> <span data-i18n="supmodel.label_import"></span></button>
+                <button class="editor-button" id="node-btn-item-export" style="float:right; margin-left:10px;"><i class="fa fa-download"></i> <span data-i18n="supmodel.label_export"></span></button>
             </div>
             <div id="node-table-models-form" style="margin-top:15px;border:1px solid #ddd;padding:10px">
                 <table class="node-table-models">
                     <thead id="preview-thead">
                         <tr>
                             <th data-i18n="supmodel.table_header_serial"></th>
-                            <th data-i18n="supmodel.table_header_file_name"></th>
+                            <th>Topic</th>
                             <th data-i18n="supmodel.table_header_prop_name"></th>
+                            <th data-i18n="supmodel.table_header_prop_type"></th>
                             <th data-i18n="supmodel.table_header_tag_name"></th>
                             <th data-i18n="supmodel.table_header_operate"></th>
                         </tr>
                     </thead>
                     <tbody id="preview-tbody"></tbody>
                 </table>
+            </div>
+
+            <div id="topic-modal" class="topic-modal" style="display:none;">
+                <div class="topic-modal-content">
+                    <div class="topic-modal-header">
+                        <span>Select Topic</span>
+                        <div style="float:right;">
+                            <button class="editor-button" id="topic-refresh"><i class="fa fa-refresh"></i></button>
+                            <button class="editor-button" id="topic-close"><i class="fa fa-close"></i></button>
+                        </div>
+                    </div>
+                    <div class="topic-modal-body">
+                        <button class="editor-button" id="topic-select-all" style="margin-bottom:5px;">Select All</button>
+                        <div id="topic-tree" class="topic-tree"></div>
+                    </div>
+                    <div class="topic-modal-footer" style="text-align:right;margin-top:10px;">
+                        <button class="editor-button" id="topic-confirm"><i class="fa fa-check"></i> OK</button>
+                    </div>
+                </div>
             </div>
 
             <!-- 分页控件 -->
@@ -285,16 +337,40 @@
             return {
                 selector: row[4] !== undefined ? (row[4] + '') : '',
                 targetTopic: row[0] || '',
-                targetField: row[2] || ''
+                targetField: row[2] || '',
+                targetType: row[3] || ''
             }
         }).filter(item => item.selector || item.targetTopic || item.targetField);
     };
 
     const normalizeRowData = (rowData) => {
-        const path = rowData[0] || '';
+        const topic = rowData[0] || '';
         const propName = rowData[1] || '';
-        const tag = rowData[2] || '';
-        return [path, '', propName, '', tag]; // Alias & AttributeType unused, keep placeholders
+        const propType = rowData[2] || '';
+        const tag = rowData[3] || '';
+        return [topic, '', propName, propType, tag]; // Alias占位，AttributeType可为空
+    };
+
+    const buildTreeHtml = (nodes) => {
+        if (!nodes || nodes.length === 0) {
+            return '';
+        }
+        return `<ul>${nodes.map(n => {
+            const childrenHtml = buildTreeHtml(n.children || n.childrens || []);
+            const topic = n.path || n.topic || n.alias || '';
+            const alias = n.alias || '';
+            const label = n.name || n.label || topic;
+            const id = (n.id || topic || Math.random().toString(16).slice(2));
+            const icon = '<i class="fa fa-line-chart" style="margin-right:4px;"></i>';
+            return `<li>
+                <label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}"/>${icon}${label}</label>
+                ${childrenHtml}
+            </li>`;
+        }).join('')}</ul>`;
+    };
+
+    const renderTopicTree = (data) => {
+        $('#topic-tree').html(buildTreeHtml(data));
     };
 
     const uploadJson = (node, file) => {
@@ -383,8 +459,16 @@
             data.map((row, index) => {
                         let start  = (pagenation.pageNo - 1) * pagenation.pageItem;
                         let id = start + index + 1;
-                        const displayRow = [row[0], row[2], row[4]];
-                        return `<tr><td>${id}</td>${displayRow.map(cell => `<td title="${cell==null?'':cell}">${cell==null?'':cell}</td>`).join('')}<td><i class="fa fa-pencil edit" style="margin-right: 10px;" title='edit'></i><i class="fa fa-remove remove" title='delete'></i></dt></tr>`
+                        const displayRow = [
+                            row[0],
+                            row[2],
+                            row[3],
+                            row[4]
+                        ];
+                        return `<tr data-row="${index}"><td>${id}</td>${displayRow.map((cell, idx) => {
+                            const disabled = idx < 3 ? 'disabled' : '';
+                            return `<td><input type="text" ${disabled} value="${cell==null?'':cell}" data-col="${idx}" style="width:100%"/></td>`
+                        }).join('')}<td><i class="fa fa-remove remove" title='delete'></i></dt></tr>`
                     }
             ).join('')
         );
@@ -393,52 +477,6 @@
         $('#total-pages').text(pagenation.pageTotal);
         $('#total-number').text(pagenation.totalNumber);
         //注册删除和修改事件
-        $('.edit').on('click', function() {
-            if ($(this).hasClass('fa-pencil')) {
-
-                $(this).removeClass("fa-pencil").addClass("fa-check");
-                const len = $(this).closest('tr').find('td').length;
-
-                $(this).closest('tr').find('td').each(function(index) {
-                    const val = $(this).text();
-                    // 为了去掉头尾，取值中间项
-                    if (index < (len-1) && index > 0) {
-                        if (index == (len-2)) {
-                            $(this).html(`<input disabled type="text" value="${val}" style="width: 100%"/>`)
-                        } else {
-                            $(this).html(`<input type="text" value="${val}" style="width: 100%"/>`)
-                        }
-                    }
-                });
-            } else {
-                let id = $(this).closest('tr').find("td:first").text();
-
-                $(this).removeClass("fa-check").addClass("fa-pencil");
-                
-                const len = $(this).closest('tr').find('td').length;
-
-                $(this).closest('tr').find('td').each(function(index) {
-                    const val = $(this).find('input, select').val();
-                    // 为了去掉头尾，取值中间项
-                    if (index < (len-1) && index > 0) {
-                        $(this).text(val);
-                    }
-                });
-                const rowData = $(this).closest('tr').map(function() {
-                    return $(this).find("td").map(function(index) {
-                        // 为了去掉头尾，取值中间项
-                        if (index < (len-1) && index > 0) {
-                            return $(this).text();
-                        }
-                    }).get();
-                }).get();
-
-                const normalized = normalizeRowData(rowData);
-                templateModels[node.id][id - 1] = normalized;
-            }
-            
-        });
-
         $('.remove').on('click', function() {
             let id = $(this).closest('tr').find("td:first").text();
             // 删除数组中元素
@@ -457,6 +495,20 @@
                 renderNewData = templateModels[node.id].slice(start, (start + pagenation.pageItem));
             }
             renderTable(node, renderNewData);
+        });
+
+        $('#preview-tbody input').on('change', function() {
+            const rowIdx = $(this).closest('tr').data('row');
+            const colIdx = Number($(this).data('col'));
+            if (rowIdx == null || colIdx == null) {
+                return;
+            }
+            let current = templateModels[node.id][rowIdx] || ['', '', '', '', ''];
+            switch(colIdx) {
+                case 3: current[4] = $(this).val(); break; // tag
+                default: break; // others are read-only
+            }
+            templateModels[node.id][rowIdx] = current;
         });
 
     };
@@ -522,6 +574,29 @@
         }
         $('#dropdownOptions').css('display', 'block');
     };
+    
+    const openTopicModal = (node) => {
+        $('#topic-modal').show();
+        if (topicTreeCache.length === 0) {
+            loadTopicTree(node);
+        }
+    };
+
+    const loadTopicTree = (node) => {
+        $.ajax({
+            url: '/inter-api/supos/uns/tree',
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                topicTreeCache = res.data || res || [];
+                renderTopicTree(topicTreeCache);
+            },
+            error: function(err) {
+                console.log(err);
+                RED.notify('Load topic tree failed', "error");
+            }
+        });
+    };
         
     const queryFileDetail = (id, alias, path, node) => {
         var encodeUrl = encodeURI(`/inter-api/supos/uns/instance?id=${id}`);
@@ -578,7 +653,7 @@
                 if (!fname) {
                     return node._("supmodel.error_field_not_null")
                 }
-                // Alias/AttributeType deprecated, skip validation
+                // AttributeType 可为空，不校验
                 if (!regFieldName.test(fname)) {
                     return node._("supmodel.error_invalid_fieldname")
                 }
@@ -623,6 +698,7 @@
     }
     let templateModels = {};
     let tabs;
+    let topicTreeCache = [];
     
     RED.nodes.registerType('supmodel', {
         category: 'supnodes',
@@ -762,6 +838,87 @@
                 window.open(`/nodered-api/export/tags?nodeId=${node.id}`);
 			});
 
+            $('#node-btn-select-topic').click(function() {
+                openTopicModal(node);
+            });
+
+            $('#topic-refresh').click(function() {
+                loadTopicTree(node);
+            });
+
+            $('#topic-close').click(function() {
+                $('#topic-modal').hide();
+            });
+
+            $('#topic-select-all').click(function() {
+                const checked = $(this).data('checked') === true;
+                $('#topic-tree .topic-check').prop('checked', !checked);
+                $(this).data('checked', !checked);
+            });
+
+            $('#topic-confirm').click(function() {
+                const checkedNodes = [];
+                $('#topic-tree .topic-check:checked').each(function() {
+                    const hasChild = $(this).data('haschild') === '1';
+                    const nestedChecked = $(this).closest('li').find('ul .topic-check:checked').length;
+                    if (hasChild && nestedChecked > 1) {
+                        return; // prefer leaf nodes when parent selected with children
+                    }
+                    const topic = $(this).data('topic') || '';
+                    const label = $(this).data('label') || topic;
+                    const id = $(this).data('id') || '';
+                    const alias = $(this).data('alias') || '';
+                    checkedNodes.push({topic, label, id, alias});
+                });
+
+                if (checkedNodes.length === 0) {
+                    $('#topic-modal').hide();
+                    return;
+                }
+
+                const requests = checkedNodes.map(item => {
+                    return $.ajax({
+                        url: `/inter-api/supos/uns/instance?id=${encodeURIComponent(item.id)}`,
+                        type: 'GET',
+                        dataType: 'json'
+                    }).then(data => ({item, data}), err => ({item, error: err}));
+                });
+
+                Promise.all(requests).then(resArr => {
+                    if (!templateModels[node.id]) {
+                        templateModels[node.id] = [];
+                    }
+                    let start = templateModels[node.id].length;
+                    resArr.forEach((resWrap, idx) => {
+                        const item = resWrap.item;
+                        const data = resWrap.data;
+                        if (resWrap.error || !data || !data.data) {
+                            return;
+                        }
+                        const body = data.data;
+                        const alias = item.alias || body.alias || '';
+                        if (node.protocol == 'mqtt') {
+                            templateModels[node.id].push([body.path || item.topic, alias, '', '', (start + idx)+'']);
+                        } else if (Array.isArray(body.fields)) {
+                            body.fields.forEach((f, fi) => {
+                                if (f.systemField) {
+                                    return;
+                                }
+                                const fieldType = (f.type || '').toLowerCase();
+                                const tagVal = (start + idx + fi).toString();
+                                templateModels[node.id].push([body.path || item.topic, alias, f.name, fieldType, tagVal]);
+                            });
+                        }
+                    });
+                    pagenation.totalNumber = templateModels[node.id].length;
+                    pagenation.pageTotal = Math.ceil(templateModels[node.id].length / pagenation.pageItem);
+                    const renderData = templateModels[node.id].slice(0, pagenation.pageItem);
+                    renderTable(node, renderData);
+                }).finally(() => {
+                    $('#topic-modal').hide();
+                });
+            });
+
             addBtn.click(function() {
                 if ($('#preview-tbody .dirty').length > 0) {
                     return;
@@ -770,12 +927,16 @@
                 $('#preview-tbody').prepend("<tr class='dirty'><td>0</td></tr>")
                 // 掐头去尾
                 for (let i = 1; i < len -1; i++) {
-                    $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
+                    if (i < len -2) {
+                        $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%" disabled/></td>')
+                    } else {
+                        $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
+                    }
                 }
-                $('#preview-tbody .dirty').append('<td><i class="fa fa-check edit" style="margin-right: 10px;"></i><i class="fa fa-remove remove"></i></dt>');
-                $('#preview-tbody .dirty .edit').on('click', function() {
-                    const rowData = $(this).closest('tr').map(function() {
-                        return $(this).find("input, select").map(function(index) {
+                $('#preview-tbody .dirty').append('<td><i class="fa fa-remove remove"></i></dt>');
+                const applyInsert = () => {
+                    const rowData = $('#preview-tbody .dirty').map(function() {
+                        return $(this).find("input").map(function(index) {
                             return $(this).val();
                         }).get();
                     }).get();
@@ -794,8 +955,10 @@
                     pagenation.totalNumber += 1;
                     pagenation.pageTotal = Math.ceil(templateModels[node.id].length / pagenation.pageItem);
 				    renderTable(node, templateModels[node.id]);
+                };
+                $('#preview-tbody .dirty input').on('change', function() {
+                    applyInsert();
                 });
-                
                 $('#preview-tbody .dirty .remove').on('click', function() {
                     $(this).closest('tr').remove();
                 });
