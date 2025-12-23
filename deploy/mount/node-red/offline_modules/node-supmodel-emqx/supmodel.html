@@ -149,7 +149,7 @@
             cursor: pointer;
             vertical-align: top;
             position: relative;
-            top: 2px;
+            top: -4px;
         }
         .topic-tree li.collapsed > ul {
             display: none;
@@ -170,6 +170,9 @@
         }
         .single-tab {
             display: block;
+        }
+        .invalid {
+            border: 1px solid red !important;
         }
        
     </style>
@@ -323,6 +326,32 @@
         return [row[0] || '', row[2] || ''].join('|'); // topic + attrName
     };
 
+    const isRequiredCol = (colIdx) => {
+        return colIdx === 0 || colIdx === 1 || colIdx === 3;
+    };
+
+    const validateRequiredInput = ($input) => {
+        const colIdx = Number($input.data('col'));
+        if (!isRequiredCol(colIdx)) {
+            $input.removeClass('invalid');
+            return true;
+        }
+        const val = ($input.val() || '').toString().trim();
+        if (val === '') {
+            $input.addClass('invalid');
+            return false;
+        }
+        $input.removeClass('invalid');
+        return true;
+    };
+
+    const attachRequiredHandlers = () => {
+        $('#topic-modal .topic-tree input').removeClass('invalid'); // no-op for tree
+        $('#supmodel-tab-mappings').find('input[data-col]').off('blur.required').on('blur.required', function() {
+            validateRequiredInput($(this));
+        });
+    };
+
     const normalizeSingleMapping = (item) => {
         if (!item) {
             return null;
@@ -394,7 +423,7 @@
             const id = (n.id || topic || Math.random().toString(16).slice(2));
             const hasChild = childrenHtml ? 'has-child' : 'leaf';
             const typeIcon = n.type === 0 ? '<i class="fa fa-folder-o" style="margin-right:6px;"></i>' : '<i class="fa fa-file-text-o" style="margin-right:6px;"></i>';
-            const toggle = childrenHtml ? `<span class="tree-toggle" data-toggle="1">&#9660;</span>` : `<span class="tree-toggle"></span>`;
+            const toggle = childrenHtml ? `<span class="tree-toggle" data-toggle="1">&#9654;</span>` : `<span class="tree-toggle"></span>`;
             const collapsedClass = childrenHtml ? 'collapsed' : '';
             return `<li class="${hasChild} ${collapsedClass}" data-level="${level}">
                 ${toggle}<label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}" data-type="${n.type || ''}"/>${typeIcon}<span class="tree-label">${label}</span></label>
@@ -490,6 +519,7 @@
                 
             },
             error: function(err) {
+                console.log("save/tags error:");
                 console.log(err);
                 RED.notify('System Error: Save Tags Failed!', "error");
             }
@@ -537,9 +567,9 @@
                         return `<tr data-row="${index}"><td>${id}</td>${displayRow.map((cell, idx) => {
                             if (editable) {
                                 if (idx === 3) {
-                                    return `<td><input type="text" class="tag-inline-input editable-tag" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
+                                    return `<td><input type="text" class="tag-inline-input editable-tag ${isRequiredCol(idx)?'required-input':''}" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
                                 }
-                                return `<td><input type="text" class="editable-cell" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
+                                return `<td><input type="text" class="editable-cell ${isRequiredCol(idx)?'required-input':''}" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
                             }
                             const editableTag = idx === 3 ? 'editable' : '';
                             return `<td class="cell ${editableTag}" data-col="${idx}" title="${cell==null?'':cell}">${cell==null?'':cell}</td>`
@@ -626,7 +656,7 @@
             const rowIdx = $td.closest('tr').data('row');
             const globalIdx = (pagenation.pageNo -1)*pagenation.pageItem + rowIdx;
             const currentVal = $td.text();
-            const $input = $(`<input type="text" class="tag-inline-input" value="${currentVal}"/>`);
+            const $input = $(`<input type="text" class="tag-inline-input" value="${currentVal}" data-col="3"/>`);
             $td.empty().append($input);
             $input.focus();
             $input.on('blur', function() {
@@ -635,6 +665,7 @@
                 current[4] = newVal;
                 templateModels[node.id][globalIdx] = current;
                 $td.text(newVal);
+                validateRequiredInput($input);
             });
         });
         $('.editable-cell').on('input', function() {
@@ -648,6 +679,7 @@
                 case 3: current[4] = $(this).val(); break;
             }
             templateModels[node.id][(pagenation.pageNo -1)*pagenation.pageItem + rowIdx] = current;
+            validateRequiredInput($(this));
         });
         $('.editable-tag').on('input', function() {
             const rowIdx = $(this).closest('tr').data('row');
@@ -656,6 +688,7 @@
             const newVal = sanitizeTagValue($(this).val());
             current[4] = newVal;
             templateModels[node.id][globalIdx] = current;
+            validateRequiredInput($(this));
         });
 
     };
@@ -1087,10 +1120,10 @@
                     return;
                 }
                 let len = $('#preview-thead').find('th').length;
-                $('#preview-tbody').append("<tr class='dirty'><td>0</td></tr>")
+                $('#preview-tbody').prepend("<tr class='dirty'><td>0</td></tr>")
                 // 掐头去尾
                 for (let i = 1; i < len -1; i++) {
-                    $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
+                    $('#preview-tbody .dirty').append(`<td><input type="text" style="width: 100%" data-col="${i-1}" class="${isRequiredCol(i-1)?'required-input':''}"/></td>`)
                 }
                 $('#preview-tbody .dirty').append('<td><i class="fa fa-remove remove"></i></dt>');
                 const applyInsert = () => {
@@ -1106,11 +1139,12 @@
                     if (!rowEditable[node.id]) {
                         rowEditable[node.id] = [];
                     }
-                    templateModels[node.id].push(normalized);
-                    rowEditable[node.id].push(true);
+                    templateModels[node.id].unshift(normalized);
+                    rowEditable[node.id].unshift(true);
                     pagenation.totalNumber += 1;
                     pagenation.pageTotal = Math.ceil(templateModels[node.id].length / pagenation.pageItem);
 				    renderTable(node, templateModels[node.id]);
+                    attachRequiredHandlers();
                 };
                 $('#preview-tbody .dirty input').on('change', function() {
                     applyInsert();
@@ -1183,6 +1217,15 @@
 
             let thisModels = templateModels[node.id] || [];
             templateModels[node.id] = thisModels;
+
+            let errorMsg = checkTable(node, thisModels);
+            if (errorMsg) {
+                node.tableValid = false;
+                // RED.notify(errorMsg, "error");
+                RED._debug(errorMsg)
+                return false; // 阻止编辑框关闭
+            }
+            node.tableValid = true;
 
             this.modelShowName = thisModels && thisModels.length > 0 ? thisModels[0][0] : "";
             if (this.modelShowName) {

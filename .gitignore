@@ -19,3 +19,4 @@ backend/.env
 **/.env
 **/.env.production
 .trae
+deploy/localtest/
