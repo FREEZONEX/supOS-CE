@@ -113,21 +113,21 @@
 1. Log in to Tier0, and then select **UNS** > **Namespace**.
 2. Click **Import** at the upper-right corner.
 
-<img width={450} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69.png" />
+<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69.png" />
 
 3. Import JSON to create models.
 - Directly enter JSON.
 
-<img width={450} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-1.png" />
+<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-1.png" />
 
 - Click **Upload File** to download the template and enter the model content according to template rules.
 
-<img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-2.png" />
+<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-2.png" />
 
 
 > You can manually add a path and topic, export it and use it as an example for import.
 
-<img width={450} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-3.png" />
+<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-3.png" />
 
 
 4. Save the template file, and then click **Import** on the **Namespace** page.
@@ -137,7 +137,7 @@
 1. Log in to Tier0, and then select **UNS** > **Namespace**.
 2. Click <img src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/40.png" /> on the **Topic** page.
 
-<img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/40-1.png" />
+<img width="350" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/40-1.png" />
 
 3. Select the data type, and then write JSON text for the model according to the data tree structure.
 
@@ -158,13 +158,13 @@
 }
 ```
 
-<img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/41.png" />
+<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/41.png" />
 
 4. Click **Next**, and select the model on the left side.
 
 > Click on each data level, you can change its information and add attributes on the right side.
 
-<img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/42.png" />
+<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/42.png" />
 
 5. Click **Save**.
 
