@@ -138,7 +138,7 @@
         }
         .topic-tree label {
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
         }
         .tree-toggle {
@@ -147,6 +147,7 @@
             text-align: center;
             margin-right: 6px;
             cursor: pointer;
+            vertical-align: middle;
         }
         .topic-tree li.collapsed > ul {
             display: none;
@@ -717,12 +718,10 @@
         }
         $('#dropdownOptions').css('display', 'block');
     };
-    
+
     const openTopicModal = (node) => {
         $('#topic-modal').show();
-        if (topicTreeCache.length === 0) {
-            loadTopicTree(node);
-        }
+        loadTopicTree(node);
     };
 
     const loadTopicTree = (node) => {
@@ -869,8 +868,12 @@
             tableValid: {
                 value: true,
                 validate: function(v, opt) {
-                    if (!v) {
-                        return this._('supmodel.error_invalid_table_data');
+                    const nodeId = this.id;
+                    const models = templateModels[nodeId] || [];
+                    const msg = checkTable(this, models);
+                    if (msg) {
+                        RED.notify(msg, "error");
+                        return false;
                     }
                     return true;
                 }
@@ -1070,7 +1073,7 @@
                     return;
                 }
                 let len = $('#preview-thead').find('th').length;
-                $('#preview-tbody').prepend("<tr class='dirty'><td>0</td></tr>")
+                $('#preview-tbody').append("<tr class='dirty'><td>0</td></tr>")
                 // 掐头去尾
                 for (let i = 1; i < len -1; i++) {
                     $('#preview-tbody .dirty').append('<td><input type="text" style="width: 100%"/></td>')
@@ -1089,8 +1092,8 @@
                     if (!rowEditable[node.id]) {
                         rowEditable[node.id] = [];
                     }
-                    templateModels[node.id].unshift(normalized);
-                    rowEditable[node.id].unshift(true);
+                    templateModels[node.id].push(normalized);
+                    rowEditable[node.id].push(true);
                     pagenation.totalNumber += 1;
                     pagenation.pageTotal = Math.ceil(templateModels[node.id].length / pagenation.pageItem);
 				    renderTable(node, templateModels[node.id]);
@@ -1171,7 +1174,7 @@
                 node.tableValid = false;
                 RED.notify(errorMsg, "error");
                 RED._debug(errorMsg)
-                throw new Error(errorMsg); // 阻止编辑框关闭
+                return false; // 阻止编辑框关闭
             }
             node.tableValid = true;
 
