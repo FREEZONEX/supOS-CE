@@ -134,11 +134,7 @@
         .topic-tree li {
             margin: 2px 0;
             border-radius: 4px;
-            transition: background-color 0.2s, box-shadow 0.2s;
-        }
-        .topic-tree li:hover {
-            background: #f0f0f0;
-            box-shadow: inset 0 0 0 1px #d9d9d9;
+            transition: background-color 0.2s;
         }
         .topic-tree label {
             cursor: pointer;
@@ -296,7 +292,14 @@
     };
 
     const sanitizeTagValue = (val) => {
-        return (val || '').toString().replace(/[^0-9]/g, '').slice(0, 1);
+        return (val || '').toString();
+    };
+
+    const buildRowKey = (row) => {
+        if (!Array.isArray(row)) {
+            return '';
+        }
+        return [row[0] || '', row[1] || '', row[2] || '', row[3] || '', row[4] || ''].join('|');
     };
 
     const normalizeSingleMapping = (item) => {
@@ -369,8 +372,9 @@
             const label = n.name || n.label || topic;
             const id = (n.id || topic || Math.random().toString(16).slice(2));
             const hasChild = childrenHtml ? 'has-child' : 'leaf';
+            const typeIcon = n.type === 0 ? '<i class="fa fa-folder-o" style="margin-right:6px;"></i>' : '<i class="fa fa-file-text-o" style="margin-right:6px;"></i>';
             return `<li class="${hasChild}">
-                <label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}"/><span class="tree-label">${label}</span></label>
+                <label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}" data-type="${n.type || ''}"/>${typeIcon}<span class="tree-label">${label}</span></label>
                 ${childrenHtml}
             </li>`;
         }).join('')}</ul>`;
@@ -378,6 +382,21 @@
 
     const renderTopicTree = (data) => {
         $('#topic-tree').html(buildTreeHtml(data));
+        bindTopicCheckboxEvents();
+    };
+
+    const bindTopicCheckboxEvents = () => {
+        $('#topic-tree .topic-check').off('change').on('change', function() {
+            const checked = $(this).is(':checked');
+            const $li = $(this).closest('li');
+            // propagate to children
+            $li.find('.topic-check').prop('checked', checked);
+            // propagate to ancestors: if any child checked -> parent checked, else unchecked
+            $li.parents('li').each(function() {
+                const anyChecked = $(this).find('> ul .topic-check:checked').length > 0;
+                $(this).children('label').find('.topic-check').prop('checked', anyChecked);
+            });
+        });
     };
 
     const uploadJson = (node, file) => {
@@ -568,9 +587,8 @@
             const $td = $(this);
             const rowIdx = $td.closest('tr').data('row');
             const globalIdx = (pagenation.pageNo -1)*pagenation.pageItem + rowIdx;
-            const colIdx = Number($td.data('col'));
             const currentVal = $td.text();
-            const $input = $(`<input type="number" class="tag-inline-input" value="${currentVal}"/>`);
+            const $input = $(`<input type="text" class="tag-inline-input" value="${currentVal}"/>`);
             $td.empty().append($input);
             $input.focus();
             $input.on('blur', function() {
@@ -599,7 +617,6 @@
             let current = templateModels[node.id][globalIdx] || ['', '', '', '', ''];
             const newVal = sanitizeTagValue($(this).val());
             current[4] = newVal;
-            $(this).val(newVal);
             templateModels[node.id][globalIdx] = current;
         });
 
@@ -682,6 +699,7 @@
             success: function(res) {
                 topicTreeCache = res.data || res || [];
                 renderTopicTree(topicTreeCache);
+                bindTopicCheckboxEvents();
             },
             error: function(err) {
                 console.log(err);
@@ -930,7 +948,7 @@
 
             $('#topic-select-all').click(function() {
                 const checked = $(this).data('checked') === true;
-                $('#topic-tree .topic-check').prop('checked', !checked);
+                $('#topic-tree .topic-check').prop('checked', !checked).trigger('change');
                 $(this).data('checked', !checked);
             });
 
@@ -970,6 +988,7 @@
                         rowEditable[node.id] = [];
                     }
                     let start = templateModels[node.id].length;
+                    const existingKeys = new Set(templateModels[node.id].map(buildRowKey));
                     resArr.forEach((resWrap, idx) => {
                         const item = resWrap.item;
                         const data = resWrap.data;
@@ -979,8 +998,13 @@
                         const body = data.data;
                         const alias = item.alias || body.alias || '';
                         if (node.protocol == 'mqtt') {
-                            templateModels[node.id].push([body.path || item.topic, alias, '', '', (start + idx)+'']);
-                            rowEditable[node.id].push(true);
+                            const row = [body.path || item.topic, alias, '', '', (start + idx)+''];
+                            const key = buildRowKey(row);
+                            if (!existingKeys.has(key)) {
+                                templateModels[node.id].push(row);
+                                rowEditable[node.id].push(false);
+                                existingKeys.add(key);
+                            }
                         } else if (Array.isArray(body.fields)) {
                             body.fields.forEach((f, fi) => {
                                 if (f.systemField) {
@@ -988,8 +1012,13 @@
                                 }
                                 const fieldType = (f.type || '').toLowerCase();
                                 const tagVal = (start + idx + fi).toString();
-                                templateModels[node.id].push([body.path || item.topic, alias, f.name, fieldType, tagVal]);
-                                rowEditable[node.id].push(true);
+                                const row = [body.path || item.topic, alias, f.name, fieldType, tagVal];
+                                const key = buildRowKey(row);
+                                if (!existingKeys.has(key)) {
+                                    templateModels[node.id].push(row);
+                                    rowEditable[node.id].push(false);
+                                    existingKeys.add(key);
+                                }
                             });
                         }
                     });
