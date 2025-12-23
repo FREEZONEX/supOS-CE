@@ -166,6 +166,11 @@ func init() {
 			po.Expression = &val
 		}
 	}
+	exportFunctions["description"] = func(po *UnsNamespace, val string) {
+		if len(val) > 0 {
+			po.Description = &val
+		}
+	}
 	exportFunctions["label_ids"] = func(po *UnsNamespace, val string) {
 		if len(val) > 0 && val[0] == '{' {
 			_ = json.Unmarshal([]byte(val), &po.LabelIds)

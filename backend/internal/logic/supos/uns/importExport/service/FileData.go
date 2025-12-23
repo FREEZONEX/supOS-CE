@@ -246,6 +246,8 @@ func uns2DataVo(unsPo types.UnsInfo) *FileData {
 		pt := unsPo.GetPathType()
 		if pt == constants.PathTypeFile {
 			data.DataType = enums.DataTypeName(*dt)
+		} else if pt == constants.PathTypeDir {
+			data.DataType = enums.GetFolderDataType(*dt).Name()
 		}
 		if *dt != constants.TimeSequenceType {
 			data.Fields = base.Filter(unsPo.GetFields(), func(e *types.FieldDefine) bool {
@@ -254,6 +256,8 @@ func uns2DataVo(unsPo types.UnsInfo) *FileData {
 		} else {
 			data.Fields = unsPo.GetFields()
 		}
+	} else {
+		data.Fields = unsPo.GetFields()
 	}
 
 	//if unsPo.DataType == constants.CALCULATION_REAL_TYPE ||
