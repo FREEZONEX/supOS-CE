@@ -57,6 +57,7 @@ type (
         RoleList         []RoleInfo     `json:"roleList,optional"`
         ResourceList     []ResourceInfo `json:"resourceList,optional"`
         DenyResourceList []ResourceInfo `json:"denyResourceList,optional"`
+        superAdmin       bool           `json:"superAdmin,optional"`
     }
 
    
