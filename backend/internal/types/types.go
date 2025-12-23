@@ -776,9 +776,9 @@ type PageListRequest struct {
 	K         string `form:"k,optional"`         // 关键字
 	Type      *int   `form:"type,optional"`      // Dashboard 类型
 	OrderCode string `form:"orderCode,optional"` // 排序字段
-	IsAsc     string `form:"isAsc,optional"`     // 是否升序
-	PageNum   int    `form:"pageNum,default=1"`
-	PageSize  int    `form:"pageSize,default=10"`
+	IsAsc     bool   `form:"isAsc,optional"`     // 是否升序
+	PageNo    int64  `form:"pageNo,default=1"`
+	PageSize  int64  `form:"pageSize,default=10"`
 }
 
 type PageListUnsByTemplateReq struct {
