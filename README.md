@@ -122,12 +122,12 @@
 
 - Click **Upload File** to download the template and enter the model content according to template rules.
 
-<img width={450} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-2.png" />
+<img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-2.png" />
 
 
 > You can manually add a path and topic, export it and use it as an example for import.
 
-> <img width={450} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-3.png" />
+<img width={450} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-3.png" />
 
 
 4. Save the template file, and then click **Import** on the **Namespace** page.
@@ -158,14 +158,14 @@
 }
 ```
 
-<img width={450} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/41.png" />
+<img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/41.png" />
 
 4. Click **Next**, and select the model on the left side.
 :::tip
 Click on each data level, you can change its information and add attributes on the right side.
 :::
 
-<img width={450} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/42.png" />
+<img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/42.png" />
 
 5. Click **Save**.
 
