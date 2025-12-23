@@ -78,6 +78,19 @@ export const CodeDom = () => {
         )}
       </div>
       <Flex justify="end" gap={8} style={{ marginTop: 16 }}>
+        {jsonData && smallFile && (
+          <ComButton
+            type="primary"
+            onClick={() => {
+              return exportExcel(params).then((jsonData) => {
+                downloadFn({ data: JSON.stringify(jsonData), name: 'uns.json' });
+              });
+            }}
+          >
+            <Download />
+            {formatMessage('common.download')}
+          </ComButton>
+        )}
         <Button
           type="primary"
           onClick={() => {
