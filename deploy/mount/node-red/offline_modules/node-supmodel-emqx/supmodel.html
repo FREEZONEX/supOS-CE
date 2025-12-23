@@ -139,7 +139,7 @@
         .topic-tree label {
             cursor: pointer;
             display: inline-flex;
-            align-items: center;
+            align-items: flex-start;
         }
         .tree-toggle {
             display: inline-block;
@@ -147,7 +147,9 @@
             text-align: center;
             margin-right: 6px;
             cursor: pointer;
-            vertical-align: middle;
+            vertical-align: top;
+            position: relative;
+            top: 2px;
         }
         .topic-tree li.collapsed > ul {
             display: none;
@@ -156,6 +158,7 @@
             width: 18px;
             height: 18px;
             margin-right: 6px;
+            margin-top: -2px;
         }
         .toolbar-right {
             float: right;
@@ -860,23 +863,34 @@
                 value: ""
             },
             mapping: {
-                value: []
-            },
-            modelShowName: {
-                value: ""
-            },
-            tableValid: {
-                value: true,
+                value: [],
                 validate: function(v, opt) {
                     const nodeId = this.id;
                     const models = templateModels[nodeId] || [];
                     const msg = checkTable(this, models);
                     if (msg) {
                         RED.notify(msg, "error");
+                        console.log("validation failed:", msg);
                         return false;
                     }
                     return true;
                 }
+            },
+            modelShowName: {
+                value: ""
+            },
+            tableValid: {
+                value: true,
+                // validate: function(v, opt) {
+                //     const nodeId = this.id;
+                //     const models = templateModels[nodeId] || [];
+                //     const msg = checkTable(this, models);
+                //     if (msg) {
+                //         RED.notify(msg, "error");
+                //         return false;
+                //     }
+                //     return true;
+                // }
             },
             interval: {
                 value: 100
@@ -1155,6 +1169,7 @@
             renderTable(node, renderData);
         },
         oneditsave: function () {
+            console.log("oneditsave called");
             const node = this;
             node.selectedModel = $('.search-input-m').val();
             if (!node.selectedModel) {
@@ -1168,15 +1183,6 @@
 
             let thisModels = templateModels[node.id] || [];
             templateModels[node.id] = thisModels;
-           
-            let errorMsg = checkTable(node, thisModels);
-            if (errorMsg) {
-                node.tableValid = false;
-                RED.notify(errorMsg, "error");
-                RED._debug(errorMsg)
-                return false; // 阻止编辑框关闭
-            }
-            node.tableValid = true;
 
             this.modelShowName = thisModels && thisModels.length > 0 ? thisModels[0][0] : "";
             if (this.modelShowName) {

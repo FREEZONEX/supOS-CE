@@ -41,7 +41,7 @@
     "modal_select_topic": "选择主题",
     "btn_select_all": "全选",
     "btn_ok": "确定",
-    "error_select_topic_empty": "请在列表中选择项目",
+    "error_select_topic_empty": "",
     "custom_protocol": "自定义协议",
     "error_path_not_null": "文件路径不能为空",
     "error_field_not_null": "属性名称不能为空",

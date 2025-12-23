@@ -41,7 +41,7 @@
     "modal_select_topic": "Select Topic",
     "btn_select_all": "Select All",
     "btn_ok": "OK",
-    "error_select_topic_empty": "Please select at least one topic",
+    "error_select_topic_empty": "",
     "custom_protocol": "Custom Protocol",
     "error_require_field": "Required field cannot be empty",
     "error_path_not_null": "Path cannot be empty",
