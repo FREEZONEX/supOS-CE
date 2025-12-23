@@ -37,7 +37,7 @@ module.exports = function (RED) {
         const exportJsonName = `UNS-Mapper-${nodeId || 'unknown'}.json`;
         res.setHeader('Content-Disposition', `attachment; filename="${exportJsonName}"`);
         res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({ mapping }, null, 2));
+        res.send(JSON.stringify(mapping, null, 2));
     });
 
     // 导入/上传 JSON
