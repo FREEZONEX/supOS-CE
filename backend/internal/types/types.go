@@ -1461,6 +1461,7 @@ type UserInfoVO struct {
 	RoleList          []RoleInfo     `json:"roleList,optional"`
 	ResourceList      []ResourceInfo `json:"resourceList,optional"`
 	DenyResourceList  []ResourceInfo `json:"denyResourceList,optional"`
+	SuperAdmin        bool           `json:"superAdmin,optional"`
 }
 
 type UserManageItem struct {
