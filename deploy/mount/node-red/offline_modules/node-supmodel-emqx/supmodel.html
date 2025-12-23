@@ -178,7 +178,7 @@
             </div>
             <div class="form-row">
                 <input id="node-file-item" type="file" name="filename" accept=".json" style="display:none"/>
-                <button class="editor-button" id="node-btn-select-topic"><i class="fa fa-cube"></i> Select Topic</button>
+                <button class="editor-button" id="node-btn-select-topic"><i class="fa fa-cube"></i> <span data-i18n="supmodel.btn_select_topic"></span></button>
                 <button class="editor-button" id="node-btn-item-add"><i class="fa fa-plus"></i> <span data-i18n="supmodel.label_add_one"></span></button>
                 <button class="editor-button" id="node-btn-item-remove"><i class="fa fa-trash"></i> <span data-i18n="supmodel.label_delete_all"></span></button>
                 <button class="editor-button" id="node-btn-item-dowbload"><i class="fa fa-arrow-circle-o-down"></i> <span data-i18n="supmodel.label_download_template"></span></button>
@@ -192,7 +192,7 @@
                     <thead id="preview-thead">
                         <tr>
                             <th data-i18n="supmodel.table_header_serial"></th>
-                            <th>Topic</th>
+                            <th data-i18n="supmodel.table_header_topic"></th>
                             <th data-i18n="supmodel.table_header_prop_name"></th>
                             <th data-i18n="supmodel.table_header_prop_type"></th>
                             <th data-i18n="supmodel.table_header_tag_name"></th>
@@ -206,18 +206,18 @@
             <div id="topic-modal" class="topic-modal" style="display:none;">
                 <div class="topic-modal-content">
                     <div class="topic-modal-header">
-                        <span>Select Topic</span>
+                        <span data-i18n="supmodel.modal_select_topic"></span>
                         <div style="float:right;">
                             <button class="editor-button" id="topic-refresh"><i class="fa fa-refresh"></i></button>
                             <button class="editor-button" id="topic-close"><i class="fa fa-close"></i></button>
                         </div>
                     </div>
                     <div class="topic-modal-body">
-                        <button class="editor-button" id="topic-select-all" style="margin-bottom:5px;">Select All</button>
+                        <button class="editor-button" id="topic-select-all" style="margin-bottom:5px;" data-i18n="supmodel.btn_select_all"></button>
                         <div id="topic-tree" class="topic-tree"></div>
                     </div>
                     <div class="topic-modal-footer" style="text-align:right;margin-top:10px;">
-                        <button class="editor-button" id="topic-confirm"><i class="fa fa-check"></i> OK</button>
+                        <button class="editor-button" id="topic-confirm"><i class="fa fa-check"></i> <span data-i18n="supmodel.btn_ok"></span></button>
                     </div>
                 </div>
             </div>
@@ -300,6 +300,13 @@
             return '';
         }
         return [row[0] || '', row[1] || '', row[2] || '', row[3] || '', row[4] || ''].join('|');
+    };
+
+    const buildUniqueKey = (row) => {
+        if (!Array.isArray(row)) {
+            return '';
+        }
+        return [row[0] || '', row[2] || ''].join('|'); // topic + attrName
     };
 
     const normalizeSingleMapping = (item) => {
@@ -988,7 +995,7 @@
                         rowEditable[node.id] = [];
                     }
                     let start = templateModels[node.id].length;
-                    const existingKeys = new Set(templateModels[node.id].map(buildRowKey));
+                    const existingKeys = new Set(templateModels[node.id].map(buildUniqueKey));
                     resArr.forEach((resWrap, idx) => {
                         const item = resWrap.item;
                         const data = resWrap.data;
@@ -999,7 +1006,7 @@
                         const alias = item.alias || body.alias || '';
                         if (node.protocol == 'mqtt') {
                             const row = [body.path || item.topic, alias, '', '', (start + idx)+''];
-                            const key = buildRowKey(row);
+                            const key = buildUniqueKey(row);
                             if (!existingKeys.has(key)) {
                                 templateModels[node.id].push(row);
                                 rowEditable[node.id].push(false);
@@ -1013,7 +1020,7 @@
                                 const fieldType = (f.type || '').toLowerCase();
                                 const tagVal = (start + idx + fi).toString();
                                 const row = [body.path || item.topic, alias, f.name, fieldType, tagVal];
-                                const key = buildRowKey(row);
+                                const key = buildUniqueKey(row);
                                 if (!existingKeys.has(key)) {
                                     templateModels[node.id].push(row);
                                     rowEditable[node.id].push(false);
@@ -1049,13 +1056,6 @@
                         }).get();
                     }).get();
                     const normalized = normalizeRowData(rowData);
-                    const errorMsg = checkTable(node, [normalized]);
-                    if (errorMsg) {
-                        node.tableValid = false;
-                        RED.notify(errorMsg, "error");
-                        RED._debug(errorMsg)
-                        return false; 
-                    }
                     if (!templateModels[node.id]) {
                         templateModels[node.id] = [];
                     }
