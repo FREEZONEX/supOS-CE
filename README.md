@@ -161,9 +161,8 @@
 <img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/41.png" />
 
 4. Click **Next**, and select the model on the left side.
-:::tip
-Click on each data level, you can change its information and add attributes on the right side.
-:::
+
+> Click on each data level, you can change its information and add attributes on the right side.
 
 <img width={350} src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/42.png" />
 
