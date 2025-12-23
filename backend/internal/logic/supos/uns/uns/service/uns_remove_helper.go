@@ -222,7 +222,7 @@ func (r *UnsRemoveService) deleteAndSendEventWithCall(ctx context.Context, req t
 
 	if er == nil {
 		withFlow, withDashboard := defaultFalse(req.WithFlow), defaultFalse(req.WithDashboard)
-		delEvent := event.NewRemoveTopicsEvent(context.Background(), time.Now(), withFlow, withDashboard,
+		delEvent := event.NewRemoveTopicsEvent(ctx, time.Now(), withFlow, withDashboard,
 			files,
 			unsGroups[constants.PathTypeTemplate],
 			unsGroups[constants.PathTypeDir],

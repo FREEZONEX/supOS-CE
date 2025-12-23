@@ -4,6 +4,7 @@ import (
 	"backend/internal/common"
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
+	"backend/internal/common/utils/apiutil"
 	"backend/internal/logic/supos/flowcommon"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/svc"
@@ -99,7 +100,7 @@ func (s *SourceFlowService) OnEventBatchCreateTableEvent(ev *event.BatchCreateTa
 			return dao.NewNoderedSourceFlowRepo(ctx)
 		}
 	}
-	repo := repoFactory(ctx)
+	repo := repoFactory(context.Background())
 	var errs []error
 	for _, dto := range files {
 		if !shouldProvisionFlow(dto) {
@@ -151,7 +152,7 @@ func (s *SourceFlowService) createMockFlow(ctx context.Context, repo sourceFlowR
 	}
 	path := strings.TrimSpace(dto.GetPath())
 
-	flowName, _, err := repo.FindAvailableFlowName(ctx, path, constants.FlowTypeNODERED)
+	flowName, _, err := repo.FindAvailableFlowName(context.Background(), path, constants.FlowTypeNODERED)
 	if err != nil {
 		return err
 	}
@@ -168,15 +169,20 @@ func (s *SourceFlowService) createMockFlow(ctx context.Context, repo sourceFlowR
 		"disabled":         "false",
 		"clientid":         alias,
 	}, flowcommon.GenerateNodeID)
-
+	userCtx := apiutil.GetUserFromContext(ctx)
+	userName := ""
+	if userCtx != nil {
+		userName = userCtx.PreferredUsername
+	}
 	rec := &dao.NoderedSourceFlow{
 		ID:         common.NextId(),
 		FlowName:   flowName,
 		Template:   constants.FlowTypeNODERED,
 		FlowStatus: flowcommon.FlowStatusDraft,
 		FlowData:   rendered,
+		Creator:    userName,
 	}
-
+	ctx = context.Background()
 	if err := repo.Insert(ctx, rec); err != nil {
 		return err
 	}
@@ -232,10 +238,7 @@ func (s *SourceFlowService) OnEventRemoveTopicsEvent(ev *event.RemoveTopicsEvent
 	if ev == nil || !ev.WithFlow {
 		return nil
 	}
-	ctx := ev.Context
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx := context.Background()
 	var aliases []string
 	for _, t := range ev.Topics {
 		if t == nil {

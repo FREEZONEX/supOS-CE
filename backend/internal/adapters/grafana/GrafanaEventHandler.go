@@ -61,7 +61,7 @@ func (g *GrafanaEventHandler) OnEventBatchCreateTable300(evt *event.BatchCreateT
 	}
 	go func() {
 		for dsId, list := range evt.GetAllCreateFiles() {
-			g.Create(evt.Context, dsId, list, evt.FlowName, evt.FromImport, userName)
+			g.Create(context.Background(), dsId, list, evt.FlowName, evt.FromImport, userName)
 		}
 		g.log.Info(">>>>>> GrafanaEventHandler 批量创建事件,已完成,flowName:", evt.FlowName)
 	}()

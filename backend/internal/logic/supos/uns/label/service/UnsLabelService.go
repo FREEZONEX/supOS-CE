@@ -232,7 +232,7 @@ func (l *UnsLabelService) OnEventRemoveTopicsEvent(event *event.RemoveTopicsEven
 	if len(labelIds) == 0 {
 		return nil
 	}
-	db := dao.GetDb(event.Context)
+	db := dao.GetDb(context.Background())
 	for _, partLabelIds := range base.Partition(labelIds, 1000) {
 		er = l.labelRefMapper.DeleteByLabelIds(db, partLabelIds)
 		if er != nil {

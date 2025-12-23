@@ -153,7 +153,7 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 			return s, len(s) > 0
 		})
 	}
-	if len(i.DataType) > 0 {
+	if len(i.DataType) > 0 && vo.PathType == constants.PathTypeFile {
 		dt := enums.DataTypeInt(i.DataType)
 		if dt >= 0 {
 			vo.DataType = base.V2p(dt)

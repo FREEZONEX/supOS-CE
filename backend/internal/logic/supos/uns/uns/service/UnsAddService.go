@@ -291,7 +291,7 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 				notifyUpdate[constants.PathTypeLabel] = base.Map(labelPos, UnsConverter.Label2Uns)
 			}
 			err = spring.PublishEvent(&event.BatchCreateTableEvent{
-				ApplicationEvent: event.ApplicationEvent{Context: context.Background()},
+				ApplicationEvent: event.ApplicationEvent{Context: ctx},
 				FlowName:         args.FlowName,
 				FromImport:       args.FromImport,
 				Creates:          createFiles,

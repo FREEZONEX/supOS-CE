@@ -121,7 +121,7 @@ func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) e
 	s.logger.Infof("removing dashboards for topics: %v", aliasList)
 	dashboardRefMapper := relationDB.DashboardRefMapper{}
 	dashboardMapper := relationDB.DashboardMapper{}
-	db := relationDB.GetDb(event.Context)
+	db := relationDB.GetDb(context.Background())
 	// 1. 根据别名查询关联的 dashboard ID
 	refs, err := dashboardRefMapper.SelectByUnsAliases(db, aliasList)
 	if err != nil {
@@ -156,7 +156,7 @@ func (s *DashboardService) OnEventCreateDashboard(event *event.CreateDashboardEv
 		UpdateTime: now,
 	}
 
-	db := relationDB.GetDb(event.Context)
+	db := relationDB.GetDb(context.Background())
 	dashboardMapper := relationDB.DashboardMapper{}
 	err := dashboardMapper.Insert(db, dashboard)
 	if err != nil {
