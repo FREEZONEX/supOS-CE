@@ -483,6 +483,12 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 					dt[name] = lt
 				}
 			}
+			if types.SrcJdbcType(message.Def.DataSrcID).TypeCode() == constants.TimeSequenceType {
+				ct := message.Def.GetTimestampField()
+				if _, has := data[ct]; !has && len(data) > 0 {
+					data[ct] = info.UpdateTime
+				}
+			}
 			info.Dt = dt
 			info.Data = data
 		}

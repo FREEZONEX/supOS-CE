@@ -4772,7 +4772,7 @@
             "allowEmptyValue": true
           },
           {
-            "type": "string",
+            "type": "boolean",
             "description": "是否升序",
             "name": "isAsc",
             "in": "query",
@@ -4781,7 +4781,7 @@
           {
             "type": "integer",
             "default": 1,
-            "name": "pageNum",
+            "name": "pageNo",
             "in": "query",
             "required": true
           },
@@ -12388,7 +12388,7 @@
       }
     }
   },
-  "x-date": "2025-12-19 13:56:56",
+  "x-date": "2025-12-23 15:24:45",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

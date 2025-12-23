@@ -1014,7 +1014,7 @@ const messages = {
   'Dashboards.design': '设计',
   'Dashboards.edit': '编辑',
   'Dashboards.delete': '删除',
-  'Dashboards.save': '报错',
+  'Dashboards.save': '保存',
   'Dashboards.export': '导出',
   'Dashboards.import': '导入',
   'UserManagement.add': '新增',
