@@ -79,12 +79,17 @@ func (p *PgPersistentService) OnEventRemoveTopicsEvent7(evt *event.RemoveTopicsE
 }
 
 func (p *PgPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
-	FillLastRecord(p.log, uns, func() (pgx.Rows, error) {
-		return p.dbPool.Query(context.Background(), fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.GetTable(), uns.GetTimestampField()))
+	FillLastRecord(p.log, uns, func(ctx context.Context) (pgx.Rows, error) {
+		return p.dbPool.Query(ctx, fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.GetTable(), uns.GetTimestampField()))
 	})
 }
-func FillLastRecord(log errLogger, uns *types.CreateTopicDto, query func() (pgx.Rows, error)) {
-	rows, er := query()
+func FillLastRecord(log errLogger, uns *types.CreateTopicDto, query func(ctx context.Context) (pgx.Rows, error)) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	rows, er := query(ctx)
+	if rows != nil {
+		defer rows.Close()
+	}
 	if er != nil {
 		log.Error("fail to get last record", er, uns.GetAlias())
 		return
