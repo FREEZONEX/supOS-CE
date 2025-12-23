@@ -924,6 +924,7 @@
   "common.noDescription": "No description provided.",
   "common.clickOrDragForUpload": "Click or drag file to this area to upload",
   "common.uploadFile": "Upload File",
+  "common.SpecialCharacterValidation": "No special characters allowed：{rule}",
   "Namespace.uns_import": "UNS-Import",
   "Namespace.uns_export": "UNS-Export",
   "Namespace.uns_batch_generation": "UNS-Batch Generation",

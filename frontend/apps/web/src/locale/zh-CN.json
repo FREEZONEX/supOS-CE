@@ -924,6 +924,7 @@
   "common.noDescription": "暂无描述",
   "common.clickOrDragForUpload": "点击或者拖拽文件在这个区域进行上传",
   "common.uploadFile": "上传文件",
+  "common.SpecialCharacterValidation": "不支持特殊字符：{rule}",
   "Namespace.uns_import": "UNS-导入",
   "Namespace.uns_export": "UNS-导出",
   "Namespace.uns_batch_generation": "UNS-批量生成",
