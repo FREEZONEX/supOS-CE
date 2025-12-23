@@ -119,7 +119,7 @@ func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data a
 		calcDef, calcData, calcErr := u.calcService.TryCalculate(u.defService, def, list[len(list)-1])
 		if calcData != nil && calcDef != nil {
 			calcList := []map[string]interface{}{calcData}
-			setLastData(calcList, calcDef.GetTimestampField(), calcDef.GetFieldDefines())
+			setLastData(calcList, calcDef)
 
 			u.sendToWebsocket(calcDef, calcList, "", calcErr)
 			messages = append(messages, serviceApi.TopicMessage{UnsId: calcDef.Id, DataSrcId: types.SrcJdbcType(calcDef.DataSrcID), Data: calcList})
@@ -186,7 +186,7 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 				vm = map[string]any{jsonbFiled: string(bs)}
 			}
 			list = []map[string]any{vm}
-			setLastData(list, CT, fds)
+			setLastData(list, def)
 			return
 		}
 	}
@@ -226,21 +226,45 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 	if len(list) == 0 {
 		return
 	}
-	setLastData(list, CT, fds)
+	setLastData(list, def)
 	return
 }
 
-func setLastData(list []map[string]interface{}, CT string, fds *types.FieldDefines) {
+func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
+	CT, qos, fds := def.GetTimestampField(), def.GetQualityField(), def.GetFieldDefines()
 	now := time.Now().UnixMilli()
-	lastMap := list[len(list)-1]
 	var lastUpdateTime = now
+	var lastMap map[string]interface{}
+	mergeTime := def.GetSrcJdbcType().TypeCode() == constants.TimeSequenceType
+	if mergeTime {
+		var prevBean map[string]interface{}
+		for _, f := range def.Fields {
+			if lv := f.LastValue; lv != nil {
+				if prevBean == nil {
+					prevBean = make(map[string]interface{}, 8)
+				}
+				prevBean[f.Name] = lv
+			}
+		}
+		mergeList := mergeBeansWithTimestamp(list, CT, now, prevBean)
+		if len(qos) > 0 {
+			for _, vm := range mergeList {
+				if _, hasQos := vm[qos]; !hasQos {
+					vm[qos] = 0 // 写入质量码默认值：Good(0)
+				}
+			}
+		}
+		list = mergeList
+	} else {
+		for _, vm := range list {
+			if _, hasCt := vm[CT]; !hasCt {
+				vm[CT] = now
+			}
+		}
+	}
+	lastMap = list[len(list)-1]
 	if lo, has := lastMap[CT].(int64); has {
 		lastUpdateTime = lo
-	}
-	for _, v := range list {
-		if _, hasCt := v[CT]; !hasCt {
-			v[CT] = now
-		}
 	}
 	for fieldName, v := range lastMap {
 		fd := fds.FieldsMap[fieldName]
@@ -249,6 +273,53 @@ func setLastData(list []map[string]interface{}, CT string, fds *types.FieldDefin
 			fd.LastTime = lastUpdateTime
 		}
 	}
+}
+
+func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64, prevBean map[string]any) []map[string]interface{} {
+	prevTime := int64(-1)
+	if len(prevBean) > 0 {
+		if lastTime, ok := prevBean[CT].(int64); ok {
+			prevTime = lastTime
+		}
+	}
+	mergeList := make([]map[string]interface{}, 0, len(list))
+	for _, vm := range list {
+		if curT, hasCt := vm[CT]; !hasCt {
+			vm[CT] = now
+			mergeList = append(mergeList, vm)
+		} else if ct, ok := curT.(int64); ok {
+			if sz := len(mergeList); ct == prevTime {
+				if sz > 0 {
+					last := mergeList[sz-1]
+					mm := make(map[string]any, len(vm)*2)
+					for k, v := range last {
+						mm[k] = v
+					}
+					for k, v := range vm {
+						mm[k] = v
+					}
+					mergeList[sz-1] = mm
+				} else {
+					var mm = vm
+					if len(prevBean) > 0 {
+						mm = make(map[string]any, len(vm)*2)
+						for k, v := range prevBean {
+							mm[k] = v
+						}
+						for k, v := range vm {
+							mm[k] = v
+						}
+					}
+					mergeList = append(mergeList, mm)
+				}
+			} else {
+				mergeList = append(mergeList, vm)
+			}
+			prevTime = ct
+			prevBean = vm
+		}
+	}
+	return mergeList
 }
 func (u *UnsMessageConsumer) OnEventContextRefreshedEvent10(ev *event.ContextRefreshedEvent) {
 	if sv := ev.SvcContext; sv != nil && len(sv.Config.DevLink.Mqtt.Brokers) > 0 && sv.Config.DevLink.Mode == "mqtt" {
