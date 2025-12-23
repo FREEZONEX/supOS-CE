@@ -142,7 +142,7 @@ func CreateDatasource(jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceP
 	}
 	datasource.URL = dsProps.HostPort
 	dsJSON := formatTemplate(dsTemplate, datasource)
-	logx.Infof("创建 datasource 请求: %s", dsJSON)
+	logx.Debug("创建 datasource 请求: ", dsJSON)
 
 	host := GetGrafanaURL()
 	{

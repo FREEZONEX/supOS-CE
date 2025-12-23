@@ -327,7 +327,18 @@ func (u *UnsMessageConsumer) OnEventContextRefreshedEvent10(ev *event.ContextRef
 			cli, er := subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)
 			if er != nil {
 				u.log.Errorf("NewMqttClient(%v) failed", er)
-			} else if cli != nil {
+				for i := int64(5); ; i <<= 1 {
+					if i < 0 {
+						i = 60
+					}
+					time.Sleep(time.Duration(i) * time.Second)
+					cli, er = subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)
+					if cli != nil && er == nil {
+						break
+					}
+				}
+			}
+			if cli != nil {
 				_ = cli.SubscribeAll()
 			}
 		}()

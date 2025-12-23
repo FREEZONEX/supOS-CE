@@ -86,12 +86,11 @@ func (g *GrafanaEventHandler) OnEventRemoveTopicsEvent300(evt *event.RemoveTopic
 		}
 	}()
 }
-func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(evt *event.ContextRefreshedEvent) {
-	stop := false
+func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(_ *event.ContextRefreshedEvent) {
 	go func() {
 		time.Sleep(time.Second)
 		g.getPersistentService(0)
-		for !stop {
+		for i := int64(5); ; i <<= 1 {
 			countOk := 0
 			for srcId, ds := range g.dsMap {
 				ok, err := grafanautil.CreateDatasource(srcId, ds.GetDataSourceProperties(), false)
@@ -104,7 +103,10 @@ func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(evt *event.Context
 			if countOk == len(g.dsMap) {
 				break
 			}
-			time.Sleep(15 * time.Second)
+			if i < 0 {
+				i = 60
+			}
+			time.Sleep(time.Duration(i) * time.Second) //指数重试
 		}
 		if "zh-CN" == g.sysConfig.Lang {
 			_ = grafanautil.SetLanguage("zh-Hans")
