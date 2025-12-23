@@ -31,7 +31,8 @@ func buildCategoryFolderDto(parentAlias *string, mountType *int16, mountSource *
 
 	// 设置其他属性
 	dto.Id = common.NextId()
-	name := I18nUtils.GetMessage(fdt.String())
+	//  edge 固定用分类文件夹的英文名 https://zentao.bluetron.cn/biz/bug-view-100705.html
+	name := I18nUtils.GetMessageWithLang("en_US", fdt.String())
 	dto.Name = name
 	dto.DisplayName = &name
 	dto.DataType = folderDataType
