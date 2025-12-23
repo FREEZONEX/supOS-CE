@@ -326,7 +326,7 @@ const FlowPreview: FC<PageProps> = ({ location }) => {
     },
     {
       key: 'menu-item-search',
-      auth: ButtonPermission['SourceFlow.process'],
+      // auth: ButtonPermission['SourceFlow.process'],
       label: formatMessage('flowEditor.process'),
     },
     {

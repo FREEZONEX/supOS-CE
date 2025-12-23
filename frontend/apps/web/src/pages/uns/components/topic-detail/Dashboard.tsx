@@ -21,7 +21,13 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo }) => {
   const { dataType, refers, alias } = instanceInfo;
 
   const formatMessage = useTranslate();
-  const hasDashboards = useBaseStore((state) => state.menuGroup?.some((f) => f.url === '/dashboards'));
+  const hasDashboards = useBaseStore((state) => {
+    console.log(
+      state.menuGroup?.some((f) => f.url === '/dashboards'),
+      state.menuGroup
+    );
+    return state.menuGroup?.some((f) => f.url === '/dashboards');
+  });
   const observer = useRef<MutationObserver | null>(null);
   const newAlias = dataType === 7 ? refers?.[0]?.alias : alias;
   const aliasHash = md5(newAlias).slice(8, 24);
