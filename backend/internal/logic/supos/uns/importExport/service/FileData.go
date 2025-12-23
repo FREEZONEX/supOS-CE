@@ -160,7 +160,13 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 	}
 	if len(i.ParentDataType) > 0 {
 		if pdt, ok := enums.GetFolderDataTypeByName(i.ParentDataType); ok {
-			vo.ParentDataType = base.V2p(int16(pdt))
+			dirType := base.V2p(int16(pdt))
+			switch vo.PathType {
+			case constants.PathTypeDir:
+				vo.DataType = dirType
+			case constants.PathTypeFile:
+				vo.ParentDataType = dirType
+			}
 		}
 	}
 	return vo
