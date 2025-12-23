@@ -141,6 +141,16 @@
             display: flex;
             align-items: center;
         }
+        .tree-toggle {
+            display: inline-block;
+            width: 14px;
+            text-align: center;
+            margin-right: 6px;
+            cursor: pointer;
+        }
+        .topic-tree li.collapsed > ul {
+            display: none;
+        }
         .topic-tree input[type=checkbox] {
             width: 18px;
             height: 18px;
@@ -368,20 +378,22 @@
         return [topic, '', propName, propType, tag]; // Alias占位，AttributeType可为空
     };
 
-    const buildTreeHtml = (nodes) => {
+    const buildTreeHtml = (nodes, level = 0) => {
         if (!nodes || nodes.length === 0) {
             return '';
         }
         return `<ul>${nodes.map(n => {
-            const childrenHtml = buildTreeHtml(n.children || n.childrens || []);
+            const childrenHtml = buildTreeHtml(n.children || n.childrens || [], level + 1);
             const topic = n.path || n.topic || n.alias || '';
             const alias = n.alias || '';
             const label = n.name || n.label || topic;
             const id = (n.id || topic || Math.random().toString(16).slice(2));
             const hasChild = childrenHtml ? 'has-child' : 'leaf';
             const typeIcon = n.type === 0 ? '<i class="fa fa-folder-o" style="margin-right:6px;"></i>' : '<i class="fa fa-file-text-o" style="margin-right:6px;"></i>';
-            return `<li class="${hasChild}">
-                <label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}" data-type="${n.type || ''}"/>${typeIcon}<span class="tree-label">${label}</span></label>
+            const toggle = childrenHtml ? `<span class="tree-toggle" data-toggle="1">&#9660;</span>` : `<span class="tree-toggle"></span>`;
+            const collapsedClass = childrenHtml ? 'collapsed' : '';
+            return `<li class="${hasChild} ${collapsedClass}" data-level="${level}">
+                ${toggle}<label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}" data-type="${n.type || ''}"/>${typeIcon}<span class="tree-label">${label}</span></label>
                 ${childrenHtml}
             </li>`;
         }).join('')}</ul>`;
@@ -390,6 +402,7 @@
     const renderTopicTree = (data) => {
         $('#topic-tree').html(buildTreeHtml(data));
         bindTopicCheckboxEvents();
+        bindToggleEvents();
     };
 
     const bindTopicCheckboxEvents = () => {
@@ -403,6 +416,20 @@
                 const anyChecked = $(this).find('> ul .topic-check:checked').length > 0;
                 $(this).children('label').find('.topic-check').prop('checked', anyChecked);
             });
+        });
+    };
+
+    const bindToggleEvents = () => {
+        $('#topic-tree .tree-toggle[data-toggle]').off('click').on('click', function(e) {
+            e.stopPropagation();
+            const $li = $(this).closest('li');
+            if ($li.hasClass('collapsed')) {
+                $li.removeClass('collapsed');
+                $(this).html('&#9660;'); // down
+            } else {
+                $li.addClass('collapsed');
+                $(this).html('&#9654;'); // right
+            }
         });
     };
 
@@ -506,7 +533,7 @@
                         return `<tr data-row="${index}"><td>${id}</td>${displayRow.map((cell, idx) => {
                             if (editable) {
                                 if (idx === 3) {
-                                    return `<td><input type="number" class="tag-inline-input editable-tag" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
+                                    return `<td><input type="text" class="tag-inline-input editable-tag" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
                                 }
                                 return `<td><input type="text" class="editable-cell" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
                             }
@@ -1144,7 +1171,7 @@
                 node.tableValid = false;
                 RED.notify(errorMsg, "error");
                 RED._debug(errorMsg)
-                return false; // 阻止编辑框关闭
+                throw new Error(errorMsg); // 阻止编辑框关闭
             }
             node.tableValid = true;
 
