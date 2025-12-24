@@ -114,9 +114,10 @@ func filterByConditions(s *base.StringBuilder, f *dto.UnsSearchCondition) {
 	}
 
 	if f.Keyword != "" {
+		kw := escapeLikePattern(escapeSQL(f.Keyword))
 		s.Append(fmt.Sprintf(
 			" AND (a.path ILIKE '%%%s%%' OR a.alias LIKE '%%%s%%')",
-			escapeSQL(f.Keyword), escapeSQL(f.Keyword)))
+			kw, kw))
 	}
 	if f.Alias != "" {
 		s.Append(" AND a.alias = '").Append(escapeSQL(f.Alias)).Append("'")

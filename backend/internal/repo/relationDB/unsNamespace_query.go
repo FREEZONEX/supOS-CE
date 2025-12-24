@@ -447,7 +447,7 @@ func (p UnsNamespaceRepo) ListInTemplate(db *gorm.DB, name string) (results []*U
 		Where("data_type <> ?", constants.AlarmRuleType).
 		Where("model_id IS NOT NULL")
 	if name != "" {
-		lowerName := "%" + strings.ToLower(escapeSQL(name)) + "%"
+		lowerName := "%" + strings.ToLower(escapeLikePattern(escapeSQL(name))) + "%"
 		query = query.Where(
 			"(LOWER(path) LIKE ? OR LOWER(alias) LIKE ?)",
 			lowerName,
@@ -490,7 +490,7 @@ func (p UnsNamespaceRepo) ListLabeledUnsByKeyword(db *gorm.DB, keyword string) (
 		Where("n.path_type = ?", 2).
 		Where("n.status =1") // 软删除过滤
 
-	if kw := strings.TrimSpace(keyword); kw != "" {
+	if kw := escapeLikePattern(escapeSQL(keyword)); kw != "" {
 		likeKeyword := "%" + strings.ToLower(escapeSQL(kw)) + "%"
 		query = query.Where("(LOWER(n.path) LIKE ? OR LOWER(n.alias) LIKE ?)", likeKeyword, likeKeyword)
 	}
