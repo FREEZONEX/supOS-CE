@@ -638,6 +638,7 @@ type ResultVO {
 @server (
 	prefix: /inter-api/supos
 	group:  supos/uns/uns
+	middleware:  CheckTokenWare,InitCtxsWare
 )
 service backend {
 	@doc (

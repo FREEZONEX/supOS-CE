@@ -173,6 +173,8 @@ func (s *SourceFlowService) createMockFlow(ctx context.Context, repo sourceFlowR
 	userName := ""
 	if userCtx != nil {
 		userName = userCtx.PreferredUsername
+	} else {
+		logx.WithContext(ctx).Infof("username not found in context: %v", userCtx)
 	}
 	rec := &dao.NoderedSourceFlow{
 		ID:         common.NextId(),
