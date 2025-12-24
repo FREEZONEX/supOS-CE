@@ -158,9 +158,10 @@ func DeployFlow(
 	}
 
 	if len(globalNodes) > 0 {
+		mergedGlobal := mergeGlobalNodes(ctx, client, globalNodes)
 		globalBody := map[string]any{
 			"id":      "global",
-			"configs": toInterfaceSlice(globalNodes),
+			"configs": toInterfaceSlice(mergedGlobal),
 		}
 		var gout map[string]any
 		code, body, errs = client.DoJSON(ctx, "PUT", "/flow/global", globalBody, &gout)
@@ -361,4 +362,84 @@ func ExtractAliases(nodes []map[string]any) []string {
 		aliases = append(aliases, alias)
 	}
 	return aliases
+}
+
+func mergeGlobalNodes(ctx context.Context, client *noderedclient.Client, incoming []map[string]any) []map[string]any {
+	existing := fetchGlobalNodes(ctx, client)
+	if len(existing) == 0 {
+		return incoming
+	}
+
+	incomingByID := make(map[string]map[string]any)
+	incomingNoID := make([]map[string]any, 0)
+	for _, node := range incoming {
+		if node == nil {
+			continue
+		}
+		id := strings.TrimSpace(fmt.Sprint(node["id"]))
+		if id == "" {
+			incomingNoID = append(incomingNoID, node)
+			continue
+		}
+		incomingByID[id] = node
+	}
+
+	merged := make([]map[string]any, 0, len(existing)+len(incoming))
+	for _, node := range existing {
+		if node == nil {
+			continue
+		}
+		id := strings.TrimSpace(fmt.Sprint(node["id"]))
+		if id == "" {
+			merged = append(merged, node)
+			continue
+		}
+		if updated, ok := incomingByID[id]; ok {
+			merged = append(merged, updated)
+			delete(incomingByID, id)
+		} else {
+			merged = append(merged, node)
+		}
+	}
+	for _, node := range incomingNoID {
+		merged = append(merged, node)
+	}
+	for _, node := range incomingByID {
+		merged = append(merged, node)
+	}
+	return merged
+}
+
+func fetchGlobalNodes(ctx context.Context, client *noderedclient.Client) []map[string]any {
+	if client == nil {
+		return nil
+	}
+	var out map[string]any
+	code, body, errs := client.DoJSON(ctx, "GET", "/flow/global", nil, &out)
+	if len(errs) > 0 || (code != 200 && code != 204) {
+		logx.WithContext(ctx).Errorf("fetch global flow failed: code=%d err=%v body=%s", code, errs, string(body))
+		return nil
+	}
+	cfgs := toMapSlice(out["configs"])
+	if len(cfgs) == 0 {
+		cfgs = toMapSlice(out["nodes"])
+	}
+	return cfgs
+}
+
+func toMapSlice(value any) []map[string]any {
+	switch v := value.(type) {
+	case []map[string]any:
+		return v
+	case []any:
+		res := make([]map[string]any, 0, len(v))
+		for _, item := range v {
+			if m, ok := item.(map[string]any); ok {
+				res = append(res, m)
+			}
+		}
+		return res
+	default:
+		return nil
+	}
 }
