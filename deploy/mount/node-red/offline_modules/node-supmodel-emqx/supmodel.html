@@ -856,6 +856,49 @@
         return "";
         
     }
+
+    let detachDoneGuard = null;
+    const clearDoneGuard = () => {
+        if (detachDoneGuard) {
+            detachDoneGuard();
+        }
+    };
+    const bindDoneGuard = (node) => {
+        const okButton = document.getElementById("node-dialog-ok");
+        if (!okButton) {
+            return;
+        }
+        clearDoneGuard();
+        const handler = (evt) => {
+            const models = templateModels[node.id] || [];
+            const prevProtocol = node.protocol;
+            const selectedProtocol = $('#node-select-protocol').val();
+            if (selectedProtocol !== undefined) {
+                node.protocol = selectedProtocol;
+            }
+            let msg = "";
+            try {
+                msg = checkTable(node, models);
+            } finally {
+                node.protocol = prevProtocol;
+            }
+            if (msg) {
+                evt.preventDefault();
+                evt.stopImmediatePropagation();
+                evt.stopPropagation();
+                RED.notify(msg, "error");
+                return false;
+            }
+            return true;
+        };
+        okButton.addEventListener('click', handler, true);
+        detachDoneGuard = () => {
+            okButton.removeEventListener('click', handler, true);
+            detachDoneGuard = null;
+        };
+    };
+
+    RED.events.on("editor:close", clearDoneGuard);
     
     let pagenation = 
     {
@@ -965,6 +1008,8 @@
             if (!rowEditable[node.id]) {
                 rowEditable[node.id] = new Array((templateModels[node.id] || []).length).fill(false);
             }
+
+            bindDoneGuard(node);
 
             $("#node-config-supmodel-tabs-content").children().hide();
             $("#supmodel-tab-mappings").show();
@@ -1202,9 +1247,13 @@
             const renderData = templateModels[node.id].slice(0, pagenation.pageItem);
             renderTable(node, renderData);
         },
+        oneditcancel: function () {
+            clearDoneGuard();
+        },
         oneditsave: function () {
             console.log("oneditsave called");
             const node = this;
+            clearDoneGuard();
             node.selectedModel = $('.search-input-m').val();
             if (!node.selectedModel) {
                 node.selectedModelAlias = "";
