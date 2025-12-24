@@ -57,7 +57,7 @@ FROM oven/bun:1.3.5-alpine
 RUN apk --no-cache add curl
 
 # Install serve for static file serving
-RUN bun install -g serve concurrently pnpm
+RUN bun install -g serve concurrently
 
 # Set timezone to Asia/Shanghai
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
@@ -87,5 +87,5 @@ EXPOSE 3000 4000 8080
 # Start both services concurrently (frontend on port 3000, backend on port 4000)
 #CMD ["concurrently", \
 #    "serve -s /app/web-dist -l 3000", \
-#    "bun -C /app/services-hono run start", \
+#    "cd /app/services-hono && bun run start", \
 #    "./backend"]
