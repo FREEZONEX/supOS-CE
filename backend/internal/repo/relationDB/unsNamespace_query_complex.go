@@ -53,7 +53,7 @@ func (p UnsNamespaceRepo) PageListTemplates(db *gorm.DB, f dto.TemplateQueryVo, 
 	db = p.model(db)
 	db = db.Select([]string{"id", "name", "path", "alias", "description"}).Where("path_type=1 AND data_type=0 AND status=1 ")
 	if f.Key != "" {
-		db = db.Where(fmt.Sprintf(" name LIKE '%%%s%%'  ", escapeSQL(f.Key)))
+		db = db.Where(fmt.Sprintf(" name LIKE '%%%s%%'  ", escapeLikePattern(escapeSQL(f.Key))))
 	}
 	if subscribeEnable := f.SubscribeEnable; subscribeEnable != nil {
 		if *subscribeEnable {
