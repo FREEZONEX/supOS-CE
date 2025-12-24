@@ -57,7 +57,7 @@ FROM oven/bun:1.3.5-alpine
 RUN apk --no-cache add curl
 
 # Install serve for static file serving
-RUN npm install -g serve concurrently pnpm
+RUN bun install -g serve concurrently pnpm
 
 # Set timezone to Asia/Shanghai
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
