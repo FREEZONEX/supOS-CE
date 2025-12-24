@@ -489,7 +489,7 @@ func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, bat
 		fields := template.Fields
 		if len(insFs) > 0 {
 			var checkError string
-			if unsDto.PathType == constants.PathTypeFile {
+			if unsDto.PathType == constants.PathTypeFile && base.P2v(unsDto.DataType) != constants.JsonbType {
 				checkError = checkInstanceFields(fields, insFs)
 			}
 			if checkError != "" {
