@@ -65,7 +65,7 @@ func NewDashboardDataImporter(
 }
 
 // ImportData 导入 Dashboard 数据
-func (i *DashboardDataImporter) ImportData(file *os.File) error {
+func (i *DashboardDataImporter) ImportData(ctx context.Context, file *os.File) error {
 	// 解析 JSON 文件
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&i.dashboardJsonWrapper); err != nil {
@@ -74,11 +74,11 @@ func (i *DashboardDataImporter) ImportData(file *os.File) error {
 	}
 
 	// 处理导入数据
-	return i.handleImportData()
+	return i.handleImportData(ctx)
 }
 
 // handleImportData 处理导入数据
-func (i *DashboardDataImporter) handleImportData() error {
+func (i *DashboardDataImporter) handleImportData(ctx context.Context) error {
 	if i.dashboardJsonWrapper == nil || len(i.dashboardJsonWrapper.Data) == 0 {
 		return nil
 	}
@@ -142,7 +142,7 @@ func (i *DashboardDataImporter) handleImportData() error {
 			// 根据类型调用 Grafana/Fuxa API 创建 Dashboard
 			if dashboard.Type == 1 {
 				// Grafana Dashboard
-				_, err := grafanautil.CreateDashboardByBody(dashboard.ID, "", dashboard.JsonContent)
+				_, err := grafanautil.CreateDashboardByBody(ctx, dashboard.ID, "", dashboard.JsonContent)
 				if err != nil {
 					i.logger.Errorf("failed to create grafana dashboard: %v", err)
 				}

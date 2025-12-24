@@ -64,7 +64,7 @@ func (g *GrafanaEventHandler) createDashboardForTopic(ctx context.Context, dto *
 	g.log.Infof("创建 Grafana 仪表板 - 列：%s, 标题：%s, 模式：%s, 表：%s, 标签条件：%s, fromImport? %v",
 		columns, title, schema, table, tagNameCondition, fromImport)
 
-	uuid, er := grafanautil.CreateDashboard(table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
+	uuid, er := grafanautil.CreateDashboard(ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
 	if er != nil {
 		return er
 	}
@@ -105,7 +105,7 @@ func (g *GrafanaEventHandler) createCompositeDashboard(ctx context.Context, jdbc
 	}
 
 	dashboardName := generateDashboardName(flowName, tempName)
-	uuid, err := grafanautil.CreateTimeSeriesListDashboard(jdbcType, topics, dashboardName)
+	uuid, err := grafanautil.CreateTimeSeriesListDashboard(ctx, jdbcType, topics, dashboardName)
 	if err != nil {
 		g.log.Error("创建时序面板失败", err.Error())
 		return

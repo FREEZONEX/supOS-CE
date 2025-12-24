@@ -79,7 +79,7 @@ func (g *GrafanaEventHandler) OnEventRemoveTopicsEvent300(evt *event.RemoveTopic
 	go func() {
 		for _, table := range tables {
 			uid := grafanautil.GetDashboardUUIDByAlias(table)
-			err := grafanautil.DeleteDashboard(uid)
+			err := grafanautil.DeleteDashboard(evt.Context, uid)
 			if err != nil {
 				g.log.Error("删除grafana dashboard 异常", err, table)
 			}
@@ -93,7 +93,7 @@ func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(_ *event.ContextRe
 		for i := int64(5); ; i <<= 1 {
 			countOk := 0
 			for srcId, ds := range g.dsMap {
-				ok, err := grafanautil.CreateDatasource(srcId, ds.GetDataSourceProperties(), false)
+				ok, err := grafanautil.CreateDatasource(context.Background(), srcId, ds.GetDataSourceProperties(), false)
 				if err != nil {
 					g.log.Error("CreateDatasourceErr:", srcId.Alias(), err)
 				} else if ok {
@@ -109,7 +109,7 @@ func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(_ *event.ContextRe
 			time.Sleep(time.Duration(i) * time.Second) //指数重试
 		}
 		if "zh-CN" == g.sysConfig.Lang {
-			_ = grafanautil.SetLanguage("zh-Hans")
+			_ = grafanautil.SetLanguage(context.Background(), "zh-Hans")
 		}
 		g.log.Info(">>>>>>>>>Grafana 默认datasource 完成创建.")
 	}()

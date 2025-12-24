@@ -79,7 +79,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	}
 
 	// 4. 调用 Grafana API 创建 Dashboard
-	_, err = grafanautil.CreateDashboardByBody(dashboardUID, "", dashboardJSON)
+	_, err = grafanautil.CreateDashboardByBody(l.ctx, dashboardUID, "", dashboardJSON)
 	if err != nil {
 		l.Logger.Errorf("failed to create grafana dashboard for uns %s: %v", alias, err)
 		return &types.JsonResult{
@@ -103,7 +103,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	if err = l.dashboardMapper.Insert(db, dashboard); err != nil {
 		l.Logger.Errorf("failed to save dashboard record for uns %s: %v", alias, err)
 		// 尝试回滚 Grafana 的创建操作
-		_ = grafanautil.DeleteDashboard(dashboardUID)
+		_ = grafanautil.DeleteDashboard(l.ctx, dashboardUID)
 		return &types.JsonResult{
 			Code: http.StatusInternalServerError,
 			Msg:  err.Error(),

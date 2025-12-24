@@ -83,7 +83,7 @@ func (s *DashboardService) InitDashboardsOnStartup(ctx context.Context) {
 			}
 
 			// 检查 Grafana 中是否已存在
-			existing, _ := grafanautil.GetDashboardByUUID(uid)
+			existing, _ := grafanautil.GetDashboardByUUID(ctx, uid)
 			if existing != nil {
 				dashboard.NeedInit = false
 				if err := dashboardMapper.UpdateById(db, dashboard); err != nil {
@@ -96,7 +96,7 @@ func (s *DashboardService) InitDashboardsOnStartup(ctx context.Context) {
 			// 不存在，则创建
 			dashboardMap["id"] = nil
 			jsonBytes, _ := json.Marshal(dashboardData)
-			_, err = grafanautil.CreateDashboardByBody(uid, "", string(jsonBytes))
+			_, err = grafanautil.CreateDashboardByBody(ctx, uid, "", string(jsonBytes))
 			if err != nil {
 				s.logger.Errorf("failed to initialize dashboard %s: %v", dashboard.Name, err)
 			} else {
@@ -213,7 +213,7 @@ func (s *DashboardService) fetchDataForExport(ctx context.Context, dCtx *exporte
 
 	for _, dashboard := range dashboards {
 		if dashboard.Type == 1 { // Grafana
-			jsonContent, err := grafanautil.Get(dashboard.ID)
+			jsonContent, err := grafanautil.Get(ctx, dashboard.ID)
 			if err != nil {
 				s.logger.Errorf("failed to get grafana dashboard content for %s: %v", dashboard.ID, err)
 			} else {
@@ -250,7 +250,7 @@ func (s *DashboardService) AsyncImport(ctx context.Context, db *gorm.DB, filePat
 
 	finalTask := "dashboard.create.task.name.final" // 假设从i18n获取
 
-	if err := dataImporter.ImportData(file); err != nil {
+	if err := dataImporter.ImportData(ctx, file); err != nil {
 		s.logger.Errorf("failed to import data from %s: %v", filePath, err)
 		// 导入失败，尝试写入错误文件
 		_, writeErr := s.writeImportErrorFile(dataImporter)

@@ -56,7 +56,7 @@ func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) (*types.JsonResul
 	// Grafana Dashboard 更新
 	if existing.Type == 1 {
 		// 获取现有的 Dashboard
-		dbJSON, err := grafanautil.GetDashboardByUUID(dashboard.ID)
+		dbJSON, err := grafanautil.GetDashboardByUUID(l.ctx, dashboard.ID)
 		if err != nil || dbJSON == nil {
 			l.Logger.Errorf("failed to get grafana dashboard: %v", err)
 			goto UPDATE_DB
@@ -71,7 +71,7 @@ func (l *EditLogic) Edit(dashboard *relationDB.DashboardModel) (*types.JsonResul
 		// 调用 Grafana API 更新
 		jsonBytes, _ := json.Marshal(dbJSON)
 		url := grafanautil.GetGrafanaURL() + "/api/dashboards/db"
-		_, err = grafanautil.CreateDashboardByBody(dashboard.ID, "", string(jsonBytes))
+		_, err = grafanautil.CreateDashboardByBody(l.ctx, dashboard.ID, "", string(jsonBytes))
 		if err != nil {
 			l.Logger.Errorf("failed to update grafana dashboard: %v", err)
 			return &types.JsonResult{

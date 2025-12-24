@@ -53,7 +53,7 @@ func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 
 	// Grafana Dashboard 删除
 	if dashboard.Type == 1 {
-		err := grafanautil.DeleteDashboard(uid)
+		err := grafanautil.DeleteDashboard(l.ctx, uid)
 		if err != nil {
 			l.Logger.Errorf("failed to delete grafana dashboard: %v", err)
 		}

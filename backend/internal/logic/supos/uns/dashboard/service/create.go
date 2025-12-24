@@ -34,7 +34,7 @@ func (s *DashboardService) Create(ctx context.Context, req *relationDB.Dashboard
 	// Grafana Dashboard 创建
 	if req.Type == 1 {
 		// 构建 Dashboard JSON, 只构建 dashboard 内部的对象
-		template := grafanautil.LoadTemplate("templates/dashboard-blank.json")
+		template := grafanautil.LoadTemplate(ctx, "templates/dashboard-blank.json")
 		params := make(map[string]interface{})
 		dashboardJson := grafanautil.FormatTemplateMap(template, params)
 		s.logger.Info(">>>>>>>>>>>>>>>dashboardJson :{}", dashboardJson)
@@ -42,7 +42,7 @@ func (s *DashboardService) Create(ctx context.Context, req *relationDB.Dashboard
 		// 调用 Grafana API 创建 Dashboard
 		// grafanautil.CreateDashboardByBody 会自动添加 "dashboard": {} 和 "overwrite": true 的外层包装
 		url := grafanautil.GetGrafanaURL() + "/api/dashboards/db"
-		_, err := grafanautil.CreateDashboardByBody(req.ID, "", dashboardJson)
+		_, err := grafanautil.CreateDashboardByBody(ctx, req.ID, "", dashboardJson)
 		if err != nil {
 			s.logger.Errorf("failed to create grafana dashboard: %v", err)
 			return &types.JsonResult{
