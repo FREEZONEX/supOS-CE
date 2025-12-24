@@ -129,7 +129,7 @@ func unsTreeNextLevelFilter(q *UnsTreeNextLevelQuery, sql *base.StringBuilder) {
 		sql.Append(`AND model_id is not null `)
 	}
 	if keyword := q.Keyword; len(keyword) > 0 {
-		keyword = "'%" + escapeSQL(keyword) + "%'"
+		keyword = "'%" + escapeLikePattern(escapeSQL(keyword)) + "%'"
 		sql.Append(` AND (path ILIKE `).Append(keyword).Append(` OR alias LIKE `).Append(keyword).Append(`)`)
 	}
 	sql.Append(` AND id>1000`) //排除系统数据

@@ -1,6 +1,10 @@
 package dashboard
 
 import (
+	"backend/internal/common/I18nUtils"
+	"backend/internal/common/constants"
+	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/apiutil"
 	"backend/internal/common/utils/grafanautil"
 	unsservice "backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/repo/relationDB"
@@ -12,6 +16,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"gitee.com/unitedrhino/share/i18ns"
@@ -21,27 +26,112 @@ import (
 
 type CreateGrafanaByUnsLogic struct {
 	logx.Logger
-	ctx                context.Context
-	svcCtx             *svc.ServiceContext
-	dashboardMapper    relationDB.DashboardMapper
-	dashboardRefMapper relationDB.DashboardRefMapper
-	unsQueryService    *unsservice.UnsQueryService
-	unsUpdateService   *unsservice.UnsUpdateService
+	ctx                  context.Context
+	svcCtx               *svc.ServiceContext
+	dashboardMapper      relationDB.DashboardMapper
+	dashboardRefMapper   relationDB.DashboardRefMapper
+	unsDefinitionService serviceApi.IUnsDefinitionService
+	unsAddService        *unsservice.UnsAddService
+
+	unsQueryService  *unsservice.UnsQueryService
+	unsUpdateService *unsservice.UnsUpdateService
 }
 
 func NewCreateGrafanaByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateGrafanaByUnsLogic {
 	// Note: Services might be managed by spring, adjust if needed
 
 	return &CreateGrafanaByUnsLogic{
-		Logger:           logx.WithContext(ctx),
-		ctx:              ctx,
-		svcCtx:           svcCtx,
+		Logger:               logx.WithContext(ctx),
+		ctx:                  ctx,
+		svcCtx:               svcCtx,
+		unsDefinitionService: spring.GetBean[serviceApi.IUnsDefinitionService](),
+		unsAddService:        spring.GetBean[*unsservice.UnsAddService](),
+
 		unsQueryService:  spring.GetBean[*unsservice.UnsQueryService](),
 		unsUpdateService: spring.GetBean[*unsservice.UnsUpdateService](),
 	}
 }
-
 func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonResult, error) {
+	uns := l.unsDefinitionService.GetDefinitionByAlias(alias)
+	if uns == nil {
+		return &types.JsonResult{Code: 400, Msg: I18nUtils.GetMessage("uns.file.not.exist")}, nil
+	}
+	jdbcType := types.SrcJdbcType(uns.DataSrcID)
+	columns := grafanautil.Fields2Columns(jdbcType, uns.Fields)
+	title := alias
+	schema := "public"
+	table := uns.GetTable()
+	tagNameCondition := ""
+
+	// 如果存在表字段名，调整表和条件
+	if strings.TrimSpace(uns.GetTbFieldName()) != "" {
+		tagNameCondition = fmt.Sprintf(" and %s='%d' ", constants.SystemSeqTag, uns.Id)
+	}
+	// 日志输出（Go中使用log包）
+	l.Logger.Debugf(">>>>> create grafana dashboard columns:%s,title:%s,schema:%s,table:%s,tagNameCondition:%s",
+		columns, title, schema, table, tagNameCondition)
+	dot := strings.Index(table, ".")
+	if dot > 0 {
+		schema = table[:dot]
+		table = table[dot+1:]
+	}
+	uuid, err := grafanautil.CreateDashboard(l.ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
+	if err != nil {
+		return &types.JsonResult{Code: 400, Msg: err.Error()}, nil
+	}
+	// 检查仪表板是否已存在
+	db := relationDB.GetDb(l.ctx)
+	dashboardPo, _ := l.dashboardMapper.SelectById(db, uuid)
+	if dashboardPo == nil {
+		now := time.Now()
+		po := &relationDB.DashboardModel{
+			ID:         uuid,
+			Name:       alias,
+			CreateTime: now,
+			UpdateTime: now,
+		}
+
+		// 设置创建者
+		if userCtx := apiutil.GetUserFromContext(l.ctx); userCtx != nil {
+			po.Creator = userCtx.PreferredUsername
+		}
+
+		if err := l.dashboardMapper.Insert(db, po); err != nil {
+			fmt.Printf("Failed to insert dashboard: %v\n", err)
+		}
+	}
+
+	// 生成标志位并创建分类模型实例
+	if uns.WithFlags == nil {
+		var flag int32 = constants.UnsFlagWithDashboard
+		uns.WithFlags = &flag
+	} else {
+		*uns.WithFlags |= constants.UnsFlagWithDashboard
+	}
+
+	if err := l.unsAddService.CreateModelInstance(l.ctx, uns); err != nil {
+		fmt.Printf("Failed to create category model instance: %v\n", err)
+	}
+
+	// 创建仪表板引用关系（如果不存在）
+	refPo, _ := l.dashboardRefMapper.GetByUns(db, alias)
+	if refPo == nil {
+		ref := &relationDB.DashboardRefModel{
+			DashboardID: uuid,
+			UnsAlias:    alias,
+		}
+		if err := l.dashboardRefMapper.Insert(db, ref); err != nil {
+			fmt.Printf("Failed to insert dashboard reference: %v\n", err)
+		}
+	}
+
+	return &types.JsonResult{
+		Code: 200,
+		Msg:  "ok",
+		Data: uuid,
+	}, nil
+}
+func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns_old(alias string) (*types.JsonResult, error) {
 	// 1. 获取 UNS 定义
 	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, alias)
 	if err != nil || unsResp == nil || unsResp.Data == nil {

@@ -55,7 +55,7 @@ services:
           concurrently \"serve -s /app/web-dist -l 3000\" \"./backend\"
         else
           echo 'LLM_API_KEY已配置，启动所有服务'
-          concurrently \"serve -s /app/web-dist -l 3000\" \"node /app/services-express-dist/index.js\" \"./backend\"
+          concurrently \"serve -s /app/web-dist -l 3000\" \"cd /app/services-hono && bun run start\" \"./backend\"
         fi
       "
     volumes:
@@ -155,7 +155,7 @@ services:
       - edge_network
   
   grafana:
-    image: grafana/grafana:11.4.0
+    image: grafana/grafana:11.5.6
     profiles:
       - grafana
     container_name: grafana

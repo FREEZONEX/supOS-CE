@@ -16,7 +16,7 @@ source $SCRIPT_DIR/../../.env.tmp
 PORTAINER_JWT=`docker exec nodered curl -skX POST https://portainer:9443/api/auth      -H "Content-Type: application/json"      -d '{"username": "admin", "password": "adminpassword"}' | awk -F'"' '/jwt/ {print $4}'` && echo "Successfully got Portainer JWT"\
 || if [ "$1" == "--verbose" ]; then warn "Failed to obtain JWT from Portainer"; fi
 
-docker exec nodered curl -skX POST "https://portainer:9443/api/users"   -H "Authorization: Bearer $PORTAINER_JWT"   -H "Content-Type: application/json"   -d '{    "Username": "tier0",   "Email": "tier0@supos.com","Role": 1 }' > /dev/null 2>&1 && echo "Successfully created administrator 'tier0'"\
+docker exec nodered curl -skX POST "https://portainer:9443/api/users"   -H "Authorization: Bearer $PORTAINER_JWT"   -H "Content-Type: application/json"   -d '{    "Username": "tier0", "Email": "tier0@supos.com","Role": 1 }' > /dev/null 2>&1 && echo "Successfully created administrator 'tier0'"\
 || if [ "$1" == "--verbose" ]; then warn "Failed to create administrator 'tier0'"; fi
 
 if [ "$ENTRANCE_DOMAIN" = "127.0.0.1" ] || [ "$ENTRANCE_DOMAIN" = "localhost" ]; then

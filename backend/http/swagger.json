@@ -190,6 +190,9 @@
                 },
                 "sub": {
                   "type": "string"
+                },
+                "superAdmin": {
+                  "type": "boolean"
                 }
               }
             }
@@ -309,6 +312,9 @@
                 },
                 "sub": {
                   "type": "string"
+                },
+                "superAdmin": {
+                  "type": "boolean"
                 }
               }
             }
@@ -12388,7 +12394,7 @@
       }
     }
   },
-  "x-date": "2025-12-23 15:24:45",
+  "x-date": "2025-12-24 15:38:04",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

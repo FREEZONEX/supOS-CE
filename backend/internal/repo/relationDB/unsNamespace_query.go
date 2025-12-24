@@ -444,10 +444,10 @@ func (p UnsNamespaceRepo) ListUnsByIds(db *gorm.DB, ids []int64) (results []*Uns
 func (p UnsNamespaceRepo) ListInTemplate(db *gorm.DB, name string) (results []*UnsNamespace, err error) {
 	db = p.model(db)
 	query := db.Where("path_type in ?", []int{0, 2}).
-		Where("data_type <> ?", constants.AlarmRuleType).
-		Where("model_id IS NOT NULL")
+		Where("(data_type is NULL OR data_type <> ?)", constants.AlarmRuleType).
+		Where("model_id IS NOT NULL AND status=1 ")
 	if name != "" {
-		lowerName := "%" + strings.ToLower(escapeSQL(name)) + "%"
+		lowerName := "%" + strings.ToLower(escapeLikePattern(escapeSQL(name))) + "%"
 		query = query.Where(
 			"(LOWER(path) LIKE ? OR LOWER(alias) LIKE ?)",
 			lowerName,
@@ -490,7 +490,7 @@ func (p UnsNamespaceRepo) ListLabeledUnsByKeyword(db *gorm.DB, keyword string) (
 		Where("n.path_type = ?", 2).
 		Where("n.status =1") // 软删除过滤
 
-	if kw := strings.TrimSpace(keyword); kw != "" {
+	if kw := escapeLikePattern(escapeSQL(keyword)); kw != "" {
 		likeKeyword := "%" + strings.ToLower(escapeSQL(kw)) + "%"
 		query = query.Where("(LOWER(n.path) LIKE ? OR LOWER(n.alias) LIKE ?)", likeKeyword, likeKeyword)
 	}

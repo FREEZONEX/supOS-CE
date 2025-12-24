@@ -2,7 +2,7 @@
 
 info "Checking for existing service configuration..."
 
-if [ ! -f "$VOLUMES_PATH/edge/active-services.txt" ]; then
+if [ ! -f "$VOLUMES_PATH/edge/system/active-services.txt" ]; then
     # First-time installation
     echo "------------------------------------------------------------"
     echo "This is a first-time installation."
@@ -30,7 +30,7 @@ if [ ! -f "$VOLUMES_PATH/edge/active-services.txt" ]; then
 else
     # This is for subsequent runs
     info "Found existing service configuration, using it."
-    command=$(sed -n '2p' "$VOLUMES_PATH/edge/active-services.txt")
+    command=$(sed -n '2p' "$VOLUMES_PATH/edge/system/active-services.txt")
 fi
 
 declare -g COMPOSE_PROFILE_ARGS_STR="$command"

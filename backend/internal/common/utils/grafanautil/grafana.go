@@ -321,10 +321,15 @@ func CreateDashboardByBody(ctx context.Context, uidsTr, datasourceName, body str
 		}
 	}
 
-	newBodyMap := map[string]any{
-		"dashboard": bodyJSON,
+	var newBody []byte
+	if _, has := bodyJSON["dashboard"]; has {
+		newBody = []byte(body)
+	} else {
+		newBodyMap := map[string]any{
+			"dashboard": bodyJSON,
+		}
+		newBody, _ = json.Marshal(newBodyMap)
 	}
-	newBody, _ := json.Marshal(newBodyMap)
 
 	logger := logx.WithContext(ctx)
 	logger.Infof("创建 dashboardJson 请求: %s", string(newBody))

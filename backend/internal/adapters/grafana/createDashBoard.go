@@ -86,10 +86,10 @@ func (g *GrafanaEventHandler) extractSchemaAndTable(fullTableName, defaultSchema
 
 // buildTagNameCondition 构建标签名称条件
 func (g *GrafanaEventHandler) buildTagNameCondition(dto *types.CreateTopicDto) string {
-	if dto.TbFieldName == "" {
+	if dto.GetTbFieldName() == "" {
 		return ""
 	}
-	return fmt.Sprintf(" and %s='%s' ", constants.SystemSeqTag, dto.Id)
+	return fmt.Sprintf(" and %s='%d' ", constants.SystemSeqTag, dto.Id)
 }
 
 // createCompositeDashboard 创建组合仪表板

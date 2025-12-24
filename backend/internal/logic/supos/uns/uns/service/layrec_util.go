@@ -196,6 +196,9 @@ func processPathName(siblings []*dao.UnsNamespace, addFiles map[int64]*dao.UnsNa
 					node.PathName = name
 				}
 			}
+			if node.PathName == "" {
+				node.PathName = name
+			}
 		}
 	}
 }
