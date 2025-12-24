@@ -26,7 +26,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o backend .
 
 
 # -----------------------------
-# Stage 2: Build frontend
+# Stage 2: Build the Node.js frontend
 # -----------------------------
 FROM node:22-alpine AS web-builder
 
@@ -45,19 +45,21 @@ COPY ./frontend/packages ./packages
 RUN npm install -g pnpm
 RUN pnpm install
 
-# Build frontend
+# Build frontend and backend services
 RUN pnpm run build:web
+RUN pnpm run build:servicesExpress
+
 
 # -----------------------------
 # Stage 3: Final runtime image
 # -----------------------------
-FROM oven/bun:1.3.5-alpine
+FROM node:22-alpine
 
 # Install runtime dependencies, including nodejs and npm
 RUN apk --no-cache add curl
 
 # Install serve for static file serving
-RUN bun add -g serve concurrently
+RUN npm install -g serve concurrently pnpm
 
 # Set timezone to Asia/Shanghai
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
@@ -73,11 +75,13 @@ RUN chmod +x ./go-edge/backend
 
 # Copy Node.js web and services build artifacts
 COPY --from=web-builder /app/apps/web/dist ./web-dist
-COPY --from=web-builder /app/apps/services-hono ./services-hono
+COPY --from=web-builder /app/apps/services-express/dist ./services-express-dist
+COPY --from=web-builder /app/apps/services-express/package.json ./services-express-dist/
+COPY --from=web-builder /app/pnpm-workspace.yaml ./services-express-dist/
 
 # Install production dependencies for Node.js
-WORKDIR /app/services-hono
-RUN bun install --frozen-lockfile
+WORKDIR /app/services-express-dist
+RUN pnpm install --production
 
 WORKDIR /app/go-edge
 
@@ -87,5 +91,5 @@ EXPOSE 3000 4000 8080
 # Start both services concurrently (frontend on port 3000, backend on port 4000)
 #CMD ["concurrently", \
 #    "serve -s /app/web-dist -l 3000", \
-#    "cd /app/services-hono && bun run start", \
+#    "node /app/services-express-dist/index.js", \
 #    "./backend"]
