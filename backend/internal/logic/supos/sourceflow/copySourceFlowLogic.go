@@ -56,6 +56,15 @@ func (l *CopySourceFlowLogic) CopyFlowWithType(req *types.SourceFlowCopyReq, flo
 		template = strings.TrimSpace(flowType)
 	}
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
+	filter := relationDB.NoderedSourceFlowFilter{
+		Name:     name,
+		Template: template,
+	}
+	if exist, err := repo.FindOneByFilter(l.ctx, filter); err == nil && exist != nil {
+		return "", errors.Duplicate.WithMsg("nodered.flowName.has.used")
+	} else if err != nil && !errors.Cmp(err, errors.NotFind) {
+		return "", err
+	}
 	input := flowcommon.FlowCopyInput{
 		FlowName:    name,
 		Description: strings.TrimSpace(req.Description),
