@@ -1,6 +1,7 @@
 @server (
 	prefix: /inter-api/supos/uns/importExport
 	group:  supos/uns/importExport
+	middleware:  CheckTokenWare,InitCtxsWare
 )
 service backend {
 

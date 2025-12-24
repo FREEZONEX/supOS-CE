@@ -64,7 +64,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	tagNameCondition := ""
 
 	// 如果存在表字段名，调整表和条件
-	if strings.TrimSpace(uns.TbFieldName) != "" {
+	if strings.TrimSpace(uns.GetTbFieldName()) != "" {
 		tagNameCondition = fmt.Sprintf(" and %s='%d' ", constants.SystemSeqTag, uns.Id)
 	}
 	// 日志输出（Go中使用log包）

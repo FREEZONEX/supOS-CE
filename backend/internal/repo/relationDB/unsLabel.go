@@ -91,7 +91,7 @@ func (p UnsLabelRepo) LikeName(db *gorm.DB, key string) ([]*UnsLabel, error) {
 	var results []*UnsLabel
 	db = db.Model(&UnsLabel{})
 	if len(key) > 0 {
-		db = db.Where("label_name like '%" + escapeSQL(key) + "%' ")
+		db = db.Where("label_name like '%" + escapeLikePattern(escapeSQL(key)) + "%' ")
 	}
 	err := db.Find(&results).Error
 	if err != nil {
