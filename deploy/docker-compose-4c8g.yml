@@ -53,7 +53,7 @@ services:
           concurrently \"serve -s /app/web-dist -l 3000\" \"./backend\"
         else
           echo 'LLM_API_KEY已配置，启动所有服务'
-          concurrently \"serve -s /app/web-dist -l 3000\" \"node /app/services-express-dist/index.js\" \"./backend\"
+          concurrently \"serve -s /app/web-dist -l 3000\" \"bun -C /app/services-hono run start\" \"./backend\"
         fi
       "
     volumes:
