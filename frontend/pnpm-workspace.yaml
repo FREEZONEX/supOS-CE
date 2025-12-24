@@ -3,6 +3,7 @@ packages:
   - packages/*
   - plugins/*
   - mcp/*
+  - '!apps/services-hono'
 catalogs:
   # 框架
   framework:
@@ -116,8 +117,6 @@ catalogs:
     '@modelcontextprotocol/sdk': '^1.21.0'
   # 服务端
   server:
-    '@hono/node-server': '^1.19.5'
-    'hono': '^4.10.0'
     'dockerode': '^4.0.9'
     'cors': '^2.8.5'
     'express': '^5.1.0'
