@@ -43,7 +43,7 @@
     "btn_ok": "确定",
     "error_select_topic_empty": "",
     "custom_protocol": "自定义协议",
-    "error_path_not_null": "文件路径不能为空",
+    "error_path_not_null": "主题不能为空",
     "error_field_not_null": "属性名称不能为空",
     "error_field_type_not_null": "属性类型不能为空",
     "error_tag_not_null": "位号名不能为空",
