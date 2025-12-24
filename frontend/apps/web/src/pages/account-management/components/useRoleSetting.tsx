@@ -70,11 +70,13 @@ const AddRoleContent = ({ successBack, disabled }: { successBack: (data: any) =>
                     type: 'string',
                     min: 1,
                     max: 10,
-                    message: formatMessage('rule.characterLimit'),
+                    message: formatMessage('rule.customCharacterLimit', { length: 10 }),
                   },
                   {
                     pattern: validSpecialCharacter,
-                    message: formatMessage('uns.modelFormat'),
+                    message: formatMessage('common.SpecialCharacterValidation', {
+                      rule: '~ ` ! @ # $ % ^ & * ( ) _ + = { } [ ] \\ | ; : \' " , < > . / ?',
+                    }),
                   },
                 ]}
               >

@@ -61,7 +61,7 @@ func (g *GrafanaEventHandler) OnEventBatchCreateTable300(evt *event.BatchCreateT
 	}
 	go func() {
 		for dsId, list := range evt.GetAllCreateFiles() {
-			g.Create(evt.Context, dsId, list, evt.FlowName, evt.FromImport, userName)
+			g.Create(context.Background(), dsId, list, evt.FlowName, evt.FromImport, userName)
 		}
 		g.log.Info(">>>>>> GrafanaEventHandler 批量创建事件,已完成,flowName:", evt.FlowName)
 	}()
@@ -79,22 +79,21 @@ func (g *GrafanaEventHandler) OnEventRemoveTopicsEvent300(evt *event.RemoveTopic
 	go func() {
 		for _, table := range tables {
 			uid := grafanautil.GetDashboardUUIDByAlias(table)
-			err := grafanautil.DeleteDashboard(uid)
+			err := grafanautil.DeleteDashboard(evt.Context, uid)
 			if err != nil {
 				g.log.Error("删除grafana dashboard 异常", err, table)
 			}
 		}
 	}()
 }
-func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(evt *event.ContextRefreshedEvent) {
-	stop := false
+func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(_ *event.ContextRefreshedEvent) {
 	go func() {
 		time.Sleep(time.Second)
 		g.getPersistentService(0)
-		for !stop {
+		for i := int64(5); ; i <<= 1 {
 			countOk := 0
 			for srcId, ds := range g.dsMap {
-				ok, err := grafanautil.CreateDatasource(srcId, ds.GetDataSourceProperties(), false)
+				ok, err := grafanautil.CreateDatasource(context.Background(), srcId, ds.GetDataSourceProperties(), false)
 				if err != nil {
 					g.log.Error("CreateDatasourceErr:", srcId.Alias(), err)
 				} else if ok {
@@ -104,10 +103,13 @@ func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(evt *event.Context
 			if countOk == len(g.dsMap) {
 				break
 			}
-			time.Sleep(15 * time.Second)
+			if i < 0 {
+				i = 60
+			}
+			time.Sleep(time.Duration(i) * time.Second) //指数重试
 		}
 		if "zh-CN" == g.sysConfig.Lang {
-			_ = grafanautil.SetLanguage("zh-Hans")
+			_ = grafanautil.SetLanguage(context.Background(), "zh-Hans")
 		}
 		g.log.Info(">>>>>>>>>Grafana 默认datasource 完成创建.")
 	}()

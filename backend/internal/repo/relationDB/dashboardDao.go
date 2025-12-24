@@ -1,7 +1,7 @@
 package relationDB
 
 import (
-	"context"
+	"backend/share/base"
 	"fmt"
 	"time"
 
@@ -12,98 +12,86 @@ import (
 
 // DashboardMapper Dashboard 数据访问对象
 type DashboardMapper struct {
-	db     *gorm.DB
-	ctx    context.Context
-	logger logx.Logger
-}
-
-// NewDashboardMapper 创建 DashboardMapper 实例
-func NewDashboardMapper(db *gorm.DB, ctx context.Context) *DashboardMapper {
-	return &DashboardMapper{
-		db:     db,
-		ctx:    ctx,
-		logger: logx.WithContext(ctx),
-	}
 }
 
 // SelectById 根据 ID 查询 Dashboard
-func (m *DashboardMapper) SelectById(id string) (*DashboardModel, error) {
+func (m *DashboardMapper) SelectById(db *gorm.DB, id string) (*DashboardModel, error) {
 	var dashboard DashboardModel
-	err := m.db.WithContext(m.ctx).Where("id = ?", id).First(&dashboard).Error
+	err := db.Where("id = ?", id).First(&dashboard).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
-		m.logger.Errorf("failed to select dashboard by id: %v", err)
+		logx.Errorf("failed to select dashboard by id: %v", err)
 		return nil, err
 	}
 	return &dashboard, nil
 }
 
 // Insert 插入 Dashboard
-func (m *DashboardMapper) Insert(dashboard *DashboardModel) error {
-	err := m.db.WithContext(m.ctx).Create(dashboard).Error
+func (m *DashboardMapper) Insert(db *gorm.DB, dashboard *DashboardModel) error {
+	err := db.Create(dashboard).Error
 	if err != nil {
-		m.logger.Errorf("failed to insert dashboard: %v", err)
+		logx.Errorf("failed to insert dashboard: %v", err)
 		return err
 	}
 	return nil
 }
 
 // UpdateById 根据 ID 更新 Dashboard
-func (m *DashboardMapper) UpdateById(dashboard *DashboardModel) error {
+func (m *DashboardMapper) UpdateById(db *gorm.DB, dashboard *DashboardModel) error {
 	// 使用 map 更新非零值字段，避免gorm默认的“忽略零值”行为
 	// 这里假设所有字段都需要更新
-	err := m.db.WithContext(m.ctx).Model(&DashboardModel{}).Where("id = ?", dashboard.ID).Updates(dashboard).Error
+	err := db.Model(&DashboardModel{}).Where("id = ?", dashboard.ID).Updates(dashboard).Error
 	if err != nil {
-		m.logger.Errorf("failed to update dashboard: %v", err)
+		logx.Errorf("failed to update dashboard: %v", err)
 		return err
 	}
 	return nil
 }
 
 // DeleteById 根据 ID 删除 Dashboard
-func (m *DashboardMapper) DeleteById(id string) error {
-	err := m.db.WithContext(m.ctx).Where("id = ?", id).Delete(&DashboardModel{}).Error
+func (m *DashboardMapper) DeleteById(db *gorm.DB, id string) error {
+	err := db.Where("id = ?", id).Delete(&DashboardModel{}).Error
 	if err != nil {
-		m.logger.Errorf("failed to delete dashboard: %v", err)
+		logx.Errorf("failed to delete dashboard: %v", err)
 		return err
 	}
 	return nil
 }
 
 // SelectByFlowNames 根据名称列表查询 Dashboard
-func (m *DashboardMapper) SelectByFlowNames(names []string) ([]*DashboardModel, error) {
+func (m *DashboardMapper) SelectByFlowNames(db *gorm.DB, names []string) ([]*DashboardModel, error) {
 	if len(names) == 0 {
 		return []*DashboardModel{}, nil
 	}
 	var dashboards []*DashboardModel
-	err := m.db.WithContext(m.ctx).Where("name IN ?", names).Find(&dashboards).Error
+	err := db.Where("name IN ?", names).Find(&dashboards).Error
 	if err != nil {
-		m.logger.Errorf("failed to select dashboards by names: %v", err)
+		logx.Errorf("failed to select dashboards by names: %v", err)
 		return nil, err
 	}
 	return dashboards, nil
 }
-func (m *DashboardMapper) SelectByNameAndType(name string, dashType int) ([]*DashboardModel, error) {
+func (m *DashboardMapper) SelectByNameAndType(db *gorm.DB, name string, dashType int) ([]*DashboardModel, error) {
 	var dashboards []*DashboardModel
-	err := m.db.WithContext(m.ctx).Where("name = ?", name).Where("type=?", dashType).Find(&dashboards).Error
+	err := db.Where("name = ?", name).Where("type=?", dashType).Find(&dashboards).Error
 	if err != nil {
-		m.logger.Errorf("failed to select dashboards by NameAndType: %v", err)
+		logx.Errorf("failed to select dashboards by NameAndType: %v", err)
 		return nil, err
 	}
 	return dashboards, nil
 }
 
 // SaveOrIgnoreBatch 批量保存或忽略
-func (m *DashboardMapper) SaveOrIgnoreBatch(dashboards []*DashboardModel) error {
+func (m *DashboardMapper) SaveOrIgnoreBatch(db *gorm.DB, dashboards []*DashboardModel) error {
 	if len(dashboards) == 0 {
 		return nil
 	}
 	// GORM v2 的 Clauses(clause.OnConflict{DoNothing: true}) 提供了优雅的方式
-	err := m.db.WithContext(m.ctx).Clauses(clause.OnConflict{DoNothing: true}).Create(&dashboards).Error
+	err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&dashboards).Error
 	if err != nil {
-		m.logger.Errorf("failed to batch save or ignore dashboards: %v", err)
+		logx.Errorf("failed to batch save or ignore dashboards: %v", err)
 		return err
 	}
 	return nil
@@ -118,54 +106,63 @@ type DashboardExtends struct {
 
 // SelectDashboard 分页查询 Dashboard（包含置顶信息）
 func (m *DashboardMapper) SelectDashboard(
+	db *gorm.DB,
 	userID string,
 	fuzzyName string,
 	typ *int,
 	orderCode string,
-	descOrAsc string,
+	asc bool,
 	pageNo int64,
 	pageSize int64,
+	countTotal *int64,
 ) ([]*DashboardExtends, error) {
 	var dashboards []*DashboardExtends
-	query := m.db.WithContext(m.ctx).
+	query := db.
 		Table("uns_dashboard a").
 		Select("a.*, b.mark, b.mark_time").
 		Joins("LEFT JOIN uns_dashboard_top_recodes b ON a.id = b.id AND b.user_id = ?", userID)
 
 	if fuzzyName != "" {
-		searchPattern := "%" + fuzzyName + "%"
-		query = query.Where("a.name LIKE ? OR a.description LIKE ?", searchPattern, searchPattern)
+		searchPattern := "%" + escapeLikePattern(fuzzyName) + "%"
+		query = query.Where("(a.name LIKE ? OR a.description LIKE ?)", searchPattern, searchPattern)
 	}
 
 	if typ != nil {
 		query = query.Where("a.type = ?", *typ)
 	}
 
-	// 排序
-	if orderCode == "" {
-		query = query.Order("b.mark ASC, b.mark_time DESC, a.create_time DESC")
-	} else {
-		query = query.Order(fmt.Sprintf("%s %s", orderCode, descOrAsc))
+	if countTotal != nil {
+		er := query.Count(countTotal).Error
+		if er != nil {
+			return nil, er
+		}
 	}
 
+	// 排序
+	orders := base.StringBuilder{}
+	orders.Grow(64)
+	orders.Append("b.mark asc, ")
+	if orderCode == "" {
+		orders.Append(" b.mark_time desc, a.create_time desc ")
+	} else {
+		orders.Append(fmt.Sprintf("%s %s", orderCode, base.SanYuan(asc, "ASC", "DESC")))
+	}
+	query = query.Order(orders.String())
 	// 分页
 	offset := (pageNo - 1) * pageSize
 	query = query.Limit(int(pageSize)).Offset(int(offset))
-
-	m.logger.Infof("SelectDashboard: query: %v", query.ToSQL(func(tx *gorm.DB) *gorm.DB { return tx }))
-
 	err := query.Find(&dashboards).Error
 	if err != nil {
-		m.logger.Errorf("failed to select dashboards: %v", err)
+		logx.Errorf("failed to select dashboards: %v", err)
 		return nil, err
 	}
 	return dashboards, nil
 }
 
 // SelectDashboardCount 查询 Dashboard 总数
-func (m *DashboardMapper) SelectDashboardCount(fuzzyName string, typ *int) (int64, error) {
+func (m *DashboardMapper) SelectDashboardCount(db *gorm.DB, fuzzyName string, typ *int) (int64, error) {
 	var count int64
-	query := m.db.WithContext(m.ctx).Model(&DashboardModel{})
+	query := db.Model(&DashboardModel{})
 
 	if fuzzyName != "" {
 		searchPattern := "%" + fuzzyName + "%"
@@ -178,57 +175,57 @@ func (m *DashboardMapper) SelectDashboardCount(fuzzyName string, typ *int) (int6
 
 	err := query.Count(&count).Error
 	if err != nil {
-		m.logger.Errorf("failed to count dashboards: %v", err)
+		logx.Errorf("failed to count dashboards: %v", err)
 		return 0, err
 	}
 	return count, nil
 }
 
 // SelectAll selects all DashboardModel from the database.
-func (m *DashboardMapper) SelectAll() ([]*DashboardModel, error) {
+func (m *DashboardMapper) SelectAll(db *gorm.DB) ([]*DashboardModel, error) {
 	var dashboards []*DashboardModel
-	err := m.db.WithContext(m.ctx).Find(&dashboards).Error
+	err := db.Find(&dashboards).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return []*DashboardModel{}, nil
 		}
-		m.logger.Errorf("failed to select all dashboards: %v", err)
+		logx.Errorf("failed to select all dashboards: %v", err)
 		return nil, err
 	}
 	return dashboards, nil
 }
 
 // SelectByIds selects multiple DashboardModel from the database by their IDs.
-func (m *DashboardMapper) SelectByIds(ids []string) ([]*DashboardModel, error) {
+func (m *DashboardMapper) SelectByIds(db *gorm.DB, ids []string) ([]*DashboardModel, error) {
 	if len(ids) == 0 {
 		return []*DashboardModel{}, nil
 	}
 	var dashboards []*DashboardModel
-	err := m.db.WithContext(m.ctx).Where("id IN ?", ids).Find(&dashboards).Error
+	err := db.Where("id IN ?", ids).Find(&dashboards).Error
 	if err != nil {
-		m.logger.Errorf("failed to select dashboards by ids: %v", err)
+		logx.Errorf("failed to select dashboards by ids: %v", err)
 		return nil, err
 	}
 	return dashboards, nil
 }
 
 // DeleteBatchIds deletes multiple dashboards from the database by their IDs.
-func (m *DashboardMapper) DeleteBatchIds(ids []string) error {
+func (m *DashboardMapper) DeleteBatchIds(db *gorm.DB, ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	err := m.db.WithContext(m.ctx).Where("id IN ?", ids).Delete(&DashboardModel{}).Error
+	err := db.Where("id IN ?", ids).Delete(&DashboardModel{}).Error
 	if err != nil {
-		m.logger.Errorf("failed to delete dashboards by ids: %v", err)
+		logx.Errorf("failed to delete dashboards by ids: %v", err)
 		return err
 	}
 	return nil
 }
 
 // SelectDashboardsToInit selects dashboards that need to be initialized.
-func (m *DashboardMapper) SelectDashboardsToInit() ([]*DashboardModel, error) {
+func (m *DashboardMapper) SelectDashboardsToInit(db *gorm.DB) ([]*DashboardModel, error) {
 	var dashboards []*DashboardModel
-	err := m.db.WithContext(m.ctx).
+	err := db.
 		Where("need_init = ? AND type = ? AND json_content IS NOT NULL AND json_content != ?", true, 1, "").
 		Find(&dashboards).Error
 
@@ -236,7 +233,7 @@ func (m *DashboardMapper) SelectDashboardsToInit() ([]*DashboardModel, error) {
 		if err == gorm.ErrRecordNotFound {
 			return []*DashboardModel{}, nil
 		}
-		m.logger.Errorf("failed to select dashboards to init: %v", err)
+		logx.Errorf("failed to select dashboards to init: %v", err)
 		return nil, err
 	}
 	return dashboards, nil

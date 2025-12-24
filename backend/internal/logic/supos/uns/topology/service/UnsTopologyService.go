@@ -101,7 +101,7 @@ func (s *UnsTopologyService) refresh() {
 			case 2:
 				topologyData.InstanceNum = count.Count
 			}
-			logx.Infof("PathType=%d, Count=%d", count.PathType, count.Count)
+			logx.Debugf("PathType=%d, Count=%d", count.PathType, count.Count)
 		}
 	} else {
 		logx.Errorf("failed to count by path type: %v", err)
@@ -111,17 +111,17 @@ func (s *UnsTopologyService) refresh() {
 	if protocolCounts, err := s.unsMapper.CountByProtocolType(db); err == nil {
 		for _, count := range protocolCounts {
 			topologyData.Protocol[count.Protocol] = count.Count
-			logx.Infof("Protocol=%s, Count=%d", count.Protocol, count.Count)
+			logx.Debugf("Protocol=%s, Count=%d", count.Protocol, count.Count)
 		}
 	} else {
 		logx.Errorf("failed to count by protocol type: %v", err)
 	}
 
-	alarmMapper := dao.NewUnsAlarmsDatumRepo(db)
+	alarmMapper := dao.NewUnsAlarmsDatumRepo(ctx)
 	// Count alarms
 	if alarmCount, err := alarmMapper.Count(ctx); err == nil {
 		topologyData.AlarmNum = alarmCount
-		logx.Infof("Alarm Count=%d", alarmCount)
+		logx.Debugf("Alarm Count=%d", alarmCount)
 	} else {
 		logx.Errorf("failed to count alarms: %v", err)
 	}
@@ -227,7 +227,7 @@ func (s *UnsTopologyService) RefreshTopology() {
 	s.globalTopologyDirty = true
 	s.mu.Unlock()
 
-	logx.Info("topology refresh requested")
+	logx.Debug("topology refresh requested")
 	s.refresh()
 }
 
@@ -253,7 +253,7 @@ func (s *UnsTopologyService) OnEventContextRefreshedEvent(e *event.ContextRefres
 }
 
 func (s *UnsTopologyService) OnEventBatchCreateTableEvent(e *event.BatchCreateTableEvent) error {
-	logx.Infof("namespace change detected, scheduling topology refresh")
+	logx.Info("namespace change detected, scheduling topology refresh")
 	go func() {
 		time.Sleep(1 * time.Second)
 		s.RefreshTopology()
@@ -261,7 +261,7 @@ func (s *UnsTopologyService) OnEventBatchCreateTableEvent(e *event.BatchCreateTa
 	return nil
 }
 func (s *UnsTopologyService) OnEventRemoveTopicsEvent(e *event.RemoveTopicsEvent) error {
-	logx.Infof("namespace change detected, scheduling topology refresh")
+	logx.Info("namespace change detected, scheduling topology refresh")
 	go func() {
 		time.Sleep(1 * time.Second)
 		s.RefreshTopology()
@@ -293,7 +293,7 @@ func (s *UnsTopologyService) RemoveFromGlobalTopologyData(topic string) {
 
 // OnEventMountStatusChangeEvent handles mount status change events
 func (s *UnsTopologyService) OnEventMountStatusChangeEvent(e *mount.MountStatusChangeEvent) error {
-	logx.Infof("mount status change detected")
+	logx.Info("mount status change detected")
 
 	s.mu.Lock()
 	defer s.mu.Unlock()

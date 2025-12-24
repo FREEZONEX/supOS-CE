@@ -21,26 +21,23 @@ type DeleteLogic struct {
 	logx.Logger
 	ctx                 context.Context
 	svcCtx              *svc.ServiceContext
-	dashboardMapper     *relationDB.DashboardMapper
-	dashboardRefMapper  *relationDB.DashboardRefMapper
-	dashboardMarkMapper *relationDB.DashboardMarkedMapper
+	dashboardMapper     relationDB.DashboardMapper
+	dashboardRefMapper  relationDB.DashboardRefMapper
+	dashboardMarkMapper relationDB.DashboardMarkedMapper
 }
 
 func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogic {
-	db := relationDB.GetDb(ctx)
 	return &DeleteLogic{
-		Logger:              logx.WithContext(ctx),
-		ctx:                 ctx,
-		svcCtx:              svcCtx,
-		dashboardMapper:     relationDB.NewDashboardMapper(db, ctx),
-		dashboardRefMapper:  relationDB.NewDashboardRefMapper(db, ctx),
-		dashboardMarkMapper: relationDB.NewDashboardMarkedMapper(db, ctx),
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
 	}
 }
 
 func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 	// 检查 Dashboard 是否存在
-	dashboard, err := l.dashboardMapper.SelectById(uid)
+	db := relationDB.GetDb(l.ctx)
+	dashboard, err := l.dashboardMapper.SelectById(db, uid)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return &types.JsonResult{
 			Code: http.StatusInternalServerError,
@@ -56,7 +53,7 @@ func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 
 	// Grafana Dashboard 删除
 	if dashboard.Type == 1 {
-		err := grafanautil.DeleteDashboard(uid)
+		err := grafanautil.DeleteDashboard(l.ctx, uid)
 		if err != nil {
 			l.Logger.Errorf("failed to delete grafana dashboard: %v", err)
 		}
@@ -87,7 +84,7 @@ func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 	}
 
 	// 删除引用关系
-	err = l.dashboardRefMapper.DeleteByDashboardId(uid)
+	err = l.dashboardRefMapper.DeleteByDashboardId(db, uid)
 	if err != nil {
 		l.Logger.Errorf("failed to delete dashboard ref: %v", err)
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -99,7 +96,7 @@ func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 	}
 
 	// 删除 Dashboard
-	err = l.dashboardMapper.DeleteById(uid)
+	err = l.dashboardMapper.DeleteById(db, uid)
 	if err != nil {
 		l.Logger.Errorf("failed to delete dashboard: %v", err)
 		if !errors.Is(err, gorm.ErrRecordNotFound) {

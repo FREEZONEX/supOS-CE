@@ -77,8 +77,7 @@ func label2FileData(lb *dao.UnsLabel) *FileData {
 	return &FileData{Name: lb.LabelName}
 }
 func (l *UnsImportExportService) labelCsv2FileData(headers, values []string) *FileData {
-	label := l.labelMapper.Csv2Model(headers, values)
-	return label2FileData(label)
+	return &FileData{Name: values[0]}
 }
 func (l *UnsImportExportService) unsCsv2FileData(headers, values []string) *FileData {
 	uns := l.unsMapper.Csv2Model(headers, values)

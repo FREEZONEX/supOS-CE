@@ -65,7 +65,7 @@ func NewDashboardDataImporter(
 }
 
 // ImportData 导入 Dashboard 数据
-func (i *DashboardDataImporter) ImportData(file *os.File) error {
+func (i *DashboardDataImporter) ImportData(ctx context.Context, file *os.File) error {
 	// 解析 JSON 文件
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&i.dashboardJsonWrapper); err != nil {
@@ -74,11 +74,11 @@ func (i *DashboardDataImporter) ImportData(file *os.File) error {
 	}
 
 	// 处理导入数据
-	return i.handleImportData()
+	return i.handleImportData(ctx)
 }
 
 // handleImportData 处理导入数据
-func (i *DashboardDataImporter) handleImportData() error {
+func (i *DashboardDataImporter) handleImportData(ctx context.Context) error {
 	if i.dashboardJsonWrapper == nil || len(i.dashboardJsonWrapper.Data) == 0 {
 		return nil
 	}
@@ -95,11 +95,11 @@ func (i *DashboardDataImporter) handleImportData() error {
 		ids = append(ids, dashboard.ID)
 		names = append(names, dashboard.Name)
 	}
-
+	db := relationDB.GetDb(context.Background())
 	// 检查 ID 是否已存在
 	existByID := make(map[string]bool)
 	for _, id := range ids {
-		existing, err := i.dashboardMapper.SelectById(id)
+		existing, err := i.dashboardMapper.SelectById(db, id)
 		if err != nil {
 			return err
 		}
@@ -109,7 +109,7 @@ func (i *DashboardDataImporter) handleImportData() error {
 	}
 
 	// 检查名称是否已存在
-	existingByNames, err := i.dashboardMapper.SelectByFlowNames(names)
+	existingByNames, err := i.dashboardMapper.SelectByFlowNames(db, names)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (i *DashboardDataImporter) handleImportData() error {
 	// 批量插入数据
 	if len(addList) > 0 {
 		for _, dashboard := range addList {
-			if err := i.dashboardMapper.Insert(dashboard); err != nil {
+			if err := i.dashboardMapper.Insert(db, dashboard); err != nil {
 				i.logger.Errorf("failed to insert dashboard: %v", err)
 				i.context.AddError(dashboard.ID, err.Error())
 				continue
@@ -142,7 +142,7 @@ func (i *DashboardDataImporter) handleImportData() error {
 			// 根据类型调用 Grafana/Fuxa API 创建 Dashboard
 			if dashboard.Type == 1 {
 				// Grafana Dashboard
-				_, err := grafanautil.CreateDashboardByBody(dashboard.ID, "", dashboard.JsonContent)
+				_, err := grafanautil.CreateDashboardByBody(ctx, dashboard.ID, "", dashboard.JsonContent)
 				if err != nil {
 					i.logger.Errorf("failed to create grafana dashboard: %v", err)
 				}

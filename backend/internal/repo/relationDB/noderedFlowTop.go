@@ -20,8 +20,8 @@ type NoderedFlowTopRepo struct {
 	db *gorm.DB
 }
 
-func NewNoderedFlowTopRepo(in any) *NoderedFlowTopRepo {
-	return &NoderedFlowTopRepo{db: stores.GetCommonConn(in)}
+func NewNoderedFlowTopRepo(in context.Context) *NoderedFlowTopRepo {
+	return &NoderedFlowTopRepo{db: GetDb(in)}
 }
 
 type NoderedFlowTopFilter struct {

@@ -13,7 +13,6 @@ import (
 	"strconv"
 
 	"gitee.com/unitedrhino/share/stores"
-	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
 
@@ -63,9 +62,22 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 	var positioningUns = srcUns //返回给前端的定位UNS
 	countChildren := int64(0)
 	if src.PathType == constants.PathTypeDir {
-		var done bool
-		countChildren, done = u.copyChildren(ctx, db, src, srcUns, &positioningUns, parentAliasMap, resp)
-		if done {
+		var tipMap map[string]string
+		var countList int
+		countChildren, countList, tipMap = u.copyChildren(ctx, db, src, srcUns, &positioningUns, parentAliasMap, resp)
+		if len(tipMap) > 0 {
+			if len(tipMap) < countList {
+				setPasteData(positioningUns, resp)
+				for _, tip := range tipMap {
+					resp.Code, resp.Msg = 206, tip
+					break
+				}
+			} else {
+				for _, tip := range tipMap {
+					resp.Code, resp.Msg = 400, tip
+					break
+				}
+			}
 			return resp, nil
 		}
 	}
@@ -74,17 +86,20 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 		resp.Code, resp.Msg = rs.Code, rs.Msg
 	}
 	if resp.Code == 200 {
-		resp.Code, resp.Msg = 206, "OK"
-		parentId := ""
-		if pid := positioningUns.ParentId; pid != nil {
-			parentId = strconv.FormatInt(*pid, 10)
-		}
-		resp.Data = types.CreateUnsResult{
-			Id:       strconv.FormatInt(positioningUns.Id, 10),
-			ParentId: parentId,
-		}
+		setPasteData(positioningUns, resp)
 	}
 	return
+}
+
+func setPasteData(positioningUns *types.CreateTopicDto, resp *types.CreateUnsResp) {
+	parentId := ""
+	if pid := positioningUns.ParentId; pid != nil {
+		parentId = strconv.FormatInt(*pid, 10)
+	}
+	resp.Data = types.CreateUnsResult{
+		Id:       strconv.FormatInt(positioningUns.Id, 10),
+		ParentId: parentId,
+	}
 }
 
 func (u *UnsAddService) copyChildren(ctx context.Context,
@@ -93,7 +108,7 @@ func (u *UnsAddService) copyChildren(ctx context.Context,
 	srcUns *types.CreateTopicDto,
 	positioningUns **types.CreateTopicDto,
 	parentAliasMap map[string]string,
-	resp *types.CreateUnsResp) (int64, bool) {
+	resp *types.CreateUnsResp) (int64, int, map[string]string) {
 
 	countChildren := int64(0)
 	page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
@@ -150,7 +165,7 @@ func (u *UnsAddService) copyChildren(ctx context.Context,
 		tipMap := u.CreateModelAndInstance(ctx, list, false)
 		if len(tipMap) > 0 {
 			resp.Code, resp.Msg = 400, fmt.Sprintf("%+v", tipMap)
-			return 0, true
+			return countChildren, len(list), tipMap
 		}
 		if countChildren == 0 && srcAlias != srcUns.Alias {
 			u.log.Infof("修正别名: %s -> %s", srcAlias, srcUns.Alias)
@@ -162,7 +177,7 @@ func (u *UnsAddService) copyChildren(ctx context.Context,
 			break
 		}
 	}
-	return countChildren, false
+	return countChildren, 0, nil
 }
 
 func (u *UnsAddService) getSrcUns(src *dao.UnsNamespace, req *types.PasteRequestVO, tar *dao.UnsNamespace) (*types.CreateTopicDto, map[string]string) {
@@ -173,7 +188,7 @@ func (u *UnsAddService) getSrcUns(src *dao.UnsNamespace, req *types.PasteRequest
 		nf.Alias = ""
 		nf.ParentAlias = nil
 		nf.ParentId = nil
-		_ = copier.CopyWithOption(srcUns, nf, copier.Option{IgnoreEmpty: true})
+		srcUns = nf
 	}
 	{
 		srcUns.Id = 0

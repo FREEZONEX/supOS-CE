@@ -6,6 +6,7 @@ import (
 	"backend/internal/types"
 	"backend/share/spring"
 	"bytes"
+	"context"
 	"crypto/md5"
 	"embed"
 	"encoding/hex"
@@ -52,7 +53,7 @@ func GetDashboardUUIDByAlias(alias string) string {
 }
 
 // DeleteDashboard deletes a Grafana dashboard by UID.
-func DeleteDashboard(uid string) error {
+func DeleteDashboard(ctx context.Context, uid string) error {
 	url := GetGrafanaURL() + "/api/dashboards/uid/" + uid
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
@@ -67,12 +68,12 @@ func DeleteDashboard(uid string) error {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Debugf("Delete Dashboard: %s, response: %s", uid, string(body))
+	logx.WithContext(ctx).Debugf("Delete Dashboard: %s, response: %s", uid, string(body))
 	return nil
 }
 
 // DeleteDatasource deletes a Grafana datasource by UID.
-func DeleteDatasource(uid string) error {
+func DeleteDatasource(ctx context.Context, uid string) error {
 	url := GetGrafanaURL() + "/api/datasources/uid/" + uid
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
@@ -87,14 +88,15 @@ func DeleteDatasource(uid string) error {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Debugf("Delete DataSource: %s, response: %s", uid, string(body))
+	logx.WithContext(ctx).Debugf("Delete DataSource: %s, response: %s", uid, string(body))
 	return nil
 }
 
 // GetDataSourceByName retrieves a Grafana datasource by name.
-func GetDataSourceByName(name string) int {
+func GetDataSourceByName(ctx context.Context, name string) int {
+	logger := logx.WithContext(ctx)
 	url := GetGrafanaURL() + "/api/datasources/name/" + name
-	logx.Debugf("查询 datasource 请求: %s", url)
+	logger.Debugf("查询 datasource 请求: %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -105,13 +107,13 @@ func GetDataSourceByName(name string) int {
 		return resp.StatusCode
 	}
 	body, _ := io.ReadAll(resp.Body)
-	logx.Debugf("查询 datasource 返回结果: %s", string(body))
+	logger.Debugf("查询 datasource 返回结果: %s", string(body))
 
 	return resp.StatusCode
 }
 
 // CreateDatasource creates a Grafana datasource.
-func CreateDatasource(jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceProperties, reCreate bool) (bool, error) {
+func CreateDatasource(ctx context.Context, jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceProperties, reCreate bool) (bool, error) {
 	title := jdbcType.Alias()
 	datasource := &grafanadto.GrafanaDataSourceDto{
 		User:     dsProps.UserName,
@@ -122,39 +124,39 @@ func CreateDatasource(jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceP
 
 	if reCreate {
 		// Delete first, then create
-		_ = DeleteDatasource(datasource.UID)
+		_ = DeleteDatasource(ctx, datasource.UID)
 	}
-
+	logger := logx.WithContext(ctx)
 	var dsTemplate string
 	switch jdbcType.Id() {
 	case types.SrcJdbcTypePostgresql.Id():
-		dsTemplate = LoadTemplate("templates/pg-datasource.json")
+		dsTemplate = LoadTemplate(ctx, "templates/pg-datasource.json")
 		datasource.URL = constants.PGJDBCURL
 	case types.SrcJdbcTypeTimeScaleDB.Id():
-		dsTemplate = LoadTemplate("templates/pg-datasource.json")
+		dsTemplate = LoadTemplate(ctx, "templates/pg-datasource.json")
 		datasource.URL = constants.TSDBJDBCURL
 	case types.SrcJdbcTypeTdEngine.Id():
 		datasource.URL = constants.TDJDBCURL
 		datasource.CreateBasicAuth()
-		dsTemplate = LoadTemplate("templates/td-datasource.json")
+		dsTemplate = LoadTemplate(ctx, "templates/td-datasource.json")
 	default:
 		return false, fmt.Errorf("unsupported JDBC type: %d", jdbcType.Id())
 	}
 	datasource.URL = dsProps.HostPort
 	dsJSON := formatTemplate(dsTemplate, datasource)
-	logx.Infof("创建 datasource 请求: %s", dsJSON)
+	logger.Debug("创建 datasource 请求: ", dsJSON)
 
 	host := GetGrafanaURL()
 	{
 		url := host + "/api/datasources/name/" + datasource.Name
 		resp, err := http.Get(url)
 		if err != nil {
-			logx.Debugf("查询 datasource 失败: %v %s", err, url)
+			logger.Debugf("查询 datasource 失败: %v %s", err, url)
 		} else {
 			defer resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
 				body, _ := io.ReadAll(resp.Body)
-				logx.Debugf("查询 datasource 返回结果: %s", string(body))
+				logger.Debugf("查询 datasource 返回结果: %s", string(body))
 				if len(body) > 0 && body[0] == '{' {
 					var rsMap map[string]interface{}
 					err = json.Unmarshal(body, &rsMap)
@@ -163,8 +165,8 @@ func CreateDatasource(jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceP
 						var oldUser = rsMap["user"].(string)
 						if oldUrl != datasource.URL || oldUser != datasource.User {
 							var uid = rsMap["uid"].(string)
-							logx.Infof("准备删除重建数据源[%s],因为: url: %s->%s, user: %s->%s", uid, oldUrl, datasource.URL, oldUser, datasource.User)
-							_ = DeleteDatasource(uid)
+							logger.Infof("准备删除重建数据源[%s],因为: url: %s->%s, user: %s->%s", uid, oldUrl, datasource.URL, oldUser, datasource.User)
+							_ = DeleteDatasource(ctx, uid)
 						}
 					}
 				}
@@ -179,13 +181,14 @@ func CreateDatasource(jdbcType types.SrcJdbcType, dsProps serviceApi.DataSourceP
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Infof("创建 datasource 返回结果: %s", string(body))
+	logger.Infof("创建 datasource 返回结果: %s", string(body))
 
 	return resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusConflict, nil
 }
 
 // CreateDatasourceByBody creates a Grafana datasource from a JSON body.
-func CreateDatasourceByBody(name, body string, reCreate bool) (string, error) {
+func CreateDatasourceByBody(ctx context.Context, name, body string, reCreate bool) (string, error) {
+	logger := logx.WithContext(ctx)
 	var bodyJSON map[string]any
 	if err := json.Unmarshal([]byte(body), &bodyJSON); err != nil {
 		return "", err
@@ -201,7 +204,7 @@ func CreateDatasourceByBody(name, body string, reCreate bool) (string, error) {
 	}
 
 	newBody, _ := json.Marshal(bodyJSON)
-	logx.Infof("创建 datasource 请求: %s", string(newBody))
+	logger.Info("创建 datasource 请求: ", string(newBody))
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/datasources", "application/json", bytes.NewBuffer(newBody))
 	if err != nil {
@@ -210,7 +213,7 @@ func CreateDatasourceByBody(name, body string, reCreate bool) (string, error) {
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
-	logx.Infof("创建 datasource 返回结果: %s", string(respBody))
+	logger.Info("创建 datasource 返回结果: ", string(respBody))
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusConflict {
 		return "", nil
@@ -219,14 +222,14 @@ func CreateDatasourceByBody(name, body string, reCreate bool) (string, error) {
 }
 
 // CreateDashboard creates a Grafana dashboard.
-func CreateDashboard(table, tagNameCondition string, jdbcType types.SrcJdbcType, schema, title, columns, ct string) (string, error) {
+func CreateDashboard(ctx context.Context, table, tagNameCondition string, jdbcType types.SrcJdbcType, schema, title, columns, ct string) (string, error) {
 	uid := GetDashboardUUIDByAlias(title)
 	var template string
 	var dbParams map[string]any
 
 	switch jdbcType {
 	case types.SrcJdbcTypePostgresql:
-		template = LoadTemplate("templates/pg-dashboard.json")
+		template = LoadTemplate(ctx, "templates/pg-dashboard.json")
 		dbParams = map[string]any{
 			"title":          title,
 			"uid":            uid,
@@ -237,7 +240,7 @@ func CreateDashboard(table, tagNameCondition string, jdbcType types.SrcJdbcType,
 			"columns":        columns,
 		}
 	case types.SrcJdbcTypeTdEngine:
-		template = LoadTemplate("templates/td-dashboard.json")
+		template = LoadTemplate(ctx, "templates/td-dashboard.json")
 		dbParams = map[string]any{
 			"title":            title,
 			"uid":              uid,
@@ -249,7 +252,7 @@ func CreateDashboard(table, tagNameCondition string, jdbcType types.SrcJdbcType,
 			"columns":          columns,
 		}
 	case types.SrcJdbcTypeTimeScaleDB:
-		template = LoadTemplate("templates/ts-dashboard.json")
+		template = LoadTemplate(ctx, "templates/ts-dashboard.json")
 		dbParams = map[string]any{
 			"title":            title,
 			"uid":              uid,
@@ -266,8 +269,8 @@ func CreateDashboard(table, tagNameCondition string, jdbcType types.SrcJdbcType,
 
 	dbParams["sys_field_create_time"] = ct
 	dashboardJSON := FormatTemplateMap(template, dbParams)
-
-	logx.Debugf("创建 dashboardJson 请求: %s", dashboardJSON)
+	logger := logx.WithContext(ctx)
+	logger.Debug("创建 dashboardJson 请求: ", dashboardJSON)
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBufferString(dashboardJSON))
 	if err != nil {
@@ -276,20 +279,20 @@ func CreateDashboard(table, tagNameCondition string, jdbcType types.SrcJdbcType,
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Debugf("创建 dashboardJson 返回结果: %s", string(body))
+	logger.Debug("创建 dashboardJson 返回结果: ", string(body))
 
 	return uid, nil
 }
 
 // CreateDashboardByBody creates a Grafana dashboard from a JSON body.
-func CreateDashboardByBody(uidsTr, datasourceName, body string) (string, error) {
+func CreateDashboardByBody(ctx context.Context, uidsTr, datasourceName, body string) (string, error) {
 	var bodyJSON map[string]any
 	if err := json.Unmarshal([]byte(body), &bodyJSON); err != nil {
 		return "", err
 	}
 
 	if uid, ok := bodyJSON["uid"]; ok && uid != nil {
-		_ = DeleteDashboard(uid.(string))
+		_ = DeleteDashboard(ctx, uid.(string))
 	}
 
 	if datasourceName != "" {
@@ -323,7 +326,8 @@ func CreateDashboardByBody(uidsTr, datasourceName, body string) (string, error) 
 	}
 	newBody, _ := json.Marshal(newBodyMap)
 
-	logx.Infof("创建 dashboardJson 请求: %s", string(newBody))
+	logger := logx.WithContext(ctx)
+	logger.Infof("创建 dashboardJson 请求: %s", string(newBody))
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBuffer(newBody))
 	if err != nil {
@@ -332,7 +336,7 @@ func CreateDashboardByBody(uidsTr, datasourceName, body string) (string, error) 
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
-	logx.Infof("创建 dashboardJson 返回结果: %s", string(respBody))
+	logger.Infof("创建 dashboardJson 返回结果: %s", string(respBody))
 
 	if resp.StatusCode != http.StatusOK {
 		return "", nil
@@ -372,14 +376,15 @@ func Fields2Columns(jdbcType types.SrcJdbcType, fields []*types.FieldDefine) str
 }
 
 // CreateTimeSeriesListDashboard creates a time series list dashboard with multiple panels.
-func CreateTimeSeriesListDashboard(srcJdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, dashboardName string) (string, error) {
-	logx.Infof("调用 创建时序组合Dashboard: %s", dashboardName)
+func CreateTimeSeriesListDashboard(ctx context.Context, srcJdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, dashboardName string) (string, error) {
+	logger := logx.WithContext(ctx)
+	logger.Infof("调用 创建时序组合Dashboard: %s", dashboardName)
 
 	var panelTemplate string
 	if srcJdbcType.Id() == types.SrcJdbcTypeTimeScaleDB.Id() {
-		panelTemplate = LoadTemplate("templates/ts-panel.json")
+		panelTemplate = LoadTemplate(ctx, "templates/ts-panel.json")
 	} else {
-		panelTemplate = LoadTemplate("templates/td-panel.json")
+		panelTemplate = LoadTemplate(ctx, "templates/td-panel.json")
 	}
 
 	var panelJSONList []any
@@ -416,7 +421,7 @@ func CreateTimeSeriesListDashboard(srcJdbcType types.SrcJdbcType, topics []*type
 		panelJSONList = append(panelJSONList, panel)
 	}
 
-	template := LoadTemplate("templates/td-dashboard-list.json")
+	template := LoadTemplate(ctx, "templates/td-dashboard-list.json")
 	uid := uuid.New().String()[:32] // Fast simple UUID
 
 	dbParams := map[string]any{
@@ -426,7 +431,7 @@ func CreateTimeSeriesListDashboard(srcJdbcType types.SrcJdbcType, topics []*type
 	}
 
 	dashboardJSON := FormatTemplateMap(template, dbParams)
-	logx.Debugf("创建时序组合DashboardDashboard 请求: %s", dashboardJSON)
+	logger.Debugf("创建时序组合DashboardDashboard 请求: %s", dashboardJSON)
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBufferString(dashboardJSON))
 	if err != nil {
@@ -435,25 +440,26 @@ func CreateTimeSeriesListDashboard(srcJdbcType types.SrcJdbcType, topics []*type
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Infof("创建时序组合Dashboard 返回结果: %s", string(body))
+	logger.Infof("创建时序组合Dashboard 返回结果: %s", string(body))
 
 	return uid, nil
 }
 
 // GetDashboardByUUID retrieves a dashboard by UUID.
-func GetDashboardByUUID(uuid string) (map[string]any, error) {
+func GetDashboardByUUID(ctx context.Context, uuid string) (map[string]any, error) {
+	logger := logx.WithContext(ctx)
 	url := GetGrafanaURL() + "/api/dashboards/uid/" + uuid
 	resp, err := http.Get(url)
 	if err != nil {
-		logx.Errorf("查询 dashboards 失败: %v, %s", err, url)
+		logger.Errorf("查询 dashboards 失败: %v, %s", err, url)
 		return nil, err
 	}
-	logx.Debugf("查询 dashboards 请求: %s", url)
+	logger.Debugf("查询 dashboards 请求: %s", url)
 
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Debugf("查询 dashboards 返回结果: %s", string(body))
+	logger.Debugf("查询 dashboards 返回结果: %s", string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("status code: %d", resp.StatusCode)
@@ -510,11 +516,12 @@ func CreateFolder(uid, title string) (*grafanadto.GrafanaFolderDto, error) {
 }
 
 // SetLanguage sets Grafana language preference.
-func SetLanguage(language string) error {
+func SetLanguage(ctx context.Context, language string) error {
+	logger := logx.WithContext(ctx)
 	url := GetGrafanaURL() + "/api/org/preferences"
 	reqBody := fmt.Sprintf(`{"language":"%s"}`, language)
 
-	logx.Infof("设置grafana 语言 请求: %s", reqBody)
+	logger.Infof("设置grafana 语言 请求: %s", reqBody)
 
 	req, _ := http.NewRequest(http.MethodPut, url, bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -527,14 +534,15 @@ func SetLanguage(language string) error {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Infof("设置grafana 语言 返回结果: %s", string(body))
+	logger.Infof("设置grafana 语言 返回结果: %s", string(body))
 
 	return nil
 }
 
 // Create creates a Grafana dashboard from JSON.
-func Create(dashboardJSON string) (bool, error) {
-	logx.Debugf("grafana 创建 dashboards 请求: %s", dashboardJSON)
+func Create(ctx context.Context, dashboardJSON string) (bool, error) {
+	logger := logx.WithContext(ctx)
+	logger.Debugf("grafana 创建 dashboards 请求: %s", dashboardJSON)
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBufferString(dashboardJSON))
 	if err != nil {
@@ -543,15 +551,16 @@ func Create(dashboardJSON string) (bool, error) {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Debugf("grafana 创建 dashboards 返回结果: %s", string(body))
+	logger.Debugf("grafana 创建 dashboards 返回结果: %s", string(body))
 
 	return resp.StatusCode == http.StatusOK, nil
 }
 
 // Get retrieves a Grafana dashboard by UUID.
-func Get(uuid string) (string, error) {
+func Get(ctx context.Context, uuid string) (string, error) {
+	logger := logx.WithContext(ctx)
 	url := GetGrafanaURL() + "/api/dashboards/uid/" + uuid
-	logx.Debugf("grafana 查询 dashboards 请求: %s", url)
+	logger.Debugf("grafana 查询 dashboards 请求: %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -560,7 +569,7 @@ func Get(uuid string) (string, error) {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logx.Debugf("grafana 查询 dashboards 返回结果: %s", string(body))
+	logger.Debugf("grafana 查询 dashboards 返回结果: %s", string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return "", nil
@@ -571,10 +580,11 @@ func Get(uuid string) (string, error) {
 // Helper functions
 
 // LoadTemplate loads a template file.
-func LoadTemplate(path string) string {
+func LoadTemplate(ctx context.Context, path string) string {
+	logger := logx.WithContext(ctx)
 	bs, er := templates.ReadFile(path)
 	if er != nil {
-		logx.Error("FileNotExist:", path)
+		logger.Error("FileNotExist:", path)
 		return ""
 	}
 	return string(bs)

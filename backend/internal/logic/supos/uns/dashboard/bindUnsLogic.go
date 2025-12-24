@@ -17,29 +17,27 @@ type BindUnsLogic struct {
 	logx.Logger
 	ctx                context.Context
 	svcCtx             *svc.ServiceContext
-	dashboardMapper    *relationDB.DashboardMapper
-	dashboardRefMapper *relationDB.DashboardRefMapper
+	dashboardMapper    relationDB.DashboardMapper
+	dashboardRefMapper relationDB.DashboardRefMapper
 	unsQueryService    *unsservice.UnsQueryService
 }
 
 func NewBindUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *BindUnsLogic {
-	db := relationDB.GetDb(ctx)
 	// Note: UnsQueryService might be managed by spring, adjust if needed
 	unsQueryService := &unsservice.UnsQueryService{}
 
 	return &BindUnsLogic{
-		Logger:             logx.WithContext(ctx),
-		ctx:                ctx,
-		svcCtx:             svcCtx,
-		dashboardMapper:    relationDB.NewDashboardMapper(db, ctx),
-		dashboardRefMapper: relationDB.NewDashboardRefMapper(db, ctx),
-		unsQueryService:    unsQueryService,
+		Logger:          logx.WithContext(ctx),
+		ctx:             ctx,
+		svcCtx:          svcCtx,
+		unsQueryService: unsQueryService,
 	}
 }
 
 func (l *BindUnsLogic) BindUns(dashboardID string, unsAlias string) (*types.JsonResult, error) {
 	// 检查 Dashboard 是否存在
-	dashboard, err := l.dashboardMapper.SelectById(dashboardID)
+	db := relationDB.GetDb(l.ctx)
+	dashboard, err := l.dashboardMapper.SelectById(db, dashboardID)
 	if err != nil {
 		return &types.JsonResult{
 			Code: http.StatusInternalServerError,
@@ -71,7 +69,7 @@ func (l *BindUnsLogic) BindUns(dashboardID string, unsAlias string) (*types.Json
 	}
 
 	// 删除旧的绑定关系
-	err = l.dashboardRefMapper.DeleteByDashboardId(dashboardID)
+	err = l.dashboardRefMapper.DeleteByDashboardId(db, dashboardID)
 	if err != nil {
 		l.Logger.Errorf("failed to delete old dashboard ref: %v", err)
 		return &types.JsonResult{
@@ -86,7 +84,7 @@ func (l *BindUnsLogic) BindUns(dashboardID string, unsAlias string) (*types.Json
 		UnsAlias:    unsAlias,
 		CreateAt:    time.Now(),
 	}
-	err = l.dashboardRefMapper.Insert(ref)
+	err = l.dashboardRefMapper.Insert(db, ref)
 	if err != nil {
 		l.Logger.Errorf("failed to create new dashboard ref: %v", err)
 		return &types.JsonResult{

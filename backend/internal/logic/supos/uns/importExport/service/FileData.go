@@ -12,6 +12,7 @@ import (
 	"backend/share/spring"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -104,7 +105,7 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 		switch i.Type {
 		case TYPE_FILE, "file":
 			vo.PathType = constants.PathTypeFile
-			if os.Getenv("SYS_OS_ENABLE_AUTO_CATEGORIZATION") == "true" {
+			if ok, _ := strconv.ParseBool(os.Getenv("SYS_OS_ENABLE_AUTO_CATEGORIZATION")); ok {
 				if i.ParentDataType == "" {
 					i.Error = I18nUtils.GetMessage("uns.excel.parentDataType.is.blank")
 					return nil
@@ -147,9 +148,12 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 		vo.Description = &i.Description
 	}
 	if len(i.Label) > 0 {
-		vo.LabelNames = strings.Split(i.Label, ",")
+		vo.LabelNames = base.FilterAndMap(strings.Split(i.Label, ","), func(s string) (string, bool) {
+			s = strings.TrimSpace(s)
+			return s, len(s) > 0
+		})
 	}
-	if len(i.DataType) > 0 {
+	if len(i.DataType) > 0 && vo.PathType == constants.PathTypeFile {
 		dt := enums.DataTypeInt(i.DataType)
 		if dt >= 0 {
 			vo.DataType = base.V2p(dt)
@@ -160,10 +164,37 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 	}
 	if len(i.ParentDataType) > 0 {
 		if pdt, ok := enums.GetFolderDataTypeByName(i.ParentDataType); ok {
-			vo.ParentDataType = base.V2p(int16(pdt))
+			dirType := base.V2p(int16(pdt))
+			switch vo.PathType {
+			case constants.PathTypeDir:
+				vo.DataType = dirType
+			case constants.PathTypeFile:
+				vo.ParentDataType = dirType
+			}
+		}
+	}
+	if vo.PathType == constants.PathTypeFile {
+		vo.AddDashBoard = parseBoolP(i.GenerateDashboard)
+		vo.Save2Db = parseBoolP(i.EnableHistory)
+
+		if base.P2v(vo.DataType) == constants.JsonbType {
+			vo.AddFlow = base.OptionalFalse
+		} else {
+			vo.AddFlow = parseBoolP(i.MockData)
 		}
 	}
 	return vo
+}
+func parseBoolP(str string) *bool {
+	str = strings.TrimSpace(str)
+	if str == "" {
+		return nil
+	}
+	if v, er := strconv.ParseBool(str); er == nil {
+		return &v
+	} else {
+		return base.OptionalFalse
+	}
 }
 
 var initDefOnce sync.Once
@@ -215,6 +246,8 @@ func uns2DataVo(unsPo types.UnsInfo) *FileData {
 		pt := unsPo.GetPathType()
 		if pt == constants.PathTypeFile {
 			data.DataType = enums.DataTypeName(*dt)
+		} else if pt == constants.PathTypeDir {
+			data.DataType = enums.GetFolderDataType(*dt).Name()
 		}
 		if *dt != constants.TimeSequenceType {
 			data.Fields = base.Filter(unsPo.GetFields(), func(e *types.FieldDefine) bool {
@@ -223,6 +256,8 @@ func uns2DataVo(unsPo types.UnsInfo) *FileData {
 		} else {
 			data.Fields = unsPo.GetFields()
 		}
+	} else {
+		data.Fields = unsPo.GetFields()
 	}
 
 	//if unsPo.DataType == constants.CALCULATION_REAL_TYPE ||

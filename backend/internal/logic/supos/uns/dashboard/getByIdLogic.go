@@ -18,21 +18,20 @@ type GetByIdLogic struct {
 	logx.Logger
 	ctx             context.Context
 	svcCtx          *svc.ServiceContext
-	dashboardMapper *relationDB.DashboardMapper
+	dashboardMapper relationDB.DashboardMapper
 }
 
 func NewGetByIdLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetByIdLogic {
-	db := relationDB.GetDb(ctx)
 	return &GetByIdLogic{
-		Logger:          logx.WithContext(ctx),
-		ctx:             ctx,
-		svcCtx:          svcCtx,
-		dashboardMapper: relationDB.NewDashboardMapper(db, ctx),
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
 	}
 }
 
 func (l *GetByIdLogic) GetById(req *DashboardIDReq) (*types.JsonResult, error) {
-	dashboard, err := l.dashboardMapper.SelectById(req.ID)
+	db := relationDB.GetDb(l.ctx)
+	dashboard, err := l.dashboardMapper.SelectById(db, req.ID)
 	if err != nil {
 		return &types.JsonResult{
 			Code: http.StatusInternalServerError,

@@ -19,31 +19,31 @@ type PageListLogic struct {
 	logx.Logger
 	ctx             context.Context
 	svcCtx          *svc.ServiceContext
-	dashboardMapper *relationDB.DashboardMapper
+	dashboardMapper relationDB.DashboardMapper
 }
 
 func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageListLogic {
-	db := relationDB.GetDb(ctx)
 	return &PageListLogic{
-		Logger:          logx.WithContext(ctx),
-		ctx:             ctx,
-		svcCtx:          svcCtx,
-		dashboardMapper: relationDB.NewDashboardMapper(db, ctx),
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
 	}
 }
 
 func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dto.PageResultDTO[*relationDB.DashboardExtends], error) {
 	keyword := dbutil.EscapeForLike(req.K)
 	orderCode := req.OrderCode
-	descOrAsc := req.IsAsc
+	if req.PageNo < 1 {
+		req.PageNo = 1
+	}
 
 	pageResult := &dto.PageResultDTO[*relationDB.DashboardExtends]{
 		Code:     http.StatusOK,
-		PageNo:   int64(req.PageNum),
-		PageSize: int64(req.PageSize),
+		PageNo:   req.PageNo,
+		PageSize: req.PageSize,
 	}
 
-	l.Logger.Infof("PageListLogic: PageList request: %+v, userID: %s", req, userID)
+	l.Logger.Debugf("PageListLogic: PageList request: %+v, userID: %s", req, userID)
 
 	// 排序字段校验
 	if orderCode != "" {
@@ -53,24 +53,16 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 		// 驼峰转下划线
 		orderCode = camelToSnake(orderCode)
 	}
-
-	// 排序方向
-	if descOrAsc == "" || descOrAsc != "ASC" {
-		descOrAsc = "DESC"
-	}
-
+	db := relationDB.GetDb(l.ctx)
 	// 查询总数
-	total, err := l.dashboardMapper.SelectDashboardCount(keyword, req.Type)
+	var total int64
+	// 查询数据
+	dashboards, err := l.dashboardMapper.SelectDashboard(db, userID, keyword, req.Type, orderCode, req.IsAsc, req.PageNo, req.PageSize, &total)
 	if err != nil {
-		return nil, err
+		l.Logger.Error("查询Dashboard失败:", err)
+		return pageResult, nil
 	}
 	pageResult.Total = total
-
-	// 查询数据
-	dashboards, err := l.dashboardMapper.SelectDashboard(userID, keyword, req.Type, orderCode, descOrAsc, int64(req.PageNum), int64(req.PageSize))
-	if err != nil {
-		return nil, err
-	}
 	pageResult.Data = dashboards
 
 	return pageResult, nil

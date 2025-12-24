@@ -27,7 +27,7 @@ func NewIsExistLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsExistLo
 
 func (l *IsExistLogic) IsExist(alias string) (*types.JsonResult, error) {
 	uuid := grafanautil.GetDashboardUUIDByAlias(alias)
-	dbJSON, err := grafanautil.GetDashboardByUUID(uuid)
+	dbJSON, err := grafanautil.GetDashboardByUUID(l.ctx, uuid)
 	if err != nil || dbJSON == nil {
 		return &types.JsonResult{
 			Code: http.StatusBadRequest,

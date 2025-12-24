@@ -31,6 +31,12 @@ func (l *CreateRoleLogic) CreateRole(req *types.RoleSaveReq) (*types.RoleDetail,
 	roleName := strings.TrimSpace(req.Name)
 	denyRoleName := fmt.Sprintf("deny-%s", roleName)
 
+	for _, r := range enums.AllRoles {
+		if strings.EqualFold(roleName, r.Name) || strings.EqualFold(roleName, r.Comment) {
+			return nil, errors.Parameter.WithMsg("role.name.exist")
+		}
+	}
+
 	kc, err := l.keycloakClient()
 	if err != nil {
 		return nil, err

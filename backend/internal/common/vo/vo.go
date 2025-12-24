@@ -162,6 +162,7 @@ type UserInfoVo struct {
 	ResourceList      []*authdto.ResourceDto `json:"resourceList,omitzero"`     // 资源列表
 	DenyResourceList  []*authdto.ResourceDto `json:"denyResourceList,omitzero"` // 拒绝策略资源列表
 	MainLanguage      string                 `json:"mainLanguage,omitzero"`     // 主语言
+	SuperAdmin        bool                   `json:"superAdmin,optional"`       // 是否为超级管理员
 }
 
 // NewUserInfoVo creates a UserInfoVo with basic info.

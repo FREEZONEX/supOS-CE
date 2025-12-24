@@ -1,6 +1,7 @@
 package relationDB
 
 import (
+	"backend/internal/common/utils/loggerlevel"
 	"context"
 	"strings"
 	"sync"
@@ -8,6 +9,7 @@ import (
 	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 )
 
 /*
@@ -30,7 +32,15 @@ func GetDb(ctx context.Context) *gorm.DB {
 			return db
 		}
 	}
-	return stores.GetCommonConn(ctx).Debug()
+	db := stores.GetCommonConn(ctx)
+	if loggerlevel.IsDebug() {
+		db = db.Debug() //打日志
+	} else {
+		db = db.Session(&gorm.Session{
+			Logger: db.Logger.LogMode(logger.Silent), //不打印日志
+		})
+	}
+	return db
 }
 func SetDb(ctx context.Context, db *gorm.DB) context.Context {
 	return context.WithValue(ctx, "db", db)

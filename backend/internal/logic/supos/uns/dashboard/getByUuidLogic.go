@@ -29,7 +29,7 @@ func NewGetByUuidLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetByUu
 }
 
 func (l *GetByUuidLogic) GetByUuid(uuid string) (*types.JsonResult, error) {
-	dbJSON, err := grafanautil.GetDashboardByUUID(uuid)
+	dbJSON, err := grafanautil.GetDashboardByUUID(l.ctx, uuid)
 	if err != nil || dbJSON == nil {
 		return &types.JsonResult{
 			Code: http.StatusBadRequest,

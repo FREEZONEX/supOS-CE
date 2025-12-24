@@ -128,6 +128,7 @@ type SimpleUns struct {
 
 func (p UnsNamespaceRepo) ListPaths(db *gorm.DB, f *UnsPathFilter, page *stores.PageInfo, searchCount *int64) (results []*SimpleUns, er error) {
 	db = p.model(db)
+	db = db.Where("path_type = ?", f.PathType)
 	if f.TemplateId > 0 {
 		db = db.Where("model_id = ?", f.TemplateId)
 	}

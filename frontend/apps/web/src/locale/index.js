@@ -965,6 +965,7 @@ const messages = {
   'common.noDescription': '暂无描述',
   'common.clickOrDragForUpload': '点击或者拖拽文件在这个区域进行上传',
   'common.uploadFile': '上传文件',
+  'common.SpecialCharacterValidation': '不支持特殊字符：{rule}',
 
   // 按钮国际化
   'Namespace.uns_import': 'UNS-导入',
@@ -1014,7 +1015,7 @@ const messages = {
   'Dashboards.design': '设计',
   'Dashboards.edit': '编辑',
   'Dashboards.delete': '删除',
-  'Dashboards.save': '报错',
+  'Dashboards.save': '保存',
   'Dashboards.export': '导出',
   'Dashboards.import': '导入',
   'UserManagement.add': '新增',

@@ -117,7 +117,7 @@ func (r *AuthRepo) BuildUserInfo(ctx context.Context, realm string, userID strin
 		logx.WithContext(ctx).Errorf("resolve user(%s) language failed: %v", userID, langErr)
 	}
 	user.MainLanguage = lang
-
+	user.SuperAdmin = user.IsSuperAdmin()
 	return user, nil
 }
 
@@ -407,7 +407,10 @@ func sanitizeResources(resources []*authdto.ResourceDto) []*authdto.ResourceDto 
 }
 
 func finalizeAllowResources(resources []*authdto.ResourceDto) []*authdto.ResourceDto {
-	resources = sanitizeResources(resources)
+	return appendCommonResources(sanitizeResources(resources))
+}
+
+func appendCommonResources(resources []*authdto.ResourceDto) []*authdto.ResourceDto {
 	uriMap := make(map[string]*authdto.ResourceDto)
 	for _, res := range resources {
 		if res == nil {
@@ -416,11 +419,12 @@ func finalizeAllowResources(resources []*authdto.ResourceDto) []*authdto.Resourc
 		uriMap[res.URI] = res
 	}
 	for _, uri := range enums.DefaultAllowURIs {
-		if _, exists := uriMap[uri]; !exists {
-			uriMap[uri] = &authdto.ResourceDto{
-				URI:     uri,
-				Methods: defMethods,
-			}
+		if _, exists := uriMap[uri]; exists {
+			continue
+		}
+		uriMap[uri] = &authdto.ResourceDto{
+			URI:     uri,
+			Methods: transMethodList(uri),
 		}
 	}
 	out := make([]*authdto.ResourceDto, 0, len(uriMap))

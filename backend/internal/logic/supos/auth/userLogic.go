@@ -50,6 +50,6 @@ func (l *UserLogic) User(sessionKey string) (any, error) {
 		}
 		return "not found user info", nil
 	}
-
+	userInfo.SuperAdmin = userInfo.IsSuperAdmin()
 	return userInfo, nil
 }

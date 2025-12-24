@@ -76,7 +76,7 @@ func (p *TsdbPersistentService) OnEventRemoveTopicsEvent9(evt *event.RemoveTopic
 	postgresql.OnRemove(p.log, p.dbPool, dsId, evt)
 }
 func (p *TsdbPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
-	query := func() (pgx.Rows, error) {
+	query := func(ctx context.Context) (pgx.Rows, error) {
 		sql := base.StringBuilder{}
 		sql.Grow(256)
 		sql.Append(`SELECT * FROM "`).Append(uns.GetTable()).Append(`" `)
@@ -84,7 +84,7 @@ func (p *TsdbPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
 			sql.Append(`WHERE "`).Append(tbF).Append(`"= `).Long(uns.Id)
 		}
 		sql.Append(` ORDER BY "`).Append(uns.GetTimestampField()).Append(`" DESC LIMIT 1`)
-		return p.dbPool.Query(context.Background(), sql.String())
+		return p.dbPool.Query(ctx, sql.String())
 	}
 	postgresql.FillLastRecord(p.log, uns, query)
 }
