@@ -444,8 +444,8 @@ func (p UnsNamespaceRepo) ListUnsByIds(db *gorm.DB, ids []int64) (results []*Uns
 func (p UnsNamespaceRepo) ListInTemplate(db *gorm.DB, name string) (results []*UnsNamespace, err error) {
 	db = p.model(db)
 	query := db.Where("path_type in ?", []int{0, 2}).
-		Where("data_type <> ?", constants.AlarmRuleType).
-		Where("model_id IS NOT NULL")
+		Where("(data_type is NULL OR data_type <> ?)", constants.AlarmRuleType).
+		Where("model_id IS NOT NULL AND status=1 ")
 	if name != "" {
 		lowerName := "%" + strings.ToLower(escapeLikePattern(escapeSQL(name))) + "%"
 		query = query.Where(
