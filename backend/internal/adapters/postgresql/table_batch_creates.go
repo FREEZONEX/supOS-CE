@@ -21,6 +21,9 @@ func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 	if len(topics) == 0 {
 		return nil
 	}
+	if tableInfoMap == nil {
+		tableInfoMap = map[string]*TableInfo{}
+	}
 	alterTableSQLs := make([]string, 0, len(topics))
 	hyperTableSQLs := make([]string, 0, len(topics))
 
