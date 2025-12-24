@@ -44,7 +44,7 @@
     "error_select_topic_empty": "",
     "custom_protocol": "Custom Protocol",
     "error_require_field": "Required field cannot be empty",
-    "error_path_not_null": "Path cannot be empty",
+    "error_path_not_null": "Topic cannot be empty",
     "error_field_not_null": "AttributeName cannot be empty",
     "error_field_type_not_null": "AttributeType cannot be empty",
     "error_tag_not_null": "TagConfiguration cannot be empty",

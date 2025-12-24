@@ -820,6 +820,7 @@
         const regFileName = /^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/
         // 属性名称正则
         const regFieldName =  /^[A-Za-z][A-Za-z0-9_]*$/
+        const allowedAttrTypes = ["integer", "long", "double", "float", "boolean", "datetime", "string"];
 
         for (let i in rowsData) {
             const [path, alias, fname, ftype, tag] = rowsData[i];
@@ -834,6 +835,12 @@
                 // AttributeType 可为空，不校验
                 if (!regFieldName.test(fname)) {
                     return node._("supmodel.error_invalid_fieldname")
+                }
+                if (ftype) {
+                    const lowerType = (ftype || "").toString().toLowerCase().trim();
+                    if (allowedAttrTypes.indexOf(lowerType) === -1) {
+                        return node._("supmodel.error_invalid_type");
+                    }
                 }
             }
             if (!tag || tag == null || tag == undefined) {
