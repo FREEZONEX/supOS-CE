@@ -114,7 +114,7 @@ func loadUserInfoFromKeycloak(ctx context.Context, kc *clients.KeycloakClient, s
 	} else {
 		user.RoleList = roles
 	}
-
+	user.SuperAdmin = user.IsSuperAdmin()
 	return user, nil
 }
 

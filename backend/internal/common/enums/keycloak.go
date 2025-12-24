@@ -17,6 +17,18 @@ var DefaultAllowURIs = []string{
 	"/mf-manifest.json",
 	"/403",
 	"/copilotkit",
-	"/portainer/home/",
-	"/konga/home/",
+	"/portainer/home",
+	"/konga/home",
+	"/marimo/home",
+	"/grafana/home",
+	"/eventflow/home",
+}
+
+func IsDefaultCommonURI(path string) bool {
+	for _, uri := range DefaultAllowURIs {
+		if path == uri || len(path) > len(uri) && path[:len(uri)+1] == uri+"/" {
+			return true
+		}
+	}
+	return false
 }
