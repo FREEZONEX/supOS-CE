@@ -88,9 +88,7 @@ const TopDom: FC<TopDomProps> = ({
   return (
     <div className="chartTop">
       {treeMap ? (
-        <div className="treemapTitle" style={{ padding: 0 }}>
-          {formatMessage('home.dashboard')}
-        </div>
+        <div className="treemapTitle" style={{ padding: 0 }}></div>
       ) : treeType === 'uns' ? (
         <div className="chartTopL">
           {currentTreeMapType === 'all' && selectedNode?.id
