@@ -34,7 +34,7 @@ healthRouter.get('/health', async (c) => {
     });
 
     const filters = {
-      network: ['supos_edge_network'], // 网络名称或 ID
+      network: ['tier0_edge_network'], // 网络名称或 ID
     };
 
     // 使用Promise方式调用Docker API

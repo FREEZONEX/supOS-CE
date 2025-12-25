@@ -54,7 +54,7 @@ fi
 
 # After volumes are created, copy the service config file to its final destination.
 SOURCE_CONFIG_FILE="$SCRIPT_DIR/global/active-services.txt"
-FINAL_CONFIG_FILE="$VOLUMES_PATH/edge/active-services.txt"
+FINAL_CONFIG_FILE="$VOLUMES_PATH/edge/system/active-services.txt"
 if [ -f "$SOURCE_CONFIG_FILE" ]; then
     info "Activating selected service profile..."
     mkdir -p "$(dirname "$FINAL_CONFIG_FILE")"
@@ -67,7 +67,7 @@ fi
 
 # --- 7. Main Execution: Start services and run post-init scripts ---
 info "Starting Docker containers in detached mode..."
-if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" --project-name supos "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d; then
+if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" --project-name tier0 "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d; then
     error "Failed to start Docker containers. Please check the logs above."
     exit 1
 fi
