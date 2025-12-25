@@ -299,3 +299,25 @@ const fetchUserLanguage = async (info: { userId?: string; lang?: string }) => {
     return import.meta.env.REACT_APP_LOCAL_LANG || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
   }
 };
+
+export const fetchSystemInfo = async (fetchRoute?: boolean): Promise<any> => {
+  await getSystemConfig().then((systemInfo) => {
+    const containerList = filterContainerList(systemInfo?.containerMap || {});
+    useBaseStore.setState({
+      systemInfo: {
+        ...(systemInfo ?? {}),
+        appTitle: systemInfo?.appTitle || APP_TITLE,
+      },
+      containerList,
+      dataBaseType: systemInfo?.containerMap?.tdengine?.envMap?.service_is_show ? ['tdengine'] : ['timescale'],
+      mqttBrokeType: systemInfo?.containerMap?.emqx?.name,
+      dashboardType:
+        containerList.aboutUs
+          ?.filter((i) => ['fuxa', 'grafana'].includes(i.name) && i.envMap?.service_is_show)
+          ?.map((m) => m.name) ?? [],
+    });
+    if (fetchRoute) {
+      fetchBaseStore?.();
+    }
+  });
+};
