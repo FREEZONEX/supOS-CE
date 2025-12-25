@@ -129,9 +129,11 @@ func OnCreate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrc
 	creates := evt.GetCreateFiles(dataSrcId)
 	undates := evt.GetUpdateFiles(dataSrcId)
 	if len(undates) > 0 {
-		creates = append(creates, base.Filter(undates, func(e *types.CreateTopicDto) bool {
-			return e.FieldsChanged
-		})...)
+		if len(creates) > 0 {
+			creates = append(creates, undates...)
+		} else {
+			creates = undates
+		}
 	}
 	if len(creates) > 0 {
 		creates = base.Filter(creates, func(e *types.CreateTopicDto) bool {
