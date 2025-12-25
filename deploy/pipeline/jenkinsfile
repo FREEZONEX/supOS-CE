@@ -71,7 +71,7 @@ pipeline {
                     dir("frontend") {
                         echo "--> 正在构建前端镜像: ${FRONTEND_IMAGE_TAG}"
                         // 构建 Docker 镜像
-                        dockerImage = docker.build("${FRONTEND_IMAGE_TAG}", "-f ./Dockerfile .")
+                        dockerImage = docker.build("${FRONTEND_IMAGE_TAG}", "-f ./Dockerfile-CN .")
                     }
                     
 
