@@ -5,15 +5,14 @@ pipeline {
     // 环境变量配置
     environment {
         SOURCE_CODE_URL = "https://gitee.com/supos-community-edition/sup-os-edge.git"
-        IMAGE_NAME = "supos-edge-platform" // 替换为你的应用镜像名称
+        UNS_IMAGE_NAME = "tier0-uns" // 后端镜像
+        FRONTEND_IMAGE_NAME = "tier0-frontend" // 前端镜像
         DOCKER_REGISTRY = "eco-registry.supos.com" // 替换为你的Docker仓库地址 (例如：docker.io, hub.mycompany.com)
         DOCKER_USERNAME = "admin"
         DOCKER_PASSWORD = "Supos1304@"
-        FULL_IMAGE_TAG = "${DOCKER_REGISTRY}/sup9bnlh/${IMAGE_NAME}:${TAG}"
         TAG = "${params.TAG}"
-        SOURCE_PATH = "/var/jenkins_home/SourceCodes"
-        SOURCE_DIR = "supos-edge"
-        SOURCE_CODE = "${SOURCE_PATH}/${SOURCE_DIR}"
+        UNS_IMAGE_TAG = "${DOCKER_REGISTRY}/sup9bnlh/${UNS_IMAGE_NAME}:${TAG}"
+        FRONTEND_IMAGE_TAG = "${DOCKER_REGISTRY}/sup9bnlh/${FRONTEND_IMAGE_NAME}:${TAG}"
         CREDENTIALS_ID = '26d0e415-9908-4c00-84dd-98ef04c6f201' // 替换为你的 Jenkins SSH 凭证 ID
         VERSION=''
         DEPLOY_SSH_SERVER='root@172.21.9.198'
@@ -63,17 +62,29 @@ pipeline {
         stage('2. 构建镜像') {
             steps {
                 script {
-                    echo "--> 正在构建镜像: ${FULL_IMAGE_TAG}"
                     sh "mkdir -p ./deploy/images"
-                    // 构建 Docker 镜像
-                    dockerImage = docker.build("${FULL_IMAGE_TAG}", "-f ./deploy/Dockerfile-Compose .")
+                    dir("backend") {
+                        echo "--> 正在构建后端镜像: ${UNS_IMAGE_TAG}"
+                        // 构建 Docker 镜像
+                        dockerImage = docker.build("${UNS_IMAGE_TAG}", "-f ./Dockerfile .")
+                    }
+                    dir("frontend") {
+                        echo "--> 正在构建前端镜像: ${FRONTEND_IMAGE_TAG}"
+                        // 构建 Docker 镜像
+                        dockerImage = docker.build("${FRONTEND_IMAGE_TAG}", "-f ./Dockerfile-CN .")
+                    }
+                    
 
                     sh '''
-                        docker tag ${FULL_IMAGE_TAG} "suposce/supos-edge-platform:${TAG}"
-                        docker save  suposce/supos-edge-platform:${TAG} | xz -z -T0 -v >./deploy/images/supos-edge-platform.tar.xz
+                        docker tag ${UNS_IMAGE_TAG} "suposce/tier0-uns:${TAG}"
+                        docker save  suposce/tier0-uns:${TAG} | xz -z -T0 -v >./deploy/images/tier0-uns.tar.xz
+
+                        docker tag ${FRONTEND_IMAGE_TAG} "suposce/tier0-frontend:${TAG}"
+                        docker save  suposce/tier0-frontend:${TAG} | xz -z -T0 -v >./deploy/images/tier0-frontend.tar.xz
 
                         echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY"
-                        docker push "${FULL_IMAGE_TAG}"
+                        docker push "${UNS_IMAGE_TAG}"
+                        docker push "${FRONTEND_IMAGE_TAG}"
                     '''
                 }
             }
@@ -95,16 +106,20 @@ pipeline {
                         rm -rf ./pipeline && rm -f Dockerfile-Compose
 
                         cp -r ../backend/etc ./mount/edge/
+
+                        sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: suposce/tier0-frontend:\${TAG}|g" docker-compose-4c8g.yml
+                        sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: suposce/tier0-frontend:\${TAG}|g" docker-compose-8c16g.yml
+                        sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: suposce/tier0-uns:\${TAG}|g" docker-compose-4c8g.yml
+                        sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: suposce/tier0-uns:\${TAG}|g" docker-compose-8c16g.yml
                         
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
                         ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
-                        mkdir supOS-edge-${VERSION}-${DATE} && cp -r ${ZipDirAndFileLists} supOS-edge-${VERSION}-${DATE}
+                        mkdir tier0-${VERSION}-${DATE} && cp -r ${ZipDirAndFileLists} tier0-${VERSION}-${DATE}
 
-                        /var/jenkins_home/paks/zip -q -r -y supOS-edge-${VERSION}-${DATE}.zip supOS-edge-${VERSION}-${DATE}
-                        md5sum supOS-edge-${VERSION}-${DATE}.zip > supOS-edge-${VERSION}-${DATE}.zip.md5
-                        chmod 664 supOS-edge-${VERSION}-${DATE}.zip*
-
+                        /var/jenkins_home/paks/zip -q -r -y tier0-${VERSION}-${DATE}.zip tier0-${VERSION}-${DATE}
+                        md5sum tier0-${VERSION}-${DATE}.zip > tier0-${VERSION}-${DATE}.zip.md5
+                        chmod 664 tier0-${VERSION}-${DATE}.zip*
                         '''
                     }
                 }
@@ -123,10 +138,10 @@ pipeline {
                         sh '''
                         ls -all
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
-                        scp -i /var/jenkins_home/ssh/id_rsa supOS-edge-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${VERSION}/
+                        scp -i /var/jenkins_home/ssh/id_rsa tier0-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${VERSION}/
 
                         echo "--> 传输完成！"
-                        rm -f supOS-edge-*.zip* && rm -rf supOS-edge-${VERSION}-*
+                        rm -f tier0-*.zip* && rm -rf tier0-${VERSION}-*
                         '''
                     }
                 }
@@ -153,10 +168,10 @@ pipeline {
                         }
                         exec_ssh '
                             bash /root/edge/supos-deploy-edge/bin/uninstall.sh
-                            rm -rf /volumes/supos/data/
+                            rm -rf /volumes/tier0/data/
                         '
                         """
-                        echo "---> 远程数据/volumes/supos/data/清理完成！"
+                        echo "---> 远程数据/volumes/tier0/data/清理完成！"
                     }   
                     
                     dir("deploy") {      
@@ -170,7 +185,8 @@ pipeline {
 
                         if [ \$Only_Build_Image = false ]; then
 
-                            sed -i "s|image: suposce/supos-edge-platform:[^[:space:]]*|image: \${FULL_IMAGE_TAG}|g" docker-compose-4c8g.yml
+                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose-4c8g.yml
+                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose-4c8g.yml
                             sed -i 's@\\\${ENTRANCE_PORT:-8088}:8000@8088:8000@g' docker-compose-4c8g.yml
                             sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
                             sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
@@ -181,19 +197,20 @@ pipeline {
                             exec_ssh '
                                 cd /root/edge/supos-deploy-edge/ 
                                 bash ./bin/uninstall.sh
-                                bash ./bin/util/clean-images.sh supos-edge-platform
+                                bash ./bin/util/clean-images.sh tier0
                                 bash ./bin/install.sh
                             '
 
                         fi
 
                         if [ \$Only_Build_Image = true ]; then
-                            sed -i "s|image: suposce/supos-edge-platform:[^[:space:]]*|image: \${FULL_IMAGE_TAG}|g" docker-compose-4c8g.yml
+                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose-4c8g.yml
+                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose-4c8g.yml
                             scp -i /var/jenkins_home/ssh/id_rsa docker-compose-4c8g.yml \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
 
                             exec_ssh '
-                                docker rm -f uns
-                                cd /root/edge/supos-deploy-edge/ && docker compose -f docker-compose-4c8g.yml -p supos --env-file .env.default --env-file .env.tmp up -d --pull always uns
+                                docker rm -f uns frontend
+                                cd /root/edge/supos-deploy-edge/ && docker compose -f docker-compose-4c8g.yml -p tier0 --env-file .env.default --env-file .env.tmp up -d --pull always uns frontend
                             '
                         fi
                         

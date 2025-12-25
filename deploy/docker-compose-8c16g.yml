@@ -5,12 +5,36 @@ networks:
     driver: bridge
 
 services:
-  uns:
-    image: suposce/supos-edge-platform:1.0.0-R5
-    container_name: uns
+  frontend:
+    image: suposce/tier0-frontend:1.0.0-R5
+    container_name: frontend
     ports:
       - "3010:3000"
       - "4000:4000"
+    environment:
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_TYPE=${LLM_TYPE}
+      - REACT_APP_OS_LANG=${LANGUAGE}
+      - TOKEN_MAX_AGE=${TOKEN_MAX_AGE}
+      - TZ=UTC
+    command: >
+      sh -c "
+        if [ -z \"$LLM_API_KEY\" ]; then
+          echo 'LLM_API_KEY为空，跳过Node.js服务启动'
+          concurrently \"serve -s /app/web-dist -l 3000\"
+        else
+          echo 'LLM_API_KEY已配置，启动所有服务'
+          concurrently \"serve -s /app/web-dist -l 3000\" \"node /app/services-express-dist/index.js\"
+        fi
+      "
+    volumes:
+      - /etc/docker/certs:/certs
+    networks:
+      - edge_network
+  uns:
+    image: suposce/tier0-uns:1.0.0-R5
+    container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
@@ -48,16 +72,6 @@ services:
       - SYS_OS_TIMESTAMP_NAME=timeStamp
       - SYS_OS_LAZY_TREE=${LAZY_TREE}
       - UNS_ADD_BATCH_SIZE=1000
-    command: >
-      sh -c "
-        if [ -z \"$LLM_API_KEY\" ]; then
-          echo 'LLM_API_KEY为空，跳过Node.js服务启动'
-          concurrently \"serve -s /app/web-dist -l 3000\" \"./backend\"
-        else
-          echo 'LLM_API_KEY已配置，启动所有服务'
-          concurrently \"serve -s /app/web-dist -l 3000\" \"node /app/services-express-dist/index.js\" \"./backend\"
-        fi
-      "
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
       - /etc/docker/certs:/certs

@@ -11,7 +11,7 @@ import type { ResourceProps } from '@/stores/types.ts';
 import { removeToken } from '@/utils/auth';
 import { storageOpt } from '@/utils/storage';
 import { passwordRegex, phoneRegex, validSpecialCharacter } from '@/utils/pattern';
-import { fetchBaseStore, updateForUserInfo, useBaseStore } from '@/stores/base';
+import { fetchBaseStore, fetchSystemInfo, updateForUserInfo, useBaseStore } from '@/stores/base';
 import { PrimaryColorType, setPrimaryColor, setTheme, ThemeType, useThemeStore } from '@/stores/theme-store.ts';
 import Cookies from 'js-cookie';
 import { updatePersonConfigApi } from '@/apis/inter-api/uns';
@@ -232,7 +232,7 @@ const UserPopover: FC<PopoverProps> = ({ children, ...restProps }) => {
                         v
                       );
                       // 更新路由，名称和描述是后端国际化
-                      fetchBaseStore?.();
+                      fetchSystemInfo(true);
                       return initI18n(v, pluginLang);
                     });
                   }
