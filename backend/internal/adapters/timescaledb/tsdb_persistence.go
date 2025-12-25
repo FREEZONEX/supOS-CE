@@ -84,7 +84,12 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	for _, tableInfo := range tableInfos {
 		if err := copyDataToTempTable(conn, batchSize, tableInfo); err != nil {
 			allErrors = append(allErrors, fmt.Sprintf("表 %s 数据导入失败: %v", tableInfo.GetTableName(), err))
-			// 继续处理其他表
+			if strings.Contains(err.Error(), "42703") { //column \"xx\" does not exist (SQLSTATE 42703)
+				logx.Errorf("尝试重建表：%s | %v", tableInfo.GetTableName(), err)
+				uns := []*types.CreateTopicDto{tableInfo.def}
+				tInfoMap, _ := postgresql.ListTableInfos(conn, uns)
+				postgresql.BatchCreateTables(conn, defaultSchema, uns, tInfoMap) //尝试重建表
+			}
 		}
 	}
 

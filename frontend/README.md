@@ -22,6 +22,7 @@ frontend/
 │   ├── web/                # 主Web应用
 │   ├── services/           # 服务应用
 │   └── services-express/   # Express服务应用
+│   └── services-hono/      # hono服务应用,bun运行时,未使用
 ├── packages/               # 共享包
 │   ├── scripts/            # 构建脚本
 │   └── typescript-config/  # TypeScript配置
@@ -119,9 +120,9 @@ pnpm clean  # 清理node_modules
 
 后端服务应用，目前提供copilotkit接口和健康检查接口。
 
-### 服务应用 (`apps/services`)
+### 服务应用 (`apps/services-hono`)
 
-基于hono.js实现的版本
+基于hono.js/bun 实现的版本
 
 ## 📊 特性
 

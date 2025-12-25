@@ -545,7 +545,6 @@ func (u *UnsAddService) trySetId(
 		errTipMap[batchIndex] = errMsg
 		return nil, false
 	}
-	setJdbcType(unsDto)
 
 	dbPo := existsUns(unsDto.Alias)
 	if dbPo != nil {
@@ -563,6 +562,9 @@ func (u *UnsAddService) trySetId(
 	}
 
 	DB_EXISTS := dbPo != nil && base.P2v(dbPo.Status) == OK
+	if !DB_EXISTS {
+		setJdbcType(unsDto)
+	}
 	if DB_EXISTS && skipWhenExists {
 		*unsDto = *UnsConverter.Po2Dto(dbPo)
 		return dbPo, true
@@ -580,6 +582,19 @@ func (u *UnsAddService) trySetId(
 	//}
 
 	newUns := newUnsFile(unsDto)
+	if DB_EXISTS {
+		tar := *dbPo
+		_ = copier.CopyWithOption(&tar, newUns, copier.Option{IgnoreEmpty: true})
+		if newUns.ParentAlias != nil && *newUns.ParentAlias == "" {
+			tar.ParentAlias = nil
+			tar.ParentId = nil
+		}
+		unsDto = UnsConverter.Po2Dto(&tar)
+		newUns = &tar
+		newUns.UpdateAt = ct
+
+	}
+
 	dataType := int16(0)
 	if dt := unsDto.DataType; dt != nil {
 		dataType = *dt
@@ -599,14 +614,6 @@ func (u *UnsAddService) trySetId(
 	}
 
 	if DB_EXISTS {
-		tar := *dbPo
-		_ = copier.CopyWithOption(&tar, newUns, copier.Option{IgnoreEmpty: true})
-		if unsDto.Name == "" {
-			unsDto.Name = dbPo.Name
-		}
-		if unsDto.ParentAlias == nil && dbPo.ParentAlias != nil {
-			unsDto.ParentAlias = dbPo.ParentAlias
-		}
 		expression := newUns.Expression
 		expChanged := expression != nil && (dbPo.Expression == nil || *expression != *dbPo.Expression)
 		hasRefer := unsDto.Refers != nil || unsDto.ReferIds != nil
@@ -618,7 +625,6 @@ func (u *UnsAddService) trySetId(
 		}
 
 		if expChanged || hasRefer {
-			unsDto = UnsConverter.Po2Dto(&tar)
 			if hasRefer {
 				err := u.unsCalcService.CheckRefers(unsDto)
 				if err != "" {
@@ -634,8 +640,6 @@ func (u *UnsAddService) trySetId(
 				}
 			}
 		}
-		tar.UpdateAt = ct
-		newUns = &tar
 		newUns.Refers = unsDto.Refers
 		newUns.Expression = unsDto.Expression
 		var fieldsChanged = !base.EqualsF(newUns.Fields, dbPo.Fields, func(a, b *types.FieldDefine) bool {
@@ -902,13 +906,12 @@ func aliasToId(addFiles map[int64]*dao.UnsNamespace, aliasMap func(string) *dao.
 	}
 }
 
-func (u *UnsAddService) listUnsByAliasAndIds(ctx context.Context, alias []string, ids []int64, dbFiles map[int64]*dao.UnsNamespace) (aliasMap map[string]*dao.UnsNamespace, er error) {
-	aliasMap = make(map[string]*dao.UnsNamespace, len(alias)+len(ids))
+func (u *UnsAddService) listUnsByAliasAndIds(ctx context.Context, alias []string, ids []int64, dbFiles map[int64]*dao.UnsNamespace, aliasMap map[string]*dao.UnsNamespace) (er error) {
 	db := dao.GetDb(ctx)
 	for _, aliasList := range base.Partition(alias, constants.SQLBatchSize) {
 		unsPos, er := u.unsMapper.AllByAlias(db, aliasList)
 		if er != nil {
-			return nil, er
+			return er
 		}
 		addDbPo(unsPos, dbFiles, aliasMap)
 	}
@@ -916,7 +919,7 @@ func (u *UnsAddService) listUnsByAliasAndIds(ctx context.Context, alias []string
 		for _, idList := range base.Partition(ids, constants.SQLBatchSize) {
 			unsPos, er := u.unsMapper.AllByIds(db, idList)
 			if er != nil {
-				return nil, er
+				return er
 			}
 			addDbPo(unsPos, dbFiles, aliasMap)
 		}

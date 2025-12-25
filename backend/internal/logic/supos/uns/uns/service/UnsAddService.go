@@ -69,7 +69,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		return errTipMap
 	}
 	dbFiles := make(map[int64]*dao.UnsNamespace)
-	var existsUns map[string]*dao.UnsNamespace
+	var existsUns = make(map[string]*dao.UnsNamespace, int(float64(len(args.Topics))*1.3)+5)
 	{
 		ids := make(map[int64]bool)
 		aliasSet := make(map[string]bool)
@@ -77,11 +77,36 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			addAlias(base.MapValues(vs), aliasSet, ids)
 		}
 		var err error
-		existsUns, err = u.listUnsByAliasAndIds(ctx, base.MapKeys(aliasSet), base.MapKeys(ids), dbFiles)
+		err = u.listUnsByAliasAndIds(ctx, base.MapKeys(aliasSet), base.MapKeys(ids), dbFiles, existsUns)
 		if err != nil {
 			u.log.Error("QueryUnsError:", err)
 			errTipMap["0"] = "QueryUnsError:" + err.Error()
 			return errTipMap
+		}
+		if len(existsUns) > 0 {
+			newIds := make(map[int64]bool)
+			for _, uns := range existsUns {
+				pid := uns.ParentId
+				if pid != nil && !ids[*pid] {
+					newIds[*pid] = true
+				}
+				mid := uns.ModelId
+				if mid != nil && !ids[*mid] {
+					newIds[*mid] = true
+				}
+			}
+			if len(newIds) > 0 {
+				db := dao.GetDb(ctx)
+				for _, idList := range base.Partition(base.MapKeys(newIds), constants.SQLBatchSize) {
+					unsPos, err := u.unsMapper.SelectByIds(db, idList)
+					if err != nil {
+						u.log.Error("QueryUnsError2:", err)
+						errTipMap["0"] = "QueryUnsError2:" + err.Error()
+						return errTipMap
+					}
+					addDbPo(unsPos, dbFiles, existsUns)
+				}
+			}
 		}
 	}
 	for _, vs := range pathMap {

@@ -10,6 +10,8 @@ fi
 docker rm -f kong > /dev/null 2>&1
 docker exec -it postgresql bash -c 'PGPASSWORD="postgres" psql -U postgres -c "DROP DATABASE IF EXISTS kong;"'
 docker exec -it postgresql bash -c 'PGPASSWORD="postgres" psql -U postgres -c "CREATE DATABASE kong;"'
+docker exec -it postgresql bash -c 'PGPASSWORD="postgres" psql -U postgres -d keycloak -c "TRUNCATE TABLE \"public\".\"offline_user_session\";"'
+docker exec -it postgresql bash -c 'PGPASSWORD="postgres" psql -U postgres -d keycloak -c "TRUNCATE TABLE \"public\".\"offline_client_session\";"'
 
 source $ENV_FILE
 DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../docker-compose-8c16g.yml
@@ -30,5 +32,4 @@ fi
 docker ps -a -q --filter "network=tier0_edge_network" | xargs --no-run-if-empty docker rm -f > /dev/null 2>&1
 
 rm -f $SCRIPT_DIR/../.env.tmp > /dev/null 2>&1
-
 

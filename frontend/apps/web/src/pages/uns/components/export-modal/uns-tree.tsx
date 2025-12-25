@@ -330,7 +330,10 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
                     });
                     setSmallFile(false);
                   } else {
-                    setParams(undefined);
+                    setParams({
+                      ...params,
+                      checkSmallFile: undefined,
+                    });
                     setJsonData(undefined);
                     setSmallFile(true);
                   }
