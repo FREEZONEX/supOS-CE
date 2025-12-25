@@ -3,7 +3,6 @@ package dbpool
 import (
 	"context"
 	"reflect"
-	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -11,17 +10,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var poolMap = make(map[string]*pgxpool.Pool, 4)
-var poolLock sync.RWMutex
+type namedPool struct {
+	name string
+	pool *pgxpool.Pool
+}
+
+var pools = make([]namedPool, 0, 4)
 
 func NewPool(ctx context.Context, connString, appName string) (*pgxpool.Pool, error) {
-	poolLock.Lock()
-	defer poolLock.Unlock()
 	pool, err := newPool(ctx, connString, appName)
 	if err != nil {
 		return nil, err
 	}
-	poolMap[appName] = pool
+	pools = append(pools, namedPool{name: appName, pool: pool})
 	return pool, nil
 }
 
@@ -51,8 +52,8 @@ func init() {
 }
 func Stats() (statsMap map[string]interface{}) {
 	statsMap = make(map[string]interface{})
-	poolLock.RLock()
-	for name, pool := range poolMap {
+	for _, np := range pools {
+		name, pool := np.name, np.pool
 		stats := pool.Stat()
 		metrics := make(map[string]interface{})
 		for _, fn := range poolStats {
@@ -61,7 +62,6 @@ func Stats() (statsMap map[string]interface{}) {
 		}
 		statsMap[name] = metrics
 	}
-	poolLock.RUnlock()
 
 	return statsMap
 }
