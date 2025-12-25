@@ -5,6 +5,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/datetimeutils"
 	"backend/internal/common/utils/finddatautil"
 	"backend/internal/repo/event/subDev"
 	"backend/internal/types"
@@ -12,6 +13,7 @@ import (
 	"backend/share/spring"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -231,6 +233,9 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 }
 
 func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
+	if len(list) == 0 {
+		return
+	}
 	CT, qos, fds := def.GetTimestampField(), def.GetQualityField(), def.GetFieldDefines()
 	now := time.Now().UnixMilli()
 	var lastUpdateTime = now
@@ -254,6 +259,10 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
 				}
 			}
 		}
+		if len(mergeList) == 0 {
+			logx.Errorf("合并数据出问题[ %s ]: %+v\n", def.Alias, list)
+			return
+		}
 		list = mergeList
 	} else {
 		for _, vm := range list {
@@ -262,6 +271,7 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
 			}
 		}
 	}
+
 	lastMap = list[len(list)-1]
 	if lo, has := lastMap[CT].(int64); has {
 		lastUpdateTime = lo
@@ -287,7 +297,26 @@ func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64
 		if curT, hasCt := vm[CT]; !hasCt {
 			vm[CT] = now
 			mergeList = append(mergeList, vm)
-		} else if ct, ok := curT.(int64); ok {
+		} else {
+			ct, ok := curT.(int64)
+			if !ok {
+				str := fmt.Sprint(curT)
+				Float, err := strconv.ParseFloat(str, 64)
+				if err != nil {
+					ct = -1
+					if dt, dtEr := datetimeutils.ParseDate(str); dtEr == nil && dt.Year() > 1970 {
+						ct = dt.UnixMilli()
+					}
+				} else if Int := int64(Float); Int > 1100000000000 {
+					ct = Int
+				}
+			}
+			if ct < 1100000000000 || ct > 11000000000001 {
+				logx.Debugf("BadTimestamp: %v", curT)
+				vm[CT] = now
+				mergeList = append(mergeList, vm)
+				continue
+			}
 			if sz := len(mergeList); ct == prevTime {
 				if sz > 0 {
 					last := mergeList[sz-1]
