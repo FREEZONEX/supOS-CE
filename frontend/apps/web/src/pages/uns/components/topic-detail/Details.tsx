@@ -109,6 +109,10 @@ const Details: FC<DetailsProps> = ({ instanceInfo, updateTime, websocketData }) 
         <div>{dataTypeMap[instanceInfo.dataType]}</div>
       </div>
       <div className="detailItem">
+        <div className="detailKey"> {formatMessage('uns.sourceTemplate')}</div>
+        <div>{instanceInfo.modelName ? `${instanceInfo.modelName}（${instanceInfo.templateAlias}）` : ''}</div>
+      </div>
+      <div className="detailItem">
         <div className="detailKey">{formatMessage('common.label')}</div>
         <div>
           {instanceInfo.labelList &&
