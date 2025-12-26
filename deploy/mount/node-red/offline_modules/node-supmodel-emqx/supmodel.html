@@ -127,6 +127,9 @@
             overflow-y: auto;
             background: #fafafa;
         }
+        .topic-modal-body {
+            margin-top: 32px;
+        }
         .topic-tree ul {
             list-style: none;
             padding-left: 20px;
@@ -166,13 +169,67 @@
             gap: 8px;
         }
         .tag-inline-input {
-            width: 80px;
+            width: 80px !important;
+            min-width: 80px;
+            display: inline-block;
         }
         .single-tab {
             display: block;
         }
         .invalid {
             border: 1px solid red !important;
+        }
+        .topic-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            justify-content: flex-start;
+        }
+        .topic-toolbar .topic-search-wrapper .topic-search-input {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 0 6px 6px 0;
+            outline: none;
+            color: #333;
+            font-size: 14px;
+            box-shadow: none;
+            height: 36px;
+            box-sizing: border-box;
+        }
+        .topic-highlight {
+            color: #94C518;
+            font-weight: bold;
+        }
+        .topic-search-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex: 1;
+            max-width: 520px;
+            min-width: 260px;
+            border: 1px solid #cfcfcf;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .topic-search-icon-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border: none;
+            background: #f7f7f7;
+            height: 36px;
+            box-sizing: border-box;
+            color: #777;
+            min-width: 40px;
+            border-right: 1px solid #cfcfcf;
+        }
+        .topic-search-icon {
+            font-size: 16px;
+            opacity: 0.8;
         }
        
     </style>
@@ -230,7 +287,13 @@
                         </div>
                     </div>
                     <div class="topic-modal-body">
-                        <button class="editor-button" id="topic-select-all" style="margin-bottom:5px;" data-i18n="supmodel.btn_select_all"></button>
+                        <div class="topic-toolbar">
+                            <button class="editor-button" id="topic-select-all" style="margin-bottom:5px;" data-i18n="supmodel.btn_select_all"></button>
+                            <div class="topic-search-wrapper">
+                                <span class="topic-search-icon-box"><i class="fa fa-search topic-search-icon"></i></span>
+                                <input type="text" id="topic-search-input" class="topic-search-input" placeholder="Please enter name/alias/path" />
+                            </div>
+                        </div>
                         <div id="topic-tree" class="topic-tree"></div>
                     </div>
                     <div class="topic-modal-footer" style="text-align:right;margin-top:10px;">
@@ -259,6 +322,127 @@
     // const lang = RED.i18n.detectLanguage();
 
     let firstLoad = false;
+    const debugUseTestTree = false;
+
+    const testTree = [
+        {
+            id: 'demo-factory-a',
+            name: 'FactoryA',
+            path: 'factoryA',
+            type: 0,
+            children: [
+                {
+                    id: 'demo-line1',
+                    name: 'Line1',
+                    path: 'factoryA/line1',
+                    type: 0,
+                    children: [
+                        {
+                            id: 'demo-motor1',
+                            name: 'Motor1',
+                            path: 'factoryA/line1/motor1',
+                            type: 0,
+                            children: [
+                                { id: 'demo-motor1-power', name: 'Power', path: 'factoryA/line1/motor1/power', type: 1 },
+                                { id: 'demo-motor1-temp', name: 'Temperature', path: 'factoryA/line1/motor1/temperature', type: 1 },
+                                { id: 'demo-motor1-vibration', name: 'Vibration', path: 'factoryA/line1/motor1/vibration', type: 1 }
+                            ]
+                        },
+                        {
+                            id: 'demo-pump1',
+                            name: 'Pump1',
+                            path: 'factoryA/line1/pump1',
+                            type: 0,
+                            children: [
+                                { id: 'demo-pump1-flow', name: 'Flow', path: 'factoryA/line1/pump1/flow', type: 1 },
+                                { id: 'demo-pump1-pressure', name: 'Pressure', path: 'factoryA/line1/pump1/pressure', type: 1 }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'demo-line2',
+                    name: 'Line2',
+                    path: 'factoryA/line2',
+                    type: 0,
+                    children: [
+                        {
+                            id: 'demo-line2-meter',
+                            name: 'EnergyMeter',
+                            path: 'factoryA/line2/energymeter',
+                            type: 0,
+                            children: [
+                                { id: 'demo-line2-meter-voltage', name: 'Voltage', path: 'factoryA/line2/energymeter/voltage', type: 1 },
+                                { id: 'demo-line2-meter-current', name: 'Current', path: 'factoryA/line2/energymeter/current', type: 1 },
+                                { id: 'demo-line2-meter-power', name: 'Power', path: 'factoryA/line2/energymeter/power', type: 1 }
+                            ]
+                        },
+                        {
+                            id: 'demo-line2-robot',
+                            name: 'RobotArm',
+                            path: 'factoryA/line2/robotArm',
+                            type: 0,
+                            children: [
+                                { id: 'demo-line2-robot-speed', name: 'Speed', path: 'factoryA/line2/robotArm/speed', type: 1 },
+                                { id: 'demo-line2-robot-angle', name: 'Angle', path: 'factoryA/line2/robotArm/angle', type: 1 }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'demo-line3',
+                    name: 'Line3',
+                    path: 'factoryA/line3',
+                    type: 0,
+                    children: [
+                        { id: 'demo-line3-pack', name: 'Packaging', path: 'factoryA/line3/packaging', type: 0, children: [
+                            { id: 'demo-line3-pack-count', name: 'Count', path: 'factoryA/line3/packaging/count', type: 1 },
+                            { id: 'demo-line3-pack-rate', name: 'Rate', path: 'factoryA/line3/packaging/rate', type: 1 }
+                        ]},
+                        { id: 'demo-line3-qc', name: 'Quality', path: 'factoryA/line3/quality', type: 0, children: [
+                            { id: 'demo-line3-qc-pass', name: 'PassRate', path: 'factoryA/line3/quality/passRate', type: 1 },
+                            { id: 'demo-line3-qc-defect', name: 'Defect', path: 'factoryA/line3/quality/defect', type: 1 }
+                        ]}
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'demo-factory-b',
+            name: 'PlantB',
+            path: 'plantB',
+            type: 0,
+            children: [
+                {
+                    id: 'demo-b-line1',
+                    name: 'Process1',
+                    path: 'plantB/process1',
+                    type: 0,
+                    children: [
+                        { id: 'demo-b-reactor-temp', name: 'ReactorTemp', path: 'plantB/process1/reactor/temp', type: 1 },
+                        { id: 'demo-b-reactor-ph', name: 'ReactorPH', path: 'plantB/process1/reactor/ph', type: 1 },
+                        { id: 'demo-b-reactor-level', name: 'ReactorLevel', path: 'plantB/process1/reactor/level', type: 1 }
+                    ]
+                },
+                {
+                    id: 'demo-b-line2',
+                    name: 'Utilities',
+                    path: 'plantB/utilities',
+                    type: 0,
+                    children: [
+                        { id: 'demo-b-chiller', name: 'Chiller', path: 'plantB/utilities/chiller', type: 0, children: [
+                            { id: 'demo-b-chiller-supply', name: 'SupplyTemp', path: 'plantB/utilities/chiller/supplyTemp', type: 1 },
+                            { id: 'demo-b-chiller-return', name: 'ReturnTemp', path: 'plantB/utilities/chiller/returnTemp', type: 1 }
+                        ]},
+                        { id: 'demo-b-boiler', name: 'Boiler', path: 'plantB/utilities/boiler', type: 0, children: [
+                            { id: 'demo-b-boiler-pressure', name: 'SteamPressure', path: 'plantB/utilities/boiler/pressure', type: 1 },
+                            { id: 'demo-b-boiler-temp', name: 'SteamTemp', path: 'plantB/utilities/boiler/temp', type: 1 }
+                        ]}
+                    ]
+                }
+            ]
+        }
+    ];
 
     function createDynamicMqttBroker(RED) {
         
@@ -411,31 +595,51 @@
         return [topic, '', propName, propType, tag]; // Alias占位，AttributeType可为空
     };
 
-    const buildTreeHtml = (nodes, level = 0) => {
+    const highlightLabel = (text, key) => {
+        const labelText = text || '';
+        const keyword = (key || '').trim();
+        if (!keyword) {
+            return labelText;
+        }
+        const escaped = keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const reg = new RegExp(escaped, 'gi');
+        return labelText.replace(reg, match => `<span class="topic-highlight">${match}</span>`);
+    };
+
+    const buildTreeHtml = (nodes, level = 0, searchKey = '') => {
         if (!nodes || nodes.length === 0) {
             return '';
         }
         return `<ul>${nodes.map(n => {
-            const childrenHtml = buildTreeHtml(n.children || n.childrens || [], level + 1);
+            const childrenHtml = buildTreeHtml(n.children || n.childrens || [], level + 1, searchKey);
             const topic = n.path || n.topic || n.alias || '';
             const alias = n.alias || '';
             const label = n.name || n.label || topic;
+            const renderedLabel = highlightLabel(label, searchKey);
             const id = (n.id || topic || Math.random().toString(16).slice(2));
             const hasChild = childrenHtml ? 'has-child' : 'leaf';
             const typeIcon = n.type === 0 ? '<i class="fa fa-folder-o" style="margin-right:6px;"></i>' : '<i class="fa fa-file-text-o" style="margin-right:6px;"></i>';
             const toggle = childrenHtml ? `<span class="tree-toggle" data-toggle="1">&#9654;</span>` : `<span class="tree-toggle"></span>`;
             const collapsedClass = childrenHtml ? 'collapsed' : '';
             return `<li class="${hasChild} ${collapsedClass}" data-level="${level}">
-                ${toggle}<label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}" data-type="${n.type || ''}"/>${typeIcon}<span class="tree-label">${label}</span></label>
+                ${toggle}<label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}" data-type="${n.type || ''}"/>${typeIcon}<span class="tree-label">${renderedLabel}</span></label>
                 ${childrenHtml}
             </li>`;
         }).join('')}</ul>`;
     };
 
-    const renderTopicTree = (data) => {
-        $('#topic-tree').html(buildTreeHtml(data));
+    const expandAllTreeNodes = () => {
+        $('#topic-tree li.collapsed').removeClass('collapsed');
+        $('#topic-tree .tree-toggle[data-toggle]').html('&#9660;');
+    };
+
+    const renderTopicTree = (data, searchKey = '') => {
+        $('#topic-tree').html(buildTreeHtml(data, 0, searchKey));
         bindTopicCheckboxEvents();
         bindToggleEvents();
+        if ((searchKey || '').trim()) {
+            expandAllTreeNodes();
+        }
     };
 
     const bindTopicCheckboxEvents = () => {
@@ -557,7 +761,7 @@
                         let start  = (pagenation.pageNo - 1) * pagenation.pageItem;
                         let id = start + index + 1;
                         const globalIdx = id - 1;
-                        const editable = rowEditable[node.id] && rowEditable[node.id][globalIdx] === true;
+                        const editableRow = rowEditable[node.id] && rowEditable[node.id][globalIdx] === true;
                         const displayRow = [
                             row[0],
                             row[2],
@@ -565,15 +769,15 @@
                             row[4]
                         ];
                         return `<tr data-row="${index}"><td>${id}</td>${displayRow.map((cell, idx) => {
-                            if (editable) {
-                                if (idx === 3) {
-                                    return `<td><input type="text" class="tag-inline-input editable-tag ${isRequiredCol(idx)?'required-input':''}" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
-                                }
-                                return `<td><input type="text" class="editable-cell ${isRequiredCol(idx)?'required-input':''}" value="${cell==null?'':cell}" data-col="${idx}"/></td>`;
+                            const isTagCol = idx === 3;
+                            const val = cell == null ? '' : cell;
+                            const requiredClass = isRequiredCol(idx) ? ' required-input' : '';
+                            if (editableRow || isTagCol) {
+                                const inputClass = isTagCol ? 'tag-inline-input editable-tag' : 'editable-cell';
+                                return `<td><input type="text" class="${inputClass}${requiredClass}" value="${val}" data-col="${idx}"/></td>`;
                             }
-                            const editableTag = idx === 3 ? 'editable' : '';
-                            return `<td class="cell ${editableTag}" data-col="${idx}" title="${cell==null?'':cell}">${cell==null?'':cell}</td>`
-                        }).join('')}<td><i class="fa fa-remove remove" title='delete'></i></dt></tr>`
+                            return `<td class="cell" data-col="${idx}" title="${val}">${val}</td>`;
+                        }).join('')}<td><i class="fa fa-remove remove" title='delete'></i></td></tr>`
                     }
             ).join('')
         );
@@ -651,23 +855,6 @@
             renderTable(node, renderNewData);
         });
 
-        $('.cell.editable').on('dblclick', function() {
-            const $td = $(this);
-            const rowIdx = $td.closest('tr').data('row');
-            const globalIdx = (pagenation.pageNo -1)*pagenation.pageItem + rowIdx;
-            const currentVal = $td.text();
-            const $input = $(`<input type="text" class="tag-inline-input" value="${currentVal}" data-col="3"/>`);
-            $td.empty().append($input);
-            $input.focus();
-            $input.on('blur', function() {
-                const newVal = sanitizeTagValue($(this).val());
-                let current = templateModels[node.id][globalIdx] || ['', '', '', '', ''];
-                current[4] = newVal;
-                templateModels[node.id][globalIdx] = current;
-                $td.text(newVal);
-                validateRequiredInput($input);
-            });
-        });
         $('.editable-cell').on('input', function() {
             const rowIdx = $(this).closest('tr').data('row');
             const colIdx = Number($(this).data('col'));
@@ -757,17 +944,26 @@
 
     const openTopicModal = (node) => {
         $('#topic-modal').show();
-        loadTopicTree(node);
+        loadTopicTree(node, ($('#topic-search-input').val() || '').trim());
     };
 
-    const loadTopicTree = (node) => {
+    const loadTopicTree = (node, searchKey = '') => {
+        if (debugUseTestTree) {
+            topicTreeCache = testTree;
+            renderTopicTree(topicTreeCache, searchKey);
+            bindTopicCheckboxEvents();
+            return;
+        }
         $.ajax({
             url: '/inter-api/supos/uns/tree',
             type: 'GET',
             dataType: 'json',
+            data: {
+                key: searchKey || ''
+            },
             success: function(res) {
                 topicTreeCache = res.data || res || [];
-                renderTopicTree(topicTreeCache);
+                renderTopicTree(topicTreeCache, searchKey);
                 bindTopicCheckboxEvents();
             },
             error: function(err) {
@@ -1075,7 +1271,8 @@
             });
 
             $('#topic-refresh').click(function() {
-                loadTopicTree(node);
+                const key = ($('#topic-search-input').val() || '').trim();
+                loadTopicTree(node, key);
             });
 
             $('#topic-close').click(function() {
@@ -1086,6 +1283,18 @@
                 const checked = $(this).data('checked') === true;
                 $('#topic-tree .topic-check').prop('checked', !checked).trigger('change');
                 $(this).data('checked', !checked);
+            });
+
+            let topicSearchTimer = null;
+            const triggerSearch = () => {
+                clearTimeout(topicSearchTimer);
+                topicSearchTimer = setTimeout(() => {
+                    const key = ($('#topic-search-input').val() || '').trim();
+                    loadTopicTree(node, key);
+                }, 700);
+            };
+            $('#topic-search-input').on('input', function() {
+                triggerSearch();
             });
 
             $('#topic-confirm').click(function() {
