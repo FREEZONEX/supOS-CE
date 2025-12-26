@@ -32,7 +32,7 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
 
   const editRequest = (fields: FieldItem[]) => {
     setLoading(true);
-    editModel({ alias, fields, extendFieldUsed })
+    editModel({ alias, [dataType === 8 ? 'jsonFields' : 'fields']: fields, extendFieldUsed })
       .then(() => {
         message.success(formatMessage('uns.editSuccessful'));
         setLoading(false);
@@ -129,30 +129,33 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
                 };
           }
         );
-
-        detectModel({
-          alias,
-          fields: _fields,
-        }).then((res: any) => {
-          if (res && res.referred) {
-            modal.confirm({
-              content: res.tips,
-              zIndex: 9001,
-              onOk() {
-                editRequest(_fields);
-              },
-              onCancel() {},
-              okButtonProps: {
-                title: formatMessage('common.confirm'),
-              },
-              cancelButtonProps: {
-                title: formatMessage('common.cancel'),
-              },
-            });
-          } else {
-            editRequest(_fields);
-          }
-        });
+        if (dataType === 8) {
+          editRequest(_fields);
+        } else {
+          detectModel({
+            alias,
+            fields: _fields,
+          }).then((res: any) => {
+            if (res && res.referred) {
+              modal.confirm({
+                content: res.tips,
+                zIndex: 9001,
+                onOk() {
+                  editRequest(_fields);
+                },
+                onCancel() {},
+                okButtonProps: {
+                  title: formatMessage('common.confirm'),
+                },
+                cancelButtonProps: {
+                  title: formatMessage('common.cancel'),
+                },
+              });
+            } else {
+              editRequest(_fields);
+            }
+          });
+        }
       })
       .catch((err) => {
         console.error(err);

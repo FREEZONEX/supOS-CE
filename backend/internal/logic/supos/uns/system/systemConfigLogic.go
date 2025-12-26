@@ -57,7 +57,7 @@ func (l *SystemConfigLogic) SystemConfig() (resp *types.SystemConfigResp, err er
 const (
 	systemServicePrefix   = "service_"
 	activeServicesFile    = "active-services.txt"
-	defaultComposePattern = "docker-compose-"
+	defaultComposePattern = "docker-compose"
 )
 
 func buildSystemConfig(logger logx.Logger) (*sysconfig.SystemConfig, error) {
