@@ -195,8 +195,8 @@ const Module: FC<FileDetailProps> = (props) => {
     return getInstanceInfo({ id })
       .then(async (data: any) => {
         if (data?.id) {
-          if (data?.dataType === 8 && data?.jsonFields?.length > 0) {
-            data.fields = data?.jsonFields;
+          if (data?.dataType === 8) {
+            data.fields = data?.jsonFields || [];
           }
           data?.fields?.forEach((field: FieldItem) => {
             //特殊处理挂载文件的异常数据
@@ -251,17 +251,12 @@ const Module: FC<FileDetailProps> = (props) => {
         ),
       },
       {
-        key:
-          instanceInfo?.dataType === 8 && instanceInfo?.jsonFields?.length > 0
-            ? 'definition'
-            : [1, 2, 3, 6, 7].includes(instanceInfo.dataType)
-              ? 'definition'
-              : '',
+        key: [1, 2, 3, 6, 7, 8].includes(instanceInfo.dataType) ? 'definition' : '',
         label: formatMessage('uns.definition'),
         children: <Definition instanceInfo={instanceInfo} />,
         style: panelStyle,
         extra:
-          [1, 2].includes(instanceInfo.dataType) && !instanceInfo.mount && !instanceInfo.modelId ? (
+          [1, 2, 8].includes(instanceInfo.dataType) && !instanceInfo.mount && !instanceInfo.modelId ? (
             <EditButton
               auth={ButtonPermission['uns.fileDetail']}
               modelInfo={instanceInfo}

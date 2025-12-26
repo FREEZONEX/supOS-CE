@@ -55,7 +55,7 @@ const FormStep: FC<FormStepProps> = ({
   //以下变量用于控制步骤按钮的显示
   const advancedOptions = useFormValue('advancedOptions', form) || false;
   const calculationType = useFormValue('calculationType', form);
-  const dataType = useFormValue('dataType', form);
+  const _dataType = useFormValue('dataType', form);
   const attributeType = useFormValue('attributeType', form);
   const jsonList = useFormValue('jsonList', form);
 
@@ -75,7 +75,7 @@ const FormStep: FC<FormStepProps> = ({
       .validateFields()
       .then(async () => {
         const next = form.getFieldValue('next');
-        if ((attributeType === 3 || (isFormTopic && jsonList?.length > 1)) && !next) {
+        if ((attributeType === 3 || (isFormTopic && jsonList?.length > 1)) && _dataType !== 8 && !next) {
           message.error(formatMessage('uns.noFieldsTip'));
           return;
         }
@@ -119,7 +119,6 @@ const FormStep: FC<FormStepProps> = ({
           parentDataType,
           pasteNode,
         } = cloneDeep(form.getFieldsValue(true));
-
         // 表单验证通过后的操作
         const data: { [key: string]: any } = isCreateFolder
           ? {
@@ -375,7 +374,7 @@ const FormStep: FC<FormStepProps> = ({
             ? {
                 ...data,
                 fields: [1, 2, 3].includes(dataType) ? fields : undefined,
-                jsonFields: [8].includes(dataType) ? fields : undefined,
+                jsonFields: [8].includes(dataType) && fields?.[0]?.name ? fields : undefined,
               }
             : data;
           addRequest(finalData)
@@ -449,7 +448,7 @@ const FormStep: FC<FormStepProps> = ({
           {formatMessage('common.prev')}
         </Button>
       )}
-      {(step === 1 && [1, 2, 6, 7, 8].includes(dataType)) ||
+      {(step === 1 && [1, 2, 6, 7, 8].includes(_dataType)) ||
       (step === 2 && !advancedOptions) ||
       step === 3 ||
       isCreateFolder ? (
