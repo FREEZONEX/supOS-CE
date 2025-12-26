@@ -28,11 +28,8 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 	resp = &types.RemoveResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
 	var unsPos []*dao.UnsNamespace
 	if singleId > 0 {
-		tar, err := r.unsMapper.SelectById(db, singleId)
-		if err != nil {
-			resp.Code = 500
-			return resp, err
-		} else if tar == nil {
+		tar, _ := r.unsMapper.SelectById(db, singleId)
+		if tar == nil {
 			resp.Code = 400
 			resp.Msg = I18nUtils.GetMessage("uns.folder.or.file.not.found")
 			return resp, err
@@ -44,13 +41,9 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 	} else {
 		unsPos = make([]*dao.UnsNamespace, 0, len(req.AliasList))
 		for _, aliasList := range base.Partition(req.AliasList, 1000) {
-			list, er := r.unsMapper.ListByAlias(db, aliasList)
+			list, _ := r.unsMapper.ListByAlias(db, aliasList)
 			if len(list) > 0 {
 				unsPos = append(unsPos, list...)
-			} else if er != nil {
-				err = er
-				resp.Code = 500
-				return resp, err
 			}
 		}
 		if len(unsPos) == 0 {
@@ -97,8 +90,8 @@ func (r *UnsRemoveService) removeTemplates(ctx context.Context, req types.Remove
 	for _, templateIds := range base.Partition(base.Map(templates, getId), 1000) {
 		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id"}}}
 		for {
-			list, er := r.unsMapper.ListByTemplateIds(db, templateIds, page)
-			if er != nil || len(list) == 0 {
+			list, _ := r.unsMapper.ListByTemplateIds(db, templateIds, page)
+			if len(list) == 0 {
 				break
 			}
 			page.Page++
@@ -162,10 +155,8 @@ func (r *UnsRemoveService) removeFolders(
 	for _, lay := range base.Partition(layRecs, 500) {
 		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
 		for {
-			list, er := r.unsMapper.ListByLayRecs(db, lay, page)
-			if er != nil {
-				return nil, er
-			} else if len(list) == 0 {
+			list, _ := r.unsMapper.ListByLayRecs(db, lay, page)
+			if len(list) == 0 {
 				break
 			}
 			page.Page++

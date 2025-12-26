@@ -48,9 +48,6 @@ func (p UnsNamespaceRepo) UpdateDescByAlia(db *gorm.DB, alias string, descriptio
 func (p UnsNamespaceRepo) UpdateNullTemplateIdByIds(db *gorm.DB, ids []int64) (int64, error) {
 	db = p.model(db)
 	result := db.Where("id in ?", ids).UpdateColumn("model_id", nil)
-	if result.Error != nil {
-		return 0, result.Error
-	}
 	return result.RowsAffected, nil
 }
 func (p UnsNamespaceRepo) LinkLabelOnUns(db *gorm.DB, unsID, labelID int64, labelName string, updateAt time.Time) error {
