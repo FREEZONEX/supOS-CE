@@ -176,7 +176,8 @@ func parseNode[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode]
 		}
 		fieldName, ok := token.(string)
 		if !ok {
-			return fmt.Errorf("expected field name")
+			_ = skipValue(ctx.decoder)
+			continue
 		}
 		if fieldName == ctx.childrenName {
 			// 手动解析 children 数组
@@ -196,6 +197,9 @@ func parseNode[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode]
 			if err == nil {
 				countFields++
 			}
+		} else {
+			logx.Error("跳过未知字段: ", fieldName)
+			_ = skipValue(ctx.decoder)
 		}
 	}
 
