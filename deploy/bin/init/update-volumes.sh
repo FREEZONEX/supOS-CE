@@ -30,7 +30,7 @@ chown 1000:1000 -R $VOLUMES_PATH/emqx
 chown 1000:0 -R $VOLUMES_PATH/keycloak
 chown 755:0 -R $VOLUMES_PATH/grafana
 
-cp $SCRIPT_DIR/../docker-compose-8c16g.yml $VOLUMES_PATH/edge/system/
+cp $SCRIPT_DIR/../docker-compose.yml $VOLUMES_PATH/edge/system/
 if [ -f $SCRIPT_DIR/global/active-services.txt ]; then
   mv $SCRIPT_DIR/global/active-services.txt $VOLUMES_PATH/edge/system/
 fi
