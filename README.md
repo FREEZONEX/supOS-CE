@@ -1,6 +1,6 @@
-# SupOS Edge 项目
+# Tier0 Edge 项目
 
-这是一个 SupOS Edge 项目，包含后端和前端两个部分。
+这是一个 Tier0 Edge 项目，包含后端和前端两个部分。
 
 ## 项目结构
 
