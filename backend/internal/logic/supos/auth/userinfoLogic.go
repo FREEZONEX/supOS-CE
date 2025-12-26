@@ -31,6 +31,7 @@ func (l *UserInfoLogic) UserInfo(sessionKey string) (*vo.UserInfoVo, *http.Cooki
 
 	entry, ok := l.getTokenEntry(sessionKey)
 	if !ok || entry == nil || entry.Token == nil {
+		l.removeSession(sessionKey)
 		return nil, nil, errors.NotLogin.WithMsg("token not found")
 	}
 

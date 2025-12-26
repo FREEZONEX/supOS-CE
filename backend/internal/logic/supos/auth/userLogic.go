@@ -33,6 +33,7 @@ func (l *UserLogic) User(sessionKey string) (any, error) {
 		if l.authDisabled() {
 			return vo.Guest(), nil
 		}
+		l.removeSession(sessionKey)
 		return "not found user info", nil
 	}
 
