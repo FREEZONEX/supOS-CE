@@ -156,7 +156,7 @@ pipeline {
 
                     echo "Clean_Data 参数值: ${params.Clean_Data}"
                     
-                    if (params.Clean_Data) {
+                    if (params.Clean_Data == true) {
                         sh """
                         exec_ssh() {
                             ssh -o StrictHostKeyChecking=no \
