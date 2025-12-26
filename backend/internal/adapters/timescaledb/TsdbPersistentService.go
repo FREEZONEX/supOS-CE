@@ -45,7 +45,7 @@ func init() {
 			log:           log,
 			dbPool:        pool,
 			currentSchema: "public",
-			batchSize:     8000,
+			batchSize:     1000,
 			maxRetries:    1,
 			urlProperties: postgresql.ParseDbUrlProperties(url),
 		}

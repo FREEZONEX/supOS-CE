@@ -124,29 +124,19 @@ func (l *UnsQueryService) searchByTemplate(ctx context.Context, req *types.Searc
 }
 
 func (l *UnsQueryService) uns2treeList(req *types.SearchTreeReq, list []*dao.UnsNamespace) (treeResults []*types.TopicTreeResult) {
-	hasKeyword, keyword := len(req.Keyword) > 0, strings.ToLower(req.Keyword)
 	treeResults = base.FilterAndMap[*dao.UnsNamespace, *types.TopicTreeResult](list, func(uns *dao.UnsNamespace) (v *types.TopicTreeResult, match bool) {
-		if hasKeyword {
-			name := PathUtil.GetName(uns.Path)
-			match = strings.Contains(strings.ToLower(name), keyword) || strings.Contains(strings.ToLower(uns.Alias), keyword)
-		} else {
-			match = true
+		v = &types.TopicTreeResult{
+			Id:             strconv.FormatInt(uns.Id, 10),
+			PathType:       uns.PathType,
+			Protocol:       uns.ProtocolType,
+			ParentDataType: uns.ParentDataType,
+			Path:           uns.Path,
+			Name:           PathUtil.GetName(uns.Path),
 		}
-		if match {
-			v = &types.TopicTreeResult{
-				Id:             strconv.FormatInt(uns.Id, 10),
-				PathType:       2,
-				Type:           2,
-				Protocol:       uns.ProtocolType,
-				ParentDataType: uns.ParentDataType,
-				Path:           uns.Path,
-				Name:           PathUtil.GetName(uns.Path),
-			}
-			if l.mountService != nil {
-				v.Mount = l.mountService.ParseMountDetail(uns, true)
-			}
+		if l.mountService != nil {
+			v.Mount = l.mountService.ParseMountDetail(uns, true)
 		}
-		return
+		return v, true
 	})
 	return
 }

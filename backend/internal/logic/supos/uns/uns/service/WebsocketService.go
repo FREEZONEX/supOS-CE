@@ -448,7 +448,8 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 		if sz := len(fs); sz > 0 {
 			data := make(map[string]any, sz)
 			dt := make(map[string]int64, sz)
-			isRelation := base.P2v(message.Def.DataType) == constants.RelationType
+			dbType := types.SrcJdbcType(message.Def.DataSrcID).TypeCode()
+			isRelation := dbType == constants.RelationType
 			dm := message.Data
 			hasDm := len(dm) > 0
 			for _, f := range fs {
@@ -483,7 +484,7 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 					dt[name] = lt
 				}
 			}
-			if types.SrcJdbcType(message.Def.DataSrcID).TypeCode() == constants.TimeSequenceType {
+			if dbType == constants.TimeSequenceType {
 				ct := message.Def.GetTimestampField()
 				if _, has := data[ct]; !has && len(data) > 0 {
 					data[ct] = info.UpdateTime

@@ -109,7 +109,7 @@
             "formatType": "Time series",
             "queryType": "SQL",
             "refId": "A",
-            "sql": "SELECT {columns} FROM {schema}.`{tableName}` where 1=1 {tagNameCondition} and `{sys_field_create_time}`>=$from and `{sys_field_create_time}`<=$to "
+            "sql": "SELECT * FROM {schema}.`{tableName}` where 1=1 {tagNameCondition} and `{sys_field_create_time}`>=$from and `{sys_field_create_time}`<=$to "
           }
         ],
         "title": "{title}",

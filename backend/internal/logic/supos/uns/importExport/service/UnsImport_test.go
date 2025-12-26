@@ -5,8 +5,29 @@ import (
 	"backend/internal/types"
 	"bytes"
 	"encoding/json"
+	"os"
 	"testing"
 )
+
+func TestImportFile(t *testing.T) {
+	file, er := os.Open("F:\\data\\uns-uat.json")
+	if er != nil {
+		t.Fatal(er)
+	}
+	defer file.Close()
+	err := jsonstream.DecodeJsonTreeToFlat(file, 100, node2vo, func(rd int64, propName string, ns []*types.CreateTopicDto) {
+		jsonBytes, _ := json.Marshal(ns)
+		t.Logf("readSize=%d, prop=%s , Nodes[%d]: %v", rd, propName, len(ns), string(jsonBytes))
+	}, func(node *FileData) {
+		err := node.Error
+		node.Error = ""
+		jsonBytes, _ := json.Marshal(node)
+		t.Log("ErrorNode: ", err, string(jsonBytes))
+	})
+	if err != nil {
+		t.Fatalf("Error parsing JSON: %v\n", err)
+	}
+}
 
 func TestDecodeStreamedJson(t *testing.T) {
 	bigJson := bytes.NewBuffer([]byte(__realJson))

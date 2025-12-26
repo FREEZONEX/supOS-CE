@@ -57,7 +57,7 @@ func (g *GrafanaEventHandler) createIndividualDashboards(ctx context.Context, to
 // createDashboardForTopic 为单个主题创建仪表板
 func (g *GrafanaEventHandler) createDashboardForTopic(ctx context.Context, dto *types.CreateTopicDto, ds serviceApi.DataSourceProperties, jdbcType types.SrcJdbcType, fromImport bool, username string) error {
 	columns := grafanautil.Fields2Columns(jdbcType, dto.Fields)
-	title := dto.Alias
+	title := dto.Path
 	schema, table := g.extractSchemaAndTable(dto.GetTable(), ds.Schema)
 	tagNameCondition := g.buildTagNameCondition(dto)
 
@@ -70,7 +70,11 @@ func (g *GrafanaEventHandler) createDashboardForTopic(ctx context.Context, dto *
 	}
 	// 非导入模式下发布事件
 	if !fromImport {
-		spring.PublishEvent(event.NewCreateDashboardEvent(ctx, uuid, title, title, username))
+		desc := base.P2v(dto.Description)
+		if len(desc) == 0 {
+			desc = dto.Path
+		}
+		spring.PublishEvent(event.NewCreateDashboardEvent(ctx, uuid, title, desc, username))
 	}
 
 	return nil

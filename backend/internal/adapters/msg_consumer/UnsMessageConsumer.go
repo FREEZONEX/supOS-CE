@@ -31,11 +31,8 @@ type UnsMessageConsumer struct {
 }
 
 func init() {
-	spring.RegisterLazy[*UnsMessageConsumer](func() *UnsMessageConsumer {
-		return &UnsMessageConsumer{
-			log:        logx.WithContext(context.Background()),
-			defService: spring.GetBean[serviceApi.IUnsDefinitionService](),
-		}
+	spring.RegisterBean[*UnsMessageConsumer](&UnsMessageConsumer{
+		log: logx.WithContext(context.Background()),
 	})
 }
 
@@ -188,7 +185,7 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 				vm = map[string]any{jsonbFiled: string(bs)}
 			}
 			list = []map[string]any{vm}
-			setLastData(list, def)
+			list = setLastData(list, def)
 			return
 		}
 	}
@@ -228,13 +225,13 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 	if len(list) == 0 {
 		return
 	}
-	setLastData(list, def)
+	list = setLastData(list, def)
 	return
 }
 
-func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
+func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) []map[string]interface{} {
 	if len(list) == 0 {
-		return
+		return list
 	}
 	CT, qos, fds := def.GetTimestampField(), def.GetQualityField(), def.GetFieldDefines()
 	now := time.Now().UnixMilli()
@@ -261,8 +258,9 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
 		}
 		if len(mergeList) == 0 {
 			logx.Errorf("合并数据出问题[ %s ]: %+v\n", def.Alias, list)
-			return
+			return list
 		}
+		logx.Debugf("MergeList[ %s ]: %+v, list: %+v\n", def.Alias, mergeList, list)
 		list = mergeList
 	} else {
 		for _, vm := range list {
@@ -283,6 +281,7 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
 			fd.LastTime = lastUpdateTime
 		}
 	}
+	return list
 }
 
 func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64, prevBean map[string]any) []map[string]interface{} {
@@ -351,6 +350,7 @@ func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64
 	return mergeList
 }
 func (u *UnsMessageConsumer) OnEventContextRefreshedEvent10(ev *event.ContextRefreshedEvent) {
+	u.defService = spring.GetBean[*UnsDefinitionService]()
 	if sv := ev.SvcContext; sv != nil && len(sv.Config.DevLink.Mqtt.Brokers) > 0 && sv.Config.DevLink.Mode == "mqtt" {
 		go func() {
 			cli, er := subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)

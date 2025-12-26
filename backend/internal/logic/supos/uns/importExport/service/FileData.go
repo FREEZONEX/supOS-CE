@@ -5,6 +5,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
 	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/PathUtil"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
@@ -39,7 +40,6 @@ type FileData struct {
 	DisplayName       string               `json:"displayName,omitempty"`
 	TemplateAlias     string               `json:"templateAlias,omitempty"`
 	Fields            []*types.FieldDefine `json:"fields,omitempty"`
-	JsonFields        []*types.FieldDefine `json:"jsonFields,omitempty"`
 	DataType          string               `json:"dataType,omitempty"`
 	Refers            string               `json:"refers,omitempty"`
 	Expression        string               `json:"expression,omitempty"`
@@ -93,10 +93,9 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 	}
 
 	vo := &types.CreateTopicDto{
-		Alias:      i.Alias,
-		Name:       i.Name,
-		Fields:     i.Fields,
-		JsonFields: i.JsonFields,
+		Alias:  i.Alias,
+		Name:   i.Name,
+		Fields: i.Fields,
 	}
 	switch prop {
 	case Template:
@@ -153,14 +152,26 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 			return s, len(s) > 0
 		})
 	}
-	if len(i.DataType) > 0 && vo.PathType == constants.PathTypeFile {
-		dt := enums.DataTypeInt(i.DataType)
-		if dt >= 0 {
-			vo.DataType = base.V2p(dt)
-		} else {
-			i.Error = I18nUtils.GetMessage("uns.import.dataType.error")
-			return nil
+	if dt := i.DataType; len(dt) > 0 {
+		switch vo.PathType {
+		case constants.PathTypeFile:
+			dt := enums.DataTypeInt(dt)
+			if dt >= 0 {
+				vo.DataType = base.V2p(dt)
+				if dt == constants.JsonbType {
+					vo.Fields = nil
+					vo.JsonFields = i.Fields
+				}
+			} else {
+				i.Error = I18nUtils.GetMessage("uns.import.dataType.error")
+				return nil
+			}
+		case constants.PathTypeDir:
+			if pdt, ok := enums.GetFolderDataTypeByName(dt); ok {
+				vo.DataType = base.V2p(pdt.TypeIndex())
+			}
 		}
+
 	}
 	if len(i.ParentDataType) > 0 {
 		if pdt, ok := enums.GetFolderDataTypeByName(i.ParentDataType); ok {
@@ -231,17 +242,6 @@ func uns2DataVo(unsPo types.UnsInfo) *FileData {
 		data.Label = strings.Join(base.MapValues(labels), ",")
 	}
 
-	if protocol := unsPo.GetProtocolMap(); len(protocol) > 0 {
-		frequency := protocol["frequency"]
-		if frequency != nil {
-			data.Frequency = fmt.Sprint(frequency)
-		}
-	}
-
-	data.Description = unsPo.GetDescription()
-	if pdt := unsPo.GetParentDataType(); pdt != nil {
-		data.ParentDataType = enums.GetFolderDataType(*pdt).Name()
-	}
 	if dt := unsPo.GetDataType(); dt != nil {
 		pt := unsPo.GetPathType()
 		if pt == constants.PathTypeFile {
@@ -258,6 +258,28 @@ func uns2DataVo(unsPo types.UnsInfo) *FileData {
 		}
 	} else {
 		data.Fields = unsPo.GetFields()
+	}
+
+	if protocol := unsPo.GetProtocolMap(); len(protocol) > 0 {
+		frequency := protocol["frequency"]
+		if frequency != nil {
+			data.Frequency = fmt.Sprint(frequency)
+		}
+		if base.P2v(unsPo.GetDataType()) == constants.JsonbType {
+			// jsonb 类型不需要导出 fields,但需要导出 jsonFields 作为 fields
+			if jsf, has := protocol["jsf"]; has {
+				if str, isStr := jsf.(string); isStr {
+					JsonUtil.FromJson(str, &data.Fields)
+				} else {
+					JsonUtil.FromJson(fmt.Sprint(jsf), &data.Fields)
+				}
+			}
+		}
+	}
+
+	data.Description = unsPo.GetDescription()
+	if pdt := unsPo.GetParentDataType(); pdt != nil {
+		data.ParentDataType = enums.GetFolderDataType(*pdt).Name()
 	}
 
 	//if unsPo.DataType == constants.CALCULATION_REAL_TYPE ||

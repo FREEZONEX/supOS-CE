@@ -490,8 +490,8 @@ func (p UnsNamespaceRepo) ListLabeledUnsByKeyword(db *gorm.DB, keyword string) (
 		Where("n.path_type = ?", 2).
 		Where("n.status =1") // 软删除过滤
 
-	if kw := escapeLikePattern(escapeSQL(keyword)); kw != "" {
-		likeKeyword := "%" + strings.ToLower(escapeSQL(kw)) + "%"
+	if kw := EscapeLike(keyword); kw != "" {
+		likeKeyword := "%" + strings.ToLower(kw) + "%"
 		query = query.Where("(LOWER(n.path) LIKE ? OR LOWER(n.alias) LIKE ?)", likeKeyword, likeKeyword)
 	}
 

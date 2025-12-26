@@ -72,7 +72,7 @@ func (l *DeleteLogic) Delete(uid string) (*types.JsonResult, error) {
 	}
 
 	// 删除置顶标记
-	err = l.dashboardMarkMapper.DeleteById(uid)
+	err = l.dashboardMarkMapper.DeleteById(l.ctx, uid)
 	if err != nil {
 		l.Logger.Errorf("failed to delete dashboard mark: %v", err)
 		if !errors.Is(err, gorm.ErrRecordNotFound) {

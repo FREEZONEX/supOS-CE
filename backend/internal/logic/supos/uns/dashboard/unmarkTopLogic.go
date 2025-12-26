@@ -17,21 +17,19 @@ type UnmarkTopLogic struct {
 	logx.Logger
 	ctx                 context.Context
 	svcCtx              *svc.ServiceContext
-	dashboardMarkMapper *relationDB.DashboardMarkedMapper
+	dashboardMarkMapper relationDB.DashboardMarkedMapper
 }
 
 func NewUnmarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UnmarkTopLogic {
-	db := relationDB.GetDb(ctx)
 	return &UnmarkTopLogic{
-		Logger:              logx.WithContext(ctx),
-		ctx:                 ctx,
-		svcCtx:              svcCtx,
-		dashboardMarkMapper: relationDB.NewDashboardMarkedMapper(db, ctx),
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
 	}
 }
 
 func (l *UnmarkTopLogic) UnmarkTop(id string, userID string) (*types.JsonResult, error) {
-	err := l.dashboardMarkMapper.Delete(id, userID)
+	err := l.dashboardMarkMapper.Delete(l.ctx, id, userID)
 	if err != nil {
 		return &types.JsonResult{
 			Code: http.StatusInternalServerError,

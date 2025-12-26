@@ -58,7 +58,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	}
 	jdbcType := types.SrcJdbcType(uns.DataSrcID)
 	columns := grafanautil.Fields2Columns(jdbcType, uns.Fields)
-	title := alias
+	title := uns.Path
 	schema := "public"
 	table := uns.GetTable()
 	tagNameCondition := ""

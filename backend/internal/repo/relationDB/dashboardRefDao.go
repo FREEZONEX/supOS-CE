@@ -18,6 +18,14 @@ func (m *DashboardRefMapper) Insert(db *gorm.DB, ref *DashboardRefModel) error {
 	}
 	return nil
 }
+func (m *DashboardRefMapper) DeleteByUnsAlias(db *gorm.DB, unsAlias string) error {
+	err := db.Where("uns_alias = ?", unsAlias).Delete(&DashboardRefModel{}).Error
+	if err != nil {
+		logx.Errorf("failed to delete dashboard ref: %v, uns=%s", err, unsAlias)
+		return err
+	}
+	return nil
+}
 
 // DeleteByDashboardId 根据 Dashboard ID 删除引用关系
 func (m *DashboardRefMapper) DeleteByDashboardId(db *gorm.DB, dashboardID string) error {

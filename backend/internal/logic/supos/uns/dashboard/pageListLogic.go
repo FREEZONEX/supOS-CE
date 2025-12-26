@@ -3,7 +3,6 @@ package dashboard
 import (
 	"backend/internal/common/dto"
 	"backend/internal/common/errors"
-	"backend/internal/common/utils/dbutil"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -31,7 +30,6 @@ func NewPageListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PageList
 }
 
 func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dto.PageResultDTO[*relationDB.DashboardExtends], error) {
-	keyword := dbutil.EscapeForLike(req.K)
 	orderCode := req.OrderCode
 	if req.PageNo < 1 {
 		req.PageNo = 1
@@ -57,7 +55,7 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	// 查询总数
 	var total int64
 	// 查询数据
-	dashboards, err := l.dashboardMapper.SelectDashboard(db, userID, keyword, req.Type, orderCode, req.IsAsc, req.PageNo, req.PageSize, &total)
+	dashboards, err := l.dashboardMapper.SelectDashboard(db, userID, req.K, req.Type, orderCode, req.IsAsc, req.PageNo, req.PageSize, &total)
 	if err != nil {
 		l.Logger.Error("查询Dashboard失败:", err)
 		return pageResult, nil

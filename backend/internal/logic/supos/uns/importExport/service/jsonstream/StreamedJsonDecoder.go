@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type loggedReader struct {
@@ -59,7 +61,9 @@ func DecodeJsonTreeToFlat[TreeNode any, FlatNode any](
 		errConsumer: errConsumer,
 		cacheBatch:  make([]*FlatNode, 0, batchSize),
 	}
-	defer finish[TreeNode, FlatNode](ctx)
+	defer func() {
+		finish[TreeNode, FlatNode](ctx)
+	}()
 	{
 		var defNode TreeNode
 		ctx.fieldIndexMap, ctx.childrenName = parseJsonFields(defNode)
@@ -139,9 +143,13 @@ func accept[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode], n
 	} else {
 		ctx.cacheBatch = append(ctx.cacheBatch, flat)
 	}
+	if propName == "UNS" {
+		logx.Debugf("Add Uns[%d]: %+v", len(ctx.cacheBatch), *flat)
+	}
 	return true
 }
 func finish[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode]) {
+	logx.Info("finish: ", len(ctx.cacheBatch))
 	if len(ctx.cacheBatch) > 0 {
 		ctx.consumer(ctx.reader.readSize, ctx.prevPropName, ctx.cacheBatch)
 		ctx.cacheBatch = ctx.cacheBatch[:0]
