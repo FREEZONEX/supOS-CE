@@ -21,9 +21,9 @@ DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../docker-compose.yml
 command="--profile fuxa --profile grafana --profile minio --profile eventflow"
 
 if [ -f $SCRIPT_DIR/../.env.tmp ]; then 
-  docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../.env.tmp --project-name supos $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/edge/active-services.txt
+  docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../.env.tmp --project-name tier0 $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/edge/system/active-services.txt
 else 
-  docker compose --env-file $ENV_FILE --project-name supos $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/edge/active-services.txt
+  docker compose --env-file $ENV_FILE --project-name tier0 $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/edge/system/active-services.txt
 fi
 
 # 删除所有容器
