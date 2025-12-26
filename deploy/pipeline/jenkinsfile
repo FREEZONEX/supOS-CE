@@ -107,10 +107,8 @@ pipeline {
 
                         cp -r ../backend/etc ./mount/edge/
 
-                        sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: suposce/tier0-frontend:\${TAG}|g" docker-compose-4c8g.yml
-                        sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: suposce/tier0-frontend:\${TAG}|g" docker-compose-8c16g.yml
-                        sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: suposce/tier0-uns:\${TAG}|g" docker-compose-4c8g.yml
-                        sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: suposce/tier0-uns:\${TAG}|g" docker-compose-8c16g.yml
+                        sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: suposce/tier0-frontend:\${TAG}|g" docker-compose.yml
+                        sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: suposce/tier0-uns:\${TAG}|g" docker-compose.yml
                         
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
@@ -185,9 +183,9 @@ pipeline {
 
                         if [ \$Only_Build_Image = false ]; then
 
-                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose-4c8g.yml
-                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose-4c8g.yml
-                            sed -i 's@\\\${ENTRANCE_PORT:-8088}:8000@8088:8000@g' docker-compose-4c8g.yml
+                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i 's@\\\${ENTRANCE_PORT:-8088}:8000@8088:8000@g' docker-compose.yml
                             sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
                             sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
 
@@ -204,13 +202,13 @@ pipeline {
                         fi
 
                         if [ \$Only_Build_Image = true ]; then
-                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose-4c8g.yml
-                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose-4c8g.yml
-                            scp -i /var/jenkins_home/ssh/id_rsa docker-compose-4c8g.yml \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
+                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
+                            scp -i /var/jenkins_home/ssh/id_rsa docker-compose.yml \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
 
                             exec_ssh '
                                 docker rm -f uns frontend
-                                cd /root/edge/supos-deploy-edge/ && docker compose -f docker-compose-4c8g.yml -p tier0 --env-file .env.default --env-file .env.tmp up -d --pull always uns frontend
+                                cd /root/edge/supos-deploy-edge/ && docker compose -f docker-compose.yml -p tier0 --env-file .env.default --env-file .env.tmp up -d --pull always uns frontend
                             '
                         fi
                         

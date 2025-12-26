@@ -35,10 +35,7 @@ source "$SCRIPT_DIR/util/set-temp-env.sh" "$SCRIPT_DIR/../" "${COMPOSE_PROFILE_A
 source "$SCRIPT_DIR/init/init-keycloak-sql.sh" "$SCRIPT_DIR/.."
 source "$SCRIPT_DIR/init/init-kong-property.sh" "$SCRIPT_DIR/.."
 
-DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose-8c16g.yml"
-if [ "$OS_RESOURCE_SPEC" == "1" ]; then
-  DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose-4c8g.yml"
-fi
+DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose.yml"
 
 # --- 6. Volume and Image Management ---
 echo "Start creating volumes"

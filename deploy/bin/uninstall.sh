@@ -14,10 +14,8 @@ docker exec -it postgresql bash -c 'PGPASSWORD="postgres" psql -U postgres -d ke
 docker exec -it postgresql bash -c 'PGPASSWORD="postgres" psql -U postgres -d keycloak -c "TRUNCATE TABLE \"public\".\"offline_client_session\";"'
 
 source $ENV_FILE
-DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../docker-compose-8c16g.yml
-if [ "$OS_RESOURCE_SPEC" == "1" ]; then
-  DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../docker-compose-4c8g.yml
-fi
+
+DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../docker-compose.yml
 
 # 卸载所有服务
 command="--profile fuxa --profile grafana --profile minio --profile eventflow"
