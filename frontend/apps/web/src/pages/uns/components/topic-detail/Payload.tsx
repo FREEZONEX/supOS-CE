@@ -41,6 +41,7 @@ const Payload: FC<PayloadProps> = ({ websocketData, fields }) => {
           width: '30%',
           ellipsis: true,
           render: (text) => {
+            console.log(text);
             const _text = simpleFormat(text);
             return (
               <ComCopyContent
