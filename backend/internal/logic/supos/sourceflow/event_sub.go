@@ -224,6 +224,8 @@ func buildPayloadFromFields(fields []*types.FieldDefine) string {
 			fn = "getBool()"
 		case "STRING", "TEXT":
 			fn = "randomString()"
+		case "DATETIME":
+			fn = "formatCurDate()"
 		default:
 			// keep randomString()
 		}
