@@ -966,6 +966,7 @@ const messages = {
   'common.clickOrDragForUpload': '点击或者拖拽文件在这个区域进行上传',
   'common.uploadFile': '上传文件',
   'common.SpecialCharacterValidation': '不支持特殊字符：{rule}',
+  'common.dashboardNotFound': '数据看板不存在',
 
   // 按钮国际化
   'Namespace.uns_import': 'UNS-导入',

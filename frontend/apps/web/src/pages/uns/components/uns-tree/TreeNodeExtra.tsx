@@ -14,7 +14,7 @@ const deletePerMap: { [key: string]: string } = {
 
 const copyPerMap: { [key: string]: string } = {
   uns0: ButtonPermission['uns.folderCopy'],
-  uns1: ButtonPermission['uns.fileCopy'],
+  uns2: ButtonPermission['uns.fileCopy'],
   template: ButtonPermission['uns.templateCopy'],
 };
 

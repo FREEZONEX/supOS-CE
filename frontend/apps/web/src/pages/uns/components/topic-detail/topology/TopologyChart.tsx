@@ -292,6 +292,10 @@ const TopologyChart = ({ instanceInfo, dashboardInfo, getFileDetail }: any) => {
         return;
       }
       if (cell?.id === TypeEnum.Apps && dashboardType?.includes('grafana') && launchButton) {
+        if (!dashboardInfo) {
+          message.error(formatMessage('common.dashboardNotFound'));
+          return;
+        }
         // navigate('/grafana-design', { state: { url: getAppsLink(dashboardInfo), name: 'GrafanaDesign' } });
         navigate(
           `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`

@@ -22,6 +22,7 @@ var DefaultAllowURIs = []string{
 	"/marimo/home",
 	"/grafana/home",
 	"/eventflow/home",
+	"/emqx/home",
 }
 
 func IsDefaultCommonURI(path string) bool {

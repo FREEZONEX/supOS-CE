@@ -274,14 +274,14 @@ const Module: FC<FileDetailProps> = (props) => {
         key: [1, 2, 3, 6, 7, 8].includes(instanceInfo.dataType) ? 'payload' : '',
         label: formatMessage('uns.payload'),
         children:
-          (instanceInfo.dataType === 8 && instanceInfo?.jsonFields?.length === 0) || !showPayloadTable ? (
+          instanceInfo.dataType === 8 || !showPayloadTable ? (
             <RawData payload={websocketData?.data} />
           ) : (
             <Payload websocketData={websocketData} fields={instanceInfo.fields || []} />
           ),
         style: panelStyle,
         extra:
-          instanceInfo.dataType === 8 && instanceInfo?.jsonFields?.length === 0 ? null : (
+          instanceInfo.dataType === 8 ? null : (
             <Button
               style={{ border: '1px solid #C6C6C6' }}
               color="default"
