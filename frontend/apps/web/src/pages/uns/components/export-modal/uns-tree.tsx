@@ -324,16 +324,8 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
                 if (info?.code) {
                   //
                   if (info.code === 200) {
-                    setParams({
-                      ...params,
-                      checkSmallFile: undefined,
-                    });
                     setSmallFile(false);
                   } else {
-                    setParams({
-                      ...params,
-                      checkSmallFile: undefined,
-                    });
                     setJsonData(undefined);
                     setSmallFile(true);
                   }
@@ -349,6 +341,10 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
                 }
               })
               .finally(() => {
+                setParams({
+                  ...params,
+                  checkSmallFile: undefined,
+                });
                 setLoading(false);
               });
           }}
