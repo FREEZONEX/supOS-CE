@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * SSE连接状态枚举
@@ -180,7 +180,7 @@ const useSSE = (url: string, options: UseServerSentEventsOptions = {}): UseServe
     }
   }, [url, autoConnect, connect]);
 
-  const returnValue = useMemo(
+  return useMemo(
     () => ({
       status,
       lastMessage,
@@ -190,8 +190,6 @@ const useSSE = (url: string, options: UseServerSentEventsOptions = {}): UseServe
     }),
     [status, lastMessage, lastError, connect, disconnect]
   );
-
-  return returnValue;
 };
 
 export default useSSE;
