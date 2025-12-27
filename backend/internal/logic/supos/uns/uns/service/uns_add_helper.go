@@ -539,6 +539,7 @@ func (u *UnsAddService) trySetId(
 	unsDto *types.CreateTopicDto,
 	existsUns func(string) *dao.UnsNamespace,
 	dbFiles map[int64]*dao.UnsNamespace,
+	addUpdate func(*dao.UnsNamespace),
 	deleteFiles *[]*dao.UnsNamespace,
 	errTipMap map[string]string) (po *dao.UnsNamespace, exists bool) {
 
@@ -673,7 +674,11 @@ func (u *UnsAddService) trySetId(
 				}
 				if len(affected) > 0 {
 					for _, f := range affected {
-						f.Fields = newUns.Fields
+						tdbFs, er := FieldUtils.ProcessFieldDefines(types.SrcJdbcType(f.DataSrcId), newUns.Fields, true, true)
+						if er == nil && tdbFs != nil {
+							f.Fields = tdbFs.Fields
+							addUpdate(f)
+						}
 						dbFiles[f.Id] = f
 					}
 				}

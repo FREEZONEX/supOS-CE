@@ -142,11 +142,16 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	unsPoLabels := make(map[int64]*bo.UnsPoLabels, len(paramFiles)+len(paramFolders))
 	var deleteFiles []*dao.UnsNamespace
-	u.itrFiles(ctx, args.SkipWhenExists, base.MapValues(pathMap[constants.PathTypeTemplate]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
-	u.itrFiles(ctx, args.SkipWhenExists, folders, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+
+	indirectUpdates := make([]*dao.UnsNamespace, 0)
+	addUpdate := func(uns *dao.UnsNamespace) {
+		indirectUpdates = append(indirectUpdates, uns)
+	}
+	u.itrFiles(ctx, addUpdate, args.SkipWhenExists, base.MapValues(pathMap[constants.PathTypeTemplate]), createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+	u.itrFiles(ctx, addUpdate, args.SkipWhenExists, folders, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
 	files := base.MapValues(pathMap[constants.PathTypeFile])
 	sort.Sort(indexedFiles(files))
-	u.itrFiles(ctx, args.SkipWhenExists, files, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
+	u.itrFiles(ctx, addUpdate, args.SkipWhenExists, files, createTime, allUns, dbFiles, deleteFiles, errTipMap, addFiles, aliasMap, unsPoLabels)
 
 	//TODO 计算，引用，聚合等类型的 校验和处理
 	aliasToId(addFiles, allUns, pathMap)
@@ -218,6 +223,12 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			dtoUpdateList = append(dtoUpdateList, UnsConverter.Po2Dto(po))
 		}
 	}
+	if len(indirectUpdates) > 0 {
+		for _, update := range indirectUpdates {
+			rs.updateList[update.Id] = update
+			dtoUpdateList = append(dtoUpdateList, UnsConverter.Po2Dto(update))
+		}
+	}
 
 	/*	if refUpdates != nil && len(refUpdates) > 0 {
 		for _, refPo := range refUpdates {
@@ -251,6 +262,7 @@ func (x indexedFiles) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 func (u *UnsAddService) itrFiles(
 	ctx context.Context,
+	addUpdate func(*dao.UnsNamespace),
 	skipWhenExists bool,
 	vs []*types.CreateTopicDto,
 	createTime time.Time, allUns func(alias string) *dao.UnsNamespace,
@@ -263,7 +275,7 @@ func (u *UnsAddService) itrFiles(
 		return
 	}
 	for _, DTO := range vs {
-		po, exists := u.trySetId(ctx, skipWhenExists, createTime, DTO, allUns, dbFiles, &deleteFiles, errTipMap)
+		po, exists := u.trySetId(ctx, skipWhenExists, createTime, DTO, allUns, dbFiles, addUpdate, &deleteFiles, errTipMap)
 		if po != nil {
 			if exists && skipWhenExists {
 				aliasMap[po.Alias] = po
