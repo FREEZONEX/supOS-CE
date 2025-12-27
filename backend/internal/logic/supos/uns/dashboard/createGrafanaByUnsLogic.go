@@ -75,17 +75,18 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 		schema = table[:dot]
 		table = table[dot+1:]
 	}
-	uuid, err := grafanautil.CreateDashboard(l.ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
+	dashId := grafanautil.GetDashboardUUIDByAlias(alias)
+	err := grafanautil.CreateDashboard(dashId, l.ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
 	if err != nil {
 		return &types.JsonResult{Code: 400, Msg: err.Error()}, nil
 	}
 	// 检查仪表板是否已存在
 	db := relationDB.GetDb(l.ctx)
-	dashboardPo, _ := l.dashboardMapper.SelectById(db, uuid)
+	dashboardPo, _ := l.dashboardMapper.SelectById(db, dashId)
 	if dashboardPo == nil {
 		now := time.Now()
 		po := &relationDB.DashboardModel{
-			ID:         uuid,
+			ID:         dashId,
 			Name:       alias,
 			CreateTime: now,
 			UpdateTime: now,
@@ -117,7 +118,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	refPo, _ := l.dashboardRefMapper.GetByUns(db, alias)
 	if refPo == nil {
 		ref := &relationDB.DashboardRefModel{
-			DashboardID: uuid,
+			DashboardID: dashId,
 			UnsAlias:    alias,
 		}
 		if err := l.dashboardRefMapper.Insert(db, ref); err != nil {
@@ -128,7 +129,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	return &types.JsonResult{
 		Code: 200,
 		Msg:  "ok",
-		Data: uuid,
+		Data: dashId,
 	}, nil
 }
 func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns_old(alias string) (*types.JsonResult, error) {

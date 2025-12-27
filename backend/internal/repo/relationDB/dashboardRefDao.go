@@ -3,6 +3,7 @@ package relationDB
 import (
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // DashboardRefMapper Dashboard 引用关系数据访问对象
@@ -11,7 +12,15 @@ type DashboardRefMapper struct {
 
 // Insert 插入 Dashboard 引用关系
 func (m *DashboardRefMapper) Insert(db *gorm.DB, ref *DashboardRefModel) error {
-	err := db.Create(ref).Error
+	err := db.Model(&DashboardRefModel{}).Clauses(clause.OnConflict{DoNothing: true}).Create(ref).Error
+	if err != nil {
+		logx.Errorf("failed to insert dashboard ref: %v", err)
+		return err
+	}
+	return nil
+}
+func (m *DashboardRefMapper) SaveBatch(db *gorm.DB, refers []*DashboardRefModel) error {
+	err := db.Model(&DashboardRefModel{}).Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(refers, 1000).Error
 	if err != nil {
 		logx.Errorf("failed to insert dashboard ref: %v", err)
 		return err
