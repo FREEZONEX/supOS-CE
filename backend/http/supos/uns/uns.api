@@ -30,7 +30,7 @@ type (
         // Model/Template fields
         ModelId    *int64 `json:"modelId,string,optional,omitempty"`
         ModelAlias *string `json:"modelAlias,optional,omitempty"`
-        Template   string `json:"-"`
+        Template    *CreateTopicDto  `json:"-"`
 
         // Parent fields
         ParentAlias *string `json:"parentAlias,optional,omitempty"`

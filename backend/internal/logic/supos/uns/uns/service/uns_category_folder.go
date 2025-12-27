@@ -5,6 +5,7 @@ import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
+	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
@@ -25,7 +26,7 @@ func buildCategoryFolderDto(parentAlias *string, mountType *int16, mountSource *
 		dto.MountType = mountType
 	} else {
 		// 没有父别名的情况
-		dto.Alias = "_" + strings.ToLower(fdt.Name()) + "_"
+		dto.Alias = PathUtil.GenerateAliasWithRandom("_" + strings.ToLower(fdt.Name()) + "_")
 		dto.ParentAlias = nil
 	}
 

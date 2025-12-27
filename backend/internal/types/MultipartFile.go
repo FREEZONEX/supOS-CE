@@ -19,7 +19,7 @@ type MultipartFile struct {
 }
 
 func FormFile(r *http.Request, name string) (*MultipartFile, error) {
-	err := r.ParseMultipartForm(1 << 30) //1G
+	err := r.ParseMultipartForm(8 * 1024) //8k
 	fileData, handler, err := r.FormFile(name)
 	if err != nil && r.MultipartForm != nil && r.MultipartForm.File != nil {
 		for k, fhs := range r.MultipartForm.File {

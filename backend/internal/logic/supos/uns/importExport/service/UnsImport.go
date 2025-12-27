@@ -130,12 +130,18 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 				l.log.Error("创建标签失败", er)
 			}
 		case Template, UNS:
-			countUns += len(nodes)
-			if propName == Template {
+			if propName == UNS {
+				var insertTemplates []*types.CreateTopicDto
 				for _, n := range nodes {
-					n.PathType = constants.PathTypeTemplate
+					if template := n.Template; template != nil {
+						insertTemplates = append(insertTemplates, template)
+					}
+				}
+				if len(insertTemplates) > 0 {
+					nodes = append(insertTemplates, nodes...)
 				}
 			}
+			countUns += len(nodes)
 			errTipMap := l.unsAddService.CreateModelAndInstancesInner(context.Background(), bo.CreateModelInstancesArgs{
 				Topics:     nodes,
 				FromImport: true,
@@ -217,7 +223,7 @@ func logErrImports(errTipMap map[string]string, nodes []*types.CreateTopicDto, f
 	for k, v := range errTipMap {
 		if n, er := integerutil.ExtractTailNumbers(k); er == nil {
 			i := int(n)
-			fileData := vo2DataVo(nodes[i])
+			fileData := uns2DataVo(nil, nodes[i])
 			fileData.Error = v
 			indexMap[i] = fileData
 		}

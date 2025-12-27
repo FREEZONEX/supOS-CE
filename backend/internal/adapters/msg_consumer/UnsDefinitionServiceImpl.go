@@ -118,7 +118,6 @@ func (u *UnsDefinitionService) invalidCache(id int64, alias, path string) {
 	u.cache.Delete(strconv.FormatInt(id, 10))
 	u.cache.Delete(keyAliasPrev + alias)
 	u.cache.Delete(keyPathPrev + path)
-	logx.Debugf("清理缓存: %d, %s, %s", id, alias, path)
 }
 func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query func(db *gorm.DB, arg string) (*dao.UnsNamespace, error)) (rs *types.CreateTopicDto) {
 	key := kPrev + arg

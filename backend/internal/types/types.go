@@ -202,7 +202,7 @@ type CreateTopicDto struct {
 	Description                   *string                   `json:"description,optional,omitzero" validate:"max=255"`
 	ModelId                       *int64                    `json:"modelId,string,optional,omitempty"`
 	ModelAlias                    *string                   `json:"modelAlias,optional,omitempty"`
-	Template                      string                    `json:"-"`
+	Template                      *CreateTopicDto           `json:"-"`
 	ParentAlias                   *string                   `json:"parentAlias,optional,omitempty"`
 	ParentId                      *int64                    `json:"parentId,string,optional,omitempty"`
 	DataType                      *int16                    `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"` // Data type and fields

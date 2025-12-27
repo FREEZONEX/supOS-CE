@@ -14,6 +14,7 @@ import (
 	"backend/internal/types"
 	"backend/share/base"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -269,8 +270,10 @@ func checkTopicDto(errTipMap map[string]string,
 
 	alias := d.Alias
 	for _, mp := range pathMap {
-		if base.MapContainsKey(mp, alias) {
-			msg := I18nUtils.GetMessage("uns.alias.duplicate")
+		if v, has := mp[alias]; has {
+			dupUns, _ := json.Marshal(v)
+			curUns, _ := json.Marshal(d)
+			msg := I18nUtils.GetMessage("uns.alias.duplicate") + ": " + string(dupUns) + ", alias=" + alias + ", curUns=" + string(curUns)
 			errTipMap[batchIndex] = msg
 			return
 		}

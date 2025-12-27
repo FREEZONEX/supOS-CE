@@ -79,10 +79,6 @@ func label2FileData(lb *dao.UnsLabel) *FileData {
 func (l *UnsImportExportService) labelCsv2FileData(headers, values []string) *FileData {
 	return &FileData{Name: values[0]}
 }
-func (l *UnsImportExportService) unsCsv2FileData(headers, values []string) *FileData {
-	uns := l.unsMapper.Csv2Model(headers, values)
-	return po2DataVo(uns)
-}
 
 // 流式写入json 返回给客户端
 func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *types.ExportReq) {
@@ -90,6 +86,11 @@ func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *typ
 	//if flusher, ok := w.(http.Flusher); ok {
 	//	flusher.Flush()
 	//}
+	exportCtx := &exportContext{unsWrapTemplate: EXPORT_TYPE_ALL != exportReq.ExportType}
+	unsCsv2FileData := func(headers, values []string) *FileData {
+		uns := l.unsMapper.Csv2Model(headers, values)
+		return uns2DataVo(exportCtx, uns)
+	}
 	jsonWriter := bufio.NewWriter(out)
 	if EXPORT_TYPE_ALL == exportReq.ExportType {
 		{
@@ -108,7 +109,7 @@ func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *typ
 			fmt.Fprintf(out, `,"%s":`, Template)
 			_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
 				return l.unsMapper.ExportCsv([]int16{constants.PathTypeTemplate}, writer)
-			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, true)
+			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, unsCsv2FileData, true)
 			if err != nil {
 				l.log.Error("Template Csv2JsonStream err:", err)
 			}
@@ -117,7 +118,7 @@ func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *typ
 			fmt.Fprintf(out, `,"%s":`, UNS)
 			_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
 				return l.unsMapper.ExportCsv([]int16{constants.PathTypeDir, constants.PathTypeFile}, writer)
-			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, true)
+			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, unsCsv2FileData, true)
 			if err != nil {
 				l.log.Error("UNS Csv2JsonStream err:", err)
 			}
@@ -128,7 +129,7 @@ func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *typ
 		if len(dirLayRecs) > 0 || len(ids) > 0 {
 			countUns, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
 				return l.unsMapper.ExportCsvByLayRecAndIds(dirLayRecs, ids, writer)
-			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, l.unsCsv2FileData, false)
+			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, unsCsv2FileData, false)
 			l.log.Info("UNS Csv2JsonStream:", err, countUns)
 		}
 		fmt.Fprintln(out, "]")
