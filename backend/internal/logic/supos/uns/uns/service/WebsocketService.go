@@ -28,7 +28,7 @@ type WebsocketService struct {
 	topicToSessionsMap *sync.Map // map[string]*sync.Map (topic -> map[sessionId]bool)
 	aliasToSessionsMap *sync.Map // map[string]*sync.Map (alias -> map[sessionId]subValueObj)
 	tpLock             sync.RWMutex
-	topologySessions   map[string]io.Writer // map[string]*websocket.Conn (sessionId -> conn)
+	topologySessions   map[string]bool
 	unsQueryService    *UnsQueryService
 	topologyService    *service.UnsTopologyService
 }
@@ -40,7 +40,7 @@ func init() {
 			idToSessionsMap:    &sync.Map{},
 			topicToSessionsMap: &sync.Map{},
 			aliasToSessionsMap: &sync.Map{},
-			topologySessions:   make(map[string]io.Writer, 8),
+			topologySessions:   make(map[string]bool, 8),
 			unsQueryService:    spring.GetBean[*UnsQueryService](),
 			topologyService:    spring.GetBean[*service.UnsTopologyService](),
 		}
@@ -133,7 +133,7 @@ func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL
 			subscriptionVal, _ := s.sessions.Load(sessionId)
 			if subscription, ok := subscriptionVal.(*WsSubscription); ok {
 				s.tpLock.Lock()
-				s.topologySessions[sessionId] = subscription.conn
+				s.topologySessions[sessionId] = true
 				s.tpLock.Unlock()
 
 				logx.Infof("topology subscription: %s", sessionId)

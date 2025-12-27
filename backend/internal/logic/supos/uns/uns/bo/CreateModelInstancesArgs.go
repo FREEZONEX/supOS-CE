@@ -17,7 +17,7 @@ type CreateModelInstancesArgs struct {
 	StatusConsumer                func(*common.RunningStatus) `json:"-"`              // 使用json忽略标记
 }
 
-func (c *CreateModelInstancesArgs) String() string {
+func (c CreateModelInstancesArgs) String() string {
 	data, _ := json.Marshal(c)
 	return string(data)
 }
