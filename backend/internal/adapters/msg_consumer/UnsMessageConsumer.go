@@ -110,7 +110,8 @@ func (u *UnsMessageConsumer) OnBatchMessage(payloads map[string]map[string]any) 
 func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data any, strPayload string, messages []serviceApi.TopicMessage) []serviceApi.TopicMessage {
 	list, erMsg := procData(def, data)
 	u.sendToWebsocket(def, list, strPayload, erMsg)
-	if len(list) > 0 {
+	save2db := base.P2v(def.Save2Db)
+	if len(list) > 0 && save2db {
 		messages = append(messages, serviceApi.TopicMessage{UnsId: def.Id, DataSrcId: types.SrcJdbcType(def.DataSrcID), Data: list})
 	}
 
@@ -121,7 +122,9 @@ func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data a
 			setLastData(calcList, calcDef)
 
 			u.sendToWebsocket(calcDef, calcList, "", calcErr)
-			messages = append(messages, serviceApi.TopicMessage{UnsId: calcDef.Id, DataSrcId: types.SrcJdbcType(calcDef.DataSrcID), Data: calcList})
+			if save2db {
+				messages = append(messages, serviceApi.TopicMessage{UnsId: calcDef.Id, DataSrcId: types.SrcJdbcType(calcDef.DataSrcID), Data: calcList})
+			}
 		}
 	}
 	return messages
@@ -141,11 +144,7 @@ func (u *UnsMessageConsumer) OnMessageByAliasOnUpdate(aliasVqtMap map[string]str
 			u.log.Debugf("Unknown alias[%s]\n", alias)
 			continue
 		}
-		list, erMsg := procData(def, data)
-		u.sendToWebsocket(def, list, "", erMsg)
-		if base.P2v(def.Save2Db) {
-			msgs = append(msgs, serviceApi.TopicMessage{UnsId: def.Id, DataSrcId: types.SrcJdbcType(def.DataSrcID), Data: list})
-		}
+		msgs = u.procDataAndSendWs(def, data, "", msgs)
 	}
 	u.sendData(msgs)
 }
