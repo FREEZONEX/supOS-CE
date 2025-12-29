@@ -10,9 +10,11 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
+	"encoding/csv"
+	"io"
+	"sync"
 	"time"
 
-	"gitee.com/unitedrhino/share/stores"
 	"gorm.io/gorm"
 )
 
@@ -59,64 +61,86 @@ func (r *UnsRemoveService) Remove(ctx context.Context, req types.RemoveUnsOption
 	ctx = dao.SetDb(ctx, dao.GetDb(ctx))
 	paramGroups := base.GroupBy(unsList, getPathType)
 	if folders := paramGroups[constants.PathTypeDir]; len(folders) > 0 {
-		rs, err := r.removeFolders(ctx, req, folders)
-		if rs != nil || err != nil {
-			return rs, err
+		err := r.removeFolders(ctx, req, folders)
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	if files := paramGroups[constants.PathTypeFile]; len(files) > 0 {
 		for _, fs := range base.Partition(files, 1000) {
-			rs, err := r.deleteAndSendEvent(ctx, req, fs)
-			if rs != nil || err != nil {
-				return rs, err
+			err := r.deleteAndSendEvent(ctx, req, fs)
+			if err != nil {
+				return nil, err
 			}
 		}
 	}
 
 	if templates := paramGroups[constants.PathTypeTemplate]; len(templates) > 0 {
-		rs, err := r.removeTemplates(ctx, req, templates)
-		if rs != nil || err != nil {
-			return rs, err
+		err := r.removeTemplates(ctx, req, templates)
+		if err != nil {
+			return nil, err
 		}
 	}
 	return &types.RemoveResult{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}, nil
 }
 
-func (r *UnsRemoveService) removeTemplates(ctx context.Context, req types.RemoveUnsOptions, templates []*dao.UnsNamespace) (*types.RemoveResult, error) {
-	db := dao.GetDb(ctx)
+func (r *UnsRemoveService) removeTemplates(ctx context.Context, req types.RemoveUnsOptions, templates []*dao.UnsNamespace) error {
 	var files = make([]*dao.UnsNamespace, 0, 128)
 	var folders = make([]*dao.UnsNamespace, 0, 64)
 	for _, templateIds := range base.Partition(base.Map(templates, getId), 1000) {
-		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id"}}}
-		for {
-			list, _ := r.unsMapper.ListByTemplateIds(db, templateIds, page)
-			if len(list) == 0 {
-				break
+		// 创建管道
+		reader, writer := io.Pipe()
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer func() {
+				_ = writer.Close()
+				wg.Done()
+			}()
+			delEr := r.unsMapper.ExportCsvByTemplateIds(ctx, templateIds, writer)
+			if delEr != nil {
+				r.log.Error("Del exportByTemplate failed:", delEr)
 			}
-			page.Page++
-
-			unsGroups := base.GroupBy(list, getPathType)
-			if fs := unsGroups[constants.PathTypeFile]; len(fs) > 0 {
-				files = append(files, fs...)
+		}()
+		go func() {
+			defer func() {
+				_ = reader.Close()
+				wg.Done()
+			}()
+			// 读取 CSV 表头
+			csvReader := csv.NewReader(reader)
+			headers, err := csvReader.Read()
+			if err != nil {
+				r.log.Error("del exportHeader ByTemplate failed:", err)
+				return
 			}
-			if dirs := unsGroups[constants.PathTypeDir]; len(dirs) > 0 {
-				folders = append(folders, dirs...)
-			}
-			if len(files) >= 1000 {
-				rs, err := r.deleteAndSendEvent(ctx, req, files)
-				if rs != nil || err != nil {
-					return rs, err
+			for {
+				record, err := csvReader.Read()
+				if err == io.EOF {
+					break
 				}
-				files = files[:]
+				unsPO := r.unsMapper.Csv2Model(headers, record)
+				switch unsPO.PathType {
+				case constants.PathTypeFile:
+					files = append(files, unsPO)
+					if len(files) >= 1000 {
+						delEr := r.deleteAndSendEvent(ctx, req, files)
+						if delEr != nil {
+							r.log.Error("del exportByTemplate failed:", delEr)
+						}
+						files = files[:0]
+					}
+				case constants.PathTypeDir:
+					folders = append(folders, unsPO)
+				}
 			}
-			if int64(len(list)) < page.Size {
-				break
-			}
-		}
+
+		}()
+		wg.Wait()
 	}
 	files = append(files, templates...)
-	rs, err := r.deleteAndSendEventWithCall(ctx, req, files, func(db *gorm.DB) (er error) {
+	err := r.deleteAndSendEventWithCall(ctx, req, files, func(db *gorm.DB) (er error) {
 		if len(folders) > 0 {
 			dirIds := base.Map(folders, getId)
 			if len(dirIds) < 1000 {
@@ -132,14 +156,14 @@ func (r *UnsRemoveService) removeTemplates(ctx context.Context, req types.Remove
 		}
 		return
 	})
-	return rs, err
+	return err
 }
 
 func (r *UnsRemoveService) removeFolders(
 	ctx context.Context,
 	req types.RemoveUnsOptions,
 	folders []*dao.UnsNamespace,
-) (*types.RemoveResult, error) {
+) error {
 	onlyRemoveChild := base.P2v(req.OnlyRemoveChild)
 	var layRecs []string
 	if onlyRemoveChild {
@@ -151,27 +175,59 @@ func (r *UnsRemoveService) removeFolders(
 			return e.LayRec
 		})
 	}
-	db := dao.GetDb(ctx)
 	for _, lay := range base.Partition(layRecs, 500) {
-		page := &stores.PageInfo{Page: 1, Size: 1000, Orders: []stores.OrderBy{{Field: "id", Sort: stores.OrderAsc}}}
-		for {
-			list, _ := r.unsMapper.ListByLayRecs(db, lay, page)
-			if len(list) == 0 {
-				break
-			}
-			page.Page++
-			delRs, delEr := r.deleteAndSendEvent(ctx, req, list)
+		// 创建管道
+		reader, writer := io.Pipe()
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer func() {
+				_ = writer.Close()
+				wg.Done()
+			}()
+			delEr := r.unsMapper.ExportCsvByLayRecAndIds(ctx, lay, nil, writer, false) //layRec降序排列，保证目录是最后一个被删除
 			if delEr != nil {
-				return delRs, delEr
-			} else if delRs != nil && delRs.Data != nil {
-				return delRs, nil
+				r.log.Error("Del exportByFolder failed:", delEr)
 			}
-			if int64(len(list)) < page.Size {
-				break
+		}()
+		go func() {
+			defer func() {
+				_ = reader.Close()
+				defer wg.Done()
+			}()
+			// 读取 CSV 表头
+			csvReader := csv.NewReader(reader)
+			headers, err := csvReader.Read()
+			if err != nil {
+				r.log.Error("del exportHeader ByFolder failed:", err)
+				return
 			}
-		}
+			batch := make([]*dao.UnsNamespace, 0, 1000)
+			for {
+				record, err := csvReader.Read()
+				if err == io.EOF {
+					break
+				}
+				unsPO := r.unsMapper.Csv2Model(headers, record)
+				batch = append(batch, unsPO)
+				if len(batch) >= 1000 {
+					delEr := r.deleteAndSendEvent(ctx, req, batch)
+					batch = batch[:0]
+					if delEr != nil {
+						r.log.Error("delByFolder failed:", delEr)
+					}
+				}
+			}
+			if len(batch) > 0 {
+				delEr := r.deleteAndSendEvent(ctx, req, batch)
+				if delEr != nil {
+					r.log.Error("DelByFolder failed:", delEr)
+				}
+			}
+		}()
+		wg.Wait()
 	}
-	return nil, nil
+	return nil
 }
 func getId(e *dao.UnsNamespace) int64 {
 	return e.Id
@@ -179,10 +235,10 @@ func getId(e *dao.UnsNamespace) int64 {
 func getPathType(e *dao.UnsNamespace) int16 {
 	return e.PathType
 }
-func (r *UnsRemoveService) deleteAndSendEvent(ctx context.Context, req types.RemoveUnsOptions, list []*dao.UnsNamespace) (resp *types.RemoveResult, err error) {
+func (r *UnsRemoveService) deleteAndSendEvent(ctx context.Context, req types.RemoveUnsOptions, list []*dao.UnsNamespace) (err error) {
 	return r.deleteAndSendEventWithCall(ctx, req, list, nil)
 }
-func (r *UnsRemoveService) deleteAndSendEventWithCall(ctx context.Context, req types.RemoveUnsOptions, list []*dao.UnsNamespace, callback func(db *gorm.DB) error) (resp *types.RemoveResult, er error) {
+func (r *UnsRemoveService) deleteAndSendEventWithCall(ctx context.Context, req types.RemoveUnsOptions, list []*dao.UnsNamespace, callback func(db *gorm.DB) error) (er error) {
 	unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, *types.CreateTopicDto, int16](list, func(e *dao.UnsNamespace) (int16, *types.CreateTopicDto) {
 		return e.PathType, UnsConverter.Po2Dto(e)
 	})
