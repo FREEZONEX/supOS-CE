@@ -87,6 +87,7 @@ services:
       - PG_URL=postgresql+psycopg2://postgres:postgres@postgresql:5432/postgres
     volumes:
       - ${VOLUMES_PATH}/marimo/data:/app
+    # command: marimo edit /app/main.py --host 0.0.0.0 --port 8080 --no-token
     restart: always
     deploy:
       resources:
