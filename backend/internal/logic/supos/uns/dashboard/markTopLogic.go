@@ -17,16 +17,14 @@ type MarkTopLogic struct {
 	logx.Logger
 	ctx                 context.Context
 	svcCtx              *svc.ServiceContext
-	dashboardMarkMapper *relationDB.DashboardMarkedMapper
+	dashboardMarkMapper relationDB.DashboardMarkedMapper
 }
 
 func NewMarkTopLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MarkTopLogic {
-	db := relationDB.GetDb(ctx)
 	return &MarkTopLogic{
-		Logger:              logx.WithContext(ctx),
-		ctx:                 ctx,
-		svcCtx:              svcCtx,
-		dashboardMarkMapper: relationDB.NewDashboardMarkedMapper(db, ctx),
+		Logger: logx.WithContext(ctx),
+		ctx:    ctx,
+		svcCtx: svcCtx,
 	}
 }
 
@@ -35,7 +33,7 @@ func (l *MarkTopLogic) MarkTop(id string, userID string) (*types.JsonResult, err
 		ID:     id,
 		UserID: userID,
 	}
-	err := l.dashboardMarkMapper.Insert(mark)
+	err := l.dashboardMarkMapper.Insert(l.ctx, mark)
 	if err != nil {
 		return &types.JsonResult{
 			Code: http.StatusInternalServerError,

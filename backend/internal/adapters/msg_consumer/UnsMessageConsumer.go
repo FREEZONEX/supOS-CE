@@ -31,11 +31,8 @@ type UnsMessageConsumer struct {
 }
 
 func init() {
-	spring.RegisterLazy[*UnsMessageConsumer](func() *UnsMessageConsumer {
-		return &UnsMessageConsumer{
-			log:        logx.WithContext(context.Background()),
-			defService: spring.GetBean[serviceApi.IUnsDefinitionService](),
-		}
+	spring.RegisterBean[*UnsMessageConsumer](&UnsMessageConsumer{
+		log: logx.WithContext(context.Background()),
 	})
 }
 
@@ -113,7 +110,8 @@ func (u *UnsMessageConsumer) OnBatchMessage(payloads map[string]map[string]any) 
 func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data any, strPayload string, messages []serviceApi.TopicMessage) []serviceApi.TopicMessage {
 	list, erMsg := procData(def, data)
 	u.sendToWebsocket(def, list, strPayload, erMsg)
-	if len(list) > 0 {
+	save2db := base.P2v(def.Save2Db)
+	if len(list) > 0 && save2db {
 		messages = append(messages, serviceApi.TopicMessage{UnsId: def.Id, DataSrcId: types.SrcJdbcType(def.DataSrcID), Data: list})
 	}
 
@@ -124,7 +122,9 @@ func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data a
 			setLastData(calcList, calcDef)
 
 			u.sendToWebsocket(calcDef, calcList, "", calcErr)
-			messages = append(messages, serviceApi.TopicMessage{UnsId: calcDef.Id, DataSrcId: types.SrcJdbcType(calcDef.DataSrcID), Data: calcList})
+			if save2db {
+				messages = append(messages, serviceApi.TopicMessage{UnsId: calcDef.Id, DataSrcId: types.SrcJdbcType(calcDef.DataSrcID), Data: calcList})
+			}
 		}
 	}
 	return messages
@@ -144,11 +144,7 @@ func (u *UnsMessageConsumer) OnMessageByAliasOnUpdate(aliasVqtMap map[string]str
 			u.log.Debugf("Unknown alias[%s]\n", alias)
 			continue
 		}
-		list, erMsg := procData(def, data)
-		u.sendToWebsocket(def, list, "", erMsg)
-		if base.P2v(def.Save2Db) {
-			msgs = append(msgs, serviceApi.TopicMessage{UnsId: def.Id, DataSrcId: types.SrcJdbcType(def.DataSrcID), Data: list})
-		}
+		msgs = u.procDataAndSendWs(def, data, "", msgs)
 	}
 	u.sendData(msgs)
 }
@@ -188,7 +184,7 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 				vm = map[string]any{jsonbFiled: string(bs)}
 			}
 			list = []map[string]any{vm}
-			setLastData(list, def)
+			list = setLastData(list, def)
 			return
 		}
 	}
@@ -228,13 +224,13 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 	if len(list) == 0 {
 		return
 	}
-	setLastData(list, def)
+	list = setLastData(list, def)
 	return
 }
 
-func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
+func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) []map[string]interface{} {
 	if len(list) == 0 {
-		return
+		return list
 	}
 	CT, qos, fds := def.GetTimestampField(), def.GetQualityField(), def.GetFieldDefines()
 	now := time.Now().UnixMilli()
@@ -261,8 +257,9 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
 		}
 		if len(mergeList) == 0 {
 			logx.Errorf("合并数据出问题[ %s ]: %+v\n", def.Alias, list)
-			return
+			return list
 		}
+		logx.Debugf("MergeList[ %s ]: %+v, list: %+v\n", def.Alias, mergeList, list)
 		list = mergeList
 	} else {
 		for _, vm := range list {
@@ -283,14 +280,34 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) {
 			fd.LastTime = lastUpdateTime
 		}
 	}
+	return list
 }
-
+func parseTimestamp(curT any) (ct int64) {
+	if Float, isFloat := curT.(float64); isFloat { // json unmarshal 来的都是 float64 类型
+		ct = int64(Float)
+	} else if Long, isLong := curT.(int64); isLong {
+		ct = Long
+	} else {
+		str := fmt.Sprint(curT)
+		Double, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			ct = -1
+			if dt, dtEr := datetimeutils.ParseDate(str); dtEr == nil && dt.Year() > 1970 {
+				ct = dt.UnixMilli()
+			}
+		} else if Int := int64(Double); Int > 1100000000000 {
+			ct = Int
+		}
+	}
+	if ct < 1100000000000 || ct > 11000000000001 {
+		return -1
+	}
+	return ct
+}
 func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64, prevBean map[string]any) []map[string]interface{} {
 	prevTime := int64(-1)
 	if len(prevBean) > 0 {
-		if lastTime, ok := prevBean[CT].(int64); ok {
-			prevTime = lastTime
-		}
+		prevTime = parseTimestamp(prevBean[CT])
 	}
 	mergeList := make([]map[string]interface{}, 0, len(list))
 	for _, vm := range list {
@@ -298,20 +315,8 @@ func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64
 			vm[CT] = now
 			mergeList = append(mergeList, vm)
 		} else {
-			ct, ok := curT.(int64)
-			if !ok {
-				str := fmt.Sprint(curT)
-				Float, err := strconv.ParseFloat(str, 64)
-				if err != nil {
-					ct = -1
-					if dt, dtEr := datetimeutils.ParseDate(str); dtEr == nil && dt.Year() > 1970 {
-						ct = dt.UnixMilli()
-					}
-				} else if Int := int64(Float); Int > 1100000000000 {
-					ct = Int
-				}
-			}
-			if ct < 1100000000000 || ct > 11000000000001 {
+			ct := parseTimestamp(curT)
+			if ct < 1 {
 				logx.Debugf("BadTimestamp: %v", curT)
 				vm[CT] = now
 				mergeList = append(mergeList, vm)
@@ -351,6 +356,7 @@ func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64
 	return mergeList
 }
 func (u *UnsMessageConsumer) OnEventContextRefreshedEvent10(ev *event.ContextRefreshedEvent) {
+	u.defService = spring.GetBean[*UnsDefinitionService]()
 	if sv := ev.SvcContext; sv != nil && len(sv.Config.DevLink.Mqtt.Brokers) > 0 && sv.Config.DevLink.Mode == "mqtt" {
 		go func() {
 			cli, er := subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)

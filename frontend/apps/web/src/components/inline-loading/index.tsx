@@ -11,9 +11,36 @@ export interface InlineLoadingProps {
   className?: string;
   style?: CSSProperties;
   title?: string;
+  /** 文本显示模式 */
+  textMode?: 'single-line' | 'multi-line' | 'custom-lines';
+  /** 自定义行数（仅在textMode为custom-lines时有效） */
+  lineClamp?: number;
 }
 
-const InlineLoading: FC<InlineLoadingProps> = ({ description, status = 'active', className = '', style, title }) => {
+const InlineLoading: FC<InlineLoadingProps> = ({
+  description,
+  status = 'active',
+  className = '',
+  style,
+  title,
+  textMode = 'single-line',
+  lineClamp,
+}) => {
+  const getTextClassName = () => {
+    const baseClass = 'inline-loading-text';
+    if (textMode === 'custom-lines' && lineClamp) {
+      return `${baseClass} ${baseClass}--custom-lines`;
+    }
+    return `${baseClass} ${baseClass}--${textMode}`;
+  };
+
+  const getTextStyle = () => {
+    if (textMode === 'custom-lines' && lineClamp) {
+      return { WebkitLineClamp: lineClamp };
+    }
+    return {};
+  };
+
   return (
     <div className={`inline-loading ${className}`} style={style}>
       {status === 'active' && (
@@ -29,7 +56,7 @@ const InlineLoading: FC<InlineLoadingProps> = ({ description, status = 'active',
       {status === 'finished' && <CheckmarkFilled fill={'#24a148'} />}
       {status === 'error' && <ErrorFilled fill={'#da1e28'} />}
       {description && (
-        <div title={title} className="inline-loading-text">
+        <div title={title} className={getTextClassName()} style={getTextStyle()}>
           {description}
         </div>
       )}

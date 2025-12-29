@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -75,7 +76,23 @@ const SYS_FIELD_CREATE_TIME = "timeStamp"
 func mergeBeansWithCT(list []map[string]interface{}, prevBean map[string]any) []map[string]interface{} {
 	return mergeBeansWithTimestamp(list, SYS_FIELD_CREATE_TIME, time.Now().UnixMilli(), prevBean)
 }
+func TestMergeBeansWithTimestamp2(t *testing.T) {
+	floatTime := 1.766978836e+12
+	ct := int64(floatTime)
+	t.Log("ct=", ct)
+	ctStr := strconv.FormatInt(ct, 10)
+	prevJson := `{"double2":99.86295347545729, "timeStamp":` + ctStr + `}`
+	curJson := `{"double1":91, "timeStamp":` + ctStr + `}`
 
+	var prevBean map[string]interface{}
+	var curBean map[string]interface{}
+	json.Unmarshal([]byte(prevJson), &prevBean)
+	json.Unmarshal([]byte(curJson), &curBean)
+	rs := mergeBeansWithCT([]map[string]any{curBean}, prevBean)
+
+	rsJson, _ := json.Marshal(rs)
+	t.Log("rs:", string(rsJson))
+}
 func TestMergeBeansWithTimestamp(t *testing.T) {
 	// Test case 1
 	t.Run("case1_different_timestamps", func(t *testing.T) {

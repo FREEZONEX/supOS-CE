@@ -5,23 +5,54 @@ import (
 	"backend/internal/types"
 	"backend/share/base"
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
 func TestListTableInfo(t *testing.T) {
 	// 初始化数据库连接池
-	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@100.100.100.22:34099/postgres")
+	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@100.100.100.20:31014/postgres")
 	if err != nil {
 		panic(err)
 	}
 	defer pool.Close()
 
+	{
+		_, err = pool.Exec(context.Background(), `insert into no121("timeStamp","json","id") values (NOW(),'{}',1)`)
+		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				t.Logf("no121 pgErr: code=%v, msg=%v", pgErr.Code, pgErr.Message)
+			}
+		}
+	}
+	{
+		_, err = pool.Exec(context.Background(), `insert into _121_77ffd11e5c784f3b8396("timeStamp","json","id") values (NOW(),'{}',1)`)
+		if err != nil {
+			if pgErr, is := err.(*pgconn.PgError); is {
+				t.Logf("noid: pgErr: code=%v, msg=%v", pgErr.Code, pgErr.Message)
+			} else {
+				t.Error("noid:", err)
+			}
+		}
+	}
+	{
+		_, err = pool.Exec(context.Background(), `insert into _121_77ffd11e5c784f3b8396("timeStamp","json","_id") values (NOW(),$1,$2)`, `{}`)
+		if err != nil {
+			if pgErr, is := err.(*pgconn.PgError); is {
+				t.Logf("mismatched: pgErr: code=%v, msg=%v", pgErr.Code, pgErr.Message)
+			} else {
+				t.Error("mismatched:", err)
+			}
+		}
+	}
 	// 示例数据
 	topics := []*types.CreateTopicDto{
 		{TableName: "supos.uns_namespace"},
@@ -107,8 +138,8 @@ func TestFillLastRecord(t *testing.T) {
 		Fields: fields,
 	}
 	common.InitSnowflake(123)
-	pgQuery := func() (pgx.Rows, error) {
-		return pool.Query(context.Background(), fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.GetTable(), uns.GetTimestampField()))
+	pgQuery := func(ctx context.Context) (pgx.Rows, error) {
+		return pool.Query(ctx, fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.GetTable(), uns.GetTimestampField()))
 	}
 	FillLastRecord(logx.WithContext(context.Background()), uns, pgQuery)
 }

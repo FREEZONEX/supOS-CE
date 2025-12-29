@@ -14,6 +14,7 @@ import (
 	"backend/internal/types"
 	"backend/share/base"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -269,8 +270,10 @@ func checkTopicDto(errTipMap map[string]string,
 
 	alias := d.Alias
 	for _, mp := range pathMap {
-		if base.MapContainsKey(mp, alias) {
-			msg := I18nUtils.GetMessage("uns.alias.duplicate")
+		if v, has := mp[alias]; has {
+			dupUns, _ := json.Marshal(v)
+			curUns, _ := json.Marshal(d)
+			msg := I18nUtils.GetMessage("uns.alias.duplicate") + ": " + string(dupUns) + ", alias=" + alias + ", curUns=" + string(curUns)
 			errTipMap[batchIndex] = msg
 			return
 		}
@@ -536,6 +539,7 @@ func (u *UnsAddService) trySetId(
 	unsDto *types.CreateTopicDto,
 	existsUns func(string) *dao.UnsNamespace,
 	dbFiles map[int64]*dao.UnsNamespace,
+	addUpdate func(*dao.UnsNamespace),
 	deleteFiles *[]*dao.UnsNamespace,
 	errTipMap map[string]string) (po *dao.UnsNamespace, exists bool) {
 
@@ -670,7 +674,11 @@ func (u *UnsAddService) trySetId(
 				}
 				if len(affected) > 0 {
 					for _, f := range affected {
-						f.Fields = newUns.Fields
+						tdbFs, er := FieldUtils.ProcessFieldDefines(types.SrcJdbcType(f.DataSrcId), newUns.Fields, true, true)
+						if er == nil && tdbFs != nil {
+							f.Fields = tdbFs.Fields
+							addUpdate(f)
+						}
 						dbFiles[f.Id] = f
 					}
 				}

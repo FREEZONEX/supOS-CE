@@ -69,7 +69,7 @@ func (l *BindUnsLogic) BindUns(dashboardID string, unsAlias string) (*types.Json
 	}
 
 	// 删除旧的绑定关系
-	err = l.dashboardRefMapper.DeleteByDashboardId(db, dashboardID)
+	err = l.dashboardRefMapper.DeleteByUnsAlias(db, unsAlias)
 	if err != nil {
 		l.Logger.Errorf("failed to delete old dashboard ref: %v", err)
 		return &types.JsonResult{

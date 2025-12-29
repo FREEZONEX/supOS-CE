@@ -222,8 +222,7 @@ func CreateDatasourceByBody(ctx context.Context, name, body string, reCreate boo
 }
 
 // CreateDashboard creates a Grafana dashboard.
-func CreateDashboard(ctx context.Context, table, tagNameCondition string, jdbcType types.SrcJdbcType, schema, title, columns, ct string) (string, error) {
-	uid := GetDashboardUUIDByAlias(title)
+func CreateDashboard(uid string, ctx context.Context, table, tagNameCondition string, jdbcType types.SrcJdbcType, schema, title, columns, ct string) error {
 	var template string
 	var dbParams map[string]any
 
@@ -264,7 +263,7 @@ func CreateDashboard(ctx context.Context, table, tagNameCondition string, jdbcTy
 			"columns":          columns,
 		}
 	default:
-		return "", fmt.Errorf("unsupported JDBC type: %d", jdbcType.Id())
+		return fmt.Errorf("unsupported JDBC type: %d", jdbcType.Id())
 	}
 
 	dbParams["sys_field_create_time"] = ct
@@ -274,14 +273,14 @@ func CreateDashboard(ctx context.Context, table, tagNameCondition string, jdbcTy
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBufferString(dashboardJSON))
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
 	logger.Debug("创建 dashboardJson 返回结果: ", string(body))
 
-	return uid, nil
+	return nil
 }
 
 // CreateDashboardByBody creates a Grafana dashboard from a JSON body.

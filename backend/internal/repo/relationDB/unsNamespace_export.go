@@ -17,9 +17,9 @@ var selectColumns = []string{"id", "path_type", "parent_id", "model_id", "alias"
 	"expression", "description", "label_ids",
 	"protocol", "refers", "data_type", "parent_data_type", "with_flags", "fields"}
 
-func (p UnsNamespaceRepo) ExportCsv(pathTypes []int16, w io.Writer) error {
+func (p UnsNamespaceRepo) ExportCsv(ctx context.Context, pathTypes []int16, w io.Writer) error {
 	dbPool := getDbPool()
-	conn, err := dbPool.Acquire(context.Background())
+	conn, err := dbPool.Acquire(ctx)
 	if err != nil {
 		return err
 	}
@@ -31,12 +31,12 @@ func (p UnsNamespaceRepo) ExportCsv(pathTypes []int16, w io.Writer) error {
 		strings.Join(base.Map(pathTypes, func(e int16) string {
 			return strconv.Itoa(int(e))
 		}), ","))
-	err = conn.CopyTo(context.Background(), w, query)
+	err = conn.CopyTo(ctx, w, query)
 	return err
 }
-func (p UnsNamespaceRepo) ExportCsvByIds(ids []int64, w io.Writer) error {
+func (p UnsNamespaceRepo) ExportCsvByIds(ctx context.Context, ids []int64, w io.Writer) error {
 	dbPool := getDbPool()
-	conn, err := dbPool.Acquire(context.Background())
+	conn, err := dbPool.Acquire(ctx)
 	if err != nil {
 		return err
 	}
@@ -48,10 +48,27 @@ func (p UnsNamespaceRepo) ExportCsvByIds(ids []int64, w io.Writer) error {
 		strings.Join(base.Map(ids, func(e int64) string {
 			return strconv.FormatInt(e, 10)
 		}), ","))
-	err = conn.CopyTo(context.Background(), w, query)
+	err = conn.CopyTo(ctx, w, query)
 	return err
 }
-func (p UnsNamespaceRepo) ExportCsvByLayRecAndIds(layRec []string, ids []int64, w io.Writer) error {
+func (p UnsNamespaceRepo) ExportCsvByTemplateIds(ctx context.Context, ids []int64, w io.Writer) error {
+	dbPool := getDbPool()
+	conn, err := dbPool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	query := fmt.Sprintf(`COPY 
+           (SELECT %s FROM uns_namespace WHERE model_id in(%s) and status=1 and id>1000  and (data_type is null OR data_type<>5 ) order by id) 
+            TO STDOUT WITH CSV HEADER`, strings.Join(selectColumns, ","),
+		strings.Join(base.Map(ids, func(e int64) string {
+			return strconv.FormatInt(e, 10)
+		}), ","))
+	err = conn.CopyTo(ctx, w, query)
+	return err
+}
+func (p UnsNamespaceRepo) ExportCsvByLayRecAndIds(ctx context.Context, layRec []string, ids []int64, w io.Writer, asc bool) error {
 	query := base.StringBuilder{}
 	query.Grow(64 + 64*len(layRec) + 20*len(ids))
 	query.Append("COPY (SELECT ")
@@ -86,16 +103,16 @@ func (p UnsNamespaceRepo) ExportCsvByLayRecAndIds(layRec []string, ids []int64, 
 		}
 		query.Append(" ) AND ")
 	}
-	query.Append(" status=1 and id>1000  and (data_type is null OR data_type<>5 ) order by lay_rec asc)").
-		Append("TO STDOUT WITH CSV HEADER")
+	query.Append(" status=1 and id>1000  and (data_type is null OR data_type<>5 ) order by lay_rec ").Append(base.SanYuan(asc, " ASC )", " DESC )")).
+		Append(" TO STDOUT WITH CSV HEADER")
 
 	dbPool := getDbPool()
-	conn, err := dbPool.Acquire(context.Background())
+	conn, err := dbPool.Acquire(ctx)
 	if err != nil {
 		return err
 	}
 	defer conn.Release()
-	err = conn.CopyTo(context.Background(), w, query.String())
+	err = conn.CopyTo(ctx, w, query.String())
 	return err
 }
 func (p UnsNamespaceRepo) Csv2Model(headers, vs []string) *UnsNamespace {

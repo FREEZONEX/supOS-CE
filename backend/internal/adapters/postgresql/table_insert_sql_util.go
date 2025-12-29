@@ -14,7 +14,7 @@ func getInsertStatement(uns *types.CreateTopicDto, data []map[string]string) (sq
 	sw.Grow(64 + len(uns.Fields)*32)
 
 	table := getFullTableName(uns.GetTable())
-	sw.Append("INSERT INTO ").Append(table).Append(" (")
+	sw.Append("INSERT INTO ").Append(table).Append(" AS t(")
 
 	columns := uns.Fields
 	for _, fd := range columns {
@@ -85,7 +85,8 @@ func GetUpdateColumns(uns *types.CreateTopicDto, updateColumns *base.StringBuild
 			} else {
 				firstUpdate = true
 			}
-			updateColumns.Append(`"`).Append(fieldName).Append(`"  = COALESCE(EXCLUDED."`).Append(fieldName).Append(`")`)
+			updateColumns.Append(`"`).Append(fieldName).Append(`"  = COALESCE(EXCLUDED."`).
+				Append(fieldName).Append(`", t."`).Append(fieldName).Append(`")`)
 		}
 	}
 }

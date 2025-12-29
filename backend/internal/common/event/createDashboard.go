@@ -10,14 +10,16 @@ import (
 type CreateDashboardEvent struct {
 	ApplicationEvent
 	UUID        string
+	UnsAlias    []string
 	Name        string
 	UserName    string
 	Description string
 }
 
-func NewCreateDashboardEvent(ctx context.Context, uuid, name, description, userName string) *CreateDashboardEvent {
+func NewCreateDashboardEvent(ctx context.Context, UnsAlias []string, uuid, name, description, userName string) *CreateDashboardEvent {
 	return &CreateDashboardEvent{
 		ApplicationEvent: ApplicationEvent{Context: ctx},
+		UnsAlias:         UnsAlias,
 		UUID:             uuid,
 		Name:             name,
 		Description:      description,

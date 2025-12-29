@@ -148,6 +148,9 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 			}
 		}
 	}
+	if labels := p.LabelIds; len(labels) > 0 {
+		unsDto.LabelNames = base.MapValues(labels)
+	}
 	//if dto.DataType != nil && *dto.DataType == constants.AlarmRuleType && p.PathType == 2 {
 	//	var ruleDefine AlarmRuleDefine
 	//	if err := JsonUtil.FromJson(p.Protocol, &ruleDefine); err == nil {
@@ -188,7 +191,6 @@ func Dto2TreeResult(unsDto bo.NodeUnsInfo) *types.TopicTreeResult {
 	}
 	result.ParentAlias = unsDto.GetParentAlias()
 	result.PathType = unsDto.GetPathType()
-	result.Type = result.PathType
 	name := PathUtil.GetName(unsDto.GetPath())
 	result.Name = name
 	result.Path = unsDto.GetPath()
@@ -307,6 +309,9 @@ func ConvertApiUpdateDto(apiDto *types.UpdateUnsDto) *types.CreateTopicDto {
 
 func CopyProperties(from any, to any) error {
 	return copier.CopyWithOption(to, from, apiConvertOptions)
+}
+func CopyPropertiesDefault(from any, to any) error {
+	return copier.Copy(to, from)
 }
 func LabelPo2Vo(po *dao.UnsLabel) (vo *types.LabelVo) {
 	vo = &types.LabelVo{ID: po.ID, LabelName: po.LabelName, CreateTime: po.CreateAt.UnixMilli()}

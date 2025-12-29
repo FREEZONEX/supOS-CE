@@ -1,161 +1,156 @@
 {
-  "Template" : [ {
-    "name" : "template2",
-    "alias" : "template2_6bfcc3ab582442a889df",
-    "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"},{\"name\":\"t1\",\"type\":\"LONG\"}]",
-    "description" : ""
-  }, {
-    "name" : "template1",
-    "alias" : "template1_ea5ef2be45724a57b1a5",
-    "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"},{\"name\":\"t1\",\"type\":\"LONG\"}]",
-    "description" : ""
-  } ],
-  "Label" : [ {
-    "name" : "label1"
-  }, {
-    "name" : "label2"
-  } ],
-  "UNS" : [ {
-    "namespace" : "folder1",
-    "alias" : "folder1_f59c16d609e744c5a546",
-    "displayName" : "",
-    "templateAlias" : "",
-    "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"},{\"name\":\"t1\",\"type\":\"LONG\"}]",
-    "description" : "",
-    "type" : "folder",
-    "children": [{
-      "namespace" : "folder1/tag2",
-      "alias" : "tag2_xxx",
-      "displayName" : "",
-      "templateAlias" : "",
-      "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"},{\"name\":\"t1\",\"type\":\"LONG\"}]",
-      "description" : "",
-      "dataType" : "1",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "mockData" : "FALSE",
-      "type" : "file",
-      "label" : "label1,label2"
-    }, {
-    "namespace" : "folder1/tag1",
-    "alias" : "tag1_xxx",
-    "displayName" : "",
-    "templateAlias" : "",
-    "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"},{\"name\":\"t1\",\"type\":\"LONG\"}]",
-    "description" : "",
-    "dataType" : "1",
-    "generateDashboard" : "FALSE",
-    "enableHistory" : "TRUE",
-    "mockData" : "FALSE",
-    "type" : "file",
-    "label" : ""
-  },{
-      "namespace" : "folder1/rel1",
-      "alias" : "rel1_xxx",
-      "displayName" : "",
-      "templateAlias" : "",
-      "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"},{\"name\":\"t1\",\"type\":\"LONG\"}]",
-      "description" : "",
-      "dataType" : "2",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "mockData" : "FALSE",
-      "type" : "file",
-      "label" : "label1,label2"
-    }, {
-      "namespace" : "folder1/rel2",
-      "alias" : "rel2_xxx",
-      "displayName" : "",
-      "templateAlias" : "",
-      "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"},{\"name\":\"t1\",\"type\":\"LONG\"}]",
-      "description" : "",
-      "dataType" : "2",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "mockData" : "FALSE",
-      "type" : "file",
-      "label" : "label1,label2"
-    },{
-      "namespace" : "folder1/cal2",
-      "alias" : "cal2_xxx",
-      "displayName" : "",
-      "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"}]",
-      "refers" : "[{\"path\":\"folder1/tag1\",\"field\":\"t0\",\"alias\":\"tag1_xxx\",\"uts\":true},{\"path\":\"folder1/tag2\",\"field\":\"t1\",\"alias\":\"tag2_xxx\"}]",
-      "expression" : "a1+a2",
-      "description" : "",
-      "dataType" : "3",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "type" : "file",
-      "label" : "label1,label2"
-    }, {
-      "namespace" : "folder1/cal1",
-      "alias" : "cal1_xxx",
-      "displayName" : "",
-      "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"}]",
-      "refers" : "[{\"path\":\"folder1/tag1\",\"field\":\"t0\",\"alias\":\"tag1_xxx\"},{\"path\":\"folder1/tag2\",\"field\":\"t1\",\"alias\":\"tag2_xxx\"}]",
-      "expression" : "a1+a2",
-      "description" : "",
-      "dataType" : "3",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "type" : "file",
-      "label" : "label1,label2"
-    },{
-      "namespace" : "folder1/agg1",
-      "alias" : "agg1_xxx",
-      "displayName" : "",
-      "refers" : "[{\"path\":\"folder1/tag1\",\"alias\":\"tag1_xxx\"},{\"path\":\"folder1/tag2\",\"alias\":\"tag2_xxx\"}]",
-      "frequency" : "5m",
-      "description" : "",
-      "dataType" : "6",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "type" : "file",
-      "label" : "label1,label2"
-    }, {
-      "namespace" : "folder1/agg2",
-      "alias" : "agg2_xxx",
-      "displayName" : "",
-      "refers" : "[{\"path\":\"folder1/tag1\",\"alias\":\"tag1_xxx\"},{\"path\":\"folder1/tag2\",\"alias\":\"tag2_xxx\"}]",
-      "frequency" : "5m",
-      "description" : "",
-      "dataType" : "6",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "type" : "file",
-      "label" : "label1,label2"
-    },{
-      "namespace" : "folder1/ref1",
-      "alias" : "ref1_xxx",
-      "displayName" : "",
-      "refers" : "[{\"path\":\"folder1/tag1\",\"alias\":\"tag1_xxx\"}]",
-      "description" : "",
-      "dataType" : "7",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "type" : "file",
-      "label" : "label1,label2"
-    }, {
-      "namespace" : "folder1/ref2",
-      "alias" : "ref2_xxx",
-      "displayName" : "",
-      "refers" : "[{\"path\":\"folder1/tag1\",\"alias\":\"tag1_xxx\"}]",
-      "description" : "",
-      "dataType" : "7",
-      "generateDashboard" : "FALSE",
-      "enableHistory" : "TRUE",
-      "type" : "file",
-      "label" : "label1,label2"
-    }]
-  },
-  {
-    "namespace" : "folder2",
-    "alias" : "folder2_f59c16d609e744c5a546",
-    "displayName" : "",
-    "templateAlias" : "",
-    "fields" : "[{\"name\":\"t0\",\"type\":\"INTEGER\"},{\"name\":\"t1\",\"type\":\"LONG\"}]",
-    "description" : "",
-    "type" : "folder"
-  }]
+  "notes": "type:folder|file,topicType:STATE|ACTION|METRIC,dataType:TEMPLATE_TYPE|TIME_SEQUENCE_TYPE|RELATION_TYPE|CALCULATION_REAL_TYPE|CALCULATION_HIST_TYPE|MERGE_TYPE|CITING_TYPE|JSONB_TYPE|,fields.type:INTEGER|LONG|FLOAT|DOUBLE|BOOLEAN|DATETIME|STRING",
+  "Label": [{"name": "debug"},{"name": "dev"}],
+  "Template": [],
+  "UNS": [
+    {
+      "name": "v1",
+      "type": "path",
+      "children": [
+        {
+          "name": "Plant_Name",
+          "type": "path",
+          "children": [
+            {
+              "name": "SMT-Area-1",
+              "type": "path",
+              "children": [
+                {
+                  "name": "SMT-Line-1",
+                  "type": "path",
+                  "children": [
+                    {
+                      "name": "Printer-Cell",
+                      "type": "path",
+                      "children": [
+                        {
+                          "name": "Printer01",
+                          "type": "path",
+                          "children": [
+                            {
+                              "name": "State",
+                              "type": "path",
+                              "topicType": "STATE",
+                              "children": [
+                                {
+                                  "name": "current_job",
+                                  "type": "topic",
+                                  "topicType": "STATE",
+                                  "dataType": "RELATION_TYPE",
+                                  "generateDashboard": "FALSE",
+                                  "enableHistory": "TRUE",
+                                  "mockData": "FALSE",
+                                  "fields": [
+                                    {
+                                      "name": "job_id",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "product_id",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "planned_quantity",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "completed_quantity",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "status",
+                                      "type": "LONG"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "alarm_status",
+                                  "type": "topic",
+                                  "topicType": "STATE",
+                                  "dataType": "JSONB_TYPE",
+                                  "generateDashboard": "FALSE",
+                                  "enableHistory": "TRUE",
+                                  "mockData": "FALSE"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Action",
+                              "type": "path",
+                              "topicType": "ACTION",
+                              "children": [
+                                {
+                                  "name": "start_job",
+                                  "type": "topic",
+                                  "topicType": "ACTION",
+                                  "dataType": "JSONB_TYPE",
+                                  "generateDashboard": "FALSE",
+                                  "enableHistory": "FALSE",
+                                  "mockData": "FALSE"
+                                },
+                                {
+                                  "name": "stop_job",
+                                  "type": "topic",
+                                  "topicType": "ACTION",
+                                  "dataType": "JSONB_TYPE",
+                                  "generateDashboard": "FALSE",
+                                  "enableHistory": "FALSE",
+                                  "mockData": "FALSE"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Metric",
+                              "type": "path",
+                              "topicType": "METRIC",
+                              "children": [
+                                {
+                                  "name": "board_cycle_time",
+                                  "type": "topic",
+                                  "topicType": "METRIC",
+                                  "dataType": "TIME_SEQUENCE_TYPE",
+                                  "generateDashboard": "TRUE",
+                                  "enableHistory": "TRUE",
+                                  "mockData": "FALSE",
+                                  "fields": [
+                                    {
+                                      "name": "cycle_time_ms",
+                                      "type": "LONG"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "boards_count",
+                                  "type": "topic",
+                                  "topicType": "METRIC",
+                                  "dataType": "TIME_SEQUENCE_TYPE",
+                                  "generateDashboard": "TRUE",
+                                  "enableHistory": "TRUE",
+                                  "mockData": "FALSE",
+                                  "fields": [
+                                    {
+                                      "name": "good_count",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "ng_count",
+                                      "type": "LONG"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

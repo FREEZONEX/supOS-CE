@@ -40,13 +40,12 @@ func (l *UnsTemplateService) UpdateFieldsAndDesc(ctx context.Context, req *types
 		return
 	}
 	unsDto := &types.CreateTopicDto{
-		PathType: uns.PathType,
-		Id:       uns.Id,
-		Alias:    req.Alias,
-		Fields:   req.Fields,
-	}
-	if req.Description != nil {
-		unsDto.Description = req.Description
+		PathType:    uns.PathType,
+		Id:          uns.Id,
+		Alias:       req.Alias,
+		Fields:      req.Fields,
+		JsonFields:  req.JsonFields,
+		Description: req.Description,
 	}
 	idRs := l.unsAddService.CreateModelInstance(ctx, unsDto)
 	if idRs != nil {

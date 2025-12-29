@@ -932,12 +932,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: suposunsuns.SearchExternalTreeHandler(serverCtx),
 				},
 				{
-					// 删除指定路径下的所有文件夹和文件
-					Method:  http.MethodDelete,
-					Path:    "/uns",
-					Handler: suposunsuns.RemoveModelOrInstanceHandler(serverCtx),
-				},
-				{
 					// 批量创建文件夹和文件
 					Method:  http.MethodPost,
 					Path:    "/uns/batch",

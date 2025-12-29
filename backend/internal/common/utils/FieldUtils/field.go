@@ -58,11 +58,6 @@ func ValidateFields(fields []*types.FieldDefine, checkSysField bool) error {
 		f.Name = name
 
 		if f.IsSystemField() {
-			if checkSysField {
-				if _, ok := constants.SystemFields[name]; !ok {
-					return fmt.Errorf("field name '%s' starts with '_' but is not a valid system field", name)
-				}
-			}
 			continue
 		}
 

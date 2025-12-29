@@ -2,7 +2,9 @@ package service
 
 import (
 	"backend/internal/common/I18nUtils"
+	"backend/internal/common/dto/grafana"
 	"backend/internal/common/utils/grafanautil"
+	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	"backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"context"
@@ -35,7 +37,18 @@ func (s *DashboardService) Create(ctx context.Context, req *relationDB.Dashboard
 	if req.Type == 1 {
 		// 构建 Dashboard JSON, 只构建 dashboard 内部的对象
 		template := grafanautil.LoadTemplate(ctx, "templates/dashboard-blank.json")
+
+		pgParams := grafana.GrafanaDashboardParam{
+			UID:   req.ID,
+			Title: req.Name,
+		}
 		params := make(map[string]interface{})
+		er := UnsConverter.CopyPropertiesDefault(pgParams, &params)
+		if er != nil || len(params) == 0 {
+			params["uid"] = req.ID
+			params["title"] = req.Name
+			params["version"] = 0
+		}
 		dashboardJson := grafanautil.FormatTemplateMap(template, params)
 		s.logger.Info(">>>>>>>>>>>>>>>dashboardJson :{}", dashboardJson)
 

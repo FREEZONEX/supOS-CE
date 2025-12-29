@@ -2,24 +2,18 @@ package service
 
 import (
 	"backend/internal/common/constants"
-	"backend/internal/common/dto"
 	"backend/internal/common/errors"
 	"backend/internal/common/event"
-	"backend/internal/common/utils/fuxautil"
 	"backend/internal/common/utils/grafanautil"
-	"backend/internal/logic/supos/uns/dashboard/exporter"
-	"backend/internal/logic/supos/uns/dashboard/importer"
 	"backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
 	"encoding/json"
-	"os"
 	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
-	"gorm.io/gorm"
 )
 
 // DashboardService Dashboard 业务逻辑 - 主要负责启动初始化、事件处理和导入导出等后台任务
@@ -165,16 +159,17 @@ func (s *DashboardService) OnEventCreateDashboard(event *event.CreateDashboardEv
 	}
 
 	// 创建引用关系
-	ref := &relationDB.DashboardRefModel{
-		DashboardID: event.UUID,
-		UnsAlias:    event.Name, // 假设 alias 和 name 相同
-		CreateAt:    now,
-	}
+	refers := base.Map[string, *relationDB.DashboardRefModel](event.UnsAlias, func(unsAlias string) *relationDB.DashboardRefModel {
+		return &relationDB.DashboardRefModel{
+			DashboardID: event.UUID,
+			UnsAlias:    unsAlias,
+		}
+	})
 	dashboardRefMapper := relationDB.DashboardRefMapper{}
-	return dashboardRefMapper.Insert(db, ref)
+	return dashboardRefMapper.SaveBatch(db, refers)
 }
 
-// DataExport 导出 Dashboard 数据
+/*// DataExport 导出 Dashboard 数据
 func (s *DashboardService) DataExport(ctx context.Context, db *gorm.DB, exportParam *dto.DashboardExportParam) (string, error) {
 	exportCtx := &exporter.DashboardExportContext{}
 
@@ -301,3 +296,4 @@ func (s *DashboardService) writeImportErrorFile(dataImporter *importer.Dashboard
 	// 这里我们假设 WriteError 内部处理文件创建。
 	return dataImporter.WriteError(s.fileRootPath)
 }
+*/

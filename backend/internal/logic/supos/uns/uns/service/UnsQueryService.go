@@ -1,6 +1,7 @@
 package service
 
 import (
+	"backend/internal/adapters/msg_consumer"
 	"backend/internal/common/constants"
 	"backend/internal/common/serviceApi"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
@@ -30,7 +31,7 @@ func init() {
 	spring.RegisterLazy[*UnsQueryService](func() *UnsQueryService {
 		return &UnsQueryService{
 			log:        logx.WithContext(context.Background()),
-			defService: spring.GetBean[serviceApi.IUnsDefinitionService](),
+			defService: spring.GetBean[*msg_consumer.UnsDefinitionService](),
 		}
 	})
 }

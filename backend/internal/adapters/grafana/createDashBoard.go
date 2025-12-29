@@ -57,20 +57,25 @@ func (g *GrafanaEventHandler) createIndividualDashboards(ctx context.Context, to
 // createDashboardForTopic 为单个主题创建仪表板
 func (g *GrafanaEventHandler) createDashboardForTopic(ctx context.Context, dto *types.CreateTopicDto, ds serviceApi.DataSourceProperties, jdbcType types.SrcJdbcType, fromImport bool, username string) error {
 	columns := grafanautil.Fields2Columns(jdbcType, dto.Fields)
-	title := dto.Alias
+	title := dto.Path
 	schema, table := g.extractSchemaAndTable(dto.GetTable(), ds.Schema)
 	tagNameCondition := g.buildTagNameCondition(dto)
 
 	g.log.Infof("创建 Grafana 仪表板 - 列：%s, 标题：%s, 模式：%s, 表：%s, 标签条件：%s, fromImport? %v",
 		columns, title, schema, table, tagNameCondition, fromImport)
 
-	uuid, er := grafanautil.CreateDashboard(ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
+	dashId := grafanautil.GetDashboardUUIDByAlias(dto.Alias)
+	er := grafanautil.CreateDashboard(dashId, ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
 	if er != nil {
 		return er
 	}
 	// 非导入模式下发布事件
 	if !fromImport {
-		spring.PublishEvent(event.NewCreateDashboardEvent(ctx, uuid, title, title, username))
+		desc := base.P2v(dto.Description)
+		if len(desc) == 0 {
+			desc = dto.Path
+		}
+		spring.PublishEvent(event.NewCreateDashboardEvent(ctx, []string{dto.Alias}, dashId, title, desc, username))
 	}
 
 	return nil
@@ -110,7 +115,10 @@ func (g *GrafanaEventHandler) createCompositeDashboard(ctx context.Context, jdbc
 		g.log.Error("创建时序面板失败", err.Error())
 		return
 	}
-	spring.PublishEvent(event.NewCreateDashboardEvent(ctx, uuid, dashboardName, "组合仪表板", username))
+	unsAliasList := base.Map[*types.CreateTopicDto, string](topics, func(e *types.CreateTopicDto) string {
+		return e.Alias
+	})
+	spring.PublishEvent(event.NewCreateDashboardEvent(ctx, unsAliasList, uuid, dashboardName, "组合仪表板", username))
 }
 
 // getTempName 获取临时名称

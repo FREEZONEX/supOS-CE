@@ -20,9 +20,43 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 )
 
-func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter io.Writer) {
+func (l *UnsImportExportService) ImportUns(fileName string, fileSize int64, respWriter io.Writer) (w io.Writer, waiter func()) {
+
+	l.log.Infof("UNS导入: %s (size=%d)\n", fileName, fileSize)
+	//
+	pipeReader, pipeWriter := io.Pipe()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		//
+		l.doImport(fileName, fileSize, pipeReader, respWriter)
+		wg.Done()
+		_, _ = io.Copy(io.Discard, pipeReader) //防止坏的文件或其他意外让json没有读完导致外面的 w.Write()卡死
+	}()
+	return &noBufferWriter{tar: pipeWriter}, func() {
+		wg.Wait()
+	}
+}
+func (l *UnsImportExportService) ImportUnsDirect(fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
+	l.log.Infof("UNS导入ByReader: %s (size=%d)\n", fileName, fileSize)
+	l.doImport(fileName, fileSize, reader, respWriter)
+}
+
+type noBufferWriter struct {
+	tar io.Writer
+}
+
+func (fr *noBufferWriter) Write(p []byte) (int, error) {
+	return fr.tar.Write(p)
+}
+func (fr *noBufferWriter) ReadFrom(r io.Reader) (n int64, err error) {
+	return io.Copy(struct{ io.Writer }{fr.tar}, r)
+}
+
+func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeReader io.Reader, respWriter io.Writer) {
 	var errFile *os.File
 	var errBufWriter *bufio.Writer
 	errFileRelativePath := ""
@@ -42,7 +76,7 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 		}
 		var tarPath string
 		var err error
-		errFileRelativePath = filepath.Join(constants.ImportErr, fmt.Sprintf("err_%s_%s", datetimeutils.DateSimple(), file.FileName))
+		errFileRelativePath = filepath.Join(constants.ImportErr, fmt.Sprintf("err_%s_%s", datetimeutils.DateSimple(), fileName))
 		tarPath = filepath.Join(fileutil.GetFileRootPath(), errFileRelativePath)
 
 		_ = os.MkdirAll(filepath.Dir(tarPath), os.ModeDir)
@@ -56,16 +90,15 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 		}
 		return errFile != nil
 	}
-	l.log.Infof("UNS导入: %s (size=%d)\n", file.FileName, file.Size)
-	//
-	FILE_SIZE := file.Size
+
+	FILE_SIZE := fileSize
 	var TOTAL_SIZE = float64(FILE_SIZE)
 	var prevReadSize int64 = 0
 	var progress float64 = 0
 	prevTask := ""
-	//
+
 	countUns, countErr := 0, 0
-	er := jsonstream.DecodeJsonTreeToFlat(file.Reader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
+	er := jsonstream.DecodeJsonTreeToFlat(pipeReader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
 		if prevReadSize != readSize {
 			if prevReadSize > readSize {
 				progress += 20 * float64(prevReadSize-readSize) / TOTAL_SIZE
@@ -97,12 +130,18 @@ func (l *UnsImportExportService) ImportUns(file *types.MultipartFile, respWriter
 				l.log.Error("创建标签失败", er)
 			}
 		case Template, UNS:
-			countUns += len(nodes)
-			if propName == Template {
+			if propName == UNS {
+				var insertTemplates []*types.CreateTopicDto
 				for _, n := range nodes {
-					n.PathType = constants.PathTypeTemplate
+					if template := n.Template; template != nil {
+						insertTemplates = append(insertTemplates, template)
+					}
+				}
+				if len(insertTemplates) > 0 {
+					nodes = append(insertTemplates, nodes...)
 				}
 			}
+			countUns += len(nodes)
 			errTipMap := l.unsAddService.CreateModelAndInstancesInner(context.Background(), bo.CreateModelInstancesArgs{
 				Topics:     nodes,
 				FromImport: true,
@@ -184,7 +223,7 @@ func logErrImports(errTipMap map[string]string, nodes []*types.CreateTopicDto, f
 	for k, v := range errTipMap {
 		if n, er := integerutil.ExtractTailNumbers(k); er == nil {
 			i := int(n)
-			fileData := vo2DataVo(nodes[i])
+			fileData := uns2DataVo(nil, nodes[i])
 			fileData.Error = v
 			indexMap[i] = fileData
 		}

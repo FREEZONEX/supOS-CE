@@ -2,12 +2,12 @@ package timescaledb
 
 import (
 	"backend/internal/adapters/postgresql"
-	"backend/internal/common"
 	"backend/internal/common/serviceApi"
 	"backend/internal/types"
 	"backend/share/base"
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,162 +17,125 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type tableProcessInfo struct {
-	tempTableName string
-	data          []map[string]string
-	def           *types.CreateTopicDto
-}
+var _smallBatchSize = intEnv("OS_SMALL_SIZE", 500)
 
-func (t *tableProcessInfo) GetTableName() string {
-	return t.def.GetTable()
+func intEnv(key string, def int) int {
+	if val, ok := os.LookupEnv(key); ok {
+		if parsed, err := strconv.Atoi(strings.TrimSpace(val)); err == nil {
+			return parsed
+		}
+	}
+	return def
 }
 
 func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsData []serviceApi.UnsData) error {
 	if len(unsData) == 0 {
 		return nil
 	}
-	// 获取单个连接
-	ctx := context.Background()
-	conn, err := dbPool.Acquire(ctx)
-	if err != nil {
-		logPoolError("persistence", time.Time{}, dbPool, "getConn", err)
-		return fmt.Errorf("获取数据库连接失败: %v", err)
-	}
-	defer conn.Release()
-
 	// 准备表处理信息
-
-	tableInfoMap := make(map[string]*tableProcessInfo, len(unsData))
-	for _, data := range unsData {
-		if len(data.Data) == 0 {
-			continue
-		}
-		uns := data.Uns
-		tagField := uns.GetTbFieldName()
-		if tagField != "" {
-			for _, da := range data.Data {
-				da[tagField] = strconv.FormatInt(uns.Id, 10)
-			}
-		}
-		tableName := uns.GetTable()
-		tableInfo, ok := tableInfoMap[tableName]
-		if !ok {
-			tableInfo = &tableProcessInfo{
-				tempTableName: fmt.Sprintf("tm_%s_%d", strings.ToLower(tableName), common.NextId()),
-				data:          data.Data,
-				def:           uns,
-			}
-			tableInfoMap[tableName] = tableInfo
-		} else {
-			tableInfo.data = append(tableInfo.data, data.Data...)
-		}
-	}
-
+	tableInfoMap := postgresql.GetTableDataMap(unsData)
 	if len(tableInfoMap) == 0 {
 		return nil
 	}
-	tableInfos := base.MapValues(tableInfoMap)
+	smallData := make([]serviceApi.UnsData, 0, batchSize)
+	bigData := make([]serviceApi.UnsData, 0, batchSize)
+	for _, tableInfo := range tableInfoMap {
+		if len(tableInfo.Data) < _smallBatchSize {
+			smallData = append(smallData, tableInfo)
+		} else {
+			bigData = append(bigData, tableInfo)
+		}
+	}
+	// 获取单个连接
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	conn, err := dbPool.Acquire(ctx)
+	cancel()
+	if conn != nil {
+		defer conn.Release()
+	}
+	if err != nil {
+		logPoolError("persistence", time.Time{}, dbPool, "getConn", err)
+		return fmt.Errorf("获取数据库连接失败: %v", err)
+	} else if conn == nil {
+		return fmt.Errorf("conn is nil")
+	}
+	logx.Debugf("tsdb persistence: %d , %d\n", len(smallData), len(bigData))
 	var allErrors []string
-
-	// 步骤1: 在一个SendBatch中创建所有临时表
-	if err := createAllTempTables(conn, defaultSchema, tableInfos, 0); err != nil {
-		allErrors = append(allErrors, fmt.Sprintf("创建临时表失败: %v", err))
-		return fmt.Errorf("处理失败: %s", strings.Join(allErrors, "; "))
+	if len(smallData) > 0 {
+		allErrors = postgresql.SaveBatch(conn, defaultSchema, 200, smallData)
 	}
 
-	// 步骤2: 循环每个表，使用CopyFrom导入数据到对应的临时表
-	for _, tableInfo := range tableInfos {
-		if err := copyDataToTempTable(conn, batchSize, tableInfo); err != nil {
-			allErrors = append(allErrors, fmt.Sprintf("表 %s 数据导入失败: %v", tableInfo.GetTableName(), err))
-			if strings.Contains(err.Error(), "42703") { //column \"xx\" does not exist (SQLSTATE 42703)
-				logx.Errorf("尝试重建表：%s | %v", tableInfo.GetTableName(), err)
-				uns := []*types.CreateTopicDto{tableInfo.def}
-				tInfoMap, _ := postgresql.ListTableInfos(conn, uns)
-				postgresql.BatchCreateTables(conn, defaultSchema, uns, tInfoMap) //尝试重建表
+	if len(bigData) > 0 {
+		for _, tableInfo := range bigData {
+			er := processSingleTableInTx(conn, tableInfo, batchSize)
+			if er != nil {
+				allErrors = append(allErrors, er.Error())
 			}
 		}
 	}
-
-	// 如果有表的数据导入失败，我们可能不想继续合并操作
-	if len(allErrors) > 0 {
-		return fmt.Errorf("部分表数据导入失败: %s", strings.Join(allErrors, "; "))
-	}
-
-	// 步骤3: 在一个SendBatch中执行所有表的合并操作
-	if err := mergeAllTables(conn, tableInfos); err != nil {
-		allErrors = append(allErrors, fmt.Sprintf("合并数据失败: %v", err))
-	}
-
 	if len(allErrors) > 0 {
 		return fmt.Errorf("处理完成，但有错误: %s", strings.Join(allErrors, "; "))
 	}
-
 	return nil
 }
+func processSingleTableInTx(conn *pgxpool.Conn, tableInfo serviceApi.UnsData, batchSize int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*15)
+	defer cancel()
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
 
-func createAllTempTables(conn *pgxpool.Conn, defaultSchema string, tableInfos []*tableProcessInfo, retry int) error {
-	batch := &pgx.Batch{}
-
-	// 为每个表添加创建临时表的操作
-	for _, tableInfo := range tableInfos {
-		// 创建临时表
-		createSQL := fmt.Sprintf(`CREATE TEMP TABLE %s (LIKE "%s" EXCLUDING INDEXES)`, tableInfo.tempTableName, tableInfo.GetTableName())
-		logx.Debug("创建临时表:", retry, createSQL)
-		batch.Queue(createSQL)
+	// 1. 创建临时表 (此临时表仅在此事务内存在)
+	tableName := tableInfo.Uns.GetTable()
+	tempTableName := fmt.Sprintf("tmp_%s_%d", strings.ToLower(tableName), time.Now().UnixNano())
+	createTmpTableSQL := fmt.Sprintf(`CREATE TEMP TABLE %s (LIKE "%s" EXCLUDING INDEXES)  ON COMMIT DROP`, tempTableName, tableName)
+	_, err = tx.Exec(ctx, createTmpTableSQL)
+	if err != nil {
+		return err
 	}
 
-	// 执行批次
-	br := conn.SendBatch(context.Background(), batch)
-	defer br.Close()
+	// 2. COPY数据到临时表
+	err = copyDataToTempTable(ctx, tx, batchSize, tableInfo, tempTableName)
+	if err != nil {
+		return err
+	}
 
-	// 检查所有操作结果
-	var retryTables []*tableProcessInfo
-	for i := 0; i < batch.Len(); i++ {
-		_, err := br.Exec()
-		if err != nil {
-			if retry > 0 {
-				return fmt.Errorf("【%d】批次操作 %d 失败: %v", retry, i, err)
-			} else {
-				retryTables = append(retryTables, tableInfos[i])
-			}
-		}
+	// 3. 从临时表合并到主表
+	err = mergeFromTempTable(ctx, tx, tableInfo.Uns, tempTableName)
+	if err != nil {
+		return err
 	}
-	if len(retryTables) > 0 {
-		br.Close()
-		uns := base.Map[*tableProcessInfo, *types.CreateTopicDto](retryTables, func(e *tableProcessInfo) *types.CreateTopicDto {
-			return e.def
-		})
-		tableInfoMap, _ := postgresql.ListTableInfos(conn, uns)
-		postgresql.BatchCreateTables(conn, defaultSchema, uns, tableInfoMap)
-		return createAllTempTables(conn, defaultSchema, retryTables, retry+1)
-	}
-	return br.Close()
+
+	// 4. 提交事务，提交时临时表自动销毁
+	return tx.Commit(ctx)
 }
 
-func copyDataToTempTable(conn *pgxpool.Conn, batchSize int, tableInfo *tableProcessInfo) error {
-	if len(tableInfo.data) == 0 {
+func copyDataToTempTable(ctx context.Context, conn pgx.Tx, batchSize int, tableInfo serviceApi.UnsData, tempTableName string) error {
+	if len(tableInfo.Data) == 0 {
 		return nil
 	}
-
+	uns, data := tableInfo.Uns, tableInfo.Data
 	// 构建列名（排除自动生成的字段）
-	var columns = base.Map(tableInfo.def.Fields, func(e *types.FieldDefine) string {
+	var columns = base.Map(uns.Fields, func(e *types.FieldDefine) string {
 		return e.Name
 	})
 
 	// 分批处理大数据量
-	for i := 0; i < len(tableInfo.data); i += batchSize {
+	for i := 0; i < len(data); i += batchSize {
 		end := i + batchSize
-		if end > len(tableInfo.data) {
-			end = len(tableInfo.data)
+		if end > len(data) {
+			end = len(data)
 		}
 
-		batch := tableInfo.data[i:end]
-		batch = postgresql.DeduplicationById(tableInfo.def, batch)
+		batch := data[i:end]
+		batch = postgresql.DeduplicationById(uns, batch)
 		// 准备数据行
 		rows := make([][]interface{}, len(batch))
 		for j, record := range batch {
 			row := make([]interface{}, len(columns))
-			for k, f := range tableInfo.def.Fields {
+			for k, f := range uns.Fields {
 				v, has := record[f.Name]
 				if !has {
 					row[k] = f.GetType().DefaultValue()
@@ -189,18 +152,18 @@ func copyDataToTempTable(conn *pgxpool.Conn, batchSize int, tableInfo *tableProc
 			}
 			rows[j] = row
 		}
-		//logx.Debugf("%s: rows: %+v", tableInfo.def.Alias, rows)
+		//logx.Debugf("%s: rows: %+v", uns.Alias, rows)
 
 		// 执行COPY
 		_, err := conn.CopyFrom(
-			context.Background(),
-			pgx.Identifier{tableInfo.tempTableName},
+			ctx,
+			pgx.Identifier{tempTableName},
 			columns,
 			pgx.CopyFromRows(rows),
 		)
 
 		if err != nil {
-			return fmt.Errorf("COPY数据到临时表 %s 失败: %v", tableInfo.tempTableName, err)
+			return fmt.Errorf("COPY数据到临时表 %s 失败: %v", tempTableName, err)
 		}
 
 		//p.log.Debugf("表 %s 批次 %d-%d 数据导入成功，数据量: %d",
@@ -210,50 +173,32 @@ func copyDataToTempTable(conn *pgxpool.Conn, batchSize int, tableInfo *tableProc
 	return nil
 }
 
-func mergeAllTables(conn *pgxpool.Conn, tableInfos []*tableProcessInfo) error {
-	batch := &pgx.Batch{}
+func mergeFromTempTable(ctx context.Context, conn pgx.Tx, uns *types.CreateTopicDto, tempTableName string) error {
+	primaryFields := uns.GetPrimaryField()
+	// 合并数据SQL
+	mergeSQL := &base.StringBuilder{}
+	mergeSQL.Grow(128 + len(primaryFields)*10)
+	mergeSQL.Append(`INSERT INTO "`).Append(uns.GetTable()).
+		Append(`"AS t SELECT *  FROM `).Append(tempTableName)
 
-	// 为每个表添加合并操作
-	for _, tableInfo := range tableInfos {
-		primaryFields := tableInfo.def.GetPrimaryField()
-		// 合并数据SQL
-		mergeSQL := &base.StringBuilder{}
-		mergeSQL.Grow(128 + len(primaryFields)*10)
-		mergeSQL.Append(`INSERT INTO "`).Append(tableInfo.GetTableName()).
-			Append(`" SELECT *  FROM `).Append(tableInfo.tempTableName)
-
-		if len(primaryFields) > 0 {
-			mergeSQL.Append(` ON CONFLICT (`)
-			for i, f := range primaryFields {
-				if i > 0 {
-					mergeSQL.Append(`, `)
-				}
-				mergeSQL.Append(`"`).Append(f).Append(`"`)
+	if len(primaryFields) > 0 {
+		mergeSQL.Append(` ON CONFLICT (`)
+		for i, f := range primaryFields {
+			if i > 0 {
+				mergeSQL.Append(`, `)
 			}
-			mergeSQL.Append(`)`)
-			if len(tableInfo.def.Fields) > len(primaryFields) {
-				mergeSQL.Append(" DO UPDATE SET ")
-				postgresql.GetUpdateColumns(tableInfo.def, mergeSQL)
-			} else {
-				mergeSQL.Append(" DO NOTHING ")
-			}
+			mergeSQL.Append(`"`).Append(f).Append(`"`)
 		}
-		batch.Queue(mergeSQL.String())
-	}
-
-	// 执行批次
-	br := conn.SendBatch(context.Background(), batch)
-
-	// 检查所有操作结果
-	for i := 0; i < batch.Len(); i++ {
-		_, err := br.Exec()
-		if err != nil {
-			return fmt.Errorf("合并操作 %d (表 %s) 失败: %v, SQL: %v",
-				i, tableInfos[i].GetTableName(), err, batch.QueuedQueries[i].SQL)
+		mergeSQL.Append(`)`)
+		if len(uns.Fields) > len(primaryFields) {
+			mergeSQL.Append(" DO UPDATE SET ")
+			postgresql.GetUpdateColumns(uns, mergeSQL)
+		} else {
+			mergeSQL.Append(" DO NOTHING ")
 		}
 	}
-
-	return br.Close()
+	_, er := conn.Exec(ctx, mergeSQL.String())
+	return er
 }
 func logPoolError(name string, start time.Time, pool *pgxpool.Pool, sql string, err error) {
 	if !start.IsZero() {

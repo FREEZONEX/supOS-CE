@@ -48,9 +48,11 @@ func NewUnsTopologyService() *UnsTopologyService {
 	return s
 }
 
+const needFlush = runtime.GOOS != "windows"
+
 // startRefreshTask starts background goroutine to refresh topology statistics periodically
 func (s *UnsTopologyService) startRefreshTask() {
-	if runtime.GOOS == "windows" {
+	if !needFlush {
 		logx.Info("Windows environment detected, skipping topology refresh task")
 		return
 	}
@@ -80,6 +82,9 @@ func (s *UnsTopologyService) startRefreshTask() {
 
 // refresh collects topology statistics and updates global data
 func (s *UnsTopologyService) refresh() {
+	if !needFlush || !s.wsService.HasTopologies() {
+		return
+	}
 	ctx := context.Background()
 	db := dao.GetDb(ctx)
 
@@ -213,9 +218,7 @@ func (s *UnsTopologyService) GetLastMsg() []byte {
 
 // UpdateTopologyState updates a specific node's state
 func (s *UnsTopologyService) UpdateTopologyState(node string, eventCode string) {
-	s.mu.Lock()
 	s.globalTopologyDirty = true
-	s.mu.Unlock()
 
 	logx.Infof("topology state update requested for node=%s, eventCode=%s", node, eventCode)
 	s.refresh()
@@ -223,9 +226,7 @@ func (s *UnsTopologyService) UpdateTopologyState(node string, eventCode string) 
 
 // RefreshTopology triggers an immediate topology refresh
 func (s *UnsTopologyService) RefreshTopology() {
-	s.mu.Lock()
 	s.globalTopologyDirty = true
-	s.mu.Unlock()
 
 	logx.Debug("topology refresh requested")
 	s.refresh()
@@ -271,9 +272,6 @@ func (s *UnsTopologyService) OnEventRemoveTopicsEvent(e *event.RemoveTopicsEvent
 
 // RemoveFromGlobalTopologyData removes a topic from ICMP states
 func (s *UnsTopologyService) RemoveFromGlobalTopologyData(topic string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	if s.globalTopologyData == nil {
 		return
 	}
@@ -294,9 +292,6 @@ func (s *UnsTopologyService) RemoveFromGlobalTopologyData(topic string) {
 // OnEventMountStatusChangeEvent handles mount status change events
 func (s *UnsTopologyService) OnEventMountStatusChangeEvent(e *mount.MountStatusChangeEvent) error {
 	logx.Info("mount status change detected")
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if s.globalTopologyData != nil {
 		ctx := context.Background()

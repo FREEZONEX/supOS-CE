@@ -1233,7 +1233,6 @@
                       "lastUpdateTime",
                       "countChildren",
                       "pathType",
-                      "type",
                       "dataType",
                       "parentDataType",
                       "name",
@@ -1268,7 +1267,6 @@
                             "lastUpdateTime",
                             "countChildren",
                             "pathType",
-                            "type",
                             "dataType",
                             "parentDataType",
                             "name",
@@ -1359,9 +1357,6 @@
                             },
                             "templateAlias": {
                               "type": "string"
-                            },
-                            "type": {
-                              "type": "integer"
                             },
                             "updateAt": {
                               "type": "integer"
@@ -1498,9 +1493,6 @@
                       },
                       "templateAlias": {
                         "type": "string"
-                      },
-                      "type": {
-                        "type": "integer"
                       },
                       "updateAt": {
                         "type": "integer"
@@ -3365,76 +3357,6 @@
         }
       }
     },
-    "/inter-api/supos/uns": {
-      "delete": {
-        "consumes": [
-          "application/x-www-form-urlencoded"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "删除指定路径下的所有文件夹和文件",
-        "operationId": "supos/Uns/UnsRemoveModelOrInstance",
-        "parameters": [
-          {
-            "type": "integer",
-            "name": "id",
-            "in": "formData",
-            "required": true
-          },
-          {
-            "type": "boolean",
-            "default": true,
-            "name": "withFlow",
-            "in": "formData",
-            "required": true
-          },
-          {
-            "type": "boolean",
-            "default": true,
-            "name": "withDashboard",
-            "in": "formData",
-            "required": true
-          },
-          {
-            "type": "boolean",
-            "name": "cascade",
-            "in": "formData",
-            "allowEmptyValue": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {
-                  "type": "object",
-                  "required": [
-                    "refs"
-                  ],
-                  "properties": {
-                    "refs": {
-                      "type": "integer"
-                    }
-                  }
-                },
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/inter-api/supos/uns/alarm/confirm": {
       "post": {
         "produces": [
@@ -4449,7 +4371,6 @@
                       "lastUpdateTime",
                       "countChildren",
                       "pathType",
-                      "type",
                       "dataType",
                       "parentDataType",
                       "name",
@@ -4484,7 +4405,6 @@
                             "lastUpdateTime",
                             "countChildren",
                             "pathType",
-                            "type",
                             "dataType",
                             "parentDataType",
                             "name",
@@ -4575,9 +4495,6 @@
                             },
                             "templateAlias": {
                               "type": "string"
-                            },
-                            "type": {
-                              "type": "integer"
                             },
                             "updateAt": {
                               "type": "integer"
@@ -4714,9 +4631,6 @@
                       },
                       "templateAlias": {
                         "type": "string"
-                      },
-                      "type": {
-                        "type": "integer"
                       },
                       "updateAt": {
                         "type": "integer"
@@ -8637,6 +8551,59 @@
                     }
                   }
                 },
+                "jsonFields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {},
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
                 "modelDescription": {
                   "type": "string"
                 }
@@ -10986,7 +10953,6 @@
                       "lastUpdateTime",
                       "countChildren",
                       "pathType",
-                      "type",
                       "dataType",
                       "parentDataType",
                       "name",
@@ -11021,7 +10987,6 @@
                             "lastUpdateTime",
                             "countChildren",
                             "pathType",
-                            "type",
                             "dataType",
                             "parentDataType",
                             "name",
@@ -11112,9 +11077,6 @@
                             },
                             "templateAlias": {
                               "type": "string"
-                            },
-                            "type": {
-                              "type": "integer"
                             },
                             "updateAt": {
                               "type": "integer"
@@ -11251,9 +11213,6 @@
                       },
                       "templateAlias": {
                         "type": "string"
-                      },
-                      "type": {
-                        "type": "integer"
                       },
                       "updateAt": {
                         "type": "integer"
@@ -12394,7 +12353,7 @@
       }
     }
   },
-  "x-date": "2025-12-24 15:38:04",
+  "x-date": "2025-12-27 15:42:59",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

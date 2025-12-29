@@ -1,6 +1,6 @@
 // ThemeContext.js
 import { type ReactNode, createContext, useContext } from 'react';
-import useUnsGlobalWs from '@/pages/uns/useUnsGlobalWs.ts';
+// import useUnsGlobalWs from '@/pages/uns/useUnsGlobalWs.ts';
 
 interface UnsContextType {
   topologyData: { [key: string]: any };
@@ -10,7 +10,8 @@ interface UnsContextType {
 const UnsContext = createContext<UnsContextType | undefined>(undefined);
 
 export const UnsContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { topologyData = {}, mountStatus = {} } = useUnsGlobalWs();
+  const { topologyData = {}, mountStatus = {} } = {};
+  // const { topologyData = {}, mountStatus = {} } = useUnsGlobalWs;
 
   return <UnsContext.Provider value={{ topologyData, mountStatus }}>{children}</UnsContext.Provider>;
 };

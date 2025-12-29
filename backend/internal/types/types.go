@@ -202,7 +202,7 @@ type CreateTopicDto struct {
 	Description                   *string                   `json:"description,optional,omitzero" validate:"max=255"`
 	ModelId                       *int64                    `json:"modelId,string,optional,omitempty"`
 	ModelAlias                    *string                   `json:"modelAlias,optional,omitempty"`
-	Template                      string                    `json:"-"`
+	Template                      *CreateTopicDto           `json:"-"`
 	ParentAlias                   *string                   `json:"parentAlias,optional,omitempty"`
 	ParentId                      *int64                    `json:"parentId,string,optional,omitempty"`
 	DataType                      *int16                    `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"` // Data type and fields
@@ -1243,7 +1243,6 @@ type TopicTreeResult struct {
 	LastUpdateTime int64                  `json:"lastUpdateTime,omitempty"`
 	CountChildren  *int                   `json:"countChildren,omitempty"`
 	PathType       int16                  `json:"pathType"`
-	Type           int16                  `json:"type"`
 	DataType       *int16                 `json:"dataType,omitempty"`
 	ParentDataType *int16                 `json:"parentDataType,omitempty"`
 	Name           string                 `json:"name"`
@@ -1372,6 +1371,7 @@ type UpdateTemplateBaseInfoReq struct {
 type UpdateTemplateFieldsAndDescReq struct {
 	Alias       string         `json:"alias" validate:"omitempty,max=63,alias"`
 	Fields      []*FieldDefine `json:"fields,optional" validate:"min=1"`
+	JsonFields  []*FieldDefine `json:"jsonFields,optional,omitempty"`
 	Description *string        `json:"modelDescription,optional" validate:"omitempty,max=255"`
 }
 

@@ -292,7 +292,7 @@ const Module: FC<FolderDetailProps> = (props) => {
       <div className="topicDetailContent">
         <Flex className="detailTitle" gap={8} align="center">
           <Flex align="center" gap={4}>
-            {modelInfo.alias && mountStatus[modelInfo.alias] && <StatusDot status={mountStatus[modelInfo.alias]} />}
+            {modelInfo.alias && mountStatus?.[modelInfo.alias] && <StatusDot status={mountStatus[modelInfo.alias]} />}
             {systemInfo.enableAutoCategorization ? (
               <Flex
                 align="center"

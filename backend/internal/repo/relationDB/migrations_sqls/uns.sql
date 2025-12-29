@@ -61,8 +61,24 @@ CREATE TABLE if not exists uns_dashboard (
 CREATE TABLE if not exists "uns_dashboard_ref" (
 "dashboard_id" varchar(64) NOT NULL,
 "uns_alias" varchar(255) NOT NULL,
-"create_at" timestamptz(6) DEFAULT now()
+"create_at" timestamptz(6) DEFAULT now(),
+PRIMARY KEY (dashboard_id, uns_alias)
 );
+DELETE FROM "uns_dashboard_ref"
+WHERE ctid IN (
+    SELECT ctid
+    FROM (
+             SELECT
+                 ctid,
+                 ROW_NUMBER() OVER (
+                PARTITION BY dashboard_id, uns_alias
+                ORDER BY ctid
+            ) AS row_num
+             FROM "uns_dashboard_ref"
+         ) t
+    WHERE t.row_num > 1
+);
+ALTER TABLE uns_dashboard_ref ADD PRIMARY KEY (dashboard_id, uns_alias);
 
 CREATE TABLE if not exists uns_dashboard_top_recodes (
     id varchar(64) NOT NULL,

@@ -2,12 +2,15 @@ package importExport
 
 import (
 	"backend/internal/logic/supos/uns/importExport/service"
-	"backend/internal/types"
 	"backend/share/spring"
 	"io"
 )
 
-func Import(file *types.MultipartFile, w io.Writer) {
+func Import(fileName string, fileSize int64, resp io.Writer) (w io.Writer, waiter func()) {
 	unsImportService := spring.GetBean[*service.UnsImportExportService]()
-	unsImportService.ImportUns(file, w)
+	return unsImportService.ImportUns(fileName, fileSize, resp)
+}
+func ImportUnsByReader(fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
+	unsImportService := spring.GetBean[*service.UnsImportExportService]()
+	unsImportService.ImportUnsDirect(fileName, fileSize, respWriter, reader)
 }

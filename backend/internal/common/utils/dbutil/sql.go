@@ -16,6 +16,7 @@ func EscapeForLike(keyword string) string {
 	keyword = strings.ReplaceAll(keyword, `\`, `\\`)
 	keyword = strings.ReplaceAll(keyword, "%", `\%`)
 	keyword = strings.ReplaceAll(keyword, "_", `\_`)
+	keyword = strings.ReplaceAll(keyword, "'", "''")
 	return keyword
 }
 

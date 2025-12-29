@@ -141,7 +141,9 @@ func (p UnsNamespaceRepo) FindOneByAlias(db *gorm.DB, alias string) (*UnsNamespa
 	}
 	return &result, nil
 }
-
+func EscapeLike(s string) string {
+	return escapeLikePattern(escapeSQL(s))
+}
 func escapeLikePattern(input string) string {
 	if input == "" {
 		return input

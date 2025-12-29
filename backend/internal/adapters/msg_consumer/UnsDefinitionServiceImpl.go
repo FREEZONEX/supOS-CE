@@ -25,11 +25,9 @@ type UnsDefinitionService struct {
 }
 
 func init() {
-	spring.RegisterLazy[serviceApi.IUnsDefinitionService](func() serviceApi.IUnsDefinitionService {
-		return &UnsDefinitionService{
-			log:   logx.WithContext(context.Background()),
-			cache: cache.New(10*time.Minute, 5*time.Minute),
-		}
+	spring.RegisterBean[*UnsDefinitionService](&UnsDefinitionService{
+		log:   logx.WithContext(context.Background()),
+		cache: cache.New(10*time.Minute, 5*time.Minute),
 	})
 }
 
@@ -86,7 +84,7 @@ func (u *UnsDefinitionService) DeleteBatch(list []*types.CreateTopicDto) error {
 	return nil
 }
 
-func (u *UnsDefinitionService) OnBatchCreateTableEvent0(ev *event.BatchCreateTableEvent) {
+func (u *UnsDefinitionService) OnEventBatchCreateTableEvent0(ev *event.BatchCreateTableEvent) {
 	if list := ev.Creates; len(list) > 0 {
 		for _, vs := range list {
 			for _, v := range vs {
@@ -102,14 +100,14 @@ func (u *UnsDefinitionService) OnBatchCreateTableEvent0(ev *event.BatchCreateTab
 		}
 	}
 }
-func (u *UnsDefinitionService) OnRemoveTopicsEvent0(ev *event.RemoveTopicsEvent) {
+func (u *UnsDefinitionService) OnEventRemoveTopicsEvent0(ev *event.RemoveTopicsEvent) {
 	if len(ev.Topics) >= 0 {
 		for _, v := range ev.Topics {
 			u.invalidCache(v.GetId(), v.GetAlias(), v.GetPath())
 		}
 	}
 }
-func (u *UnsDefinitionService) OnUpdateInstanceEvent0(ev *event.UpdateInstanceEvent) {
+func (u *UnsDefinitionService) OnEventUpdateInstanceEvent0(ev *event.UpdateInstanceEvent) {
 	if len(ev.Topics) >= 0 {
 		for _, v := range ev.Topics {
 			u.invalidCache(v.Id, v.Alias, v.Path)

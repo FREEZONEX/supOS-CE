@@ -1,6 +1,6 @@
 import { Divider, Flex } from 'antd';
 import Overview from './Overview.tsx';
-import { useUnsContext } from '@/pages/uns/UnsContext.tsx';
+// import { useUnsContext } from '@/pages/uns/UnsContext.tsx';
 import { useDeepCompareEffect } from 'ahooks';
 import { Connect, DataConnected, Package } from '@carbon/icons-react';
 import { useImmer } from 'use-immer';
@@ -10,9 +10,11 @@ import PackageTop from '@/components/svg-components/PackageTop.tsx';
 import styles from './index.module.scss';
 import Functions from './Functions.tsx';
 import MQTT from './MQTT.tsx';
+import useUnsGlobalWs from '@/pages/uns/useUnsGlobalWs.ts';
 
 const UnsDashboard = () => {
-  const { topologyData } = useUnsContext();
+  // const { topologyData } = useUnsContext();
+  const { topologyData = {} } = useUnsGlobalWs();
   const [overviewList, setOverviewList] = useImmer<OverviewListProps[]>([
     { key: 'messageInThroughput', label: 'uns.messageIn', icon: <Package size={24} />, value: 0, unit: 'uns.msgUnit' },
     {

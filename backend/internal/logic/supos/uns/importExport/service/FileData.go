@@ -5,8 +5,8 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
 	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/common/utils/PathUtil"
-	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
@@ -39,7 +39,6 @@ type FileData struct {
 	DisplayName       string               `json:"displayName,omitempty"`
 	TemplateAlias     string               `json:"templateAlias,omitempty"`
 	Fields            []*types.FieldDefine `json:"fields,omitempty"`
-	JsonFields        []*types.FieldDefine `json:"jsonFields,omitempty"`
 	DataType          string               `json:"dataType,omitempty"`
 	Refers            string               `json:"refers,omitempty"`
 	Expression        string               `json:"expression,omitempty"`
@@ -50,6 +49,7 @@ type FileData struct {
 	EnableHistory     string               `json:"enableHistory,omitempty"`
 	MockData          string               `json:"mockData,omitempty"`
 	ParentDataType    string               `json:"topicType,omitempty"`
+	Template          *FileData            `json:"template,omitempty"`
 	Children          []*FileData          `json:"children,omitempty"`
 	Error             string               `json:"error,omitempty"`
 
@@ -93,10 +93,9 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 	}
 
 	vo := &types.CreateTopicDto{
-		Alias:      i.Alias,
-		Name:       i.Name,
-		Fields:     i.Fields,
-		JsonFields: i.JsonFields,
+		Alias:  i.Alias,
+		Name:   i.Name,
+		Fields: i.Fields,
 	}
 	switch prop {
 	case Template:
@@ -144,6 +143,9 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 	if len(i.TemplateAlias) > 0 {
 		vo.ModelAlias = &i.TemplateAlias
 	}
+	if template := i.Template; template != nil {
+		vo.Template = node2vo(Template, template, nil)
+	}
 	if len(i.Description) > 0 {
 		vo.Description = &i.Description
 	}
@@ -153,14 +155,26 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 			return s, len(s) > 0
 		})
 	}
-	if len(i.DataType) > 0 && vo.PathType == constants.PathTypeFile {
-		dt := enums.DataTypeInt(i.DataType)
-		if dt >= 0 {
-			vo.DataType = base.V2p(dt)
-		} else {
-			i.Error = I18nUtils.GetMessage("uns.import.dataType.error")
-			return nil
+	if dt := i.DataType; len(dt) > 0 {
+		switch vo.PathType {
+		case constants.PathTypeFile:
+			dt := enums.DataTypeInt(dt)
+			if dt >= 0 {
+				vo.DataType = base.V2p(dt)
+				if dt == constants.JsonbType {
+					vo.Fields = nil
+					vo.JsonFields = i.Fields
+				}
+			} else {
+				i.Error = I18nUtils.GetMessage("uns.import.dataType.error")
+				return nil
+			}
+		case constants.PathTypeDir:
+			if pdt, ok := enums.GetFolderDataTypeByName(dt); ok {
+				vo.DataType = base.V2p(pdt.TypeIndex())
+			}
 		}
+
 	}
 	if len(i.ParentDataType) > 0 {
 		if pdt, ok := enums.GetFolderDataTypeByName(i.ParentDataType); ok {
@@ -200,27 +214,42 @@ func parseBoolP(str string) *bool {
 var initDefOnce sync.Once
 var defService serviceApi.IUnsDefinitionService
 
-func po2DataVo(unsPo *dao.UnsNamespace) *FileData {
-	return uns2DataVo(unsPo)
+type exportContext struct {
+	unsWrapTemplate bool // UNS 文件内部是否嵌套模版的定义
+	templates       map[int64]*FileData
 }
-func vo2DataVo(unsPo *types.CreateTopicDto) *FileData {
-	return uns2DataVo(unsPo)
-}
-func uns2DataVo(unsPo types.UnsInfo) *FileData {
+
+func uns2DataVo(ctx *exportContext, unsPo types.UnsInfo) *FileData {
 
 	data := &FileData{id: unsPo.GetId(), parentId: base.P2vWithDefault(unsPo.GetParentId(), -1)}
 
 	data.Alias = unsPo.GetAlias()
 	data.DisplayName = unsPo.GetDisplayName()
-	if mid := unsPo.GetModelId(); mid != nil {
+	if mid := unsPo.GetModelId(); mid != nil && ctx != nil {
 		if defService == nil {
 			initDefOnce.Do(func() {
 				defService = spring.GetBean[serviceApi.IUnsDefinitionService]()
 			})
 		}
-		template := defService.GetDefinitionById(*mid)
-		if template != nil {
-			data.TemplateAlias = template.Alias
+		if templateId := *mid; ctx.unsWrapTemplate {
+			if ctx.templates == nil {
+				ctx.templates = make(map[int64]*FileData, 16)
+			}
+			if v, has := ctx.templates[templateId]; has {
+				data.TemplateAlias = v.Alias
+			} else {
+				if template := defService.GetDefinitionById(templateId); template != nil {
+					templateVo := uns2DataVo(nil, template)
+					data.Template = templateVo //首个引用该模版的uns, 嵌套模版的定义
+					ctx.templates[templateId] = templateVo
+				} else {
+					ctx.templates[templateId] = nil
+				}
+			}
+		} else {
+			if template := defService.GetDefinitionById(templateId); template != nil {
+				data.TemplateAlias = template.Alias
+			}
 		}
 	}
 	// data.Namespace = unsPo.Path
@@ -231,17 +260,6 @@ func uns2DataVo(unsPo types.UnsInfo) *FileData {
 		data.Label = strings.Join(base.MapValues(labels), ",")
 	}
 
-	if protocol := unsPo.GetProtocolMap(); len(protocol) > 0 {
-		frequency := protocol["frequency"]
-		if frequency != nil {
-			data.Frequency = fmt.Sprint(frequency)
-		}
-	}
-
-	data.Description = unsPo.GetDescription()
-	if pdt := unsPo.GetParentDataType(); pdt != nil {
-		data.ParentDataType = enums.GetFolderDataType(*pdt).Name()
-	}
 	if dt := unsPo.GetDataType(); dt != nil {
 		pt := unsPo.GetPathType()
 		if pt == constants.PathTypeFile {
@@ -258,6 +276,28 @@ func uns2DataVo(unsPo types.UnsInfo) *FileData {
 		}
 	} else {
 		data.Fields = unsPo.GetFields()
+	}
+
+	if protocol := unsPo.GetProtocolMap(); len(protocol) > 0 {
+		frequency := protocol["frequency"]
+		if frequency != nil {
+			data.Frequency = fmt.Sprint(frequency)
+		}
+		if base.P2v(unsPo.GetDataType()) == constants.JsonbType {
+			// jsonb 类型不需要导出 fields,但需要导出 jsonFields 作为 fields
+			if jsf, has := protocol["jsf"]; has {
+				if str, isStr := jsf.(string); isStr {
+					JsonUtil.FromJson(str, &data.Fields)
+				} else {
+					JsonUtil.FromJson(fmt.Sprint(jsf), &data.Fields)
+				}
+			}
+		}
+	}
+
+	data.Description = unsPo.GetDescription()
+	if pdt := unsPo.GetParentDataType(); pdt != nil {
+		data.ParentDataType = enums.GetFolderDataType(*pdt).Name()
 	}
 
 	//if unsPo.DataType == constants.CALCULATION_REAL_TYPE ||

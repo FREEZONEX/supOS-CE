@@ -32,31 +32,8 @@ type UnsQueueDataSinkService struct {
 const maxMsgSize = 4 * 1024 * 1024
 
 func init() {
-	spring.RegisterLazy[*UnsQueueDataSinkService](func() *UnsQueueDataSinkService {
-		dir := constants.LogPath + "/queue"
-		err := os.MkdirAll(dir, 666)
-		if err != nil {
-			panic(err)
-		}
-		this := &UnsQueueDataSinkService{
-			log:        logx.WithContext(context.Background()),
-			defService: spring.GetBean[serviceApi.IUnsDefinitionService](),
-		}
-		diskLog := func(lvl diskqueue.LogLevel, f string, args ...interface{}) {
-			switch lvl {
-			case diskqueue.DEBUG, diskqueue.INFO:
-				this.log.Debugf(f, args)
-			case diskqueue.WARN:
-				this.log.Errorf(f, args)
-			case diskqueue.ERROR, diskqueue.FATAL:
-				this.log.Errorf(f, args)
-			}
-		}
-		this.queue = diskqueue.New("uns", dir,
-			64*1024*1024, 8, maxMsgSize,
-			2500, 5*time.Second, diskLog)
-
-		return this
+	spring.RegisterBean[*UnsQueueDataSinkService](&UnsQueueDataSinkService{
+		log: logx.WithContext(context.Background()),
 	})
 }
 
@@ -99,7 +76,26 @@ func (s *UnsQueueDataSinkService) OnEventShutdown(evt *event.ContextClosedEvent)
 	_ = s.queue.Close()
 }
 
-func (s *UnsQueueDataSinkService) OnEventStart(evt *event.ContextRefreshedEvent) {
+func (s *UnsQueueDataSinkService) OnEventStart100(evt *event.ContextRefreshedEvent) {
+	s.defService = spring.GetBean[*UnsDefinitionService]()
+	dir := constants.LogPath + "/queue"
+	err := os.MkdirAll(dir, 666)
+	if err != nil {
+		panic(err)
+	}
+	diskLog := func(lvl diskqueue.LogLevel, f string, args ...interface{}) {
+		switch lvl {
+		case diskqueue.DEBUG, diskqueue.INFO:
+			s.log.Debugf(f, args)
+		case diskqueue.WARN:
+			s.log.Errorf(f, args)
+		case diskqueue.ERROR, diskqueue.FATAL:
+			s.log.Errorf(f, args)
+		}
+	}
+	s.queue = diskqueue.New("uns", dir,
+		64*1024*1024, 8, maxMsgSize,
+		2500, 5*time.Second, diskLog)
 	s.run = true
 	go s.fetchData()
 }
@@ -159,7 +155,7 @@ func (s *UnsQueueDataSinkService) persistence(msgLit []*TopicMessage) {
 	}
 	dsMap := base.MapAndFilterGroupBy[*TopicMessage, serviceApi.UnsData, types.SrcJdbcType](msgLit, func(e *TopicMessage) (ok bool, id types.SrcJdbcType, dat serviceApi.UnsData) {
 		def := s.defService.GetDefinitionById(e.Id)
-		if def == nil {
+		if def == nil || !base.P2v(def.Save2Db) {
 			return
 		}
 		return true, types.SrcJdbcType(e.DataSrcId), serviceApi.UnsData{Uns: def, Data: base.Map(e.Data, func(e *TopicMessage_DataArray) map[string]string {

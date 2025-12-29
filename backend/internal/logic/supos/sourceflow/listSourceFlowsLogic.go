@@ -4,6 +4,7 @@
 package sourceflow
 
 import (
+	"backend/internal/repo/relationDB"
 	"context"
 	"database/sql"
 	"fmt"
@@ -70,7 +71,7 @@ func (l *ListSourceFlowsLogic) ListFlowsWithType(req *types.SourceFlowListQuery,
 		Joins("LEFT JOIN supos_node_flow_top_recodes AS t ON f.id = t.id AND t.user_id = ?", userID).
 		Where("f.template = ?", template)
 	if keyword != "" {
-		like := "%" + keyword + "%"
+		like := "%" + relationDB.EscapeLike(keyword) + "%"
 		query = query.Where("(f.flow_name LIKE ? OR f.description LIKE ?)", like, like)
 	}
 	countQuery := query.Session(&gorm.Session{}).Select("f.id")

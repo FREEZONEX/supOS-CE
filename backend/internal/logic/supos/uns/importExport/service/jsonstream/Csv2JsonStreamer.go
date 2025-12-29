@@ -43,6 +43,7 @@ func Csv2JsonStream[Node any, ID cmp.Ordered](
 	}
 	// Goroutine 2: 从管道读取 CSV 并转换为 JSON
 	go func() {
+		defer csvReader.Close()
 		var csvErr error
 		if countNodes, csvErr = csvStreamWriteJson(csvReader, jsonWriter, nodeGetChildren, nodeSetChildren, getId, getParentId, csv2node, childrenName, fullList); csvErr != nil {
 			errChan <- fmt.Errorf("CSV转JSON失败: %v", csvErr)

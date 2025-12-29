@@ -28,7 +28,7 @@ type WebsocketService struct {
 	topicToSessionsMap *sync.Map // map[string]*sync.Map (topic -> map[sessionId]bool)
 	aliasToSessionsMap *sync.Map // map[string]*sync.Map (alias -> map[sessionId]subValueObj)
 	tpLock             sync.RWMutex
-	topologySessions   map[string]io.Writer // map[string]*websocket.Conn (sessionId -> conn)
+	topologySessions   map[string]bool
 	unsQueryService    *UnsQueryService
 	topologyService    *service.UnsTopologyService
 }
@@ -40,7 +40,7 @@ func init() {
 			idToSessionsMap:    &sync.Map{},
 			topicToSessionsMap: &sync.Map{},
 			aliasToSessionsMap: &sync.Map{},
-			topologySessions:   make(map[string]io.Writer, 8),
+			topologySessions:   make(map[string]bool, 8),
 			unsQueryService:    spring.GetBean[*UnsQueryService](),
 			topologyService:    spring.GetBean[*service.UnsTopologyService](),
 		}
@@ -133,7 +133,7 @@ func (s *WebsocketService) HandleSessionConnected(sessionId string, req *url.URL
 			subscriptionVal, _ := s.sessions.Load(sessionId)
 			if subscription, ok := subscriptionVal.(*WsSubscription); ok {
 				s.tpLock.Lock()
-				s.topologySessions[sessionId] = subscription.conn
+				s.topologySessions[sessionId] = true
 				s.tpLock.Unlock()
 
 				logx.Infof("topology subscription: %s", sessionId)
@@ -448,7 +448,8 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 		if sz := len(fs); sz > 0 {
 			data := make(map[string]any, sz)
 			dt := make(map[string]int64, sz)
-			isRelation := base.P2v(message.Def.DataType) == constants.RelationType
+			dbType := types.SrcJdbcType(message.Def.DataSrcID).TypeCode()
+			isRelation := dbType == constants.RelationType
 			dm := message.Data
 			hasDm := len(dm) > 0
 			for _, f := range fs {
@@ -483,7 +484,7 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 					dt[name] = lt
 				}
 			}
-			if types.SrcJdbcType(message.Def.DataSrcID).TypeCode() == constants.TimeSequenceType {
+			if dbType == constants.TimeSequenceType {
 				ct := message.Def.GetTimestampField()
 				if _, has := data[ct]; !has && len(data) > 0 {
 					data[ct] = info.UpdateTime
