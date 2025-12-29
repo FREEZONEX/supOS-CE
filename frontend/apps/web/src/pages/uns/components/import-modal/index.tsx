@@ -392,7 +392,11 @@ const Module: FC<ImportModalProps> = (props) => {
               {loading ? (
                 <div className="loadingWrap">
                   <InlineLoading
+                    style={{ width: '100%', display: 'flex', padding: '0 8px', justifyContent: 'center' }}
                     status={finished ? (code === 200 ? 'finished' : 'error') : 'active'}
+                    textMode="custom-lines"
+                    lineClamp={3}
+                    title={`${formatMessage('common.importProgress')}：${progress || 0}%${msg || task ? '，' : ''}${finished ? msg : task || ''}`}
                     description={`${formatMessage('common.importProgress')}：${progress || 0}%${msg || task ? '，' : ''}${finished ? msg : task || ''}`}
                   />
                 </div>
