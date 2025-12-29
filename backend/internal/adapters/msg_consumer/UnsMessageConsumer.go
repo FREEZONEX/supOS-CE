@@ -282,13 +282,32 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) []map
 	}
 	return list
 }
-
+func parseTimestamp(curT any) (ct int64) {
+	if Float, isFloat := curT.(float64); isFloat { // json unmarshal 来的都是 float64 类型
+		ct = int64(Float)
+	} else if Long, isLong := curT.(int64); isLong {
+		ct = Long
+	} else {
+		str := fmt.Sprint(curT)
+		Double, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			ct = -1
+			if dt, dtEr := datetimeutils.ParseDate(str); dtEr == nil && dt.Year() > 1970 {
+				ct = dt.UnixMilli()
+			}
+		} else if Int := int64(Double); Int > 1100000000000 {
+			ct = Int
+		}
+	}
+	if ct < 1100000000000 || ct > 11000000000001 {
+		return -1
+	}
+	return ct
+}
 func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64, prevBean map[string]any) []map[string]interface{} {
 	prevTime := int64(-1)
 	if len(prevBean) > 0 {
-		if lastTime, ok := prevBean[CT].(int64); ok {
-			prevTime = lastTime
-		}
+		prevTime = parseTimestamp(prevBean[CT])
 	}
 	mergeList := make([]map[string]interface{}, 0, len(list))
 	for _, vm := range list {
@@ -296,20 +315,8 @@ func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64
 			vm[CT] = now
 			mergeList = append(mergeList, vm)
 		} else {
-			ct, ok := curT.(int64)
-			if !ok {
-				str := fmt.Sprint(curT)
-				Float, err := strconv.ParseFloat(str, 64)
-				if err != nil {
-					ct = -1
-					if dt, dtEr := datetimeutils.ParseDate(str); dtEr == nil && dt.Year() > 1970 {
-						ct = dt.UnixMilli()
-					}
-				} else if Int := int64(Float); Int > 1100000000000 {
-					ct = Int
-				}
-			}
-			if ct < 1100000000000 || ct > 11000000000001 {
+			ct := parseTimestamp(curT)
+			if ct < 1 {
 				logx.Debugf("BadTimestamp: %v", curT)
 				vm[CT] = now
 				mergeList = append(mergeList, vm)
