@@ -2,26 +2,43 @@
 <script type="text/html" data-template-name="supmodel">
     
     <style id="model-selector-style">
-       .node-table-models {
+        .node-table-models {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
         }
         .node-table-models th {
             background: #f5f5f5;
             padding: 8px;
             border-bottom: 2px solid #ddd;
         }
+        .node-table-models th,
+        .node-table-models td {
+            box-sizing: border-box;
+        }
         .node-table-models td {
             text-align: center;
             padding: 8px;
             border-bottom: 1px solid #eee;
-            max-width: 200px;       /* 设置最大宽度 */
-            overflow: hidden;        /* 超出部分隐藏 */
-            white-space: nowrap;     /* 禁止换行 */
-            text-overflow: ellipsis; /* 显示省略号 */
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            vertical-align: middle;
         }
+        .node-table-models col.col-serial { width: 5%; min-width: 50px; }
+        .node-table-models col.col-topic { width: 32%; min-width: 240px; }
+        .node-table-models col.col-attr-name { width: 18%; min-width: 150px; }
+        .node-table-models col.col-attr-type { width: 12%; min-width: 90px; max-width: 130px; }
+        .node-table-models col.col-tag { width: 26%; min-width: 200px; }
+        .node-table-models col.col-operation { width: 7%; min-width: 100px; }
         .error_msg {
             color: red;
+        }
+        /* 强制表格输入撑满单元格，避免聚焦/失焦后宽度收缩 */
+        .node-table-models td input[type="text"] {
+            width: 100% !important;
+            min-width: 0;
+            display: block;
         }
 
         .pagination-control {
@@ -169,9 +186,13 @@
             gap: 8px;
         }
         .tag-inline-input {
-            width: 80px !important;
-            min-width: 80px;
             display: inline-block;
+            box-sizing: border-box;
+        }
+        .editable-cell,
+        .editable-tag {
+            width: 100%;
+            box-sizing: border-box;
         }
         .single-tab {
             display: block;
@@ -263,6 +284,14 @@
             </div>
             <div id="node-table-models-form" style="margin-top:15px;border:1px solid #ddd;padding:10px">
                 <table class="node-table-models">
+                    <colgroup>
+                        <col class="col-serial">
+                        <col class="col-topic">
+                        <col class="col-attr-name">
+                        <col class="col-attr-type">
+                        <col class="col-tag">
+                        <col class="col-operation">
+                    </colgroup>
                     <thead id="preview-thead">
                         <tr>
                             <th data-i18n="supmodel.table_header_serial"></th>
