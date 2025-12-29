@@ -40,10 +40,30 @@
   &-text {
     color: var(--supos-t-menu-active-color);
     font-weight: 400;
-    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
+    //width: 100%;
+
+    // 单行显示（默认）
+    &--single-line {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    // 多行显示
+    &--multi-line {
+      display: -webkit-box;
+      -webkit-line-clamp: 2; // 显示2行
+      -webkit-box-orient: vertical;
+      text-overflow: ellipsis;
+    }
+
+    // 自定义行数
+    &--custom-lines {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
   }
 }
 
