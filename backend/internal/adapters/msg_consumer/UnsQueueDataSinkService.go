@@ -155,7 +155,7 @@ func (s *UnsQueueDataSinkService) persistence(msgLit []*TopicMessage) {
 	}
 	dsMap := base.MapAndFilterGroupBy[*TopicMessage, serviceApi.UnsData, types.SrcJdbcType](msgLit, func(e *TopicMessage) (ok bool, id types.SrcJdbcType, dat serviceApi.UnsData) {
 		def := s.defService.GetDefinitionById(e.Id)
-		if def == nil {
+		if def == nil || !base.P2v(def.Save2Db) {
 			return
 		}
 		return true, types.SrcJdbcType(e.DataSrcId), serviceApi.UnsData{Uns: def, Data: base.Map(e.Data, func(e *TopicMessage_DataArray) map[string]string {
