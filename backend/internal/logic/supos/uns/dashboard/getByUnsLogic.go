@@ -17,7 +17,7 @@ type GetByUnsLogic struct {
 	logx.Logger
 	ctx                context.Context
 	svcCtx             *svc.ServiceContext
-	dashboardRefMapper *relationDB.DashboardRefMapper
+	dashboardRefMapper relationDB.DashboardRefMapper
 	unsQueryService    *unsservice.UnsQueryService
 }
 

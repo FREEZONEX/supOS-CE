@@ -9,6 +9,9 @@ import (
 // CreateDashboardEvent defines an event for creating a Grafana dashboard record.
 type CreateDashboardEvent struct {
 	ApplicationEvent
+	Dashboards []DashboardVo
+}
+type DashboardVo struct {
 	UUID        string
 	UnsAlias    []string
 	Name        string
@@ -19,11 +22,15 @@ type CreateDashboardEvent struct {
 func NewCreateDashboardEvent(ctx context.Context, UnsAlias []string, uuid, name, description, userName string) *CreateDashboardEvent {
 	return &CreateDashboardEvent{
 		ApplicationEvent: ApplicationEvent{Context: ctx},
-		UnsAlias:         UnsAlias,
-		UUID:             uuid,
-		Name:             name,
-		Description:      description,
-		UserName:         userName,
+		Dashboards: []DashboardVo{
+			{
+				UnsAlias:    UnsAlias,
+				UUID:        uuid,
+				Name:        name,
+				Description: description,
+				UserName:    userName,
+			},
+		},
 	}
 }
 

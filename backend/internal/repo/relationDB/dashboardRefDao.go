@@ -11,7 +11,7 @@ type DashboardRefMapper struct {
 }
 
 // Insert 插入 Dashboard 引用关系
-func (m *DashboardRefMapper) Insert(db *gorm.DB, ref *DashboardRefModel) error {
+func (m DashboardRefMapper) Insert(db *gorm.DB, ref *DashboardRefModel) error {
 	err := db.Model(&DashboardRefModel{}).Clauses(clause.OnConflict{DoNothing: true}).Create(ref).Error
 	if err != nil {
 		logx.Errorf("failed to insert dashboard ref: %v", err)
@@ -19,7 +19,7 @@ func (m *DashboardRefMapper) Insert(db *gorm.DB, ref *DashboardRefModel) error {
 	}
 	return nil
 }
-func (m *DashboardRefMapper) SaveBatch(db *gorm.DB, refers []*DashboardRefModel) error {
+func (m DashboardRefMapper) SaveBatch(db *gorm.DB, refers []*DashboardRefModel) error {
 	err := db.Model(&DashboardRefModel{}).Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(refers, 1000).Error
 	if err != nil {
 		logx.Errorf("failed to insert dashboard ref: %v", err)
@@ -27,8 +27,16 @@ func (m *DashboardRefMapper) SaveBatch(db *gorm.DB, refers []*DashboardRefModel)
 	}
 	return nil
 }
-func (m *DashboardRefMapper) DeleteByUnsAlias(db *gorm.DB, unsAlias string) error {
+func (m DashboardRefMapper) DeleteByUnsAlias(db *gorm.DB, unsAlias string) error {
 	err := db.Where("uns_alias = ?", unsAlias).Delete(&DashboardRefModel{}).Error
+	if err != nil {
+		logx.Errorf("failed to delete dashboard ref: %v, uns=%s", err, unsAlias)
+		return err
+	}
+	return nil
+}
+func (m DashboardRefMapper) DeleteByUnsAliasList(db *gorm.DB, unsAlias []string) error {
+	err := db.Where("uns_alias IN ?", unsAlias).Delete(&DashboardRefModel{}).Error
 	if err != nil {
 		logx.Errorf("failed to delete dashboard ref: %v, uns=%s", err, unsAlias)
 		return err
@@ -37,7 +45,7 @@ func (m *DashboardRefMapper) DeleteByUnsAlias(db *gorm.DB, unsAlias string) erro
 }
 
 // DeleteByDashboardId 根据 Dashboard ID 删除引用关系
-func (m *DashboardRefMapper) DeleteByDashboardId(db *gorm.DB, dashboardID string) error {
+func (m DashboardRefMapper) DeleteByDashboardId(db *gorm.DB, dashboardID string) error {
 	err := db.Where("dashboard_id = ?", dashboardID).Delete(&DashboardRefModel{}).Error
 	if err != nil {
 		logx.Errorf("failed to delete dashboard ref: %v", err)
@@ -47,7 +55,7 @@ func (m *DashboardRefMapper) DeleteByDashboardId(db *gorm.DB, dashboardID string
 }
 
 // GetByUns 根据 UNS 别名获取 Dashboard
-func (m *DashboardRefMapper) GetByUns(db *gorm.DB, unsAlias string) (*DashboardModel, error) {
+func (m DashboardRefMapper) GetByUns(db *gorm.DB, unsAlias string) (*DashboardModel, error) {
 	var dashboard DashboardModel
 	err := db.
 		Table("uns_dashboard a").
@@ -67,7 +75,7 @@ func (m *DashboardRefMapper) GetByUns(db *gorm.DB, unsAlias string) (*DashboardM
 }
 
 // SelectByUnsAlias 根据 UNS 别名查询引用关系
-func (m *DashboardRefMapper) SelectByUnsAlias(db *gorm.DB, unsAlias string) (*DashboardRefModel, error) {
+func (m DashboardRefMapper) SelectByUnsAlias(db *gorm.DB, unsAlias string) (*DashboardRefModel, error) {
 	var ref DashboardRefModel
 	err := db.Where("uns_alias = ?", unsAlias).First(&ref).Error
 	if err != nil {
@@ -81,7 +89,7 @@ func (m *DashboardRefMapper) SelectByUnsAlias(db *gorm.DB, unsAlias string) (*Da
 }
 
 // SelectByUnsAliases selects dashboard references by a list of UNS aliases.
-func (m *DashboardRefMapper) SelectByUnsAliases(db *gorm.DB, aliases []string) ([]*DashboardRefModel, error) {
+func (m DashboardRefMapper) SelectByUnsAliases(db *gorm.DB, aliases []string) ([]*DashboardRefModel, error) {
 	if len(aliases) == 0 {
 		return []*DashboardRefModel{}, nil
 	}

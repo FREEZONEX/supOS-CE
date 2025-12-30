@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"backend/internal/common/utils/grafanautil"
+	dao "backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 	"context"
@@ -13,8 +14,9 @@ import (
 
 type IsExistLogic struct {
 	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
+	ctx           context.Context
+	svcCtx        *svc.ServiceContext
+	dashRefMapper dao.DashboardRefMapper
 }
 
 func NewIsExistLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsExistLogic {
@@ -26,7 +28,15 @@ func NewIsExistLogic(ctx context.Context, svcCtx *svc.ServiceContext) *IsExistLo
 }
 
 func (l *IsExistLogic) IsExist(alias string) (*types.JsonResult, error) {
-	uuid := grafanautil.GetDashboardUUIDByAlias(alias)
+	db := dao.GetDb(l.ctx)
+	ref, err := l.dashRefMapper.SelectByUnsAlias(db, alias)
+	if err != nil || ref == nil {
+		return &types.JsonResult{
+			Code: http.StatusBadRequest,
+			Msg:  i18ns.LocalizeMsg("uns.dashboard.not.exit"),
+		}, err
+	}
+	uuid := ref.DashboardID
 	dbJSON, err := grafanautil.GetDashboardByUUID(l.ctx, uuid)
 	if err != nil || dbJSON == nil {
 		return &types.JsonResult{

@@ -4,6 +4,7 @@ import (
 	"backend/internal/common/serviceApi"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/base"
 	"backend/share/spring"
 	"bytes"
 	"context"
@@ -14,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"backend/internal/common/constants"
@@ -369,7 +371,7 @@ func Fields2Columns(jdbcType types.SrcJdbcType, fields []*types.FieldDefine) str
 		}
 		if field.Name == constants.QosField ||
 			field.Name == constants.SysSaveTime ||
-			field.Name == "tag" ||
+			field.Name == constants.SystemSeqTag ||
 			field.Name == constants.SysFieldID {
 			continue
 		}
@@ -394,10 +396,8 @@ func CreateTimeSeriesListDashboard(ctx context.Context, srcJdbcType types.SrcJdb
 	var panelJSONList []any
 	for i, topic := range topics {
 		columns := Fields2Columns(srcJdbcType, topic.Fields)
-		title := topic.GetTopic()
 		schema := "public"
-		table := topic.TableName
-
+		table := topic.GetTable()
 		if dot := strings.Index(table, "."); dot > 0 {
 			schema = table[:dot]
 			table = table[dot+1:]
@@ -411,14 +411,16 @@ func CreateTimeSeriesListDashboard(ctx context.Context, srcJdbcType types.SrcJdb
 
 		panelParam := map[string]any{
 			"id":            i + 1,
-			"title":         title,
+			"title":         topic.Path,
 			"dataSourceUid": GetDatasourceUUIDByJDBC(srcJdbcType),
 			"columns":       columns,
 			"schema":        schema,
-			"tableName":     table,
+			"tableName":     topic.Id,
 			"gridPosX":      gridPosX,
 		}
 
+		panelTemplate = strings.Replace(panelTemplate, "supos_tag_timeserial", table, 1)
+		panelTemplate = strings.Replace(panelTemplate, "tag_name", constants.SystemSeqTag, 1)
 		panelJSON := FormatTemplateMap(panelTemplate, panelParam)
 		var panel any
 		json.Unmarshal([]byte(panelJSON), &panel)
@@ -608,17 +610,44 @@ func formatTemplate(template string, data any) string {
 
 // FormatTemplateMap formats a template string with map values.
 func FormatTemplateMap(template string, data map[string]any) string {
+	if len(template) == 0 {
+		return ""
+	} else if len(data) == 0 {
+		return template
+	}
 	result := template
 	for key, value := range data {
-		placeholder := fmt.Sprintf("{%s}", key)
-		var valueStr string
-		switch v := value.(type) {
-		case string:
-			valueStr = v
-		default:
-			valueStr = fmt.Sprint(v)
+		if value == nil {
+			continue
 		}
+		placeholder := fmt.Sprintf("{%s}", key)
+		var valueStr = strIt(value)
 		result = strings.ReplaceAll(result, placeholder, valueStr)
 	}
 	return result
+}
+func strIt(obj any) string {
+	if obj == nil {
+		return ""
+	}
+	if str, ok := obj.(string); ok {
+		return str
+	} else if bs, ok := obj.([]byte); ok {
+		return string(bs)
+	} else if val := reflect.ValueOf(obj); val.Kind() == reflect.Slice {
+		bd := base.StringBuilder{}
+		bd.Grow(10 + 32*val.Len())
+		bd.Append("[")
+		for i := 0; i < val.Len(); i++ {
+			elem := val.Index(i)
+			bd.Append(strIt(elem.Interface())).Append(",")
+		}
+		bd.SetLast(']')
+		return bd.String()
+	} else if val.Kind() == reflect.Map {
+		jsonBs, _ := json.Marshal(obj)
+		return string(jsonBs)
+	} else {
+		return fmt.Sprintf("%v", obj)
+	}
 }

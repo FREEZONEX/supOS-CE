@@ -45,6 +45,13 @@ func (e *BatchCreateTableEvent) GetAllCreateFiles() map[types.SrcJdbcType][]*typ
 	}
 	return e.createFiles
 }
+func (e *BatchCreateTableEvent) GetAllUpdateFiles() map[types.SrcJdbcType][]*types.CreateTopicDto {
+	if e.updateFiles == nil && len(e.Updates) > 0 {
+		files := e.Updates[constants.PathTypeFile]
+		e.updateFiles = base.GroupBy(files, pathTypeGroupSrcType)
+	}
+	return e.updateFiles
+}
 func (e *BatchCreateTableEvent) GetUpdateFiles(sinkDataSrcType types.SrcJdbcType) []*types.CreateTopicDto {
 	if e.updateFiles == nil && len(e.Updates) > 0 {
 		files := e.Updates[constants.PathTypeFile]

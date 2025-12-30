@@ -7,6 +7,7 @@ import (
 	"backend/internal/common/serviceApi"
 	"backend/internal/common/utils/apiutil"
 	"backend/internal/common/utils/grafanautil"
+	"backend/internal/logic/supos/uns/dashboard/service"
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
@@ -18,10 +19,11 @@ import (
 )
 
 type GrafanaEventHandler struct {
-	log       logx.Logger
-	once      sync.Once
-	sysConfig *sysconfig.SystemConfig
-	dsMap     map[types.SrcJdbcType]serviceApi.IPersistentService
+	log              logx.Logger
+	once             sync.Once
+	sysConfig        *sysconfig.SystemConfig
+	dsMap            map[types.SrcJdbcType]serviceApi.IPersistentService
+	dashboardService *service.DashboardService
 }
 
 func init() {
@@ -50,8 +52,8 @@ func (g *GrafanaEventHandler) getPersistentService(dsId types.SrcJdbcType) servi
 	return g.dsMap[dsId]
 }
 func (g *GrafanaEventHandler) OnEventBatchCreateTable300(evt *event.BatchCreateTableEvent) {
-	g.log.Infof(">>>>>> GrafanaEventHandler 批量创建事件,topic数量：%d,flowName:%s", len(evt.Creates), evt.FlowName)
-	if len(evt.Creates) == 0 {
+	g.log.Infof(">>>>>> GrafanaEventHandler 批量创建事件,topic数量：%d+%d, flowName:%s", len(evt.Creates), len(evt.Updates), evt.FlowName)
+	if len(evt.Creates) == 0 && len(evt.Updates) == 0 {
 		return
 	}
 	userCtx := apiutil.GetUserFromContext(evt.Context)
@@ -60,13 +62,24 @@ func (g *GrafanaEventHandler) OnEventBatchCreateTable300(evt *event.BatchCreateT
 		userName = userCtx.PreferredUsername
 	}
 	go func() {
+		if updates := evt.GetAllUpdateFiles(); len(updates) > 0 {
+			aliasList := base.Map[*types.CreateTopicDto, string](evt.Updates[constants.PathTypeFile], func(e *types.CreateTopicDto) string {
+				return e.Alias
+			})
+			g.log.Infof("删除面板: alias: %+v", aliasList)
+			err := g.dashboardService.RemoveByUnsAliasList(aliasList)
+			if err != nil {
+				g.log.Error("删除面板失败:", err.Error())
+			}
+			for dsId, list := range updates {
+				g.Create(context.Background(), dsId, list, evt.FlowName, evt.FromImport, userName)
+			}
+		}
 		for dsId, list := range evt.GetAllCreateFiles() {
 			g.Create(context.Background(), dsId, list, evt.FlowName, evt.FromImport, userName)
 		}
 		g.log.Info(">>>>>> GrafanaEventHandler 批量创建事件,已完成,flowName:", evt.FlowName)
 	}()
-}
-func (g *GrafanaEventHandler) OnEventUpdateInstanceEvent300(evt *event.UpdateInstanceEvent) {
 }
 func (g *GrafanaEventHandler) OnEventRemoveTopicsEvent300(evt *event.RemoveTopicsEvent) {
 	list := evt.Topics
@@ -87,6 +100,7 @@ func (g *GrafanaEventHandler) OnEventRemoveTopicsEvent300(evt *event.RemoveTopic
 	}()
 }
 func (g *GrafanaEventHandler) OnEventContextRefreshedEvent300(_ *event.ContextRefreshedEvent) {
+	g.dashboardService = spring.GetBean[*service.DashboardService]()
 	go func() {
 		time.Sleep(time.Second)
 		g.getPersistentService(0)

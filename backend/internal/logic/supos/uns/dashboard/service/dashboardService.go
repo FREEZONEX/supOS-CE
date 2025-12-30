@@ -112,6 +112,10 @@ func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) e
 	aliasList := base.Map(event.Topics, func(e *types.CreateTopicDto) string {
 		return e.GetAlias()
 	})
+	return s.RemoveByUnsAliasList(aliasList)
+}
+
+func (s *DashboardService) RemoveByUnsAliasList(aliasList []string) error {
 	s.logger.Infof("removing dashboards for topics: %v", aliasList)
 	dashboardRefMapper := relationDB.DashboardRefMapper{}
 	dashboardMapper := relationDB.DashboardMapper{}
@@ -130,9 +134,40 @@ func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) e
 	for i, ref := range refs {
 		idsToDelete[i] = ref.DashboardID
 	}
-
+	_ = dashboardRefMapper.DeleteByUnsAliasList(db, aliasList)
 	// 2. 批量删除 dashboard
 	return dashboardMapper.DeleteBatchIds(db, idsToDelete)
+}
+func (s *DashboardService) CreateDashboards(ctx context.Context, dashboardVos []event.DashboardVo) error {
+	now := time.Now()
+	dashboards := make([]*relationDB.DashboardModel, 0, len(dashboardVos))
+	refers := make([]*relationDB.DashboardRefModel, 0, len(dashboardVos))
+	for _, dashboard := range dashboardVos {
+		dashboards = append(dashboards, &relationDB.DashboardModel{
+			ID:         dashboard.UUID,
+			Name:       dashboard.Name,
+			Creator:    dashboard.UserName,
+			CreateTime: now,
+			UpdateTime: now,
+		})
+		for _, unsAlias := range dashboard.UnsAlias {
+			refers = append(refers, &relationDB.DashboardRefModel{
+				DashboardID: dashboard.UUID,
+				UnsAlias:    unsAlias,
+			})
+		}
+
+	}
+	db := relationDB.GetDb(ctx)
+	dashboardMapper := relationDB.DashboardMapper{}
+	err := dashboardMapper.SaveBatch(db, dashboards)
+	if err != nil {
+		s.logger.Errorf("failed to insert dashboard by event: %v", err)
+		return err
+	}
+	// 创建引用关系
+	dashboardRefMapper := relationDB.DashboardRefMapper{}
+	return dashboardRefMapper.SaveBatch(db, refers)
 }
 
 // OnEventCreateDashboard 通过事件创建 Dashboard
@@ -140,33 +175,9 @@ func (s *DashboardService) OnEventCreateDashboard(event *event.CreateDashboardEv
 	if event == nil {
 		return errors.NewBuzError(400, "global.event.nil")
 	}
-	s.logger.Infof("creating dashboard by event: name=%s, uuid=%s", event.Name, event.UUID)
-	now := time.Now()
-	dashboard := &relationDB.DashboardModel{
-		ID:         event.UUID,
-		Name:       event.Name,
-		Creator:    event.UserName,
-		CreateTime: now,
-		UpdateTime: now,
-	}
-
-	db := relationDB.GetDb(context.Background())
-	dashboardMapper := relationDB.DashboardMapper{}
-	err := dashboardMapper.Insert(db, dashboard)
-	if err != nil {
-		s.logger.Errorf("failed to insert dashboard by event: %v", err)
-		return err
-	}
-
-	// 创建引用关系
-	refers := base.Map[string, *relationDB.DashboardRefModel](event.UnsAlias, func(unsAlias string) *relationDB.DashboardRefModel {
-		return &relationDB.DashboardRefModel{
-			DashboardID: event.UUID,
-			UnsAlias:    unsAlias,
-		}
-	})
-	dashboardRefMapper := relationDB.DashboardRefMapper{}
-	return dashboardRefMapper.SaveBatch(db, refers)
+	dashboardVos := event.Dashboards
+	s.logger.Debugf("creating dashboard by event: %+v", dashboardVos)
+	return s.CreateDashboards(event.Context, dashboardVos)
 }
 
 /*// DataExport 导出 Dashboard 数据

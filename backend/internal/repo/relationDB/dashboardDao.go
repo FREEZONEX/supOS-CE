@@ -37,6 +37,14 @@ func (m *DashboardMapper) Insert(db *gorm.DB, dashboard *DashboardModel) error {
 	}
 	return nil
 }
+func (m *DashboardMapper) SaveBatch(db *gorm.DB, dashboard []*DashboardModel) error {
+	err := db.Create(dashboard).Error
+	if err != nil {
+		logx.Errorf("failed to insert dashboard: %v", err)
+		return err
+	}
+	return nil
+}
 
 // UpdateById 根据 ID 更新 Dashboard
 func (m *DashboardMapper) UpdateById(db *gorm.DB, dashboard *DashboardModel) error {

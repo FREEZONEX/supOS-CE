@@ -16,6 +16,8 @@ import (
 
 // Create 创建仪表板的主方法
 func (g *GrafanaEventHandler) Create(ctx context.Context, jdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, flowName string, fromImport bool, username string) {
+	// 和 CE 一样，现在不区分导入的情况
+
 	storageAdapter := g.getPersistentService(jdbcType)
 	if storageAdapter == nil {
 		g.log.Errorf("忽略不支持的 jdbcType=%s", jdbcType.Alias)
@@ -26,59 +28,78 @@ func (g *GrafanaEventHandler) Create(ctx context.Context, jdbcType types.SrcJdbc
 	startTime := time.Now()
 	g.log.Infof("开始创建仪表板，预计数量：%d, 流程：%s, 数据源类型：%s", len(topics), flowName, jdbcType.Alias)
 
-	createdCount := g.createIndividualDashboards(ctx, topics, ds, jdbcType, fromImport, username)
-
-	elapsed := time.Since(startTime)
-	g.log.Infof("完成创建仪表板，实际创建：%d, 耗时：%v, 流程：%s", createdCount, elapsed, flowName)
-
-	// 处理组合仪表板
-	if fromImport {
-		g.createCompositeDashboard(ctx, jdbcType, topics, flowName, username)
+	//var seqMergeUns []*types.CreateTopicDto
+	var normalUns = make([]*types.CreateTopicDto, 0, len(topics))
+	//isSeq := jdbcType.TypeCode() == constants.TimeSequenceType
+	for _, topic := range topics {
+		if !base.P2v(topic.AddDashBoard) {
+			continue
+		}
+		/*	if fromImport && isSeq && topic.GetTbFieldName() != "" {
+				seqMergeUns = append(seqMergeUns, topic)
+			} else {
+			}*/
+		normalUns = append(normalUns, topic)
 	}
+	if len(normalUns) > 0 {
+
+		createdCount := g.createIndividualDashboards(ctx, normalUns, ds, jdbcType, fromImport, username)
+
+		elapsed := time.Since(startTime)
+		g.log.Infof("完成创建仪表板，实际创建：%d, 耗时：%v, 流程：%s", createdCount, elapsed, flowName)
+	}
+
+	//// 处理组合仪表板
+	//if fromImport && len(seqMergeUns) > 0 {
+	//	g.createCompositeDashboard(ctx, jdbcType, seqMergeUns, flowName, username)
+	//}
 }
 
 // createIndividualDashboards 创建单个仪表板
 func (g *GrafanaEventHandler) createIndividualDashboards(ctx context.Context, topics []*types.CreateTopicDto, ds serviceApi.DataSourceProperties, jdbcType types.SrcJdbcType, fromImport bool, username string) int {
-	count := 0
+
+	dashboards := make([]event.DashboardVo, 0, len(topics))
 	for _, dto := range topics {
 		if !base.P2v(dto.AddDashBoard) {
 			continue
 		}
+		columns := grafanautil.Fields2Columns(jdbcType, dto.Fields)
+		title := dto.Path
+		schema, table := g.extractSchemaAndTable(dto.GetTable(), ds.Schema)
+		tagNameCondition := g.buildTagNameCondition(dto)
 
-		if err := g.createDashboardForTopic(ctx, dto, ds, jdbcType, fromImport, username); err != nil {
+		g.log.Debugf("创建 Grafana 仪表板 - 列：%s, 标题：%s, 模式：%s, 表：%s, 标签条件：%s, fromImport? %v",
+			columns, title, schema, table, tagNameCondition, fromImport)
+
+		dashId := grafanautil.GetDashboardUUIDByAlias(dto.Alias)
+		err := grafanautil.CreateDashboard(dashId, ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
+		if err != nil {
 			g.log.Infof("创建仪表板失败: %v", err)
 			continue
 		}
-		count++
-	}
-	return count
-}
-
-// createDashboardForTopic 为单个主题创建仪表板
-func (g *GrafanaEventHandler) createDashboardForTopic(ctx context.Context, dto *types.CreateTopicDto, ds serviceApi.DataSourceProperties, jdbcType types.SrcJdbcType, fromImport bool, username string) error {
-	columns := grafanautil.Fields2Columns(jdbcType, dto.Fields)
-	title := dto.Path
-	schema, table := g.extractSchemaAndTable(dto.GetTable(), ds.Schema)
-	tagNameCondition := g.buildTagNameCondition(dto)
-
-	g.log.Infof("创建 Grafana 仪表板 - 列：%s, 标题：%s, 模式：%s, 表：%s, 标签条件：%s, fromImport? %v",
-		columns, title, schema, table, tagNameCondition, fromImport)
-
-	dashId := grafanautil.GetDashboardUUIDByAlias(dto.Alias)
-	er := grafanautil.CreateDashboard(dashId, ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
-	if er != nil {
-		return er
-	}
-	// 非导入模式下发布事件
-	if !fromImport {
+		//  发布事件
 		desc := base.P2v(dto.Description)
 		if len(desc) == 0 {
 			desc = dto.Path
 		}
-		spring.PublishEvent(event.NewCreateDashboardEvent(ctx, []string{dto.Alias}, dashId, title, desc, username))
+		dashboards = append(dashboards, event.DashboardVo{
+			UUID:        dashId,
+			UnsAlias:    []string{dto.Alias},
+			Name:        title,
+			Description: desc,
+			UserName:    username,
+		})
 	}
-
-	return nil
+	if len(dashboards) > 0 {
+		er := spring.PublishEvent(&event.CreateDashboardEvent{
+			ApplicationEvent: event.ApplicationEvent{Context: ctx},
+			Dashboards:       dashboards,
+		})
+		if er != nil {
+			g.log.Error("CreateDashboardErr", er)
+		}
+	}
+	return len(dashboards)
 }
 
 // extractSchemaAndTable 从表名中提取模式和表名
