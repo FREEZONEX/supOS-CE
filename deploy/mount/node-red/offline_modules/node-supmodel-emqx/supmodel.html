@@ -351,40 +351,40 @@
     // const lang = RED.i18n.detectLanguage();
 
     let firstLoad = false;
-    const debugUseTestTree = false;
+    const debugUseTestTree = true;
 
     const testTree = [
         {
             id: 'demo-factory-a',
             name: 'FactoryA',
             path: 'factoryA',
-            type: 0,
+            pathType: 0,
             children: [
                 {
                     id: 'demo-line1',
                     name: 'Line1',
                     path: 'factoryA/line1',
-                    type: 0,
+                    pathType: 0,
                     children: [
                         {
                             id: 'demo-motor1',
                             name: 'Motor1',
                             path: 'factoryA/line1/motor1',
-                            type: 0,
+                            pathType: 0,
                             children: [
-                                { id: 'demo-motor1-power', name: 'Power', path: 'factoryA/line1/motor1/power', type: 1 },
-                                { id: 'demo-motor1-temp', name: 'Temperature', path: 'factoryA/line1/motor1/temperature', type: 1 },
-                                { id: 'demo-motor1-vibration', name: 'Vibration', path: 'factoryA/line1/motor1/vibration', type: 1 }
+                                { id: 'demo-motor1-power', name: 'Power', path: 'factoryA/line1/motor1/power', pathType: 1 },
+                                { id: 'demo-motor1-temp', name: 'Temperature', path: 'factoryA/line1/motor1/temperature', pathType: 1 },
+                                { id: 'demo-motor1-vibration', name: 'Vibration', path: 'factoryA/line1/motor1/vibration', pathType: 1 }
                             ]
                         },
                         {
                             id: 'demo-pump1',
                             name: 'Pump1',
                             path: 'factoryA/line1/pump1',
-                            type: 0,
+                            pathType: 0,
                             children: [
-                                { id: 'demo-pump1-flow', name: 'Flow', path: 'factoryA/line1/pump1/flow', type: 1 },
-                                { id: 'demo-pump1-pressure', name: 'Pressure', path: 'factoryA/line1/pump1/pressure', type: 1 }
+                                { id: 'demo-pump1-flow', name: 'Flow', path: 'factoryA/line1/pump1/flow', pathType: 1 },
+                                { id: 'demo-pump1-pressure', name: 'Pressure', path: 'factoryA/line1/pump1/pressure', pathType: 1 }
                             ]
                         }
                     ]
@@ -393,27 +393,27 @@
                     id: 'demo-line2',
                     name: 'Line2',
                     path: 'factoryA/line2',
-                    type: 0,
+                    pathType: 0,
                     children: [
                         {
                             id: 'demo-line2-meter',
                             name: 'EnergyMeter',
                             path: 'factoryA/line2/energymeter',
-                            type: 0,
+                            pathType: 0,
                             children: [
-                                { id: 'demo-line2-meter-voltage', name: 'Voltage', path: 'factoryA/line2/energymeter/voltage', type: 1 },
-                                { id: 'demo-line2-meter-current', name: 'Current', path: 'factoryA/line2/energymeter/current', type: 1 },
-                                { id: 'demo-line2-meter-power', name: 'Power', path: 'factoryA/line2/energymeter/power', type: 1 }
+                                { id: 'demo-line2-meter-voltage', name: 'Voltage', path: 'factoryA/line2/energymeter/voltage', pathType: 1 },
+                                { id: 'demo-line2-meter-current', name: 'Current', path: 'factoryA/line2/energymeter/current', pathType: 1 },
+                                { id: 'demo-line2-meter-power', name: 'Power', path: 'factoryA/line2/energymeter/power', pathType: 1 }
                             ]
                         },
                         {
                             id: 'demo-line2-robot',
                             name: 'RobotArm',
                             path: 'factoryA/line2/robotArm',
-                            type: 0,
+                            pathType: 0,
                             children: [
-                                { id: 'demo-line2-robot-speed', name: 'Speed', path: 'factoryA/line2/robotArm/speed', type: 1 },
-                                { id: 'demo-line2-robot-angle', name: 'Angle', path: 'factoryA/line2/robotArm/angle', type: 1 }
+                                { id: 'demo-line2-robot-speed', name: 'Speed', path: 'factoryA/line2/robotArm/speed', pathType: 1 },
+                                { id: 'demo-line2-robot-angle', name: 'Angle', path: 'factoryA/line2/robotArm/angle', pathType: 1 }
                             ]
                         }
                     ]
@@ -422,15 +422,15 @@
                     id: 'demo-line3',
                     name: 'Line3',
                     path: 'factoryA/line3',
-                    type: 0,
+                    pathType: 0,
                     children: [
-                        { id: 'demo-line3-pack', name: 'Packaging', path: 'factoryA/line3/packaging', type: 0, children: [
-                            { id: 'demo-line3-pack-count', name: 'Count', path: 'factoryA/line3/packaging/count', type: 1 },
-                            { id: 'demo-line3-pack-rate', name: 'Rate', path: 'factoryA/line3/packaging/rate', type: 1 }
+                        { id: 'demo-line3-pack', name: 'Packaging', path: 'factoryA/line3/packaging', pathType: 0, children: [
+                            { id: 'demo-line3-pack-count', name: 'Count', path: 'factoryA/line3/packaging/count', pathType: 1 },
+                            { id: 'demo-line3-pack-rate', name: 'Rate', path: 'factoryA/line3/packaging/rate', pathType: 1 }
                         ]},
-                        { id: 'demo-line3-qc', name: 'Quality', path: 'factoryA/line3/quality', type: 0, children: [
-                            { id: 'demo-line3-qc-pass', name: 'PassRate', path: 'factoryA/line3/quality/passRate', type: 1 },
-                            { id: 'demo-line3-qc-defect', name: 'Defect', path: 'factoryA/line3/quality/defect', type: 1 }
+                        { id: 'demo-line3-qc', name: 'Quality', path: 'factoryA/line3/quality', pathType: 0, children: [
+                            { id: 'demo-line3-qc-pass', name: 'PassRate', path: 'factoryA/line3/quality/passRate', pathType: 1 },
+                            { id: 'demo-line3-qc-defect', name: 'Defect', path: 'factoryA/line3/quality/defect', pathType: 1 }
                         ]}
                     ]
                 }
@@ -440,32 +440,32 @@
             id: 'demo-factory-b',
             name: 'PlantB',
             path: 'plantB',
-            type: 0,
+            pathType: 0,
             children: [
                 {
                     id: 'demo-b-line1',
                     name: 'Process1',
                     path: 'plantB/process1',
-                    type: 0,
+                    pathType: 0,
                     children: [
-                        { id: 'demo-b-reactor-temp', name: 'ReactorTemp', path: 'plantB/process1/reactor/temp', type: 1 },
-                        { id: 'demo-b-reactor-ph', name: 'ReactorPH', path: 'plantB/process1/reactor/ph', type: 1 },
-                        { id: 'demo-b-reactor-level', name: 'ReactorLevel', path: 'plantB/process1/reactor/level', type: 1 }
+                        { id: 'demo-b-reactor-temp', name: 'ReactorTemp', path: 'plantB/process1/reactor/temp', pathType: 1 },
+                        { id: 'demo-b-reactor-ph', name: 'ReactorPH', path: 'plantB/process1/reactor/ph', pathType: 1 },
+                        { id: 'demo-b-reactor-level', name: 'ReactorLevel', path: 'plantB/process1/reactor/level', pathType: 1 }
                     ]
                 },
                 {
                     id: 'demo-b-line2',
                     name: 'Utilities',
                     path: 'plantB/utilities',
-                    type: 0,
+                    pathType: 0,
                     children: [
-                        { id: 'demo-b-chiller', name: 'Chiller', path: 'plantB/utilities/chiller', type: 0, children: [
-                            { id: 'demo-b-chiller-supply', name: 'SupplyTemp', path: 'plantB/utilities/chiller/supplyTemp', type: 1 },
-                            { id: 'demo-b-chiller-return', name: 'ReturnTemp', path: 'plantB/utilities/chiller/returnTemp', type: 1 }
+                        { id: 'demo-b-chiller', name: 'Chiller', path: 'plantB/utilities/chiller', pathType: 0, children: [
+                            { id: 'demo-b-chiller-supply', name: 'SupplyTemp', path: 'plantB/utilities/chiller/supplyTemp', pathType: 1 },
+                            { id: 'demo-b-chiller-return', name: 'ReturnTemp', path: 'plantB/utilities/chiller/returnTemp', pathType: 1 }
                         ]},
-                        { id: 'demo-b-boiler', name: 'Boiler', path: 'plantB/utilities/boiler', type: 0, children: [
-                            { id: 'demo-b-boiler-pressure', name: 'SteamPressure', path: 'plantB/utilities/boiler/pressure', type: 1 },
-                            { id: 'demo-b-boiler-temp', name: 'SteamTemp', path: 'plantB/utilities/boiler/temp', type: 1 }
+                        { id: 'demo-b-boiler', name: 'Boiler', path: 'plantB/utilities/boiler', pathType: 0, children: [
+                            { id: 'demo-b-boiler-pressure', name: 'SteamPressure', path: 'plantB/utilities/boiler/pressure', pathType: 1 },
+                            { id: 'demo-b-boiler-temp', name: 'SteamTemp', path: 'plantB/utilities/boiler/temp', pathType: 1 }
                         ]}
                     ]
                 }
@@ -635,6 +635,33 @@
         return labelText.replace(reg, match => `<span class="topic-highlight">${match}</span>`);
     };
 
+    const filterTopicTree = (nodes, searchKey = '') => {
+        const keyword = (searchKey || '').trim().toLowerCase();
+        if (!keyword) {
+            return nodes || [];
+        }
+        const matchNode = (node) => {
+            const text = [
+                node.path,
+                node.topic,
+                node.alias,
+                node.name,
+                node.label
+            ].find(Boolean) || '';
+            return text.toString().toLowerCase().includes(keyword);
+        };
+        const loop = (list) => {
+            return (list || []).map(n => {
+                const children = loop(n.children || n.childrens || []);
+                if (matchNode(n) || children.length > 0) {
+                    return Object.assign({}, n, { children });
+                }
+                return null;
+            }).filter(Boolean);
+        };
+        return loop(nodes);
+    };
+
     const buildTreeHtml = (nodes, level = 0, searchKey = '') => {
         if (!nodes || nodes.length === 0) {
             return '';
@@ -647,11 +674,12 @@
             const renderedLabel = highlightLabel(label, searchKey);
             const id = (n.id || topic || Math.random().toString(16).slice(2));
             const hasChild = childrenHtml ? 'has-child' : 'leaf';
-            const typeIcon = n.type === 0 ? '<i class="fa fa-folder-o" style="margin-right:6px;"></i>' : '<i class="fa fa-file-text-o" style="margin-right:6px;"></i>';
+            const nodeType = (typeof n.pathType !== 'undefined') ? n.pathType : n.type;
+            const typeIcon = nodeType === 0 ? '<i class="fa fa-folder-o" style="margin-right:6px;"></i>' : '<i class="fa fa-file-text-o" style="margin-right:6px;"></i>';
             const toggle = childrenHtml ? `<span class="tree-toggle" data-toggle="1">&#9654;</span>` : `<span class="tree-toggle"></span>`;
             const collapsedClass = childrenHtml ? 'collapsed' : '';
             return `<li class="${hasChild} ${collapsedClass}" data-level="${level}">
-                ${toggle}<label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}" data-type="${n.type || ''}"/>${typeIcon}<span class="tree-label">${renderedLabel}</span></label>
+                ${toggle}<label><input type="checkbox" class="topic-check" data-topic="${topic}" data-alias="${alias}" data-label="${label}" data-id="${id}" data-haschild="${childrenHtml ? '1':'0'}" data-type="${(nodeType === 0 || nodeType === 1 || nodeType === 2) ? nodeType : ''}"/>${typeIcon}<span class="tree-label">${renderedLabel}</span></label>
                 ${childrenHtml}
             </li>`;
         }).join('')}</ul>`;
@@ -912,7 +940,7 @@
     let timeoutId;
 
     const delayShowFileDropList = (node) => {
-        var searchParam = $('.search-input-m').val();
+        var searchParam = ($('.search-input-m').val() || '').trim();
             // 清除之前的定时器
         clearTimeout(timeoutId);
         // 设置新的定时器
@@ -924,7 +952,8 @@
 
     // 显示uns文件下拉列表
     const showFileDropList = (node, inputParam) => {
-        var encodeUrl = encodeURI(`/inter-api/supos/uns/search?k=${inputParam}&pageNo=1&pageSize=100&orderBy=createTime&type=2&normal=true`);
+        const keyword = (inputParam || '').trim();
+        var encodeUrl = encodeURI(`/inter-api/supos/uns/search?k=${keyword}&pageNo=1&pageSize=100&orderBy=createTime&type=2&normal=true`);
         $.ajax({
             url: encodeUrl,
             type: 'GET',
@@ -977,10 +1006,13 @@
     };
 
     const loadTopicTree = (node, searchKey = '') => {
+        const normalizedKey = (searchKey || '').trim();
         if (debugUseTestTree) {
-            topicTreeCache = testTree;
-            renderTopicTree(topicTreeCache, searchKey);
-            bindTopicCheckboxEvents();
+            if (!topicTreeCache.length) {
+                topicTreeCache = testTree;
+            }
+            const renderData = filterTopicTree(topicTreeCache, normalizedKey);
+            renderTopicTree(renderData, normalizedKey);
             return;
         }
         $.ajax({
@@ -988,12 +1020,16 @@
             type: 'GET',
             dataType: 'json',
             data: {
-                key: searchKey || ''
+                key: normalizedKey || ''
             },
             success: function(res) {
-                topicTreeCache = res.data || res || [];
-                renderTopicTree(topicTreeCache, searchKey);
-                bindTopicCheckboxEvents();
+                const resData = Array.isArray(res && res.data) ? res.data : (Array.isArray(res) ? res : []);
+                if (!normalizedKey) {
+                    topicTreeCache = resData;
+                }
+                const sourceData = normalizedKey ? resData : (topicTreeCache || []);
+                const filteredData = filterTopicTree(sourceData, normalizedKey);
+                renderTopicTree(filteredData, normalizedKey);
             },
             error: function(err) {
                 console.log(err);
@@ -1319,6 +1355,14 @@
                 clearTimeout(topicSearchTimer);
                 topicSearchTimer = setTimeout(() => {
                     const key = ($('#topic-search-input').val() || '').trim();
+                    if (!key) {
+                        if (topicTreeCache && topicTreeCache.length > 0) {
+                            renderTopicTree(topicTreeCache, '');
+                        } else {
+                            loadTopicTree(node, '');
+                        }
+                        return;
+                    }
                     loadTopicTree(node, key);
                 }, 700);
             };
