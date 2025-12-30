@@ -118,6 +118,21 @@ func DeployFlow(
 
 	flowNodes, globalNodes := splitGlobalNodes(rawNodes)
 
+	// mqtt的全局节点先部署
+	if len(globalNodes) > 0 {
+		mergedGlobal := mergeGlobalNodes(ctx, client, globalNodes)
+		globalBody := map[string]any{
+			"id":      "global",
+			"configs": toInterfaceSlice(mergedGlobal),
+		}
+		var gout map[string]any
+		code, body, errs := client.DoJSON(ctx, "PUT", "/flow/global", globalBody, &gout)
+		if len(errs) > 0 || (code != 200 && code != 204) {
+			logx.WithContext(ctx).Errorf("update global flow failed: code=%d err=%v body=%s", code, errs, string(body))
+			return "", errors.System.WithMsg("error.sys.systemError").AddDetailf("node-red update global failed: code=%d err=%v body=%s", code, errs, string(body))
+		}
+	}
+
 	flowID := strings.TrimSpace(rec.FlowID)
 	// create flow if absent
 	if flowID == "" {
@@ -155,20 +170,6 @@ func DeployFlow(
 	if len(errs) > 0 || (code != 200 && code != 204) {
 		logx.WithContext(ctx).Errorf("update flow failed: code=%d err=%v body=%s", code, errs, string(body))
 		return "", errors.System.WithMsg("error.sys.systemError").AddDetailf("node-red update flow failed: code=%d err=%v body=%s", code, errs, string(body))
-	}
-
-	if len(globalNodes) > 0 {
-		mergedGlobal := mergeGlobalNodes(ctx, client, globalNodes)
-		globalBody := map[string]any{
-			"id":      "global",
-			"configs": toInterfaceSlice(mergedGlobal),
-		}
-		var gout map[string]any
-		code, body, errs = client.DoJSON(ctx, "PUT", "/flow/global", globalBody, &gout)
-		if len(errs) > 0 || (code != 200 && code != 204) {
-			logx.WithContext(ctx).Errorf("update global flow failed: code=%d err=%v body=%s", code, errs, string(body))
-			return "", errors.System.WithMsg("error.sys.systemError").AddDetailf("node-red update global failed: code=%d err=%v body=%s", code, errs, string(body))
-		}
 	}
 
 	syncSupmodelMappings(ctx, client, flowNodes)
