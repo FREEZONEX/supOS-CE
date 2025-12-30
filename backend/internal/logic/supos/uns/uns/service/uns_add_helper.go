@@ -676,7 +676,18 @@ func (u *UnsAddService) trySetId(
 					for _, f := range affected {
 						tdbFs, er := FieldUtils.ProcessFieldDefines(types.SrcJdbcType(f.DataSrcId), newUns.Fields, true, true)
 						if er == nil && tdbFs != nil {
-							f.Fields = tdbFs.Fields
+							if base.P2v(f.DataType) == constants.JsonbType {
+								jsfStr, _ := JsonUtil.ToJson(newUns.Fields)
+								pm := f.GetProtocolMap()
+								if pm == nil {
+									pm = make(map[string]interface{})
+								}
+								pm["jsf"] = jsfStr
+								jsfStr, _ = JsonUtil.ToJson(pm)
+								f.Protocol = &jsfStr
+							} else {
+								f.Fields = tdbFs.Fields
+							}
 							addUpdate(f)
 						}
 						dbFiles[f.Id] = f

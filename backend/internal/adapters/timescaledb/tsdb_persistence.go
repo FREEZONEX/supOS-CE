@@ -37,8 +37,8 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	if len(tableInfoMap) == 0 {
 		return nil
 	}
-	smallData := make([]serviceApi.UnsData, 0, batchSize)
-	bigData := make([]serviceApi.UnsData, 0, batchSize)
+	smallData := make([]*serviceApi.UnsData, 0, batchSize)
+	bigData := make([]*serviceApi.UnsData, 0, batchSize)
 	for _, tableInfo := range tableInfoMap {
 		if len(tableInfo.Data) < _smallBatchSize {
 			smallData = append(smallData, tableInfo)
@@ -78,7 +78,7 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	}
 	return nil
 }
-func processSingleTableInTx(conn *pgxpool.Conn, tableInfo serviceApi.UnsData, batchSize int) error {
+func processSingleTableInTx(conn *pgxpool.Conn, tableInfo *serviceApi.UnsData, batchSize int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*15)
 	defer cancel()
 	tx, err := conn.Begin(ctx)
@@ -112,7 +112,7 @@ func processSingleTableInTx(conn *pgxpool.Conn, tableInfo serviceApi.UnsData, ba
 	return tx.Commit(ctx)
 }
 
-func copyDataToTempTable(ctx context.Context, conn pgx.Tx, batchSize int, tableInfo serviceApi.UnsData, tempTableName string) error {
+func copyDataToTempTable(ctx context.Context, conn pgx.Tx, batchSize int, tableInfo *serviceApi.UnsData, tempTableName string) error {
 	if len(tableInfo.Data) == 0 {
 		return nil
 	}

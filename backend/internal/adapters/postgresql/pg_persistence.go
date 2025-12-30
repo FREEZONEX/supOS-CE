@@ -46,8 +46,8 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	return nil
 }
 
-func GetTableDataMap(unsData []serviceApi.UnsData) map[string]serviceApi.UnsData {
-	tableInfoMap := make(map[string]serviceApi.UnsData, len(unsData))
+func GetTableDataMap(unsData []serviceApi.UnsData) map[string]*serviceApi.UnsData {
+	tableInfoMap := make(map[string]*serviceApi.UnsData, len(unsData))
 	for _, data := range unsData {
 		uns, list := data.Uns, data.Data
 		if len(list) == 0 || uns == nil {
@@ -61,7 +61,7 @@ func GetTableDataMap(unsData []serviceApi.UnsData) map[string]serviceApi.UnsData
 		tableName := uns.GetTable()
 		tableInfo, ok := tableInfoMap[tableName]
 		if !ok {
-			tableInfo = serviceApi.UnsData{
+			tableInfo = &serviceApi.UnsData{
 				Data: list,
 				Uns:  uns,
 			}
@@ -73,7 +73,7 @@ func GetTableDataMap(unsData []serviceApi.UnsData) map[string]serviceApi.UnsData
 	return tableInfoMap
 }
 
-func SaveBatch(conn *pgxpool.Conn, defaultSchema string, batchSize int, unsData []serviceApi.UnsData) (allErrors []string) {
+func SaveBatch(conn *pgxpool.Conn, defaultSchema string, batchSize int, unsData []*serviceApi.UnsData) (allErrors []string) {
 	// 分批处理大数据量
 	for _, segment := range base.Partition(unsData, batchSize) {
 		var batch = &pgx.Batch{}
@@ -93,7 +93,7 @@ func SaveBatch(conn *pgxpool.Conn, defaultSchema string, batchSize int, unsData 
 
 type batchTask struct {
 	batch *pgx.Batch
-	uns   []serviceApi.UnsData
+	uns   []*serviceApi.UnsData
 }
 
 func execBatch(conn *pgxpool.Conn, task batchTask, defaultSchema string, retry int) error {
@@ -130,7 +130,7 @@ func execBatch(conn *pgxpool.Conn, task batchTask, defaultSchema string, retry i
 				//55000 	object_in_use 	对象正在被使用（如删除正在使用的表） 	    等待事务结束，或使用 DROP ... CASCADE 强制清理依赖
 				if retryTask.batch == nil {
 					retryTask.batch = &pgx.Batch{}
-					retryTask.uns = make([]serviceApi.UnsData, 0, len(task.uns))
+					retryTask.uns = make([]*serviceApi.UnsData, 0, len(task.uns))
 				}
 				q := task.batch.QueuedQueries[i]
 				retryTask.batch.Queue(q.SQL, q.Arguments)
@@ -141,7 +141,7 @@ func execBatch(conn *pgxpool.Conn, task batchTask, defaultSchema string, retry i
 		}
 	}
 	if retryTask.batch != nil {
-		uns := base.Map[serviceApi.UnsData, *types.CreateTopicDto](retryTask.uns, func(e serviceApi.UnsData) *types.CreateTopicDto {
+		uns := base.Map[*serviceApi.UnsData, *types.CreateTopicDto](retryTask.uns, func(e *serviceApi.UnsData) *types.CreateTopicDto {
 			return e.Uns
 		})
 		tableInfoMap, er := ListTableInfos(conn, uns)
