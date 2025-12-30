@@ -45,7 +45,7 @@ func (l *CreateSourceMockFlowLogic) CreateSourceMockFlow(req *types.SourceFlowMo
 	if alias == "" || path == "" {
 		return nil, errors.Parameter.WithMsg("error.sys.parameterError")
 	}
-	tpl, err := templates.Load("mock_metrics.json.tpl")
+	tpl, err := templates.Load("relational-emqx.json.tpl")
 	if err != nil {
 		l.Errorf("load mock template failed: %v", err)
 		return nil, errors.System.AddDetail(err)
