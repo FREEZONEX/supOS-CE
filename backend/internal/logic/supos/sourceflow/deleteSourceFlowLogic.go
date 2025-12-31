@@ -48,9 +48,20 @@ func (l *DeleteSourceFlowLogic) DeleteFlowWithType(req *types.SourceFlowDeleteRe
 	}
 	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
 	template := strings.TrimSpace(flowType)
+	rec, err := LoadFlowByType(l.ctx, repo, flowID, template)
 	if template != "" {
-		if _, err := LoadFlowByType(l.ctx, repo, flowID, template); err != nil {
+		if err != nil {
 			return err
+		}
+	}
+	if l.svcCtx != nil && l.svcCtx.SourceNodeRed != nil && rec != nil {
+		if flowIDStr := strings.TrimSpace(rec.FlowID); flowIDStr != "" {
+			var out map[string]any
+			code, body, errs := l.svcCtx.SourceNodeRed.DoJSON(l.ctx, "DELETE", "/flow/"+flowIDStr, nil, &out)
+			if len(errs) > 0 || (code != 200 && code != 204 && code != 404) {
+				l.Errorf("delete nodered flow failed: code=%d err=%v body=%s", code, errs, string(body))
+				return errors.System.WithMsg("error.sys.systemError").AddDetailf("node-red delete flow failed: code=%d err=%v body=%s", code, errs, string(body))
+			}
 		}
 	}
 	if err := repo.ReplaceModels(l.ctx, flowID, nil); err != nil {
