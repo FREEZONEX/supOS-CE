@@ -489,7 +489,7 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 				if _, has := data[ct]; !has && len(data) > 0 {
 					data[ct] = info.UpdateTime
 				}
-			} else if dbType == constants.JsonbType {
+			} else if base.P2v(message.Def.DataType) == constants.JsonbType {
 				if jsonS, has := data["json"]; has {
 					str, isStr := jsonS.(string)
 					if !isStr {
