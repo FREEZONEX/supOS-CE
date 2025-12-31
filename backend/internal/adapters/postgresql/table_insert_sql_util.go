@@ -37,7 +37,7 @@ func getInsertStatement(uns *types.CreateTopicDto, data []map[string]string) (sq
 					mill, _ := strconv.ParseFloat(v, 64)
 					if mill > 0 {
 						utcTime := time.UnixMilli(int64(mill)).UTC()
-						v = utcTime.Format(time.RFC3339)
+						v = utcTime.Format(time.RFC3339Nano)
 					}
 				}
 				params = append(params, v)

@@ -12,17 +12,26 @@ func DeduplicationById(def *types.CreateTopicDto, data []map[string]string) []ma
 		return data
 	}
 	idMap := base.NewLinkedHashMap[string, map[string]string]()
+	mergePut := func(id string, record map[string]string) {
+		old := idMap.Get(id)
+		if len(old) > 0 {
+			for k, v := range record {
+				old[k] = v
+			}
+		} else {
+			idMap.Put(id, record)
+		}
+	}
 	if sz := len(pks); sz == 1 {
 		pk := pks[0]
 		for _, record := range data {
 			var id string
 			if val, ok := record[pk]; ok {
 				id = val
-				idMap.Put(val, record)
 			} else {
 				id = fmt.Sprintf("%p", record)
 			}
-			idMap.Put(id, record)
+			mergePut(id, record)
 		}
 	} else {
 		initCap := sz * 20
@@ -45,7 +54,7 @@ func DeduplicationById(def *types.CreateTopicDto, data []map[string]string) []ma
 				id = idBd.String()
 			}
 			idBd.Reset()
-			idMap.Put(id, record)
+			mergePut(id, record)
 		}
 	}
 	return idMap.Values()
