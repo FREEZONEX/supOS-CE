@@ -1055,8 +1055,10 @@
                             // const lastSlashIndex = data.data.path.lastIndexOf('/');
                             // let folder = lastSlashIndex !== -1 ? data.data.path.substring(0, (lastSlashIndex+1)) : ''; 
                             if (!f.systemField) { // 排除系统字段
-                                let fieldType = f.type.toLowerCase();
-                                templateModels[node.id].push([data.data.path, alias, f.name, fieldType, i+'']);
+                                const fieldName = f.name || f.attributeName || f.fieldName || "";
+                                const rawType = f.type || f.attributeType || f.fieldType || "";
+                                const fieldType = (rawType || "").toString().toLowerCase();
+                                templateModels[node.id].push([data.data.path, alias, fieldName, fieldType, i+'']);
                                 i += 1;
                             }
                         });
@@ -1417,9 +1419,11 @@
                                 if (f.systemField) {
                                     return;
                                 }
-                                const fieldType = (f.type || '').toLowerCase();
+                                const fieldName = f.name || f.attributeName || f.fieldName || "";
+                                const rawType = f.type || f.attributeType || f.fieldType || "";
+                                const fieldType = (rawType || "").toString().toLowerCase();
                                 const tagVal = (start + idx + fi).toString();
-                                const row = [body.path || item.topic, alias, f.name, fieldType, tagVal];
+                                const row = [body.path || item.topic, alias, fieldName, fieldType, tagVal];
                                 const key = buildUniqueKey(row);
                                 if (!existingKeys.has(key)) {
                                     templateModels[node.id].push(row);
