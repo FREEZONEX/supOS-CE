@@ -572,11 +572,11 @@
         if (Array.isArray(item)) {
             return item;
         }
-        const selector = toSafeString(item.selector || item.tag || item.target || item.topicIndex);
-        const targetTopic = toSafeString(item.targetTopic || item.path || item.topic);
-        const targetField = toSafeString(item.targetField || item.propName || item.field || item.property);
+        const selector = toSafeString(item.tagConfiguration || item.TagConfiguration || item.selector || item.tag || item.target || item.topicIndex);
+        const targetTopic = toSafeString(item.topic || item.Topic || item.targetTopic || item.path);
+        const targetField = toSafeString(item.attributeName || item.AttributeName || item.targetField || item.propName || item.field || item.property);
         const alias = toSafeString(item.alias || item.targetAlias);
-        const propType = toSafeString(item.propType || item.type || "string") || "string";
+        const propType = toSafeString(item.attributeType || item.targetType || item.propType || item.type);
         if (!selector && !targetTopic && !targetField) {
             return null;
         }
@@ -1207,18 +1207,7 @@
                 value: ""
             },
             mapping: {
-                value: [],
-                validate: function(v, opt) {
-                    const nodeId = this.id;
-                    const models = templateModels[nodeId] || [];
-                    const msg = checkTable(this, models);
-                    if (msg) {
-                        RED.notify(msg, "error");
-                        console.log("validation failed:", msg);
-                        return false;
-                    }
-                    return true;
-                }
+                value: []
             },
             modelShowName: {
                 value: ""
