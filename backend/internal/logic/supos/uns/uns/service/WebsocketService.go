@@ -489,6 +489,18 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 				if _, has := data[ct]; !has && len(data) > 0 {
 					data[ct] = info.UpdateTime
 				}
+			} else if dbType == constants.JsonbType {
+				if jsonS, has := data["json"]; has {
+					str, isStr := jsonS.(string)
+					if !isStr {
+						str = fmt.Sprint(jsonS)
+					}
+					var dMap map[string]any
+					ers := json.Unmarshal([]byte(str), &dMap)
+					if ers == nil {
+						data = dMap
+					}
+				}
 			}
 			info.Dt = dt
 			info.Data = data
