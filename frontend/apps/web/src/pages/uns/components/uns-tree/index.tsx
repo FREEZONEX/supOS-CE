@@ -81,7 +81,7 @@ const Operation = () => {
   const [reverserOpen, setReverserOpen] = useState<boolean>(false); //复制的topic
 
   const hasTopicType =
-    enableAutoCategorization && selectedNode && !(selectedNode?.type === 0 && !selectedNode?.dataType);
+    enableAutoCategorization && selectedNode && !(selectedNode?.pathType === 0 && !selectedNode?.dataType);
 
   const options = useMemo(() => {
     return filterPermissionToList<{
@@ -437,7 +437,7 @@ const TreeNodeIcon = memo(({ dataNode }: { dataNode: UnsTreeNode }) => {
   let Dom;
   let color;
   const parentDataType = enableAutoCategorization
-    ? dataNode.type === 0
+    ? dataNode.pathType === 0
       ? dataNode.dataType
       : dataNode.parentDataType
     : 0;
@@ -1042,7 +1042,7 @@ const TopTreeCom = ({
         }}
         renderTitleStyle={(dataNode) => {
           const bgColor =
-            dataNode.type === 0 && dataNode.dataType && enableAutoCategorization
+            dataNode.pathType === 0 && dataNode.dataType && enableAutoCategorization
               ? dataNode.dataType === 1
                 ? '#FCF4D6'
                 : dataNode.dataType === 2
