@@ -8,6 +8,13 @@ Database:
   DBType: pgsql
   DSN: postgres://postgres:postgres@postgresql:5432/postgres?search_path=supos
 
+log:
+  ServiceName: uns
+  Mode: file
+  Path: logs
+  Level: info
+  KeepDays: 7
+
 persistent_url:
   postgresql: postgres://postgres:postgres@tsdb:5432/postgres
   timescaledb: postgres://postgres:postgres@tsdb:5432/postgres

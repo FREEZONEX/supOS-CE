@@ -13,7 +13,6 @@ type Config struct {
 	rest.RestConf
 	Database      conf.Database
 	OssConf       conf.OssConf      `json:",optional"`
-	LoggerLevel   string            `json:"loggerLevel,optional" `
 	Export        ExportConfig      `json:"export,optional"`
 	GrafanaUrl    string            `json:"grafanaUrl,optional,default=http://grafana:3000"`
 	PersistentUrl map[string]string `json:"persistent_url,optional"`

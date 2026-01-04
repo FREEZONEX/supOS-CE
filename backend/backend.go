@@ -39,9 +39,7 @@ func main() {
 	server := rest.MustNewServer(c.RestConf, rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
 	defer server.Stop()
 
-	if lv := c.LoggerLevel; lv != "" {
-		system.SetLogLevel(lv)
-	}
+	system.SetupLog(c.Log)
 
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
