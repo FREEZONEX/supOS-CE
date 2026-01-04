@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -63,6 +64,13 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 	var errJsonEncoder *json.Encoder
 
 	pushStatus := func(status *common.RunningStatus) {
+		task := status.Task
+		segments := strings.Split(task, ".")
+		if sz := len(segments); sz > 1 {
+			status.Task = I18nUtils.GetMessage(segments[sz-2])
+		} else if sz == 1 {
+			status.Task = I18nUtils.GetMessage(status.Task)
+		}
 		tsJson, _ := json.Marshal(status)
 		_, er := respWriter.Write(append(tsJson, '\n', '\n'))
 		respWriter.(http.Flusher).Flush()

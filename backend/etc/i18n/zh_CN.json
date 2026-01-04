@@ -1650,5 +1650,14 @@
   "MenuConfiguration.guideCreateMenu": "创建不同层级的菜单",
   "MenuConfiguration.guideRefreshMenu": "刷新整个菜单结构",
   "MenuConfiguration.guideSortMenu": "快速进行菜单排序",
-  "MenuConfiguration.menu": "菜单"
+  "MenuConfiguration.menu": "菜单",
+  "Label": "创建标签",
+  "Template": "创建模版",
+  "Uns": "创建UNS..",
+  "GrafanaEventHandler": "创建 Grafana 面板",
+  "UnsDefinitionService": "刷新缓存",
+  "PgPersistentService": "创建关系表",
+  "TsdbPersistentService": "创建时序表",
+  "SourceFlowService": "创建Node-red流程",
+  "UnsTopologyService": "更新拓扑"
 }

@@ -1648,5 +1648,14 @@
   "MenuConfiguration.guideCreateMenu": "Create different levels of menus",
   "MenuConfiguration.guideRefreshMenu": "Refresh the entire menu structure",
   "MenuConfiguration.guideSortMenu": "Quickly sort menus",
-  "MenuConfiguration.menu": "Menu"
+  "MenuConfiguration.menu": "Menu",
+  "Label": "Create Labels",
+  "Template": "Create Templates",
+  "Uns": "Create UNS..",
+  "GrafanaEventHandler": "Create Grafana Dashboard",
+  "UnsDefinitionService": "Refresh cache",
+  "PgPersistentService": "Create relation tables",
+  "TsdbPersistentService": "Create Timeseries tables",
+  "SourceFlowService": "Create SourceFlow",
+  "UnsTopologyService": "Update Topology"
 }
