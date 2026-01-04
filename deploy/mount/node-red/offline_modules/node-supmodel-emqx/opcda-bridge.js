@@ -14,11 +14,11 @@ class OpcdaBridge {
         this.queue = q.newQueue();
 
         this.timer = setInterval(() => {
-            let newMsg = this.queue.poll();
-            if (newMsg != null) {
+            let newMsg = null;
+            while ((newMsg = this.queue.poll()) != null) {
                 node.send([newMsg])
             }
-        }, interval); // 5毫秒轮询队列里的数据，每次只取一个topic发送
+        }, interval); // 轮询队列里的数据，每次只取一个topic发送
         
         node.log(`OPCDA ${interval}ms定时推送任务开启, 节点ID=${node.id}`)
     }

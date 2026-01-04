@@ -20,11 +20,11 @@ class OpcuaBridge {
         this.mappings = mappings;
 
         this.timer = setInterval(() => {
-            let newMsg = this.queue.poll();
-            if (newMsg != null) {
+            let newMsg = null;
+            while ((newMsg = this.queue.poll()) != null) {
                 node.send([newMsg])
             }
-        }, interval); // 5毫秒轮询队列里的数据，每次只取一个topic发送
+        }, interval); // 轮询队列里的数据，每次只取一个topic发送
 
         // this.topologyTimer = setInterval(() => {
         //     fs.unlink(this.topologyFile, (err) => {

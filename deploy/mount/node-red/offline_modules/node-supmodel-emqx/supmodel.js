@@ -339,10 +339,10 @@ module.exports = function (RED) {
         node.interval = config.interval || 100; // 推送频率 默认100ms
 
         switch (node.protocol) {
-            case "opcua": node.bridge = opcua.newOpcuaBridge(node, node.mappings, 5); break;
-            case "opcda": node.bridge = opcda.newOpcdaBridge(node, node.mappings, 5); break;
-            case "modbus": node.bridge = modbus.newModbusBridge(node, node.mappings, 5); break;
-            case "mqtt": node.bridge = mqtt.newMqttBridge(node, node.mappings, 5); break;
+            case "opcua": node.bridge = opcua.newOpcuaBridge(node, node.mappings, 1); break;
+            case "opcda": node.bridge = opcda.newOpcdaBridge(node, node.mappings, 1); break;
+            case "modbus": node.bridge = modbus.newModbusBridge(node, node.mappings, 1); break;
+            case "mqtt": node.bridge = mqtt.newMqttBridge(node, node.mappings, 1); break;
             case "mock": node.bridge = mock.newMockDataBridge(node, 1000); break;
             case "custom": node.bridge = custom.newCustomProtocolBridge(node, node.mappings, 5); break;
             default: {

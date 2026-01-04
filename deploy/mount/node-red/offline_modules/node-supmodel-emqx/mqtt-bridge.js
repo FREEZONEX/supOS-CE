@@ -16,8 +16,8 @@ class MqttBridge {
         this.mappings = mappings;
 
         this.timer = setInterval(() => {
-            let newMsg = this.queue.poll();
-            if (newMsg != null) {
+            let newMsg = null;
+            while ((newMsg = this.queue.poll()) != null) {
                 node.send([newMsg])
             }
         }, interval); 
