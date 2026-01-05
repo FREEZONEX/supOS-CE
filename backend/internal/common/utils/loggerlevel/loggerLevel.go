@@ -14,6 +14,7 @@ const (
 )
 
 var CurrentLevel = "INFO"
+var DoStats = false
 
 func IsDebug() bool {
 	return strings.ToLower(CurrentLevel) == levelDebug

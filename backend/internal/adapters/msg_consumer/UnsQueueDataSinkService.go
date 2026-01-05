@@ -6,6 +6,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/loggerlevel"
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/diskqueue"
@@ -112,6 +113,7 @@ func (s *UnsQueueDataSinkService) fetchData() {
 		case <-tk.C:
 			tk.Reset(maxWait)
 			if size > 0 {
+				logSinkFetch(size, msgToSend[0])
 				//上车
 				size = 0
 				s.persistence(msgToSend)
@@ -135,6 +137,7 @@ func (s *UnsQueueDataSinkService) fetchData() {
 				}
 			}
 			if size >= fetchSize {
+				logSinkFetch(size, msgToSend[0])
 				//上车
 				size = 0
 				s.persistence(msgToSend)
@@ -143,7 +146,11 @@ func (s *UnsQueueDataSinkService) fetchData() {
 		}
 	}
 }
-
+func logSinkFetch(size int, data *TopicMessage) {
+	if loggerlevel.DoStats {
+		logx.Statf("sinkFetch: %d, first: %v", size, data)
+	}
+}
 func (s *UnsQueueDataSinkService) persistence(msgLit []*TopicMessage) {
 	if s.persistentServiceMap == nil {
 		s.once.Do(func() {

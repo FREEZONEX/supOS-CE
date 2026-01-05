@@ -73,8 +73,20 @@ func (u *UnsMessageConsumer) OnMsg(ctx context.Context, topic string, msgId int,
 		u.sendErrMsg(def, strPayload, err.Error())
 		return
 	}
-	u.sendData(u.procDataAndSendWs(def, data, strPayload, nil))
+
+	go func() {
+		t0 := time.Now()
+		msgList := u.procDataAndSendWs(def, data, strPayload, nil)
+		t1 := time.Now()
+		u.sendData(msgList)
+		t2 := time.Now()
+		if du := t2.Sub(t0); du > slowGap {
+			logx.WithDuration(du).Slowf("sendWs: %v, sink: %v", t1.Sub(t0), t2.Sub(t1))
+		}
+	}()
 }
+
+const slowGap = 500 * time.Millisecond
 
 // OnMessageByAlias 处理单个消息
 func (u *UnsMessageConsumer) OnMessageByAlias(alias, payload string) {
@@ -90,7 +102,8 @@ func (u *UnsMessageConsumer) OnMessageByAlias(alias, payload string) {
 		u.sendErrMsg(def, payload, err.Error())
 		return
 	}
-	u.sendData(u.procDataAndSendWs(def, data, payload, nil))
+	msgList := u.procDataAndSendWs(def, data, payload, nil)
+	u.sendData(msgList)
 }
 
 // OnBatchMessage 处理批量消息
@@ -311,6 +324,9 @@ func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64
 	}
 	mergeList := make([]map[string]interface{}, 0, len(list))
 	for _, vm := range list {
+		if len(vm) == 0 {
+			continue
+		}
 		if curT, hasCt := vm[CT]; !hasCt {
 			vm[CT] = now
 			mergeList = append(mergeList, vm)
