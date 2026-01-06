@@ -1,0 +1,30 @@
+{
+  "name": "@supos-os-edge/typescript-config",
+  "version": "0.0.1",
+  "description": "共享的 TypeScript 配置",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./base": "./src/base.json",
+    "./react": "./src/react.json",
+    "./node": "./src/node.json",
+    "./vite": "./src/vite.json"
+  },
+  "files": [
+    "src"
+  ],
+  "peerDependencies": {
+    "typescript": ">=5.7.2"
+  },
+  "keywords": [
+    "typescript",
+    "tsconfig",
+    "config"
+  ],
+  "author": "zhengfayue",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  }
+}

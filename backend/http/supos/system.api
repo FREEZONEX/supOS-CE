@@ -1,23 +1,65 @@
 info(
-    title: "uns模板"
-    desc: "uns模板"
-    author: "杨磊"
-    email: "603685348@qq.com"
+    title: "System Config"
+    desc: "System level configuration metadata"
+    author: "Yang Lei"
     version: "v1"
 )
 
 @server(
-    group: supos/uns
-    prefix: /inter-api/supos/uns
-    middleware:  CheckTokenWare,InitCtxsWare
+    group: supos/uns/system
+    prefix: /inter-api/supos
+    middleware: CheckTokenWare,InitCtxsWare
 )
 service backend {
     @doc "获取系统配置"
     @handler systemConfig
-    get /systemConfig () returns ()
+    get /systemConfig () returns (SystemConfigResp)
 
+    @doc "日志级别配置"
+    @handler logConfig
+    get /uns/log/:level (LogConfigRequest) returns (LogConfigResponse)
+
+    @doc "获取UNS定义"
+    @handler getUns
+    get /uns/def/:uns (GetDefRequest) returns (*CreateTopicDto)
 }
 
 type (
+    GetDefRequest {
+        Uns string `path:"uns,optional"`
+    }
+    LogConfigRequest {
+        Level string `path:"level,optional"`
+    }
+    LogConfigResponse {
+        Level string `json:"rootLevel"`
+    }
+    SystemConfigResp {
+        AppTitle            string                       `json:"appTitle,optional"`
+        Version             string                       `json:"version,optional"`
+        Lang                string                       `json:"lang,optional"`
+        AuthEnable          bool                         `json:"authEnable,optional"`
+        LlmType             string                       `json:"llmType,optional"`
+	    EnableAi            bool                         `json:"enableAi,optional"`
+        MqttTcpPort         int64                        `json:"mqttTcpPort,optional"`
+        MqttWebsocketTslPort int64                       `json:"mqttWebsocketTslPort,optional"`
+        LoginPath           string                       `json:"loginPath,optional"`
+        PlatformType        string                       `json:"platformType,optional"`
+        EntranceUrl         string                       `json:"entranceUrl,optional"`
+        MultipleTopic       bool                         `json:"multipleTopic,optional"`
+        UseAliasPathAsTopic bool                         `json:"useAliasPathAsTopic,optional"`
+        ContainerMap        map[string]ContainerInfo     `json:"containerMap,optional"`
+        QualityName         string                       `json:"qualityName,optional"`
+        TimestampName       string                       `json:"timestampName,optional"`
+        LazyTree            bool                         `json:"lazyTree,optional"`
+        LdapEnable          bool                         `json:"ldapEnable,optional"`
+        AutoCategoryEnable  bool                         `json:"enableAutoCategorization,optional"`//是否开启文件自动归类
+    }
 
+    ContainerInfo {
+        Name        string                 `json:"name,optional"`
+        Version     string                 `json:"version,optional"`
+        Description string                 `json:"description,optional"`
+        EnvMap      map[string]interface{} `json:"envMap,optional"`
+    }
 )

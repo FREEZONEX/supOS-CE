@@ -1,0 +1,80 @@
+.unsDashboard {
+  padding: 24px 24px 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+}
+
+.overview {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.overview-item {
+  width: calc((100% - 48px) / 4);
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: 0.16px;
+}
+
+.mqtt {
+  border: 1px solid #e0e0e0;
+  padding: 16px;
+  border-radius: 3px;
+}
+
+.mqtt-item {
+  width: 50%;
+  height: 100%;
+  padding: 0 16px;
+
+  &:first-child {
+    border-right: 1px dotted #e0e0e0;
+  }
+}
+
+.mqtt-wrapper {
+  width: calc((100% - 48px) / 4);
+}
+
+.functions-wrapper {
+  flex: 1;
+  overflow: hidden;
+}
+
+.functions-item {
+  width: calc((100% - 32px) / 3);
+}
+
+@media (width <= 800px) {
+  .overview-item {
+    width: 100%;
+  }
+
+  .mqtt-wrapper {
+    display: none;
+  }
+
+  .functions-item {
+    width: 100%;
+  }
+}
+
+@media (800px < width <= 1400px) {
+  .overview-item {
+    width: calc(50% - 8px);
+  }
+
+  .mqtt-wrapper {
+    width: calc(50% - 8px);
+  }
+
+  .functions-item {
+    width: 100%;
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "modelConverter": {
+    "label_name": "名称",
+    "model_label_name": "选择模型",
+    "node_name": "数据转换",
+    "source_data_root_dir": "数据根目录",
+    "source_data_root_dir_example": "例: list.data",
+    "model_input_placeholder": "输入模型名称...",
+    "mapping_input_key_placeholder": "数据源字段，例: student.name",
+    "select_uns_column": "请选择一个字段"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "uid": "{uid}",
+  "name": "{name}",
+  "access": "proxy",
+  "accessControl": {
+    "alert.instances.external:read": true,
+    "alert.instances.external:write": true,
+    "alert.notifications.external:read": true,
+    "alert.notifications.external:write": true,
+    "alert.rules.external:read": true,
+    "alert.rules.external:write": true,
+    "datasources.id:read": true,
+    "datasources:delete": true,
+    "datasources:query": true,
+    "datasources:read": true,
+    "datasources:write": true
+  },
+  "apiVersion": "",
+  "basicAuth": true,
+  "basicAuthUser": "{user}",
+  "database": "",
+  "isDefault": false,
+  "jsonData": {},
+  "orgId": 1,
+  "readOnly": false,
+  "secureJsonData": {
+    "basicAuth": "{basicAuth}",
+    "basicAuthPassword": "{password}",
+    "password": "{password}",
+    "url": "http://{url}",
+    "user": "{user}"
+  },
+  "secureJsonFields": {},
+  "type": "tdengine-datasource",
+  "typeLogoUrl": "public/plugins/tdengine-datasource/img/taosdata_logo.png",
+  "url": "http://{url}",
+  "user": "{user}",
+  "version": 15,
+  "withCredentials": false
+}

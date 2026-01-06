@@ -1,0 +1,114 @@
+info(
+    title: "uns附件"
+    desc: "uns附件管理"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/attachment
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc(
+        summary: "模板实例附件上传"
+        injectFormdataParam: "files"
+    )
+    @handler attachmentUpload
+    post /attachment (AttachmentUploadReq) returns (AttachmentUploadResp)
+    
+    @doc "模板实例附件下载"
+    @handler attachmentDownload
+    get /attachment (AttachmentDownloadReq) returns ()
+    
+    @doc "模板实例附件预览"
+    @handler attachmentPreview
+    get /attachment/preview (AttachmentPreviewReq) returns ()
+    
+    @doc "模板实例附件删除"
+    @handler attachmentDelete
+    delete /attachment (AttachmentDeleteReq) returns ()
+    
+    @doc "获取模板实例附件列表"
+    @handler listAttachment
+    get /attachments (ListAttachmentReq) returns (ListAttachmentResp)
+}
+
+type (
+    // 附件上传请求
+    AttachmentUploadReq {
+        // 模板实例别名
+        Alias string `form:"alias"`
+    }
+    
+    // 附件上传响应
+    AttachmentUploadResp {
+        List []UnsAttachmentBo `json:"list"`
+    }
+    
+    // 附件下载请求
+    AttachmentDownloadReq {
+        // 附件名（objectName）
+        ObjectName string `form:"objectName"`
+    }
+    
+//    // 附件下载响应（文件流）
+//    AttachmentDownloadResp {
+//        // 文件名
+//        FileName string `json:"fileName"`
+//        // 文件内容（base64编码）
+//        Content string `json:"content"`
+//    }
+    
+    // 附件预览请求
+    AttachmentPreviewReq {
+        // 附件名（objectName）
+        ObjectName string `form:"objectName"`
+    }
+    
+    // 附件预览响应（文件流）
+    AttachmentPreviewResp {
+        // 文件名
+        FileName string `json:"fileName"`
+        // 文件内容（base64编码）
+        Content string `json:"content"`
+    }
+    
+    // 附件删除请求
+    AttachmentDeleteReq {
+        // 附件名（objectName）
+        ObjectName string `form:"objectName"`
+    }
+    
+    // 获取附件列表请求
+    ListAttachmentReq {
+        // 模板实例别名
+        Alias string `form:"alias"`
+    }
+    
+    // 获取附件列表响应
+    ListAttachmentResp {
+        List []UnsAttachmentBo `json:"list"`
+    }
+    
+    // 附件信息
+    UnsAttachmentBo {
+        // 主键ID
+        Id int64 `json:"id"`
+        // 关联模型实例别名
+        UnsAlias string `json:"unsAlias"`
+        // 原始名称
+        OriginalName string `json:"originalName"`
+        // 附件名称
+        AttachmentName string `json:"attachmentName"`
+        // 附件存储路径
+        AttachmentPath string `json:"attachmentPath"`
+        // 扩展名
+        ExtensionName string `json:"extensionName"`
+        // 附件上传时间（时间戳，毫秒）
+        CreateAt int64 `json:"createAt"`
+    }
+)
+

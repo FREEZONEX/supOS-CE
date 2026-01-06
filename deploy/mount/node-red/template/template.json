@@ -1,0 +1,14 @@
+[
+  {
+    "tagConfiguration": "0",
+    "topic": "v1/Factory/Line1/Motor/Metric/Power",
+    "attributeName": "voltage",
+    "attributeType": "float"
+  },
+  {
+    "tagConfiguration": "1",
+    "topic": "v1/Factory/Line1/Motor/Metric/Power",
+    "attributeName": "current",
+    "attributeType": "float"
+  }
+]

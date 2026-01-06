@@ -1,0 +1,93 @@
+.pro-modal {
+  .ant-modal-content {
+    padding: 0 16px 24px;
+  }
+
+  .ant-modal-header {
+    margin-block-end: 0.5rem;
+    padding-block-start: 1rem;
+    background: none;
+    margin: 0;
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      line-height: 1;
+
+      .drag-handle {
+        flex: 1 1 auto;
+        padding-right: 20px;
+        align-items: center;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .header-controls {
+        display: flex;
+        gap: 8px;
+
+        .control-button {
+          width: 32px;
+          height: 32px;
+          padding: 0;
+          border: none;
+          color: var(--supos-text-color);
+          transition: all 0.2s;
+
+          &:hover {
+            background: var(--supos-header-bg-color);
+            color: var(--supos-theme-color);
+          }
+
+          &.close-button,
+          &.control-button {
+            .close-icon,
+            .anticon-expand {
+              font-size: 18px;
+              vertical-align: middle;
+              color: var(--supos-text-color);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .ant-modal-title {
+    box-sizing: border-box;
+    padding: 0;
+    border: 0;
+    margin: 0;
+    font-family: inherit;
+    vertical-align: baseline;
+    color: var(--supos-text-color);
+    font-size: 1.25rem;
+  }
+
+  .ant-modal-body {
+    margin-block-end: 0.5rem;
+    padding-block-start: 1rem;
+  }
+
+  // 全屏模式
+  &.fullscreen-mode {
+    top: 0 !important;
+    left: 0 !important;
+    max-width: 100vw;
+    padding: 0;
+    margin: 0;
+
+    .ant-modal-content {
+      height: 100vh;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ant-modal-body {
+      flex: 1;
+      overflow: auto;
+    }
+  }
+}

@@ -1,0 +1,301 @@
+@use './reset';
+@use './theme/theme' as *;
+@use '@ibm/plex-sans/scss' as PlexSans with (
+  $font-prefix: '@ibm/plex-sans',
+  $font-weights: (
+    bold: false,
+    boldItalic: false,
+    extralight: false,
+    extralightItalic: false,
+    // italic: false,
+    // light: false,
+    // lightItalic: false,
+    medium: false,
+    mediumItalic: false,
+    // regular: false,
+    // semibold: false,
+    // semiboldItalic: false,
+    text: false,
+    textItalic: false,
+    thin: false,
+    thinItalic: false,
+  )
+);
+
+@include PlexSans.all();
+
+* {
+  font-family:
+    'IBM Plex Sans',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    '.SFNSText-Regular',
+    sans-serif !important ;
+}
+
+iframe {
+  display: block;
+}
+
+@keyframes ant-line {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+/* 默认主题（明亮主题） */
+:root {
+  --supos-text-color: var(--supos-t-gray-color-100);
+  --supos-anti-text-color: var(--supos-t-white-color);
+  --supos-bg-color: var(--supos-t-white-color);
+  --supos-header-bg-color: var(--supos-t-white-color);
+  --supos-color-fill: rgb(0 0 0 / 15%);
+  --supos-check-color: #050b14;
+  --supos-nocheck-color: var(--supos-t-gray-color-50);
+  --supos-table-head-bg-color: var(--supos-t-gray-color-50);
+  --supos-border-color: var(--supos-t-gray-color-80);
+  --supos-charttop-bg-color: var(--supos-t-gray-color-10);
+  --supos-switchwrap-bg-color: var(--supos-t-gray-color-10);
+  --supos-switchwrap-active-bg-color: var(--supos-t-white-color);
+  --supos-switchwrap-active-text-color: #050b14;
+  --supos-menu-hover-color: var(--supos-t-gray-color-20);
+  --supos-menu-active-color: #e6f4ff;
+  --supos-table-head-color: var(--supos-t-table-head-color);
+  --supos-table-first-color: var(--supos-t-table-first-color);
+  --supos-payloadfirsttd-color: var(--supos-t-gray-color-10);
+  --supos-uns-button-color: var(--supos-t-gray-color-10);
+  --supos-user-color: var(--supos-t-gray-color-10);
+  --supos-common-card-color: #2f343b;
+  --supos-select-card-color: #e0e0e0;
+  --supos-hover-card-color: #e0e0e0;
+  --supos-lable-card-color: var(--supos-t-table-first-color);
+  --supos-description-card-color: var(--supos-t-gray-color-70);
+  --supos-image-card-color: var(--supos-t-white-color);
+  --supos-pagination-color: var(--supos-t-white-color);
+  --supos-card-hover-color: var(--supos-t-blue-color-10);
+  --supos-card-color: var(--supos-t-white-color);
+  --supos-card-active-color: #8ebbfe;
+  --supos-copilot-color: var(--supos-t-blue-color-10);
+  --supos-navwrap-color: rgb(255 255 255 / 60%);
+  --supos-message-color: var(--supos-t-gray-color-70);
+  --supos-gray-color-10-message: var(--supos-t-gray-color-10);
+  --supos-blue-color-10: var(--supos-t-blue-color-10);
+  --supos-button-def-10: rgb(0 0 0 / 4%);
+  --supos-view-item: var(--supos-t-table-first-color);
+  --supos-useremail-color: #515151;
+  --supos-tree-fooer-color: var(--supos-t-white-color);
+  --supos-input-color: var(--supos-t-white-color);
+  --supos-select-active-color: #e6f4ff;
+  --supos-tag-color: var(--supos-t-gray-color-10);
+  --supos-icon-color: var(--supos-t-icon-color);
+  --supos-shadow-color: var(--supos-t-shadow-color);
+  --supos-select-d-color: var(--supos-t-gray-color-40);
+  --supos-modal-color: var(--supos-t-modal-color);
+  --supos-useravatar-color: var(--supos-t-white-color);
+  --supos-boxshadow-color: var(--supos-t-boxshadow-light-color);
+  --supos-theme-color: var(--supos-t-blue-color-70);
+  --supos-theme-color-rgb: 29, 119, 254;
+  --supos-theme-button-hover-color: var(--supos-t-blue-color-80);
+  --supos-theme-button-active-color: var(--supos-t-blue-color-90);
+  --supos-home-bg-color: var(--supos-t-white-color);
+  --supos-home-border-color: var(--supos-t-gray-color-30);
+  --supos-uns-home-color: var(--supos-t-table-head-color);
+  --supos-active-bg-color: var(--supos-t-gray-color-20);
+  --supos-table-tr-color: var(--supos-t-gray-color-30);
+  --supos-card-border-color: var(--supos-t-blue-color-20);
+  --supos-fill-secondary: rgb(0 0 0 / 6%);
+  --supos-fill-tertiary: rgb(0 0 0 / 4%);
+  --supos-active-with-range-bg: var(--supos-t-blue-color-10);
+  --supos-cell-hover-bg: rgb(0 0 0 / 4%);
+  --supos-header-splitter-color: var(--supos-t-gray-color-20);
+  --supos-primary-bg: var(--supos-t-blue-color-10);
+  --supos-primary-bg-hover: var(--supos-t-blue-color-20);
+  --supos-promodal-bg-pg-color: var(--supos-t-white-color);
+  --supos-modal-mask-bg: rgb(0 0 0 / 45%);
+  --supos-icon-disabled-color: var(--supos-t-gray-color-40);
+  --supos-t-card-select-bg: var(--supos-t-light-card-select-bg);
+  --supos-t-card-hover-bg: var(--supos-t-table-head-color);
+  --supos-background-selected: rgb(141 141 141 / 20%);
+  --supos-border-interactive: #0f62fe;
+  --supos-craft-bg-color: #f4f4f4;
+  --supos-t-text-disabled-color: var(--supos-t-select-d-color);
+  --supos-t-dividr-color: var(--supos-fill-secondary);
+  --supos-card-bg: var(--supos-t-gray-color-10);
+  --supos-card-hover-bg: var(--supos-t-gray-color-20);
+  --supos-card-active-bg: var(--supos-t-gray-color-30);
+}
+
+/* dark Theme */
+.dark {
+  --supos-craft-bg-color: #262626;
+  --supos-text-color: var(--supos-t-white-color);
+  --supos-anti-text-color: var(--supos-t-gray-color-100);
+  --supos-bg-color: var(--supos-t-gray-color-100);
+  --supos-header-bg-color: var(--supos-t-gray-color-100);
+  --supos-color-fill: rgb(255 255 255 / 15%);
+  --supos-check-color: var(--supos-t-white-color);
+  --supos-table-head-bg-color: var(--supos-t-gray-color-50);
+  --supos-nocheck-color: #ffc;
+  --supos-charttop-bg-color: var(--supos-t-gray-color-80);
+  --supos-switchwrap-bg-color: var(--supos-t-gray-color-90);
+  --supos-switchwrap-active-bg-color: var(--supos-t-gray-color-80);
+  --supos-switchwrap-active-text-color: var(--supos-t-white-color);
+  --supos-menu-hover-color: var(--supos-t-menu-hover-color);
+  --supos-menu-active-color: var(--supos-t-menu-active-color);
+  --supos-table-head-color: var(--supos-t-gray-color-80);
+  --supos-table-first-color: var(--supos-t-gray-color-10);
+  --supos-payloadfirsttd-color: var(--supos-t-gray-color-90);
+  --supos-uns-button-color: var(--supos-t-gray-color-90);
+  --supos-user-color: var(--supos-t-gray-color-100);
+  --supos-common-card-color: var(--supos-t-gray-color-10);
+  --supos-select-card-color: var(--supos-t-menu-active-color);
+  --supos-hover-card-color: var(--supos-t-menu-hover-color);
+  --supos-lable-card-color: var(--supos-t-white-color);
+  --supos-description-card-color: var(--supos-t-gray-color-40);
+  --supos-image-card-color: var(--supos-t-gray-color-100);
+  --supos-pagination-color: var(--supos-t-gray-color-90);
+  --supos-card-hover-color: var(--supos-t-gray-color-80);
+  --supos-card-color: var(--supos-t-gray-color-90);
+  --supos-card-active-color: var(--supos-t-gray-color-80);
+  --supos-copilot-color: var(--supos-t-blue-color-100);
+  --supos-navwrap-color: rgb(5 11 20 / 20%);
+  --supos-message-color: var(--supos-t-gray-color-10);
+  --supos-gray-color-10-message: var(--supos-t-gray-color-80);
+  --supos-blue-color-10: var(--supos-t-blue-color-50);
+  --supos-button-def-10: var(--supos-t-gray-color-80);
+  --supos-view-item: var(--supos-t-gray-color-40);
+  --supos-useremail-color: var(--supos-t-gray-color-10);
+  --supos-tree-fooer-color: var(--supos-t-gray-color-80);
+  --supos-input-color: var(--supos-t-gray-color-80);
+  --supos-select-active-color: var(--supos-t-gray-color-70);
+  --supos-tag-color: var(--supos-t-gray-color-90);
+  --supos-icon-color: var(--supos-text-color);
+  --supos-shadow-color: var(--supos-t-gray-color-90);
+  --supos-select-d-color: rgb(255 255 255 / 25%);
+  --supos-modal-color: var(--supos-t-gray-color-100);
+  --supos-useravatar-color: var(--supos-t-gray-color-90);
+  --supos-boxshadow-color: var(--supos-t-boxshadow-dark-color);
+  --supos-theme-color: var(--supos-t-blue-color-70);
+  --supos-theme-color-rgb: 29, 119, 254;
+  --supos-theme-button-hover-color: var(--supos-t-blue-color-80);
+  --supos-theme-button-active-color: var(--supos-t-blue-color-90);
+  --supos-home-bg-color: var(--supos-t-gray-color-100);
+  --supos-home-border-color: var(--supos-t-gray-color-80);
+  --supos-uns-home-color: var(--supos-t-gray-color-70);
+  --supos-active-bg-color: var(--supos-t-gray-color-60);
+  --supos-table-tr-color: var(--supos-t-gray-color-50);
+  --supos-fill-secondary: rgb(255 255 255 / 8%);
+  --supos-fill-tertiary: rgb(255 255 255 / 6%);
+  --supos-active-with-range-bg: var(--supos-t-gray-color-70);
+  --supos-cell-hover-bg: var(--supos-t-gray-color-80);
+  --supos-header-splitter-color: var(--supos-t-white-color);
+  --supos-primary-bg: var(--supos-t-gray-color-70);
+  --supos-primary-bg-hover: var(--supos-t-gray-color-80);
+  --supos-promodal-bg-pg-color: var(--supos-t-boxshadow-dark-color);
+  --supos-modal-mask-bg: rgb(255 255 255 / 45%);
+  --supos-icon-disabled-color: rgb(255 255 255 / 25%);
+  --supos-t-card-select-bg: var(--supos-t-gray-color-80);
+  --supos-t-card-hover-bg: var(--supos-t-menu-hover-color);
+  --supos-layer-selecter-hover: #d1d1d1;
+  --supos-t-text-disabled-color: var(--supos-t-white-select-d-color);
+  --supos-t-dividr-color: #6e6e6e;
+  --supos-card-bg: var(--supos-t-gray-color-90);
+  --supos-card-hover-bg: var(--supos-t-gray-color-80);
+  --supos-card-active-bg: var(--supos-t-gray-color-70);
+}
+// chartreuse
+.chartreuse {
+  --supos-theme-color: var(--supos-t-chartreuse-color-70);
+  --supos-theme-color-rgb: 148, 198, 24;
+  --supos-theme-button-hover-color: var(--supos-t-chartreuse-color-80);
+  --supos-theme-button-active-color: var(--supos-t-chartreuse-color-90);
+  --supos-card-hover-color: var(--supos-t-chartreuse-color-10);
+  --supos-card-color: var(--supos-t-chartreuse-color-90);
+  --supos-card-active-color: var(--supos-t-chartreuse-color-30);
+  --supos-card-border-color: var(--supos-t-chartreuse-color-30);
+  --supos-select-active-color: var(--supos-t-chartreuse-color-10);
+  --supos-menu-active-color: var(--supos-t-chartreuse-color-10);
+  --supos-icon-color: var(--supos-t-chartreuse-color-70);
+  --supos-copilot-color: var(--supos-t-chartreuse-color-10);
+  --supos-active-with-range-bg: var(--supos-t-chartreuse-color-10);
+  --supos-primary-bg: var(--supos-t-chartreuse-color-10);
+  --supos-primary-bg-hover: var(--supos-t-chartreuse-color-20);
+}
+// chartreuseDark 用来覆盖亮绿色主题和其它暗主题保持一致
+.chartreuseDark {
+  --supos-card-hover-color: var(--supos-t-gray-color-80);
+  --supos-select-active-color: var(--supos-t-gray-color-70);
+  --supos-menu-active-color: var(--supos-t-menu-active-color);
+  --supos-copilot-color: var(--supos-t-chartreuse-color-100);
+  --supos-active-with-range-bg: var(--supos-t-gray-color-70);
+  --supos-primary-bg: var(--supos-t-gray-color-70);
+  --supos-primary-bg-hover: var(--supos-t-gray-color-80);
+}
+
+.ant-select-arrow {
+  color: var(--supos-text-color) !important; /* 设置下拉箭头的颜色 */
+}
+
+.ant-spin .ant-spin-dot-holder {
+  color: var(--supos-theme-color);
+}
+
+.ant-menu-submenu-popup > .ant-menu-sub > .ant-menu-item {
+  &:focus {
+    background-color: var(--supos-menu-active-color) !important;
+  }
+}
+
+.ant-menu-submenu-vertical > .ant-menu-submenu-title {
+  &:focus {
+    background-color: var(--supos-menu-active-color) !important;
+  }
+}
+
+.ant-menu-submenu-horizontal.ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: var(--supos-text-color) !important;
+}
+
+.ant-menu-submenu-vertical.ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: var(--supos-theme-color) !important;
+}
+
+.ant-menu-horizontal .ant-menu-item.ant-menu-item-selected .menu-label {
+  color: var(--supos-text-color) !important;
+}
+
+input {
+  caret-color: var(--supos-text-color) !important;
+}
+
+input:-webkit-autofill {
+  box-shadow: 0 0 0 1000px var(--supos-input-color) inset !important;
+}
+
+input:-internal-autofill-previewed,
+input:-internal-autofill-selected {
+  -webkit-text-fill-color: var(--supos-text-color) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+input::placeholder {
+  color: var(--supos-t-placeholder-color) !important;
+}
+// 全局分页样式
+.custom-pagination {
+  .ant-pagination-item,
+  .ant-pagination-options-quick-jumper,
+  .ant-pagination-options-quick-jumper input {
+    background-color: var(--supos-header-bg-color) !important;
+  }
+
+  .ant-pagination-item-active,
+  .ant-pagination-options-quick-jumper input:focus-within {
+    border-color: var(--supos-theme-color) !important;
+  }
+
+  .ant-pagination-item-active a {
+    color: var(--supos-theme-color) !important;
+  }
+}

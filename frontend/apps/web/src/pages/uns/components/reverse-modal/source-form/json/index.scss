@@ -1,0 +1,20 @@
+.json-tree {
+  width: 300px;
+  border: 1px solid #c6c6c6;
+  padding: 10px;
+  border-radius: 4px;
+  height: 100%;
+  display: flex;
+
+  .ant-tree-node-content-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    .ant-tree-icon__customize {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}

@@ -1,0 +1,22 @@
+.container {
+  display: flex;
+  align-items: center;
+}
+
+.editIcon {
+  cursor: pointer;
+}
+
+.editComponent {
+  width: 100%;
+}
+
+.frequencyForm {
+  width: 500px;
+
+  :global {
+    .ant-form-item-control-input-content {
+      display: flex;
+    }
+  }
+}

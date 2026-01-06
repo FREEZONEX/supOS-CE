@@ -2,9 +2,24 @@
 *.exe
 
 .idea
+.cursorrules
+.editorconfig
+.vscode
+.DS_Store
+
 # frontend
 **/node_modules
 **/build
 **/dist
 **/.turbo
 **/.vite
+.vscode
+AGENTS.md
+backend/.env
+**/*.local
+**/.__mf__temp
+**/properties-output
+**/.env
+**/.env.production
+.trae
+deploy/localtest/

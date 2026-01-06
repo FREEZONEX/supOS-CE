@@ -1,0 +1,11 @@
+{
+  "supmodel": {
+    "node_name": "模型选择器",
+    "no_model_selected": "未选择模型",
+    "protocol_data_not_match": "输入的数据类型不是数组",
+    "model_label_name": "选择模型",
+    "model_input_placeholder": "输入模型名称...",
+    "model_select_help_tip": "从UNS选择一个合适的模型",
+    "network_error": "网络异常"
+  }
+}

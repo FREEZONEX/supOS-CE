@@ -1,0 +1,11 @@
+{
+  "supmodel": {
+    "node_name": "UNS Selector",
+    "no_model_selected": "No model selected.",
+    "protocol_data_not_match": "The input data type is an array.",
+    "model_label_name": "Select Model",
+    "model_input_placeholder": "Enter model name...",
+    "model_select_help_tip": "Select an appropriate model from UNS",
+    "network_error": "Network error."
+  }
+}

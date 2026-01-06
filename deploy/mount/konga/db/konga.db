@@ -1,0 +1,779 @@
+{
+  "data": {
+    "konga_api_health_checks": [],
+    "konga_email_transports": [
+      {
+        "id": 1,
+        "name": "smtp",
+        "description": "Send emails using the SMTP protocol",
+        "schema": [
+          {
+            "name": "host",
+            "description": "The SMTP host",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "port",
+            "description": "The SMTP port",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "username",
+            "model": "auth.user",
+            "description": "The SMTP user username",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "password",
+            "model": "auth.pass",
+            "description": "The SMTP user password",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "secure",
+            "model": "secure",
+            "description": "Use secure connection",
+            "type": "boolean"
+          }
+        ],
+        "settings": {
+          "host": "",
+          "port": "",
+          "auth": {
+            "user": "",
+            "pass": ""
+          },
+          "secure": false
+        },
+        "active": true,
+        "createdAt": "2025-02-14T01:35:11.165Z",
+        "updatedAt": "2025-02-14T03:05:30.771Z"
+      },
+      {
+        "id": 2,
+        "name": "sendmail",
+        "description": "Pipe messages to the sendmail command",
+        "settings": {
+          "sendmail": true
+        },
+        "active": false,
+        "createdAt": "2025-02-14T01:35:11.166Z",
+        "updatedAt": "2025-02-14T03:05:30.777Z"
+      },
+      {
+        "id": 3,
+        "name": "mailgun",
+        "description": "Send emails through Mailgun’s Web API",
+        "schema": [
+          {
+            "name": "api_key",
+            "model": "auth.api_key",
+            "description": "The API key that you got from www.mailgun.com/cp",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "domain",
+            "model": "auth.domain",
+            "description": "One of your domain names listed at your https://mailgun.com/app/domains",
+            "type": "text",
+            "required": true
+          }
+        ],
+        "settings": {
+          "auth": {
+            "api_key": "",
+            "domain": ""
+          }
+        },
+        "active": false,
+        "createdAt": "2025-02-14T01:35:11.166Z",
+        "updatedAt": "2025-02-14T03:05:30.780Z"
+      }
+    ],
+    "konga_kong_nodes": [
+      {
+        "id": 1,
+        "name": "Kong",
+        "type": "default",
+        "kong_admin_url": "http://kong:8001",
+        "kong_api_key": "",
+        "jwt_algorithm": "HS256",
+        "username": "",
+        "password": "",
+        "kong_version": "3.8.0",
+        "health_checks": false,
+        "health_check_details": null,
+        "active": true,
+        "createdAt": "2025-02-14T01:35:11.158Z",
+        "updatedAt": "2025-02-14T03:03:27.302Z"
+      }
+    ],
+    "konga_kong_services": [],
+    "konga_netdata_connections": [],
+    "konga_passports": [],
+    "konga_settings": [
+      {
+        "id": 1,
+        "data": {
+          "signup_enable": false,
+          "signup_require_activation": false,
+          "info_polling_interval": 5000,
+          "email_default_sender_name": "KONGA",
+          "email_default_sender": "konga@konga.test",
+          "email_notifications": false,
+          "default_transport": "sendmail",
+          "notify_when": {
+            "node_down": {
+              "title": "A node is down or unresponsive",
+              "description": "Health checks must be enabled for the nodes that need to be monitored.",
+              "active": false
+            },
+            "api_down": {
+              "title": "An API is down or unresponsive",
+              "description": "Health checks must be enabled for the APIs that need to be monitored.",
+              "active": false
+            }
+          },
+          "integrations": [
+            {
+              "id": "slack",
+              "name": "Slack",
+              "image": "slack_rgb.png",
+              "config": {
+                "enabled": false,
+                "fields": [
+                  {
+                    "id": "slack_webhook_url",
+                    "name": "Slack Webhook URL",
+                    "type": "text",
+                    "required": true,
+                    "value": ""
+                  }
+                ],
+                "slack_webhook_url": ""
+              }
+            }
+          ],
+          "user_permissions": {
+            "apis": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            },
+            "services": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            },
+            "routes": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            },
+            "consumers": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            },
+            "plugins": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            },
+            "upstreams": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            },
+            "certificates": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            },
+            "connections": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            },
+            "users": {
+              "create": false,
+              "read": true,
+              "update": false,
+              "delete": false
+            }
+          }
+        },
+        "createdAt": "2025-02-14T01:35:11.174Z",
+        "updatedAt": "2025-02-14T03:05:30.787Z"
+      }
+    ],
+    "konga_kong_snapshots": [],
+    "konga_kong_snapshot_schedules": [],
+    "konga_kong_upstream_alerts": [],
+    "konga_users": []
+  },
+  "schema": {
+    "konga_api_health_checks": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "api_id": {
+        "type": "string",
+        "unique": true
+      },
+      "api": {
+        "type": "json"
+      },
+      "health_check_endpoint": {
+        "type": "string"
+      },
+      "notification_endpoint": {
+        "type": "string"
+      },
+      "active": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "data": {
+        "type": "json"
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_email_transports": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "name": {
+        "type": "string",
+        "unique": true
+      },
+      "description": {
+        "type": "string"
+      },
+      "schema": {
+        "type": "json"
+      },
+      "settings": {
+        "type": "json"
+      },
+      "active": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_kong_nodes": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "name": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "default",
+          "key_auth",
+          "jwt",
+          "basic_auth"
+        ],
+        "defaultsTo": "default"
+      },
+      "kong_admin_url": {
+        "type": "string"
+      },
+      "netdata_url": {
+        "type": "string"
+      },
+      "kong_api_key": {
+        "type": "string",
+        "defaultsTo": ""
+      },
+      "jwt_algorithm": {
+        "type": "string",
+        "enum": [
+          "HS256",
+          "RS256"
+        ],
+        "defaultsTo": "HS256"
+      },
+      "jwt_key": {
+        "type": "string"
+      },
+      "jwt_secret": {
+        "type": "string"
+      },
+      "username": {
+        "type": "string",
+        "defaultsTo": ""
+      },
+      "password": {
+        "type": "string",
+        "defaultsTo": ""
+      },
+      "kong_version": {
+        "type": "string",
+        "defaultsTo": "0-10-x"
+      },
+      "health_checks": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "health_check_details": {
+        "type": "json"
+      },
+      "active": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_kong_services": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "service_id": {
+        "type": "string",
+        "unique": true
+      },
+      "kong_node_id": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "tags": {
+        "type": "json"
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_netdata_connections": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "apiId": {
+        "type": "string"
+      },
+      "url": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_passports": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "protocol": {
+        "type": "string"
+      },
+      "password": {
+        "type": "string"
+      },
+      "provider": {
+        "type": "string"
+      },
+      "identifier": {
+        "type": "string"
+      },
+      "tokens": {
+        "type": "json"
+      },
+      "user": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "user"
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      }
+    },
+    "konga_settings": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "data": {
+        "type": "json"
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_kong_snapshots": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "name": {
+        "type": "string",
+        "unique": true
+      },
+      "kong_node_name": {
+        "type": "string"
+      },
+      "kong_node_url": {
+        "type": "string"
+      },
+      "kong_version": {
+        "type": "string"
+      },
+      "data": {
+        "type": "json"
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_kong_snapshot_schedules": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "connection": {
+        "type": "integer",
+        "model": "kongnode",
+        "foreignKey": true,
+        "alias": "connection"
+      },
+      "active": {
+        "type": "boolean",
+        "defaultsTo": true
+      },
+      "cron": {
+        "type": "string"
+      },
+      "lastRunAt": {
+        "type": "date",
+        "defaultsTo": null
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_kong_upstream_alerts": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "upstream_id": {
+        "type": "string",
+        "unique": true
+      },
+      "connection": {
+        "type": "integer",
+        "model": "kongnode",
+        "foreignKey": true,
+        "alias": "connection"
+      },
+      "email": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "slack": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "cron": {
+        "type": "string"
+      },
+      "active": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "data": {
+        "type": "json"
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    },
+    "konga_users": {
+      "id": {
+        "type": "integer",
+        "primaryKey": true,
+        "unique": true,
+        "autoIncrement": true
+      },
+      "username": {
+        "type": "string",
+        "unique": true
+      },
+      "email": {
+        "type": "string",
+        "unique": true
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "admin": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "node_id": {
+        "type": "string",
+        "defaultsTo": ""
+      },
+      "active": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "activationToken": {
+        "type": "string"
+      },
+      "node": {
+        "type": "integer",
+        "model": "kongnode",
+        "foreignKey": true,
+        "alias": "node"
+      },
+      "createdAt": {
+        "type": "datetime"
+      },
+      "updatedAt": {
+        "type": "datetime"
+      },
+      "createdUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "createdUser",
+        "defaultsTo": null
+      },
+      "updatedUserId": {
+        "type": "integer",
+        "model": "user",
+        "foreignKey": true,
+        "alias": "updatedUser",
+        "defaultsTo": null
+      }
+    }
+  },
+  "counters": {
+    "konga_api_health_checks": {},
+    "konga_email_transports": {
+      "id": 3
+    },
+    "konga_kong_nodes": {
+      "id": 2
+    },
+    "konga_kong_services": {},
+    "konga_netdata_connections": {},
+    "konga_passports": {},
+    "konga_settings": {
+      "id": 1
+    },
+    "konga_kong_snapshots": {},
+    "konga_kong_snapshot_schedules": {},
+    "konga_kong_upstream_alerts": {},
+    "konga_users": {}
+  }
+}

@@ -1,0 +1,14 @@
+.operation-buittons {
+  display: inline-flex;
+  gap: 10px;
+
+  .button-item {
+    min-width: 66px;
+    padding: 0 6px;
+    gap: 3px;
+
+    &.ant-btn-variant-link {
+      min-width: 0;
+    }
+  }
+}

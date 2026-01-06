@@ -1,0 +1,210 @@
+.pf-v5-c-login__container {
+  position: relative;
+  grid-template-columns: 20rem;
+  grid-template-areas: "header" "main";
+}
+
+.login-pf body {
+  /*background: url("../img/keycloak-bg.png") no-repeat center center fixed;*/
+  background-size: cover;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.pf-v5-c-login {
+  padding: 0;
+  align-items: stretch;
+}
+
+.pf-v5-c-login-left {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px;
+  font-weight: bold;
+  background-color: var(--pf-v5-global--BackgroundColor--light-300);
+  /* background-image: url("../img/login-background.png"); */
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  background-position: bottom;
+}
+
+.pf-v5-c-login-l-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 50px;
+  line-height: 60px;
+}
+
+.supos-login-slogan {
+  width: 150px;
+}
+
+.pf-v5-c-login-l-t-right {
+  width: 80px;
+  height: 80px;
+  background-image: url("../img/login-arrow.svg");
+  background-size: 100%;
+  background-repeat: no-repeat;
+}
+
+.pf-v5-c-login-l-bottom {
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+}
+
+.supos-logo {
+  height: 40px;
+  width: 100px;
+  margin-right: 10px;
+}
+
+.pf-v5-c-login__main {
+  margin: 0 auto;
+  width: 320px;
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.pf-v5-c-login__main-header, .pf-v5-c-login__main-body {
+  padding: 0;
+}
+
+.kc-page-title-tip {
+  margin: 30px 0;
+}
+
+#username, #password, #kc-login {
+  outline: none;
+  height: 40px;
+}
+
+.pf-v5-c-form__label {
+  height: 28px;
+}
+
+.pf-v5-c-form-control:after {
+  border: var(--pf-v5-c-form-control--after--BorderBottomWidth) var(--pf-v5-c-form-control--after--BorderStyle, solid) var(--pf-v5-c-form-control--after--BorderBottomColor);
+}
+
+.pf-v5-c-button.pf-m-control {
+  --pf-v5-c-button--after--BorderColor: var( --pf-v5-c-button--m-control--after--BorderBottomColor);
+}
+
+.pf-v5-c-button.pf-m-control:focus:after {
+  border-block-end-width: var(--pf-v5-c-button--after--BorderWidth);
+}
+
+@media (max-width: 767px) {
+  .pf-v5-c-login-left {
+    display: none;
+  }
+  .pf-v5-c-login__container {
+    display: grid;
+    grid-template-columns: none;
+    grid-template-areas: "header" "main";
+  }
+  .pf-v5-c-login__main {
+    margin: 0 auto;
+    width: 80%;
+  }
+}
+
+.pf-v5-c-login__main-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+div.kc-logo-text {
+  background-image: url(../img/keycloak-logo-text.png);
+  background-repeat: no-repeat;
+  height: 63px;
+  width: 300px;
+  margin: 0 auto;
+}
+
+div.kc-logo-text span {
+  display: none;
+}
+
+.kc-login-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background-color: #94c618;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.pf-v5-c-button:disabled {
+  background-color: var(--pf-v5-c-button--disabled--BackgroundColor);
+}
+
+.kc-login-tooltip .kc-tooltip-text {
+  top: -3px;
+  left: 160%;
+  background-color: black;
+  visibility: hidden;
+  color: #fff;
+  min-width: 130px;
+  text-align: center;
+  border-radius: 2px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+  padding: 5px;
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+
+/* Show tooltip */
+
+.kc-login-tooltip:hover .kc-tooltip-text {
+  visibility: visible;
+  opacity: 0.7;
+}
+
+
+/* Arrow for tooltip */
+
+.kc-login-tooltip .kc-tooltip-text::after {
+  content: " ";
+  position: absolute;
+  top: 15px;
+  right: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent black transparent transparent;
+}
+
+#kc-recovery-codes-list {
+  columns: 2;
+}
+
+#certificate_subjectDN {
+  overflow-wrap: break-word;
+}
+
+#kc-header-wrapper {
+  font-size: 29px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  line-height: 1.2em;
+  white-space: normal;
+  color: var(--pf-v5-global--Color--light-100) !important;
+  text-align: center;
+}
+
+hr {
+  margin-top: var(--pf-v5-global--spacer--sm);
+  margin-bottom: var(--pf-v5-global--spacer--md);
+}

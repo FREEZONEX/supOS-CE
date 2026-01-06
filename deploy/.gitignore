@@ -1,0 +1,21 @@
+# Java class files
+*.class
+
+# Maven / Gradle files
+target/
+build/
+
+# IntelliJ IDEA specific files
+.idea/
+*.iml
+*.iws
+.git/
+# OS specific files
+.DS_Store
+Thumbs.db
+README.md
+README_zh.md
+# Temporary files
+*.tmp
+*.temp
+images/*.tar

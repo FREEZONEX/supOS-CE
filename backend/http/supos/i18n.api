@@ -1,0 +1,38 @@
+info(
+    title: "gateway auth"
+    version: "v1"
+)
+
+
+@server(
+    group: supos/i18n
+    prefix: /inter-api/supos
+)
+
+service backend {
+    @doc "返回支持的语言"
+    @handler getLanguages
+    get /i18n/languages (GetLanguagesReq) returns (GetLanguagesResp)
+
+}
+
+type (
+    GetLanguagesReq {
+        // 对应 Controller 的 @RequestParam(name="onlyForEnabled", defaultValue="false")
+        OnlyForEnabled bool `form:"onlyForEnabled,optional"`
+    }
+
+    // 参考 Java I18nLanguageVO 定义
+    I18nLanguageVO {
+        Id           int64  `json:"id"`// 主键
+        LanguageCode string `json:"languageCode"`// 语言编码，例如 zh_CN、en_US
+        LanguageName string `json:"languageName"`// 语言名称，例如 中文（中国）、English (US)
+        LanguageType int32  `json:"languageType"`// 语言类型：1-内置，2-自定义
+        HasUsed      bool   `json:"hasUsed"`// 是否启用
+    }
+
+    // 列表返回结构
+    GetLanguagesResp {
+        List []I18nLanguageVO `json:"list"`
+    }
+)

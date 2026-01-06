@@ -1,0 +1,25 @@
+.subscript-table {
+  width: calc(50% - 4px);
+}
+
+.custom-table {
+  :global {
+    .ant-btn-link {
+      padding: 0;
+      width: 100%;
+      text-align: left;
+
+      & > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        display: inline-block;
+      }
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}

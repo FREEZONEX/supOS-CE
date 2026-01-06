@@ -39,7 +39,28 @@ goctl api new viewsvr  --style=goZero
 ```shell
 #cd apisvr && goctl api go -api http/api.api  -dir ./  --style=goZero && cd ..
 goctl api go -api http/backend.api  -dir ./  --style=goZero  && goctl api swagger -filename swagger.json -api http/backend.api -dir ./http&&  goctl api access  -api http/backend.api -dir ./http 
+#goctl 1.9.2+
+goctl api go -api http/backend.api  -dir ./  --style=goZero  && goctl api swagger -filename swagger -api http/backend.api -dir ./http&&  goctl api access  -api http/backend.api -dir ./http 
 
 goctl api swagger -filename swagger.json -api http/backend.api -dir ./http 
 goctl api access  -api http/backend.api -dir ./http 
 ```
+
+# 开发环境联调
+
+- 服务器
+supos-community-edge
+
+- 访问入口 
+http://100.100.100.22:34098/home
+
+数据库开放端口
+- 100.100.100.22:34099
+
+联调环境后端部署流程:
+
+1. 本地build可执行文件上传到/home/supOS-V1.2.0.0-M-25102214-T5/gobackend/
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o backend ./backend.go
+
+2. 一键部署脚本(打包并推送镜像,重启backend服务)
+cd /home/supOS-V1.2.0.0-M-25102214-T5/ && sh rebuild_start_backend.sh

@@ -1,0 +1,31 @@
+.keyIndexBtn {
+  .MainKey {
+    color: #8d8d8d;
+  }
+
+  &:hover {
+    .MainKey {
+      color: var(--supos-theme-color);
+    }
+  }
+
+  &:disabled {
+    .MainKey {
+      color: #8d8d8d;
+    }
+  }
+}
+
+.activeKeyIndexBtn {
+  background: var(--supos-select-active-color) !important;
+
+  .MainKey {
+    color: var(--supos-theme-color);
+  }
+
+  &:hover {
+    .MainKey {
+      color: #8d8d8d;
+    }
+  }
+}

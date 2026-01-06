@@ -1,0 +1,212 @@
+info(
+    title: "User And Role Management"
+    desc: "Proxy endpoints to manage users and roles through Keycloak"
+    author: "DengPingAn"
+    version: "v1"
+)
+
+@server(
+    group: supos/userManage
+    prefix: /inter-api/supos
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "List available roles"
+    @handler roleList
+    get /userManage/roleList () returns ([]RoleDetail)
+
+    @doc "Create a new role"
+    @handler createRole
+    post /role (RoleSaveReq) returns (RoleDetail)
+
+    @doc "Update an existing role"
+    @handler updateRole
+    put /role (RoleSaveReq) returns (RoleDetail)
+
+    @doc "Delete role by id"
+    @handler deleteRole
+    delete /role/:id (RoleIDPathReq) returns (OperationResult)
+
+    @doc "Query paginated user list"
+    @handler userPage
+    post /userManage/pageList (UserManagePageReq) returns (UserManagePageResp)
+
+    @doc "Remove user by id"
+    @handler deleteUser
+    delete /userManage/deleteById/:id (UserDeleteReq) returns (OperationResult)
+
+    @doc "Reset user password by admin"
+    @handler resetPassword
+    put /userManage/resetPwd (AdminResetPwdReq) returns (OperationResult)
+
+    @doc "Reset password by user"
+    @handler userResetPassword
+    put /userManage/userResetPwd (UserResetPwdReq) returns (OperationResult)
+
+    @doc "Update user profile"
+    @handler updateUser
+    put /userManage/updateUser (UserUpdateReq) returns (OperationResult)
+
+    @doc "Assign roles to user"
+    @handler setRole
+    post /userManage/setRole (UserSetRoleReq) returns (OperationResult)
+
+    @doc "Create user"
+    @handler createUser
+    post /userManage/createUser (UserCreateReq) returns (OperationResult)
+
+    @doc "Toggle tips flag"
+    @handler setTipsEnable
+    put /userManage/tipsEnable (TipsEnableReq) returns (OperationResult)
+
+    @doc "Set home page"
+    @handler setHomePage
+    put /userManage/homePage (HomePageReq) returns (OperationResult)
+
+    @doc "Update phone number"
+    @handler setPhone
+    put /userManage/phone (PhoneUpdateReq) returns (OperationResult)
+
+    @doc "Update email address"
+    @handler setEmail
+    put /userManage/email (EmailUpdateReq) returns (OperationResult)
+}
+
+type (
+
+    RoleDetail {
+        RoleID          string         `json:"roleId"`
+        RoleName        string         `json:"roleName"`
+        ResourceList    []RoleResource `json:"resourceList,optional"`
+        DenyResourceList []RoleResource `json:"denyResourceList,optional"`
+    }
+
+    RoleResource {
+        PolicyID   string   `json:"policyId,optional"`
+        ResourceID string   `json:"resourceId,optional"`
+        URI        string   `json:"uri"`
+        Methods    []string `json:"methods,optional"`
+    }
+
+    RoleSaveReq {
+        ID                string         `json:"id,optional"`
+        Name              string         `json:"name"`
+        AllowResourceList []RoleResource `json:"allowResourceList,optional"`
+        DenyResourceList  []RoleResource `json:"denyResourceList,optional"`
+    }
+
+    RoleIDPathReq {
+        ID string `path:"id"`
+    }
+
+    UserManagePageReq {
+        PageNo            int64  `json:"pageNo,optional"`
+        PageSize          int64  `json:"pageSize,optional"`
+        PreferredUsername string `json:"preferredUsername,optional"`
+        FirstName         string `json:"firstName,optional"`
+        Email             string `json:"email,optional"`
+        RoleName          string `json:"roleName,optional"`
+        Enabled           *bool   `json:"enabled,optional"`
+    }
+
+    UserManagePageResp {
+        Code     int64             `json:"code"`
+        PageNo   int64             `json:"pageNo"`
+        PageSize int64             `json:"pageSize"`
+        Total    int64             `json:"total"`
+        Data     []UserManageItem  `json:"data"`
+    }
+
+    UserManageItem {
+        ID               string        `json:"id"`
+        Email            string        `json:"email,optional"`
+        EmailVerified    bool          `json:"emailVerified,optional"`
+        FirstName        string        `json:"firstName,optional"`
+        PreferredUsername string       `json:"preferredUsername"`
+        Sub              string        `json:"sub,optional"`
+        Enabled          bool          `json:"enabled,optional"`
+        RoleList         []RoleSummary `json:"roleList,optional"`
+        FirstTimeLogin   int           `json:"firstTimeLogin,optional"`
+        TipsEnable       int           `json:"tipsEnable,optional"`
+        HomePage         string        `json:"homePage,optional"`
+        Phone            string        `json:"phone,optional"`
+        Source           string        `json:"source,optional"`
+    }
+
+    RoleSummary {
+        RoleID          string `json:"roleId"`
+        RoleName        string `json:"roleName"`
+        RoleDescription string `json:"roleDescription,optional"`
+        ClientRole      bool   `json:"clientRole,optional"`
+    }
+
+    OperationResult {
+        Success bool `json:"success"`
+    }
+
+    UserDeleteReq {
+        ID string `path:"id"`
+    }
+
+    AdminResetPwdReq {
+        UserID   string `json:"userId"`
+        Password string `json:"password"`
+    }
+
+    UserResetPwdReq {
+        UserID      string `json:"userId"`
+        Username    string `json:"username"`
+        Password    string `json:"password"`
+        NewPassword string `json:"newPassword"`
+    }
+
+    UserUpdateReq {
+        UserID         string        `json:"userId"`
+        Username       string        `json:"username,optional"`
+        Password       string        `json:"password,optional"`
+        Enabled        *bool          `json:"enabled,optional"`
+        Email          string        `json:"email,optional"`
+        FirstName      string        `json:"firstName,optional"`
+        Phone          string        `json:"phone,optional"`
+        FirstTimeLogin *int           `json:"firstTimeLogin,optional"`
+        TipsEnable     *int           `json:"tipsEnable,optional"`
+        HomePage       string        `json:"homePage,optional"`
+        RoleList       []RoleSummary `json:"roleList,optional"`
+        OperateRole    *bool          `json:"operateRole,optional"`
+        Source         string        `json:"source,optional"`
+    }
+
+    UserSetRoleReq {
+        UserID   string        `json:"userId"`
+        Type     int           `json:"type,optional"`
+        RoleList []RoleSummary `json:"roleList,optional"`
+    }
+
+    UserCreateReq {
+        ID        string        `json:"id,optional"`
+        Username  string        `json:"username"`
+        Password  string        `json:"password"`
+        Enabled   *bool          `json:"enabled,optional"`
+        Email     string        `json:"email,optional"`
+        FirstName string        `json:"firstName,optional"`
+        Phone     string        `json:"phone,optional"`
+        Source    string        `json:"source,optional"`
+        RoleList  []RoleSummary `json:"roleList,optional"`
+    }
+
+    TipsEnableReq {
+        TipsEnable int `form:"tipsEnable"`
+    }
+
+    HomePageReq {
+        HomePage string `form:"homePage"`
+    }
+
+    PhoneUpdateReq {
+        Phone string `form:"phone"`
+    }
+
+    EmailUpdateReq {
+        Email string `form:"email"`
+    }
+)

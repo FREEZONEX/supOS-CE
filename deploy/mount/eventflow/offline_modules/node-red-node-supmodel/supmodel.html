@@ -1,0 +1,273 @@
+
+<script type="text/html" data-template-name="supmodel">
+    
+    <style id="model-selector-style">
+        /* body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        } */
+
+        .dropdown-m {
+            font-family: Arial, sans-serif;
+            /* background-color: #f4f4f4; */
+            position: relative;
+        }
+
+        .search-input-m {
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .select-dropdown-m {
+            width: 70%;
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 104px;
+            right: 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .select-dropdown-m div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .select-dropdown-m div:hover {
+            background-color: #f0f0f0;
+        }
+
+        .select-dropdown-m div.selected {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+    <!-- <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-globe"></i> <span data-i18n="common.label.name">名称</label>
+        <input type="text" id="node-input-name">
+    </div> -->
+    <div class="dropdown-m form-row">
+        <!-- <label for="node-input-selectedModel"><i class="fa fa-tag"></i> <span data-i18n="supmodel.model_label_name"></span></label> -->
+        <label for="node-input-selectedModel"><i class="fa fa-tag"></i> <span data-i18n="supmodel.model_label_name"></span></label>
+        <input type="text" id="node-input-selectedModel" class="search-input-m" data-i18n="[placeholder]supmodel.model_input_placeholder" required onfocus="showdropdown()" oninput="filterFunction()" />
+        <div class="select-dropdown-m" id="dropdownOptions">
+            
+            
+        </div>
+    </div>
+    <div id="errorMsg" style="position: absolute; left: 124px;"></div>
+    
+</script>
+
+
+<script type="text/html" data-help-name="supmodel">
+    <p data-i18n="supmodel.model_select_help_tip"></p>
+</script>
+
+
+<!-- <script src="./modelCommon.js"></script> -->
+<script type="text/javascript">
+
+    var supmodelCommon = {
+        queryInstanceTopics: function(input, func) {
+            var start = 1;
+            var size = 100;
+            const node = this;
+            var encodeUrl = encodeURI('/inter-api/supos/uns/search?k=' + input + '&p=' + start + '&sz=' + size + '&orderBy=createTime');
+            $.ajax({
+                url: encodeUrl,
+                type: 'GET',
+                dataType: 'json',
+                beforeSend: function() {
+                    // modelList = [];
+                    // $('#errorMsg').empty();
+                },
+                success: function(data) {
+                    if (data.code == 200 || data.code == 0) {
+                        // modelList = data.data;
+                        func(data.data);
+                    } else {
+                        func([]);
+                        $('#errorMsg').html('<p style="color: red;">' + data.msg || 'sever error' + '</p>');
+                    }
+                    
+                },
+                error: function(err) {
+                    // modelList = [];
+                    func([]);
+                    $('#dropdownOptions').empty();
+                    $('#errorMsg').html('<p style="color: red;">network error</p>');
+                }
+            });
+        },
+        
+        queryModelSchema: function(modelTopic, func) {
+            const node = this;
+            var encodeUrl = encodeURI('/inter-api/supos/uns/instance?topic=' + modelTopic);
+            $.ajax({
+                url: encodeUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.code == 200 || data.code == 0) {
+                        func(data.data);
+                    } else {
+                        func({});
+                    }
+                },
+                error: function(err) {
+                    func({});
+                }
+            });
+        }
+    };
+    var  modelList = [];
+    let timeoutId;
+    function showdropdown() {
+
+        var searchParam = $('.search-input-m').val();
+        supmodelCommon.queryInstanceTopics(searchParam, showModels);
+        $('#dropdownOptions').css('display', 'block');
+    }
+
+    function filterFunction() {
+        var searchParam = $('.search-input-m').val();
+            // 清除之前的定时器
+        clearTimeout(timeoutId);
+        // 设置新的定时器
+        timeoutId = setTimeout(() => {
+            supmodelCommon.queryInstanceTopics(searchParam, showModels);
+            $('#dropdownOptions').css('display', 'block');
+        }, 600); 
+        
+    }
+
+    function showModels(models) {
+        modelList = models;
+        $('#dropdownOptions').empty();
+        if (models && models.length > 0) {
+            models.forEach(m => {
+                $('#dropdownOptions').append('<div value="' + m +'">' + m + '</div>');
+            });
+            // 点击选项后关闭下拉框
+            $('#dropdownOptions div').on('click', function() {
+                var textContent = $(this).attr('value');
+                $('.search-input-m').val(textContent);
+                $('#dropdownOptions').css('display', 'none');
+            });
+        } else {
+            $('#dropdownOptions').append('<div id="nodataOption" style="align:center;" value="">-- No Data --</div>');
+        }
+    }
+    
+    RED.nodes.registerType('supmodel', {
+        category: 'supNodes',
+        color: '#66CDAA',
+        defaults: {
+            selectedModel: {
+                value: "",
+                validate: function(v, opt) {
+                    if (v.trim().length != 0) {
+                        return true;
+                    }
+                    return this._("supmodel.no_model_selected");
+                },
+            },
+            modelSchema: {
+                value: ""
+            },
+            modelMapping: {
+                value: ""
+            }
+        },
+        inputs: 1,
+        outputs: 2,
+        icon: "font-awesome/fa-cubes",
+        label: function () {
+            var nodeName = this._('supmodel.node_name');
+            return this.selectedModel || nodeName;
+        },
+        paletteLabel: function () {
+            return this._('supmodel.node_name');
+        },
+        oneditprepare: function () {
+            // 点击外部区域关闭下拉框
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById("dropdownOptions");
+                const input = document.querySelector(".search-input-m");
+                if (!dropdown.contains(event.target) && event.target !== input) {
+                    dropdown.style.display = "none";
+                    $('#errorMsg').empty();
+                }
+            });
+        },
+        oneditsave: function () {
+            const node = this;
+            var searchInput = $('.search-input-m').val();
+            node.selectedModel = searchInput;
+            // 清空当前选中schema，让运行期重新调接口拉取
+            if (node.selectedModel && node.selectedModel != 'Auto') {
+                supmodelCommon.queryModelSchema(node.selectedModel, function(data) {
+                    node.modelSchema = JSON.stringify(data);
+                    // 处理时序类型
+                    if (data.dataType == 1) {
+                        if (data.protocol?.protocol == 'modbus') {
+                            let fields = data.fields;
+                            var indexMap = {};
+                            for (let i in fields) {
+                                indexMap[fields[i].name] = fields[i].index;
+                            }
+                            node.modelMapping[node.selectedModel] = indexMap;
+                        } else if (data.protocol?.protocol == 'opcua' || data.protocol?.protocol == 'opcda') {
+                            node.modelMapping = {};
+                            let fields = data.fields;
+                            for (let i in fields) {
+                                if (fields[i].index !== undefined) {
+                                    node.modelMapping[fields[i].index] = node.selectedModel + ":" + fields[i].name;
+                                }
+                            }
+                        } else {
+                            // 处理自定义协议 字段映射关系
+                            node.modelMapping = {};
+                            let fields = data.fields;
+
+                            let isArray = !isNaN(Number(fields[0]?.index));
+                            if (isArray) {
+                                var indexMap = {};
+                                for (let i in fields) {
+                                    indexMap[fields[i].name] = fields[i].index;
+                                }
+                                node.modelMapping[node.selectedModel] = indexMap;
+                            } else {
+                                for (let i in fields) {
+                                    if (fields[i].index !== undefined) {
+                                        node.modelMapping[fields[i].index] = node.selectedModel + ":" + fields[i].name;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                });
+            }
+        }
+        
+    });
+
+    
+
+</script>

@@ -1,0 +1,165 @@
+.com-group-button {
+  display: flex;
+  height: 100%;
+
+  .item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 100%;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgb(141 141 141 / 12%);
+    }
+
+    &:active {
+      background-color: rgb(141 141 141 / 50%);
+    }
+  }
+
+  .no-hover-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 100%;
+    cursor: pointer;
+  }
+}
+
+.ant-popover .ant-popover-arrow::before {
+  background-color: var(--supos-bg-color);
+}
+
+.ant-popover .ant-popover-arrow::after {
+  background-color: var(--supos-user-color);
+}
+
+.userPopover .ant-popover-inner {
+  background-color: var(--supos-user-color) !important;
+
+  .userPopoverWrap {
+    width: 226px;
+    // height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    .userAvatar {
+      width: 40px;
+      height: 40px;
+      background-color: var(--supos-useravatar-color);
+      border-radius: 20px;
+      line-height: 40px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .userRole {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--supos-theme-color);
+      letter-spacing: 0.16px;
+      min-height: 20px;
+      text-align: center;
+    }
+
+    .userName {
+      font-size: 16px;
+      font-weight: bold;
+      max-width: 100%;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .userEmail {
+      font-size: 12px;
+      color: var(--supos-useremail-color);
+      max-width: 100%;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+
+      .emailStatus {
+        width: 4px;
+        height: 4px;
+        border-radius: 2px;
+        display: inline-block;
+        margin-right: 5px;
+      }
+    }
+  }
+}
+
+.noticePopover {
+  .noticePopoverContent {
+    width: 466px;
+    height: 700px;
+
+    .noticePopoverTitle {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .noticeListWrap {
+      flex: 1;
+
+      .noticeListTable {
+        .ant-table-body .ant-table-cell {
+          padding: 14px 8px;
+          vertical-align: top;
+        }
+
+        .ant-table-cell::before {
+          display: none;
+        }
+
+        .ant-table-row-selected > .ant-table-cell {
+          background: transparent;
+        }
+
+        .noticeContent {
+          font-size: 16px;
+          line-height: 24px;
+          font-weight: 500;
+          user-select: none;
+          word-break: break-all;
+          margin: 0;
+        }
+
+        .noticeSendTime {
+          margin-top: 2px;
+          font-size: 13px;
+          color: #8c8c8c;
+          user-select: none;
+        }
+
+        .ant-empty {
+          height: 482px;
+          display: flex;
+          align-items: center;
+          flex-direction: column;
+          justify-content: center;
+        }
+      }
+    }
+
+    .noticePagination {
+      border-top: 1px solid var(--supos-table-tr-color);
+      padding: 10px 0;
+      text-align: center;
+      flex-shrink: 0;
+      margin-top: -1px;
+      position: relative;
+      z-index: 1;
+
+      .ant-pagination-item:not(.ant-pagination-item-active):active {
+        background-color: transparent;
+      }
+    }
+  }
+}

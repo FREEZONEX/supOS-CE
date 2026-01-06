@@ -1,0 +1,20 @@
+.sortable-tree-loading {
+  flex: 1;
+  overflow: hidden;
+
+  :global {
+    .ant-spin-container {
+      height: 100%;
+    }
+  }
+}
+
+.sortable-tree-wrap {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .ant-tree {
+    background-color: transparent;
+  }
+}

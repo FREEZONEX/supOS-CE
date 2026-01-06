@@ -1,0 +1,31 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/i18n
+    prefix: /inter-api/supos/uns/i18n
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "获取i18n"
+    @handler readFile
+    get /messages (GetUnsI18nMessagesReq) returns (GetUnsI18nMessagesResp)
+
+}
+
+type (
+    // 请求：读取系统模块 i18n 文本
+    GetUnsI18nMessagesReq {
+        // 语言编码，必填，如 zh_CN
+        Lang string `form:"lang"`
+    }
+    GetUnsI18nMessagesResp{
+        Messages map[string ]string `json:"messages"`
+    }
+
+)

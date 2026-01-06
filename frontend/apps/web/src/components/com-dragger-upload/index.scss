@@ -1,0 +1,17 @@
+.com-dragger-upload {
+  .ant-upload-drag {
+    height: 250px;
+    border-radius: 4px;
+    border: none;
+    background: var(--supos-charttop-bg-color);
+  }
+
+  .ant-upload-list {
+    max-height: 300px;
+    overflow-y: auto;
+
+    .ant-upload-list-item-container {
+      overflow: hidden;
+    }
+  }
+}

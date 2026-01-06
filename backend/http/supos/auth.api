@@ -1,0 +1,64 @@
+info(
+    title: "gateway auth"
+    version: "v1"
+)
+
+
+@server(
+    group: supos/auth
+    prefix: /inter-api/supos/auth
+)
+
+service backend {
+    @doc "exchange oauth code for platform token"
+    @handler token
+    get /token (TokenCallbackReq) returns ()
+
+    @doc "fetch user info by cached token"
+    @handler user
+    get /user () returns (UserInfoVO)
+
+    @doc "fetch raw keycloak userinfo"
+    @handler userinfo
+    get /userinfo () returns (UserInfoVO)
+
+    @doc "logout current user"
+    @handler logout
+    delete /logout () returns ()
+}
+
+type (
+    TokenCallbackReq {
+        Code string `form:"code"`
+    }
+
+    RoleInfo {
+        RoleID          string   `json:"roleId"`
+        RoleName        string   `json:"roleName"`
+        RoleDescription string   `json:"roleDescription,optional"`
+        ClientRole      bool     `json:"clientRole,optional"`
+    }
+
+    ResourceInfo {
+        PolicyID   string   `json:"policyId,optional"`
+        ResourceID string   `json:"resourceId,optional"`
+        URI        string   `json:"uri"`
+        Methods    []string `json:"methods,optional"`
+    }
+
+    UserInfoVO {
+        Sub              string         `json:"sub"`
+        PreferredUsername string        `json:"preferredUsername"`
+        Email            string         `json:"email,optional"`
+        EmailVerified    bool           `json:"email_verified,optional"`
+        FirstName        string         `json:"firstName,optional"`
+        Enabled          bool           `json:"enabled,optional"`
+        HomePage         string         `json:"homePage,optional"`
+        RoleList         []RoleInfo     `json:"roleList,optional"`
+        ResourceList     []ResourceInfo `json:"resourceList,optional"`
+        DenyResourceList []ResourceInfo `json:"denyResourceList,optional"`
+        superAdmin       bool           `json:"superAdmin,optional"`
+    }
+
+   
+)

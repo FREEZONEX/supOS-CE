@@ -1,0 +1,157 @@
+syntax = "v1"
+
+info (
+    title:   "标签管理 API"
+    desc:    "转换自 UnsLabelApiController.java 的接口定义"
+    author:  "Kilo Code"
+    version: "1.0"
+)
+
+type (
+
+    UnsLabelListReq {
+        Key string `form:"key,optional"`
+    }
+
+    CreateLabelReq {
+        Name string `form:"name"`
+    }
+    CreateLabelResp {
+        BaseResult
+        Data *LabelVo `json:"data"`
+    }
+    // UpdateLabelReq 更新标签请求
+    UpdateLabelReq {
+        // 标签ID
+        ID int64 `json:"id,string"`
+
+        // 标签名称
+        LabelName string `json:"labelName" validate:"required,max=63"`
+
+        // 是否订阅
+        SubscribeEnable *bool `json:"subscribeEnable,optional,string"`
+
+        // 订阅频率
+        SubscribeFrequency string `json:"subscribeFrequency,optional"`
+    }
+    UpdateLabelSubscribeReq {
+        // 标签ID
+        ID int64 `form:"id,string"`
+
+        // 是否订阅
+        SubscribeEnable *bool `form:"enable,optional,string"`
+
+        // 订阅频率
+        SubscribeFrequency string `form:"frequency,optional"`
+
+    }
+    MakeLabelReq {
+        UnsId     int64     `form:"unsId"`
+        LabelList []*LabelVo `json:"labelList,optional"`
+    }
+
+    MakeSingleLabelReq {
+        UnsId   int64 `form:"unsId"`
+        LabelId int64 `form:"labelId"`
+    }
+
+    // CancelLabelReq 文件取消标签请求
+    CancelLabelReq {
+        UnsId    int64   `form:"unsId"`
+        LabelIds []int64 `json:"labelIds"`
+    }
+
+    LabelPageReq {
+        LabelId  int64 `form:"labelId"`
+        PageNo   int64 `form:"pageNo,optional,default=1"`
+        PageSize int64 `form:"pageSize,optional,default=20"`
+    }
+
+    UnsLabelListResp {
+        BaseResult
+        Data []*LabelVo `json:"data"`
+    }
+
+    LabelDetailResult {
+        BaseResult
+        Data *LabelVo `json:"data"`
+    }
+
+    UnsByLabelPageResp {
+        BaseResult
+        PageNo   int64    `json:"pageNo"`
+        PageSize int64    `json:"pageSize"`
+        Total    int64    `json:"total"`
+        Data     []FileVo `json:"data"`
+    }
+)
+
+@server(
+    group: supos/uns/label
+    prefix: /inter-api/supos/uns
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+
+service backend {
+    @doc (
+        summary: "标签列表"
+        desc:    "列出所有支持的标签，下拉选择，支持模糊搜索"
+    )
+    @handler allLabel
+    get /allLabel (UnsLabelListReq) returns (UnsLabelListResp)
+
+    @doc (
+        summary: "标签详情"
+    )
+    @handler detail
+    get /label/detail (WithID) returns (LabelDetailResult)
+
+    @doc (
+        summary: "创建标签"
+    )
+    @handler create
+    post /label (CreateLabelReq) returns (CreateLabelResp)
+
+    @doc (
+        summary: "删除标签"
+    )
+    @handler delete
+    delete /label (WithID) returns (BaseResult)
+
+    @doc (
+        summary: "修改标签"
+    )
+    @handler update
+    put /label (UpdateLabelReq) returns (BaseResult)
+
+    @doc (
+        summary: "修改标签订阅"
+    )
+    @handler updateSubscribe
+    put /label/subscribe (UpdateLabelSubscribeReq) returns (BaseResult)
+
+    @doc (
+        summary: "文件打标签"
+        desc:    "标签集合为空时取消所有标签"
+    )
+    @handler makeLabel
+    post /makeLabel (MakeLabelReq) returns (BaseResult)
+
+    @doc (
+        summary: "文件打单个标签"
+    )
+    @handler makeSingleLabel
+    post /makeSingleLabel (MakeSingleLabelReq) returns (BaseResult)
+
+    @doc (
+        summary: "文件取消标签"
+    )
+    @handler cancelLabel
+    delete /cancelLabel (CancelLabelReq) returns (BaseResult)
+
+    @doc (
+        summary: "分页获取标签下的文件列表"
+    )
+    @handler pageListUnsByLabel
+    get /label/pageListUnsByLabel (LabelPageReq) returns (UnsByLabelPageResp)
+}

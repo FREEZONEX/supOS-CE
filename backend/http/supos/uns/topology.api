@@ -1,0 +1,60 @@
+syntax = "v1"
+
+info (
+	title:  "UNS Topology Service"
+	desc:   "UNS 拓扑服务"
+	author: "sunlifang"
+	email:  "sunlifang@supos.com"
+)
+
+// DTOs
+type InstanceTopologyData {
+	TopologyNode string `json:"topologyNode"`
+	EventCode    string `json:"eventCode"`
+	EventMessage string `json:"eventMessage,omitempty"`
+	EventTime    int64  `json:"eventTime,omitempty"`
+}
+
+// GlobalTopologyData represents global topology statistics (equivalent to Java's GlobalTopologyData)
+type GlobalTopologyData {
+	ModelNum             int64             `json:"Folder"`               // Number of models (path_type=0)
+	InstanceNum          int64             `json:"File"`                 // Number of instances (path_type=2)
+	AlarmNum             int64             `json:"Alarm"`                // Number of alarms
+	AllConnections       int64             `json:"allConnections"`       // Total MQTT connections
+	LiveConnections      int64             `json:"liveConnections"`      // Active MQTT connections
+	MessageInThroughput  int64             `json:"messageInThroughput"`  // Messages/sec into MQTT broker
+	MessageOutThroughput int64             `json:"messageOutThroughput"` // Messages/sec out of MQTT broker
+	Protocol             map[string]int64  `json:"protocol"`             // Protocol counts: {"mqtt": 200, "opcua": 50}
+	ICMPStates           []interface{}     `json:"icmpStates"`           // ICMP ping states
+	MountStatus          map[string]string `json:"mountStatus"`          // Mount status by alias
+}
+
+// APIs
+type (
+	GetInstanceTopologyReq {
+		UnsId int64 `form:"unsId,optional"`
+	}
+	GetInstanceTopologyResp {
+		Data []InstanceTopologyData `json:"data"`
+	}
+	MockInstanceTopologyReq {
+		UnsId int64  `form:"unsId,optional"`
+		Topic string `form:"topic,optional"` // The java code has topic, but it seems unused in log method. Kept for compatibility.
+		Node  string `form:"node,optional"`
+	}
+)
+
+@server (
+	group:  supos/uns/topology
+	prefix: /inter-api/supos/uns
+)
+service backend {
+	@doc "获取实例拓扑状态"
+	@handler GetInstanceTopologyHandler
+	get /topology (GetInstanceTopologyReq) returns (JsonResult)
+
+	@doc "设置实例拓扑状态(mock)"
+	@handler MockInstanceTopologyHandler
+	get /topology-mock (MockInstanceTopologyReq)
+}
+

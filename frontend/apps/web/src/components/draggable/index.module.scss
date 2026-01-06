@@ -1,0 +1,3 @@
+.draggable-item {
+  transform: translate3d(var(--translate-x, 0), var(--translate-y, 0), 0) scale(var(--scale, 1));
+}

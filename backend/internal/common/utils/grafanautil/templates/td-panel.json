@@ -1,0 +1,94 @@
+{
+  "datasource": {
+    "type": "tdengine-datasource",
+    "uid": "{dataSourceUid}"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisBorderShow": false,
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "barWidthFactor": 0.6,
+        "drawStyle": "line",
+        "fillOpacity": 0,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "insertNulls": false,
+        "lineInterpolation": "linear",
+        "lineWidth": 1,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "auto",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green"
+          },
+          {
+            "color": "red",
+            "value": 80
+          }
+        ]
+      }
+    },
+    "overrides": []
+  },
+  "gridPos": {
+    "h": 6,
+    "w": 8,
+    "x": {gridPosX},
+    "y": 0
+  },
+  "id": {id},
+  "options": {
+    "legend": {
+      "calcs": [],
+      "displayMode": "list",
+      "placement": "bottom",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "single",
+      "sort": "none"
+    }
+  },
+  "pluginVersion": "11.3.0",
+  "targets": [
+    {
+      "datasource": {
+        "type": "tdengine-datasource",
+        "uid": "{dataSourceUid}"
+      },
+      "formatType": "Time series",
+      "queryType": "SQL",
+      "refId": "A",
+      "sql": "SELECT {columns} FROM {schema}.`{tableName}` where 1=1 {tagNameCondition} and `{sys_field_create_time}`>=$from and `{sys_field_create_time}`<=$to "
+    }
+  ],
+  "title": "{title}",
+  "type": "timeseries"
+}

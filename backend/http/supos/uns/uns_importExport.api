@@ -1,0 +1,53 @@
+@server (
+	prefix: /inter-api/supos/uns/importExport
+	group:  supos/uns/importExport
+	middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+
+	@doc (
+		summary: "下载模版"
+	)
+	@handler templateDownload
+	get /template/download (TemplateDownloadReq) returns ()
+
+	@doc (
+		summary: "文件下载"
+	)
+	@handler fileDownload
+	get /file/download (FileDownloadReq) returns ()
+}
+
+type (
+	// 文件上传请求
+	UploadReq  {
+		File string `form:"file,multipart/form-data"`
+	}
+    // 导出请求
+    ExportReq  {
+        CheckSmallFile *bool   `json:"checkSmallFile,optional,omitempty,omitzero"`
+        UserId         string  `json:"userId,optional,omitempty,omitzero"`
+        Language       string   `json:"language,optional,omitempty,omitzero"`
+        ExportType     string  `json:"exportType,optional,omitempty,omitzero"`
+        FileType       string  `json:"fileType,optional,omitempty,omitzero"`
+        Folders        []int64 `json:"folders,string,optional,omitempty,omitzero"`
+        Files          []int64 `json:"files,string,optional,omitempty,omitzero"`
+    }
+    ExportPathResult {
+       SmallFile bool    `json:"smallFile"`
+       FilePath  string  `json:"filePath"`
+    }
+    ExportResp {
+      BaseResult
+      Data *ExportPathResult `json:"data"`
+    }
+
+	// 模版下载请求
+	TemplateDownloadReq  {
+		FileType string `form:"fileType"`
+	}
+	// 文件下载请求
+	FileDownloadReq  {
+		Path string `form:"path"`
+	}
+)

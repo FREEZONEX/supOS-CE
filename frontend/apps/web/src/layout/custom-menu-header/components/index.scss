@@ -1,0 +1,12 @@
+.menu-label {
+  img {
+    vertical-align: middle !important;
+  }
+
+  &:hover {
+    .menu-label-icon {
+      transition: transform 0.3s ease;
+      transform: rotate(180deg);
+    }
+  }
+}

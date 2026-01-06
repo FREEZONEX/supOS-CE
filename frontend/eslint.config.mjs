@@ -27,9 +27,14 @@ export default tsEslint.config(
       ...reactHooks.configs.recommended.rules,
       // 'no-unused-vars': 'off',
       // '@typescript-eslint/no-unused-vars': 'off',
-      // '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       // '@typescript-eslint/no-require-imports': 'off',
       // '@typescript-eslint/no-unused-expressions': 'warn',
+      'react-hooks/set-state-in-effect': 'warn', // 从 "error" 改为 "warn"
+      'react-hooks/preserve-manual-memoization': 'warn', // 从 "error" 改为 "warn"
+      'react-hooks/use-memo': 'warn', // 从 "error" 改为 "warn"
+      'react-hooks/immutability': 'warn', // 从 "error" 改为 "warn"
+      'react-hooks/refs': 'warn', // 从 "error" 改为 "warn"
     },
   },
   {

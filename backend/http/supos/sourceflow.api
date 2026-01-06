@@ -1,0 +1,181 @@
+syntax = "v1"
+
+info(
+    title: "Node-RED Source Flow API"
+    desc: "Manage Node-RED flows for source integrations"
+    author: "SupOS Team"
+    version: "v1"
+)
+
+@server(
+    group: supos/sourceflow
+    prefix: /inter-api/supos
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "Create a new source flow"
+    @handler createSourceFlow
+    post /flow (SourceFlowCreateReq) returns (string)
+
+    @doc "Copy an existing source flow"
+    @handler copySourceFlow
+    post /flow/copy (SourceFlowCopyReq) returns (string)
+
+    @doc "List source flows with optional fuzzy search"
+    @handler listSourceFlows
+    get /flows (SourceFlowListQuery) returns (SourceFlowPageResult)
+
+    @doc "Fetch flow information by UNS alias"
+    @handler getSourceFlowByAlias
+    get /flow/uns/alias (SourceFlowAliasQuery) returns (SourceFlowInfo)
+
+    @doc "Create a mock flow from UNS path"
+    @handler createSourceMockFlow
+    post /flow/create (SourceFlowMockReq) returns (SourceFlowInfo)
+
+    @doc "Query current Node-RED flow version"
+    @handler getSourceFlowVersion
+    get /flow/version returns (string)
+
+    @doc "Deploy a source flow"
+    @handler deploySourceFlow
+    post /flow/deploy (SourceFlowDeployReq) returns (SourceFlowDeployResult)
+
+    @doc "Persist Node-RED flow JSON"
+    @handler saveSourceFlowJson
+    put /flow/save (SourceFlowSaveReq) returns ()
+
+    @doc "Update flow metadata"
+    @handler updateSourceFlow
+    put /flow (SourceFlowUpdateReq) returns ()
+
+    @doc "Delete a source flow by id"
+    @handler deleteSourceFlow
+    delete /flow (SourceFlowDeleteReq) returns ()
+    
+    @doc "Mark a source flow by id"
+    @handler markSourceFlow
+    post /flow/mark (FlowMarkReq) returns ()
+
+    @doc "delete Mark a source flow by id"
+    @handler unmarkSourceFlow
+    delete /flow/unmark (FlowUNMarkReq) returns ()
+
+    @doc "bind a source flow with UNS alias"
+    @handler bindUNS
+    post /flow/bindUns (SourceFlowBindUnsReq) returns ()
+}
+
+@server(
+    group: supos/sourceflow/service_api
+    prefix: /service-api/supos
+)
+service backend {
+    @doc "Proxy Node-RED /flows endpoint using cookie scoped id"
+    @handler proxySourceFlows
+    get /proxy/flows returns (string)
+
+    @doc "Batch query flows by UNS aliases"
+    @handler batchSourceFlowByAliases
+    post /flow/by/aliases (SourceFlowBatchAliasReq) returns (SourceFlowListResult)
+}
+
+type (
+    SourceFlowCreateReq {
+        FlowName    string `json:"flowName"`
+        Description string `json:"description,optional"`
+        Template    string `json:"template,optional"`
+    }
+
+    SourceFlowCopyReq {
+        SourceID    string `json:"sourceId"`
+        FlowName    string `json:"flowName"`
+        Description string `json:"description,optional"`
+        Template    string `json:"template,optional"`
+    }
+
+    SourceFlowListQuery {
+        Keyword  string `form:"k,optional"`
+        OrderCode  string `form:"orderCode,optional"`
+        IsAsc  string `form:"isAsc,optional"`
+        PageNo   int64  `form:"pageNo,optional,default=1"`
+        PageSize int64  `form:"pageSize,optional,default=10"`
+    }
+
+    SourceFlowAliasQuery {
+        Alias string `form:"alias"`
+    }
+
+    SourceFlowMockReq {
+        UnsAlias string `json:"unsAlias"`
+        Path     string `json:"path"`
+    }
+
+    SourceFlowDeployReq {
+        ID    string                   `json:"id"`
+        Flows []map[string]interface{} `json:"flows,optional"`
+    }
+
+    SourceFlowSaveReq {
+        ID    string                   `json:"id"`
+        Flows []map[string]interface{} `json:"flows,optional"`
+    }
+
+    SourceFlowUpdateReq {
+        ID          string `json:"id"`
+        FlowName    string `json:"flowName"`
+        Description string `json:"description,optional"`
+    }
+
+    SourceFlowDeleteReq {
+        ID string `form:"id"`
+    }
+
+    SourceFlowBatchAliasReq {
+        Aliases []string `json:"aliases"`
+    }
+
+    SourceFlowInfo {
+        ID          string `json:"id,optional"`
+        FlowName    string `json:"flowName,optional"`
+        FlowID      string `json:"flowId,optional"`
+        Description string `json:"description,optional"`
+        FlowStatus  string `json:"flowStatus,optional"`
+        Template    string `json:"template,optional"`
+        Mark        int    `json:"mark,optional"`
+        Creator    string `json:"creator,optional"`
+        CreateTime        int    `json:"createTime,optional"`
+    }
+
+    SourceFlowDeployResult {
+        FlowID  string `json:"flowId,optional"`
+        Version string `json:"version,optional"`
+    }
+
+   
+    SourceFlowListResult {
+        Code int              `json:"code"`
+        Msg  string           `json:"msg,optional"`
+        Data []SourceFlowInfo `json:"data,optional"`
+    }
+
+    SourceFlowPageResult {
+        Code     int                `json:"code"`
+        PageNo   int64              `json:"pageNo"`
+        PageSize int64              `json:"pageSize"`
+        Total    int64              `json:"total"`
+        Data     []SourceFlowInfo   `json:"data,optional"`
+    }
+
+    FlowMarkReq {
+        ID  string `json:"id,optional"`
+    }
+    FlowUNMarkReq {
+        ID  string `form:"id,optional"`
+    }
+
+    SourceFlowBindUnsReq {
+        FlowID    int64 `form:"flowId"`
+        UnsAlias string `form:"unsAlias"`
+    }
+)

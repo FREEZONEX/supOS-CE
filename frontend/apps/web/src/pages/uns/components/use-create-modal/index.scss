@@ -1,0 +1,81 @@
+.optionDrawerWrap {
+  .antd-form-item-no-colon {
+    font-weight: 500;
+  }
+
+  .ant-drawer-header {
+    border: none;
+    padding-left: 40px;
+  }
+
+  .ant-drawer-body {
+    padding: 40px;
+  }
+
+  .optionContent {
+    .useCreateModalForm {
+      font-weight: bold;
+
+      .namespaceValue {
+        width: 100%;
+        word-break: break-all;
+      }
+
+      .dashedWrap {
+        padding: 20px;
+        border: 1px dashed #c6c6c6;
+        border-radius: 6px;
+      }
+
+      .ant-select-selector {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .ant-radio-wrapper {
+        max-width: 100%;
+
+        .ant-radio-label {
+          flex: auto;
+          overflow-wrap: break-word;
+        }
+      }
+
+      .ant-form-item {
+        margin-bottom: 16px;
+      }
+
+      .customLabelStyle {
+        .ant-form-item-no-colon {
+          width: min-content;
+        }
+      }
+    }
+
+    .functionBox {
+      font-weight: bold;
+      border-bottom: 1px solid #c6c6c6;
+      margin-bottom: 22px;
+
+      .rightSection {
+        border: 1px solid #d9d9d9;
+        border-radius: 6px;
+        padding: 12px;
+        min-width: 200px;
+        background-color: var(--supos-user-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-top: -24px;
+      }
+    }
+  }
+}
+
+.opt-checkbox {
+  .ant-checkbox-wrapper,
+  .ant-checkbox-label {
+    width: 100%;
+  }
+}

@@ -1,0 +1,104 @@
+.TodoTable {
+  :global {
+    .ant-radio-inner {
+      border-radius: 0 !important;
+    }
+  }
+
+  .no-border-radio {
+    //border: none !important;
+    //padding: 0 20px;
+
+    @media (width <= 768px) {
+      flex-direction: column;
+      padding: 0 15px;
+    }
+  }
+
+  .no-border-radio::before {
+    display: none !important;
+  }
+}
+
+.filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+
+  @media (width <= 768px) {
+    overflow: auto;
+    flex-direction: column;
+    padding: 20px 0 40px;
+  }
+}
+
+.radio-group {
+  @media (width <= 768px) {
+    width: 100%;
+    margin-bottom: 16px;
+
+    .ant-radio-button-wrapper {
+      display: block;
+      margin: 4px 0;
+    }
+  }
+}
+
+.right-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  @media (width <= 768px) {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  > div {
+    display: flex;
+    align-items: center;
+
+    &:not(:last-child) {
+      margin-right: 16px;
+    }
+
+    @media (width <= 768px) {
+      width: 100%;
+      margin-right: 0 !important;
+
+      .filter-label {
+        flex: 0 0 30%;
+        padding-right: 8px;
+      }
+
+      .filter-label-input,
+      .filter-label-select {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+  }
+
+  .filter-select,
+  .filter-input {
+    width: 210px;
+
+    @media (width <= 768px) {
+      width: 100% !important;
+    }
+  }
+
+  .search-btn {
+    @media (width <= 768px) {
+      width: 100%;
+      margin-top: 8px;
+    }
+  }
+}
+
+.filter-label-task,
+.filter-label-origin {
+  padding: 0 5px;
+}

@@ -1,0 +1,37 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/uns/person
+    prefix: /inter-api/supos/uns/person
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "获取个人配置"
+    @handler config
+    get /config (GetPersonConfigReq) returns (GetPersonConfigResp)
+    @doc "设置个人配置"
+    @handler update
+    post /config (UpdatePersonConfigReq) returns ()
+}
+
+type (
+    GetPersonConfigReq {
+        UserID string `form:"userId"`
+    }
+    GetPersonConfigResp {
+        UserID string `json:"userId"`
+        mainLanguage string `json:"mainLanguage"`
+        createAt int64 `json:"createAt"`
+        updateAt int64 `json:"updateAt"`    
+    }
+    UpdatePersonConfigReq {
+        UserID string `json:"userId"`
+        mainLanguage string `json:"mainLanguage"`
+    }
+)

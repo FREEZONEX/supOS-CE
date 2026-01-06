@@ -1,0 +1,25 @@
+info(
+    title: "uns模板"
+    desc: "uns模板"
+    author: "杨磊"
+    email: "603685348@qq.com"
+    version: "v1"
+)
+
+@server(
+    group: supos/mount
+    prefix: /inter-api/supos/mount
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "手动挂载"
+    @handler mount
+    post / () returns ()
+    @doc "获取挂载数据源"
+    @handler source
+    post /source () returns ()
+}
+
+type (
+
+)

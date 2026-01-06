@@ -5,7 +5,7 @@ export default {
     'at-rule-no-unknown': [
       true,
       {
-        ignoreAtRules: ['use', 'forward', 'import'],
+        ignoreAtRules: ['use', 'forward', 'import', 'include'],
       },
     ],
     'selector-class-pattern': null, // 禁用对类选择器命名的强制要求

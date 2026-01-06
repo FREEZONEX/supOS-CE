@@ -1,0 +1,13 @@
+.com-code-snippet {
+  width: 100%;
+
+  .code-snippet-wrapper {
+    background: var(--supos-switchwrap-active-bg-color);
+    padding: 12px !important;
+    min-width: 100%;
+
+    .code-snippet-container {
+      width: 100%;
+    }
+  }
+}

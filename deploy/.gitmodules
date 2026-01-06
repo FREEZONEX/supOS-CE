@@ -1,0 +1,6 @@
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/FREEZONEX/supOS-frontend.git
+[submodule "backend"]
+	path = backend
+	url = https://github.com/FREEZONEX/supOS-backend.git

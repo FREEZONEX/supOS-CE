@@ -1,0 +1,72 @@
+syntax = "v1"
+
+import "uns/uns.api"
+
+info(
+	title: "Kong Adapter API"
+	desc: "Kong 适配器服务的 API 定义"
+	author: "Du Bingxuan"
+	version: "1.0"
+)
+
+// ==================== 类型定义 ====================
+
+// SimpleRouteVO 简化的路由信息
+type SimpleRouteVO {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
+// RouteListResp 路由列表响应
+type RouteListResp {
+	Code int             `json:"code"`
+	Msg  string          `json:"msg"`
+	Data []SimpleRouteVO `json:"data"`
+}
+
+// SaveMenuReq 保存菜单请求
+type SaveMenuReq {
+	ServiceName string `form:"serviceName,optional"`               // 服务名（可选）
+	Name        string `form:"name"`                               // 名称，唯一标识一个菜单
+	ShowName    string `form:"showName"`                           // 显示名
+	Description string `form:"description,optional"`               // 描述（可选）
+	BaseUrl     string `form:"baseUrl"`                            // baseURL
+	OpenType    int    `form:"openType"`                           // 跳转方式：0-iframe打开，1-打开新页面，2-app
+	// Icon 文件通过 multipart/form-data 上传，字段名为 "file"
+}
+
+// ==================== 服务定义 ====================
+
+@server(
+	prefix: /inter-api/supos/kong
+	group: supos/kong
+)
+service backend {
+	@doc "获取简化的路由列表"
+	@handler RouteListHandler
+	get /routeList returns (RouteListResp)
+}
+
+@server(
+	prefix: /open-api
+	group: supos/menu
+)
+service backend {
+	@doc "保存菜单"
+	@handler SaveMenuHandler
+	post /menu (SaveMenuReq) returns (ResultVO)
+}
+
+@server(
+	group: supos/nodered
+)
+service backend {
+	@doc "代理 NodeRed /flows 接口"
+	@handler ProxyNodeRedFlowsHandler
+	get /test/nodered returns (string)
+	
+	@doc "代理 NodeRed /flows 接口（备用路径）"
+	@handler ProxyNodeRedFlowsHandler2
+	get /flows/test/nodered returns (string)
+}

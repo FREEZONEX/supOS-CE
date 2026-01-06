@@ -1,0 +1,152 @@
+info(
+    title: "Dashboard"
+    desc: "UNS Dashboard API Definition"
+    author: "Du Bingxuan"
+    email: "dubingxuan@supos.com"
+    version: "v1"
+)
+
+// ==================== 类型定义 ====================
+type BindUnsReq {
+	DashboardID string `json:"dashboardId"`
+	UnsAlias    string `json:"unsAlias"`
+}
+
+type GetByUnsReq {
+	UnsAlias string `form:"unsAlias"`
+}
+
+type IsExistReq {
+	Alias string `form:"alias"`
+}
+
+type AliasPathReq {
+	Alias string `path:"alias"`
+}
+
+// DashboardDto Dashboard 数据传输对象
+type DashboardDto {
+	ID          string `json:"id,optional,omitzero"`
+	Name        string `json:"name"`
+	Type        int    `json:"type"`                      // 1-grafana 2-fuxa
+	NeedInit    bool   `json:"needInit,optional"`
+	Description string `json:"description,optional,omitzero"`
+	JsonContent string `json:"jsonContent,optional,omitzero"`
+	Creator     string `json:"creator,optional,omitzero"`
+	UpdateTime  string `json:"updateTime,optional,omitzero"`
+	CreateTime  string `json:"createTime,optional,omitzero"`
+}
+
+// DashboardRefDto Dashboard 引用关系 DTO
+type DashboardRefDto {
+	DashboardID string `json:"dashboardId"`
+	UnsAlias    string `json:"unsAlias"`
+}
+
+// PageListRequest 分页查询请求
+type PageListRequest {
+	K         string `form:"k,optional"`         // 关键字
+	Type      *int   `form:"type,optional"`      // Dashboard 类型
+	OrderCode string `form:"orderCode,optional"` // 排序字段
+	IsAsc     bool   `form:"isAsc,optional"`     // 是否升序
+	PageNo    int64  `form:"pageNo,default=1"`
+	PageSize  int64  `form:"pageSize,default=10"`
+}
+
+type DashboardPageResp {
+    PageResultDTO
+    Data     []DashboardDto `json:"data"`
+}
+
+// JsonResult 通用 JSON 响应
+type JsonResult {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data,omitzero"`
+}
+
+// MarkTopRequest 置顶请求
+type MarkTopRequest {
+	ID string `json:"id"`
+}
+
+// ==================== 服务定义 ====================
+
+@server(
+    group: supos/uns/dashboard
+    prefix: /inter-api/supos/uns/dashboard
+    middleware:  CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "分页查询 Dashboard"
+    @handler PageList
+    get / (PageListRequest) returns (DashboardPageResp)
+    
+    @doc "获取 Dashboard 详情"
+    @handler GetDetail
+    get /detail (DetailRequest) returns (JsonResult)
+    
+    @doc "根据 UID 获取 Dashboard"
+    @handler GetByUuid
+    get /:uid (UuidRequest) returns (JsonResult)
+    
+    @doc "创建 Dashboard"
+    @handler Create
+    post / (DashboardDto) returns (JsonResult)
+    
+    @doc "编辑 Dashboard"
+    @handler Edit
+    put / (DashboardDto) returns (JsonResult)
+    
+    @doc "删除 Dashboard"
+    @handler Delete
+    delete /:uid (UuidRequest) returns (JsonResult)
+    
+    @doc "置顶 Dashboard"
+    @handler MarkTop
+    post /mark (MarkTopRequest) returns (JsonResult)
+    
+    @doc "取消置顶 Dashboard"
+    @handler UnmarkTop
+    delete /unmark (UnmarkRequest) returns (JsonResult)
+    
+    @doc "绑定 UNS"
+    @handler BindUns
+    post /bindUns (DashboardRefDto) returns (JsonResult)
+    
+    @doc "根据 UNS 获取 Dashboard"
+    @handler GetByUns
+    get /getByUns (GetByUnsRequest) returns (JsonResult)
+    
+    @doc "基于 UNS 创建 Grafana Dashboard"
+    @handler CreateGrafanaByUns
+    post /createGrafanaByUns/:alias (AliasRequest) returns (JsonResult)
+    
+    @doc "检查 Dashboard 是否存在"
+    @handler IsExist
+    get /isExist (IsExistRequest) returns (JsonResult)
+}
+
+type DetailRequest {
+    ID string `form:"id"`
+}
+
+type UuidRequest {
+    Uid string `path:"uid"`
+}
+
+type UnmarkRequest {
+    ID string `form:"id"`
+}
+
+type GetByUnsRequest {
+    UnsAlias string `form:"unsAlias"`
+}
+
+type AliasRequest {
+    Alias string `path:"alias"`
+}
+
+type IsExistRequest {
+    Alias string `form:"alias"`
+}

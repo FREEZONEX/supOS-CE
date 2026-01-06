@@ -1,0 +1,25 @@
+{
+  "name": "@supos-ce/plugin-alert",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "intl:once": "supos-scripts intl:once",
+    "intl:watch": "supos-scripts intl:watch",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "properties:convert": "supos-scripts json-to-properties --prefix=Alert"
+  },
+  "dependencies": {
+    "react": "catalog:framework",
+    "react-dom": "catalog:framework",
+    "react-router": "catalog:framework"
+  },
+  "devDependencies": {
+    "vite": "catalog:build",
+    "@supos-os-edge/scripts": "workspace:^",
+    "@supos-os-edge/typescript-config": "workspace:^"
+  }
+}

@@ -1,0 +1,132 @@
+syntax = "v1"
+
+info(
+    title: "Node-RED Event Flow API"
+    desc: "Manage Node-RED flows for event processing"
+    author: "SupOS Team"
+    version: "v1"
+)
+
+@server(
+    group: supos/eventflow
+    prefix: /inter-api/supos
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "Create a new event flow"
+    @handler createEventFlow
+    post /event/flow (EventFlowCreateReq) returns (string)
+
+    @doc "Copy an existing event flow"
+    @handler copyEventFlow
+    post /event/flow/copy (EventFlowCopyReq) returns (string)
+
+    @doc "List event flows with optional fuzzy search"
+    @handler listEventFlows
+    get /event/flows (EventFlowListQuery) returns (EventFlowPageResult)
+
+    @doc "Deploy an event flow"
+    @handler deployEventFlow
+    post /event/flow/deploy (EventFlowDeployReq) returns (string)
+
+    @doc "Persist Node-RED event flow JSON"
+    @handler saveEventFlowJson
+    put /event/flow/save (EventFlowSaveReq) returns ()
+
+    @doc "Query current event flow version"
+    @handler getEventFlowVersion
+    get /event/flow/version returns (string)
+
+    @doc "Update event flow metadata"
+    @handler updateEventFlow
+    put /event/flow (EventFlowUpdateReq) returns ()
+
+    @doc "Delete an event flow by id"
+    @handler deleteEventFlow
+    delete /event/flow (EventFlowDeleteReq) returns ()
+
+    @doc "Mark a  flow by id"
+    @handler markEventFlow
+    post /event/mark (FlowMarkReq) returns ()
+
+    @doc "delete Mark a  flow by id"
+    @handler unmarkEventFlow
+    delete /event/unmark (FlowUNMarkReq) returns ()
+}
+
+@server(
+    group: supos/eventflow/service_api
+    prefix: /service-api/supos
+)
+service backend {
+    @doc "Proxy Node-RED /flows endpoint using cookie scoped id"
+    @handler proxyEventFlows
+    get /proxy/event/flows returns (string)
+}
+
+
+type (
+    EventFlowCreateReq {
+        FlowName    string `json:"flowName"`
+        Description string `json:"description,optional"`
+        Template    string `json:"template,optional"`
+    }
+
+    EventFlowCopyReq {
+        SourceID    string `json:"sourceId"`
+        FlowName    string `json:"flowName"`
+        Description string `json:"description,optional"`
+        Template    string `json:"template,optional"`
+    }
+
+    EventFlowListQuery {
+        Keyword   string `form:"k,optional"`
+        OrderCode string `form:"orderCode,optional"`
+        IsAsc     string `form:"isAsc,optional"`
+        PageNo    int64  `form:"pageNo,optional,default=1"`
+        PageSize  int64  `form:"pageSize,optional,default=10"`
+    }
+
+    EventFlowDeployReq {
+        ID    string                   `json:"id"`
+        Flows []map[string]interface{} `json:"flows,optional"`
+    }
+
+    EventFlowSaveReq {
+        ID    string                   `json:"id"`
+        Flows []map[string]interface{} `json:"flows,optional"`
+    }
+
+    EventFlowUpdateReq {
+        ID          string `json:"id"`
+        FlowName    string `json:"flowName"`
+        Description string `json:"description,optional"`
+    }
+
+    EventFlowDeleteReq {
+        ID string `form:"id"`
+    }
+
+    EventFlowInfo {
+        ID          string `json:"id,optional"`
+        FlowName    string `json:"flowName,optional"`
+        FlowID      string `json:"flowId,optional"`
+        Description string `json:"description,optional"`
+        FlowStatus  string `json:"flowStatus,optional"`
+        Template    string `json:"template,optional"`
+        Mark        int    `json:"mark,optional"`
+        Creator    string `json:"creator,optional"`
+        CreateTime        int    `json:"createTime,optional"`
+    }
+
+    EventFlowPageResult {
+        Code     int             `json:"code"`
+        Msg      string          `json:"msg,optional"`
+        PageNo   int64           `json:"pageNo"`
+        PageSize int64           `json:"pageSize"`
+        Total    int64           `json:"total"`
+        Data     []EventFlowInfo `json:"data,optional"`
+    }
+
+    
+)

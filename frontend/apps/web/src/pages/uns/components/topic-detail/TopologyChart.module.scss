@@ -1,0 +1,221 @@
+.detailTopologyWrap {
+  display: flex;
+  flex-flow: column wrap;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid var(--supos-table-head-color) !important;
+
+  .detailTopologyContent {
+    width: 100%;
+    height: 200px;
+    border-radius: 3px;
+
+    .common-node {
+      width: 100%;
+      height: 100%;
+      background-color: var(--supos-bg-color);
+      border-radius: 3px;
+      border: 1px solid transparent;
+      border-left: 4px solid var(--supos-mode-color, var(--supos-theme-color));
+      color: var(--supos-text-color);
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      padding-right: 12px;
+      gap: 10px;
+
+      .common-node-content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        align-items: flex-start;
+        gap: 4px;
+        width: 90px;
+
+        .common-node-subtitle {
+          font-size: 10px;
+          color: #c6c6c6;
+          width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .common-node-title {
+          font-size: 14px;
+          letter-spacing: 0.16px;
+          width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .common-node-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+
+        &:hover {
+          color: var(--supos-theme-color);
+        }
+      }
+    }
+
+    .common-node-hover:hover:not(:has(.common-node-btn:hover)) {
+      background-color: var(--supos-primary-bg);
+      border-right: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+      border-top: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+      border-bottom: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+      cursor: pointer;
+    }
+
+    .activeBg {
+      background-color: var(--supos-bg-color);
+      border-right: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+      border-top: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+      border-bottom: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+    }
+
+    .status-indicator {
+      position: absolute;
+      right: 0;
+      bottom: -20px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 4px;
+    }
+
+    .status-content {
+      max-width: calc(190px - 12px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 15px;
+    }
+
+    .loading-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--supos-gray-color-30);
+      border-top: 2px solid var(--supos-theme-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  }
+
+  .detailTable {
+    border-top: 1px dashed var(--supos-t-gray-color-30);
+    background-color: var(--supos-gray-color-10-message);
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    padding: 30px 40px;
+    align-items: flex-end;
+
+    .customTable {
+      width: 100%;
+
+      :global {
+        .ant-table-tbody .ant-table-cell {
+          background-color: var(--supos-gray-color-10-message) !important;
+        }
+      }
+
+      .payloadFirstTd {
+        background-color: var(--supos-payloadfirsttd-color);
+      }
+    }
+  }
+
+  .name {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 18px;
+    letter-spacing: 0.16px;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 8px;
+  }
+
+  .Tables {
+    width: 100%;
+    margin-bottom: 10px;
+
+    .Tables_title {
+      padding: 8px 16px;
+      align-items: flex-start;
+      gap: 10px;
+      flex: 1 0 0;
+      background-color: var(--supos-table-head-color);
+      border: 1px solid var(--supos-table-tr-color);
+      font-size: 16px;
+      font-style: normal;
+      line-height: 24px; /* 150% */
+      font-weight: bold;
+    }
+
+    .Tables_content {
+      display: flex;
+      padding: 20px 16px;
+      align-items: center;
+      gap: 4px;
+      flex: 1 0 0;
+      border: 1px solid var(--supos-table-tr-color);
+      border-top: none;
+      background-color: #fff;
+    }
+  }
+
+  .buttonError {
+    width: 16px;
+    height: 16px;
+    background-color: red;
+    border-radius: 50%;
+
+    img {
+      width: 100%;
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .error {
+    display: flex;
+    padding: 10px 14px;
+    align-items: center;
+    gap: 10px;
+    border-radius: 3px;
+    border: 1px solid #f1aaae;
+    background: #fff1f1;
+    color: #000;
+    font-size: 16px;
+  }
+
+  .btn {
+    display: flex;
+    justify-content: flex-end;
+  }
+}

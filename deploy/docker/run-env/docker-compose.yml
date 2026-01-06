@@ -54,6 +54,73 @@ services:
       driver: json-file
     networks:
       - supos_edge
+
+  kong:
+    image: kong:3.4.0
+    container_name: kong
+    hostname: kong
+    restart: always
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: postgres
+      KONG_PG_PORT: 5432
+      KONG_PG_USER: postgres
+      KONG_PG_PASSWORD: password
+      KONG_PG_DATABASE: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+    ports:
+      - "8000:8000"   # Kong proxy
+      - "8443:8443"   # Kong proxy SSL
+      - "8001:8001"   # Kong admin API
+      - "8444:8444"   # Kong admin API SSL
+      - "8002:8002"   # Kong Manager (GUI)
+    volumes:
+      - ../conf/kong/kong_config.yml:/usr/local/kong/declarative/kong.yml
+    depends_on:
+      - postgres
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - supos_edge
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  konga:
+    image: pantsel/konga:latest
+    container_name: konga
+    hostname: konga
+    restart: always
+    environment:
+      NODE_ENV: production
+      DB_ADAPTER: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_DATABASE: konga
+    ports:
+      - "1337:1337"   # Konga web UI
+    depends_on:
+      - postgres
+      - kong
+    volumes:
+      - ../conf/konga:/app/kongadata
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - supos_edge
 #  minio:
 #    image: minio/minio:latest
 #    hostname: minio

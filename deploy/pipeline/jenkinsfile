@@ -1,0 +1,256 @@
+pipeline {
+    // 运行环境配置：使用任何可用的 Jenkins Agent
+    agent any 
+
+    // 环境变量配置
+    environment {
+        SOURCE_CODE_URL = "https://gitee.com/supos-community-edition/sup-os-edge.git"
+        UNS_IMAGE_NAME = "tier0-uns" // 后端镜像
+        FRONTEND_IMAGE_NAME = "tier0-frontend" // 前端镜像
+        DOCKER_REGISTRY = "eco-registry.supos.com" // 替换为你的Docker仓库地址 (例如：docker.io, hub.mycompany.com)
+        DOCKER_USERNAME = "admin"
+        DOCKER_PASSWORD = "Supos1304@"
+        TAG = "${params.TAG}"
+        UNS_IMAGE_TAG = "${DOCKER_REGISTRY}/sup9bnlh/${UNS_IMAGE_NAME}:${TAG}"
+        FRONTEND_IMAGE_TAG = "${DOCKER_REGISTRY}/sup9bnlh/${FRONTEND_IMAGE_NAME}:${TAG}"
+        CREDENTIALS_ID = '26d0e415-9908-4c00-84dd-98ef04c6f201' // 替换为你的 Jenkins SSH 凭证 ID
+        VERSION=''
+        DEPLOY_SSH_SERVER='root@172.21.9.198'
+
+    }
+
+    // parameters {
+    //     booleanParam(
+    //         name: 'Only_Build_Image', 
+    //         defaultValue: false, 
+    //         description: '是否只构建镜像，不打包部署文件'
+    //     )
+    //     booleanParam(
+    //         name: 'Auto_Deploy', 
+    //         defaultValue: true, 
+    //         description: '自动部署到supos-community-edge'
+    //     )
+    // }
+
+    stages {
+        // --------------------------------------------------------------------------------------------------
+        stage('1. 克隆源码') {
+            steps {
+                script {
+                    echo "--> 清理工作空间 ${WORKSPACE}..."
+                    // 最佳实践：在克隆前清理工作空间
+                    cleanWs() 
+                }
+                
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: "${TAG}"]], 
+                    extensions: [
+                        [$class: 'CloneOption', depth: 1,shallow: true,timeout: 3600]
+                    ],
+                    userRemoteConfigs: [[credentialsId: "${CREDENTIALS_ID}", url: "${SOURCE_CODE_URL}"]]])
+
+                script {
+                    //currentBuild.displayName = "#${env.BUILD_NUMBER} - ${BUILD_USER}"
+                    sh '''
+                        #!/bin/bash
+                        ls -l "${WORKSPACE}"
+                    '''
+                }
+            }
+        }
+        // --------------------------------------------------------------------------------------------------
+        stage('2. 构建镜像') {
+            steps {
+                script {
+                    sh "mkdir -p ./deploy/images"
+                    dir("backend") {
+                        echo "--> 正在构建后端镜像: ${UNS_IMAGE_TAG}"
+                        // 构建 Docker 镜像
+                        dockerImage = docker.build("${UNS_IMAGE_TAG}", "-f ./Dockerfile .")
+                    }
+                    dir("frontend") {
+                        echo "--> 正在构建前端镜像: ${FRONTEND_IMAGE_TAG}"
+                        // 构建 Docker 镜像
+                        dockerImage = docker.build("${FRONTEND_IMAGE_TAG}", "-f ./Dockerfile-CN .")
+                    }
+                    
+
+                    sh '''
+                        docker tag ${UNS_IMAGE_TAG} "suposce/tier0-uns:${TAG}"
+                        docker save  suposce/tier0-uns:${TAG} | xz -z -T0 -v >./deploy/images/tier0-uns.tar.xz
+
+                        docker tag ${FRONTEND_IMAGE_TAG} "suposce/tier0-frontend:${TAG}"
+                        docker save  suposce/tier0-frontend:${TAG} | xz -z -T0 -v >./deploy/images/tier0-frontend.tar.xz
+
+                        echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY"
+                        docker push "${UNS_IMAGE_TAG}"
+                        docker push "${FRONTEND_IMAGE_TAG}"
+                    '''
+                }
+            }
+        }
+        // --------------------------------------------------------------------------------------------------
+        stage('3. 准备部署包') {
+            when {
+                expression { 
+                    return !params.Only_Build_Image 
+                }
+            }
+            steps {
+                script {                    
+                    dir("deploy") {
+                        
+                        sh '''
+                        ls -all
+                        scp -i /var/jenkins_home/ssh/id_rsa "root@172.21.2.148:/home/images/edge/*.tar*" ./images/
+                        rm -rf ./pipeline && rm -f Dockerfile-Compose
+
+                        cp -r ../backend/etc ./mount/edge/
+
+                        sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: suposce/tier0-frontend:\${TAG}|g" docker-compose.yml
+                        sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: suposce/tier0-uns:\${TAG}|g" docker-compose.yml
+                        
+                        VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
+                        DATE=$(date +%y%m%d%H)
+                        ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
+                        mkdir tier0-${VERSION}-${DATE} && cp -r ${ZipDirAndFileLists} tier0-${VERSION}-${DATE}
+
+                        /var/jenkins_home/paks/zip -q -r -y tier0-${VERSION}-${DATE}.zip tier0-${VERSION}-${DATE}
+                        md5sum tier0-${VERSION}-${DATE}.zip > tier0-${VERSION}-${DATE}.zip.md5
+                        chmod 664 tier0-${VERSION}-${DATE}.zip*
+                        '''
+                    }
+                }
+            }
+        }
+        // --------------------------------------------------------------------------------------------------
+        stage('4. 传输部署包') {
+            when {
+                expression { 
+                    return !params.Only_Build_Image 
+                }
+            }
+            steps {
+                script {      
+                    dir("deploy") {            
+                        sh '''
+                        ls -all
+                        VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
+                        scp -i /var/jenkins_home/ssh/id_rsa tier0-*.zip* root@172.21.2.136:/home/deploy-packages/edge/${VERSION}/
+
+                        echo "--> 传输完成！"
+                        rm -f tier0-*.zip* && rm -rf tier0-${VERSION}-*
+                        '''
+                    }
+                }
+            }
+        }
+        stage('5. 部署到edge服务器') {
+            when {
+                expression { 
+                    return params.Auto_Deploy 
+                }
+            }
+            steps {
+                script {  
+
+                    echo "Clean_Data 参数值: ${params.Clean_Data}"
+                    
+                    if (params.Clean_Data == true) {
+                        sh """
+                        exec_ssh() {
+                            ssh -o StrictHostKeyChecking=no \
+                                -o ConnectTimeout=10 \
+                                -i /var/jenkins_home/ssh/id_rsa \
+                                \$DEPLOY_SSH_SERVER "\$1"
+                        }
+                        exec_ssh '
+                            bash /root/edge/supos-deploy-edge/bin/uninstall.sh
+                            rm -rf /volumes/tier0/data/
+                        '
+                        """
+                        echo "---> 远程数据/volumes/tier0/data/清理完成！"
+                    }   
+                    
+                    dir("deploy") {      
+                        sh """
+                        exec_ssh() {
+                            ssh -o StrictHostKeyChecking=no \
+                                -o ConnectTimeout=10 \
+                                -i /var/jenkins_home/ssh/id_rsa \
+                                \$DEPLOY_SSH_SERVER "\$1"
+                        }
+
+                        if [ \$Only_Build_Image = false ]; then
+
+                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i 's@\\\${ENTRANCE_PORT:-8088}:8000@8088:8000@g' docker-compose.yml
+                            sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
+                            sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
+
+                            rm -f ./bin/install.sh
+
+                            scp -i /var/jenkins_home/ssh/id_rsa -r ./* \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
+                            exec_ssh '
+                                cd /root/edge/supos-deploy-edge/ 
+                                bash ./bin/uninstall.sh
+                                bash ./bin/util/clean-images.sh tier0
+                                bash ./bin/install.sh
+                            '
+
+                        fi
+
+                        if [ \$Only_Build_Image = true ]; then
+                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
+                            scp -i /var/jenkins_home/ssh/id_rsa docker-compose.yml \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
+
+                            exec_ssh '
+                                docker rm -f uns frontend
+                                cd /root/edge/supos-deploy-edge/ && docker compose -f docker-compose.yml -p tier0 --env-file .env.default --env-file .env.tmp up -d --pull always uns frontend
+                            '
+                        fi
+                        
+
+                        """
+                    }
+                }
+            }
+        }
+        
+    }
+    post {
+            always {
+                // 1. 清理工作空间
+                cleanWs()
+                dir("${env.WORKSPACE}@tmp") {
+                    deleteDir()
+                } 
+                
+                // 2. 清理 Docker
+                sh '''
+                    echo "=== 清理 Docker 资源 ==="
+                    # 清理容器
+                    docker container prune -f 2>/dev/null || true
+                    # 清理镜像
+                    docker image prune -f 2>/dev/null || true
+                    # 清理卷
+                    docker volume prune -f 2>/dev/null || true
+                    # 清理网络
+                    docker network prune -f 2>/dev/null || true
+                    echo "Docker 清理完成"
+                '''
+            
+            }
+            success {
+                echo "✅ 构建成功: ${JOB_NAME} #${BUILD_NUMBER}"
+                // 可以添加成功通知
+            }
+            
+            failure {
+                echo "❌ 构建失败: ${JOB_NAME} #${BUILD_NUMBER}"
+                // 可以添加失败通知
+            }
+        }
+}

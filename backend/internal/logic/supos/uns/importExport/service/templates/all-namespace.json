@@ -1,0 +1,156 @@
+{
+  "notes": "type:folder|file,topicType:STATE|ACTION|METRIC,dataType:TEMPLATE_TYPE|TIME_SEQUENCE_TYPE|RELATION_TYPE|CALCULATION_REAL_TYPE|CALCULATION_HIST_TYPE|MERGE_TYPE|CITING_TYPE|JSONB_TYPE|,fields.type:INTEGER|LONG|FLOAT|DOUBLE|BOOLEAN|DATETIME|STRING",
+  "Label": [{"name": "debug"},{"name": "dev"}],
+  "Template": [],
+  "UNS": [
+    {
+      "name": "v1",
+      "type": "path",
+      "children": [
+        {
+          "name": "Plant_Name",
+          "type": "path",
+          "children": [
+            {
+              "name": "SMT-Area-1",
+              "type": "path",
+              "children": [
+                {
+                  "name": "SMT-Line-1",
+                  "type": "path",
+                  "children": [
+                    {
+                      "name": "Printer-Cell",
+                      "type": "path",
+                      "children": [
+                        {
+                          "name": "Printer01",
+                          "type": "path",
+                          "children": [
+                            {
+                              "name": "State",
+                              "type": "path",
+                              "topicType": "STATE",
+                              "children": [
+                                {
+                                  "name": "current_job",
+                                  "type": "topic",
+                                  "topicType": "STATE",
+                                  "dataType": "RELATION_TYPE",
+                                  "generateDashboard": "FALSE",
+                                  "enableHistory": "TRUE",
+                                  "mockData": "FALSE",
+                                  "fields": [
+                                    {
+                                      "name": "job_id",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "product_id",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "planned_quantity",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "completed_quantity",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "status",
+                                      "type": "LONG"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "alarm_status",
+                                  "type": "topic",
+                                  "topicType": "STATE",
+                                  "dataType": "JSONB_TYPE",
+                                  "generateDashboard": "FALSE",
+                                  "enableHistory": "TRUE",
+                                  "mockData": "FALSE"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Action",
+                              "type": "path",
+                              "topicType": "ACTION",
+                              "children": [
+                                {
+                                  "name": "start_job",
+                                  "type": "topic",
+                                  "topicType": "ACTION",
+                                  "dataType": "JSONB_TYPE",
+                                  "generateDashboard": "FALSE",
+                                  "enableHistory": "FALSE",
+                                  "mockData": "FALSE"
+                                },
+                                {
+                                  "name": "stop_job",
+                                  "type": "topic",
+                                  "topicType": "ACTION",
+                                  "dataType": "JSONB_TYPE",
+                                  "generateDashboard": "FALSE",
+                                  "enableHistory": "FALSE",
+                                  "mockData": "FALSE"
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Metric",
+                              "type": "path",
+                              "topicType": "METRIC",
+                              "children": [
+                                {
+                                  "name": "board_cycle_time",
+                                  "type": "topic",
+                                  "topicType": "METRIC",
+                                  "dataType": "TIME_SEQUENCE_TYPE",
+                                  "generateDashboard": "TRUE",
+                                  "enableHistory": "TRUE",
+                                  "mockData": "FALSE",
+                                  "fields": [
+                                    {
+                                      "name": "cycle_time_ms",
+                                      "type": "LONG"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "name": "boards_count",
+                                  "type": "topic",
+                                  "topicType": "METRIC",
+                                  "dataType": "TIME_SEQUENCE_TYPE",
+                                  "generateDashboard": "TRUE",
+                                  "enableHistory": "TRUE",
+                                  "mockData": "FALSE",
+                                  "fields": [
+                                    {
+                                      "name": "good_count",
+                                      "type": "LONG"
+                                    },
+                                    {
+                                      "name": "ng_count",
+                                      "type": "LONG"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

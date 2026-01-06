@@ -1,0 +1,38 @@
+.com-tags {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap; /* 禁止换行 */
+  scrollbar-width: none; /* 隐藏滚动条 (Firefox) */
+  -ms-overflow-style: none; /* 隐藏滚动条 (IE/Edge) */
+  .com-tags-item {
+    cursor: pointer;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 3px;
+
+    .anticon-close {
+      color: var(--supos-text-color);
+    }
+  }
+}
+
+.scroll-button {
+  cursor: pointer;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 8px;
+
+  &:hover {
+    background: rgb(141 141 141 / 12%);
+  }
+
+  &.left {
+    box-shadow: 2px 0 4px rgb(0 0 0 / 10%); /* 右侧凸起 */
+  }
+
+  &.right {
+    box-shadow: -2px 0 4px rgb(0 0 0 / 10%); /* 左侧凸起 */
+  }
+}

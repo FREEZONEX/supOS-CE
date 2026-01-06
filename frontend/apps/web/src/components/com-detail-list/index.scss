@@ -1,0 +1,19 @@
+.com-detail-list {
+  .com-detail-list-item {
+    min-height: 40px;
+    border-bottom: 1px solid var(--supos-table-tr-color);
+    width: 100%;
+    line-height: 30px;
+    word-break: break-all;
+
+    .item-label {
+      width: 30%;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .item-content {
+      flex: 1;
+    }
+  }
+}

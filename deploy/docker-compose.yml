@@ -1,0 +1,439 @@
+networks:
+  edge_network:
+    driver: bridge
+
+services:
+  frontend:
+    image: suposce/tier0-frontend:1.0.0-R5
+    container_name: frontend
+    ports:
+      - "3010:3000"
+      - "4000:4000"
+    environment:
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_TYPE=${LLM_TYPE}
+      - REACT_APP_OS_LANG=${LANGUAGE}
+      - TOKEN_MAX_AGE=${TOKEN_MAX_AGE}
+      - TZ=UTC
+    command: >
+      sh -c "
+        if [ -z \"$LLM_API_KEY\" ]; then
+          echo 'LLM_API_KEY为空，跳过Node.js服务启动'
+          concurrently \"serve -s /app/web-dist -l 3000\"
+        else
+          echo 'LLM_API_KEY已配置，启动所有服务'
+          concurrently \"serve -s /app/web-dist -l 3000\" \"node /app/services-express-dist/index.js\"
+        fi
+      "
+    volumes:
+      - /etc/docker/certs:/certs
+    networks:
+      - edge_network
+  uns:
+    image: suposce/tier0-uns:1.0.0-R5
+    container_name: uns
+    environment:
+      - LLM_MODEL=${LLM_MODEL}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_TYPE=${LLM_TYPE}
+      - REACT_APP_OS_LANG=${LANGUAGE}
+      - OAUTH_REDIRECT_URI=${BASE_URL}/inter-api/supos/auth/token
+      - OAUTH_SUPOS_HOME=${BASE_URL}/uns
+      - OAUTH_REALM=${OAUTH_REALM}
+      - OAUTH_CLIENT_NAME=${OAUTH_CLIENT_NAME}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - OAUTH_GRANT_TYPE=${OAUTH_GRANT_TYPE}
+      - OAUTH_ISSUER_URI=${OAUTH_ISSUER_URI}
+      - OAUTH_REFRESH_TOKEN_TIME=${OAUTH_REFRESH_TOKEN_TIME}
+      - SYS_OS_APP_TITLE=${OS_NAME}
+      - SYS_OS_LOGIN_PATH=${OS_LOGIN_PATH}
+      - SYS_OS_LANG=${LANGUAGE}
+      - TOKEN_MAX_AGE=${TOKEN_MAX_AGE}
+      - TZ=UTC
+      - GRPC_POOL_CORE_SIZE=2
+      - GRPC_POOL_MAX_SIZE=4
+      - ENV_DB_HOST=postgresql
+      - ENV_DB_PORT=5432
+      - NODE_RED_HOST=nodered
+      - NODE_RED_PORT=1880
+      - SYS_OS_MULTIPLE_TOPIC=false
+      - SYS_OS_VERSION=${OS_VERSION}
+      - SYS_OS_AUTH_ENABLE=${OS_AUTH_ENABLE}
+      - SYS_OS_LLM_TYPE=${OS_LLM_TYPE}
+      - SYS_OS_MQTT_TCP_PORT=${OS_MQTT_TCP_PORT}
+      - SYS_OS_MQTT_WEBSOCKET_TSL_PORT=${OS_MQTT_WEBSOCKET_TSL_PORT}
+      - SYS_OS_PLATFORM_TYPE=${OS_PLATFORM_TYPE}
+      - SYS_OS_ENTRANCE_URL=${BASE_URL}
+      - SYS_OS_QUALITY_NAME=quality
+      - SYS_OS_TIMESTAMP_NAME=timeStamp
+      - SYS_OS_LAZY_TREE=${LAZY_TREE}
+      - UNS_ADD_BATCH_SIZE=1000
+    volumes:
+      - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
+      - /etc/docker/certs:/certs
+    networks:
+      - edge_network
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    restart: always
+  marimo:
+    image: suposce/marimo:latest
+    container_name: marimo
+    environment:
+      - TSDB_URL=postgresql+psycopg2://postgres:postgres@tsdb:5432/postgres
+      - PG_URL=postgresql+psycopg2://postgres:postgres@postgresql:5432/postgres
+    volumes:
+      - ${VOLUMES_PATH}/marimo/data:/app
+    # command: marimo edit /app/main.py --host 0.0.0.0 --port 8080 --no-token
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 512M
+    networks:
+      - edge_network
+  emqx:
+    image: emqx/emqx:5.8
+    container_name: emqx
+    ports:
+      - "1883:1883"   # MQTT端口
+      - "8883:8883"   # MQTT加密端口
+      - "8083:8083"   # WebSocket端口
+      - "8084:8084"   # WebSocket加密端口
+      - "18083:18083" # EMQX Dashboard端口
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_NODE__COOKIE=secretcookie # 节点通信时的cookie
+      - service_logo=emqx-original.svg
+      - service_description=aboutus.emqxDescription
+      - service_redirect_url=/emqx/home/
+      - service_account=admin
+      - service_password=public
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${VOLUMES_PATH}/emqx/data:/opt/emqx/data
+      - ${VOLUMES_PATH}/emqx/log:/opt/emqx/log
+      - ${VOLUMES_PATH}/emqx/config/emqx.conf:/opt/emqx/etc/emqx.conf
+      - ${VOLUMES_PATH}/emqx/config/default_api_key.conf:/opt/emqx/etc/default_api_key.conf
+      - ${VOLUMES_PATH}/emqx/config/acl.conf:/opt/emqx/etc/acl.conf
+    restart: always
+    networks:
+      - edge_network
+  nodered:
+    image: nodered/node-red:4.0.8-22
+    container_name: nodered
+    user: root
+    ports:
+      - "1880:1880"  # Node-RED web UI端口
+    environment:
+      - service_logo=nodered-original.svg
+      - service_description=aboutus.nodeRedDescription
+      - FLOWS=/data/flows.json
+      - USE_ALIAS_AS_TOPIC=false
+      - TIMESTAMP_NAME=timeStamp
+      - QUALITY_NAME=quality
+      - TZ=UTC
+      - OS_LANG=${LANGUAGE}
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - NODE_HTTP_API_PREFIX=/nodered-api
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${VOLUMES_PATH}/node-red:/data  # 使用当前目录的 data 目录
+    depends_on:
+      - emqx
+    restart: always
+    networks:
+      - edge_network
+  eventflow:
+    image: nodered/node-red:4.0.8-22
+    container_name: eventflow
+    user: root
+    ports:
+      - "1889:1889"  # Node-RED web UI端口
+    environment:
+      - service_logo=nodered-original.svg
+      - service_description=aboutus.nodeRedDescription
+      - FLOWS=/data/flows.json
+      - USE_ALIAS_AS_TOPIC=false
+      - QUALITY_NAME=status
+      - TIMESTAMP_NAME=timeStamp
+      - TZ=UTC
+      - OS_LANG=${LANGUAGE}
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - NODE_HTTP_API_PREFIX=/eventflow-api
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${VOLUMES_PATH}/eventflow:/data  # 使用当前目录的 data 目录
+    restart: always
+    networks:
+      - edge_network
+  grafana:
+    image: grafana/grafana:11.5.6
+    profiles:
+      - grafana
+    container_name: grafana
+    user: root
+    ports:
+      - "3000:3000"  # Grafana web UI端口
+    volumes:
+      - ${VOLUMES_PATH}/grafana/data:/var/lib/grafana
+      # - ${VOLUMES_PATH}/grafana/data/plugins:/var/lib/grafana/plugins  # 使用当前目录的 data 目录
+    environment:
+      service_logo: grafana-original.svg
+      service_description: aboutus.grafanaDescription
+      service_redirect_url: /grafana/home/dashboards/
+      # 设置管理员用户的初始密码
+      GF_SECURITY_ADMIN_PASSWORD: "supos"
+      # 开启 Grafana 的 Explore 功能
+      GF_EXPLORE_ENABLED: "true"
+      # 安装 Grafana 插件
+      # GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-mqtt-datasource,tdengine-datasource,yesoreyeram-infinity-datasource"
+      # 注释掉的设置，用于改变 Grafana 用户界面的语言
+      GF_VIEWER_LANGUAGE: "${GRAFANA_LANG:-en-US}"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_SERVER_ROOT_URL: "http://${ENTRANCE_DOMAIN}/grafana/home/"
+      GF_USERS_DEFAULT_THEME: "light"
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: postgresql:5432
+      GF_DATABASE_NAME: grafana
+      GF_DATABASE_USER: postgres
+      GF_DATABASE_PASSWORD: postgres
+    restart: always
+    depends_on:
+      postgresql:
+        condition: service_healthy  # 依赖 PostgreSQL 的健康状态
+    networks:
+      - edge_network
+  portainer:
+    image: portainer/portainer-ce:2.23.0
+    container_name: portainer
+    environment:
+      service_logo: portainer.svg
+    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC"
+    ports:
+      - "8000:8000"
+      - "9443:9443"
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${VOLUMES_PATH}/portainer:/data
+    networks:
+      - edge_network
+  postgresql:
+    image: timescale/timescaledb:2.20.0-pg17
+    container_name: postgresql
+    environment:
+      TZ: UTC  # 设置容器时区
+      service_logo: postgresql-original.svg
+      service_description: aboutus.postgresqlDescription
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${VOLUMES_PATH}/postgresql/conf/postgresql.conf:/etc/postgresql/custom.conf
+      - /etc/localtime:/etc/localtime:ro
+      - ${VOLUMES_PATH}/postgresql/pgdata:/var/lib/postgresql/data # 持久化数据
+      - ${VOLUMES_PATH}/postgresql/init-scripts:/docker-entrypoint-initdb.d  # 加载初始化脚本
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/custom.conf
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U postgres -d keycloak -c '\\dt public.initialization_complete' | grep -q 'initialization_complete'"]
+      interval: 15s
+      timeout: 15s
+      retries: 60
+      start_period: 120s
+      start_interval: 10s
+    restart: always
+    networks:
+      - edge_network
+  keycloak:
+    image: keycloak/keycloak:26.0  # 使用 Keycloak 的最新镜像
+    container_name: keycloak
+    ports:
+      - "8081:8080"
+    user: root
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 512M
+    environment:
+      service_logo: keycloak-original.svg
+      service_description: aboutus.keycloakDescription
+      service_redirect_url: /keycloak/home/
+      service_account: admin
+      service_password: tier0
+      KC_SSL_REQUIRED: none  # 不要求 SSL
+      KC_PROXY: passthrough                       # 设置代理模式
+      KC_HOSTNAME: "${ENTRANCE_DOMAIN}"              # 指定主机名
+      KC_FRONTEND_URL: "${BASE_URL}"  # 设置前端 URL
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: supos
+      KC_COOKIE_SECURE: false                          # 禁用安全 cookie
+      KC_DB: postgres
+      KC_DB_URL: "jdbc:postgresql://postgresql:5432/keycloak"
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+      KC_DB_POOL_INITIAL_SIZE: 2
+      KC_DB_POOL_MIN_SIZE: 2
+      KC_DB_POOL_MAX_SIZE: 4
+      KC_DB_POOL_MAX_LIFETIME: 1800
+      KC_HEALTH_ENABLED: true
+      KC_FEATURES: token-exchange
+      JAVA_OPTS_APPEND: -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${VOLUMES_PATH}/keycloak/data:/opt/keycloak/data  # 将 Keycloak 的数据目录挂载到本地
+      - ${VOLUMES_PATH}/keycloak/theme/keycloak.v2:/opt/keycloak/themes/wenhao
+      - ${VOLUMES_PATH}/keycloak/ca/ca.crt:/opt/keycloak/ca.crt
+      - ${VOLUMES_PATH}/keycloak/ca/init-ldaps-cert.sh:/opt/keycloak/init-ldaps-cert.sh
+    depends_on:
+      postgresql:
+        condition: service_healthy  # 依赖 PostgreSQL 的健康状态
+    command: start-dev --hostname ${BASE_URL}/keycloak/home/auth  --proxy-headers forwarded
+    healthcheck:
+      test: >
+        /bin/bash -c "
+        exec 3<>/dev/tcp/localhost/8080"
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 120s    # 新增：给予2分钟的启动宽限期
+      start_interval: 10s   # 新增：宽限期内的检查间隔
+    restart: always
+    networks:
+      - edge_network
+  tsdb:
+    image: timescale/timescaledb:2.20.0-pg17
+    container_name: tsdb
+    environment:
+      TZ: UTC  # 设置容器时区
+      service_logo: postgresql-original.svg
+      service_description: aboutus.postgresqlDescription
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "2345:5432"
+    volumes:
+      - ${VOLUMES_PATH}/tsdb/conf/postgresql.conf:/etc/postgresql/custom.conf
+      - ${VOLUMES_PATH}/tsdb/data:/var/lib/postgresql/data # 持久化数据
+      - ${VOLUMES_PATH}/tsdb/init-scripts:/docker-entrypoint-initdb.d  # 加载初始化脚本
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/custom.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+      start_interval: 60s
+    restart: always
+    networks:
+      - edge_network
+  kong:
+    image: kong:3.9.0
+    container_name: kong
+    environment:
+      KONG_WORKER_STATE_UPDATE_FREQUENCY: 30
+      KONG_DB_CACHE_TTL: 600
+      KONG_NGINX_WORKER_PROCESSES: 2
+      KONG_LUA_GC_PAUSE: 100            # 提高暂停率，降低 GC 触发频率
+      KONG_LUA_GC_STEPMUL: 200          # 增加单次回收强度
+      service_logo: konga-original.svg
+      service_description: aboutus.kongaDescription
+      service_redirect_url: /konga/home/
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: postgresql
+      KONG_PG_PASSWORD: postgres
+      KONG_PG_USER: postgres
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_SSL_CERT: /etc/kong/ssl/fullchain.cer
+      KONG_SSL_CERT_KEY: /etc/kong/ssl/private.key
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      KONG_PLUGINS: bundled,supos-auth-checker,supos-url-transformer
+      KONG_PG_POOL_SIZE: 2
+      KONG_LOG_LEVEL: error
+    volumes:
+      - ${VOLUMES_PATH}/kong/certificationfile:/etc/kong/ssl:ro
+      - ${VOLUMES_PATH}/kong/kong_config.yml:/etc/kong/kong_config.yml
+      - ${VOLUMES_PATH}/kong/start.sh:/usr/local/bin/start.sh
+      - ${VOLUMES_PATH}/kong/kong-plugin-auth-checker:/usr/local/share/lua/5.1/kong/plugins/supos-auth-checker
+      - ${VOLUMES_PATH}/kong/kong-plugin-url-transformer:/usr/local/share/lua/5.1/kong/plugins/supos-url-transformer
+    ports:
+      - "${ENTRANCE_PORT:-8088}:8000"
+      - "${ENTRANCE_SSL_PORT:-8443}:8443"
+      - "8001:8001"
+      - "8444:8444"
+    depends_on:
+      - emqx
+      - uns
+      - keycloak
+      - postgresql
+    command: >
+      sh -c "kong migrations bootstrap &&
+             kong config db_import /etc/kong/kong_config.yml &&
+             kong start"
+    restart: always  # 确保 Kong 自动重启
+    networks:
+      - edge_network
+  konga:
+    image: suposce/konga:1.0.0
+    container_name: konga
+    environment:
+      # DB_ADAPTER: mysql           # 使用 MySQL 作为数据库
+      # DB_HOST: konga_mysql_database # MySQL 容器的主机名
+      # DB_USER: konga               # MySQL 用户
+      # DB_PASSWORD: konga           # MySQL 用户密码
+      # DB_DATABASE: konga          # MySQL 数据库名
+      # NODE_ENV: production           # 设置 NODE_ENV 为生产环境
+      NO_AUTH: "true"             # 禁用认证
+      KONGA_SEED_KONG_NODE_DATA_SOURCE_FILE: /node.data
+    ports:
+      - "1337:1337"  # 映射 Konga 的端口到主机
+    volumes:
+      - ${VOLUMES_PATH}/konga/db/:/app/kongadata/
+      - ${VOLUMES_PATH}/konga/node.data:/node.data  # 持久化数据库数据
+    restart: always
+    networks:
+      - edge_network
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: minio
+    profiles:
+      - minio
+    environment:
+      - service_logo=minio-original.svg
+      - service_description=aboutus.minioDescription
+      - service_redirect_url=/minio/home/
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=adminpassword
+      - MINIO_BROWSER_REDIRECT_URL=${BASE_URL}/minio/home
+      - MINIO_IDENTITY_OPENID_CONFIG_URL=${OAUTH_ISSUER_URI}/realms/supos/.well-known/openid-configuration
+      - MINIO_IDENTITY_OPENID_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - MINIO_IDENTITY_OPENID_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - MINIO_IDENTITY_OPENID_SCOPES=openid
+      - MINIO_IDENTITY_OPENID_ROLE_POLICY=public-delete-policy
+      - MINIO_IDENTITY_OPENID_REDIRECT_URI=${BASE_URL}/minio/home/oauth_callback
+    ports:
+      - "9000:9000"  # Web UI 端口
+      - "9001:9001"  # Admin API 端口 (如果需要访问管理接口)
+    volumes:
+      - ${VOLUMES_PATH}/minio/data:/data  # 数据存储位置
+    command: server /data --console-address ":9001"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    restart: always
+    networks:
+      - edge_network

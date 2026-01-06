@@ -1,0 +1,14 @@
+.com-breadcrumb {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+
+  .ant-breadcrumb ol {
+    flex-wrap: nowrap;
+  }
+
+  .ant-breadcrumb .ant-breadcrumb-separator {
+    margin-inline: 0;
+    padding-inline: 8px;
+  }
+}

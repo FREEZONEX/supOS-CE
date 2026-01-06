@@ -20,7 +20,7 @@ type ExampleRepo struct {
 }
 
 func NewExampleRepo(in any) *ExampleRepo {
-	return &ExampleRepo{db: stores.GetSchemaTenantConn(in)}
+	return &ExampleRepo{db: stores.GetCommonConn(in)}
 }
 
 type ExampleFilter struct {

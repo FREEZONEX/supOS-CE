@@ -1,0 +1,35 @@
+.role-setting {
+  :global {
+    .ant-tabs-nav-operations,
+    .ant-tabs-nav-wrap {
+      background-color: var(--supos-uns-button-color);
+    }
+
+    .ant-tabs-nav-list {
+      padding: 0 12px;
+    }
+
+    .ant-tabs-tab-btn {
+      &:focus {
+        color: var(--supos-theme-color) !important;
+      }
+    }
+  }
+
+  &:global(.ant-modal .ant-tabs-content-holder) {
+    height: calc(100vh - 320px);
+    overflow: auto;
+  }
+
+  &:global(.fullscreen-mode .ant-tabs-content-holder) {
+    height: calc(100vh - 210px);
+  }
+}
+
+.use-add-modal {
+  :global {
+    .ant-input-affix-wrapper .anticon.ant-input-password-icon {
+      color: var(--supos-text-color);
+    }
+  }
+}
