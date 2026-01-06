@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -27,19 +28,8 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	if len(tableInfoMap) == 0 {
 		return nil
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	conn, err := dbPool.Acquire(ctx)
-	cancel()
-	if conn != nil {
-		defer conn.Release()
-	}
-	if err != nil {
-		return err
-	} else if conn == nil {
-		return fmt.Errorf("conn is nil")
-	}
 	tbs := base.MapValues(tableInfoMap)
-	allErrors := SaveBatch(conn, defaultSchema, batchSize, tbs)
+	allErrors := SaveBatch(dbPool, defaultSchema, batchSize, tbs)()
 	if len(allErrors) > 0 {
 		return fmt.Errorf("处理完成，但有错误: %s", strings.Join(allErrors, "; "))
 	}
@@ -73,22 +63,50 @@ func GetTableDataMap(unsData []serviceApi.UnsData) map[string]*serviceApi.UnsDat
 	return tableInfoMap
 }
 
-func SaveBatch(conn *pgxpool.Conn, defaultSchema string, batchSize int, unsData []*serviceApi.UnsData) (allErrors []string) {
+func SaveBatch(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsData []*serviceApi.UnsData) func() (allErrors []string) {
 	// 分批处理大数据量
-	for _, segment := range base.Partition(unsData, batchSize) {
-		var batch = &pgx.Batch{}
-		for _, table := range segment {
-			sql, params := getInsertStatement(table.Uns, table.Data)
-			logx.Debugf("insert sql: %s, values: %+v", sql, params)
-			batch.Queue(sql, params...)
-		}
-		// 执行批次
-		err := execBatch(conn, batchTask{batch: batch, uns: segment}, defaultSchema, 0)
-		if err != nil {
-			allErrors = append(allErrors, err.Error())
-		}
+	var wg sync.WaitGroup
+	var parts = base.Partition(unsData, batchSize)
+	var lock sync.Mutex
+	errorMsgs := make([]string, 0, len(parts))
+	for _, segment := range parts {
+		wg.Add(1)
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			conn, err := dbPool.Acquire(ctx)
+			defer func() {
+				if err != nil {
+					lock.Lock()
+					errorMsgs = append(errorMsgs, err.Error())
+					lock.Unlock()
+				}
+				if conn != nil {
+					conn.Release()
+				}
+				wg.Done()
+			}()
+			cancel()
+
+			if err != nil {
+				return
+			} else if conn == nil {
+				err = fmt.Errorf("conn is nil")
+				return
+			}
+			var batch = &pgx.Batch{}
+			for _, table := range segment {
+				sql, params := getInsertStatement(table.Uns, table.Data)
+				logx.Debugf("insert sql: %s, values: %+v", sql, params)
+				batch.Queue(sql, params...)
+			}
+			// 执行批次
+			err = execBatch(conn, batchTask{batch: batch, uns: segment}, defaultSchema, 0)
+		}()
 	}
-	return allErrors
+	return func() []string {
+		wg.Wait()
+		return errorMsgs
+	}
 }
 
 type batchTask struct {
@@ -135,8 +153,24 @@ func execBatch(conn *pgxpool.Conn, task batchTask, defaultSchema string, retry i
 				q := task.batch.QueuedQueries[i]
 				retryTask.batch.Queue(q.SQL, q.Arguments)
 				retryTask.uns = append(retryTask.uns, seg)
+			} else if pgEr != nil {
+				if pgEr.Code == "42601" || strings.HasPrefix(pgEr.Code, "2") {
+					sql := task.batch.QueuedQueries[i].SQL
+					args := task.batch.QueuedQueries[i].Arguments
+					argsBs, _ := json.Marshal(args)
+					countArgsInSql := strings.Count(sql, "$")
+					if pgEr.Code == "42601" {
+						logx.Errorf("语法错误[%s]: sql[%d]=%s, Args[%d]= %s", seg.Uns.Alias, countArgsInSql, sql, len(args), string(argsBs))
+						return fmt.Errorf("语法错误[%s]: %v ", seg.Uns.Alias, err)
+					} else {
+						logx.Errorf("约束错误[%s]: sql[%d]=%s, Args[%d]= %s", seg.Uns.Alias, countArgsInSql, sql, len(args), string(argsBs))
+						return fmt.Errorf("约束错误[%s]: %v ", seg.Uns.Alias, err)
+					}
+				} else {
+					return fmt.Errorf("pg操作失败[%s]: %v ", seg.Uns.Alias, err)
+				}
 			} else {
-				return fmt.Errorf("批次操作失败[%s]: %v ", seg.Uns.Alias, err)
+				return fmt.Errorf("批次操作失败![%s]: %v ", seg.Uns.Alias, err)
 			}
 		}
 	}

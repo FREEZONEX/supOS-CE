@@ -68,6 +68,10 @@ func SetLogLevel(level string) bool {
 		levelInt = logx.ErrorLevel
 	case levelSevere:
 		levelInt = logx.SevereLevel
+	case "stat":
+		loggerlevel.DoStats = true
+		log.Println("Set DoStats to true")
+		return true
 	default:
 		ok = false
 	}
@@ -75,6 +79,7 @@ func SetLogLevel(level string) bool {
 		loggerlevel.CurrentLevel = level
 		logx.SetLevel(levelInt)
 	}
+	loggerlevel.DoStats = false
 	log.Println("Set log level to ", loggerlevel.CurrentLevel, ok)
 	return ok
 }
