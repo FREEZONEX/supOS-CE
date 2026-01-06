@@ -30,6 +30,7 @@ services:
       - /etc/docker/certs:/certs
     networks:
       - edge_network
+    restart: always
   uns:
     image: suposce/tier0-uns:1.0.0-R5
     container_name: uns
