@@ -4,7 +4,7 @@ networks:
 
 services:
   frontend:
-    image: suposce/tier0-frontend:1.0.0-R5
+    image: eco-registry.supos.com/sup9bnlh/tier0-frontend:1.0.0-R10
     container_name: frontend
     ports:
       - "3010:3000"
@@ -32,7 +32,7 @@ services:
       - edge_network
     restart: always
   uns:
-    image: suposce/tier0-uns:1.0.0-R5
+    image: eco-registry.supos.com/sup9bnlh/tier0-uns:1.0.0-R10
     container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}
@@ -99,7 +99,7 @@ services:
     networks:
       - edge_network
   emqx:
-    image: emqx/emqx:5.8
+    image: eco-registry.supos.com/sup9bnlh/emqx:5.8
     container_name: emqx
     ports:
       - "1883:1883"   # MQTT端口
@@ -126,7 +126,7 @@ services:
     networks:
       - edge_network
   nodered:
-    image: nodered/node-red:4.0.8-22
+    image: eco-registry.supos.com/sup9bnlh/node-red:4.0.8-22
     container_name: nodered
     user: root
     ports:
@@ -151,7 +151,7 @@ services:
     networks:
       - edge_network
   eventflow:
-    image: nodered/node-red:4.0.8-22
+    image: eco-registry.supos.com/sup9bnlh/node-red:4.0.8-22
     container_name: eventflow
     user: root
     ports:
@@ -174,7 +174,7 @@ services:
     networks:
       - edge_network
   grafana:
-    image: grafana/grafana:11.5.6
+    image: eco-registry.supos.com/sup9bnlh/grafana:11.5.6
     profiles:
       - grafana
     container_name: grafana
@@ -213,7 +213,7 @@ services:
     networks:
       - edge_network
   portainer:
-    image: portainer/portainer-ce:2.23.0
+    image: eco-registry.supos.com/sup9bnlh/portainer-ce:2.23.0
     container_name: portainer
     environment:
       service_logo: portainer.svg
@@ -228,7 +228,7 @@ services:
     networks:
       - edge_network
   postgresql:
-    image: timescale/timescaledb:2.20.0-pg17
+    image: eco-registry.supos.com/sup9bnlh/timescaledb:2.20.0-pg17
     container_name: postgresql
     environment:
       TZ: UTC  # 设置容器时区
@@ -257,7 +257,7 @@ services:
     networks:
       - edge_network
   keycloak:
-    image: keycloak/keycloak:26.0  # 使用 Keycloak 的最新镜像
+    image: eco-registry.supos.com/sup9bnlh/keycloak:26.0
     container_name: keycloak
     ports:
       - "8081:8080"
@@ -315,7 +315,7 @@ services:
     networks:
       - edge_network
   tsdb:
-    image: timescale/timescaledb:2.20.0-pg17
+    image: eco-registry.supos.com/sup9bnlh/timescaledb:2.20.0-pg17
     container_name: tsdb
     environment:
       TZ: UTC  # 设置容器时区
@@ -343,7 +343,7 @@ services:
     networks:
       - edge_network
   kong:
-    image: kong:3.9.0
+    image: eco-registry.supos.com/sup9bnlh/kong:3.9.0
     container_name: kong
     environment:
       KONG_WORKER_STATE_UPDATE_FREQUENCY: 30
@@ -389,7 +389,7 @@ services:
     networks:
       - edge_network
   konga:
-    image: suposce/konga:1.0.0
+    image: eco-registry.supos.com/sup9bnlh/konga:0.14.9
     container_name: konga
     environment:
       # DB_ADAPTER: mysql           # 使用 MySQL 作为数据库
@@ -409,7 +409,7 @@ services:
     networks:
       - edge_network
   minio:
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    image: eco-registry.supos.com/sup9bnlh/minio:RELEASE.2024-12-18T13-15-44Z
     container_name: minio
     profiles:
       - minio
