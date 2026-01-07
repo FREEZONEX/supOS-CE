@@ -35,6 +35,7 @@ docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d keycloak -
 command=$(sed -n '2p' $VOLUMES_PATH/edge/system/active-services.txt)
 source $SCRIPT_DIR/set-temp-env.sh "$SCRIPT_DIR/../.." "$command"
 source $SCRIPT_DIR/../init/init-kong-property.sh "$SCRIPT_DIR/../../" && cp $SCRIPT_DIR/../../mount/kong/kong_config.yml $VOLUMES_PATH/kong/
+source $SCRIPT_DIR/../init/init-portainer.sh
 
 info "IP修改成功, 正在重启服务..."
 
