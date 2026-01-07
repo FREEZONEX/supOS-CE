@@ -44,7 +44,7 @@ docker rm -f uns
 docker rm -f kong
 
 DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../../docker-compose.yml
-docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../../.env.tmp -p supos -f $DOCKER_COMPOSE_FILE up -d uns kong
+docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../../.env.tmp -p tier0 -f $DOCKER_COMPOSE_FILE up -d uns kong
 
 sleep 15s
 
