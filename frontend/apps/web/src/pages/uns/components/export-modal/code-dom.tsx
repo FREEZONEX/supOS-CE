@@ -1,5 +1,5 @@
 import CodeMirror from '@uiw/react-codemirror';
-import { Button, Flex } from 'antd';
+import { Alert, Button, Flex } from 'antd';
 import { useClipboard, useTranslate } from '@/hooks';
 import { useSize } from 'ahooks';
 import { useRef } from 'react';
@@ -28,17 +28,27 @@ export const CodeDom = () => {
     <>
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {!smallFile ? (
-          <ComButton
-            type="primary"
-            onClick={() => {
-              return exportExcel(params).then((jsonData) => {
-                downloadFn({ data: JSON.stringify(jsonData), name: 'uns.json' });
-              });
-            }}
-          >
-            <Download />
-            {formatMessage('common.download')}
-          </ComButton>
+          <>
+            <div>
+              <ComButton
+                type="primary"
+                onClick={() => {
+                  return exportExcel(params).then((jsonData) => {
+                    downloadFn({ data: JSON.stringify(jsonData), name: 'uns.json' });
+                  });
+                }}
+              >
+                <Download />
+                {formatMessage('common.download')}
+              </ComButton>
+            </div>
+            <Alert
+              style={{ marginTop: 16, padding: '8px 16px' }}
+              description={formatMessage('uns.exportJsonWarning')}
+              type="warning"
+              showIcon
+            />
+          </>
         ) : (
           <div
             style={{
@@ -91,15 +101,17 @@ export const CodeDom = () => {
             {formatMessage('common.download')}
           </ComButton>
         )}
-        <Button
-          type="primary"
-          onClick={() => {
-            copy(jsonData);
-          }}
-        >
-          <Copy />
-          {formatMessage('common.copy')}
-        </Button>
+        {smallFile && (
+          <Button
+            type="primary"
+            onClick={() => {
+              copy(jsonData);
+            }}
+          >
+            <Copy />
+            {formatMessage('common.copy')}
+          </Button>
+        )}
       </Flex>
     </>
   );
