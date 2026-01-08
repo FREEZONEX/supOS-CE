@@ -42,7 +42,9 @@ const Functions = () => {
   return (
     <Flex vertical gap={24} style={{ marginBottom: 24 }}>
       <Flex justify="space-between" align="flex-start" gap={16}>
-        <ComEllipsis className={styles['title']}>{formatMessage('uns.functions')}</ComEllipsis>
+        <ComEllipsis className={styles['title']} style={{ lineHeight: 1 }}>
+          {formatMessage('uns.functions')}
+        </ComEllipsis>
         <Segmented<string>
           style={{ overflowX: 'auto' }}
           options={homeTree?.map((item) => ({
