@@ -86,15 +86,15 @@ func (g *GrafanaEventHandler) OnEventRemoveTopicsEvent300(evt *event.RemoveTopic
 	if len(list) == 0 || !evt.WithDashboard {
 		return
 	}
-	tables := base.FilterAndMap[*types.CreateTopicDto, string](list, func(e *types.CreateTopicDto) (v string, ok bool) {
-		return e.GetTable(), e.PathType == constants.PathTypeFile && !constants.WithRetainTableWhenDeleteInstance(base.P2v(e.WithFlags))
+	aliasList := base.FilterAndMap[*types.CreateTopicDto, string](list, func(e *types.CreateTopicDto) (v string, ok bool) {
+		return e.Alias, e.PathType == constants.PathTypeFile && !constants.WithRetainTableWhenDeleteInstance(base.P2v(e.WithFlags))
 	})
 	go func() {
-		for _, table := range tables {
-			uid := grafanautil.GetDashboardUUIDByAlias(table)
+		for _, alias := range aliasList {
+			uid := grafanautil.GetDashboardUUIDByAlias(alias)
 			err := grafanautil.DeleteDashboard(evt.Context, uid)
 			if err != nil {
-				g.log.Error("删除grafana dashboard 异常", err, table)
+				g.log.Error("删除grafana dashboard 异常", err, alias)
 			}
 		}
 	}()

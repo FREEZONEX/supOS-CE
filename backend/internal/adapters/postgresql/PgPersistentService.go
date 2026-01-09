@@ -68,21 +68,31 @@ func (p *PgPersistentService) GetDataSourceProperties() (rs serviceApi.DataSourc
 func (p *PgPersistentService) GetDataSrcId() types.SrcJdbcType {
 	return dsId
 }
-func (p *PgPersistentService) OnEventBatchCreateTableEvent7(evt *event.BatchCreateTableEvent) error {
-	return OnCreate(p.log, p.dbPool, p.currentSchema, dsId, evt)
-}
-func (p *PgPersistentService) OnEventUpdateInstanceEvent7(evt *event.UpdateInstanceEvent) error {
-	return OnUpdate(p.log, p.dbPool, p.currentSchema, dsId, evt)
-}
-func (p *PgPersistentService) OnEventRemoveTopicsEvent7(evt *event.RemoveTopicsEvent) {
-	OnRemove(p.log, p.dbPool, dsId, evt)
-}
 
+//	func (p *PgPersistentService) OnEventBatchCreateTableEvent7(evt *event.BatchCreateTableEvent) error {
+//		return onCreate(p.log, p.dbPool, p.currentSchema, dsId, evt)
+//	}
+//
+//	func (p *PgPersistentService) OnEventUpdateInstanceEvent7(evt *event.UpdateInstanceEvent) error {
+//		return OnUpdate(p.log, p.dbPool, p.currentSchema, dsId, evt)
+//	}
+func (p *PgPersistentService) OnEventRemoveTopicsEvent7(evt *event.RemoveTopicsEvent) {
+	onRemove(p.log, p.dbPool, dsId, base.Map[*types.CreateTopicDto, types.UnsInfo](evt.Topics, func(e *types.CreateTopicDto) types.UnsInfo {
+		return e
+	}))
+}
 func (p *PgPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
 	FillLastRecord(p.log, uns, func(ctx context.Context) (pgx.Rows, error) {
-		return p.dbPool.Query(ctx, fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.GetTable(), uns.GetTimestampField()))
+		return p.dbPool.Query(ctx, fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.Alias, uns.GetTimestampField()))
 	})
 }
+func (p *PgPersistentService) Save(creates []types.UnsInfo) error {
+	return onCreate(p.log, p.dbPool, p.currentSchema, dsId, creates)
+}
+func (p *PgPersistentService) Remove(topics []types.UnsInfo) error {
+	return onRemove(p.log, p.dbPool, dsId, topics)
+}
+
 func FillLastRecord(log errLogger, uns *types.CreateTopicDto, query func(ctx context.Context) (pgx.Rows, error)) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -123,98 +133,82 @@ func FillLastRecord(log errLogger, uns *types.CreateTopicDto, query func(ctx con
 
 type errLogger interface {
 	Error(...any)
+	Debugf(format string, v ...any)
 }
 
-func OnCreate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrcId types.SrcJdbcType, evt *event.BatchCreateTableEvent) error {
-	creates := evt.GetCreateFiles(dataSrcId)
-	undates := evt.GetUpdateFiles(dataSrcId)
-	if len(undates) > 0 {
-		if len(creates) > 0 {
-			creates = append(creates, undates...)
-		} else {
-			creates = undates
-		}
+func onCreate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrcId types.SrcJdbcType, topics []types.UnsInfo) error {
+	if len(topics) == 0 {
+		return nil
 	}
-	if len(creates) > 0 {
-		creates = base.Filter(creates, func(e *types.CreateTopicDto) bool {
-			return base.P2v(e.DataType) != constants.AlarmRuleType
-		})
-		conn, er := dbPool.Acquire(context.Background())
-		if er != nil {
-			logPoolError("OnCreate:"+dataSrcId.Alias(), time.Time{}, dbPool, "getConn", er)
-			log.Error("ListTableInfos fail", er)
-			return er
-		}
-		defer conn.Release()
-		tableInfoMap, er := ListTableInfos(conn, creates)
-		if er != nil {
-			log.Error("ListTableInfos fail", er)
-			return er
-		}
-		Errors := BatchCreateTables(conn, defaultSchema, creates, tableInfoMap)
-		if len(Errors) > 0 {
-			log.Error("BatchCreateTables fail", Errors)
-			return Errors[0]
-		}
-	}
-	return nil
-}
-func OnUpdate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrcId types.SrcJdbcType, evt *event.UpdateInstanceEvent) error {
-	topicList := base.Filter(evt.Topics, func(e *types.CreateTopicDto) bool {
-		return e.FieldsChanged && e.GetSrcJdbcType() == dataSrcId
+	topics = base.Filter(topics, func(e types.UnsInfo) bool {
+		return base.P2v(e.GetDataType()) != constants.AlarmRuleType
 	})
-	if len(topicList) > 0 {
-		conn, er := dbPool.Acquire(context.Background())
-		if er != nil {
-			logPoolError("OnUpdate:"+dataSrcId.Alias(), time.Time{}, dbPool, "getConn", er)
-			log.Error("OnUpdate fail", er)
-			return er
-		}
-		defer conn.Release()
-		tableInfoMap, er := ListTableInfos(conn, topicList)
-		if er != nil {
-			log.Error("ListTableInfos fail", er)
-			return er
-		}
-		Errors := BatchCreateTables(conn, defaultSchema, topicList, tableInfoMap)
-		if len(Errors) > 0 {
-			log.Error("BatchUpdate fail", Errors)
-			return Errors[0]
-		}
+	conn, er := dbPool.Acquire(context.Background())
+	if er != nil {
+		logPoolError("onCreate:"+dataSrcId.Alias(), time.Time{}, dbPool, "getConn", er)
+		log.Error("ListTableInfos fail", er)
+		return er
+	}
+	defer conn.Release()
+	tableInfoMap, er := ListTableInfos(conn, base.Map[types.UnsInfo, string](topics, func(e types.UnsInfo) string {
+		return e.GetTable()
+	}))
+	if er != nil {
+		log.Error("ListTableInfos fail", er)
+		return er
+	}
+	Errors := BatchCreateTables(conn, defaultSchema, topics, tableInfoMap)
+	if len(Errors) > 0 {
+		log.Error("BatchCreateTables fail", Errors)
+		return Errors[0]
 	}
 	return nil
 }
-func OnRemove(log errLogger, dbPool *pgxpool.Pool, dataSrcId types.SrcJdbcType, evt *event.RemoveTopicsEvent) {
-	batch := &pgx.Batch{}
-	for _, e := range evt.Topics {
+
+/*
+	func OnUpdate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrcId types.SrcJdbcType, evt *event.UpdateInstanceEvent) error {
+		topicList := base.Filter(evt.Topics, func(e *types.CreateTopicDto) bool {
+			return e.FieldsChanged && e.GetSrcJdbcType() == dataSrcId
+		})
+		if len(topicList) > 0 {
+			conn, er := dbPool.Acquire(context.Background())
+			if er != nil {
+				logPoolError("OnUpdate:"+dataSrcId.Alias(), time.Time{}, dbPool, "getConn", er)
+				log.Error("OnUpdate fail", er)
+				return er
+			}
+			defer conn.Release()
+			tableInfoMap, er := ListTableInfos(conn, topicList)
+			if er != nil {
+				log.Error("ListTableInfos fail", er)
+				return er
+			}
+			Errors := BatchCreateTables(conn, defaultSchema, topicList, tableInfoMap)
+			if len(Errors) > 0 {
+				log.Error("BatchUpdate fail", Errors)
+				return Errors[0]
+			}
+		}
+		return nil
+	}
+*/
+func onRemove(log errLogger, dbPool *pgxpool.Pool, dataSrcId types.SrcJdbcType, topics []types.UnsInfo) error {
+	sqls := make([]string, 0, len(topics))
+	for _, e := range topics {
 		if e.GetSrcJdbcType() == dataSrcId {
 			tbf := e.GetTbFieldName()
 			sql := ""
-			table := getFullTableName(e.GetTable())
+			table := GetFullTableName(e.GetTable())
 			if tbf == "" {
 				sql = "drop table if exists " + table
 			} else {
-				sql = fmt.Sprintf("delete from %s where %s=%v", table, tbf, e.Id)
+				sql = fmt.Sprintf("delete from %s where %s=%v", table, tbf, e.GetId())
 			}
-			batch.Queue(sql)
+			sqls = append(sqls, sql)
 		}
 	}
-	if len(batch.QueuedQueries) > 0 {
-		conn, er := dbPool.Acquire(context.Background())
-		if er != nil {
-			logPoolError("OnRemove:"+dataSrcId.Alias(), time.Time{}, dbPool, "getConn", er)
-			log.Error("OnRemove fail", er)
-			return
-		}
-		defer conn.Release()
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-		br := conn.SendBatch(ctx, batch)
-		defer cancel()
-		for i := 0; i < batch.Len(); i++ {
-			_, err := br.Exec()
-			if err != nil {
-				log.Error("delete fail", err, batch.QueuedQueries[i].SQL)
-			}
-		}
+	if len(sqls) > 0 {
+		return BatchExecSQL(log, dbPool, sqls, nil)
 	}
+	return nil
 }

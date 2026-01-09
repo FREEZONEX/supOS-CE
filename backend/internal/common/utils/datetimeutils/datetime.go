@@ -23,9 +23,13 @@ const (
 var (
 	utcZone = time.UTC
 	// A list of time layouts to try for parsing, ordered by preference
+
 	timeFormats = []string{
 		time.RFC3339,
 		time.RFC3339Nano,
+		"2006-01-02 15:04:05.999999Z0700",
+		"2006-01-02 15:04:05.999 Z0700",
+		"2006-01-02 15:04:05.999Z07",
 		ISO8601Millis,
 		CustomFormat1,
 		CustomFormat2,
@@ -34,7 +38,6 @@ var (
 		NoTZFormat2,
 		NoTZFormat3,
 		ISOLocalDate,
-		"2006-01-02 15:04:05", // Common format
 	}
 )
 
@@ -106,6 +109,7 @@ func ParseDate(datetime string) (time.Time, error) {
 			return t, nil
 		}
 	}
+
 	return time.Time{}, fmt.Errorf("unable to parse date: %s", datetime)
 }
 

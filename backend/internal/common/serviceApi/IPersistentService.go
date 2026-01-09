@@ -26,4 +26,7 @@ type IPersistentService interface {
 
 	// FillLastRecord 填充最后一条记录
 	FillLastRecord(uns *types.CreateTopicDto)
+
+	Save(creates []types.UnsInfo) error
+	Remove(topics []types.UnsInfo) error
 }

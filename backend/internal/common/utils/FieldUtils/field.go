@@ -226,19 +226,19 @@ func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine
 		}
 
 		// Special handling for TimeScaleDB when there is only one non-system field named "value".
-		if jdbcType == types.SrcJdbcTypeTimeScaleDB && len(nonSysFields) == 1 && nonSysFields[0].Name == constants.SystemSeqValue {
-			theField := nonSysFields[0]
-			theField.Name = constants.SystemSeqValue // Ensure the name is correct
-			fNews = append(fNews, theField)
+		if jdbcType == types.SrcJdbcTypeTimeScaleDB {
+			tableName = "uns_timeserial"
+			name := constants.SystemSeqTag // Ensure the name is correct
 			tableValueField := &types.FieldDefine{
 				Name:        constants.SystemSeqTag,
 				Type:        types.FieldTypeLong,
 				Unique:      &_True,
-				TbValueName: &theField.Name,
+				TbValueName: &name,
 			}
 			fNews = append(fNews, tableValueField)
-
-			tableName = "supos_timeserial_" + strings.ToLower(theField.Type)
+			if len(nonSysFields) > 0 {
+				fNews = append(fNews, nonSysFields...)
+			}
 		} else {
 			// Default behavior for other time-series data
 			tableName = ""
@@ -246,7 +246,7 @@ func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine
 		}
 
 		fNews = append(fNews, &types.FieldDefine{Name: constants.QosField, Type: types.FieldTypeLong})
-	} else {
+	} else if jdbcType.TypeCode() == constants.RelationType {
 		// Relational data
 		tableName = ""
 		fNews = make([]*types.FieldDefine, 0, len(processedFields)+2)

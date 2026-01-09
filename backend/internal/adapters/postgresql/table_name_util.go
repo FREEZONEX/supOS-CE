@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// 获取完整表名
-func getFullTableName(tableName string) string {
+// GetFullTableName 获取完整表名
+func GetFullTableName(tableName string) string {
 	// 如果已经是引号包围的，直接返回
 	if len(tableName) >= 2 && tableName[0] == '"' && tableName[len(tableName)-1] == '"' {
 		return tableName
@@ -27,8 +27,8 @@ func getFullTableName(tableName string) string {
 	return fmt.Sprintf(`"%s"`, tableName)
 }
 
-// 获取不带双引号的表名
-func getCleanTableName(tableName string) string {
+// GetCleanTableName 获取不带双引号的表名
+func GetCleanTableName(tableName string) string {
 	st := 0
 	// 查找最后一个点之后的位置
 	if idx := strings.LastIndex(tableName, "."); idx >= 0 {

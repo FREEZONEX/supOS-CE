@@ -54,7 +54,7 @@ func TestQuChong(t *testing.T) {
 	sql, params := getInsertStatement(uns, data)
 	t.Log("sql: ", sql)
 	t.Logf("params: %+v", params)
-	rs := DeduplicationById(uns, data)
+	rs := DeduplicationById(uns.GetPrimaryField(), data)
 	for i, v := range rs {
 		t.Log(i, ": ", v)
 	}

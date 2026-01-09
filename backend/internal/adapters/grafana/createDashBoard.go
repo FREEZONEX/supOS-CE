@@ -65,8 +65,8 @@ func (g *GrafanaEventHandler) createIndividualDashboards(ctx context.Context, to
 		}
 		columns := grafanautil.Fields2Columns(jdbcType, dto.Fields)
 		title := dto.Path
-		schema, table := g.extractSchemaAndTable(dto.GetTable(), ds.Schema)
-		tagNameCondition := g.buildTagNameCondition(dto)
+		schema, table := g.extractSchemaAndTable(dto.Alias, ds.Schema)
+		tagNameCondition := ""
 
 		g.log.Debugf("创建 Grafana 仪表板 - 列：%s, 标题：%s, 模式：%s, 表：%s, 标签条件：%s, fromImport? %v",
 			columns, title, schema, table, tagNameCondition, fromImport)
@@ -111,12 +111,12 @@ func (g *GrafanaEventHandler) extractSchemaAndTable(fullTableName, defaultSchema
 }
 
 // buildTagNameCondition 构建标签名称条件
-func (g *GrafanaEventHandler) buildTagNameCondition(dto *types.CreateTopicDto) string {
-	if dto.GetTbFieldName() == "" {
-		return ""
-	}
-	return fmt.Sprintf(" and %s='%d' ", constants.SystemSeqTag, dto.Id)
-}
+//func (g *GrafanaEventHandler) buildTagNameCondition(dto *types.CreateTopicDto) string {
+//	if dto.GetTbFieldName() == "" {
+//		return ""
+//	}
+//	return fmt.Sprintf(" and %s='%d' ", constants.SystemSeqTag, dto.Id)
+//}
 
 // createCompositeDashboard 创建组合仪表板
 func (g *GrafanaEventHandler) createCompositeDashboard(ctx context.Context, jdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, flowName, username string) {

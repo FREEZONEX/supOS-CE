@@ -17,7 +17,7 @@ const (
 )
 
 // 检查表修改
-func checkTableModify(dto *types.CreateTopicDto, dbName string, tableName string, alterTableSQLs *[]string, tableInfo *TableInfo) int {
+func checkTableModify(dto types.UnsInfo, dbName string, tableName string, alterTableSQLs *[]string, tableInfo *TableInfo) int {
 	if tableInfo == nil || len(tableInfo.FieldTypes) == 0 {
 		return MDF_NEW_TABLE
 	}

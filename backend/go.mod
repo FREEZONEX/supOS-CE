@@ -13,6 +13,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/jinzhu/copier v0.4.0
+	github.com/lib/pq v1.10.9
 	github.com/magiconair/properties v1.8.7
 	github.com/mozillazg/go-pinyin v0.21.0
 	github.com/orcaman/concurrent-map/v2 v2.0.1

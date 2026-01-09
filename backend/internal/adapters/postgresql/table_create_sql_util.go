@@ -9,8 +9,8 @@ import (
 )
 
 // 获取创建表的 SQL -- by uns
-func getCreateTableSQLByUns(dto *types.CreateTopicDto) string {
-	return getCreateTableSQL(dto.GetTbFieldName() != "", dto.GetTable(), dto.Fields)
+func getCreateTableSQLByUns(dto types.UnsInfo) string {
+	return getCreateTableSQL(dto.GetTbFieldName() != "", dto.GetTable(), dto.GetFields())
 }
 
 // 获取创建表的 SQL
@@ -19,7 +19,7 @@ func getCreateTableSQL(isShareTable bool, tableName string, fields []*types.Fiel
 	builder.Grow(128)
 	fullName := tableName
 	if tableName[len(tableName)-1] != '"' {
-		fullName = getFullTableName(tableName)
+		fullName = GetFullTableName(tableName)
 	}
 	builder.Append("create table IF NOT EXISTS ").Append(fullName).Append(" (")
 
@@ -53,7 +53,7 @@ func getCreateTableSQL(isShareTable bool, tableName string, fields []*types.Fiel
 
 	// 处理主键约束
 	if len(ids) > 0 {
-		table := getCleanTableName(tableName)
+		table := GetCleanTableName(tableName)
 
 		builder.Append("CONSTRAINT \"pk_").Append(table).Append("_").Long(common.NextId()).Append("\" PRIMARY KEY (")
 
