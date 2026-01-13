@@ -338,10 +338,8 @@ func mergeBeansWithTimestamp(ctx context.Context, list []map[string]interface{},
 	defer func() {
 		if err := recover(); err != nil {
 			payload := ctx.Value("payload")
-			listJson, _ := json.Marshal(list)
-			prevBeanJson, _ := json.Marshal(prevBean)
-			logx.WithContext(ctx).Errorf("HandleThrow|traceID=%s|error=%#v|stack=%s| CT=%s, payload=%v, list=%v, prevBean=%v", utils.TraceIdFromContext(ctx), err, utils.Stack(4, 20),
-				CT, payload, b2s(listJson), b2s(prevBeanJson))
+			logx.WithContext(ctx).Errorf("HandleThrow|traceID=%s|error=%#v|stack=%s| CT=%s, payload=%v", utils.TraceIdFromContext(ctx), err, utils.Stack(4, 20),
+				CT, payload)
 		}
 	}()
 

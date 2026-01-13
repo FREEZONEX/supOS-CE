@@ -12,7 +12,6 @@ import (
 	"backend/share/diskqueue"
 	"backend/share/spring"
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -45,8 +44,7 @@ func (s *UnsQueueDataSinkService) Sink(unsData []serviceApi.TopicMessage) {
 	}
 	defer func() {
 		if err := recover(); err != nil {
-			unsDataJson, _ := json.Marshal(unsData)
-			s.log.Errorf("HandleThrow|error=%#v| [%d] unsData=%v", err, len(unsDataJson), b2s(unsDataJson))
+			s.log.Errorf("HandleThrow|error=%#v| len=%d", err, len(unsData))
 		}
 	}()
 
