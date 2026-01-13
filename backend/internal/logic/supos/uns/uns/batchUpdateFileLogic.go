@@ -116,7 +116,7 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(list []types.UpdateFileDTO) (resp
 			errorFields[alias+"."+fieldName] = I18nUtils.GetMessage("uns.field.value.out.of.size")
 		}
 		jsonBs, _ := json.Marshal(newBody)
-		msgConsumer.OnMessageByAlias(alias, string(jsonBs))
+		msgConsumer.OnMessageByAlias(l.ctx, alias, string(jsonBs))
 	}
 	if len(notExists)+len(errorFields) > 0 {
 		resp.Code, resp.Msg = 206, ""

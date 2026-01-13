@@ -11,17 +11,18 @@ import (
 
 type Config struct {
 	rest.RestConf
-	Database      conf.Database
-	OssConf       conf.OssConf      `json:",optional"`
-	Export        ExportConfig      `json:"export,optional"`
-	GrafanaUrl    string            `json:"grafanaUrl,optional,default=http://grafana:3000"`
-	PersistentUrl map[string]string `json:"persistent_url,optional"`
-	DevLink       conf.EventConf
-	CacheRedis    cache.ClusterConf
-	KeycloakDSN   string                 `json:",optional,env=KEYCLOAK_DSN,default=postgresql://postgresql:5432/keycloak" `
-	OAuthKeyCloak clients.KeycloakConfig `json:",optional" `
-	NodeRed       nodered.NodeRedConfig  `json:",optional" `
-	Kong          clients.KongConfig     `json:",optional" mapstructure:"Kong"`
+	Database       conf.Database
+	OssConf        conf.OssConf `json:",optional"`
+	Export         ExportConfig `json:"export,optional"`
+	GrafanaUrl     string       `json:"grafanaUrl,optional,default=http://grafana:3000"`
+	PostgresqlUrl  string       `json:"sink.postgresql,env=SINK_PG_URL,optional,default=postgres://postgres:postgres@tsdb:5432/postgres"`
+	TimescaledbUrl string       `json:"sink.timescaledb,env=SINK_TSDB_URL,optional,default=postgres://postgres:postgres@tsdb:5432/postgres"`
+	DevLink        conf.EventConf
+	CacheRedis     cache.ClusterConf
+	KeycloakDSN    string                 `json:",optional,env=KEYCLOAK_DSN,default=postgresql://postgresql:5432/keycloak" `
+	OAuthKeyCloak  clients.KeycloakConfig `json:",optional" `
+	NodeRed        nodered.NodeRedConfig  `json:",optional" `
+	Kong           clients.KongConfig     `json:",optional" mapstructure:"Kong"`
 }
 
 // ExportConfig UNS 导入导出配置

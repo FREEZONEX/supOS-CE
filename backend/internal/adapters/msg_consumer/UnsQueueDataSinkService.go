@@ -12,6 +12,7 @@ import (
 	"backend/share/diskqueue"
 	"backend/share/spring"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -42,6 +43,13 @@ func (s *UnsQueueDataSinkService) Sink(unsData []serviceApi.TopicMessage) {
 	if len(unsData) == 0 {
 		return
 	}
+	defer func() {
+		if err := recover(); err != nil {
+			unsDataJson, _ := json.Marshal(unsData)
+			s.log.Errorf("HandleThrow|error=%#v| [%d] unsData=%v", err, len(unsDataJson), b2s(unsDataJson))
+		}
+	}()
+
 	msgList := make([]*TopicMessage, len(unsData))
 	for i, d := range unsData {
 		dL := make([]*TopicMessage_DataArray, len(d.Data))
@@ -51,8 +59,8 @@ func (s *UnsQueueDataSinkService) Sink(unsData []serviceApi.TopicMessage) {
 				var vStr string
 				if str, ok := v.(string); ok {
 					vStr = str
-				} else {
-					vStr = fmt.Sprintf("%v", v)
+				} else if v != nil {
+					vStr = fmt.Sprint(v)
 				}
 				dataMap[k] = vStr
 			}
@@ -84,19 +92,9 @@ func (s *UnsQueueDataSinkService) OnEventStart100(evt *event.ContextRefreshedEve
 	if err != nil {
 		panic(err)
 	}
-	diskLog := func(lvl diskqueue.LogLevel, f string, args ...interface{}) {
-		switch lvl {
-		case diskqueue.DEBUG, diskqueue.INFO:
-			s.log.Debugf(f, args)
-		case diskqueue.WARN:
-			s.log.Errorf(f, args)
-		case diskqueue.ERROR, diskqueue.FATAL:
-			s.log.Errorf(f, args)
-		}
-	}
 	s.queue = diskqueue.New("uns", dir,
 		64*1024*1024, 8, maxMsgSize,
-		2500, 5*time.Second, diskLog)
+		2500, 5*time.Second, s.log.Debugf, s.log.Errorf)
 	s.run = true
 	go s.fetchData()
 }
@@ -118,6 +116,8 @@ func (s *UnsQueueDataSinkService) fetchData() {
 				size = 0
 				s.persistence(msgToSend)
 				msgToSend = msgToSend[:0]
+			} else if loggerlevel.DoStats {
+				logx.Stat("没数据")
 			}
 		case msg := <-s.queue.ReadChan():
 			var list TopicMessageList

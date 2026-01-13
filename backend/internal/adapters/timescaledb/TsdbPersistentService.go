@@ -34,8 +34,8 @@ type TsdbPersistentService struct {
 func init() {
 	spring.RegisterLazy[*TsdbPersistentService](func() *TsdbPersistentService {
 		svCtx := spring.GetBean[*svc.ServiceContext]()
-		url, has := svCtx.Config.PersistentUrl["timescaledb"]
-		if !has || len(url) == 0 {
+		url := svCtx.Config.TimescaledbUrl
+		if len(url) == 0 {
 			logx.Info("timescaledb url not found in config")
 			return nil
 		}

@@ -15,7 +15,7 @@ log:
   Level: info
   KeepDays: 7
 
-persistent_url:
+sink:
   postgresql: postgres://postgres:postgres@tsdb:5432/postgres
   timescaledb: postgres://postgres:postgres@tsdb:5432/postgres
 
@@ -41,6 +41,7 @@ DevLink:
     ClientID: supos_server
     Pass: uns
     User: unssvr
+    ConnNum: 6
     Brokers:
       - tcp://emqx:1883
     OpenApi:

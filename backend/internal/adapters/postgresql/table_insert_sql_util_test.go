@@ -5,6 +5,7 @@ import (
 	"backend/share/base"
 	"context"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -39,17 +40,20 @@ func TestInsertSQL(t *testing.T) {
 	t.Log(tag.RowsAffected())
 }
 func TestInsertWithArgs(t *testing.T) {
-	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@100.100.100.20:31014/postgres")
+	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@pgsql-ha.supos.app:50000/tier0")
 	if err != nil {
 		panic(err)
 	}
 	defer pool.Close()
 
-	args := []any{20, 21}
-	tag, err := pool.Exec(context.Background(), `insert into public._dingdanceshi_edd1ebaeb5da4155bdbf (_id,"timeStamp",wst)
-        values(default,default,$1),(default,default,$2)`, args...)
-	if err != nil {
-		panic(err)
+	for i := 0; i < 3000; i++ {
+		time.Sleep(time.Second)
+		tag, err := pool.Exec(context.Background(), `INSERT INTO "supos_timeserial_long"("timeStamp", "tag", "value") 
+        VALUES (NOW(), 1, (random() * 100)::int8)`)
+		if err != nil {
+			t.Error(err)
+		} else {
+			t.Log(tag.RowsAffected())
+		}
 	}
-	t.Log(tag.RowsAffected())
 }

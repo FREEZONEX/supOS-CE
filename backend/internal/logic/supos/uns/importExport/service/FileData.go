@@ -101,7 +101,7 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 	case Template:
 		vo.PathType = constants.PathTypeTemplate
 	case UNS:
-		switch i.Type {
+		switch strings.ToLower(i.Type) {
 		case TYPE_FILE:
 			vo.PathType = constants.PathTypeFile
 			if ok, _ := strconv.ParseBool(os.Getenv("SYS_OS_ENABLE_AUTO_CATEGORIZATION")); ok {

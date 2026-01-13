@@ -33,10 +33,10 @@ const dsId = types.SrcJdbcTypePostgresql
 func init() {
 	spring.RegisterLazy[*PgPersistentService](func() *PgPersistentService {
 		svCtx := spring.GetBean[*svc.ServiceContext]()
-		pgUrl, has := svCtx.Config.PersistentUrl["postgresql"]
+		pgUrl := svCtx.Config.PostgresqlUrl
 		ctx := context.Background()
 		log := logx.WithContext(ctx)
-		if !has || len(pgUrl) == 0 {
+		if len(pgUrl) == 0 {
 			log.Info("postgresql url not found in config")
 			return nil
 		}

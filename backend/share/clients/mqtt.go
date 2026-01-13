@@ -75,10 +75,11 @@ func (m *MqttClient) Subscribe(topic string, qos byte) error {
 	m.lock.Unlock()
 
 	logx.Infof("mqtt_client_subscribe topic:%v", topic)
-	var cli = m.clients[0]
-	err := cli.Subscribe(topic, qos, m.subscribeHandler).Error()
-	if err != nil {
-		return errors.System.AddDetail(err)
+	for _, cli := range m.clients {
+		err := cli.Subscribe(topic, qos, m.subscribeHandler).Error()
+		if err != nil {
+			return errors.System.AddDetail(err)
+		}
 	}
 	return nil
 }
@@ -101,10 +102,11 @@ func (m *MqttClient) SubscribeMultiple(filters map[string]byte) error {
 		return nil
 	}
 	logx.Infof("mqtt_client_subscribe topics: %+v", filters)
-	var cli = m.clients[0]
-	err := cli.SubscribeMultiple(newAdds, m.subscribeHandler).Error()
-	if err != nil {
-		return errors.System.AddDetail(err)
+	for _, cli := range m.clients {
+		err := cli.SubscribeMultiple(newAdds, m.subscribeHandler).Error()
+		if err != nil {
+			return errors.System.AddDetail(err)
+		}
 	}
 	return nil
 }
@@ -115,7 +117,9 @@ func (m *MqttClient) subscribeHandler(client mqtt.Client, message mqtt.Message) 
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
 	defer cancel()
-	utils.Recover(ctx)
+	cliOptions := client.OptionsReader()
+	ctx = context.WithValue(ctx, "client", cliOptions.ClientID())
+	defer utils.Recover(ctx)
 	m.consumer.OnMsg(ctx, topic, int(message.MessageID()), message.Payload())
 }
 

@@ -54,13 +54,8 @@ func TestListTableInfo(t *testing.T) {
 		}
 	}
 	// 示例数据
-	topics := []*types.CreateTopicDto{
-		{TableName: "supos.uns_namespace"},
-		{TableName: "supos.supos_example"},
-	}
-
 	// 查询表信息
-	tableInfos, err := ListTableInfos(pool, topics)
+	tableInfos, err := ListTableInfos(pool, []string{"supos.uns_namespace", "supos.supos_example"})
 	if err != nil {
 		panic(err)
 	}

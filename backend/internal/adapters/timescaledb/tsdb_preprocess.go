@@ -5,7 +5,6 @@ import (
 	"backend/internal/common/serviceApi"
 	"backend/internal/types"
 	"backend/share/base"
-	"math"
 	"sort"
 	"strconv"
 	"time"
@@ -45,7 +44,7 @@ func preprocess(unsData []serviceApi.UnsData) processResult {
 			initFlags[uns.Id] = def
 			uns.Timestamps[0] = -1 //先清空原来的 最大值
 			if uns.Timestamps[1] == 0 {
-				uns.Timestamps[1] = math.MaxInt64
+				uns.Timestamps[1] = time.Now().UnixMilli()
 			}
 		}
 		CT := def.GetTimestampField()

@@ -14,11 +14,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
+	"unsafe"
 
+	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -60,54 +63,66 @@ func (u *UnsMessageConsumer) OnMsg(ctx context.Context, topic string, msgId int,
 			}
 		}
 	}
-	strPayload := string(payload)
+	strPayload := b2s(payload)
 	if def == nil {
 		u.log.Debugf("UnknownMsg[%s]: %v\n", topic, strPayload)
 		u.getWsSender().SendMessage(serviceApi.WebsocketMessage{Path: topic, Payload: strPayload})
 		return
 	}
 	u.log.Debugf("OnMsg[%s]: %v, def=%+v\n", topic, strPayload, *def)
-	var data interface{}
-	err := json.Unmarshal(payload, &data)
-	if err != nil {
-		u.sendErrMsg(def, strPayload, err.Error())
-		return
-	}
-
 	go func() {
-		t0 := time.Now()
-		msgList := u.procDataAndSendWs(def, data, strPayload, nil)
-		t1 := time.Now()
+		var t0, t1, t2 time.Time
+		t0 = time.Now()
+		var data interface{}
+		err := json.Unmarshal(payload, &data)
+		if err != nil {
+			u.sendErrMsg(def, strPayload, err.Error())
+			return
+		}
+		msgList := u.procDataAndSendWs(context.WithValue(ctx, "payload", strPayload), def, data, strPayload, nil)
+		t1 = time.Now()
 		u.sendData(msgList)
-		t2 := time.Now()
+		t2 = time.Now()
 		if du := t2.Sub(t0); du > slowGap {
 			logx.WithDuration(du).Slowf("sendWs: %v, sink: %v", t1.Sub(t0), t2.Sub(t1))
 		}
 	}()
 }
+func b2s(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+func s2b(s string) (b []byte) {
+	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	bh.Data = sh.Data
+	bh.Cap = sh.Len
+	bh.Len = sh.Len
+	return b
+}
 
 const slowGap = 500 * time.Millisecond
 
 // OnMessageByAlias 处理单个消息
-func (u *UnsMessageConsumer) OnMessageByAlias(alias, payload string) {
+func (u *UnsMessageConsumer) OnMessageByAlias(ctx context.Context, alias, payload string) {
 	def := u.defService.GetDefinitionByAlias(alias)
 	if def == nil {
 		u.log.Infof("Unknown alias[%s]: %v\n", alias, payload)
 		return
 	}
 	var data interface{}
-	bs := []byte(payload)
+	bs := s2b(payload)
 	err := json.Unmarshal(bs, &data)
 	if err != nil {
 		u.sendErrMsg(def, payload, err.Error())
 		return
 	}
-	msgList := u.procDataAndSendWs(def, data, payload, nil)
+	msgList := u.procDataAndSendWs(ctx, def, data, payload, nil)
 	u.sendData(msgList)
 }
 
 // OnBatchMessage 处理批量消息
-func (u *UnsMessageConsumer) OnBatchMessage(payloads map[string]map[string]any) {
+func (u *UnsMessageConsumer) OnBatchMessage(ctx context.Context, payloads map[string]map[string]any) {
 	messages := make([]serviceApi.TopicMessage, 0, len(payloads))
 	for alias, data := range payloads {
 		def := u.defService.GetDefinitionByAlias(alias)
@@ -115,13 +130,13 @@ func (u *UnsMessageConsumer) OnBatchMessage(payloads map[string]map[string]any) 
 			u.log.Debugf("Unknown alias[%s]\n", alias)
 			continue
 		}
-		messages = u.procDataAndSendWs(def, data, "", messages)
+		messages = u.procDataAndSendWs(ctx, def, data, "", messages)
 	}
 	u.sendData(messages)
 }
 
-func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data any, strPayload string, messages []serviceApi.TopicMessage) []serviceApi.TopicMessage {
-	list, erMsg := procData(def, data)
+func (u *UnsMessageConsumer) procDataAndSendWs(ctx context.Context, def *types.CreateTopicDto, data any, strPayload string, messages []serviceApi.TopicMessage) []serviceApi.TopicMessage {
+	list, erMsg := procData(ctx, def, data)
 	u.sendToWebsocket(def, list, strPayload, erMsg)
 	save2db := base.P2v(def.Save2Db)
 	if len(list) > 0 && save2db {
@@ -132,7 +147,7 @@ func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data a
 		calcDef, calcData, calcErr := u.calcService.TryCalculate(u.defService, def, list[len(list)-1])
 		if calcData != nil && calcDef != nil {
 			calcList := []map[string]interface{}{calcData}
-			setLastData(calcList, calcDef)
+			setLastData(ctx, calcList, calcDef)
 
 			u.sendToWebsocket(calcDef, calcList, "", calcErr)
 			if save2db {
@@ -144,11 +159,11 @@ func (u *UnsMessageConsumer) procDataAndSendWs(def *types.CreateTopicDto, data a
 }
 
 // OnMessageByAliasOnUpdate 处理vqt消息
-func (u *UnsMessageConsumer) OnMessageByAliasOnUpdate(aliasVqtMap map[string]string) {
+func (u *UnsMessageConsumer) OnMessageByAliasOnUpdate(ctx context.Context, aliasVqtMap map[string]string) {
 	msgs := make([]serviceApi.TopicMessage, 0, len(aliasVqtMap))
 	for alias, payload := range aliasVqtMap {
 		var data interface{}
-		err := json.Unmarshal([]byte(payload), &data)
+		err := json.Unmarshal(s2b(payload), &data)
 		if err != nil {
 			continue
 		}
@@ -157,7 +172,7 @@ func (u *UnsMessageConsumer) OnMessageByAliasOnUpdate(aliasVqtMap map[string]str
 			u.log.Debugf("Unknown alias[%s]\n", alias)
 			continue
 		}
-		msgs = u.procDataAndSendWs(def, data, "", msgs)
+		msgs = u.procDataAndSendWs(ctx, def, data, "", msgs)
 	}
 	u.sendData(msgs)
 }
@@ -186,7 +201,7 @@ func (u *UnsMessageConsumer) getWsSender() serviceApi.IWebsocketSender {
 	}
 	return u.wsSender
 }
-func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{}, errMsg string) {
+func procData(ctx context.Context, def *types.CreateTopicDto, data any) (list []map[string]interface{}, errMsg string) {
 	fds := def.GetFieldDefines()
 	CT := def.GetTimestampField()
 	if base.P2v(def.DataType) == constants.JsonbType {
@@ -194,10 +209,10 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 		if vm, ok := data.(map[string]any); ok {
 			if _, has := vm[jsonbFiled]; !has {
 				bs, _ := json.Marshal(data)
-				vm = map[string]any{jsonbFiled: string(bs)}
+				vm = map[string]any{jsonbFiled: b2s(bs)}
 			}
 			list = []map[string]any{vm}
-			list = setLastData(list, def)
+			list = setLastData(ctx, list, def)
 			return
 		}
 	}
@@ -237,11 +252,11 @@ func procData(def *types.CreateTopicDto, data any) (list []map[string]interface{
 	if len(list) == 0 {
 		return
 	}
-	list = setLastData(list, def)
+	list = setLastData(ctx, list, def)
 	return
 }
 
-func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) []map[string]interface{} {
+func setLastData(ctx context.Context, list []map[string]interface{}, def *types.CreateTopicDto) []map[string]interface{} {
 	if len(list) == 0 {
 		return list
 	}
@@ -260,7 +275,7 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) []map
 				prevBean[f.Name] = lv
 			}
 		}
-		mergeList := mergeBeansWithTimestamp(list, CT, now, prevBean)
+		mergeList := mergeBeansWithTimestamp(ctx, list, CT, now, prevBean)
 		if len(qos) > 0 {
 			for _, vm := range mergeList {
 				if _, hasQos := vm[qos]; !hasQos {
@@ -296,7 +311,9 @@ func setLastData(list []map[string]interface{}, def *types.CreateTopicDto) []map
 	return list
 }
 func parseTimestamp(curT any) (ct int64) {
-	if Float, isFloat := curT.(float64); isFloat { // json unmarshal 来的都是 float64 类型
+	if curT == nil {
+		return -1
+	} else if Float, isFloat := curT.(float64); isFloat { // json unmarshal 来的都是 float64 类型
 		ct = int64(Float)
 	} else if Long, isLong := curT.(int64); isLong {
 		ct = Long
@@ -317,10 +334,22 @@ func parseTimestamp(curT any) (ct int64) {
 	}
 	return ct
 }
-func mergeBeansWithTimestamp(list []map[string]interface{}, CT string, now int64, prevBean map[string]any) []map[string]interface{} {
+func mergeBeansWithTimestamp(ctx context.Context, list []map[string]interface{}, CT string, now int64, prevBean map[string]any) []map[string]interface{} {
+	defer func() {
+		if err := recover(); err != nil {
+			payload := ctx.Value("payload")
+			listJson, _ := json.Marshal(list)
+			prevBeanJson, _ := json.Marshal(prevBean)
+			logx.WithContext(ctx).Errorf("HandleThrow|traceID=%s|error=%#v|stack=%s| CT=%s, payload=%v, list=%v, prevBean=%v", utils.TraceIdFromContext(ctx), err, utils.Stack(4, 20),
+				CT, payload, b2s(listJson), b2s(prevBeanJson))
+		}
+	}()
+
 	prevTime := int64(-1)
 	if len(prevBean) > 0 {
-		prevTime = parseTimestamp(prevBean[CT])
+		if ct, has := prevBean[CT]; has {
+			prevTime = parseTimestamp(ct)
+		}
 	}
 	mergeList := make([]map[string]interface{}, 0, len(list))
 	for _, vm := range list {
