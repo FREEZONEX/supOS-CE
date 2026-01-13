@@ -10,7 +10,7 @@ Database:
 
 log:
   ServiceName: uns
-  Mode: file
+  Mode: console
   Path: logs
   Level: info
   KeepDays: 7
