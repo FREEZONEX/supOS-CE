@@ -8,11 +8,11 @@ import (
 )
 
 func TestPgQueryParserView(t *testing.T) {
-	pool, err := dbpool.NewPool(context.Background(), "postgres://postgres:postgres@192.168.235.152:2345/postgres", "test")
+	pool, err := dbpool.NewPool(context.Background(), "postgres://postgres:postgres@100.100.100.20:31014/postgres", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
-	rs, err := parseViews(pool, context.Background(), "public", "table3")
+	rs, err := parseViews(pool, context.Background(), "public", "opcua_demo_file_5483")
 	if err != nil {
 		t.Fatal(err)
 	}

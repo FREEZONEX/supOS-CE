@@ -220,6 +220,7 @@ type ExpressionSources struct {
 
 // 从表达式中提取源信息
 func extractSourcesFromExpression(expr, viewDef string) ExpressionSources {
+	expr = strings.TrimSpace(expr)
 	sources := ExpressionSources{}
 
 	// 提取表名.字段名模式
@@ -260,6 +261,16 @@ func extractSourcesFromExpression(expr, viewDef string) ExpressionSources {
 			matches = validNamePattern.FindAllStringSubmatch(expr, -1)
 			if len(matches) > 0 {
 				columnName = matches[0][0]
+				if strings.ToUpper(columnName) == "CASE" {
+					upper := strings.ToUpper(expr)
+					if strings.HasSuffix(upper, "END") {
+						elseIndex := strings.LastIndex(upper, "ELSE")
+						if elseIndex > 0 {
+							matches = validNamePattern.FindAllStringSubmatch(expr[elseIndex+4:], -1)
+							columnName = matches[0][0]
+						}
+					}
+				}
 			}
 		}
 		sources.Columns = append(sources.Columns, columnName)

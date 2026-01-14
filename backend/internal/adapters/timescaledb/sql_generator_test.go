@@ -133,8 +133,8 @@ func TestSQLGenerator_ExistingTable(t *testing.T) {
 					{Name: "timeStamp", Type: types.FieldTypeDatetime, SystemField: base.OptionalTrue, Unique: base.OptionalTrue},
 					{Name: "quality", Type: types.FieldTypeLong},
 					{Name: "double1", Type: types.FieldTypeDouble},
-					{Name: "double2", Type: types.FieldTypeDouble},
-					{Name: "double3", Type: types.FieldTypeDouble},
+					{Name: "double4", Type: types.FieldTypeDouble},
+					{Name: "double5", Type: types.FieldTypeDouble},
 				},
 			},
 			View: SimpleViewInfo{
@@ -142,7 +142,7 @@ func TestSQLGenerator_ExistingTable(t *testing.T) {
 				Columns: []ViewColumnInfo{
 					{ColumnName: "timeStamp"},
 					{ColumnName: "quality"},
-					{ColumnName: "double1", SourceColumn: "double_1"},
+					{ColumnName: "double1", SourceColumn: "double_1", Expression: "1+double_1 as double1"},
 					{ColumnName: "double2", SourceColumn: "double_2"},
 					{ColumnName: "double3", SourceColumn: "double_3"},
 				},

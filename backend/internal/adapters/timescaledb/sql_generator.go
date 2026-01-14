@@ -18,6 +18,7 @@ type RequiredFields struct {
 type ViewColumnInfo struct {
 	ColumnName   string `json:"column_name"`   // 视图中的字段名
 	SourceColumn string `json:"source_column"` // 物理表 uns_timeserial 中的字段名
+	Expression   string `json:"expression"`
 }
 type SimpleViewInfo struct {
 	SrcTable string

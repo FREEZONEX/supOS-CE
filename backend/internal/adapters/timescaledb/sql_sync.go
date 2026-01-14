@@ -32,20 +32,15 @@ func (g *SQLGenerator) GenerateSyncSQLs(
 		unsInfo := unsView.Uns
 		viewInfo := unsView.View
 		// 获取字段映射
-		mappings, removedFields, _ := g.getFieldMappings(unsInfo, viewInfo.Columns)
+		mappings := g.getFieldMappings(unsInfo, viewInfo.Columns)
 
 		// 保存字段映射信息
 		var mappingInfo []string
-		for viewField, sourceCol := range mappings {
+		for _, col := range mappings {
+			viewField, sourceCol := col.viewField, col.sourceCol
 			mappingInfo = append(mappingInfo, fmt.Sprintf("%s -> %s", viewField, sourceCol))
 		}
 		result.FieldMappings[unsInfo.GetAlias()] = mappingInfo
-
-		// 生成更新数据的 SQL
-		updateSQL := g.GenerateDataUpdateSQL(unsInfo, removedFields)
-		if updateSQL != "" {
-			result.UpdateDataSQL = append(result.UpdateDataSQL, updateSQL)
-		}
 
 		// 生成创建视图的 SQL
 		viewSQL := g.GenerateViewSQL(unsInfo, mappings)

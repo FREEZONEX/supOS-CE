@@ -8,13 +8,15 @@ import (
 
 // getUsedFieldNumbers 获取已使用的字段编号
 func (g *SQLGenerator) getUsedFieldNumbers(
-	existingMap map[string]string,
+	existingMap map[string]ViewColumnInfo,
+	fieldMap map[string]bool,
 	prefix string,
 ) map[int]bool {
 	used := make(map[int]bool)
 	if len(existingMap) > 0 {
-		for _, src := range existingMap {
-			if strings.HasPrefix(src, prefix+"_") {
+		for field, col := range existingMap {
+			src := col.SourceColumn
+			if fieldMap[field] && strings.HasPrefix(src, prefix+"_") {
 				// 提取编号
 				var num int
 				fmt.Sscanf(src, prefix+"_%d", &num)
@@ -25,16 +27,6 @@ func (g *SQLGenerator) getUsedFieldNumbers(
 		}
 	}
 	return used
-}
-
-// allocateFieldNumber 分配新的字段编号
-func (g *SQLGenerator) allocateFieldNumber(usedNumbers map[int]bool) int {
-	// 从1开始查找第一个未使用的编号
-	for i := 1; ; i++ {
-		if _, has := usedNumbers[i]; !has {
-			return i
-		}
-	}
 }
 
 // hasPhysicalField 检查物理表是否已有某个字段

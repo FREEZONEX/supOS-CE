@@ -9,7 +9,7 @@ import (
 // GenerateViewSQL 生成创建视图的 SQL
 func (g *SQLGenerator) GenerateViewSQL(
 	unsInfo types.UnsInfo,
-	mappings map[string]string,
+	vms []ViewMap,
 ) string {
 
 	alias := unsInfo.GetAlias()
@@ -25,27 +25,32 @@ func (g *SQLGenerator) GenerateViewSQL(
 			selectFields = append(selectFields, fmt.Sprintf(`"%s"`, field.Name))
 		}
 	}
-
+	mappings := make(map[string]ViewMap, len(vms))
+	for _, vm := range vms {
+		mappings[vm.viewField] = vm
+	}
 	// 动态字段
 	for _, field := range unsInfo.GetFields() {
-		sourceCol := mappings[field.Name]
+		col := mappings[field.Name]
+		sourceCol := col.sourceCol
 		if len(sourceCol) == 0 {
 			continue
 		}
 
 		// 根据字段类型可能需要类型转换
-		selectExpr := fmt.Sprintf(`"%s"`, sourceCol)
-
-		// INTEGER 类型需要转换为 int4
-		if field.Type == types.FieldTypeInteger {
-			selectExpr = fmt.Sprintf(`"%s"::int4`, sourceCol)
-		} else if field.Type == types.FieldTypeFloat {
-			// FLOAT 类型需要转换为 float4
-			selectExpr = fmt.Sprintf(`"%s"::real`, sourceCol)
+		selectExpr := col.expression
+		if len(selectExpr) == 0 {
+			selectExpr = fmt.Sprintf(`"%s"`, sourceCol)
+			// INTEGER 类型需要转换为 int4
+			if field.Type == types.FieldTypeInteger {
+				selectExpr = fmt.Sprintf(`"%s"::int4`, sourceCol)
+			} else if field.Type == types.FieldTypeFloat {
+				// FLOAT 类型需要转换为 float4
+				selectExpr = fmt.Sprintf(`"%s"::real`, sourceCol)
+			}
+			// 添加别名
+			selectExpr = fmt.Sprintf(`%s as "%s"`, selectExpr, field.Name)
 		}
-
-		// 添加别名
-		selectExpr = fmt.Sprintf(`%s as "%s"`, selectExpr, field.Name)
 		selectFields = append(selectFields, selectExpr)
 	}
 
