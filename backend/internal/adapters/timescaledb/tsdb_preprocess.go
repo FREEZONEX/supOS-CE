@@ -94,6 +94,7 @@ func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, 
 	rows = make([][]any, 0, dataMap.Size())
 	dataMap.Range(func(key [2]int64, da map[string]string) {
 		uns := unsMap[key[0]]
+		qos := uns.GetQualityField()
 		row := make([]any, len(colIndexMap))
 		tagField := uns.GetTbFieldName()
 		da[tagField] = strconv.FormatInt(uns.Id, 10)
@@ -102,9 +103,15 @@ func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, 
 			if index := fd.Index; index != nil && len(*index) > 0 {
 				name = *index
 			}
+			var value interface{}
 			v := da[fd.Name]
-			if len(v) == 0 && fd.Type != types.FieldTypeString {
-				continue
+			value = v
+			if len(v) == 0 {
+				if fd.Name == qos {
+					value = int64(0) //默认质量码
+				} else {
+					continue
+				}
 			}
 			i := colIndexMap[name]
 			if i >= 0 {
@@ -112,10 +119,10 @@ func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, 
 					mill, _ := strconv.ParseFloat(v, 64)
 					if mill > 0 {
 						utcTime := time.UnixMilli(int64(mill)).UTC()
-						v = utcTime.Format("2006-01-02 15:04:05.000") + "+00"
+						value = utcTime.Format("2006-01-02 15:04:05.000") + "+00"
 					}
 				}
-				row[i] = v
+				row[i] = value
 			}
 		}
 		rows = append(rows, row)
