@@ -84,19 +84,9 @@ func (s *UnsQueueDataSinkService) OnEventStart100(evt *event.ContextRefreshedEve
 	if err != nil {
 		panic(err)
 	}
-	diskLog := func(lvl diskqueue.LogLevel, f string, args ...interface{}) {
-		switch lvl {
-		case diskqueue.DEBUG, diskqueue.INFO:
-			s.log.Debugf(f, args)
-		case diskqueue.WARN:
-			s.log.Errorf(f, args)
-		case diskqueue.ERROR, diskqueue.FATAL:
-			s.log.Errorf(f, args)
-		}
-	}
 	s.queue = diskqueue.New("uns", dir,
 		64*1024*1024, 8, maxMsgSize,
-		2500, 5*time.Second, diskLog)
+		2500, 5*time.Second, logx.Debugf, logx.Errorf)
 	s.run = true
 	go s.fetchData()
 }
