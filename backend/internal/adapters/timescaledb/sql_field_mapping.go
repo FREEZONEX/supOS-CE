@@ -22,6 +22,7 @@ func (g *SQLGenerator) getFieldMappings(
 		}
 		for _, field := range unsInfo.GetFields() {
 			if field.IsSystemField() {
+				delete(existingMap, field.Name)
 				continue
 			}
 			fieldName := field.Name
@@ -78,7 +79,9 @@ func (g *SQLGenerator) getFieldMappings(
 
 	// 收集被删除的字段
 	for _, sourceCol := range existingMap {
-		removedFields = append(removedFields, sourceCol)
+		if len(sourceCol) > 0 {
+			removedFields = append(removedFields, sourceCol)
+		}
 		// 这里可以记录日志，但不在 SQL 生成中处理
 	}
 
