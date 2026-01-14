@@ -76,11 +76,9 @@ pipeline {
                     
 
                     sh '''
-                        docker tag ${UNS_IMAGE_TAG} "suposce/tier0-uns:${TAG}"
-                        docker save  suposce/tier0-uns:${TAG} | xz -z -T0 -v >./deploy/images/tier0-uns.tar.xz
+                        docker save  ${UNS_IMAGE_TAG} | xz -z -T0 -v >./deploy/images/tier0-uns.tar.xz
 
-                        docker tag ${FRONTEND_IMAGE_TAG} "suposce/tier0-frontend:${TAG}"
-                        docker save  suposce/tier0-frontend:${TAG} | xz -z -T0 -v >./deploy/images/tier0-frontend.tar.xz
+                        docker save  ${FRONTEND_IMAGE_TAG} | xz -z -T0 -v >./deploy/images/tier0-frontend.tar.xz
 
                         echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY"
                         docker push "${UNS_IMAGE_TAG}"
@@ -107,8 +105,8 @@ pipeline {
 
                         cp -r ../backend/etc ./mount/edge/
 
-                        sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: suposce/tier0-frontend:\${TAG}|g" docker-compose.yml
-                        sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: suposce/tier0-uns:\${TAG}|g" docker-compose.yml
+                        sed -i "s|image: \${DOCKER_REGISTRY}/sup9bnlh/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
+                        sed -i "s|image: \${DOCKER_REGISTRY}/sup9bnlh/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
                         
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
@@ -183,8 +181,8 @@ pipeline {
 
                         if [ \$Only_Build_Image = false ]; then
 
-                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
-                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i "s|image: \${DOCKER_REGISTRY}/sup9bnlh/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i "s|image: \${DOCKER_REGISTRY}/sup9bnlh/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
                             sed -i 's@\\\${ENTRANCE_PORT:-8088}:8000@8088:8000@g' docker-compose.yml
                             sed -i 's/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=100.100.100.22/' .env.default
                             sed -i 's/^ENTRANCE_PORT=.*/ENTRANCE_PORT=34098/' .env.default
@@ -202,8 +200,8 @@ pipeline {
                         fi
 
                         if [ \$Only_Build_Image = true ]; then
-                            sed -i "s|image: suposce/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
-                            sed -i "s|image: suposce/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i "s|image: \${DOCKER_REGISTRY}/sup9bnlh/tier0-uns:[^[:space:]]*|image: \${UNS_IMAGE_TAG}|g" docker-compose.yml
+                            sed -i "s|image: \${DOCKER_REGISTRY}/sup9bnlh/tier0-frontend:[^[:space:]]*|image: \${FRONTEND_IMAGE_TAG}|g" docker-compose.yml
                             scp -i /var/jenkins_home/ssh/id_rsa docker-compose.yml \$DEPLOY_SSH_SERVER:/root/edge/supos-deploy-edge/
 
                             exec_ssh '

@@ -18,7 +18,7 @@ source $ENV_FILE
 DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../docker-compose.yml
 
 # 卸载所有服务
-command="--profile fuxa --profile grafana --profile minio --profile eventflow"
+command="--profile fuxa --profile grafana --profile minio --profile eventflow --profile konga"
 
 if [ -f $SCRIPT_DIR/../.env.tmp ]; then 
   docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../.env.tmp --project-name tier0 $command -f $DOCKER_COMPOSE_FILE down && rm -f $VOLUMES_PATH/edge/system/active-services.txt
