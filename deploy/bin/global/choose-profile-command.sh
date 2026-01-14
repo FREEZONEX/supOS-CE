@@ -26,14 +26,16 @@ chooseProfile1() {
 
     if [[ $askyou == 1 ]]; then
         # This is the single source of truth for the default profile
-        profileCommand+="--profile grafana "
-        activeServices+=",grafana"
+        profileCommand+="--profile grafana --profile konga "
+        activeServices+=",grafana,konga"
     else
         # ... (custom selection logic remains unchanged) ...
         read -p "Step 1: Do you want to install Grafana?[y/n]: " choicegrafana; choicegrafana=${choicegrafana:-Y}
         if [[ $choicegrafana =~ ^[Yy] ]]; then profileCommand+="--profile grafana "; activeServices+=",grafana"; fi
         read -p "Step 2:Do you want to install MinIO?[y/n]: " choiceminio; choiceminio=${choiceminio:-Y}
         if [[ $choiceminio =~ ^[Yy] ]]; then profileCommand+="--profile minio "; activeServices+=",minio"; fi
+        read -p "Step 3: Do you want to install Konga? [y/N]: " choiceKonga; choiceKonga=${choiceKonga:-N}
+        if [[ $choiceKonga =~ ^[Yy] ]]; then profileCommand+="--profile konga "; activeServices+=",konga"; fi
     fi
 
     mkdir -p "$(dirname "$OUTPUT_FILE")"
@@ -61,8 +63,8 @@ chooseProfile2() {
 
     if [[ $askyou == 1 ]]; then
         # Default profile logic
-        profileCommand="--profile grafana "
-        activeServices+=",grafana"
+        profileCommand="--profile grafana --profile konga "
+        activeServices+=",grafana,konga"
     else
         # Custom selection logic (no changes here)
         read -p "Step 1: Do you want to install Grafana? [y/n]: " choicegrafana; choicegrafana=${choicegrafana:-Y}
@@ -71,6 +73,8 @@ chooseProfile2() {
         if [[ $choiceminio =~ ^[Yy] ]]; then profileCommand+="--profile minio "; activeServices+=",minio"; fi
         read -p "Step 3: Do you want to install Gitea? [y/N]: " choiceGitea; choiceGitea=${choiceGitea:-N}
         if [[ $choiceGitea =~ ^[Yy] ]]; then profileCommand+="--profile gitea "; activeServices+=",gitea"; fi
+        read -p "Step 4: Do you want to install Konga? [y/N]: " choiceKonga; choiceKonga=${choiceKonga:-N}
+        if [[ $choiceKonga =~ ^[Yy] ]]; then profileCommand+="--profile konga "; activeServices+=",konga"; fi
     fi
 
     mkdir -p "$(dirname "$OUTPUT_FILE")"

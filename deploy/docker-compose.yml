@@ -391,6 +391,8 @@ services:
   konga:
     image: eco-registry.supos.com/sup9bnlh/konga:0.14.9
     container_name: konga
+    profiles:
+      - konga
     environment:
       # DB_ADAPTER: mysql           # 使用 MySQL 作为数据库
       # DB_HOST: konga_mysql_database # MySQL 容器的主机名
