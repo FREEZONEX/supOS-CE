@@ -1,6 +1,7 @@
 package msg_consumer
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -8,7 +9,24 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"gitee.com/unitedrhino/share/utils"
+	"github.com/zeromicro/go-zero/core/logx"
 )
+
+func TestNpePanic(t *testing.T) {
+	var vm map[string]interface{}
+	//vm = make(map[string]interface{})
+	//vm["a"] = 1
+	CT := "timestamp"
+	if len(vm) == 0 {
+		t.Log("no vm")
+	} else {
+		curT, hasCt := vm[CT]
+		t.Logf("curT:%v, hasCt:%v", curT, hasCt)
+	}
+	t.Log("ts:", parseTimestamp(vm[CT]))
+}
 
 // 模拟Java中的mockBean方法
 func mockBean(p string) map[string]interface{} {
@@ -74,7 +92,18 @@ func keysMatch(m map[string]interface{}, expectedKeys map[string]bool) bool {
 const SYS_FIELD_CREATE_TIME = "timeStamp"
 
 func mergeBeansWithCT(list []map[string]interface{}, prevBean map[string]any) []map[string]interface{} {
-	return mergeBeansWithTimestamp(list, SYS_FIELD_CREATE_TIME, time.Now().UnixMilli(), prevBean)
+	return mergeBeansWithTimestamp(context.Background(), list, SYS_FIELD_CREATE_TIME, time.Now().UnixMilli(), prevBean)
+}
+func TestLogPanic(t *testing.T) {
+	ctx := t.Context()
+	var err error
+	CT := "timestamp"
+	var list []map[string]interface{}
+	prevBean := map[string]any{}
+	prevBean[CT] = float64(time.Now().UnixMilli())
+	logx.WithContext(ctx).Errorf("HandleThrow|traceID=%s|error=%#v|stack=%s| CT=%s, list=%+v, prevBean=%+v", utils.TraceIdFromContext(ctx),
+		err, utils.Stack(2, 20), CT, list, prevBean)
+
 }
 func TestMergeBeansWithTimestamp2(t *testing.T) {
 	floatTime := 1.766978836e+12

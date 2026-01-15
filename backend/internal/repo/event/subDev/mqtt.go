@@ -42,6 +42,9 @@ func NewMqttClient(conf *conf.MqttConf, consumer clients.MqttMsgConsumer) (*Mqtt
 	}, nil
 }
 func (d *MqttClient) SubscribeAll() error {
+	return d.client.Subscribe("$share/uns/#", 1)
+}
+func (d *MqttClient) SubscribeNormalAll() error {
 	//暂不用共享的 TopicUns，实测gmqtt重连后,新消息一直会收到两份
 	return d.client.Subscribe("#", 1)
 }

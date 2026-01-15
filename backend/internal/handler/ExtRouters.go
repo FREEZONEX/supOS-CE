@@ -6,11 +6,13 @@ import (
 	unsHandler "backend/internal/handler/supos/uns/uns"
 	"backend/internal/svc"
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/zeromicro/go-zero/rest"
 )
 
 func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	addProfiles(server)
 
 	server.AddRoutes(rest.WithMiddlewares(
 		[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
@@ -57,4 +59,64 @@ func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		}...,
 	))
+}
+func addProfiles(server *rest.Server) {
+	server.AddRoutes([]rest.Route{
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/",
+			Handler: pprof.Index,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/allocs",
+			Handler: pprof.Index,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/heap",
+			Handler: pprof.Index,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/mutex",
+			Handler: pprof.Index,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/threadcreate",
+			Handler: pprof.Index,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/goroutine",
+			Handler: pprof.Index,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/block",
+			Handler: pprof.Index,
+		},
+		//
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/cmdline",
+			Handler: pprof.Cmdline,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/profile",
+			Handler: pprof.Profile,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/symbol",
+			Handler: pprof.Symbol,
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/debug/pprof/trace",
+			Handler: pprof.Trace,
+		},
+	}, rest.WithTimeout(0))
 }
