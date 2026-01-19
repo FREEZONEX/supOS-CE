@@ -95,7 +95,7 @@ func SaveBatch(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsDat
 			}
 			var batch = &pgx.Batch{}
 			for _, table := range segment {
-				sql, params := getInsertStatement(table.Uns, table.Data)
+				sql, params := getInsertStatement(&table.Uns.CreateTopicDto, table.Data)
 				logx.Debugf("insert sql: %s, values: %+v", sql, params)
 				batch.Queue(sql, params...)
 			}
@@ -175,10 +175,13 @@ func execBatch(conn *pgxpool.Conn, task batchTask, defaultSchema string, retry i
 		}
 	}
 	if retryTask.batch != nil {
-		uns := base.Map[*serviceApi.UnsData, *types.CreateTopicDto](retryTask.uns, func(e *serviceApi.UnsData) *types.CreateTopicDto {
+		tables := base.Map[*serviceApi.UnsData, string](retryTask.uns, func(e *serviceApi.UnsData) string {
+			return e.Uns.Alias
+		})
+		uns := base.Map[*serviceApi.UnsData, types.UnsInfo](retryTask.uns, func(e *serviceApi.UnsData) types.UnsInfo {
 			return e.Uns
 		})
-		tableInfoMap, er := ListTableInfos(conn, uns)
+		tableInfoMap, er := ListTableInfos(conn, tables)
 		if er != nil {
 			return er
 		}

@@ -64,6 +64,7 @@ type UnsNamespace struct {
 	PathName            string `gorm:"-" json:"pathName"`
 	OldPath             string `gorm:"-" json:"oldPath"`
 	CountExistsSiblings int64  `gorm:"-" json:"countExistsSiblings"`
+	tmField             string `gorm:"-"`
 }
 
 func (u *UnsNamespace) String() string {
@@ -83,7 +84,22 @@ func (u *UnsNamespace) GetTbFieldName() string {
 	}
 	return ""
 }
+func (u *UnsNamespace) GetTimestampField() string {
+	if u.tmField != "" {
+		return u.tmField
+	}
 
+	if len(u.Fields) > 0 {
+		// Find timestamp field (implementation depends on FieldUtils)
+		for _, f := range u.Fields {
+			if f.Name == constants.SysFieldCreateTime || f.Name == "timestamp" {
+				u.tmField = f.Name
+				return u.tmField
+			}
+		}
+	}
+	return ""
+}
 func (u *UnsNamespace) GetLayRec() string {
 	return u.LayRec
 }

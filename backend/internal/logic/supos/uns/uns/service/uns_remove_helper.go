@@ -10,9 +10,7 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
-	"encoding/csv"
 	"io"
-	"sync"
 	"time"
 
 	"gorm.io/gorm"
@@ -89,38 +87,13 @@ func (r *UnsRemoveService) removeTemplates(ctx context.Context, req types.Remove
 	var files = make([]*dao.UnsNamespace, 0, 128)
 	var folders = make([]*dao.UnsNamespace, 0, 64)
 	for _, templateIds := range base.Partition(base.Map(templates, getId), 1000) {
-		// 创建管道
-		reader, writer := io.Pipe()
-		var wg sync.WaitGroup
-		wg.Add(2)
-		go func() {
-			defer func() {
-				_ = writer.Close()
-				wg.Done()
-			}()
+		r.unsMapper.DoExportBatch(1, func(writer io.Writer) {
 			delEr := r.unsMapper.ExportCsvByTemplateIds(ctx, templateIds, writer)
 			if delEr != nil {
 				r.log.Error("Del exportByTemplate failed:", delEr)
 			}
-		}()
-		go func() {
-			defer func() {
-				_ = reader.Close()
-				wg.Done()
-			}()
-			// 读取 CSV 表头
-			csvReader := csv.NewReader(reader)
-			headers, err := csvReader.Read()
-			if err != nil {
-				r.log.Error("del exportHeader ByTemplate failed:", err)
-				return
-			}
-			for {
-				record, err := csvReader.Read()
-				if err == io.EOF {
-					break
-				}
-				unsPO := r.unsMapper.Csv2Model(headers, record)
+		}, func(namespaces []*dao.UnsNamespace) {
+			for _, unsPO := range namespaces {
 				switch unsPO.PathType {
 				case constants.PathTypeFile:
 					files = append(files, unsPO)
@@ -135,9 +108,7 @@ func (r *UnsRemoveService) removeTemplates(ctx context.Context, req types.Remove
 					folders = append(folders, unsPO)
 				}
 			}
-
-		}()
-		wg.Wait()
+		})
 	}
 	files = append(files, templates...)
 	err := r.deleteAndSendEventWithCall(ctx, req, files, func(db *gorm.DB) (er error) {
@@ -176,56 +147,17 @@ func (r *UnsRemoveService) removeFolders(
 		})
 	}
 	for _, lay := range base.Partition(layRecs, 500) {
-		// 创建管道
-		reader, writer := io.Pipe()
-		var wg sync.WaitGroup
-		wg.Add(2)
-		go func() {
-			defer func() {
-				_ = writer.Close()
-				wg.Done()
-			}()
+		r.unsMapper.DoExportBatch(1000, func(writer io.Writer) {
 			delEr := r.unsMapper.ExportCsvByLayRecAndIds(ctx, lay, nil, writer, false) //layRec降序排列，保证目录是最后一个被删除
 			if delEr != nil {
 				r.log.Error("Del exportByFolder failed:", delEr)
 			}
-		}()
-		go func() {
-			defer func() {
-				_ = reader.Close()
-				defer wg.Done()
-			}()
-			// 读取 CSV 表头
-			csvReader := csv.NewReader(reader)
-			headers, err := csvReader.Read()
-			if err != nil {
-				r.log.Error("del exportHeader ByFolder failed:", err)
-				return
+		}, func(namespaces []*dao.UnsNamespace) {
+			delEr := r.deleteAndSendEvent(ctx, req, namespaces)
+			if delEr != nil {
+				r.log.Error("delByFolder failed:", delEr)
 			}
-			batch := make([]*dao.UnsNamespace, 0, 1000)
-			for {
-				record, err := csvReader.Read()
-				if err == io.EOF {
-					break
-				}
-				unsPO := r.unsMapper.Csv2Model(headers, record)
-				batch = append(batch, unsPO)
-				if len(batch) >= 1000 {
-					delEr := r.deleteAndSendEvent(ctx, req, batch)
-					batch = batch[:0]
-					if delEr != nil {
-						r.log.Error("delByFolder failed:", delEr)
-					}
-				}
-			}
-			if len(batch) > 0 {
-				delEr := r.deleteAndSendEvent(ctx, req, batch)
-				if delEr != nil {
-					r.log.Error("DelByFolder failed:", delEr)
-				}
-			}
-		}()
-		wg.Wait()
+		})
 	}
 	return nil
 }

@@ -259,10 +259,10 @@ func (c *CreateTopicDto) GetTimestampField() string {
 
 // GetQualityField returns the quality field name
 func (c *CreateTopicDto) GetQualityField() string {
-	if len(c.Fields) > 2 && c.DataSrcID > 0 {
+	if len(c.Fields) > 2 {
 		// Find quality field (implementation depends on FieldUtils and dataSrcId.typeCode)
 		for _, f := range c.Fields {
-			if f.Name == constants.QosField || f.Name == "quality" {
+			if f.Type == FieldTypeLong && f.IsSystemField() && !base.P2v(f.Unique) {
 				return f.Name
 			}
 		}

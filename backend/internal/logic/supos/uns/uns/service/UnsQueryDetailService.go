@@ -129,8 +129,8 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file types.UnsInfo,
 	if mc := l.mountService; setMount && mc != nil {
 		dto.SetMount(mc.ParseMountDetail(unsTarget, false))
 	}
-	dto.SetTable(file.GetTable())
-	dto.SetTbFieldName(file.GetTbFieldName())
+	//dto.SetTable(file.GetTable())
+	//dto.SetTbFieldName(file.GetTbFieldName())
 	// 设置标志位
 	if flagsP := unsTarget.GetFlags(); flagsP != nil {
 		flags := *flagsP

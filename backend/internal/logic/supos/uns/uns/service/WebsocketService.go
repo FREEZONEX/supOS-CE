@@ -4,6 +4,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/datetimeutils"
 	"backend/internal/logic/supos/uns/topology/service"
 	"backend/internal/types"
 	"backend/share/base"
@@ -457,28 +458,29 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 				if (isRelation && name == constants.SysFieldCreateTime) || name == constants.SystemSeqTag || name == constants.SysFieldID {
 					continue
 				}
-				var v any
+				var v string
 				has := false
 				if hasDm {
 					v, has = dm[name]
 				}
-				if lv := f.GetLastValue(); !has && lv != nil {
-					if f.Type == types.FieldTypeDatetime {
-						if date, isDate := lv.(time.Time); isDate {
-							v = date.UnixMilli()
-						} else if long, isLong := lv.(int64); isLong {
-							v = long
-						}
-					} else {
-						v = lv
-					}
+				if lv := f.GetLastValue(); !has && lv != "" {
+					v = lv
 				}
-				if v != nil {
+				if v != "" {
 					switch f.Type {
-					case types.FieldTypeDouble, types.FieldTypeLong:
-						v = fmt.Sprint(v)
+					case types.FieldTypeInteger:
+						N, er := strconv.ParseInt(v, 10, 64)
+						if er == nil {
+							data[name] = N
+						}
+					case types.FieldTypeDatetime:
+						ct := datetimeutils.ParseTimestamp(v)
+						if ct > 0 {
+							data[name] = ct
+						}
+					default:
+						data[name] = v
 					}
-					data[name] = v
 				}
 				if lt := f.GetLastTime(); lt > 0 {
 					dt[name] = lt

@@ -711,6 +711,7 @@
   "uns.functions": "Functions",
   "uns.mqttDescription": "View connection details and configuration.",
   "uns.backOverview": "Back to overview",
+  "uns.exportJsonWarning": "此主题过大，无法在此预览。请下载后查看完整内容。",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

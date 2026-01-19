@@ -221,7 +221,6 @@ type CreateTopicDto struct {
 	ReferTable                    string                    `json:"referTable,optional,omitzero"`
 	RefFields                     []*FieldDefine            `json:"refFields,optional,omitzero"`
 	ReferModelID                  string                    `json:"referModelId,optional,omitzero"`
-	Cited                         map[int64]bool            `json:"-"`                        // Set of cited IDs
 	Refers                        []*InstanceField          `json:"refers,optional,omitzero"` // Calculation fields
 	Expression                    *string                   `json:"expression,optional,omitzero" validate:"max=255"`
 	CompileExpression             interface{}               `json:"-"`
@@ -260,6 +259,7 @@ type CreateTopicDto struct {
 	RefTopicFields                map[int64]map[string]bool `json:"-"`
 	Status                        int16                     `json:"-"`
 	CountExistsSiblings           int64                     `json:"-"`
+	Timestamps                    [2]int64                  `json:"-"`
 }
 
 type CreateUnsNodeRedDto struct {
@@ -442,14 +442,14 @@ type FieldDefine struct {
 	Index       *string     `json:"index,optional,omitempty"`
 	DisplayName *string     `json:"displayName,optional,omitempty"`
 	Remark      *string     `json:"remark,optional,omitempty"`
-	MaxLen      *int        `json:"maxLen,optional,omitempty"`
+	MaxLen      *int        `json:"maxLen,optional,omitempty,string"`
 	TbValueName *string     `json:"tbValueName,optional,omitempty"`
 	Unit        *string     `json:"unit,optional,omitempty"`
 	UpperLimit  *float64    `json:"upperLimit,optional,omitempty"`
 	LowerLimit  *float64    `json:"lowerLimit,optional,omitempty"`
-	Decimal     *int        `json:"decimal,optional,omitempty"`
+	Decimal     *int        `json:"decimal,optional,omitempty,string"`
 	SystemField *bool       `json:"systemField,optional,omitempty"`
-	LastValue   interface{} `json:"-,optional"`
+	LastValue   string      `json:"-,optional"`
 	LastTime    int64       `json:"-,optional"`
 	Uns         interface{} `json:"-"`
 }

@@ -32,7 +32,7 @@ services:
       - edge_network
     restart: always
   uns:
-    image: eco-registry.supos.com/sup9bnlh/tier0-uns:1.0.0-R10
+    image: eco-registry.supos.com/sup9bnlh/tier0-uns:1.0.0-R11
     container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}

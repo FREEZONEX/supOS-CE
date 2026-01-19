@@ -397,11 +397,7 @@ func CreateTimeSeriesListDashboard(ctx context.Context, srcJdbcType types.SrcJdb
 	for i, topic := range topics {
 		columns := Fields2Columns(srcJdbcType, topic.Fields)
 		schema := "public"
-		table := topic.GetTable()
-		if dot := strings.Index(table, "."); dot > 0 {
-			schema = table[:dot]
-			table = table[dot+1:]
-		}
+		table := topic.Alias
 
 		// Panel's x-axis position
 		gridPosX := i * 8

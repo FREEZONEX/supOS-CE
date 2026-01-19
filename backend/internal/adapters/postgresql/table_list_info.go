@@ -1,7 +1,6 @@
 package postgresql
 
 import (
-	"backend/internal/types"
 	"backend/share/base"
 	"context"
 	"fmt"
@@ -19,6 +18,10 @@ type TableInfo struct {
 	FieldTypes map[string]string // 字段名到类型的映射
 }
 
+func (t *TableInfo) HasPK(pk string) bool {
+	_, has := t._pkSet[pk]
+	return has
+}
 func newTableInfo() *TableInfo {
 	return &TableInfo{
 		_pkSet:     make(map[string]byte),
@@ -31,15 +34,14 @@ type queryer interface {
 }
 
 // ListTableInfos 列出表信息
-func ListTableInfos(query queryer, topics []*types.CreateTopicDto) (map[string]*TableInfo, error) {
-	if topics == nil || len(topics) == 0 {
+func ListTableInfos(query queryer, tables []string) (map[string]*TableInfo, error) {
+	if tables == nil || len(tables) == 0 {
 		return make(map[string]*TableInfo), nil
 	}
 
 	// 按 schema 分组表名
 	schemaTables := make(map[string]map[string]bool)
-	for _, dto := range topics {
-		tableName := dto.GetTable()
+	for _, tableName := range tables {
 		dot := strings.Index(tableName, ".")
 
 		dbName := "public" // 默认 schema，根据实际情况调整

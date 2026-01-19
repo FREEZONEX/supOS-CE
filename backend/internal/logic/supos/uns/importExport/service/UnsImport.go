@@ -107,21 +107,25 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 
 	countUns, countErr := 0, 0
 	er := jsonstream.DecodeJsonTreeToFlat(pipeReader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
-		if prevReadSize != readSize {
-			if prevReadSize > readSize {
-				progress += 20 * float64(prevReadSize-readSize) / TOTAL_SIZE
-			} else {
-				newProgress := 20 * float64(readSize) / TOTAL_SIZE
-				if newProgress <= progress {
+		if prevReadSize < readSize {
+			newProgress := 20 * float64(readSize) / TOTAL_SIZE
+			if newProgress <= progress {
+				if progress < 80 {
 					if propName == prevTask {
-						progress += 2
+						progress += 1
 					} else {
-						progress += 20
+						if progress < 60 {
+							progress += 10
+						} else {
+							progress += 1
+						}
 						prevTask = propName
 					}
-				} else {
-					progress = newProgress
+				} else if progress < 90 {
+					progress += 0.01
 				}
+			} else if newProgress < 90 {
+				progress = newProgress
 			}
 			status := &common.RunningStatus{Code: 200, Task: propName}
 			status.SetProgress(progress)
@@ -154,9 +158,9 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 				Topics:     nodes,
 				FromImport: true,
 				StatusConsumer: func(status *common.RunningStatus) {
-					if progress < 80 {
+					if progress < 95 {
 						if status.Code > 0 {
-							if status.N != nil {
+							if status.N != nil && *status.N > 1 {
 								progress += 1 / float64(*status.N)
 							} else {
 								progress += 0.1
@@ -175,19 +179,6 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 				logErrImports(errTipMap, nodes, first, errBufWriter, errJsonEncoder)
 			}
 		}
-		if progress < 95 {
-			if propName == prevTask {
-				if readSize == FILE_SIZE {
-					progress += 1
-				}
-			} else {
-				progress += 20
-			}
-			progressStatus := &common.RunningStatus{Code: 200, Task: propName}
-			progressStatus.SetProgress(progress)
-			pushStatus(progressStatus)
-		}
-		prevTask = propName
 	}, func(errNode *FileData) {
 		first := errFile == nil
 		createErrorFile()

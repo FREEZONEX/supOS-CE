@@ -8,7 +8,7 @@ type TopicMessageConsumer interface {
 	OnMessageByAlias(ctx context.Context, alias, payload string)
 
 	// OnBatchMessage 处理批量消息
-	OnBatchMessage(ctx context.Context, payloads map[string]map[string]any)
+	OnBatchMessage(ctx context.Context, payloads map[string]map[string]string)
 
 	// OnMessageByAliasOnUpdate 处理vqt消息
 	OnMessageByAliasOnUpdate(ctx context.Context, aliasVqtMap map[string]string)

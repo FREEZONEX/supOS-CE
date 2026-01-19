@@ -101,17 +101,18 @@ export const handleTheme = async (keycloakUrl, lang) => {
     );
   };
 
-  // try {
-  //   const themeConfig = await request(`/inter-api/supos/theme/getConfig`);
-  //   if (themeConfig) {
-  //     updateDarkMode(themeConfig?.loginPageType, themeConfig);
-  //   } else {
-  //     useDefaultTheme();
-  //   }
-  //   document.body.style.opacity = 1;
-  // } catch (err) {
-  //   useDefaultTheme();
-  //   document.body.style.opacity = 1;
-  //   console.log(err);
-  // }
+  try {
+    // const themeConfig = await request(`/inter-api/supos/theme/getConfig`);
+    const themeConfig = false;
+    if (themeConfig) {
+      updateDarkMode(themeConfig?.loginPageType, themeConfig);
+    } else {
+      useDefaultTheme();
+    }
+    document.body.style.opacity = 1;
+  } catch (err) {
+    useDefaultTheme();
+    document.body.style.opacity = 1;
+    console.log(err);
+  }
 };
