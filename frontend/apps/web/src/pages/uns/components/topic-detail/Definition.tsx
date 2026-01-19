@@ -89,7 +89,9 @@ const Definition: FC<DefinitionProps> = ({ instanceInfo }) => {
           dataIndex: extendFieldUsed?.includes('decimal') ? 'decimal' : undefined,
           width: '20%',
           hidden: true,
-          render: (text: any) => <span style={{ color: 'var(--supos-theme-color)' }}>{text}</span>,
+          render: (text: any) => (
+            <span style={{ color: 'var(--supos-theme-color)' }}>{text === -1 || text === '-1' ? '' : text}</span>
+          ),
         },
       ].filter((item) => item.dataIndex)}
       dataSource={fields || []}
