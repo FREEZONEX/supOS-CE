@@ -11,8 +11,8 @@ type UnsRealtimeCalcService struct {
 
 func (c UnsRealtimeCalcService) TryCalculate(
 	defService serviceApi.IUnsDefinitionService,
-	def *types.CreateTopicDto,
-	data map[string]any) (calcDef *types.CreateTopicDto, calcData map[string]any, errMsg string) {
+	def *types.UnsDefinition,
+	data map[string]string) (calcDef *types.UnsDefinition, calcData map[string]string, errMsg string) {
 
 	if def == nil || len(def.RefUns) == 0 {
 		return

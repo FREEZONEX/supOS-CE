@@ -3,11 +3,11 @@ package serviceApi
 import "backend/internal/types"
 
 type IUnsDefinitionService interface {
-	GetDefinitionByAlias(alias string) *types.CreateTopicDto
-	GetDefinitionByPath(path string) *types.CreateTopicDto
-	GetDefinitionById(id int64) *types.CreateTopicDto
+	GetDefinitionByAlias(alias string) *types.UnsDefinition
+	GetDefinitionByPath(path string) *types.UnsDefinition
+	GetDefinitionById(id int64) *types.UnsDefinition
 
 	DeleteByIds(ids []int64) error
-	SaveBatch(list []*types.CreateTopicDto) error
-	DeleteBatch(list []*types.CreateTopicDto) error
+	SaveBatch(list []*types.UnsDefinition) error
+	DeleteBatch(list []*types.UnsDefinition) error
 }

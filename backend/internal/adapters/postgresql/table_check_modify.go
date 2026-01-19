@@ -119,7 +119,7 @@ func checkTableModify(dto types.UnsInfo, dbName string, tableName string, alterT
 
 // 获取无长度限制的类型定义
 func getTypeDefineWithoutLen(def *types.FieldDefine) string {
-	typeStr := getTypeDefineWithSerial(def, false)
+	typeStr := GetTypeDefineWithSerial(def, false)
 	typeStr = strings.ToLower(typeStr)
 
 	// 移除长度信息
@@ -132,11 +132,11 @@ func getTypeDefineWithoutLen(def *types.FieldDefine) string {
 
 // 获取类型定义
 func getTypeDefine(def *types.FieldDefine) string {
-	return getTypeDefineWithSerial(def, true)
+	return GetTypeDefineWithSerial(def, true)
 }
 
-// 获取类型定义（带序列处理）
-func getTypeDefineWithSerial(def *types.FieldDefine, procSerial bool) string {
+// GetTypeDefineWithSerial 获取类型定义（带序列处理）
+func GetTypeDefineWithSerial(def *types.FieldDefine, procSerial bool) string {
 	typeName := def.GetType()
 	typeStr := fieldType2DBTypeMap[typeName.Name()]
 

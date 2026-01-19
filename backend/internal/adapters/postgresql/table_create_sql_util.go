@@ -42,9 +42,7 @@ func getCreateTableSQL(isShareTable bool, tableName string, fields []*types.Fiel
 
 		if def.IsUnique() {
 			builder.Append(" NOT NULL ")
-		} else if strings.HasPrefix(typeStr, "timestamp") && name == constants.SysSaveTime {
-			builder.Append(" DEFAULT now() ")
-		} else if strings.HasPrefix(typeStr, "timestamp") && name == constants.SysFieldCreateTime {
+		} else if strings.HasPrefix(typeStr, "timestamp") && (name == constants.SysFieldCreateTime || name == constants.SysSaveTime) {
 			builder.Append(" DEFAULT now() ")
 		}
 

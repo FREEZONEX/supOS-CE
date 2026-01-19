@@ -3,7 +3,7 @@ package serviceApi
 import "backend/internal/types"
 
 type UnsData struct {
-	Uns  *types.CreateTopicDto
+	Uns  *types.UnsDefinition
 	Data []map[string]string
 }
 type DataSourceProperties struct {
@@ -25,7 +25,7 @@ type IPersistentService interface {
 	GetDataSourceProperties() DataSourceProperties
 
 	// FillLastRecord 填充最后一条记录
-	FillLastRecord(uns *types.CreateTopicDto)
+	FillLastRecord(uns *types.UnsDefinition)
 
 	Save(creates []types.UnsInfo) error
 	Remove(topics []types.UnsInfo) error

@@ -18,6 +18,10 @@ type TableInfo struct {
 	FieldTypes map[string]string // 字段名到类型的映射
 }
 
+func (t *TableInfo) HasPK(pk string) bool {
+	_, has := t._pkSet[pk]
+	return has
+}
 func newTableInfo() *TableInfo {
 	return &TableInfo{
 		_pkSet:     make(map[string]byte),

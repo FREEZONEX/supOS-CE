@@ -75,7 +75,7 @@ func (p *TsdbPersistentService) GetDataSourceProperties() (rs serviceApi.DataSou
 func (p *TsdbPersistentService) GetDataSrcId() types.SrcJdbcType {
 	return dsId
 }
-func (p *TsdbPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
+func (p *TsdbPersistentService) FillLastRecord(uns *types.UnsDefinition) {
 	query := func(ctx context.Context) (pgx.Rows, error) {
 		sql := base.StringBuilder{}
 		sql.Grow(256)

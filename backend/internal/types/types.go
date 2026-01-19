@@ -221,7 +221,6 @@ type CreateTopicDto struct {
 	ReferTable                    string                    `json:"referTable,optional,omitzero"`
 	RefFields                     []*FieldDefine            `json:"refFields,optional,omitzero"`
 	ReferModelID                  string                    `json:"referModelId,optional,omitzero"`
-	Cited                         map[int64]bool            `json:"-"`                        // Set of cited IDs
 	Refers                        []*InstanceField          `json:"refers,optional,omitzero"` // Calculation fields
 	Expression                    *string                   `json:"expression,optional,omitzero" validate:"max=255"`
 	CompileExpression             interface{}               `json:"-"`
@@ -450,7 +449,7 @@ type FieldDefine struct {
 	LowerLimit  *float64    `json:"lowerLimit,optional,omitempty"`
 	Decimal     *int        `json:"decimal,optional,omitempty,string"`
 	SystemField *bool       `json:"systemField,optional,omitempty"`
-	LastValue   interface{} `json:"-,optional"`
+	LastValue   string      `json:"-,optional"`
 	LastTime    int64       `json:"-,optional"`
 	Uns         interface{} `json:"-"`
 }

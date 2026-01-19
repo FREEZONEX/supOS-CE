@@ -31,7 +31,7 @@ func preprocess(unsData []serviceApi.UnsData) processResult {
 		return rs
 	}
 	tsDatas := &tsData{}
-	initFlags := make(map[int64]*types.CreateTopicDto, len(unsData))
+	initFlags := make(map[int64]*types.UnsDefinition, len(unsData))
 	columns := make(map[string]bool, 16)
 	for _, data := range unsData {
 		uns, list := data.Uns, data.Data
@@ -90,7 +90,7 @@ func preprocess(unsData []serviceApi.UnsData) processResult {
 	}
 	return rs
 }
-func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, map[string]string], unsMap map[int64]*types.CreateTopicDto) (rows [][]any) {
+func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, map[string]string], unsMap map[int64]*types.UnsDefinition) (rows [][]any) {
 	rows = make([][]any, 0, dataMap.Size())
 	dataMap.Range(func(key [2]int64, da map[string]string) {
 		uns := unsMap[key[0]]
@@ -114,6 +114,9 @@ func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, 
 				}
 			}
 			i := colIndexMap[name]
+			if i < 0 && fd.Name == qos { // uns定义的质量码字段和目前质量码环境变量名字不同的处理
+				i = colIndexMap[constants.QosField]
+			}
 			if i >= 0 {
 				if fd.Type == types.FieldTypeDatetime {
 					mill, _ := strconv.ParseFloat(v, 64)
@@ -129,7 +132,7 @@ func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, 
 	})
 	return rows
 }
-func (td *tsData) mergePut(uns *types.CreateTopicDto, timestamp int64, record map[string]string) {
+func (td *tsData) mergePut(uns *types.UnsDefinition, timestamp int64, record map[string]string) {
 	//计算uns 当前时间戳最大值
 	if timestamp > uns.Timestamps[0] {
 		uns.Timestamps[0] = timestamp

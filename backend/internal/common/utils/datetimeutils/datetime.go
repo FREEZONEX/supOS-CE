@@ -112,6 +112,24 @@ func ParseDate(datetime string) (time.Time, error) {
 
 	return time.Time{}, fmt.Errorf("unable to parse date: %s", datetime)
 }
+func ParseTimestamp(curT string) (ct int64) {
+	if len(curT) == 0 {
+		return -1
+	}
+	Double, err := strconv.ParseFloat(curT, 64)
+	if err != nil {
+		ct = -1
+		if dt, dtEr := ParseDate(curT); dtEr == nil && dt.Year() > 1970 {
+			ct = dt.UnixMilli()
+		}
+	} else {
+		ct = int64(Double)
+	}
+	if ct < 1100000000000 || ct > 11000000000001 {
+		return -1
+	}
+	return ct
+}
 
 // IsValidTime checks if the given value is a valid timestamp or datetime string.
 func IsValidTime(value any) bool {

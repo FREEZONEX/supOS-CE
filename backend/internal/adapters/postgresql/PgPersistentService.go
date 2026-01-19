@@ -70,7 +70,7 @@ func (p *PgPersistentService) GetDataSrcId() types.SrcJdbcType {
 }
 
 //	func (p *PgPersistentService) OnEventBatchCreateTableEvent7(evt *event.BatchCreateTableEvent) error {
-//		return onCreate(p.log, p.dbPool, p.currentSchema, dsId, evt)
+//		return onCreateTable(p.log, p.dbPool, p.currentSchema, dsId, evt)
 //	}
 //
 //	func (p *PgPersistentService) OnEventUpdateInstanceEvent7(evt *event.UpdateInstanceEvent) error {
@@ -81,7 +81,7 @@ func (p *PgPersistentService) OnEventRemoveTopicsEvent7(evt *event.RemoveTopicsE
 		return e
 	}))
 }
-func (p *PgPersistentService) FillLastRecord(uns *types.CreateTopicDto) {
+func (p *PgPersistentService) FillLastRecord(uns *types.UnsDefinition) {
 	FillLastRecord(p.log, uns, func(ctx context.Context) (pgx.Rows, error) {
 		return p.dbPool.Query(ctx, fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.Alias, uns.GetTimestampField()))
 	})
@@ -93,7 +93,7 @@ func (p *PgPersistentService) Remove(topics []types.UnsInfo) error {
 	return onRemove(p.log, p.dbPool, dsId, topics)
 }
 
-func FillLastRecord(log errLogger, uns *types.CreateTopicDto, query func(ctx context.Context) (pgx.Rows, error)) {
+func FillLastRecord(log errLogger, uns *types.UnsDefinition, query func(ctx context.Context) (pgx.Rows, error)) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, er := query(ctx)
@@ -121,12 +121,20 @@ func FillLastRecord(log errLogger, uns *types.CreateTopicDto, query func(ctx con
 				}
 			}
 			fd := uns.GetFieldDefines().FieldsMap
+			uns.Lock.Lock()
 			for i, f := range rows.FieldDescriptions() {
 				if field, has := fd[f.Name]; has {
-					field.LastValue = values[i]
+					value := values[i]
+					if field.Type == types.FieldTypeDatetime {
+						if tm, is := value.(time.Time); is {
+							value = tm.UnixMilli()
+						}
+					}
+					field.LastValue = fmt.Sprint(value)
 					field.LastTime = updateTime
 				}
 			}
+			uns.Lock.Unlock()
 		}
 	}
 }
@@ -150,6 +158,9 @@ func onCreate(log errLogger, dbPool *pgxpool.Pool, defaultSchema string, dataSrc
 		return er
 	}
 	defer conn.Release()
+	return doCreateTables(log, conn, defaultSchema, topics)
+}
+func doCreateTables(log errLogger, conn *pgxpool.Conn, defaultSchema string, topics []types.UnsInfo) error {
 	tableInfoMap, er := ListTableInfos(conn, base.Map[types.UnsInfo, string](topics, func(e types.UnsInfo) string {
 		return e.GetTable()
 	}))

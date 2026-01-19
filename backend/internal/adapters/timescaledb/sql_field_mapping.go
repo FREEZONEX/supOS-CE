@@ -171,6 +171,13 @@ var fieldTypeToPrefix = map[types.FieldType]string{
 	types.FieldTypeDatetime: "date",
 	types.FieldTypeString:   "str",
 }
+var prefixToFieldType = map[string]string{
+	"long":   types.FieldTypeLong,
+	"double": types.FieldTypeDouble,
+	"bool":   types.FieldTypeBoolean,
+	"date":   types.FieldTypeDatetime,
+	"str":    types.FieldTypeString,
+}
 
 // 字段类型到 PostgreSQL 数据类型的映射
 var fieldTypeToPgType = map[types.FieldType]string{

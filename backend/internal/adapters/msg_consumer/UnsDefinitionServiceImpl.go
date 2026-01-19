@@ -20,7 +20,7 @@ import (
 type UnsDefinitionService struct {
 	log                  logx.Logger
 	unsMapper            dao.UnsNamespaceRepo
-	cache                *cache.Cache // map[int64]*types.CreateTopicDto
+	cache                *cache.Cache // map[int64]*types.UnsDefinition
 	persistentServiceMap map[types.SrcJdbcType]serviceApi.IPersistentService
 }
 
@@ -34,20 +34,20 @@ func init() {
 const keyAliasPrev = "a:"
 const keyPathPrev = "p:"
 
-func (u *UnsDefinitionService) GetDefinitionByAlias(alias string) *types.CreateTopicDto {
+func (u *UnsDefinitionService) GetDefinitionByAlias(alias string) *types.UnsDefinition {
 	return u.getByAliasOrPath(keyAliasPrev, alias, u.unsMapper.GetByAlias)
 }
 
-func (u *UnsDefinitionService) GetDefinitionByPath(path string) *types.CreateTopicDto {
+func (u *UnsDefinitionService) GetDefinitionByPath(path string) *types.UnsDefinition {
 	return u.getByAliasOrPath(keyPathPrev, path, u.unsMapper.GetByPath)
 }
 
-func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.CreateTopicDto) {
+func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.UnsDefinition) {
 	c := u.cache
 	idStr := strconv.FormatInt(id, 10)
 	vu, exist := c.Get(idStr)
 	if exist && vu != nil {
-		rs = vu.(*types.CreateTopicDto)
+		rs = vu.(*types.UnsDefinition)
 	} else if !exist {
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
 		defer cancel()
@@ -70,14 +70,14 @@ func (u *UnsDefinitionService) DeleteByIds(ids []int64) error {
 	return nil
 }
 
-func (u *UnsDefinitionService) SaveBatch(list []*types.CreateTopicDto) error {
+func (u *UnsDefinitionService) SaveBatch(list []*types.UnsDefinition) error {
 	for _, v := range list {
 		u.invalidCache(v.Id, v.Alias, v.Path)
 	}
 	return nil
 }
 
-func (u *UnsDefinitionService) DeleteBatch(list []*types.CreateTopicDto) error {
+func (u *UnsDefinitionService) DeleteBatch(list []*types.UnsDefinition) error {
 	for _, v := range list {
 		u.invalidCache(v.Id, v.Alias, v.Path)
 	}
@@ -119,7 +119,7 @@ func (u *UnsDefinitionService) invalidCache(id int64, alias, path string) {
 	u.cache.Delete(keyAliasPrev + alias)
 	u.cache.Delete(keyPathPrev + path)
 }
-func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query func(db *gorm.DB, arg string) (*dao.UnsNamespace, error)) (rs *types.CreateTopicDto) {
+func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query func(db *gorm.DB, arg string) (*dao.UnsNamespace, error)) (rs *types.UnsDefinition) {
 	key := kPrev + arg
 	c := u.cache
 	idObj, has := c.Get(key)
@@ -139,20 +139,21 @@ func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query 
 	} else {
 		vu, exist := c.Get(idObj.(string))
 		if exist && vu != nil {
-			rs = vu.(*types.CreateTopicDto)
+			rs = vu.(*types.UnsDefinition)
 		}
 	}
 	return
 }
-func po2dto(po *dao.UnsNamespace) *types.CreateTopicDto {
+func po2dto(po *dao.UnsNamespace) *types.UnsDefinition {
 	rs := UnsConverter.Po2Dto(po)
 	fields := rs.Fields
+	def := &types.UnsDefinition{CreateTopicDto: *rs}
 	if len(fields) > 0 {
 		for _, field := range fields {
-			field.Uns = rs
+			field.Uns = def
 		}
 	}
-	return rs
+	return def
 }
 func (u *UnsDefinitionService) OnEventContextRefreshedEvent1(_ *event.ContextRefreshedEvent) {
 	u.persistentServiceMap = base.MapArrayToMap(spring.GetBeansOfType[serviceApi.IPersistentService](),
@@ -161,7 +162,7 @@ func (u *UnsDefinitionService) OnEventContextRefreshedEvent1(_ *event.ContextRef
 		})
 	types.UnsLastValueFill = u.fillUnsLastValue
 }
-func (u *UnsDefinitionService) fillUnsLastValue(uns *types.CreateTopicDto) {
+func (u *UnsDefinitionService) fillUnsLastValue(uns *types.UnsDefinition) {
 	// 查询数据库表最新的一条数据，填充字段的 lastValue
 	psv, has := u.persistentServiceMap[types.SrcJdbcType(uns.DataSrcID)]
 	if !has {
