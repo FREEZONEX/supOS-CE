@@ -3,11 +3,6 @@ import Layout from '@/layout';
 import Uns from '@/pages/uns';
 import Todo from '@/pages/todo';
 import GrafanaDesign from '@/pages/grafana-design';
-// import AppDisplay from '@/pages/app-management/AppDisplay';
-// import AppSpace from '@/pages/app-management/AppSpace';
-// import AppGUI from '@/pages/app-management/AppGUI';
-// import AppPreview from '@/pages/app-management/AppPreview';
-// import AppIframe from '@/pages/app-management/AppIframe';
 import NotFoundPage from '@/pages/not-found-Page/NotFoundPage';
 import NotPage from '@/pages/not-found-Page';
 import CollectionFlow from '@/pages/collection-flow';
@@ -207,13 +202,18 @@ export const childrenRoutes = [
     path: '/plugin-management',
     Component: PluginManagement,
   },
-  // 插件移到主项目
+  // 插件移到主项目 数据开放
   {
     path: '/OpenData',
     Component: OpenData,
-    handle: {
-      type: 'dev',
-    },
+  },
+  // app管理
+  {
+    path: '/AppManagement',
+    Component: PluginManagement,
+    // handle: {
+    //   type: 'dev',
+    // },
   },
   {
     path: '/403',

@@ -100,8 +100,16 @@ export const ButtonPermission = {
   'MenuConfiguration.deleteMenu': 'MenuConfiguration.deleteMenu',
   'MenuConfiguration.enabledMenu': 'MenuConfiguration.enabledMenu',
   // 数据开放
-  'OpenData.addKey': `OpenData.addKey`,
-  'OpenData.enable': `OpenData.enable`,
-  'OpenData.disable': `OpenData.disable`,
-  'OpenData.delete': `OpenData.delete`,
+  'OpenData.addKey': 'OpenData.addKey',
+  'OpenData.enable': 'OpenData.enable',
+  'OpenData.disable': 'OpenData.disable',
+  'OpenData.delete': 'OpenData.delete',
+  // app管理
+  'AppManagement.install': 'AppManagement.install',
+  'AppManagement.unInstall': 'AppManagement.unInstall',
+  'AppManagement.configUpdate': 'AppManagement.config_update',
+  'AppManagement.pause': 'AppManagement.pause',
+  'AppManagement.start': 'AppManagement.start',
+  'AppManagement.upload': 'AppManagement.upload',
+  'AppManagement.delete': 'AppManagement.delete',
 };
