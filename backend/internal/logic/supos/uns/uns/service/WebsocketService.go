@@ -398,37 +398,39 @@ func (s *WebsocketService) SendMessage(wsMsg serviceApi.WebsocketMessage) {
 		// Send by UNS ID
 		if sessionsVal, ok := s.idToSessionsMap.Load(unsId); ok {
 			sessions := sessionsVal.(*sync.Map)
-			msg := processWsMsg(wsMsg)
-			sessions.Range(func(key, value any) bool {
-				sessionId := key.(string)
-				if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
-					subscription := subscriptionVal.(*WsSubscription)
-					subscription.WriteLock.Lock()
-					defer subscription.WriteLock.Unlock()
-					if _, err := subscription.conn.Write(msg); err != nil {
-						logx.Errorf("fail to sendMessage to[%s], unsId=%d", sessionId, unsId)
+			onWsMsg(wsMsg, func(msg []byte) {
+				sessions.Range(func(key, value any) bool {
+					sessionId := key.(string)
+					if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
+						subscription := subscriptionVal.(*WsSubscription)
+						subscription.WriteLock.Lock()
+						defer subscription.WriteLock.Unlock()
+						if _, err := subscription.conn.Write(msg); err != nil {
+							logx.Errorf("fail to sendMessage to[%s], unsId=%d", sessionId, unsId)
+						}
 					}
-				}
-				return true
+					return true
+				})
 			})
+
 		}
 	} else if path != "" {
 		// Send by topic path
 		if sessionsVal, ok := s.topicToSessionsMap.Load(path); ok {
 			sessions := sessionsVal.(*sync.Map)
-			msg := processWsMsg(wsMsg)
-
-			sessions.Range(func(key, value any) bool {
-				sessionId := key.(string)
-				if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
-					subscription := subscriptionVal.(*WsSubscription)
-					subscription.WriteLock.Lock()
-					defer subscription.WriteLock.Unlock()
-					if _, err := subscription.conn.Write(msg); err != nil {
-						logx.Errorf("fail to sendMessage to[%s], topic=%s", sessionId, path)
+			onWsMsg(wsMsg, func(msg []byte) {
+				sessions.Range(func(key, value any) bool {
+					sessionId := key.(string)
+					if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
+						subscription := subscriptionVal.(*WsSubscription)
+						subscription.WriteLock.Lock()
+						defer subscription.WriteLock.Unlock()
+						if _, err := subscription.conn.Write(msg); err != nil {
+							logx.Errorf("fail to sendMessage to[%s], topic=%s", sessionId, path)
+						}
 					}
-				}
-				return true
+					return true
+				})
 			})
 		}
 	}
@@ -440,6 +442,25 @@ type TopicMessageInfo struct {
 	Data       map[string]any   `json:"data,omitempty"`
 	Dt         map[string]int64 `json:"dt,omitempty"`
 	Payload    string           `json:"payload,omitempty"`
+}
+
+func onWsMsg(message serviceApi.WebsocketMessage, consumer func([]byte)) {
+	needQueryDB := false
+	for _, f := range message.Def.Fields {
+		if f.LastTime < 1 {
+			needQueryDB = true
+			break
+		}
+	}
+	if needQueryDB {
+		go func() {
+			data := processWsMsg(message)
+			consumer(data)
+		}()
+	} else {
+		data := processWsMsg(message)
+		consumer(data)
+	}
 }
 
 func processWsMsg(message serviceApi.WebsocketMessage) []byte {

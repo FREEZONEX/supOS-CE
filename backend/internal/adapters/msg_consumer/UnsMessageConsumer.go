@@ -225,6 +225,7 @@ func setLastData(ctx context.Context, list []map[string]string, def *types.UnsDe
 	mergeTime := def.GetSrcJdbcType().TypeCode() == constants.TimeSequenceType
 	if mergeTime {
 		var prevBean map[string]string
+		prevTime := int64(-1)
 		def.Lock.RLock()
 		for _, f := range def.Fields {
 			lv := f.LastValue
@@ -233,11 +234,14 @@ func setLastData(ctx context.Context, list []map[string]string, def *types.UnsDe
 					prevBean = make(map[string]string, 8)
 				}
 				prevBean[f.Name] = lv
+				if f.Name == CT {
+					prevTime = datetimeutils.ParseTimestamp(lv)
+				}
 			}
 		}
 		def.Lock.RUnlock()
 
-		mergeList := mergeBeansWithTimestamp(ctx, list, CT, now, prevBean)
+		mergeList := mergeBeansWithTimestamp(ctx, list, CT, prevTime, now, prevBean)
 		if len(mergeList) == 0 {
 			logx.Errorf("合并数据出问题[ %s ]: %+v\n", def.Alias, list)
 			return list
@@ -266,7 +270,7 @@ func setLastData(ctx context.Context, list []map[string]string, def *types.UnsDe
 	return list
 }
 
-func mergeBeansWithTimestamp(ctx context.Context, list []map[string]string, CT string, nowMills int64, prevBean map[string]string) []map[string]string {
+func mergeBeansWithTimestamp(ctx context.Context, list []map[string]string, CT string, prevTime, nowMills int64, prevBean map[string]string) []map[string]string {
 	defer func() {
 		if err := recover(); err != nil {
 			payload := ctx.Value("payload")
@@ -275,12 +279,6 @@ func mergeBeansWithTimestamp(ctx context.Context, list []map[string]string, CT s
 		}
 	}()
 
-	prevTime := int64(-1)
-	if len(prevBean) > 0 {
-		if ct, has := prevBean[CT]; has {
-			prevTime = datetimeutils.ParseTimestamp(ct)
-		}
-	}
 	now := strconv.FormatInt(nowMills, 10)
 	mergeList := make([]map[string]string, 0, len(list))
 	for _, vm := range list {

@@ -7,6 +7,7 @@ require (
 	gitee.com/unitedrhino/share v1.5.53
 	github.com/buger/jsonparser v1.1.1
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/expr-lang/expr v1.17.6
 	github.com/go-resty/resty/v2 v2.7.0

@@ -93,7 +93,11 @@ func keysMatch(m map[string]string, expectedKeys map[string]bool) bool {
 const SYS_FIELD_CREATE_TIME = "timeStamp"
 
 func mergeBeansWithCT(list []map[string]string, prevBean map[string]string) []map[string]string {
-	return mergeBeansWithTimestamp(context.Background(), list, SYS_FIELD_CREATE_TIME, time.Now().UnixMilli(), prevBean)
+	var prevTime = int64(-1)
+	if len(prevBean) > 0 {
+		prevTime = datetimeutils.ParseTimestamp(prevBean[SYS_FIELD_CREATE_TIME])
+	}
+	return mergeBeansWithTimestamp(context.Background(), list, SYS_FIELD_CREATE_TIME, prevTime, time.Now().UnixMilli(), prevBean)
 }
 
 func TestLogPanic(t *testing.T) {

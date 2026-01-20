@@ -71,8 +71,8 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	}
 	return nil
 }
-func column2uns(cols []string, reference *types.UnsDefinition) *types.CreateTopicDto {
-	var uns = &types.CreateTopicDto{Fields: make([]*types.FieldDefine, 0, 32), TableName: "uns_timeserial",
+func column2uns(cols []string, reference *types.UnsDefinition) *types.UnsDefinition {
+	var uns = types.CreateTopicDto{Fields: make([]*types.FieldDefine, 0, 32), TableName: "uns_timeserial",
 		DataSrcID: types.SrcJdbcTypeTimeScaleDB.Id()}
 	for _, col := range cols {
 		fd := &types.FieldDefine{
@@ -88,9 +88,9 @@ func column2uns(cols []string, reference *types.UnsDefinition) *types.CreateTopi
 
 		uns.Fields = append(uns.Fields, fd)
 	}
-	return uns
+	return &types.UnsDefinition{CreateTopicDto: uns}
 }
-func copyAndMergeFromTempTable(conn *pgxpool.Conn, uns *types.CreateTopicDto, defaultSchema string, params copyParams) error {
+func copyAndMergeFromTempTable(conn *pgxpool.Conn, uns *types.UnsDefinition, defaultSchema string, params copyParams) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*15)
 	defer cancel()
 	tx, err := conn.Begin(ctx)
@@ -146,7 +146,7 @@ func copyAndMergeFromTempTable(conn *pgxpool.Conn, uns *types.CreateTopicDto, de
 	// 4. 提交事务，提交时临时表自动销毁
 	return tx.Commit(ctx)
 }
-func fixTable(conn *pgxpool.Conn, uns *types.CreateTopicDto) error {
+func fixTable(conn *pgxpool.Conn, uns *types.UnsDefinition) error {
 	info, er := postgresql.ListTableInfos(conn, []string{uns.TableName})
 	if er != nil {
 		return er
@@ -241,7 +241,7 @@ func copyDataToTable(ctx context.Context, conn copyFromer, tableName string, par
 	return err
 }
 
-func mergeFromTempTable(ctx context.Context, conn pgx.Tx, uns *types.CreateTopicDto, tempTableName string) error {
+func mergeFromTempTable(ctx context.Context, conn pgx.Tx, uns *types.UnsDefinition, tempTableName string) error {
 	primaryFields := uns.GetPrimaryField()
 	// 合并数据SQL
 	mergeSQL := &base.StringBuilder{}
