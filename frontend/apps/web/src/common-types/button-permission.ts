@@ -99,4 +99,9 @@ export const ButtonPermission = {
   'MenuConfiguration.editMenu': 'MenuConfiguration.editMenu',
   'MenuConfiguration.deleteMenu': 'MenuConfiguration.deleteMenu',
   'MenuConfiguration.enabledMenu': 'MenuConfiguration.enabledMenu',
+  // 数据开放
+  'OpenData.addKey': `OpenData.addKey`,
+  'OpenData.enable': `OpenData.enable`,
+  'OpenData.disable': `OpenData.disable`,
+  'OpenData.delete': `OpenData.delete`,
 };

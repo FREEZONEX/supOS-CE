@@ -1113,6 +1113,25 @@ const messages = {
   'MenuConfiguration.guideRefreshMenu': '刷新整个菜单结构',
   'MenuConfiguration.guideSortMenu': '快速进行菜单排序',
   'MenuConfiguration.menu': '菜单',
+  // 数据开放
+  'OpenData.appSceretKey': '密钥',
+  'OpenData.creationTime': '创建时间',
+  'OpenData.status': '状态',
+  'OpenData.start': '启用',
+  'OpenData.disable': '禁用',
+  'OpenData.operation': '操作',
+  'OpenData.delete': '删除',
+  'OpenData.builtIn': '内置',
+  'OpenData.newSuccessfullyAdded': '新增成功',
+  'OpenData.disabledSuccessfully': '禁用成功',
+  'OpenData.startSuccessfully': '启用成功',
+  'OpenData.deleteConfirm': '您确认要删除吗？',
+  'OpenData.deleteSuccessfully': '删除成功',
+  'OpenData.openData': '数据开放',
+  'OpenData.newKey': '新增密钥',
+  'OpenData.apiList': '接口清单',
+  'OpenData.addKey': '新增密钥',
+  'OpenData.enable': '启用',
 };
 
 export default messages;

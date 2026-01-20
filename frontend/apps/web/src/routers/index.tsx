@@ -27,6 +27,7 @@ import Share from '@/pages/share';
 import EventFlow from '@/pages/event-flow';
 import EventFlowPreview from '@/pages/event-flow/FlowPreview.tsx';
 import PluginManagement from '@/pages/plugin-management';
+import OpenData from '@/pages/open-data';
 import qs from 'qs';
 import { useEffect } from 'react';
 import { useBaseStore } from '@/stores/base';
@@ -205,6 +206,14 @@ export const childrenRoutes = [
   {
     path: '/plugin-management',
     Component: PluginManagement,
+  },
+  // 插件移到主项目
+  {
+    path: '/OpenData',
+    Component: OpenData,
+    handle: {
+      type: 'dev',
+    },
   },
   {
     path: '/403',
