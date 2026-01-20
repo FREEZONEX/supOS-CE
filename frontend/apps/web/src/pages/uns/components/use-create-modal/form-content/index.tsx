@@ -485,7 +485,7 @@ const FormContent: FC<FormContentProps> = ({
               title: formatMessage('uns.aliasTooltip'),
             },
           },
-          childProps: { disabled: true },
+          childProps: {},
         },
         {
           formType: 'input',

@@ -60,8 +60,8 @@ const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
 
   useEffect(() => {
     if (locationTreeMap) {
+      // 点击logo过来的需要跳到overview页
       setTreeMap(true);
-      loadData({ reset: true });
       changeCurrentPath();
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -168,7 +168,6 @@ const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
 };
 
 const WrapperModule: FC<PageProps> = ({ location }) => {
-  console.log(location);
   return (
     <TreeStoreProvider>
       <UnsContextProvider>
