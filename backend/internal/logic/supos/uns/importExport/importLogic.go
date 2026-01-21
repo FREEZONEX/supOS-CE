@@ -4,13 +4,14 @@ import (
 	"backend/internal/logic/supos/uns/importExport/service"
 	"backend/share/spring"
 	"io"
+	"strings"
 )
 
-func Import(fileName string, fileSize int64, resp io.Writer) (w io.Writer, waiter func()) {
+func Import(fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
 	unsImportService := spring.GetBean[*service.UnsImportExportService]()
-	return unsImportService.ImportUns(fileName, fileSize, resp)
-}
-func ImportUnsByReader(fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
-	unsImportService := spring.GetBean[*service.UnsImportExportService]()
-	unsImportService.ImportUnsDirect(fileName, fileSize, respWriter, reader)
+	if strings.HasSuffix(fileName, ".zip") {
+		unsImportService.ImportGlobal(fileName, fileSize, respWriter, reader)
+	} else if strings.HasSuffix(fileName, ".json") {
+		unsImportService.Import(fileName, fileSize, respWriter, reader)
+	}
 }

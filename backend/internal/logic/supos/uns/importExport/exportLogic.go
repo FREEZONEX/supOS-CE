@@ -31,5 +31,9 @@ func NewExportLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ExportLogi
 }
 
 func (l *ExportLogic) Export(w http.ResponseWriter, req *types.ExportReq) (*types.BaseResult, error) {
-	return spring.GetBean[*service.UnsImportExportService]().Export(l.ctx, w, req)
+	serv := spring.GetBean[*service.UnsImportExportService]()
+	if req.SrcFlowExportParam != nil || req.EventFlowExportParam != nil || req.DashboardExportParam != nil {
+		return serv.ExportGlobal(l.ctx, w, req)
+	}
+	return serv.Export(l.ctx, w, req)
 }

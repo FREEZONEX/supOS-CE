@@ -23,5 +23,5 @@ func ImportHandler(w http.ResponseWriter, r *http.Request) {
 		httpx.ErrorCtx(r.Context(), w, err)
 		return
 	}
-	importExport.ImportUnsByReader(req.FileName, req.Size, w, req.Reader)
+	importExport.Import(req.FileName, req.Size, w, req.Reader)
 }

@@ -292,6 +292,12 @@ type DashboardDto struct {
 	CreateTime  string `json:"createTime,optional,omitzero"`
 }
 
+type DashboardExportParam struct {
+	GroupIds   []string `json:"gids,string,optional,omitempty,omitzero"`
+	DashIds    []string `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string   `json:"exportType,optional,omitempty,omitzero"`
+}
+
 type DashboardPageResp struct {
 	PageResultDTO
 	Data []DashboardDto `json:"data"`
@@ -370,6 +376,12 @@ type EventFlowDeployReq struct {
 	Flows []map[string]interface{} `json:"flows,optional"`
 }
 
+type EventFlowExportParam struct {
+	GroupIds   []int64 `json:"gids,string,optional,omitempty,omitzero"`
+	FlowIds    []int64 `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+}
+
 type EventFlowInfo struct {
 	ID          string `json:"id,optional"`
 	FlowName    string `json:"flowName,optional"`
@@ -416,13 +428,16 @@ type ExportPathResult struct {
 }
 
 type ExportReq struct {
-	CheckSmallFile *bool   `json:"checkSmallFile,optional,omitempty,omitzero"`
-	UserId         string  `json:"userId,optional,omitempty,omitzero"`
-	Language       string  `json:"language,optional,omitempty,omitzero"`
-	ExportType     string  `json:"exportType,optional,omitempty,omitzero"`
-	FileType       string  `json:"fileType,optional,omitempty,omitzero"`
-	Folders        []int64 `json:"folders,string,optional,omitempty,omitzero"`
-	Files          []int64 `json:"files,string,optional,omitempty,omitzero"`
+	CheckSmallFile       *bool                  `json:"checkSmallFile,optional,omitempty,omitzero"`
+	UserId               string                 `json:"userId,optional,omitempty,omitzero"`
+	Language             string                 `json:"language,optional,omitempty,omitzero"`
+	ExportType           string                 `json:"exportType,optional,omitempty,omitzero"`
+	FileType             string                 `json:"fileType,optional,omitempty,omitzero"`
+	Folders              []int64                `json:"folders,string,optional,omitempty,omitzero"`
+	Files                []int64                `json:"files,string,optional,omitempty,omitzero"`
+	SrcFlowExportParam   *SourceFlowExportParam `json:"sourceFlowExportParam,optional,omitzero"`
+	EventFlowExportParam *EventFlowExportParam  `json:"eventFlowExportParam,optional,omitzero"`
+	DashboardExportParam *DashboardExportParam  `json:"dashboardExportParam,optional,omitzero"`
 }
 
 type ExportResp struct {
@@ -1062,6 +1077,12 @@ type SourceFlowDeployReq struct {
 type SourceFlowDeployResult struct {
 	FlowID  string `json:"flowId,optional"`
 	Version string `json:"version,optional"`
+}
+
+type SourceFlowExportParam struct {
+	GroupIds   []int64 `json:"gids,string,optional,omitempty,omitzero"`
+	FlowIds    []int64 `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
 }
 
 type SourceFlowInfo struct {

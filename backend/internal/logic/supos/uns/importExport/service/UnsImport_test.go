@@ -1,14 +1,44 @@
 package service
 
 import (
+	"archive/zip"
 	"backend/internal/logic/supos/uns/importExport/service/jsonstream"
 	"backend/internal/types"
 	"bytes"
 	"encoding/json"
+	"io"
 	"os"
 	"testing"
 )
 
+func TestZip(t *testing.T) {
+	// 打开ZIP文件
+	zipPath := "F:\\download\\HKXexport_260120.zip"
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		panic(err)
+	}
+	defer r.Close()
+
+	// 遍历ZIP中的所有文件和目录
+	for _, f := range r.File {
+		// 打印文件信息
+		t.Logf("文件名: %s\n", f.Name)
+		t.Logf("压缩大小: %d\n", f.CompressedSize64)
+		t.Logf("未压缩大小: %d\n", f.UncompressedSize64)
+		t.Logf("是否为目录: %v\n", f.FileInfo().IsDir())
+		rd, er := f.Open()
+		if er != nil {
+			t.Error(er)
+		} else {
+			bs, _ := io.ReadAll(rd)
+			rd.Close()
+			t.Logf("size=%d,%d, 内容：\n%s", f.UncompressedSize64, len(bs), string(bs))
+		}
+		t.Log("---")
+	}
+
+}
 func TestImportFile(t *testing.T) {
 	file, er := os.Open("F:\\data\\uns-uat.json")
 	if er != nil {
