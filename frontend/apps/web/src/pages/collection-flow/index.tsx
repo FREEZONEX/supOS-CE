@@ -1,12 +1,24 @@
 import { type FC, useState } from 'react';
-import { App, Button, Empty, Flex, Form, Pagination, Segmented, Tag } from 'antd';
+import { App, Breadcrumb, Button, Empty, Flex, Form, Pagination, Segmented, Tag } from 'antd';
 import { useNavigate } from 'react-router';
 import { addFlow, copyFlow, deleteFlow, editFlow, flowPage, markFlow, unmarkFlow } from '@/apis/inter-api/flow';
 import { usePagination, useTranslate } from '@/hooks';
 import type { PageProps } from '@/common-types';
 import { useActivate } from '@/contexts/tabs-lifecycle-context';
 import { ButtonPermission } from '@/common-types/button-permission.ts';
-import { ConnectSource, CopyFile, Edit, Grid, List, Search, TrashCan } from '@carbon/icons-react';
+import {
+  ConnectSource,
+  CopyFile,
+  Edit,
+  // FlowData,
+  Folder,
+  FolderAdd,
+  Grid,
+  List,
+  Search,
+  TrashCan,
+  Undo,
+} from '@carbon/icons-react';
 import ComDrawer from '@/components/com-drawer';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
@@ -22,6 +34,7 @@ import ProCard from '../../components/pro-card/ProCard.tsx';
 import SecondaryList from '../../components/pro-card/SecondaryList.tsx';
 import { hasPermission } from '@/utils/auth.ts';
 import { formatTimestamp } from '@/utils/format.ts';
+import useFormModal from '@/components/business/useFormModal.tsx';
 
 const CollectionFlow: FC<PageProps> = ({ title }) => {
   const { modal, message } = App.useApp();
@@ -227,6 +240,27 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
       return record?.mark !== 1;
     },
   };
+  const { openFormModal, FormModalDom } = useFormModal({
+    onSave: () => {},
+    formItemOptions: () => [
+      {
+        name: 'name',
+        label: formatMessage('common.name'),
+        properties: {
+          placeholder: formatMessage('common.commonPlaceholder'),
+          allowClear: true,
+        },
+      },
+      {
+        name: 'description',
+        label: formatMessage('uns.description'),
+        properties: {
+          placeholder: formatMessage('common.commonPlaceholder'),
+          allowClear: true,
+        },
+      },
+    ],
+  });
   return (
     <ComLayout loading={loading}>
       <ComContent
@@ -249,6 +283,13 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
               form={searchForm}
               formItemOptions={[
                 {
+                  type: 'Filter',
+                  name: 'type',
+                  properties: {
+                    placeholder: formatMessage('common.searchPlaceholder'),
+                  },
+                },
+                {
                   name: 'k',
                   properties: {
                     prefix: <Search />,
@@ -267,13 +308,24 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                 setSearchParams(searchForm.getFieldsValue());
               }}
             />
+            <AuthButton auth={ButtonPermission['SourceFlow.add']} type="primary" onClick={openFormModal}>
+              <FolderAdd />
+              {formatMessage('common.newGroup')}
+            </AuthButton>
             <AuthButton auth={ButtonPermission['SourceFlow.add']} type="primary" onClick={onAddHandle}>
               + {formatMessage('collectionFlow.newFlow')}
             </AuthButton>
           </>
         }
       >
-        <Flex justify="flex-end" align="center" style={{ marginBottom: 16, marginTop: 16, paddingRight: 16 }}>
+        <Flex justify="space-between" align="center" style={{ marginBottom: 16, marginTop: 16, padding: '0 16px' }}>
+          <Flex align="center" gap={16}>
+            <Button size="small" style={{ background: 'var(--supos-switchwrap-bg-color)' }}>
+              <Undo />
+              {formatMessage('common.back')}
+            </Button>
+            <Breadcrumb items={[{ title: 'sample' }]} />
+          </Flex>
           <Segmented
             size="small"
             value={mode}
@@ -307,6 +359,15 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                     <ProCard
                       key={d?.id}
                       header={{
+                        customIconBg: '#A8A8A8',
+                        customIcon: (
+                          <Flex align="center" justify="center">
+                            <Folder size="28" style={{ color: 'white' }} />
+                          </Flex>
+                          // <Flex align="center" justify="center">
+                          //   <FlowData size="28" />
+                          // </Flex>
+                        ),
                         title: d.flowName,
                         titleDescription: formatTimestamp(d?.createTime),
                         onClick: hasPermission(ButtonPermission['SourceFlow.design'])
@@ -338,6 +399,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                           </Tag>
                         ),
                         pinOptions,
+                        actions,
                       }}
                       description={d?.description}
                       secondaryDescription={
@@ -358,7 +420,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                           ]}
                         />
                       }
-                      actions={actions}
+                      // actions={actions}
                       item={d}
                     />
                   );
@@ -379,12 +441,25 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     titleIntlId: 'common.name',
                     dataIndex: 'flowName',
-                    width: '20%',
+                    width: '14%',
                     sorter: true,
                     render: (text: any, item: any) => {
                       const hasDesign = hasPermission(ButtonPermission['SourceFlow.design']);
                       return (
-                        <>
+                        <Flex gap={8} align="center">
+                          <Flex
+                            style={{
+                              borderRadius: 3,
+                              // backgroundColor: 'var(--supos-image-card-color)',
+                              backgroundColor: '#A8A8A8',
+                              padding: 6,
+                              height: 26,
+                            }}
+                          >
+                            <Flex align="center" justify="center">
+                              <Folder size="14" style={{ color: 'white' }} />
+                            </Flex>
+                          </Flex>
                           {hasDesign ? (
                             <Button
                               className="table-link-button"
@@ -401,20 +476,28 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                           ) : (
                             text
                           )}
-                          {item.flowStatus && (
-                            <Tag
-                              style={{ borderRadius: 15, lineHeight: '16px', margin: 0 }}
-                              bordered={false}
-                              color={
-                                (runStatusOptions?.find((f: any) => f.value === item.flowStatus)?.bgType ||
-                                  'red') as any
-                              }
-                            >
-                              {titleStatehandle(item)}
-                            </Tag>
-                          )}
-                        </>
+                        </Flex>
                       );
+                    },
+                  },
+                  {
+                    title: () => formatMessage('common.status'),
+                    dataIndex: 'flowStatus',
+                    width: '8%',
+                    render: (flowStatus: any, item: any) => {
+                      if (flowStatus) {
+                        return (
+                          <Tag
+                            style={{ borderRadius: 15, lineHeight: '16px', margin: 0 }}
+                            bordered={false}
+                            color={(runStatusOptions?.find((f: any) => f.value === flowStatus)?.bgType || 'red') as any}
+                          >
+                            {titleStatehandle(item)}
+                          </Tag>
+                        );
+                      } else {
+                        return null;
+                      }
                     },
                   },
                   {
@@ -485,6 +568,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           formItemOptions={formItemOptions(isEdit)}
         />
       </ComDrawer>
+      {FormModalDom}
     </ComLayout>
   );
 };

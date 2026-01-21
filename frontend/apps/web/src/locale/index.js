@@ -784,6 +784,8 @@ const messages = {
   'common.edit': '编辑',
   'common.todo': '待办中心',
   'common.all': '全部',
+  'common.file': '文件',
+  'common.group': '分组',
   'common.toDo': '待办中心',
   'common.completed': '已办',
   'common.myCompletedList': '我的已办',
@@ -968,6 +970,7 @@ const messages = {
   'common.uploadFile': '上传文件',
   'common.SpecialCharacterValidation': '不支持特殊字符：{rule}',
   'common.dashboardNotFound': '数据看板不存在',
+  'common.newFolder': '新增分组',
 
   // 按钮国际化
   'Namespace.uns_import': 'UNS-导入',

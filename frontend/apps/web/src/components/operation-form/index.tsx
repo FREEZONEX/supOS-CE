@@ -71,11 +71,11 @@ const OperationForm: FC<OperationFormProps> = ({
         <Flex gap="10px" justify="end">
           <Button
             style={{
+              flex: 1,
+              minWidth: 0,
               ...buttonStyle,
               backgroundColor: 'var(--supos-uns-button-color)',
               color: 'var(--supos-text-color)',
-              flex: 1,
-              minWidth: 0,
             }}
             color="default"
             variant="filled"
@@ -87,9 +87,9 @@ const OperationForm: FC<OperationFormProps> = ({
           </Button>
           <Button
             style={{
-              ...buttonStyle,
               flex: 1,
               minWidth: 0,
+              ...buttonStyle,
             }}
             type="primary"
             variant="solid"
