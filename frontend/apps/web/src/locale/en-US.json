@@ -930,6 +930,7 @@
   "common.SpecialCharacterValidation": "No special characters allowed：{rule}",
   "common.dashboardNotFound": "No data dashboard found.",
   "common.newGroup": "New Group",
+  "common.others": "Others",
   "Namespace.uns_import": "UNS-Import",
   "Namespace.uns_export": "UNS-Export",
   "Namespace.uns_batch_generation": "UNS-Batch Generation",

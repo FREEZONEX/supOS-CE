@@ -930,6 +930,7 @@
   "common.SpecialCharacterValidation": "不支持特殊字符：{rule}",
   "common.dashboardNotFound": "数据看板不存在",
   "common.newGroup": "新增分组",
+  "common.others": "其他",
   "Namespace.uns_import": "UNS-导入",
   "Namespace.uns_export": "UNS-导出",
   "Namespace.uns_batch_generation": "UNS-批量生成",

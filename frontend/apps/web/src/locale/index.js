@@ -970,7 +970,8 @@ const messages = {
   'common.uploadFile': '上传文件',
   'common.SpecialCharacterValidation': '不支持特殊字符：{rule}',
   'common.dashboardNotFound': '数据看板不存在',
-  'common.newFolder': '新增分组',
+  'common.newGroup': '新增分组',
+  'common.others': '其他',
 
   // 按钮国际化
   'Namespace.uns_import': 'UNS-导入',
