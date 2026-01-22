@@ -566,6 +566,43 @@ type GlobalTopologyData struct {
 	MountStatus          map[string]string `json:"mountStatus"`          // Mount status by alias
 }
 
+type GroupBatchDeleteReq struct {
+	IDs []int64 `json:"ids"`
+}
+
+type GroupByTypeQuery struct {
+	Type int16 `form:"type"`
+	PageInfo
+}
+
+type GroupIDReq struct {
+	ID int64 `path:"id"`
+}
+
+type GroupQuery struct {
+	Type *int16  `form:"type,optional"`
+	Name *string `form:"name,optional"`
+	PageInfo
+}
+
+type GroupVO struct {
+	ID          int64  `json:"id"`
+	Type        *int16 `json:"type,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	UpdateAt    string `json:"updateAt,optional"`
+	CreateAt    string `json:"createAt,optional"`
+}
+
+type GroupPageResultVO struct {
+	PageNo   int64     `json:"pageNo"`
+	PageSize int64     `json:"pageSize"`
+	Total    int64     `json:"total"`
+	Code     int64     `json:"code"`
+	Data     []GroupVO `json:"data"`
+}
+
 type HistoryValueRequest struct {
 }
 
@@ -971,6 +1008,14 @@ type RouteListResp struct {
 	Code int             `json:"code"`
 	Msg  string          `json:"msg"`
 	Data []SimpleRouteVO `json:"data"`
+}
+
+type SaveGroupReq struct {
+	ID          *int64  `json:"id,string,optional"`
+	Type        *int16  `json:"type,optional"`
+	Name        *string `json:"name,optional"`
+	Description *string `json:"description,optional"`
+	Sort        *int32  `json:"sort,optional"`
 }
 
 type SaveMenuReq struct {

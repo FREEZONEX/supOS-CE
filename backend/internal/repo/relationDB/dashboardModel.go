@@ -16,6 +16,7 @@ type DashboardModel struct {
 	UpdateTime  time.Time `gorm:"column:update_time;autoUpdateTime" json:"updateTime"`
 	CreateTime  time.Time `gorm:"column:create_time;autoCreateTime" json:"createTime"`
 	Error       string    `gorm:"-" json:"error,omitzero"` // 不存储在数据库中
+	GroupId     int64     `gorm:"column:group_id" json:"groupId"`
 }
 
 // TableName 返回表名

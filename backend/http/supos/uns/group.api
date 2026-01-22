@@ -1,0 +1,84 @@
+info(
+    title: "Group Management"
+    desc: "Manage resource groups"
+    author: "System Generated"
+    version: "v1"
+)
+
+@server(
+    group: supos/group
+    prefix: /inter-api/supos/group
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "查询组列表"
+    @handler get
+    get / (GroupQuery) returns ([]GroupVO)
+
+    @doc "根据类型查询组列表"
+    @handler getByType
+    get /by-type (GroupByTypeQuery) returns (GroupPageResultVO)
+
+    @doc "创建组"
+    @handler post
+    post / (SaveGroupReq) returns (CommonResp)
+
+    @doc "更新组"
+    @handler put
+    put / (SaveGroupReq) returns ()
+
+    @doc "根据ID删除组"
+    @handler delete
+    delete /:id (GroupIDReq) returns ()
+
+    @doc "批量删除组"
+    @handler batchDelete
+    delete /batch (GroupBatchDeleteReq) returns ()
+}
+
+type (
+    GroupQuery {
+        Type *int16 `form:"type,optional"`
+        Name *string `form:"name,optional"`
+        PageInfo
+    }
+
+    GroupByTypeQuery {
+        Type int16 `form:"type"`
+        PageInfo
+    }
+
+    GroupVO {
+        ID          int64  `json:"id"`
+        Type        *int16 `json:"type,optional"`
+        Name        string `json:"name"`
+        Description string `json:"description,optional"`
+        Sort        int32  `json:"sort,optional"`
+        UpdateAt    string `json:"updateAt,optional"`
+        CreateAt    string `json:"createAt,optional"`
+    }
+
+    GroupPageResultVO {
+        PageNo   int64       `json:"pageNo"`
+        PageSize int64       `json:"pageSize"`
+        Total    int64       `json:"total"`
+        Code     int64       `json:"code"`
+        Data     []GroupVO   `json:"data"`
+    }
+
+    SaveGroupReq {
+        ID          *int64  `json:"id,string,optional"`
+        Type        *int16  `json:"type,optional"`
+        Name        *string `json:"name,optional"`
+        Description *string `json:"description,optional"`
+        Sort        *int32  `json:"sort,optional"`
+    }
+
+    GroupIDReq {
+        ID int64 `path:"id"`
+    }
+
+    GroupBatchDeleteReq {
+        IDs []int64 `json:"ids"`
+    }
+)

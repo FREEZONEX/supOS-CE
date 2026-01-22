@@ -12,6 +12,7 @@ import (
 	suposeventflowservice_api "backend/internal/handler/supos/eventflow/service_api"
 	suposexample "backend/internal/handler/supos/example"
 	suposglobal "backend/internal/handler/supos/global"
+	suposgroup "backend/internal/handler/supos/group"
 	suposi18n "backend/internal/handler/supos/i18n"
 	suposkong "backend/internal/handler/supos/kong"
 	suposmenu "backend/internal/handler/supos/menu"
@@ -254,6 +255,51 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/global"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 查询组列表
+					Method:  http.MethodGet,
+					Path:    "/",
+					Handler: suposgroup.GetHandler(serverCtx),
+				},
+				{
+					// 创建组
+					Method:  http.MethodPost,
+					Path:    "/",
+					Handler: suposgroup.PostHandler(serverCtx),
+				},
+				{
+					// 更新组
+					Method:  http.MethodPut,
+					Path:    "/",
+					Handler: suposgroup.PutHandler(serverCtx),
+				},
+				{
+					// 根据ID删除组
+					Method:  http.MethodDelete,
+					Path:    "/:id",
+					Handler: suposgroup.DeleteHandler(serverCtx),
+				},
+				{
+					// 批量删除组
+					Method:  http.MethodDelete,
+					Path:    "/batch",
+					Handler: suposgroup.BatchDeleteHandler(serverCtx),
+				},
+				{
+					// 根据类型查询组列表
+					Method:  http.MethodGet,
+					Path:    "/by-type",
+					Handler: suposgroup.GetByTypeHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/group"),
 	)
 
 	server.AddRoutes(

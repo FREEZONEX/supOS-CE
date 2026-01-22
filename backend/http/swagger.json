@@ -2227,6 +2227,443 @@
         }
       }
     },
+    "/inter-api/supos/group": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询组列表",
+        "operationId": "supos/GroupGet",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "type",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "name",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "页码",
+            "name": "page",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "每页大小",
+            "name": "size",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "orders": {
+                  "description": "排序",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "field": {
+                        "description": "//排序的字段名",
+                        "type": "string"
+                      },
+                      "sort": {
+                        "description": "排序方式：0 从小到大, 1 从大到小",
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "page": {
+                  "description": "页码",
+                  "type": "integer"
+                },
+                "size": {
+                  "description": "每页大小",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "properties": {
+                  "createAt": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "sort": {
+                    "type": "integer"
+                  },
+                  "type": {
+                    "type": "integer"
+                  },
+                  "updateAt": {
+                    "type": "string"
+                  }
+                }
+              },
+              "properties": {
+                "createAt": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                },
+                "updateAt": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "更新组",
+        "operationId": "supos/GroupPut",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建组",
+        "operationId": "supos/GroupPost",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "id",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/group/batch": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "批量删除组",
+        "operationId": "supos/GroupBatchDelete",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "ids"
+              ],
+              "properties": {
+                "ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/inter-api/supos/group/by-type": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "根据类型查询组列表",
+        "operationId": "supos/GroupGetByType",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "type",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "页码",
+            "name": "page",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "每页大小",
+            "name": "size",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "orders": {
+                  "description": "排序",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "field": {
+                        "description": "//排序的字段名",
+                        "type": "string"
+                      },
+                      "sort": {
+                        "description": "排序方式：0 从小到大, 1 从大到小",
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "page": {
+                  "description": "页码",
+                  "type": "integer"
+                },
+                "size": {
+                  "description": "每页大小",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "properties": {
+                  "createAt": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "sort": {
+                    "type": "integer"
+                  },
+                  "type": {
+                    "type": "integer"
+                  },
+                  "updateAt": {
+                    "type": "string"
+                  }
+                }
+              },
+              "properties": {
+                "createAt": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                },
+                "updateAt": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/group/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "根据ID删除组",
+        "operationId": "supos/GroupDelete",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
     "/inter-api/supos/i18n/languages": {
       "get": {
         "produces": [
@@ -12368,7 +12805,7 @@
       }
     }
   },
-  "x-date": "2026-01-21 15:49:50",
+  "x-date": "2026-01-22 10:18:04",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
