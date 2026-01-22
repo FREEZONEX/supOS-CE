@@ -25,9 +25,9 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-func (l *UnsImportExportService) Import(fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
-	l.log.Infof("UNS导入ByReader: %s (size=%d)\n", fileName, fileSize)
-	l.doImport(fileName, fileSize, reader, responseWriterStatusConsumer{respWriter: respWriter}.write)
+func (l *UnsImportExportService) Import(ctx context.Context, fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
+	logx.WithContext(ctx).Infof("UNS导入ByReader: %s (size=%d)\n", fileName, fileSize)
+	l.ImportStream(ctx, fileName, fileSize, reader, responseWriterStatusConsumer{respWriter: respWriter}.write)
 }
 
 type responseWriterStatusConsumer struct {
@@ -42,12 +42,13 @@ func (r responseWriterStatusConsumer) write(status *common.RunningStatus) {
 		logx.Error("导入进度发送失败:", er)
 	}
 }
-func (l *UnsImportExportService) doImport(fileName string, fileSize int64, reader io.Reader, statusConsumer func(status *common.RunningStatus)) {
+func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName string, fileSize int64, reader io.Reader, statusConsumer func(status *common.RunningStatus)) {
 	var errFile *os.File
 	var errBufWriter *bufio.Writer
 	errFileRelativePath := ""
 	var errJsonEncoder *json.Encoder
 
+	log := logx.WithContext(ctx)
 	pushStatus := func(status *common.RunningStatus) {
 		task := status.Task
 		segments := strings.Split(task, ".")
@@ -70,7 +71,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, reade
 		_ = os.MkdirAll(filepath.Dir(tarPath), os.ModeDir)
 		errFile, err = os.Create(tarPath)
 		if err != nil {
-			l.log.Error("创建错误提示文件失败", err, tarPath)
+			log.Error("创建错误提示文件失败", err, tarPath)
 		} else {
 			errBufWriter = bufio.NewWriter(errFile)
 			_ = errBufWriter.WriteByte('[')
@@ -119,7 +120,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, reade
 			})
 			_, er := l.labelService.CreateBatch(context.Background(), labelNames)
 			if er != nil {
-				l.log.Error("创建标签失败", er)
+				log.Error("创建标签失败", er)
 			}
 		case Template, UNS:
 			if propName == UNS {
@@ -168,7 +169,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, reade
 		_ = errJsonEncoder.Encode(errNode)
 	})
 	if er != nil {
-		l.log.Error("JsonDecodeError", er)
+		log.Error("JsonDecodeError", er)
 		first := errFile == nil
 		createErrorFile()
 		if !first {

@@ -293,7 +293,7 @@ type DashboardDto struct {
 }
 
 type DashboardExportParam struct {
-	GroupIds   []string `json:"gids,string,optional,omitempty,omitzero"`
+	GroupIds   []int64  `json:"gids,string,optional,omitempty,omitzero"`
 	DashIds    []string `json:"ids,string,optional,omitempty,omitzero"`
 	ExportType string   `json:"exportType,optional,omitempty,omitzero"`
 }

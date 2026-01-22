@@ -80,6 +80,16 @@ func (l *UnsImportExportService) labelCsv2FileData(headers, values []string) *Fi
 	return &FileData{Name: values[0]}
 }
 
+func (l *UnsImportExportService) ExportStream(ctx context.Context, arg *types.ExportReq) (exporter func(writer io.Writer)) {
+	if arg.ExportType != "" || len(arg.Files) > 0 || len(arg.Folders) > 0 {
+		return func(writer io.Writer) {
+			l.streamedExportUns(writer, arg)
+		}
+	} else {
+		return nil
+	}
+}
+
 // 流式写入json 返回给客户端
 func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *types.ExportReq) {
 	fmt.Fprintln(out, "{") //开始 JSON 对象
