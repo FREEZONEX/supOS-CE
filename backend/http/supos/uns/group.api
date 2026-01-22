@@ -29,7 +29,7 @@ service backend {
 
     @doc "根据ID删除组"
     @handler delete
-    delete /:id (GroupIDReq) returns ()
+    delete /:id (GroupIDReq) returns (JsonResult)
 
     @doc "批量删除组"
     @handler batchDelete

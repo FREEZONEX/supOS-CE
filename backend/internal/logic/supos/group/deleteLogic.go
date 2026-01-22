@@ -11,7 +11,6 @@ import (
 	"backend/internal/types"
 	"gitee.com/unitedrhino/share/stores"
 
-	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -30,7 +29,7 @@ func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogi
 	}
 }
 
-func (l *DeleteLogic) Delete(req *types.GroupIDReq) error {
+func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 	db := stores.GetCommonConn(l.ctx)
 	groupMapper := &relationDB.GroupMapper{}
 
@@ -38,17 +37,30 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) error {
 	group, err := groupMapper.SelectById(db, req.ID)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
-		return errors.Database.WithMsg("查询组失败").AddDetail(err)
+		return &types.JsonResult{
+			Code: 500,
+			Msg:  "查询组失败: " + err.Error(),
+		}, nil
 	}
 	if group == nil {
-		return errors.Parameter.WithMsg("组不存在")
+		return &types.JsonResult{
+			Code: 400,
+			Msg:  "组不存在",
+		}, nil
 	}
 
 	// 执行删除
 	if err = groupMapper.DeleteById(db, req.ID); err != nil {
 		l.Errorf("删除组失败: %v", err)
-		return errors.Database.WithMsg("删除组失败").AddDetail(err)
+		return &types.JsonResult{
+			Code: 500,
+			Msg:  "删除组失败: " + err.Error(),
+		}, nil
 	}
 
-	return nil
+	return &types.JsonResult{
+		Code: 200,
+		Msg:  "success",
+		Data: nil,
+	}, nil
 }

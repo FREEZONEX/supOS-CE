@@ -579,6 +579,14 @@ type GroupIDReq struct {
 	ID int64 `path:"id"`
 }
 
+type GroupPageResultVO struct {
+	PageNo   int64     `json:"pageNo"`
+	PageSize int64     `json:"pageSize"`
+	Total    int64     `json:"total"`
+	Code     int64     `json:"code"`
+	Data     []GroupVO `json:"data"`
+}
+
 type GroupQuery struct {
 	Type *int16  `form:"type,optional"`
 	Name *string `form:"name,optional"`
@@ -593,14 +601,6 @@ type GroupVO struct {
 	Sort        int32  `json:"sort,optional"`
 	UpdateAt    string `json:"updateAt,optional"`
 	CreateAt    string `json:"createAt,optional"`
-}
-
-type GroupPageResultVO struct {
-	PageNo   int64     `json:"pageNo"`
-	PageSize int64     `json:"pageSize"`
-	Total    int64     `json:"total"`
-	Code     int64     `json:"code"`
-	Data     []GroupVO `json:"data"`
 }
 
 type HistoryValueRequest struct {
