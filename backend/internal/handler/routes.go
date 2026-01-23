@@ -651,6 +651,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: suposunsdashboard.GetByUnsHandler(serverCtx),
 				},
 				{
+					// 分页按分组获取dashboard列表
+					Method:  http.MethodGet,
+					Path:    "/getGroupedDashboardList",
+					Handler: suposunsdashboard.GetGroupedDashboardListHandler(serverCtx),
+				},
+				{
 					// 检查 Dashboard 是否存在
 					Method:  http.MethodGet,
 					Path:    "/isExist",

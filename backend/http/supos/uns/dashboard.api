@@ -125,6 +125,10 @@ service backend {
     @doc "检查 Dashboard 是否存在"
     @handler IsExist
     get /isExist (IsExistRequest) returns (JsonResult)
+
+    @doc "分页按分组获取dashboard列表"
+    @handler GetGroupedDashboardList
+    get /getGroupedDashboardList (GroupListQuery) returns (DashboardGroupPageResp)
 }
 
 type DetailRequest {
@@ -149,4 +153,30 @@ type AliasRequest {
 
 type IsExistRequest {
     Alias string `form:"alias"`
+}
+
+type GroupListQuery {
+	GroupType int64 `json:"type,optional"`
+	GroupId    int64 `json:"groupId"`
+	Keyword    string `form:"keyword,optional"`
+}
+
+type GroupBizVO {
+	ID          int64  `json:"groupId"`
+	Type        *int16 `json:"groupType,optional"`
+	Name        string `json:"groupName"`
+	Description string `json:"groupDescription,optional"`
+	Sort        int32  `json:"sort,optional"`
+	UpdateAt    string `json:"groupUpdateAt,optional"`
+	CreateAt    string `json:"groupCreateAt,optional"`
+	BizID          int64  `json:"bizId"`
+	BizName        string `json:"bizName"`
+	BizDescription string `json:"BizDescription,optional"`
+	BizUpdateAt    string `json:"bizUpdateAt,optional"`
+	BizCreateAt    string `json:"bizCreateAt,optional"`
+}
+
+type DashboardGroupPageResp {
+	PageResultDTO
+	Data []GroupBizVO `json:"data"`
 }

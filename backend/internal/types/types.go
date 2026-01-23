@@ -298,6 +298,11 @@ type DashboardExportParam struct {
 	ExportType string   `json:"exportType,optional,omitempty,omitzero"`
 }
 
+type DashboardGroupPageResp struct {
+	PageResultDTO
+	Data []GroupBizVO `json:"data"`
+}
+
 type DashboardPageResp struct {
 	PageResultDTO
 	Data []DashboardDto `json:"data"`
@@ -570,6 +575,21 @@ type GroupBatchDeleteReq struct {
 	IDs []int64 `json:"ids"`
 }
 
+type GroupBizVO struct {
+	ID             int64  `json:"groupId"`
+	Type           *int16 `json:"groupType,optional"`
+	Name           string `json:"groupName"`
+	Description    string `json:"groupDescription,optional"`
+	Sort           int32  `json:"sort,optional"`
+	UpdateAt       string `json:"groupUpdateAt,optional"`
+	CreateAt       string `json:"groupCreateAt,optional"`
+	BizID          int64  `json:"bizId"`
+	BizName        string `json:"bizName"`
+	BizDescription string `json:"BizDescription,optional"`
+	BizUpdateAt    string `json:"bizUpdateAt,optional"`
+	BizCreateAt    string `json:"bizCreateAt,optional"`
+}
+
 type GroupByTypeQuery struct {
 	Type int16 `form:"type"`
 	PageInfo
@@ -577,6 +597,12 @@ type GroupByTypeQuery struct {
 
 type GroupIDReq struct {
 	ID int64 `path:"id"`
+}
+
+type GroupListQuery struct {
+	GroupType int64  `json:"type,optional"`
+	GroupId   int64  `json:"groupId"`
+	Keyword   string `form:"keyword,optional"`
 }
 
 type GroupPageResultVO struct {

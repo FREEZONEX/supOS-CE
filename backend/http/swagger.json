@@ -2576,58 +2576,52 @@
           "200": {
             "description": "",
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": [
-                  "id",
-                  "name"
-                ],
-                "properties": {
-                  "createAt": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "id": {
-                    "type": "integer"
-                  },
-                  "name": {
-                    "type": "string"
-                  },
-                  "sort": {
-                    "type": "integer"
-                  },
-                  "type": {
-                    "type": "integer"
-                  },
-                  "updateAt": {
-                    "type": "string"
-                  }
-                }
-              },
+              "type": "object",
               "properties": {
-                "createAt": {
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "id": {
+                "code": {
                   "type": "integer"
                 },
-                "name": {
-                  "type": "string"
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "createAt": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "sort": {
+                        "type": "integer"
+                      },
+                      "type": {
+                        "type": "integer"
+                      },
+                      "updateAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
                 },
-                "sort": {
+                "pageNo": {
                   "type": "integer"
                 },
-                "type": {
+                "pageSize": {
                   "type": "integer"
                 },
-                "updateAt": {
-                  "type": "string"
+                "total": {
+                  "type": "integer"
                 }
               }
             }
@@ -2659,7 +2653,18 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -5529,6 +5534,120 @@
                 "data": {},
                 "msg": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/getGroupedDashboardList": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "分页按分组获取dashboard列表",
+        "operationId": "supos/Uns/DashboardGetGroupedDashboardList",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "groupId"
+              ],
+              "properties": {
+                "groupId": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "groupId",
+                      "groupName",
+                      "bizId",
+                      "bizName"
+                    ],
+                    "properties": {
+                      "BizDescription": {
+                        "type": "string"
+                      },
+                      "bizCreateAt": {
+                        "type": "string"
+                      },
+                      "bizId": {
+                        "type": "integer"
+                      },
+                      "bizName": {
+                        "type": "string"
+                      },
+                      "bizUpdateAt": {
+                        "type": "string"
+                      },
+                      "groupCreateAt": {
+                        "type": "string"
+                      },
+                      "groupDescription": {
+                        "type": "string"
+                      },
+                      "groupId": {
+                        "type": "integer"
+                      },
+                      "groupName": {
+                        "type": "string"
+                      },
+                      "groupType": {
+                        "type": "integer"
+                      },
+                      "groupUpdateAt": {
+                        "type": "string"
+                      },
+                      "sort": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
                 }
               }
             }
@@ -12805,7 +12924,7 @@
       }
     }
   },
-  "x-date": "2026-01-22 10:18:04",
+  "x-date": "2026-01-23 10:09:57",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
