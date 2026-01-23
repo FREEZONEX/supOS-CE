@@ -7,6 +7,7 @@ import (
 // NoderedFlow represents both source and event flows stored in the shared table.
 type NoderedFlow struct {
 	ID       int64  `gorm:"column:id;primaryKey;type:bigint;"`
+	GroupId  int64  `gorm:"column:group_id;comment:分组ID" json:"groupId"`
 	FlowID   string `gorm:"column:flow_id;size:64;index;comment:node-red flow id"`
 	FlowName string `gorm:"column:flow_name;size:128;uniqueIndex:idx_uns_node_flow_name;comment:名称唯一"`
 	// Use cross-DB compatible type. Postgres has no LONGTEXT, so use TEXT.
