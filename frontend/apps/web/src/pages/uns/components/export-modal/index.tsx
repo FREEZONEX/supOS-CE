@@ -98,7 +98,7 @@ const Tab = ({ form }: { form: FormInstance }) => {
   );
 };
 
-const Content = ({ isFullscreen, open }: { isFullscreen?: boolean; open: boolean }) => {
+const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open: boolean; onClose: () => void }) => {
   const formatMessage = useTranslate();
   const { tabType, checkedKeys, allChecked } = useTreeStore((state) => ({
     tabType: state.tabType,
@@ -128,7 +128,7 @@ const Content = ({ isFullscreen, open }: { isFullscreen?: boolean; open: boolean
         <Tab form={form} />
       </div>
       {/*uns*/}
-      <Flex gap={16} style={{ flex: 1, display: tabType === 'uns' ? 'inherit' : 'none' }}>
+      <Flex gap={16} style={{ flex: 1, display: tabType === 'uns' ? 'inherit' : 'none', overflow: 'hidden' }}>
         <Flex vertical style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
           <Flex className={styles['export-label']}>
             <span>UNS</span>
@@ -150,13 +150,7 @@ const Content = ({ isFullscreen, open }: { isFullscreen?: boolean; open: boolean
       <div style={{ flexShrink: 0 }}>
         <Divider style={{ backgroundColor: 'rgb(198, 198, 198)' }} />
         <Flex align="center" gap={8} justify="flex-end">
-          <ComButton
-            onClick={() => {
-              return;
-            }}
-          >
-            {formatMessage('common.cancel')}
-          </ComButton>
+          <ComButton onClick={onClose}>{formatMessage('common.cancel')}</ComButton>
           <ComButton type="primary" onClick={onExport}>
             {formatMessage('common.export')}
           </ComButton>
@@ -196,7 +190,7 @@ const Module: FC<ExportModalProps> = (props) => {
       {(isFullscreen) => {
         return (
           <TreeStoreProvider>
-            <Content open={open} isFullscreen={isFullscreen} />
+            <Content open={open} isFullscreen={isFullscreen} onClose={close} />
           </TreeStoreProvider>
         );
       }}
