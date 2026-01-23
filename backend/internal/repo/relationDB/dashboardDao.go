@@ -259,7 +259,7 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 		    g.type AS group_type,
 		    g.name AS name,
 		    g.description AS description,
-		    g.id AS group_id,
+		    NULL AS group_id,
 		    g.sort AS sort,
 		    g.create_at AS create_at
 		FROM resource_group g
@@ -268,7 +268,7 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 		    FROM "uns_dashboard" u
 		    WHERE u.group_id = g.id
 		)
-
+		AND g.type = 1
 		UNION ALL
 
 		SELECT
@@ -277,25 +277,20 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 		    u.name AS name,
 		    u.description AS description,
 		    u.group_id AS group_id,
-		    -199291 AS sort,
+		    0 AS sort,
 		    u.create_time AS create_at
 		FROM uns_dashboard u
-		WHERE u.group_id IS NULL
 	`
 
 	// 构建查询SQL
 	querySQL := baseSQL
 
-	// 添分组类型筛选条件
-	if req.GroupType > 0 {
-		whereConditions = append(whereConditions, "group_type = ?")
-		args = append(args, req.GroupType)
-	}
-
 	// 添加分组ID筛选条件
 	if req.GroupId > 0 {
 		whereConditions = append(whereConditions, "group_id = ?")
 		args = append(args, req.GroupId)
+	} else {
+		whereConditions = append(whereConditions, "group_id IS NULL")
 	}
 
 	// 添加关键词搜索条件
