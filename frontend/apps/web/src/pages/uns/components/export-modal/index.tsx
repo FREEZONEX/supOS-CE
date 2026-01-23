@@ -1,8 +1,7 @@
-import { type FC, useState, useImperativeHandle } from 'react';
-import { Divider, Flex, Form, Segmented } from 'antd';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
+import { type FC, useImperativeHandle, useMemo, useState } from 'react';
+import { Divider, Flex, Form, type FormInstance, Segmented } from 'antd';
 import { useTranslate } from '@/hooks';
-
-import type { RefObject, Dispatch, SetStateAction } from 'react';
 import ProModal from '@/components/pro-modal';
 import { UnsTree } from '@/pages/uns/components/export-modal/uns-tree.tsx';
 import styles from './index.module.scss';
@@ -10,6 +9,7 @@ import { TreeStoreProvider, useTreeStore } from '@/pages/uns/components/export-m
 import { CodeDom } from '@/pages/uns/components/export-modal/code-dom.tsx';
 import ComButton from '../../../../components/com-button';
 import OtherDom from '@/pages/uns/components/export-modal/other-dom.tsx';
+import ComStatusDot from '@/components/com-status-dot/ComStatusDot.tsx';
 
 interface ExportModalRef {
   setOpen: Dispatch<SetStateAction<boolean>>;
@@ -19,14 +19,99 @@ export interface ExportModalProps {
   exportRef?: RefObject<ExportModalRef>;
 }
 
-const Content = ({ isFullscreen, open }: { isFullscreen?: boolean; open: boolean }) => {
-  const formatMessage = useTranslate();
-  const { tabType, setTabType } = useTreeStore((state) => ({
+const Tab = ({ form }: { form: FormInstance }) => {
+  const { tabType, setTabType, checkedKeys, allChecked } = useTreeStore((state) => ({
     tabType: state.tabType,
     setTabType: state.setTabType,
+    checkedKeys: state.checkedKeys,
+    allChecked: state.allChecked,
+  }));
+
+  const isSelect = Form.useWatch((values) => {
+    return (
+      values?.dashboardExportParam?.length ||
+      values?.eventFlowExportParam?.length ||
+      values?.sourceFlowExportParam?.length
+    );
+  }, form);
+
+  const unsStatus = useMemo(() => {
+    const isSelect = allChecked || checkedKeys?.length > 0;
+    if (tabType === 'uns') {
+      if (isSelect) {
+        return 'breathing';
+      } else {
+        return 'active';
+      }
+    } else {
+      if (isSelect) {
+        return 'unactive';
+      } else {
+        return 'stop';
+      }
+    }
+  }, [tabType, checkedKeys, allChecked]);
+
+  const othersStatus = useMemo(() => {
+    if (tabType === 'others') {
+      if (isSelect) {
+        return 'breathing';
+      } else {
+        return 'active';
+      }
+    } else {
+      if (isSelect) {
+        return 'unactive';
+      } else {
+        return 'stop';
+      }
+    }
+  }, [tabType, isSelect]);
+  return (
+    <Segmented<string>
+      defaultValue={'uns'}
+      options={[
+        {
+          value: 'uns',
+          label: (
+            <Flex gap={4} align="center">
+              <ComStatusDot status={unsStatus} />
+              <span>UNS</span>
+            </Flex>
+          ),
+        },
+        {
+          value: 'others',
+          label: (
+            <Flex gap={4} align="center">
+              <ComStatusDot status={othersStatus} />
+              <span>Others</span>
+            </Flex>
+          ),
+        },
+      ]}
+      value={tabType}
+      onChange={(value: any) => {
+        setTabType(value);
+      }}
+    />
+  );
+};
+
+const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open: boolean; onClose: () => void }) => {
+  const formatMessage = useTranslate();
+  const { tabType, checkedKeys, allChecked } = useTreeStore((state) => ({
+    tabType: state.tabType,
+    setTabType: state.setTabType,
+    checkedKeys: state.checkedKeys,
+    allChecked: state.allChecked,
   }));
   const [form] = Form.useForm();
 
+  const onExport = async () => {
+    const values = await form.validateFields();
+    console.log(values, checkedKeys, allChecked);
+  };
   return (
     <Flex
       style={{
@@ -40,26 +125,10 @@ const Content = ({ isFullscreen, open }: { isFullscreen?: boolean; open: boolean
           flexShrink: 0,
         }}
       >
-        <Segmented<string>
-          defaultValue={'uns'}
-          options={[
-            {
-              value: 'uns',
-              label: 'UNS',
-            },
-            {
-              value: 'others',
-              label: 'Others',
-            },
-          ]}
-          value={tabType}
-          onChange={(value: any) => {
-            setTabType(value);
-          }}
-        />
+        <Tab form={form} />
       </div>
       {/*uns*/}
-      <Flex gap={16} style={{ flex: 1, display: tabType === 'uns' ? 'inherit' : 'none' }}>
+      <Flex gap={16} style={{ flex: 1, display: tabType === 'uns' ? 'inherit' : 'none', overflow: 'hidden' }}>
         <Flex vertical style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
           <Flex className={styles['export-label']}>
             <span>UNS</span>
@@ -81,19 +150,8 @@ const Content = ({ isFullscreen, open }: { isFullscreen?: boolean; open: boolean
       <div style={{ flexShrink: 0 }}>
         <Divider style={{ backgroundColor: 'rgb(198, 198, 198)' }} />
         <Flex align="center" gap={8} justify="flex-end">
-          <ComButton
-            onClick={() => {
-              return;
-            }}
-          >
-            {formatMessage('common.cancel')}
-          </ComButton>
-          <ComButton
-            type="primary"
-            onClick={() => {
-              return;
-            }}
-          >
+          <ComButton onClick={onClose}>{formatMessage('common.cancel')}</ComButton>
+          <ComButton type="primary" onClick={onExport}>
             {formatMessage('common.export')}
           </ComButton>
         </Flex>
@@ -132,7 +190,7 @@ const Module: FC<ExportModalProps> = (props) => {
       {(isFullscreen) => {
         return (
           <TreeStoreProvider>
-            <Content open={open} isFullscreen={isFullscreen} />
+            <Content open={open} isFullscreen={isFullscreen} onClose={close} />
           </TreeStoreProvider>
         );
       }}
