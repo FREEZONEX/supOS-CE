@@ -595,8 +595,8 @@ type GroupIDReq struct {
 }
 
 type GroupPageRequest struct {
-	GroupType int64  `form:"type,optional"`
-	GroupId   int64  `form:"groupId"`
+	GroupType int64  `form:"groupType"`
+	GroupId   int64  `form:"groupId,optional"`
 	K         string `form:"k,optional"`
 	PageNo    int64  `form:"pageNo,default=1"`
 	PageSize  int64  `form:"pageSize,default=10"`

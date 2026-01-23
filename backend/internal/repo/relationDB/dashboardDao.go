@@ -1,8 +1,10 @@
 package relationDB
 
 import (
+	"backend/internal/types"
 	"backend/share/base"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -242,19 +244,24 @@ type GroupedDashboardItem struct {
 }
 
 // GetGroupedDashboardList 按分组获取dashboard列表
-func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB) ([]*GroupedDashboardItem, error) {
+func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedDashboardItem, int64, error) {
 	var items []*GroupedDashboardItem
+	var total int64
 
-	// 执行SQL查询
-	sql := `
+	// 构建查询条件
+	whereConditions := []string{}
+	args := []interface{}{}
+
+	// 基础SQL查询
+	baseSQL := `
 		SELECT
 		    g.id::varchar AS id,
-		    g.type  AS group_type,
-		    g.name        AS name,
+		    g.type AS group_type,
+		    g.name AS name,
 		    g.description AS description,
 		    g.id AS group_id,
-		    g.sort        AS sort,
-		    g.create_at   AS create_at
+		    g.sort AS sort,
+		    g.create_at AS create_at
 		FROM resource_group g
 		WHERE EXISTS (
 		    SELECT 1
@@ -265,28 +272,64 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB) ([]*GroupedDashbo
 		UNION ALL
 
 		SELECT
-		     u.id     AS id,
-		    NULL  AS group_type,
-		    u.name        AS name,
+		    u.id AS id,
+		    NULL AS group_type,
+		    u.name AS name,
 		    u.description AS description,
-		     u.group_id AS group_id,
-		    -199291        AS sort,
-		    u.create_time   AS create_at
+		    u.group_id AS group_id,
+		    -199291 AS sort,
+		    u.create_time AS create_at
 		FROM uns_dashboard u
 		WHERE u.group_id IS NULL
-
-		ORDER BY
-		    sort DESC,
-		    create_at DESC;
 	`
 
-	err := db.Raw(sql).Scan(&items).Error
-	if err != nil {
-		logx.Errorf("failed to get grouped dashboard list: %v", err)
-		return nil, err
+	// 构建查询SQL
+	querySQL := baseSQL
+
+	// 添分组类型筛选条件
+	if req.GroupType > 0 {
+		whereConditions = append(whereConditions, "group_type = ?")
+		args = append(args, req.GroupType)
 	}
 
-	return items, nil
+	// 添加分组ID筛选条件
+	if req.GroupId > 0 {
+		whereConditions = append(whereConditions, "group_id = ?")
+		args = append(args, req.GroupId)
+	}
+
+	// 添加关键词搜索条件
+	if req.K != "" {
+		whereConditions = append(whereConditions, "(name LIKE ? OR description LIKE ?)")
+		searchPattern := "%" + req.K + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
+
+	if len(whereConditions) > 0 {
+		querySQL = "SELECT * FROM (" + baseSQL + ") t WHERE " + strings.Join(whereConditions, " AND ")
+	}
+
+	// 查询总数
+	countSQL := "SELECT COUNT(*) FROM (" + querySQL + ") t"
+	err := db.Raw(countSQL, args...).Scan(&total).Error
+	if err != nil {
+		logx.Errorf("failed to count grouped dashboard list: %v", err)
+		return nil, 0, err
+	}
+
+	// 实现分页
+	offset := (req.PageNo - 1) * req.PageSize
+	querySQL += " ORDER BY sort DESC, create_at DESC LIMIT ? OFFSET ?"
+	args = append(args, req.PageSize, offset)
+	logx.Debug("group sql : ", querySQL)
+	// 执行查询
+	err = db.Raw(querySQL, args...).Scan(&items).Error
+	if err != nil {
+		logx.Errorf("failed to get grouped dashboard list: %v", err)
+		return nil, 0, err
+	}
+
+	return items, total, nil
 }
 
 // SelectDashboardsToInit selects dashboards that need to be initialized.

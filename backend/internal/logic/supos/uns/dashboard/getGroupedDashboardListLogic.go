@@ -49,7 +49,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 	db := relationDB.GetDb(l.ctx)
 
 	// 调用DAO层方法获取分组后的dashboard列表
-	items, err := l.dashboardMapper.GetGroupedDashboardList(db)
+	items, total, err := l.dashboardMapper.GetGroupedDashboardList(db, req)
 	if err != nil {
 		l.Logger.Error("查询分组dashboard列表失败:", err)
 		return pageResult, nil
@@ -59,11 +59,12 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 	var groupBizVOList []types.GroupBizVO
 	for _, item := range items {
 		groupBizVO := types.GroupBizVO{}
+		//存在分组
 		if item.GroupType != 0 {
 			// 处理分组数据
 			groupID, _ := parseStringToInt64(item.ID)
 			groupBizVO.ID = groupID
-			groupBizVO.GroupType = item.GroupID
+			groupBizVO.GroupType = item.GroupType
 			groupBizVO.Name = item.Name
 			groupBizVO.Description = item.Description
 			groupBizVO.Sort = item.Sort
@@ -81,7 +82,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 		groupBizVOList = append(groupBizVOList, groupBizVO)
 	}
 
-	pageResult.Total = int64(len(groupBizVOList))
+	pageResult.Total = total
 	pageResult.Data = groupBizVOList
 
 	return pageResult, nil
