@@ -4,7 +4,11 @@
 package dashboard
 
 import (
+	"backend/internal/repo/relationDB"
 	"context"
+	"fmt"
+	"net/http"
+	"time"
 
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -14,8 +18,9 @@ import (
 
 type GetGroupedDashboardListLogic struct {
 	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
+	ctx             context.Context
+	svcCtx          *svc.ServiceContext
+	dashboardMapper relationDB.DashboardMapper
 }
 
 // 分页按分组获取dashboard列表
@@ -27,8 +32,67 @@ func NewGetGroupedDashboardListLogic(ctx context.Context, svcCtx *svc.ServiceCon
 	}
 }
 
-func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupListQuery) (resp *types.DashboardGroupPageResp, err error) {
-	// todo: add your logic here and delete this line
+func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupPageRequest) (resp *types.DashboardGroupPageResp, err error) {
+	if req.PageNo < 1 {
+		req.PageNo = 1
+	}
 
-	return
+	pageResult := &types.DashboardGroupPageResp{
+		PageResultDTO: types.PageResultDTO{
+			Code:     http.StatusOK,
+			PageNo:   req.PageNo,
+			PageSize: req.PageSize,
+		},
+	}
+
+	l.Logger.Debugf("GetGroupedDashboardList: PageList request: %+v", req)
+	db := relationDB.GetDb(l.ctx)
+
+	// 调用DAO层方法获取分组后的dashboard列表
+	items, err := l.dashboardMapper.GetGroupedDashboardList(db)
+	if err != nil {
+		l.Logger.Error("查询分组dashboard列表失败:", err)
+		return pageResult, nil
+	}
+
+	// 转换为前端需要的格式
+	var groupBizVOList []types.GroupBizVO
+	for _, item := range items {
+		groupBizVO := types.GroupBizVO{}
+		if item.GroupType != 0 {
+			// 处理分组数据
+			groupID, _ := parseStringToInt64(item.ID)
+			groupBizVO.ID = groupID
+			groupBizVO.GroupType = item.GroupID
+			groupBizVO.Name = item.Name
+			groupBizVO.Description = item.Description
+			groupBizVO.Sort = item.Sort
+			groupBizVO.CreateAt = item.CreateAt.Format(time.RFC3339)
+			groupBizVO.GroupId = item.GroupID
+		} else if item.GroupType == 0 {
+			// 处理未分组的dashboard数据
+			bizID, _ := parseStringToInt64(item.ID)
+			groupBizVO.ID = bizID
+			groupBizVO.Name = item.Name
+			groupBizVO.Description = item.Description
+			groupBizVO.CreateAt = item.CreateAt.Format(time.RFC3339)
+			groupBizVO.GroupId = item.GroupID
+		}
+		groupBizVOList = append(groupBizVOList, groupBizVO)
+	}
+
+	pageResult.Total = int64(len(groupBizVOList))
+	pageResult.Data = groupBizVOList
+
+	return pageResult, nil
+}
+
+// parseStringToInt64 字符串转int64
+func parseStringToInt64(s string) (int64, error) {
+	if s == "" {
+		return 0, nil
+	}
+	var result int64
+	_, err := fmt.Sscanf(s, "%d", &result)
+	return result, err
 }

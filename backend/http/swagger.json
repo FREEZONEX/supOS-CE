@@ -5554,9 +5554,23 @@
         "parameters": [
           {
             "type": "string",
-            "name": "keyword",
+            "name": "k",
             "in": "query",
             "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
           },
           {
             "name": "body",
@@ -5593,42 +5607,22 @@
                     "type": "object",
                     "required": [
                       "groupId",
-                      "groupName",
-                      "bizId",
-                      "bizName"
+                      "name"
                     ],
                     "properties": {
-                      "BizDescription": {
-                        "type": "string"
-                      },
-                      "bizCreateAt": {
-                        "type": "string"
-                      },
-                      "bizId": {
-                        "type": "integer"
-                      },
-                      "bizName": {
-                        "type": "string"
-                      },
-                      "bizUpdateAt": {
+                      "description": {
                         "type": "string"
                       },
                       "groupCreateAt": {
                         "type": "string"
                       },
-                      "groupDescription": {
-                        "type": "string"
-                      },
                       "groupId": {
                         "type": "integer"
-                      },
-                      "groupName": {
-                        "type": "string"
                       },
                       "groupType": {
                         "type": "integer"
                       },
-                      "groupUpdateAt": {
+                      "name": {
                         "type": "string"
                       },
                       "sort": {
@@ -12924,7 +12918,7 @@
       }
     }
   },
-  "x-date": "2026-01-23 10:09:57",
+  "x-date": "2026-01-23 11:00:02",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

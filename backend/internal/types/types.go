@@ -576,18 +576,13 @@ type GroupBatchDeleteReq struct {
 }
 
 type GroupBizVO struct {
-	ID             int64  `json:"groupId"`
-	Type           *int16 `json:"groupType,optional"`
-	Name           string `json:"groupName"`
-	Description    string `json:"groupDescription,optional"`
-	Sort           int32  `json:"sort,optional"`
-	UpdateAt       string `json:"groupUpdateAt,optional"`
-	CreateAt       string `json:"groupCreateAt,optional"`
-	BizID          int64  `json:"bizId"`
-	BizName        string `json:"bizName"`
-	BizDescription string `json:"BizDescription,optional"`
-	BizUpdateAt    string `json:"bizUpdateAt,optional"`
-	BizCreateAt    string `json:"bizCreateAt,optional"`
+	ID          int64  `json:"id"`
+	GroupType   int64  `json:"groupType,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	GroupId     int64  `json:"groupId,optional"`
+	CreateAt    string `json:"createAt,optional"`
 }
 
 type GroupByTypeQuery struct {
@@ -599,10 +594,12 @@ type GroupIDReq struct {
 	ID int64 `path:"id"`
 }
 
-type GroupListQuery struct {
-	GroupType int64  `json:"type,optional"`
-	GroupId   int64  `json:"groupId"`
-	Keyword   string `form:"keyword,optional"`
+type GroupPageRequest struct {
+	GroupType int64  `form:"type,optional"`
+	GroupId   int64  `form:"groupId"`
+	K         string `form:"k,optional"`
+	PageNo    int64  `form:"pageNo,default=1"`
+	PageSize  int64  `form:"pageSize,default=10"`
 }
 
 type GroupPageResultVO struct {

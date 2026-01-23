@@ -128,7 +128,7 @@ service backend {
 
     @doc "分页按分组获取dashboard列表"
     @handler GetGroupedDashboardList
-    get /getGroupedDashboardList (GroupListQuery) returns (DashboardGroupPageResp)
+    get /getGroupedDashboardList (GroupPageRequest) returns (DashboardGroupPageResp)
 }
 
 type DetailRequest {
@@ -155,25 +155,22 @@ type IsExistRequest {
     Alias string `form:"alias"`
 }
 
-type GroupListQuery {
-	GroupType int64 `json:"type,optional"`
-	GroupId    int64 `json:"groupId"`
-	Keyword    string `form:"keyword,optional"`
+type GroupPageRequest {
+	GroupType int64 `form:"type,optional"`
+	GroupId    int64 `form:"groupId"`
+    K         string `form:"k,optional"`
+    PageNo    int64  `form:"pageNo,default=1"`
+    PageSize  int64  `form:"pageSize,default=10"`
 }
 
 type GroupBizVO {
-	ID          int64  `json:"groupId"`
-	Type        *int16 `json:"groupType,optional"`
-	Name        string `json:"groupName"`
-	Description string `json:"groupDescription,optional"`
+	ID          int64  `json:"id"`
+	GroupType   *int64 `json:"groupType,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
 	Sort        int32  `json:"sort,optional"`
-	UpdateAt    string `json:"groupUpdateAt,optional"`
-	CreateAt    string `json:"groupCreateAt,optional"`
-	BizID          int64  `json:"bizId"`
-	BizName        string `json:"bizName"`
-	BizDescription string `json:"BizDescription,optional"`
-	BizUpdateAt    string `json:"bizUpdateAt,optional"`
-	BizCreateAt    string `json:"bizCreateAt,optional"`
+    GroupId     int64 `json:"groupId,optional"`
+	CreateAt    string `json:"createAt,optional"`
 }
 
 type DashboardGroupPageResp {

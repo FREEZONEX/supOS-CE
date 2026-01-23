@@ -9,13 +9,14 @@ import (
 	"backend/internal/logic/supos/uns/dashboard"
 	"backend/internal/svc"
 	"backend/internal/types"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 // 分页按分组获取dashboard列表
 func GetGroupedDashboardListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.GroupListQuery
+		var req types.GroupPageRequest
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return

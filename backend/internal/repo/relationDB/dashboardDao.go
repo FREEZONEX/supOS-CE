@@ -230,6 +230,65 @@ func (m *DashboardMapper) DeleteBatchIds(db *gorm.DB, ids []string) error {
 	return nil
 }
 
+// GroupedDashboardItem 分组和未分组dashboard统一返回结构
+type GroupedDashboardItem struct {
+	ID          string    `gorm:"column:id" json:"id"`                   // ID
+	GroupType   int64     `gorm:"column:group_type" json:"groupType"`    // 类型：GROUP 表示分组，BIZ 表示未分组的dashboard
+	Name        string    `gorm:"column:name" json:"name"`               // 名称
+	Description string    `gorm:"column:description" json:"description"` // 描述
+	GroupID     int64     `gorm:"column:group_id" json:"groupId"`        // 分组ID
+	Sort        int32     `gorm:"column:sort" json:"sort"`               // 排序字段
+	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`      // 创建时间
+}
+
+// GetGroupedDashboardList 按分组获取dashboard列表
+func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB) ([]*GroupedDashboardItem, error) {
+	var items []*GroupedDashboardItem
+
+	// 执行SQL查询
+	sql := `
+		SELECT
+		    g.id::varchar AS id,
+		    g.type  AS group_type,
+		    g.name        AS name,
+		    g.description AS description,
+		    g.id AS group_id,
+		    g.sort        AS sort,
+		    g.create_at   AS create_at
+		FROM resource_group g
+		WHERE EXISTS (
+		    SELECT 1
+		    FROM "uns_dashboard" u
+		    WHERE u.group_id = g.id
+		)
+
+		UNION ALL
+
+		SELECT
+		     u.id     AS id,
+		    NULL  AS group_type,
+		    u.name        AS name,
+		    u.description AS description,
+		     u.group_id AS group_id,
+		    -199291        AS sort,
+		    u.create_time   AS create_at
+		FROM uns_dashboard u
+		WHERE u.group_id IS NULL
+
+		ORDER BY
+		    sort DESC,
+		    create_at DESC;
+	`
+
+	err := db.Raw(sql).Scan(&items).Error
+	if err != nil {
+		logx.Errorf("failed to get grouped dashboard list: %v", err)
+		return nil, err
+	}
+
+	return items, nil
+}
+
 // SelectDashboardsToInit selects dashboards that need to be initialized.
 func (m *DashboardMapper) SelectDashboardsToInit(db *gorm.DB) ([]*DashboardModel, error) {
 	var dashboards []*DashboardModel
