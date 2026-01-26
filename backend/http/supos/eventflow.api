@@ -52,6 +52,10 @@ service backend {
     @doc "delete Mark a  flow by id"
     @handler unmarkEventFlow
     delete /event/unmark (FlowUNMarkReq) returns ()
+
+    @doc "分页按分组获取event flow列表"
+    @handler GetGroupedEventFlowList
+    get /event/getGroupedEventFlowList (GroupPageRequest) returns (EventFlowGroupPageResp)
 }
 
 @server(
@@ -128,5 +132,8 @@ type (
         Data     []EventFlowInfo `json:"data,optional"`
     }
 
-    
+    EventFlowGroupPageResp {
+        PageResultDTO
+        Data []GroupBizVO `json:"data"`
+    }
 )

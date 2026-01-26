@@ -139,6 +139,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: suposeventflow.ListEventFlowsHandler(serverCtx),
 				},
 				{
+					// 分页按分组获取event flow列表
+					Method:  http.MethodGet,
+					Path:    "/event/getGroupedEventFlowList",
+					Handler: suposeventflow.GetGroupedEventFlowListHandler(serverCtx),
+				},
+				{
 					// Mark a  flow by id
 					Method:  http.MethodPost,
 					Path:    "/event/mark",
@@ -468,6 +474,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: supossourceflow.DeploySourceFlowHandler(serverCtx),
 				},
 				{
+					// 分页按分组获取source flow列表
+					Method:  http.MethodGet,
+					Path:    "/flow/getGroupedSourceFlowList",
+					Handler: supossourceflow.GetGroupedSourceFlowListHandler(serverCtx),
+				},
+				{
 					// Mark a source flow by id
 					Method:  http.MethodPost,
 					Path:    "/flow/mark",
@@ -502,12 +514,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Method:  http.MethodGet,
 					Path:    "/flows",
 					Handler: supossourceflow.ListSourceFlowsHandler(serverCtx),
-				},
-				{
-					// 分页按分组获取source flow列表
-					Method:  http.MethodGet,
-					Path:    "/flow/getGroupedSourceFlowList",
-					Handler: supossourceflow.GetGroupedSourceFlowListHandler(serverCtx),
 				},
 			}...,
 		),

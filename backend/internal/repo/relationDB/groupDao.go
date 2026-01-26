@@ -170,12 +170,16 @@ func (m *GroupMapper) OperationGroup(db *gorm.DB, req *types.OperationGroupReq) 
 
 	// 根据分组类型确定要操作的表
 	var tableName string
+	var flowType string
 	switch *group.Type {
 	case 1:
 		tableName = "supos_node_flows"
+		flowType = " and template = node-red"
 	case 2:
-		tableName = "supos_event_flows"
+		tableName = "supos_node_flows"
+		flowType = " and template = event-flow"
 	case 3:
+		flowType = " "
 		tableName = "uns_dashboard"
 	default:
 		return errors.Parameter
@@ -185,13 +189,13 @@ func (m *GroupMapper) OperationGroup(db *gorm.DB, req *types.OperationGroupReq) 
 	if *req.Status {
 		// 移入分组：set group_id = req.ID
 		err = db.Exec(
-			"UPDATE "+tableName+" SET group_id = ? WHERE id = ?",
+			"UPDATE "+tableName+" SET group_id = ? WHERE id = ?"+flowType,
 			*req.ID, *req.BizId,
 		).Error
 	} else {
 		// 移出分组：set group_id = NULL
 		err = db.Exec(
-			"UPDATE "+tableName+" SET group_id = NULL WHERE id = ?",
+			"UPDATE "+tableName+" SET group_id = NULL WHERE id = ?"+flowType,
 			*req.BizId,
 		).Error
 	}

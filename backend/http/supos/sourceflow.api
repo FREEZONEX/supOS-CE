@@ -81,7 +81,7 @@ service backend {
 
     @doc "Batch query flows by UNS aliases"
     @handler batchSourceFlowByAliases
-    post /flow/by/aliases (GroupPageRequest) returns (SourceFlowListResult)
+    post /flow/by/aliases (SourceFlowBatchAliasReq) returns (SourceFlowListResult)
 }
 
 type (

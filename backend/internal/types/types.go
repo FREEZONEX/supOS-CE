@@ -387,6 +387,11 @@ type EventFlowExportParam struct {
 	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
 }
 
+type EventFlowGroupPageResp struct {
+	PageResultDTO
+	Data []GroupBizVO `json:"data"`
+}
+
 type EventFlowInfo struct {
 	ID          string `json:"id,optional"`
 	FlowName    string `json:"flowName,optional"`
