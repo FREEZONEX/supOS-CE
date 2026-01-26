@@ -717,6 +717,7 @@
   "uns.individualProgress": "详细进度",
   "uns.uploadSuccess": "文件上传成功",
   "uns.waitingFormParsing": "等待解析...",
+  "uns.deployNewApp": "点击部署新应用",
   "common.url": "地址",
   "common.usage": "用法",
   "common.example": "示例",

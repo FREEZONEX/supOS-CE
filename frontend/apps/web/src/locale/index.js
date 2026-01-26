@@ -756,6 +756,7 @@ const messages = {
   'uns.individualProgress': '详细进度',
   'uns.uploadSuccess': '文件上传成功',
   'uns.waitingFormParsing': '等待解析...',
+  'uns.deployNewApp': '点击部署新应用',
 
   //公共通用模块
   'common.url': '地址',

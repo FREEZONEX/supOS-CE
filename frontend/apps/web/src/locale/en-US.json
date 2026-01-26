@@ -717,6 +717,7 @@
   "uns.individualProgress": "Individual Progress",
   "uns.uploadSuccess": "File uploaded successfully",
   "uns.waitingFormParsing": "Waiting for parsing...",
+  "uns.deployNewApp": "Click to deploy a new App",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",
