@@ -34,10 +34,10 @@ func NewGetGroupedSourceFlowListLogic(ctx context.Context, svcCtx *svc.ServiceCo
 }
 
 func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.GroupPageRequest) (resp *types.SourceFlowGroupPageResp, err error) {
+	req.GroupType = 1
 	if req.PageNo < 1 {
 		req.PageNo = 1
 	}
-
 	pageResult := &types.SourceFlowGroupPageResp{
 		PageResultDTO: types.PageResultDTO{
 			Code:     http.StatusOK,
@@ -53,7 +53,7 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 	items, total, err := l.sourceFlowRepo.GetGroupedSourceFlowList(db, req)
 	if err != nil {
 		l.Logger.Error("查询分组source flow列表失败:", err)
-		return pageResult, nil
+		return nil, err
 	}
 
 	// 转换为前端需要的格式

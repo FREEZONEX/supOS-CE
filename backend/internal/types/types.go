@@ -600,7 +600,7 @@ type GroupIDReq struct {
 }
 
 type GroupPageRequest struct {
-	GroupType int64  `form:"groupType"`
+	GroupType int64  `form:"groupType,optional"`
 	GroupId   int64  `form:"groupId,optional"`
 	K         string `form:"k,optional"`
 	PageNo    int64  `form:"pageNo,default=1"`

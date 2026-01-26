@@ -744,7 +744,7 @@
             "type": "integer",
             "name": "groupType",
             "in": "query",
-            "required": true
+            "allowEmptyValue": true
           },
           {
             "type": "integer",
@@ -1965,7 +1965,7 @@
             "type": "integer",
             "name": "groupType",
             "in": "query",
-            "required": true
+            "allowEmptyValue": true
           },
           {
             "type": "integer",
@@ -5825,7 +5825,7 @@
             "type": "integer",
             "name": "groupType",
             "in": "query",
-            "required": true
+            "allowEmptyValue": true
           },
           {
             "type": "integer",
@@ -13183,7 +13183,7 @@
       }
     }
   },
-  "x-date": "2026-01-26 14:03:55",
+  "x-date": "2026-01-26 14:55:24",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

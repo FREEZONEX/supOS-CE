@@ -33,6 +33,7 @@ func NewGetGroupedDashboardListLogic(ctx context.Context, svcCtx *svc.ServiceCon
 }
 
 func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupPageRequest) (resp *types.DashboardGroupPageResp, err error) {
+	req.GroupType = 3
 	if req.PageNo < 1 {
 		req.PageNo = 1
 	}

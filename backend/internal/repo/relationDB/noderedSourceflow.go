@@ -26,7 +26,8 @@ type GroupedSourceFlowItem struct {
 }
 
 // GetGroupedSourceFlowList 按分组获取source flow列表
-func (m *NoderedSourceFlowRepo) GetGroupedSourceFlowList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedSourceFlowItem, int64, error) {
+// GetGroupedFlowList 按分组获取flow列表（内部通用方法）
+func (m *NoderedSourceFlowRepo) GetGroupedFlowList(db *gorm.DB, req *types.GroupPageRequest, template string) ([]*GroupedSourceFlowItem, int64, error) {
 	var items []*GroupedSourceFlowItem
 	var total int64
 	// 构建查询条件
@@ -47,7 +48,7 @@ func (m *NoderedSourceFlowRepo) GetGroupedSourceFlowList(db *gorm.DB, req *types
 		WHERE EXISTS (
 		    SELECT 1
 		    FROM "supos_node_flows" u
-		    WHERE u.group_id = g.id
+		    WHERE u.group_id = g.id AND u.template = ?
 		)
 		AND g.type = ?
 		UNION ALL
@@ -61,7 +62,11 @@ func (m *NoderedSourceFlowRepo) GetGroupedSourceFlowList(db *gorm.DB, req *types
 		    0 AS sort,
 		    u.create_time AS create_at
 		FROM supos_node_flows u
+		WHERE u.template = ?
 	`
+
+	// 调整参数顺序
+	args = []interface{}{template, req.GroupType, req.GroupType, template}
 
 	// 构建查询SQL
 	querySQL := baseSQL
@@ -89,7 +94,7 @@ func (m *NoderedSourceFlowRepo) GetGroupedSourceFlowList(db *gorm.DB, req *types
 	countSQL := "SELECT COUNT(*) FROM (" + querySQL + ") t"
 	err := db.Raw(countSQL, args...).Scan(&total).Error
 	if err != nil {
-		logx.Errorf("failed to count grouped source flow list: %v", err)
+		logx.Errorf("failed to count grouped flow list: %v", err)
 		return nil, 0, err
 	}
 
@@ -101,11 +106,43 @@ func (m *NoderedSourceFlowRepo) GetGroupedSourceFlowList(db *gorm.DB, req *types
 	// 执行查询
 	err = db.Raw(querySQL, args...).Scan(&items).Error
 	if err != nil {
-		logx.Errorf("failed to get grouped source flow list: %v", err)
+		logx.Errorf("failed to get grouped flow list: %v", err)
 		return nil, 0, err
 	}
 
 	return items, total, nil
+}
+
+// GetGroupedSourceFlowList 按分组获取source flow列表
+func (m *NoderedSourceFlowRepo) GetGroupedSourceFlowList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedSourceFlowItem, int64, error) {
+	// 根据 groupType 判断 template
+	var template string
+	switch req.GroupType {
+	case 1:
+		template = "node-red"
+	case 2:
+		template = "event-flow"
+	default:
+		return nil, 0, fmt.Errorf("invalid group type: %d", req.GroupType)
+	}
+
+	return m.GetGroupedFlowList(db, req, template)
+}
+
+// GetGroupedEventFlowList 按分组获取event flow列表
+func (m *NoderedSourceFlowRepo) GetGroupedEventFlowList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedSourceFlowItem, int64, error) {
+	// 根据 groupType 判断 template
+	var template string
+	switch req.GroupType {
+	case 1:
+		template = "node-red"
+	case 2:
+		template = "event-flow"
+	default:
+		return nil, 0, fmt.Errorf("invalid group type: %d", req.GroupType)
+	}
+
+	return m.GetGroupedFlowList(db, req, template)
 }
 
 /*
