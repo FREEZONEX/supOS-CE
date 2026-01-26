@@ -247,7 +247,6 @@ type GroupedDashboardItem struct {
 func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedDashboardItem, int64, error) {
 	var items []*GroupedDashboardItem
 	var total int64
-
 	// 构建查询条件
 	whereConditions := []string{}
 	args := []interface{}{}
@@ -268,12 +267,12 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 		    FROM "uns_dashboard" u
 		    WHERE u.group_id = g.id
 		)
-		AND g.type = 1
+		AND g.type = 3
 		UNION ALL
 
 		SELECT
 		    u.id AS id,
-		    NULL AS group_type,
+		    3 AS group_type,
 		    u.name AS name,
 		    u.description AS description,
 		    u.group_id AS group_id,

@@ -34,6 +34,10 @@ service backend {
     @doc "批量删除组"
     @handler batchDelete
     delete /batch (GroupBatchDeleteReq) returns ()
+
+    @doc "操作分组数据（移入移出）"
+    @handler operationGroup
+    post /operationGroup (OperationGroupReq) returns (JsonResult)
 }
 
 type (
@@ -80,5 +84,11 @@ type (
 
     GroupBatchDeleteReq {
         IDs []int64 `json:"ids"`
+    }
+
+    OperationGroupReq {
+        ID          *int64  `json:"id,string"`//组ID
+        BizId       *string  `json:"bizId"`//业务ID
+        Status      *bool `json:"status"`// true移入，false移出
     }
 )

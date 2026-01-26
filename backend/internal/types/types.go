@@ -577,7 +577,7 @@ type GroupBatchDeleteReq struct {
 
 type GroupBizVO struct {
 	ID          int64  `json:"id"`
-	GroupType   int64  `json:"groupType,optional"`
+	GroupType   *int64 `json:"groupType,optional"`
 	Name        string `json:"name"`
 	Description string `json:"description,optional"`
 	Sort        int32  `json:"sort,optional"`
@@ -824,6 +824,12 @@ type MountDetailVo struct {
 	MountType   *int16 `json:"mountType,omitempty,string"`
 	MountSource string `json:"mountSource,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`
+}
+
+type OperationGroupReq struct {
+	ID     *int64  `json:"id,string"` //组ID
+	BizId  *string `json:"bizId"`     //业务ID
+	Status *bool   `json:"status"`    // true移入，false移出
 }
 
 type OperationResult struct {

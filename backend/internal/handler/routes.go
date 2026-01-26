@@ -297,6 +297,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/by-type",
 					Handler: suposgroup.GetByTypeHandler(serverCtx),
 				},
+				{
+					// 操作分组数据（移入移出）
+					Method:  http.MethodPost,
+					Path:    "/operationGroup",
+					Handler: suposgroup.OperationGroupHandler(serverCtx),
+				},
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/group"),

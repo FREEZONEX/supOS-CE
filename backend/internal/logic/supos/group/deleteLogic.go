@@ -9,6 +9,7 @@ import (
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+
 	"gitee.com/unitedrhino/share/stores"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -55,6 +56,14 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 		return &types.JsonResult{
 			Code: 500,
 			Msg:  "删除组失败: " + err.Error(),
+		}, nil
+	}
+
+	if err = groupMapper.DeleteById(db, req.ID); err != nil {
+		l.Errorf("删除组关联的业务groupId失败: %v", err)
+		return &types.JsonResult{
+			Code: 500,
+			Msg:  "删除组关联的业务groupId失败: " + err.Error(),
 		}, nil
 	}
 

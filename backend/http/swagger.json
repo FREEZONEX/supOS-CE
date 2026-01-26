@@ -2629,6 +2629,64 @@
         }
       }
     },
+    "/inter-api/supos/group/operationGroup": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "操作分组数据（移入移出）",
+        "operationId": "supos/GroupOperationGroup",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "bizId",
+                "status"
+              ],
+              "properties": {
+                "bizId": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inter-api/supos/group/{id}": {
       "delete": {
         "consumes": [
@@ -5553,6 +5611,18 @@
         "operationId": "supos/Uns/DashboardGetGroupedDashboardList",
         "parameters": [
           {
+            "type": "integer",
+            "name": "groupType",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "groupId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
             "type": "string",
             "name": "k",
             "in": "query",
@@ -5571,25 +5641,6 @@
             "name": "pageSize",
             "in": "query",
             "required": true
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "groupId"
-              ],
-              "properties": {
-                "groupId": {
-                  "type": "integer"
-                },
-                "type": {
-                  "type": "integer"
-                }
-              }
-            }
           }
         ],
         "responses": {
@@ -5606,20 +5657,23 @@
                   "items": {
                     "type": "object",
                     "required": [
-                      "groupId",
+                      "id",
                       "name"
                     ],
                     "properties": {
-                      "description": {
+                      "createAt": {
                         "type": "string"
                       },
-                      "groupCreateAt": {
+                      "description": {
                         "type": "string"
                       },
                       "groupId": {
                         "type": "integer"
                       },
                       "groupType": {
+                        "type": "integer"
+                      },
+                      "id": {
                         "type": "integer"
                       },
                       "name": {
@@ -12918,7 +12972,7 @@
       }
     }
   },
-  "x-date": "2026-01-23 11:00:02",
+  "x-date": "2026-01-23 16:19:28",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

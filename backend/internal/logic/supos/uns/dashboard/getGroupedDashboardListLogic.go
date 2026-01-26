@@ -64,7 +64,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 			// 处理分组数据
 			groupID, _ := parseStringToInt64(item.ID)
 			groupBizVO.ID = groupID
-			groupBizVO.GroupType = item.GroupType
+			groupBizVO.GroupType = &item.GroupType
 			groupBizVO.Name = item.Name
 			groupBizVO.Description = item.Description
 			groupBizVO.Sort = item.Sort

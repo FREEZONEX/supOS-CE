@@ -1,6 +1,8 @@
 package relationDB
 
 import (
+	"backend/internal/types"
+	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 )
@@ -117,5 +119,87 @@ func (m *GroupMapper) DeleteBatchIds(db *gorm.DB, ids []int64) error {
 		logx.Errorf("failed to batch delete groups: %v", err)
 		return err
 	}
+	return nil
+}
+
+// CleanBizGroupById 清除分组下的所有业务关联（将业务的分组ID设为NULL）
+func (m *GroupMapper) CleanBizGroupById(db *gorm.DB, id int64) error {
+	// 执行三个更新语句，确保在同一个事务中执行
+	err := db.Transaction(func(tx *gorm.DB) error {
+		// 更新 uns_dashboard 表
+		if err := tx.Exec(`UPDATE "uns_dashboard" SET group_id = NULL WHERE group_id = ?`, id).Error; err != nil {
+			logx.Errorf("failed to update uns_dashboard group_id: %v", err)
+			return err
+		}
+
+		// 更新 supos_node_flows 表
+		if err := tx.Exec(`UPDATE "supos_node_flows" SET group_id = NULL WHERE group_id = ?`, id).Error; err != nil {
+			logx.Errorf("failed to update supos_node_flows group_id: %v", err)
+			return err
+		}
+
+		// 更新 supos_event_flows 表
+		if err := tx.Exec(`UPDATE "supos_event_flows" SET group_id = NULL WHERE group_id = ?`, id).Error; err != nil {
+			logx.Errorf("failed to update supos_event_flows group_id: %v", err)
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		logx.Errorf("failed to clean biz group by id: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// OperationGroup 操作分组数据（移入移出）
+func (m *GroupMapper) OperationGroup(db *gorm.DB, req *types.OperationGroupReq) error {
+	// 查询分组信息
+	var group GroupModel
+	err := db.Where("id = ?", *req.ID).First(&group).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.NotFind
+		}
+		logx.Errorf("failed to select group by id: %v", err)
+		return err
+	}
+
+	// 根据分组类型确定要操作的表
+	var tableName string
+	switch *group.Type {
+	case 1:
+		tableName = "supos_node_flows"
+	case 2:
+		tableName = "supos_event_flows"
+	case 3:
+		tableName = "uns_dashboard"
+	default:
+		return errors.Parameter
+	}
+
+	// 根据状态确定要设置的group_id值
+	if *req.Status {
+		// 移入分组：set group_id = req.ID
+		err = db.Exec(
+			"UPDATE "+tableName+" SET group_id = ? WHERE id = ?",
+			*req.ID, *req.BizId,
+		).Error
+	} else {
+		// 移出分组：set group_id = NULL
+		err = db.Exec(
+			"UPDATE "+tableName+" SET group_id = NULL WHERE id = ?",
+			*req.BizId,
+		).Error
+	}
+
+	if err != nil {
+		logx.Errorf("failed to operation group: %v", err)
+		return err
+	}
+
 	return nil
 }
