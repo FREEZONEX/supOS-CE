@@ -84,6 +84,7 @@
   border-radius: 3px;
   color: var(--supos-theme-color);
   cursor: pointer;
+  min-height: 122px;
 
   &:hover {
     background: rgb(var(--supos-theme-color-rgb), 0.1);
