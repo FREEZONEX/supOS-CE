@@ -249,7 +249,7 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 	var total int64
 	// 构建查询条件
 	whereConditions := []string{}
-	args := []interface{}{}
+	args := []interface{}{req.GroupType, req.GroupType}
 
 	// 基础SQL查询
 	baseSQL := `
@@ -267,12 +267,12 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 		    FROM "uns_dashboard" u
 		    WHERE u.group_id = g.id
 		)
-		AND g.type = 3
+		AND g.type = ?
 		UNION ALL
 
 		SELECT
 		    u.id AS id,
-		    3 AS group_type,
+		    ? AS group_type,
 		    u.name AS name,
 		    u.description AS description,
 		    u.group_id AS group_id,
