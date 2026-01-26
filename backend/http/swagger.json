@@ -2137,6 +2137,110 @@
         }
       }
     },
+    "/inter-api/supos/flow/getGroupedSourceFlowList": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "分页按分组获取source flow列表",
+        "operationId": "supos/SourceflowGetGroupedSourceFlowList",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "groupType",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "groupId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "k",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "createAt": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "groupId": {
+                        "type": "integer"
+                      },
+                      "groupType": {
+                        "type": "integer"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "sort": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inter-api/supos/global/data/export": {
       "post": {
         "produces": [
@@ -2656,12 +2760,15 @@
               ],
               "properties": {
                 "bizId": {
+                  "description": "业务ID",
                   "type": "string"
                 },
                 "id": {
+                  "description": "组ID",
                   "type": "integer"
                 },
                 "status": {
+                  "description": "true移入，false移出",
                   "type": "boolean"
                 }
               }
@@ -12827,7 +12934,7 @@
     "/service-api/supos/flow/by/aliases": {
       "post": {
         "consumes": [
-          "application/json"
+          "application/x-www-form-urlencoded"
         ],
         "produces": [
           "application/json"
@@ -12839,23 +12946,36 @@
         "operationId": "supos/Sourceflow/ServiceApiBatchSourceFlowByAliases",
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "required": [
-                "aliases"
-              ],
-              "properties": {
-                "aliases": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
+            "type": "integer",
+            "name": "groupType",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "name": "groupId",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "k",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
+            "name": "pageSize",
+            "in": "formData",
+            "required": true
           }
         ],
         "responses": {
@@ -12972,7 +13092,7 @@
       }
     }
   },
-  "x-date": "2026-01-23 16:19:28",
+  "x-date": "2026-01-26 13:04:58",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

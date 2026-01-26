@@ -503,6 +503,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/flows",
 					Handler: supossourceflow.ListSourceFlowsHandler(serverCtx),
 				},
+				{
+					// 分页按分组获取source flow列表
+					Method:  http.MethodGet,
+					Path:    "/flow/getGroupedSourceFlowList",
+					Handler: supossourceflow.GetGroupedSourceFlowListHandler(serverCtx),
+				},
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos"),

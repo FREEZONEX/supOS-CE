@@ -1159,6 +1159,11 @@ type SourceFlowExportParam struct {
 	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
 }
 
+type SourceFlowGroupPageResp struct {
+	PageResultDTO
+	Data []GroupBizVO `json:"data"`
+}
+
 type SourceFlowInfo struct {
 	ID          string `json:"id,optional"`
 	FlowName    string `json:"flowName,optional"`

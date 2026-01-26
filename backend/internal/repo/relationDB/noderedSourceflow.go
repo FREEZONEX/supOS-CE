@@ -1,15 +1,112 @@
 package relationDB
 
 import (
+	"backend/internal/types"
 	"context"
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"gitee.com/unitedrhino/share/stores"
+	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+// GroupedSourceFlowItem 分组和未分组source flow统一返回结构
+type GroupedSourceFlowItem struct {
+	ID          string    `gorm:"column:id" json:"id"`                   // ID
+	GroupType   int64     `gorm:"column:group_type" json:"groupType"`    // 类型：GROUP 表示分组，BIZ 表示未分组的source flow
+	Name        string    `gorm:"column:name" json:"name"`               // 名称
+	Description string    `gorm:"column:description" json:"description"` // 描述
+	GroupID     int64     `gorm:"column:group_id" json:"groupId"`        // 分组ID
+	Sort        int32     `gorm:"column:sort" json:"sort"`               // 排序字段
+	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`      // 创建时间
+}
+
+// GetGroupedSourceFlowList 按分组获取source flow列表
+func (m *NoderedSourceFlowRepo) GetGroupedSourceFlowList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedSourceFlowItem, int64, error) {
+	var items []*GroupedSourceFlowItem
+	var total int64
+	// 构建查询条件
+	whereConditions := []string{}
+	args := []interface{}{req.GroupType, req.GroupType}
+
+	// 基础SQL查询
+	baseSQL := `
+		SELECT
+		    g.id::varchar AS id,
+		    g.type AS group_type,
+		    g.name AS name,
+		    g.description AS description,
+		    NULL AS group_id,
+		    g.sort AS sort,
+		    g.create_at AS create_at
+		FROM resource_group g
+		WHERE EXISTS (
+		    SELECT 1
+		    FROM "supos_node_flows" u
+		    WHERE u.group_id = g.id
+		)
+		AND g.type = ?
+		UNION ALL
+
+		SELECT
+		    u.id::varchar AS id,
+		    ? AS group_type,
+		    u.flow_name AS name,
+		    u.description AS description,
+		    u.group_id AS group_id,
+		    0 AS sort,
+		    u.create_time AS create_at
+		FROM supos_node_flows u
+	`
+
+	// 构建查询SQL
+	querySQL := baseSQL
+
+	// 添加分组ID筛选条件
+	if req.GroupId > 0 {
+		whereConditions = append(whereConditions, "group_id = ?")
+		args = append(args, req.GroupId)
+	} else {
+		whereConditions = append(whereConditions, "group_id IS NULL")
+	}
+
+	// 添加关键词搜索条件
+	if req.K != "" {
+		whereConditions = append(whereConditions, "(name LIKE ? OR description LIKE ?)")
+		searchPattern := "%" + req.K + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
+
+	if len(whereConditions) > 0 {
+		querySQL = "SELECT * FROM (" + baseSQL + ") t WHERE " + strings.Join(whereConditions, " AND ")
+	}
+
+	// 查询总数
+	countSQL := "SELECT COUNT(*) FROM (" + querySQL + ") t"
+	err := db.Raw(countSQL, args...).Scan(&total).Error
+	if err != nil {
+		logx.Errorf("failed to count grouped source flow list: %v", err)
+		return nil, 0, err
+	}
+
+	// 实现分页
+	offset := (req.PageNo - 1) * req.PageSize
+	querySQL += " ORDER BY sort DESC, create_at DESC LIMIT ? OFFSET ?"
+	args = append(args, req.PageSize, offset)
+	logx.Debug("group sql : ", querySQL)
+	// 执行查询
+	err = db.Raw(querySQL, args...).Scan(&items).Error
+	if err != nil {
+		logx.Errorf("failed to get grouped source flow list: %v", err)
+		return nil, 0, err
+	}
+
+	return items, total, nil
+}
 
 /*
 这个是参考样例
