@@ -32,7 +32,7 @@ func NewPostLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PostLogic {
 	}
 }
 
-func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.CommonResp, err error) {
+func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err error) {
 	if req.Name == nil || *req.Name == "" {
 		return nil, errors.Parameter.WithMsg("组名称不能为空")
 	}
@@ -62,7 +62,9 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.CommonResp, err e
 		return nil, errors.Database.WithMsg("创建组失败").AddDetail(err)
 	}
 
-	return &types.CommonResp{
-		ID: group.ID,
+	return &types.JsonResult{
+		Code: 0,
+		Msg:  "创建成功",
+		Data: map[string]int64{"id": group.ID},
 	}, nil
 }

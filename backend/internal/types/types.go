@@ -582,7 +582,7 @@ type GroupBatchDeleteReq struct {
 
 type GroupBizVO struct {
 	ID          int64  `json:"id"`
-	Category    string `form:"category,optional"` //分类 group-分组 file-文件
+	Category    string `json:"category,optional"` //分类 group-分组 file-文件
 	GroupType   *int64 `json:"groupType,optional"`
 	Name        string `json:"name"`
 	Description string `json:"description,optional"`

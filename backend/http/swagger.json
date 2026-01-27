@@ -798,6 +798,10 @@
                       "name"
                     ],
                     "properties": {
+                      "category": {
+                        "description": "分类 group-分组 file-文件",
+                        "type": "string"
+                      },
                       "createAt": {
                         "type": "integer"
                       },
@@ -2026,6 +2030,10 @@
                       "name"
                     ],
                     "properties": {
+                      "category": {
+                        "description": "分类 group-分组 file-文件",
+                        "type": "string"
+                      },
                       "createAt": {
                         "type": "integer"
                       },
@@ -2626,7 +2634,18 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       },
@@ -2675,9 +2694,12 @@
             "schema": {
               "type": "object",
               "properties": {
-                "id": {
-                  "description": "id",
+                "code": {
                   "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
                 }
               }
             }
@@ -5950,6 +5972,10 @@
                       "name"
                     ],
                     "properties": {
+                      "category": {
+                        "description": "分类 group-分组 file-文件",
+                        "type": "string"
+                      },
                       "createAt": {
                         "type": "integer"
                       },
@@ -13261,7 +13287,7 @@
       }
     }
   },
-  "x-date": "2026-01-27 11:24:18",
+  "x-date": "2026-01-27 14:35:20",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

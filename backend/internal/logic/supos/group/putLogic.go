@@ -32,9 +32,9 @@ func NewPutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PutLogic {
 	}
 }
 
-func (l *PutLogic) Put(req *types.SaveGroupReq) error {
+func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err error) {
 	if req.ID == nil {
-		return errors.Parameter.WithMsg("组ID不能为空")
+		return nil, errors.Parameter.WithMsg("组ID不能为空")
 	}
 
 	db := stores.GetCommonConn(l.ctx)
@@ -44,10 +44,10 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) error {
 	group, err := groupMapper.SelectById(db, *req.ID)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
-		return errors.Database.WithMsg("查询组失败").AddDetail(err)
+		return nil, errors.Database.WithMsg("查询组失败").AddDetail(err)
 	}
 	if group == nil {
-		return errors.Parameter.WithMsg("组不存在")
+		return nil, errors.Parameter.WithMsg("组不存在")
 	}
 
 	// 更新字段
@@ -68,8 +68,12 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) error {
 	// 执行更新
 	if err = groupMapper.UpdateById(db, group); err != nil {
 		l.Errorf("更新组失败: %v", err)
-		return errors.Database.WithMsg("更新组失败").AddDetail(err)
+		return nil, errors.Database.WithMsg("更新组失败").AddDetail(err)
 	}
 
-	return nil
+	return &types.JsonResult{
+		Code: 0,
+		Msg:  "更新成功",
+		Data: nil,
+	}, nil
 }
