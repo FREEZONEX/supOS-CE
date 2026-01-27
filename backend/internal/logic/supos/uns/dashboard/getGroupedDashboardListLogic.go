@@ -5,13 +5,11 @@ package dashboard
 
 import (
 	"backend/internal/repo/relationDB"
+	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
 	"fmt"
 	"net/http"
-	"time"
-
-	"backend/internal/svc"
-	"backend/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -69,7 +67,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 			groupBizVO.Name = item.Name
 			groupBizVO.Description = item.Description
 			groupBizVO.Sort = item.Sort
-			groupBizVO.CreateAt = item.CreateAt.Format(time.RFC3339)
+			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
 			groupBizVO.GroupId = item.GroupID
 			groupBizVO.Category = item.Category
 		} else if item.GroupType == 0 {
@@ -78,7 +76,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 			groupBizVO.ID = bizID
 			groupBizVO.Name = item.Name
 			groupBizVO.Description = item.Description
-			groupBizVO.CreateAt = item.CreateAt.Format(time.RFC3339)
+			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
 			groupBizVO.GroupId = item.GroupID
 			groupBizVO.Category = item.Category
 		}

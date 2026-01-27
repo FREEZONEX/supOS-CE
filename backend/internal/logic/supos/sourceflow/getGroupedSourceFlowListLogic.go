@@ -5,13 +5,11 @@ package sourceflow
 
 import (
 	"backend/internal/repo/relationDB"
+	"backend/internal/svc"
+	"backend/internal/types"
 	"context"
 	"fmt"
 	"net/http"
-	"time"
-
-	"backend/internal/svc"
-	"backend/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -69,7 +67,7 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 			groupBizVO.Name = item.Name
 			groupBizVO.Description = item.Description
 			groupBizVO.Sort = item.Sort
-			groupBizVO.CreateAt = item.CreateAt.Format(time.RFC3339)
+			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
 			groupBizVO.GroupId = item.GroupID
 		} else if item.GroupType == 0 {
 			// 处理未分组的source flow数据
@@ -77,7 +75,7 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 			groupBizVO.ID = bizID
 			groupBizVO.Name = item.Name
 			groupBizVO.Description = item.Description
-			groupBizVO.CreateAt = item.CreateAt.Format(time.RFC3339)
+			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
 			groupBizVO.GroupId = item.GroupID
 		}
 		groupBizVOList = append(groupBizVOList, groupBizVO)

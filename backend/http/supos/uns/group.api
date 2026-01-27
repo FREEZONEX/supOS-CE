@@ -38,6 +38,10 @@ service backend {
     @doc "操作分组数据（移入移出）"
     @handler operationGroup
     post /operationGroup (OperationGroupReq) returns (JsonResult)
+
+    @doc "置顶分组"
+    @handler operationGroupTop
+    post /operationGroupTop (OperationGroupTopReq) returns (JsonResult)
 }
 
 type (
@@ -109,6 +113,11 @@ type (
         Description string `json:"description,optional"`
         Sort int32 `json:"sort,optional"`
         GroupId int64 `json:"groupId,optional"`
-        CreateAt string `json:"createAt,optional"`
+        CreateAt int64 `json:"createAt,optional"`
+    }
+
+    OperationGroupTopReq {
+        ID *int64 `json:"id,string"`//组ID
+        Status *bool `json:"status"`// true置顶（sort字段设置为1），false取消置顶(sort字段设置为0)
     }
 )

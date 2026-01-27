@@ -799,7 +799,7 @@
                     ],
                     "properties": {
                       "createAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "description": {
                         "type": "string"
@@ -2027,7 +2027,7 @@
                     ],
                     "properties": {
                       "createAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "description": {
                         "type": "string"
@@ -2888,6 +2888,62 @@
                 },
                 "status": {
                   "description": "true移入，false移出",
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/group/operationGroupTop": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "置顶分组",
+        "operationId": "supos/GroupOperationGroupTop",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "description": "组ID",
+                  "type": "integer"
+                },
+                "status": {
+                  "description": "true置顶（sort字段设置为1），false取消置顶(sort字段设置为0)",
                   "type": "boolean"
                 }
               }
@@ -5895,7 +5951,7 @@
                     ],
                     "properties": {
                       "createAt": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "description": {
                         "type": "string"
@@ -13205,7 +13261,7 @@
       }
     }
   },
-  "x-date": "2026-01-27 09:32:03",
+  "x-date": "2026-01-27 11:24:18",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

@@ -588,7 +588,7 @@ type GroupBizVO struct {
 	Description string `json:"description,optional"`
 	Sort        int32  `json:"sort,optional"`
 	GroupId     int64  `json:"groupId,optional"`
-	CreateAt    string `json:"createAt,optional"`
+	CreateAt    int64  `json:"createAt,optional"`
 }
 
 type GroupByTypeQuery struct {
@@ -837,6 +837,11 @@ type OperationGroupReq struct {
 	ID     *int64  `json:"id,string"` //组ID
 	BizId  *string `json:"bizId"`     //业务ID
 	Status *bool   `json:"status"`    // true移入，false移出
+}
+
+type OperationGroupTopReq struct {
+	ID     *int64 `json:"id,string"` //组ID
+	Status *bool  `json:"status"`    // true置顶（sort字段设置为1），false取消置顶(sort字段设置为0)
 }
 
 type OperationResult struct {

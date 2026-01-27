@@ -309,6 +309,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/operationGroup",
 					Handler: suposgroup.OperationGroupHandler(serverCtx),
 				},
+				{
+					// 置顶分组
+					Method:  http.MethodPost,
+					Path:    "/operationGroupTop",
+					Handler: suposgroup.OperationGroupTopHandler(serverCtx),
+				},
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/group"),
