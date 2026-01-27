@@ -751,6 +751,12 @@ const messages = {
   'uns.mqttDescription': '查看连接详细信息和配置。',
   'uns.backOverview': '返回概述',
   'uns.exportJsonWarning': '此文件过大，无法在此预览。请下载后查看完整内容。',
+  'uns.importAll': '导入所有',
+  'uns.overallProgress': '整体进度',
+  'uns.individualProgress': '详细进度',
+  'uns.uploadSuccess': '文件上传成功',
+  'uns.waitingFormParsing': '等待解析...',
+  'uns.deployNewApp': '点击部署新应用',
 
   //公共通用模块
   'common.url': '地址',

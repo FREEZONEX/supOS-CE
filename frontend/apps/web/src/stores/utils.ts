@@ -133,9 +133,9 @@ export function buildResourceTrees(resources: ResourceProps[]) {
   return {
     // 菜单分组 不带子菜单，过滤掉空目录
     menuTree: buildSortedTree(treeResources)?.filter((f) => f.type === 2 || (f.type === 1 && f?.children?.length)),
-    // home页分组 不带子菜单，过滤掉空目录
+    // home页分组 不带子菜单，过滤掉空目录(应用集的目录 就算空的 也放出来 id为4)
     homeTree: buildSortedTree(treeResources?.filter((r) => r.homeEnable))?.filter(
-      (f) => f.type === 2 || (f.type === 1 && f?.children?.length)
+      (f) => f.type === 2 || (f.type === 1 && (f?.children?.length ? true : f.id === '4'))
     ),
     // options
     menuGroup,
