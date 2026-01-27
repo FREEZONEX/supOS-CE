@@ -771,6 +771,13 @@
             "name": "pageSize",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "分类 group-分组 file-文件",
+            "name": "category",
+            "in": "query",
+            "allowEmptyValue": true
           }
         ],
         "responses": {
@@ -1992,6 +1999,13 @@
             "name": "pageSize",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "分类 group-分组 file-文件",
+            "name": "category",
+            "in": "query",
+            "allowEmptyValue": true
           }
         ],
         "responses": {
@@ -2726,6 +2740,7 @@
         "parameters": [
           {
             "type": "integer",
+            "description": "1-sourceflow 2-eventflow 3-datasource",
             "name": "type",
             "in": "query",
             "required": true
@@ -5852,6 +5867,13 @@
             "name": "pageSize",
             "in": "query",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "分类 group-分组 file-文件",
+            "name": "category",
+            "in": "query",
+            "allowEmptyValue": true
           }
         ],
         "responses": {
@@ -13183,7 +13205,7 @@
       }
     }
   },
-  "x-date": "2026-01-26 14:55:24",
+  "x-date": "2026-01-27 09:32:03",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

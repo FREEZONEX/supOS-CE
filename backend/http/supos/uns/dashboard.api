@@ -155,24 +155,6 @@ type IsExistRequest {
     Alias string `form:"alias"`
 }
 
-type GroupPageRequest {
-	GroupType int64 `form:"groupType,optional"`
-	GroupId    int64 `form:"groupId,optional"`
-    K         string `form:"k,optional"`
-    PageNo    int64  `form:"pageNo,default=1"`
-    PageSize  int64  `form:"pageSize,default=10"`
-}
-
-type GroupBizVO {
-	ID          int64  `json:"id"`
-	GroupType   *int64 `json:"groupType,optional"`
-	Name        string `json:"name"`
-	Description string `json:"description,optional"`
-	Sort        int32  `json:"sort,optional"`
-    GroupId     int64 `json:"groupId,optional"`
-	CreateAt    string `json:"createAt,optional"`
-}
-
 type DashboardGroupPageResp {
 	PageResultDTO
 	Data []GroupBizVO `json:"data"`

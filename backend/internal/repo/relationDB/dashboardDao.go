@@ -235,7 +235,8 @@ func (m *DashboardMapper) DeleteBatchIds(db *gorm.DB, ids []string) error {
 // GroupedDashboardItem 分组和未分组dashboard统一返回结构
 type GroupedDashboardItem struct {
 	ID          string    `gorm:"column:id" json:"id"`                   // ID
-	GroupType   int64     `gorm:"column:group_type" json:"groupType"`    // 类型：GROUP 表示分组，BIZ 表示未分组的dashboard
+	Category    string    `gorm:"column:category" json:"category"`       // 分类 group-分组 file-文件
+	GroupType   int64     `gorm:"column:group_type" json:"groupType"`    // 类型：1-sourceflow 2-eventflow 3-datasource
 	Name        string    `gorm:"column:name" json:"name"`               // 名称
 	Description string    `gorm:"column:description" json:"description"` // 描述
 	GroupID     int64     `gorm:"column:group_id" json:"groupId"`        // 分组ID
@@ -255,6 +256,7 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 	baseSQL := `
 		SELECT
 		    g.id::varchar AS id,
+			'group' as category,
 		    g.type AS group_type,
 		    g.name AS name,
 		    g.description AS description,
@@ -272,13 +274,14 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 
 		SELECT
 		    u.id AS id,
+		    'file' as category,
 		    ? AS group_type,
 		    u.name AS name,
 		    u.description AS description,
 		    u.group_id AS group_id,
-		    0 AS sort,
+		    r.mark AS sort,
 		    u.create_time AS create_at
-		FROM uns_dashboard u
+		FROM uns_dashboard u LEFT JOIN uns_dashboard_top_recodes r on u.id = r.id::varchar
 	`
 
 	// 构建查询SQL
@@ -292,7 +295,12 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 		whereConditions = append(whereConditions, "group_id IS NULL")
 	}
 
-	// 添加关键词搜索条件
+	//分类 group-分组 file-文件
+	if req.Category != "" {
+		whereConditions = append(whereConditions, "category = ?")
+		args = append(args, req.Category)
+	}
+
 	if req.K != "" {
 		whereConditions = append(whereConditions, "(name LIKE ? OR description LIKE ?)")
 		searchPattern := "%" + req.K + "%"

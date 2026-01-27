@@ -61,7 +61,7 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(db *gorm.DB, req *types.Group
 		    u.group_id AS group_id,
 		    0 AS sort,
 		    u.create_time AS create_at
-		FROM supos_node_flows u
+		FROM supos_node_flows u LEFT JOIN supos_node_flow_top_recodes r on u.id = r.id::varchar
 		WHERE u.template = ?
 	`
 

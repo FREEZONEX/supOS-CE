@@ -48,34 +48,34 @@ type (
     }
 
     GroupByTypeQuery {
-        Type int16 `form:"type"`
-        PageInfo
+        Type int16 `form:"type"` //1-sourceflow 2-eventflow 3-datasource
+        PageInfo                 // 分页参数
     }
 
     GroupVO {
-        ID          int64  `json:"id"`
-        Type        *int16 `json:"type,optional"`
-        Name        string `json:"name"`
+        ID int64 `json:"id"`
+        Type *int16 `json:"type,optional"`
+        Name string `json:"name"`
         Description string `json:"description,optional"`
-        Sort        int32  `json:"sort,optional"`
-        UpdateAt    string `json:"updateAt,optional"`
-        CreateAt    string `json:"createAt,optional"`
+        Sort int32 `json:"sort,optional"`
+        UpdateAt string `json:"updateAt,optional"`
+        CreateAt string `json:"createAt,optional"`
     }
 
     GroupPageResultVO {
-        PageNo   int64       `json:"pageNo"`
-        PageSize int64       `json:"pageSize"`
-        Total    int64       `json:"total"`
-        Code     int64       `json:"code"`
-        Data     []GroupVO   `json:"data"`
+        PageNo int64 `json:"pageNo"`
+        PageSize int64 `json:"pageSize"`
+        Total int64 `json:"total"`
+        Code int64 `json:"code"`
+        Data []GroupVO `json:"data"`
     }
 
     SaveGroupReq {
-        ID          *int64  `json:"id,string,optional"`
-        Type        *int16  `json:"type,optional"`
-        Name        *string `json:"name,optional"`
+        ID *int64 `json:"id,string,optional"`
+        Type *int16 `json:"type,optional"`
+        Name *string `json:"name,optional"`
         Description *string `json:"description,optional"`
-        Sort        *int32  `json:"sort,optional"`
+        Sort *int32 `json:"sort,optional"`
     }
 
     GroupIDReq {
@@ -87,8 +87,28 @@ type (
     }
 
     OperationGroupReq {
-        ID          *int64  `json:"id,string"`//组ID
-        BizId       *string  `json:"bizId"`//业务ID
-        Status      *bool `json:"status"`// true移入，false移出
+        ID *int64 `json:"id,string"`//组ID
+        BizId *string `json:"bizId"`//业务ID
+        Status *bool `json:"status"`// true移入，false移出
+    }
+
+    GroupPageRequest {
+        GroupType int64 `form:"groupType,optional"`
+        GroupId int64 `form:"groupId,optional"`
+        K string `form:"k,optional"`
+        PageNo int64 `form:"pageNo,default=1"`
+        PageSize int64 `form:"pageSize,default=10"`
+        Category string `form:"category,optional"` //分类 group-分组 file-文件
+    }
+
+    GroupBizVO {
+        ID int64 `json:"id"`
+        Category string `form:"category,optional"` //分类 group-分组 file-文件
+        GroupType *int64 `json:"groupType,optional"`
+        Name string `json:"name"`
+        Description string `json:"description,optional"`
+        Sort int32 `json:"sort,optional"`
+        GroupId int64 `json:"groupId,optional"`
+        CreateAt string `json:"createAt,optional"`
     }
 )

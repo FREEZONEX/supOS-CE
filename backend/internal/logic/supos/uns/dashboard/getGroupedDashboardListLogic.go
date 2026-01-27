@@ -71,6 +71,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 			groupBizVO.Sort = item.Sort
 			groupBizVO.CreateAt = item.CreateAt.Format(time.RFC3339)
 			groupBizVO.GroupId = item.GroupID
+			groupBizVO.Category = item.Category
 		} else if item.GroupType == 0 {
 			// 处理未分组的dashboard数据
 			bizID, _ := parseStringToInt64(item.ID)
@@ -79,6 +80,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 			groupBizVO.Description = item.Description
 			groupBizVO.CreateAt = item.CreateAt.Format(time.RFC3339)
 			groupBizVO.GroupId = item.GroupID
+			groupBizVO.Category = item.Category
 		}
 		groupBizVOList = append(groupBizVOList, groupBizVO)
 	}

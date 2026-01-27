@@ -582,6 +582,7 @@ type GroupBatchDeleteReq struct {
 
 type GroupBizVO struct {
 	ID          int64  `json:"id"`
+	Category    string `form:"category,optional"` //分类 group-分组 file-文件
 	GroupType   *int64 `json:"groupType,optional"`
 	Name        string `json:"name"`
 	Description string `json:"description,optional"`
@@ -591,7 +592,7 @@ type GroupBizVO struct {
 }
 
 type GroupByTypeQuery struct {
-	Type int16 `form:"type"`
+	Type int16 `form:"type"` //1-sourceflow 2-eventflow 3-datasource
 	PageInfo
 }
 
@@ -605,6 +606,7 @@ type GroupPageRequest struct {
 	K         string `form:"k,optional"`
 	PageNo    int64  `form:"pageNo,default=1"`
 	PageSize  int64  `form:"pageSize,default=10"`
+	Category  string `form:"category,optional"` //分类 group-分组 file-文件
 }
 
 type GroupPageResultVO struct {
