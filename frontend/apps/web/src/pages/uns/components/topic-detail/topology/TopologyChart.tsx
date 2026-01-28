@@ -19,13 +19,13 @@ import { Graph } from '@antv/x6';
 import { debounce } from 'lodash-es';
 import { findDate } from '@/pages/uns/components/topic-detail/topology/data.ts';
 import { useBaseStore } from '@/stores/base';
-import { bindDashboardForUns } from '@/apis/inter-api';
 import { getSearchParamsString } from '@/utils';
 import { bindFlowForUns, createFlow, goFlow } from '@/apis/inter-api/flow.ts';
 import { useNavigate } from 'react-router';
 import { useTranslate } from '@/hooks';
 import { useDeepCompareEffect } from 'ahooks';
 import { getRefreshList, getSourceList } from '@/apis/chat2db';
+import { bindDashboardForUns } from '@/apis/inter-api/dashboard.ts';
 
 register({
   shape: TypeEnum.NodeRed,
