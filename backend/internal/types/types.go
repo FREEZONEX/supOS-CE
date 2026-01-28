@@ -62,6 +62,25 @@ type BaseResult struct {
 	Msg  string `json:"msg"`
 }
 
+type UpdateAppKeyReq struct {
+	AppSecretKey string `json:"appSecretKey"`
+	Status       int32  `json:"status"`
+}
+
+type AppKeyInfo struct {
+	ID             int64  `json:"id"`
+	AppSecretKey   string `json:"appSecretKey"`
+	AppSecretValue string `json:"appSecretValue"`
+	Status         int32  `json:"status"`
+	CreateTime     string `json:"createTime"`
+}
+
+type ListAppKeyResp struct {
+	Code int32         `json:"code"`
+	Msg  string        `json:"msg"`
+	Data []*AppKeyInfo `json:"data"`
+}
+
 type BatchCreateReq struct {
 	Flags      int               `form:"flags,optional"`
 	FromImport bool              `form:"fromImport,optional,default=false"`

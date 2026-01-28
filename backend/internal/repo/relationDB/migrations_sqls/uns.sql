@@ -327,3 +327,10 @@ COMMENT ON COLUMN "resource_group"."type" IS '1-sourceFlow 2-eventFlow 3-dashboa
 
 alter table uns_dashboard add if not exists "group_id" int8 null default NULL;
 alter table supos_node_flows add if not exists "group_id" int8 null default NULL;
+
+CREATE TABLE if not exists "resource_app_key" (
+"id" BIGSERIAL PRIMARY KEY,
+"app_secret_key" varchar(200) NOT NULL,
+"app_secret_value" varchar(200) NOT NULL,
+"status" int2 default 1,
+"create_time" timestamptz(6) DEFAULT now());

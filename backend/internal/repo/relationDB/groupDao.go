@@ -2,6 +2,7 @@ package relationDB
 
 import (
 	"backend/internal/types"
+
 	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
@@ -218,4 +219,26 @@ func (m *GroupMapper) OperationGroup(db *gorm.DB, req *types.OperationGroupReq) 
 	}
 
 	return nil
+}
+
+// 根据name查询 Group
+func (m *GroupMapper) SelectByName(db *gorm.DB, name string) ([]*GroupModel, error) {
+	var groups []*GroupModel
+	err := db.Where("name = ?", name).Find(&groups).Error
+	if err != nil {
+		logx.Errorf("failed to select groups by name: %v", err)
+		return nil, err
+	}
+	return groups, nil
+}
+
+// 根据name查询 Group not id equals
+func (m *GroupMapper) SelectByNameNotId(db *gorm.DB, id int64, name string) ([]*GroupModel, error) {
+	var groups []*GroupModel
+	err := db.Where("name = ?", name).Where("id != ?", id).Find(&groups).Error
+	if err != nil {
+		logx.Errorf("failed to select groups by name: %v", err)
+		return nil, err
+	}
+	return groups, nil
 }

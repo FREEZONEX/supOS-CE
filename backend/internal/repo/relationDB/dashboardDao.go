@@ -245,18 +245,24 @@ type GroupedDashboardItem struct {
 }
 
 // GetGroupedDashboardList 按分组获取dashboard列表
-func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedDashboardItem, int64, error) {
-	var items []*GroupedDashboardItem
-	var total int64
-	// 构建查询条件
-	whereConditions := []string{}
-	args := []interface{}{req.GroupType, req.GroupType}
+func (m *DashboardMapper) GetGroupedDashboardList(
+	db *gorm.DB,
+	req *types.GroupPageRequest,
+) ([]*GroupedDashboardItem, int64, error) {
 
-	// 基础SQL查询
+	var (
+		items []*GroupedDashboardItem
+		total int64
+	)
+
+	whereConditions := make([]string, 0)
+	args := make([]interface{}, 0)
+
+	// ---------- base SQL ----------
 	baseSQL := `
 		SELECT
 		    g.id::varchar AS id,
-			'group' as category,
+		    'group' AS category,
 		    g.type AS group_type,
 		    g.name AS name,
 		    g.description AS description,
@@ -264,69 +270,92 @@ func (m *DashboardMapper) GetGroupedDashboardList(db *gorm.DB, req *types.GroupP
 		    g.sort AS sort,
 		    g.create_at AS create_at
 		FROM resource_group g
-		WHERE EXISTS (
-		    SELECT 1
-		    FROM "uns_dashboard" u
-		    WHERE u.group_id = g.id
-		)
-		AND g.type = ?
+
 		UNION ALL
 
 		SELECT
 		    u.id AS id,
-		    'file' as category,
-		    ? AS group_type,
+		    'file' AS category,
+		    $1 AS group_type,
 		    u.name AS name,
 		    u.description AS description,
 		    u.group_id AS group_id,
 		    r.mark AS sort,
 		    u.create_time AS create_at
-		FROM uns_dashboard u LEFT JOIN uns_dashboard_top_recodes r on u.id = r.id::varchar
+		FROM uns_dashboard u
+		LEFT JOIN uns_dashboard_top_recodes r
+		    ON u.id = r.id::varchar
 	`
 
-	// 构建查询SQL
-	querySQL := baseSQL
+	// $1
+	args = append(args, req.GroupType)
+	paramIdx := 2
 
-	// 添加分组ID筛选条件
+	// ---------- WHERE conditions ----------
+
+	// groupId
 	if req.GroupId > 0 {
-		whereConditions = append(whereConditions, "group_id = ?")
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("group_id = $%d", paramIdx),
+		)
 		args = append(args, req.GroupId)
+		paramIdx++
 	} else {
 		whereConditions = append(whereConditions, "group_id IS NULL")
 	}
 
-	//分类 group-分组 file-文件
+	// category
 	if req.Category != "" {
-		whereConditions = append(whereConditions, "category = ?")
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("category = $%d", paramIdx),
+		)
 		args = append(args, req.Category)
+		paramIdx++
 	}
 
+	// keyword
 	if req.K != "" {
-		whereConditions = append(whereConditions, "(name LIKE ? OR description LIKE ?)")
-		searchPattern := "%" + req.K + "%"
-		args = append(args, searchPattern, searchPattern)
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf(
+				"(name ILIKE $%d OR description ILIKE $%d)",
+				paramIdx, paramIdx+1,
+			),
+		)
+		like := "%" + req.K + "%"
+		args = append(args, like, like)
+		paramIdx += 2
 	}
 
+	// ---------- final query SQL ----------
+	querySQL := baseSQL
 	if len(whereConditions) > 0 {
-		querySQL = "SELECT * FROM (" + baseSQL + ") t WHERE " + strings.Join(whereConditions, " AND ")
+		querySQL = `
+			SELECT * FROM (` + baseSQL + `) t
+			WHERE ` + strings.Join(whereConditions, " AND ")
 	}
 
-	// 查询总数
+	// ---------- COUNT ----------
 	countSQL := "SELECT COUNT(*) FROM (" + querySQL + ") t"
-	err := db.Raw(countSQL, args...).Scan(&total).Error
-	if err != nil {
+	if err := db.Raw(countSQL, args...).Scan(&total).Error; err != nil {
 		logx.Errorf("failed to count grouped dashboard list: %v", err)
 		return nil, 0, err
 	}
 
-	// 实现分页
+	// ---------- pagination ----------
 	offset := (req.PageNo - 1) * req.PageSize
-	querySQL += " ORDER BY sort DESC, create_at DESC LIMIT ? OFFSET ?"
+	querySQL += fmt.Sprintf(
+		" ORDER BY sort DESC, create_at DESC LIMIT $%d OFFSET $%d",
+		paramIdx, paramIdx+1,
+	)
 	args = append(args, req.PageSize, offset)
-	logx.Debug("group sql : ", querySQL)
-	// 执行查询
-	err = db.Raw(querySQL, args...).Scan(&items).Error
-	if err != nil {
+
+	logx.Debugf("group sql: %s , args: %+v", querySQL, args)
+
+	// ---------- query ----------
+	if err := db.Raw(querySQL, args...).Scan(&items).Error; err != nil {
 		logx.Errorf("failed to get grouped dashboard list: %v", err)
 		return nil, 0, err
 	}

@@ -40,6 +40,16 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 	db := stores.GetCommonConn(l.ctx)
 	groupMapper := &relationDB.GroupMapper{}
 
+	// 检查组名是否已存在
+	existingGroup, err := groupMapper.SelectByName(db, *req.Name)
+	if err != nil {
+		l.Errorf("查询组失败: %v", err)
+		return nil, errors.Database.WithMsg("创建组失败").AddDetail(err)
+	}
+	if len(existingGroup) > 0 {
+		return nil, errors.Parameter.WithMsg("组名称已存在")
+	}
+
 	// 构建组模型
 	group := &relationDB.GroupModel{
 		Type:        req.Type,

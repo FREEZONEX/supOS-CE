@@ -27,14 +27,21 @@ type GroupedSourceFlowItem struct {
 
 // GetGroupedSourceFlowList 按分组获取source flow列表
 // GetGroupedFlowList 按分组获取flow列表（内部通用方法）
-func (m *NoderedSourceFlowRepo) GetGroupedFlowList(db *gorm.DB, req *types.GroupPageRequest, template string) ([]*GroupedSourceFlowItem, int64, error) {
-	var items []*GroupedSourceFlowItem
-	var total int64
-	// 构建查询条件
-	whereConditions := []string{}
-	args := []interface{}{req.GroupType, req.GroupType}
+func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
+	db *gorm.DB,
+	req *types.GroupPageRequest,
+	template string,
+) ([]*GroupedSourceFlowItem, int64, error) {
 
-	// 基础SQL查询
+	var (
+		items []*GroupedSourceFlowItem
+		total int64
+	)
+
+	whereConditions := make([]string, 0)
+	args := make([]interface{}, 0)
+
+	// ---------- base SQL ----------
 	baseSQL := `
 		SELECT
 		    g.id::varchar AS id,
@@ -45,67 +52,83 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(db *gorm.DB, req *types.Group
 		    g.sort AS sort,
 		    g.create_at AS create_at
 		FROM resource_group g
-		WHERE EXISTS (
-		    SELECT 1
-		    FROM "supos_node_flows" u
-		    WHERE u.group_id = g.id AND u.template = ?
-		)
-		AND g.type = ?
+		WHERE g.type = $1
+
 		UNION ALL
 
 		SELECT
 		    u.id::varchar AS id,
-		    ? AS group_type,
+		    $1 AS group_type,
 		    u.flow_name AS name,
 		    u.description AS description,
 		    u.group_id AS group_id,
 		    0 AS sort,
 		    u.create_time AS create_at
-		FROM supos_node_flows u LEFT JOIN supos_node_flow_top_recodes r on u.id = r.id::varchar
-		WHERE u.template = ?
+		FROM supos_node_flows u
+		LEFT JOIN supos_node_flow_top_recodes r
+		    ON u.id = r.id::varchar
+		WHERE u.template = $2
 	`
 
-	// 调整参数顺序
-	args = []interface{}{template, req.GroupType, req.GroupType, template}
+	// $1 -> groupType, $2 -> template
+	args = append(args, req.GroupType, template)
+	paramIdx := 3
 
-	// 构建查询SQL
-	querySQL := baseSQL
+	// ---------- WHERE conditions ----------
 
-	// 添加分组ID筛选条件
+	// groupId
 	if req.GroupId > 0 {
-		whereConditions = append(whereConditions, "group_id = ?")
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("group_id = $%d", paramIdx),
+		)
 		args = append(args, req.GroupId)
+		paramIdx++
 	} else {
 		whereConditions = append(whereConditions, "group_id IS NULL")
 	}
 
-	// 添加关键词搜索条件
+	// keyword
 	if req.K != "" {
-		whereConditions = append(whereConditions, "(name LIKE ? OR description LIKE ?)")
-		searchPattern := "%" + req.K + "%"
-		args = append(args, searchPattern, searchPattern)
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf(
+				"(name ILIKE $%d OR description ILIKE $%d)",
+				paramIdx, paramIdx+1,
+			),
+		)
+		like := "%" + req.K + "%"
+		args = append(args, like, like)
+		paramIdx += 2
 	}
 
+	// ---------- final query SQL ----------
+	querySQL := baseSQL
 	if len(whereConditions) > 0 {
-		querySQL = "SELECT * FROM (" + baseSQL + ") t WHERE " + strings.Join(whereConditions, " AND ")
+		querySQL = `
+			SELECT * FROM (` + baseSQL + `) t
+			WHERE ` + strings.Join(whereConditions, " AND ")
 	}
 
-	// 查询总数
+	// ---------- COUNT ----------
 	countSQL := "SELECT COUNT(*) FROM (" + querySQL + ") t"
-	err := db.Raw(countSQL, args...).Scan(&total).Error
-	if err != nil {
+	if err := db.Raw(countSQL, args...).Scan(&total).Error; err != nil {
 		logx.Errorf("failed to count grouped flow list: %v", err)
 		return nil, 0, err
 	}
 
-	// 实现分页
+	// ---------- pagination ----------
 	offset := (req.PageNo - 1) * req.PageSize
-	querySQL += " ORDER BY sort DESC, create_at DESC LIMIT ? OFFSET ?"
+	querySQL += fmt.Sprintf(
+		" ORDER BY sort DESC, create_at DESC LIMIT $%d OFFSET $%d",
+		paramIdx, paramIdx+1,
+	)
 	args = append(args, req.PageSize, offset)
-	logx.Debug("group sql : ", querySQL)
-	// 执行查询
-	err = db.Raw(querySQL, args...).Scan(&items).Error
-	if err != nil {
+
+	logx.Debugf("group flow sql: %s , args: %+v", querySQL, args)
+
+	// ---------- query ----------
+	if err := db.Raw(querySQL, args...).Scan(&items).Error; err != nil {
 		logx.Errorf("failed to get grouped flow list: %v", err)
 		return nil, 0, err
 	}

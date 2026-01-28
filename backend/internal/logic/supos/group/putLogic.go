@@ -50,6 +50,16 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 		return nil, errors.Parameter.WithMsg("组不存在")
 	}
 
+	// 检查组名是否已存在
+	existingGroup, err := groupMapper.SelectByNameNotId(db, *req.ID, *req.Name)
+	if err != nil {
+		l.Errorf("查询组失败: %v", err)
+		return nil, errors.Database.WithMsg("修改组失败").AddDetail(err)
+	}
+	if len(existingGroup) > 0 {
+		return nil, errors.Parameter.WithMsg("组名称已存在")
+	}
+
 	// 更新字段
 	if req.Type != nil {
 		group.Type = req.Type
