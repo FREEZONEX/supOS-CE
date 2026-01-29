@@ -5617,6 +5617,10 @@
                       "description": {
                         "type": "string"
                       },
+                      "groupId": {
+                        "description": "分组ID",
+                        "type": "integer"
+                      },
                       "id": {
                         "type": "string"
                       },
@@ -5688,6 +5692,10 @@
                 },
                 "description": {
                   "type": "string"
+                },
+                "groupId": {
+                  "description": "分组ID",
+                  "type": "integer"
                 },
                 "id": {
                   "type": "string"
@@ -5762,6 +5770,10 @@
                 },
                 "description": {
                   "type": "string"
+                },
+                "groupId": {
+                  "description": "分组ID",
+                  "type": "integer"
                 },
                 "id": {
                   "type": "string"
@@ -13357,7 +13369,7 @@
       }
     }
   },
-  "x-date": "2026-01-29 14:05:48",
+  "x-date": "2026-01-29 14:21:51",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

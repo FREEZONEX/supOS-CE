@@ -294,7 +294,8 @@ type CreateUnsResult struct {
 type DashboardDto struct {
 	ID          string `json:"id,optional,omitzero"`
 	Name        string `json:"name"`
-	Type        int    `json:"type"` // 1-grafana 2-fuxa
+	Type        int    `json:"type"`             // 1-grafana 2-fuxa
+	GroupId     int64  `json:"groupId,optional"` // 分组ID
 	NeedInit    bool   `json:"needInit,optional"`
 	Description string `json:"description,optional,omitzero"`
 	JsonContent string `json:"jsonContent,optional,omitzero"`

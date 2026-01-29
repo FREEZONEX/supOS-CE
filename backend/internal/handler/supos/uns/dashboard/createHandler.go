@@ -24,6 +24,7 @@ func CreateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		model := &relationDB.DashboardModel{
 			Name:        req.Name,
 			Type:        req.Type,
+			GroupId:     req.GroupId,
 			Description: req.Description,
 		}
 		resp, err := l.Create(model, getUsername(r))
