@@ -1,4 +1,4 @@
-package appKey
+package appkey
 
 import (
 	"net/http"
@@ -21,7 +21,7 @@ func DeleteHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		l := appKey.NewDeleteLogic(r.Context(), svcCtx)
+		l := appkey.NewDeleteLogic(r.Context(), svcCtx)
 		err = l.Delete(id)
 		result.Http(w, r, nil, err)
 	}
