@@ -32,6 +32,14 @@ type AliasRequest struct {
 	Alias string `path:"alias"`
 }
 
+type AppKeyInfo struct {
+	ID             int64  `json:"id"`
+	AppSecretKey   string `json:"appSecretKey"`
+	AppSecretValue string `json:"appSecretValue"`
+	Status         int32  `json:"status"`
+	CreateTime     string `json:"createTime"`
+}
+
 type AttachmentDeleteReq struct {
 	ObjectName string `form:"objectName"`
 }
@@ -60,25 +68,6 @@ type AttachmentUploadResp struct {
 type BaseResult struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
-}
-
-type UpdateAppKeyReq struct {
-	AppSecretKey string `json:"appSecretKey"`
-	Status       int32  `json:"status"`
-}
-
-type AppKeyInfo struct {
-	ID             int64  `json:"id"`
-	AppSecretKey   string `json:"appSecretKey"`
-	AppSecretValue string `json:"appSecretValue"`
-	Status         int32  `json:"status"`
-	CreateTime     string `json:"createTime"`
-}
-
-type ListAppKeyResp struct {
-	Code int32         `json:"code"`
-	Msg  string        `json:"msg"`
-	Data []*AppKeyInfo `json:"data"`
 }
 
 type BatchCreateReq struct {
@@ -163,6 +152,9 @@ type ContainerInfo struct {
 	Version     string                 `json:"version,optional"`
 	Description string                 `json:"description,optional"`
 	EnvMap      map[string]interface{} `json:"envMap,optional"`
+}
+
+type CreateAppKeyReq struct {
 }
 
 type CreateFileDto struct {
@@ -600,7 +592,7 @@ type GroupBatchDeleteReq struct {
 }
 
 type GroupBizVO struct {
-	ID          int64  `json:"id"`
+	ID          string `json:"id"`
 	Category    string `json:"category,optional"` //分类 group-分组 file-文件
 	GroupType   *int64 `json:"groupType,optional"`
 	Name        string `json:"name"`
@@ -770,6 +762,12 @@ type LabelVo struct {
 	SubscribeFrequency string `json:"subscribeFrequency,omitempty"`
 	CreateTime         int64  `json:"createTime,omitzero"`
 	SubscribeAt        int64  `json:"subscribeAt,omitzero"`
+}
+
+type ListAppKeyResp struct {
+	Code int32         `json:"code"`
+	Msg  string        `json:"msg"`
+	Data []*AppKeyInfo `json:"data"`
 }
 
 type ListAttachmentReq struct {
@@ -1457,6 +1455,11 @@ type UnsTreeCondition struct {
 type UnsTreePageResp struct {
 	PageResultDTO
 	Data []*TopicTreeResult `json:"data,omitempty,optional"`
+}
+
+type UpdateAppKeyReq struct {
+	AppSecretKey string `json:"appSecretKey"`
+	Status       int32  `json:"status"`
 }
 
 type UpdateFileDTO struct {

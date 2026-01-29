@@ -62,8 +62,7 @@ func (l *GetGroupedEventFlowListLogic) GetGroupedEventFlowList(req *types.GroupP
 		//存在分组
 		if item.GroupType != 0 {
 			// 处理分组数据
-			groupID, _ := parseStringToInt64(item.ID)
-			groupBizVO.ID = groupID
+			groupBizVO.ID = item.ID
 			groupBizVO.GroupType = &item.GroupType
 			groupBizVO.Name = item.Name
 			groupBizVO.Description = item.Description
@@ -72,8 +71,7 @@ func (l *GetGroupedEventFlowListLogic) GetGroupedEventFlowList(req *types.GroupP
 			groupBizVO.GroupId = item.GroupID
 		} else if item.GroupType == 0 {
 			// 处理未分组的event flow数据
-			bizID, _ := parseStringToInt64(item.ID)
-			groupBizVO.ID = bizID
+			groupBizVO.ID = item.ID
 			groupBizVO.Name = item.Name
 			groupBizVO.Description = item.Description
 			groupBizVO.CreateAt = item.CreateAt.UnixMilli()

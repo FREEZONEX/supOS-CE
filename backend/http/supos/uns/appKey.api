@@ -6,7 +6,7 @@ info(
 )
 
 @server(
-    group: supos/group
+    group: supos/appkey
     prefix: /inter-api/supos/app/secretKey
     middleware: CheckTokenWare,InitCtxsWare
 )

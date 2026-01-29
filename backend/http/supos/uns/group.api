@@ -106,7 +106,7 @@ type (
     }
 
     GroupBizVO {
-        ID int64 `json:"id"`
+        ID string `json:"id"`
         Category string `json:"category,optional"` //分类 group-分组 file-文件
         GroupType *int64 `json:"groupType,optional"`
         Name string `json:"name"`

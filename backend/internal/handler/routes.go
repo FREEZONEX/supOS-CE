@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	suposappkey "backend/internal/handler/supos/appkey"
 	suposauth "backend/internal/handler/supos/auth"
 	suposdevtools "backend/internal/handler/supos/devtools"
 	suposeventflow "backend/internal/handler/supos/eventflow"
@@ -22,7 +23,6 @@ import (
 	supossourceflow "backend/internal/handler/supos/sourceflow"
 	supossourceflowservice_api "backend/internal/handler/supos/sourceflow/service_api"
 	suposunsalarm "backend/internal/handler/supos/uns/alarm"
-	suposunsappKey "backend/internal/handler/supos/uns/appKey"
 	suposunsattachment "backend/internal/handler/supos/uns/attachment"
 	suposunsdashboard "backend/internal/handler/supos/uns/dashboard"
 	suposunsexternal "backend/internal/handler/supos/uns/external"
@@ -42,6 +42,39 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 创建密钥
+					Method:  http.MethodPost,
+					Path:    "/",
+					Handler: suposappkey.CreateHandler(serverCtx),
+				},
+				{
+					// 更新密钥状态
+					Method:  http.MethodPut,
+					Path:    "/",
+					Handler: suposappkey.UpdateHandler(serverCtx),
+				},
+				{
+					// 删除密钥
+					Method:  http.MethodDelete,
+					Path:    "/:id",
+					Handler: suposappkey.DeleteHandler(serverCtx),
+				},
+				{
+					// 查询密钥列表
+					Method:  http.MethodGet,
+					Path:    "/list",
+					Handler: suposappkey.ListHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/app/secretKey"),
+	)
+
 	server.AddRoutes(
 		[]rest.Route{
 			{
@@ -849,39 +882,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/uns"),
-	)
-
-	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
-			[]rest.Route{
-				{
-					// 创建密钥
-					Method:  http.MethodPost,
-					Path:    "/",
-					Handler: suposunsappKey.CreateHandler(serverCtx),
-				},
-				{
-					// 更新密钥状态
-					Method:  http.MethodPut,
-					Path:    "/",
-					Handler: suposunsappKey.UpdateHandler(serverCtx),
-				},
-				{
-					// 查询密钥列表
-					Method:  http.MethodGet,
-					Path:    "/list",
-					Handler: suposunsappKey.ListHandler(serverCtx),
-				},
-				{
-					// 删除密钥
-					Method:  http.MethodDelete,
-					Path:    "/:id",
-					Handler: suposunsappKey.DeleteHandler(serverCtx),
-				},
-			}...,
-		),
-		rest.WithPrefix("/inter-api/supos/app/secretKey"),
 	)
 
 	server.AddRoutes(

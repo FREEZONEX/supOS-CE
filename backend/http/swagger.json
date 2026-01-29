@@ -34,6 +34,76 @@
         }
       }
     },
+    "/inter-api/supos/app/secretKey": {
+      "put": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "更新密钥状态",
+        "operationId": "supos/AppkeyUpdate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建密钥",
+        "operationId": "supos/AppkeyCreate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/secretKey/list": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询密钥列表",
+        "operationId": "supos/AppkeyList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/secretKey/{id}": {
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "删除密钥",
+        "operationId": "supos/AppkeyDelete",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
     "/inter-api/supos/auth/logout": {
       "delete": {
         "produces": [
@@ -815,7 +885,7 @@
                         "type": "integer"
                       },
                       "id": {
-                        "type": "integer"
+                        "type": "string"
                       },
                       "name": {
                         "type": "string"
@@ -2047,7 +2117,7 @@
                         "type": "integer"
                       },
                       "id": {
-                        "type": "integer"
+                        "type": "string"
                       },
                       "name": {
                         "type": "string"
@@ -5989,7 +6059,7 @@
                         "type": "integer"
                       },
                       "id": {
-                        "type": "integer"
+                        "type": "string"
                       },
                       "name": {
                         "type": "string"
@@ -13287,7 +13357,7 @@
       }
     }
   },
-  "x-date": "2026-01-27 14:35:20",
+  "x-date": "2026-01-29 14:05:48",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
