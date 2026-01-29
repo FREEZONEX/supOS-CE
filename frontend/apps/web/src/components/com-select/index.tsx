@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useState } from 'react';
 import { Select, type SelectProps } from 'antd';
-import debounce from 'lodash/debounce';
+import { debounce } from 'lodash-es';
 import { useTranslate } from '@/hooks';
 
 interface ApiFunction {

@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
-import { useTranslate } from '@supos_host/hooks';
 import { App, Button, Flex, Input } from 'antd';
-import { updateConfigApi } from '../apis';
-import { ProModal } from '@supos_host/components';
-import { I18N_NAME } from '../../variables.ts';
+import ProModal from '@/components/pro-modal';
+import useTranslate from '@/hooks/useTranslate.ts';
+import { updateConfigApi } from '@/apis/inter-api/third-apps.ts';
+const I18N_NAME = 'AppManagement';
 
 const usePropertiesModal = ({ successBackFn }: any) => {
   const formatMessage = useTranslate(I18N_NAME);
