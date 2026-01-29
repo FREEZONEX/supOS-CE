@@ -1,4 +1,4 @@
-package appKey
+package appkey
 
 import (
 	"context"
