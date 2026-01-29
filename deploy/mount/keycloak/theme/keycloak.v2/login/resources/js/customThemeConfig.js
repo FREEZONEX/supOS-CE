@@ -5,90 +5,87 @@ const checkUrl = (dom, url, defaultUrl) => {
     dom.src = url;
     dom.onerror = function () {
       this.onerror = null;
-      this.src = defaultUrl;
+      if (defaultUrl) {
+        this.src = defaultUrl;
+      } else {
+        this.style.display = 'none'
+      }
     };
   }else{
-    dom.src = defaultUrl;
+    if (defaultUrl) {
+      dom.src = defaultUrl;
+    } else {
+      dom.style.display = 'none'
+    }
   }
 };
+
+const OriginUrl = '/files/system/resource/supos'
 
 export const handleTheme = async (keycloakUrl, lang) => {
   const DARK_MODE_CLASS = "pf-v5-theme-dark";
   const { classList } = document.documentElement;
-  const loginLeft = document.querySelector(".pf-v5-c-login-left");
-  const logoDom = document.querySelector(".supos-logo");
-  const loginArrowDom = document.querySelector(".pf-v5-c-login-l-t-right");
-  const sloganDom = document.querySelector(".supos-login-slogan");
+  // 背景图
+  const backgroundImgDom = document.querySelector(".pf-v5-c-login-left");
+  // slogan
+  const sloganImgDom = document.querySelector(".supos-logo");
+  // logo
+  const logoImgDom = document.querySelector(".supos-login-slogan");
 
   const favicon = document.getElementById("dynamic-favicon");
 
-  function edgeMode () {
-      loginLeft.style.background = `url(${keycloakUrl}/img/login-background.svg) no-repeat center / cover`;
-      document.body.style.opacity = 1;
-
-  }
-  edgeMode()
-  function updateDarkMode(isEnabled, themeConfig) {
+  function updateDarkMode(isDark, themeConfig) {
     const {
-      brightBackgroundIcon,
-      brightLogoIcon,
-      brightSloganIcon,
-      darkBackgroundIcon,
-      darkLogoIcon,
-      darkSloganIcon,
-      browseIcon,
+      general,
+      dark,
+      light,
     } = themeConfig || {};
-
     // 浏览器图标
     // 检测 SVG 是否加载失败
     const faviconIcon = new Image();
-    if (browseIcon) {
-      favicon.href = browseIcon;
+    if (general?.browserIco) {
+      favicon.href = `${OriginUrl}/${general.browserIco}`;
     }
     faviconIcon.src = favicon.href;
     faviconIcon.onerror = function () {
       // 替换为备用图标
-      favicon.href = "/log.svg";
+      favicon.href = "/logo-ico.svg";
     };
 
-    if (isEnabled) {
+    if (isDark) {
       //暗色主题
       classList.add(DARK_MODE_CLASS);
-      if (logoDom && loginArrowDom && sloganDom) {
+      if (logoImgDom && sloganImgDom) {
         checkUrl(
-          logoDom,
-          darkLogoIcon || "/files/system/resource/supos/logo-dark.png",
-          `${keycloakUrl}/img/supos-logo-dark.svg`
+          logoImgDom,
+          `${OriginUrl}/${dark?.logo || 'logo-dark.svg'}`,
+          `${keycloakUrl}/img/logo-dark.svg`
         );
         checkUrl(
-          sloganDom,
-          darkSloganIcon,
-          `${keycloakUrl}/img/slogan-dark-${lang}.png`
+          sloganImgDom,
+          `${OriginUrl}/${dark?.loginSloganImg}`,
         );
-        loginArrowDom.style.backgroundImage = `url(${keycloakUrl}/img/login-arrow-dark.svg)`;
-        loginLeft.style.backgroundImage = darkBackgroundIcon
-          ? `url(${darkBackgroundIcon})`
-          : `url(${keycloakUrl}/img/login-background.png)`;
+        backgroundImgDom.style.backgroundImage = dark?.loginBackgroundImg
+          ? `url(${OriginUrl}/${dark?.loginBackgroundImg})`
+          : `url(${keycloakUrl}/img/login-background.svg)`;
       }
     } else {
       //亮色主题
       classList.remove(DARK_MODE_CLASS);
-      if (logoDom && loginArrowDom && sloganDom) {
+      if (logoImgDom && sloganImgDom) {
         checkUrl(
-          logoDom,
-          brightLogoIcon || "/files/system/resource/supos/logo-light.png",
-          `${keycloakUrl}/img/supos-logo.svg`
+          logoImgDom,
+          `${OriginUrl}/${light?.logo || 'logo-dark.svg'}`,
+          `${keycloakUrl}/img/logo-light.svg`
         );
         checkUrl(
-          sloganDom,
-          brightSloganIcon,
-          `${keycloakUrl}/img/slogan-light-${lang}.png`
+          sloganImgDom,
+          `${OriginUrl}/${light?.loginSloganImg}`,
         );
-        loginArrowDom.style.backgroundImage = `url(${keycloakUrl}/img/login-arrow.svg)`;
 
-        loginLeft.style.backgroundImage = brightBackgroundIcon
-          ? `url(${brightBackgroundIcon})`
-          : `url(${keycloakUrl}/img/login-background.png)`;
+        backgroundImgDom.style.backgroundImage = light?.loginBackgroundImg
+          ? `url(${OriginUrl}/${light?.loginBackgroundImg})`
+          : `url(${keycloakUrl}/img/login-background.svg)`;
       }
     }
   }
@@ -102,10 +99,9 @@ export const handleTheme = async (keycloakUrl, lang) => {
   };
 
   try {
-    // const themeConfig = await request(`/inter-api/supos/theme/getConfig`);
-    const themeConfig = false;
+    const themeConfig = await request(`${OriginUrl}/theme-config.json`)
     if (themeConfig) {
-      updateDarkMode(themeConfig?.loginPageType, themeConfig);
+      updateDarkMode(themeConfig?.general?.loginPageTheme === 'dark', themeConfig);
     } else {
       useDefaultTheme();
     }
