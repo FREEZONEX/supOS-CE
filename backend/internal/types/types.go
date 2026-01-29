@@ -601,6 +601,7 @@ type GroupBizVO struct {
 	Sort        int32  `json:"sort,optional"`
 	GroupId     int64  `json:"groupId,optional"`
 	CreateAt    int64  `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
 }
 
 type GroupByTypeQuery struct {

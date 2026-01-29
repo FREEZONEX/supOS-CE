@@ -13,6 +13,7 @@ type GroupModel struct {
 	Sort        int32     `gorm:"column:sort;not null" json:"sort"`
 	UpdateAt    time.Time `gorm:"column:update_at;default:now()" json:"update_at"`
 	CreateAt    time.Time `gorm:"column:create_at;default:now()" json:"create_at"`
+	Creator     string    `gorm:"column:creator" json:"creator"`
 }
 
 // TableName 返回表名

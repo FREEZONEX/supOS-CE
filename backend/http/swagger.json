@@ -875,6 +875,9 @@
                       "createAt": {
                         "type": "integer"
                       },
+                      "creator": {
+                        "type": "string"
+                      },
                       "description": {
                         "type": "string"
                       },
@@ -2106,6 +2109,9 @@
                       },
                       "createAt": {
                         "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
                       },
                       "description": {
                         "type": "string"
@@ -6060,6 +6066,9 @@
                       },
                       "createAt": {
                         "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
                       },
                       "description": {
                         "type": "string"
@@ -13369,7 +13378,7 @@
       }
     }
   },
-  "x-date": "2026-01-29 14:21:51",
+  "x-date": "2026-01-29 14:42:22",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

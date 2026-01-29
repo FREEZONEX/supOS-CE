@@ -242,6 +242,7 @@ type GroupedDashboardItem struct {
 	GroupID     int64     `gorm:"column:group_id" json:"groupId"`        // 分组ID
 	Sort        int32     `gorm:"column:sort" json:"sort"`               // 排序字段
 	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`      // 创建时间
+	Creator     string    `gorm:"column:creator" json:"creator"`         // 创建人
 }
 
 // GetGroupedDashboardList 按分组获取dashboard列表
@@ -268,7 +269,8 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 		    g.description AS description,
 		    NULL AS group_id,
 		    g.sort AS sort,
-		    g.create_at AS create_at
+		    g.create_at AS create_at,
+		    g.creator AS creator
 		FROM resource_group g
 
 		UNION ALL
@@ -281,7 +283,8 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 		    u.description AS description,
 		    u.group_id AS group_id,
 		    r.mark AS sort,
-		    u.create_time AS create_at
+		    u.create_time AS create_at,
+			u.creator AS creator
 		FROM uns_dashboard u
 		LEFT JOIN uns_dashboard_top_recodes r
 		    ON u.id = r.id::varchar

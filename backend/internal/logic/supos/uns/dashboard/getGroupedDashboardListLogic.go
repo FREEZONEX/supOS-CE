@@ -69,6 +69,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
 			groupBizVO.GroupId = item.GroupID
 			groupBizVO.Category = item.Category
+			groupBizVO.Creator = item.Creator
 		} else if item.GroupType == 0 {
 			// 处理未分组的dashboard数据
 			groupBizVO.ID = item.ID
@@ -77,6 +78,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
 			groupBizVO.GroupId = item.GroupID
 			groupBizVO.Category = item.Category
+			groupBizVO.Creator = item.Creator
 		}
 		groupBizVOList = append(groupBizVOList, groupBizVO)
 	}

@@ -320,6 +320,7 @@ CREATE TABLE if not exists "resource_group" (
 "name" varchar(255)  NOT NULL,
 "description" varchar(512) ,
 "sort" int4,
+"creator" varchar(128) NULL,
 "create_at" timestamptz(6) DEFAULT now(),
 "update_at" timestamptz(6) DEFAULT now()
 );

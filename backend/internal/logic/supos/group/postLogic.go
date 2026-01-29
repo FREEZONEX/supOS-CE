@@ -4,6 +4,7 @@
 package group
 
 import (
+	"backend/internal/common/utils/apiutil"
 	"context"
 	"time"
 
@@ -59,6 +60,12 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 		UpdateAt:    time.Now(),
 		CreateAt:    time.Now(),
 	}
+
+	// 设置创建者
+	if userCtx := apiutil.GetUserFromContext(l.ctx); userCtx != nil {
+		group.Creator = userCtx.PreferredUsername
+	}
+
 	if req.Description != nil {
 		group.Description = *req.Description
 	}
