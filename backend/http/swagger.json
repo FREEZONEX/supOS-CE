@@ -848,6 +848,12 @@
             "name": "category",
             "in": "query",
             "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "creator",
+            "in": "query",
+            "allowEmptyValue": true
           }
         ],
         "responses": {
@@ -881,6 +887,15 @@
                       "description": {
                         "type": "string"
                       },
+                      "flowId": {
+                        "type": "string"
+                      },
+                      "flowName": {
+                        "type": "string"
+                      },
+                      "flowStatus": {
+                        "type": "string"
+                      },
                       "groupId": {
                         "type": "integer"
                       },
@@ -895,6 +910,9 @@
                       },
                       "sort": {
                         "type": "integer"
+                      },
+                      "template": {
+                        "type": "string"
                       }
                     }
                   }
@@ -2083,6 +2101,12 @@
             "name": "category",
             "in": "query",
             "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "creator",
+            "in": "query",
+            "allowEmptyValue": true
           }
         ],
         "responses": {
@@ -2116,6 +2140,15 @@
                       "description": {
                         "type": "string"
                       },
+                      "flowId": {
+                        "type": "string"
+                      },
+                      "flowName": {
+                        "type": "string"
+                      },
+                      "flowStatus": {
+                        "type": "string"
+                      },
                       "groupId": {
                         "type": "integer"
                       },
@@ -2130,6 +2163,9 @@
                       },
                       "sort": {
                         "type": "integer"
+                      },
+                      "template": {
+                        "type": "string"
                       }
                     }
                   }
@@ -2621,6 +2657,9 @@
                   "createAt": {
                     "type": "string"
                   },
+                  "creator": {
+                    "type": "string"
+                  },
                   "description": {
                     "type": "string"
                   },
@@ -2643,6 +2682,9 @@
               },
               "properties": {
                 "createAt": {
+                  "type": "string"
+                },
+                "creator": {
                   "type": "string"
                 },
                 "description": {
@@ -2912,6 +2954,9 @@
                     ],
                     "properties": {
                       "createAt": {
+                        "type": "string"
+                      },
+                      "creator": {
                         "type": "string"
                       },
                       "description": {
@@ -6038,6 +6083,12 @@
             "type": "string",
             "description": "分类 group-分组 file-文件",
             "name": "category",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "creator",
             "in": "query",
             "allowEmptyValue": true
           }
@@ -13378,7 +13429,7 @@
       }
     }
   },
-  "x-date": "2026-01-29 14:42:22",
+  "x-date": "2026-01-29 15:17:00",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

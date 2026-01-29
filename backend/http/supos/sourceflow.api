@@ -185,6 +185,22 @@ type (
 
     SourceFlowGroupPageResp {
         PageResultDTO
-        Data []GroupBizVO `json:"data"`
+        Data []GroupFlowVO `json:"data"`
+    }
+
+    GroupFlowVO {
+        ID string `json:"id"`
+        Category string `json:"category,optional"` //分类 group-分组 file-文件
+        GroupType *int64 `json:"groupType,optional"`
+        Name string `json:"name"`
+        Description string `json:"description,optional"`
+        Sort int32 `json:"sort,optional"`
+        GroupId int64 `json:"groupId,optional"`
+        CreateAt int64 `json:"createAt,optional"`
+        Creator     string `json:"creator,optional,omitzero"`
+        FlowName    string `json:"flowName,optional"`
+        FlowID      string `json:"flowId,optional"`
+        FlowStatus  string `json:"flowStatus,optional"`
+        Template    string `json:"template,optional"`
     }
 )

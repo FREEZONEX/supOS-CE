@@ -17,12 +17,18 @@ import (
 // GroupedSourceFlowItem 分组和未分组source flow统一返回结构
 type GroupedSourceFlowItem struct {
 	ID          string    `gorm:"column:id" json:"id"`                   // ID
+	Category    string    `gorm:"column:category" json:"category"`       // 分类 group-分组 file-文件
 	GroupType   int64     `gorm:"column:group_type" json:"groupType"`    // 类型：GROUP 表示分组，BIZ 表示未分组的source flow
 	Name        string    `gorm:"column:name" json:"name"`               // 名称
 	Description string    `gorm:"column:description" json:"description"` // 描述
 	GroupID     int64     `gorm:"column:group_id" json:"groupId"`        // 分组ID
 	Sort        int32     `gorm:"column:sort" json:"sort"`               // 排序字段
 	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`      // 创建时间
+	Creator     string    `gorm:"column:creator" json:"creator"`         // 创建人
+	FlowName    string    `gorm:"column:flow_name" json:"flowName"`
+	FlowID      string    `gorm:"column:flow_id" json:"flowId"`
+	FlowStatus  string    `gorm:"column:flow_status" json:"flowStatus"`
+	Template    string    `gorm:"column:template" json:"template"`
 }
 
 // GetGroupedSourceFlowList 按分组获取source flow列表
@@ -45,12 +51,18 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
 	baseSQL := `
 		SELECT
 		    g.id::varchar AS id,
+			'group' AS category,
 		    g.type AS group_type,
 		    g.name AS name,
 		    g.description AS description,
 		    NULL AS group_id,
 		    g.sort AS sort,
-		    g.create_at AS create_at
+		    g.create_at AS create_at,
+		    g.creator AS creator,
+		    null as flow_name,
+		    null as flow_id,
+		    null as flow_status,
+		    null as template
 		FROM resource_group g
 		WHERE g.type = $1
 
@@ -58,15 +70,21 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
 
 		SELECT
 		    u.id::varchar AS id,
+		 	'file' AS category,
 		    $1 AS group_type,
 		    u.flow_name AS name,
 		    u.description AS description,
 		    u.group_id AS group_id,
-		    0 AS sort,
-		    u.create_time AS create_at
+		    COALESCE(r.mark,0) AS sort,
+		    u.create_time AS create_at,
+		    u.creator AS creator,
+		    u.flow_name AS flow_name,
+		    u.flow_id AS flow_id,
+		    u.flow_status AS flow_status,
+		    u.template AS template
 		FROM supos_node_flows u
 		LEFT JOIN supos_node_flow_top_recodes r
-		    ON u.id = r.id::varchar
+		    ON u.id = r.id
 		WHERE u.template = $2
 	`
 

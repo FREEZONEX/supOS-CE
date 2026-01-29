@@ -282,7 +282,7 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 		    u.name AS name,
 		    u.description AS description,
 		    u.group_id AS group_id,
-		    r.mark AS sort,
+		    COALESCE(r.mark,0) AS sort,
 		    u.create_time AS create_at,
 			u.creator AS creator
 		FROM uns_dashboard u

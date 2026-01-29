@@ -134,6 +134,6 @@ type (
 
     EventFlowGroupPageResp {
         PageResultDTO
-        Data []GroupBizVO `json:"data"`
+        Data []GroupFlowVO `json:"data"`
     }
 )

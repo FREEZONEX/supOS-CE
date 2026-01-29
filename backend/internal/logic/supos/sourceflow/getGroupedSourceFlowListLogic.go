@@ -32,7 +32,6 @@ func NewGetGroupedSourceFlowListLogic(ctx context.Context, svcCtx *svc.ServiceCo
 }
 
 func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.GroupPageRequest) (resp *types.SourceFlowGroupPageResp, err error) {
-	req.GroupType = 1
 	if req.PageNo < 1 {
 		req.PageNo = 1
 	}
@@ -55,32 +54,44 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 	}
 
 	// 转换为前端需要的格式
-	var groupBizVOList []types.GroupBizVO
+	var groupVOList []types.GroupFlowVO
 	for _, item := range items {
-		groupBizVO := types.GroupBizVO{}
+		groupFlowVO := types.GroupFlowVO{}
 		//存在分组
 		if item.GroupType != 0 {
 			// 处理分组数据
-			groupBizVO.ID = item.ID
-			groupBizVO.GroupType = &item.GroupType
-			groupBizVO.Name = item.Name
-			groupBizVO.Description = item.Description
-			groupBizVO.Sort = item.Sort
-			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
-			groupBizVO.GroupId = item.GroupID
+			groupFlowVO.ID = item.ID
+			groupFlowVO.Category = item.Category
+			groupFlowVO.GroupType = &item.GroupType
+			groupFlowVO.Name = item.Name
+			groupFlowVO.Description = item.Description
+			groupFlowVO.Sort = item.Sort
+			groupFlowVO.CreateAt = item.CreateAt.UnixMilli()
+			groupFlowVO.Creator = item.Creator
+			groupFlowVO.FlowName = item.FlowName
+			groupFlowVO.FlowID = item.FlowID
+			groupFlowVO.FlowStatus = item.FlowStatus
+			groupFlowVO.Template = item.Template
 		} else if item.GroupType == 0 {
 			// 处理未分组的source flow数据
-			groupBizVO.ID = item.ID
-			groupBizVO.Name = item.Name
-			groupBizVO.Description = item.Description
-			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
-			groupBizVO.GroupId = item.GroupID
+			groupFlowVO.ID = item.ID
+			groupFlowVO.Category = item.Category
+			groupFlowVO.Name = item.Name
+			groupFlowVO.Description = item.Description
+			groupFlowVO.Sort = item.Sort
+			groupFlowVO.CreateAt = item.CreateAt.UnixMilli()
+			groupFlowVO.GroupId = item.GroupID
+			groupFlowVO.Creator = item.Creator
+			groupFlowVO.FlowName = item.FlowName
+			groupFlowVO.FlowID = item.FlowID
+			groupFlowVO.FlowStatus = item.FlowStatus
+			groupFlowVO.Template = item.Template
 		}
-		groupBizVOList = append(groupBizVOList, groupBizVO)
+		groupVOList = append(groupVOList, groupFlowVO)
 	}
 
 	pageResult.Total = total
-	pageResult.Data = groupBizVOList
+	pageResult.Data = groupVOList
 
 	return pageResult, nil
 }

@@ -401,7 +401,7 @@ type EventFlowExportParam struct {
 
 type EventFlowGroupPageResp struct {
 	PageResultDTO
-	Data []GroupBizVO `json:"data"`
+	Data []GroupFlowVO `json:"data"`
 }
 
 type EventFlowInfo struct {
@@ -609,6 +609,22 @@ type GroupByTypeQuery struct {
 	PageInfo
 }
 
+type GroupFlowVO struct {
+	ID          string `json:"id"`
+	Category    string `json:"category,optional"` //分类 group-分组 file-文件
+	GroupType   *int64 `json:"groupType,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	GroupId     int64  `json:"groupId,optional"`
+	CreateAt    int64  `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
+	FlowName    string `json:"flowName,optional"`
+	FlowID      string `json:"flowId,optional"`
+	FlowStatus  string `json:"flowStatus,optional"`
+	Template    string `json:"template,optional"`
+}
+
 type GroupIDReq struct {
 	ID int64 `path:"id"`
 }
@@ -620,6 +636,7 @@ type GroupPageRequest struct {
 	PageNo    int64  `form:"pageNo,default=1"`
 	PageSize  int64  `form:"pageSize,default=10"`
 	Category  string `form:"category,optional"` //分类 group-分组 file-文件
+	Creator   string `form:"creator,optional"`
 }
 
 type GroupPageResultVO struct {
@@ -644,6 +661,7 @@ type GroupVO struct {
 	Sort        int32  `json:"sort,optional"`
 	UpdateAt    string `json:"updateAt,optional"`
 	CreateAt    string `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
 }
 
 type HistoryValueRequest struct {
@@ -1192,7 +1210,7 @@ type SourceFlowExportParam struct {
 
 type SourceFlowGroupPageResp struct {
 	PageResultDTO
-	Data []GroupBizVO `json:"data"`
+	Data []GroupFlowVO `json:"data"`
 }
 
 type SourceFlowInfo struct {

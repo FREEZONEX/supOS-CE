@@ -4,11 +4,12 @@
 package eventflow
 
 import (
+	"backend/internal/logic/supos/sourceflow"
 	"net/http"
 
-	"backend/internal/logic/supos/eventflow"
 	"backend/internal/svc"
 	"backend/internal/types"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
@@ -21,8 +22,8 @@ func GetGroupedEventFlowListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc
 			return
 		}
 
-		l := eventflow.NewGetGroupedEventFlowListLogic(r.Context(), svcCtx)
-		resp, err := l.GetGroupedEventFlowList(&req)
+		l := sourceflow.NewGetGroupedSourceFlowListLogic(r.Context(), svcCtx)
+		resp, err := l.GetGroupedSourceFlowList(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
