@@ -1,4 +1,4 @@
-package appKey
+package appkey
 
 import (
 	"net/http"
@@ -12,7 +12,7 @@ import (
 // 查询密钥列表
 func ListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		l := appKey.NewListLogic(r.Context(), svcCtx)
+		l := appkey.NewListLogic(r.Context(), svcCtx)
 		resp, err := l.List()
 		result.Http(w, r, resp, err)
 	}

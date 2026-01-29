@@ -1,4 +1,4 @@
-package appKey
+package appkey
 
 import (
 	"net/http"
@@ -21,7 +21,7 @@ func UpdateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		l := appKey.NewUpdateLogic(r.Context(), svcCtx)
+		l := appkey.NewUpdateLogic(r.Context(), svcCtx)
 		err := l.Update(&req)
 		result.Http(w, r, nil, err)
 	}

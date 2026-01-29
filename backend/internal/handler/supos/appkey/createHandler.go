@@ -1,4 +1,4 @@
-package appKey
+package appkey
 
 import (
 	"net/http"
@@ -12,7 +12,7 @@ import (
 // 创建密钥
 func CreateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		l := appKey.NewCreateLogic(r.Context(), svcCtx)
+		l := appkey.NewCreateLogic(r.Context(), svcCtx)
 		err := l.Create()
 		result.Http(w, r, nil, err)
 	}
