@@ -1,27 +1,34 @@
-import { type UseBoundStoreWithEqualityFn, createWithEqualityFn } from 'zustand/traditional';
+import { createWithEqualityFn, type UseBoundStoreWithEqualityFn } from 'zustand/traditional';
 import type { StoreApi } from 'zustand';
 import { shallow } from 'zustand/vanilla/shallow';
 import type { DataItem, ResourceProps, UserInfoProps } from '@/stores/types.ts';
 import { storageOpt } from '@/utils/storage';
-import { APP_TITLE, SUPOS_LANG, SUPOS_UNS_TREE, SUPOS_USER_TIPS_ENABLE } from '@/common-types/constans.ts';
+import {
+  APP_TITLE,
+  MENU_TARGET_PATH,
+  STORAGE_PATH,
+  SUPOS_LANG,
+  SUPOS_UNS_TREE,
+  SUPOS_USER_TIPS_ENABLE,
+} from '@/common-types/constans.ts';
 import { getPersonConfigApi } from '@/apis/inter-api/uns.ts';
 import { getSystemConfig } from '@/apis/inter-api/system-config.ts';
 import { getUserInfo } from '@/apis/inter-api/auth';
 
 import type { TBaseStore } from '@/stores/base/type.ts';
-import { initI18n, defaultLanguage, useI18nStore } from '../i18n-store.ts';
+import { defaultLanguage, initI18n, useI18nStore } from '../i18n-store.ts';
 import { getRoutesResourceApi } from '@/apis/inter-api/resource.ts';
 import {
+  buildResourceTrees,
   type Criteria,
   filterArrays,
   filterContainerList,
   filterObjectArrays,
+  filterRouteByUserResource,
   guideConfig,
   handleButtonPermissions,
-  multiGroupByCondition,
-  buildResourceTrees,
-  filterRouteByUserResource,
   mapResource,
+  multiGroupByCondition,
 } from '../utils.ts';
 import { getLangListApi } from '@/apis/inter-api/i18n.ts';
 
@@ -108,6 +115,33 @@ const criteria: Criteria<DataItem> = {
   buttonGroup: (item: any) => item?.uri?.includes('button:'),
 };
 
+const defaultThemeConfig = {
+  general: {
+    browserTitle: '',
+    appTitle: '',
+  },
+  dark: {
+    logo: '',
+    loginSloganImg: '',
+    loginBackgroundImg: '',
+  },
+  light: {
+    logo: '',
+    loginSloganImg: '',
+    loginBackgroundImg: '',
+  },
+};
+
+const loadAndApplyTheme = async () => {
+  try {
+    const response = await fetch(`${STORAGE_PATH}${MENU_TARGET_PATH}/theme-config.json`);
+    return await response.json();
+  } catch (error) {
+    console.log(error);
+    return defaultThemeConfig;
+    // 可加载默认主题或保持原样
+  }
+};
 // edge版本 用户默认支持所有的权限和菜单
 // 更新路由基础方法 (私有)
 const updateBaseStore = async (isFirst: boolean = false) => {
@@ -119,7 +153,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
         getUserInfo(),
         getSystemConfig(),
       ]);
-
+      systemInfo.themeConfig = await loadAndApplyTheme();
       // 国际化语言包list
       await getLangList();
 

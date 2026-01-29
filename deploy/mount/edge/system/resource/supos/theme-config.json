@@ -1,0 +1,27 @@
+{
+  "general": {
+    "browserTitle": "",
+    "browserIco": "",
+    "loginPageTheme": ""
+  },
+  "dark": {
+    "logo": "",
+    "loginSloganImg": "",
+    "loginBackgroundImg": ""
+  },
+  "light": {
+    "logo": "",
+    "loginSloganImg": "",
+    "loginBackgroundImg": ""
+  },
+  "default": {
+    "readonly": true,
+    "message": "不需要动,默认的内容",
+    "browserTitle": "TierO",
+    "browserIco": "logo-ico.svg",
+    "loginPageTheme": "light | dark",
+    "logo": "logo-${isDark ? 'dark' : 'light'}.svg",
+    "loginSloganImg": "",
+    "loginBackgroundImg": ""
+  }
+}

@@ -5,30 +5,32 @@ import logoLight from '@/assets/custom-nav/logo-light.svg';
 import LoadingDots from '@/layout/custom-menu-header/components/LoadingDots.tsx';
 import { MENU_TARGET_PATH, STORAGE_PATH } from '@/common-types/constans';
 import { checkImageExists, getBaseUrl } from '@/utils/url-util';
-// import { useBaseStore } from '@/stores/base';
+import { useBaseStore } from '@/stores/base';
 
 interface IconImgProps extends Partial<ImageProps> {
   isDark: boolean;
 }
 const LogoImg: FC<IconImgProps> = ({ isDark, onClick, ...props }) => {
   const [imageSrc, setImageSrc] = useState('');
-  // const { systemInfo } = useBaseStore((state) => ({
-  //   systemInfo: state.systemInfo,
-  // }));
+  const { systemInfo } = useBaseStore((state) => ({
+    systemInfo: state.systemInfo,
+  }));
 
   useEffect(() => {
     setImageSrc('');
     const loadImage = async () => {
-      const baseUrl = `${getBaseUrl()}${STORAGE_PATH}${MENU_TARGET_PATH}`;
-      // 从服务器 加载 /files/system/resource/supos//supos
-      const themeLogoUrl = `${baseUrl}/logo-${isDark ? 'dark' : 'light'}.svg`;
+      const baseUrl = `${getBaseUrl()}${STORAGE_PATH}${MENU_TARGET_PATH}/`;
+      // 从服务器 加载 /files/system/resource/supos/
+      const hasTheme = systemInfo.themeConfig?.[isDark ? 'dark' : 'light']?.logo;
+      const themeLogoUrl = hasTheme
+        ? `${baseUrl}${hasTheme}?t=${new Date().getTime()}`
+        : `${baseUrl}logo-${isDark ? 'dark' : 'light'}.svg`;
       const themeExists = await checkImageExists(themeLogoUrl);
       if (themeExists) {
         setImageSrc(themeLogoUrl);
       } else {
         setImageSrc(isDark ? logoDark : logoLight); // 如果默认图片存在
       }
-      setImageSrc(isDark ? logoDark : logoLight); // 如果默认图片存在
     };
     loadImage();
   }, [isDark]);

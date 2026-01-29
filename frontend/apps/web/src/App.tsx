@@ -8,10 +8,10 @@ import 'shepherd.js/dist/css/shepherd.css';
 import './App.css';
 import { userLogin } from '@/apis/chat2db';
 import { UnsTreeMapProvider } from '@/UnsTreeMapContext';
-import { OMC_MODEL } from '@/common-types/constans.ts';
+import { MENU_TARGET_PATH, OMC_MODEL, STORAGE_PATH } from '@/common-types/constans.ts';
 import LanguageProvider from './LanguageProvider.tsx';
 import { queryChat2dbCurUser } from '@/utils/chat2db.ts';
-import { isInIframe } from '@/utils/url-util.ts';
+import { checkImageExists, isInIframe } from '@/utils/url-util.ts';
 import { fetchBaseStore, useBaseStore } from '@/stores/base';
 import { setThemeBySystem, ThemeType, useThemeStore } from '@/stores/theme-store.ts';
 import { cleanupI18nSubscriptions } from './stores/i18n-store.ts';
@@ -66,31 +66,27 @@ function App() {
   useEffect(() => {
     if (!systemInfo.appTitle) return;
     const loadFavicon = async () => {
-      if (systemInfo?.themeConfig?.browseTitle) {
-        document.title = systemInfo.themeConfig.browseTitle;
-      } else {
-        document.title = `${systemInfo.appTitle}`;
-        // document.title = `${systemInfo.appTitle} ${formatMessage('common.excellence')}`;
+      // 浏览器标题
+      document.title = `${systemInfo.themeConfig?.general?.browserTitle || systemInfo.appTitle}`;
+      const baseUrl = `${STORAGE_PATH}${MENU_TARGET_PATH}/${systemInfo?.themeConfig?.general?.browserIco || `logo-ico.svg`}`;
+      const themeExists = await checkImageExists(baseUrl);
+
+      // 统一处理文件类型和路径
+      const [type, path] = themeExists ? ['image/svg+xml', baseUrl] : ['image/svg+xml', '/logo-ico.svg'];
+
+      // 统一处理时间戳
+      const href = `${path}?v=${Date.now()}`;
+
+      // 查找或创建 link 元素
+      let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.append(link);
       }
-      // const baseUrl = `${getBaseUrl()}${systemInfo?.themeConfig?.browseIcon || `${STORAGE_PATH}${MENU_TARGET_PATH}/logo-ico.svg`}`;
-      // const themeExists = await checkImageExists(baseUrl);
-      //
-      // // 统一处理文件类型和路径
-      // const [type, path] = themeExists ? ['image/svg+xml', baseUrl] : ['image/svg+xml', '/logo.svg'];
-      //
-      // // 统一处理时间戳
-      // const href = `${path}?v=${Date.now()}`;
-      //
-      // // 查找或创建 link 元素
-      // let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
-      // if (!link) {
-      //   link = document.createElement('link');
-      //   link.rel = 'icon';
-      //   document.head.append(link);
-      // }
-      //
-      // // 统一设置属性
-      // Object.assign(link, { type, href });
+
+      // 统一设置属性
+      Object.assign(link, { type, href });
     };
 
     loadFavicon();
