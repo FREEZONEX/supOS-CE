@@ -1,63 +1,81 @@
 import { forwardRef, useEffect, useState } from 'react';
 import { Select, type SelectProps } from 'antd';
-import { debounce } from 'lodash-es';
+import debounce from 'lodash/debounce';
 import { useTranslate } from '@/hooks';
+
+interface ApiFunction {
+  (key?: string): Promise<any[]>;
+}
 
 interface ComSelectProps extends SelectProps {
   options?: any[];
-  api?: any;
+  api?: ApiFunction;
   debounceTimeout?: number;
   isRequest?: boolean;
-  onBlurRequest?: boolean;
+  otherOptions?: any[];
 }
 
 const ComSelect = forwardRef<any, ComSelectProps>(
-  ({ onBlurRequest = true, options, api, debounceTimeout = 500, isRequest, ...restProps }, ref) => {
+  ({ options, api, debounceTimeout = 500, isRequest, otherOptions, ...restProps }, ref) => {
     const formatMessage = useTranslate();
-    const [apiOptions, setOptions] = useState([]);
+    const [apiOptions, setApiOptions] = useState<any[]>(otherOptions || []);
+    const [hasRequested, setHasRequested] = useState(false);
 
-    const searchData = (key?: any) => {
-      api(key)
-        .then((res: any) => {
-          setOptions(res);
-        })
-        .finally(() => {});
+    const searchData = async (key?: string) => {
+      if (!api) return;
+
+      try {
+        const res = await api(key);
+        setApiOptions(otherOptions ? otherOptions.concat(res) : res);
+      } catch (error) {
+        console.error('ComSelect API请求失败:', error);
+        setApiOptions(otherOptions || []);
+      }
     };
 
+    // 监听isRequest变化，当Modal打开时触发请求
     useEffect(() => {
-      if (api && isRequest) {
+      if (api && isRequest && !hasRequested) {
         searchData();
+        setHasRequested(true);
+      }
+    }, [api, isRequest, hasRequested]);
+
+    // 当isRequest变为false时（Modal关闭），重置请求状态
+    useEffect(() => {
+      if (!isRequest) {
+        setHasRequested(false);
       }
     }, [isRequest]);
-    return api ? (
-      <Select
-        placeholder={formatMessage('common.select')}
-        // notFoundContent={fetching ? <Spin size="small" /> : null}
-        {...restProps}
-        onSearch={
-          api
-            ? debounce((searchValue: string) => {
-                searchData(searchValue);
-              }, debounceTimeout)
-            : restProps?.onSearch
-        }
-        onBlur={
-          api
-            ? (e) => {
-                restProps?.onBlur?.(e);
-                if (onBlurRequest) {
-                  searchData();
-                }
-              }
-            : restProps?.onBlur
-        }
-        options={api ? apiOptions : options}
-        ref={ref}
-      />
-    ) : (
-      <Select placeholder={formatMessage('common.select')} {...restProps} options={options} ref={ref} />
-    );
+
+    const handleSearch = api
+      ? debounce((searchValue: string) => {
+          searchData(searchValue);
+        }, debounceTimeout)
+      : restProps?.onSearch;
+
+    // 当Modal打开时，如果还没有数据，自动触发一次请求
+    const handleOpenChangeChange = (open: boolean) => {
+      if (open && api && !hasRequested) {
+        searchData();
+        setHasRequested(true);
+      }
+      restProps?.onOpenChange?.(open);
+    };
+
+    const selectProps = {
+      placeholder: formatMessage('common.select'),
+      ...restProps,
+      options: api ? apiOptions : options,
+      ref,
+      onSearch: handleSearch,
+      onOpenChange: handleOpenChangeChange,
+    };
+
+    return <Select {...selectProps} />;
   }
 );
+
+ComSelect.displayName = 'ComSelect';
 
 export default ComSelect;

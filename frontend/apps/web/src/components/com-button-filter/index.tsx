@@ -34,9 +34,9 @@ const ComButtonFilter: FC<ButtonFilterProps> = ({ value, defaultValue, onChange,
         options
           ? options
           : [
-              { value: 1, label: formatMessage('common.all'), title: formatMessage('common.all') },
-              { value: 3, label: formatMessage('common.group'), title: formatMessage('common.group') },
-              { value: 2, label: formatMessage('common.file'), title: formatMessage('common.file') },
+              { value: 'all', label: formatMessage('common.all'), title: formatMessage('common.all') },
+              { value: 'group', label: formatMessage('common.group'), title: formatMessage('common.group') },
+              { value: 'file', label: formatMessage('common.file'), title: formatMessage('common.file') },
             ]
       }
     />

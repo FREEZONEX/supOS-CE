@@ -1,4 +1,4 @@
-import { type FC, useState } from 'react';
+import { type FC, useRef, useState } from 'react';
 import { App, Breadcrumb, Button, Empty, Flex, Form, Pagination, Segmented, Tag } from 'antd';
 import { useNavigate } from 'react-router';
 import { addFlow, copyFlow, deleteFlow, editFlow, flowPage, markFlow, unmarkFlow } from '@/apis/inter-api/flow';
@@ -10,9 +10,11 @@ import {
   ConnectSource,
   CopyFile,
   Edit,
+  FlowData,
   // FlowData,
   Folder,
   FolderAdd,
+  FolderMoveTo,
   Grid,
   List,
   Search,
@@ -34,10 +36,14 @@ import ProCard from '../../components/pro-card/ProCard.tsx';
 import SecondaryList from '../../components/pro-card/SecondaryList.tsx';
 import { hasPermission } from '@/utils/auth.ts';
 import { formatTimestamp } from '@/utils/format.ts';
-import useFormModal from '@/components/business/useFormModal.tsx';
+import { deleteGroup, markGroup } from '@/apis/inter-api/group.ts';
+import AddGroupModal from '@/pages/dashboards/components/AddGroupModal';
+import MoveGroupModal from '@/pages/dashboards/components/MoveGroupModal';
 
 const CollectionFlow: FC<PageProps> = ({ title }) => {
   const { modal, message } = App.useApp();
+  const addGroupModalRef = useRef<any>(null);
+  const moveGroupModalRef = useRef<any>(null);
   const formatMessage = useTranslate();
   const navigate = useNavigate();
   const [isEdit, setIsEdit] = useState('create');
@@ -48,6 +54,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   const [mode, setMode] = useLocalStorageState<string>('SUPOS_COLLECTION_MODE', {
     defaultValue: 'list',
   });
+  const [breadcrumbItem, setBreadcrumbItem] = useState<any>([{ title: formatMessage('common.all') }]);
 
   const { loading, pagination, data, reload, refreshRequest, setSearchParams, onChange } = usePagination({
     fetchApi: flowPage,
@@ -172,6 +179,48 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
     });
   };
   const actions: any = (record: any) => {
+    if (record?.category === 'group') {
+      return [
+        {
+          key: 'edit',
+          label: formatMessage('common.edit'),
+          auth: ButtonPermission['SourceFlow.edit'],
+          onClick: () => {
+            addGroupModalRef?.current?.onOpen?.(1, {
+              id: record.id,
+              name: record.name,
+              description: record.description,
+            });
+          },
+          extra: (
+            <Flex justify="center" align="center">
+              <Edit />
+            </Flex>
+          ),
+        },
+        {
+          key: 'delete',
+          label: formatMessage('common.delete'),
+          auth: ButtonPermission['SourceFlow.delete'],
+          onClick: () => {
+            modal.confirm({
+              title: formatMessage('common.deleteConfirm'),
+              onOk: () => {
+                return deleteGroup(record.id).then(() => {
+                  message.success(formatMessage('common.optsuccess'));
+                  reload();
+                });
+              },
+            });
+          },
+          extra: (
+            <Flex justify="center" align="center">
+              <TrashCan />
+            </Flex>
+          ),
+        },
+      ];
+    }
     return [
       {
         key: 'copy',
@@ -205,6 +254,19 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
         onClick: () => onEditHandle(record),
       },
       {
+        key: 'moveToGroup',
+        label: formatMessage('uns.moveToGroup'),
+        // auth: ButtonPermission['Dashboards.edit'],
+        onClick: () => {
+          moveGroupModalRef.current?.onOpen(1, { bizId: record.id });
+        },
+        extra: (
+          <Flex justify="center" align="center">
+            <FolderMoveTo />
+          </Flex>
+        ),
+      },
+      {
         key: 'delete',
         label: formatMessage('common.delete'),
         auth: ButtonPermission['SourceFlow.delete'],
@@ -217,50 +279,39 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           modal.confirm({
             title: formatMessage('common.deleteConfirm'),
             onOk: () => onDeleteHandle(record),
-            okButtonProps: {
-              title: formatMessage('common.confirm'),
-            },
-            cancelButtonProps: {
-              title: formatMessage('common.cancel'),
-            },
           }),
       },
     ];
   };
   const pinOptions = {
     onClick: (record: any) => {
-      const isMark = record?.mark === 1;
-      const api = isMark ? unmarkFlow : markFlow;
-      return api?.(record.id).then(() => {
-        message.success(formatMessage('common.optsuccess'));
-        reload();
-      });
+      const isMark = record?.sort === 1;
+      if (record?.category === 'group') {
+        return markGroup(record.id, !isMark).then(() => {
+          message.success(formatMessage('common.optsuccess'));
+          reload();
+        });
+      } else {
+        const api = isMark ? unmarkFlow : markFlow;
+        return api?.(record.id).then(() => {
+          message.success(formatMessage('common.optsuccess'));
+          reload();
+        });
+      }
     },
     renderPinIcon: (record: any) => {
-      return record?.mark !== 1;
+      return record?.sort !== 1;
     },
   };
-  const { openFormModal, FormModalDom } = useFormModal({
-    onSave: () => {},
-    formItemOptions: () => [
-      {
-        name: 'name',
-        label: formatMessage('common.name'),
-        properties: {
-          placeholder: formatMessage('common.commonPlaceholder'),
-          allowClear: true,
-        },
-      },
-      {
-        name: 'description',
-        label: formatMessage('uns.description'),
-        properties: {
-          placeholder: formatMessage('common.commonPlaceholder'),
-          allowClear: true,
-        },
-      },
-    ],
-  });
+
+  const onSearch = () => {
+    const params = searchForm.getFieldsValue();
+    if (params?.category === 'all') {
+      params.category = undefined;
+    }
+    setSearchParams(params);
+  };
+
   return (
     <ComLayout loading={loading}>
       <ComContent
@@ -283,10 +334,15 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
               form={searchForm}
               formItemOptions={[
                 {
+                  hidden: true,
+                  name: 'groupId',
+                },
+                {
                   type: 'Filter',
-                  name: 'type',
+                  name: 'category',
                   properties: {
                     placeholder: formatMessage('common.searchPlaceholder'),
+                    defaultValue: 'all',
                   },
                 },
                 {
@@ -300,18 +356,22 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                 },
               ]}
               formConfig={{
-                onFinish: () => {
-                  setSearchParams(searchForm.getFieldsValue());
-                },
+                onFinish: onSearch,
               }}
-              onSearch={() => {
-                setSearchParams(searchForm.getFieldsValue());
-              }}
+              onSearch={onSearch}
             />
-            <AuthButton auth={ButtonPermission['SourceFlow.add']} type="primary" onClick={openFormModal}>
-              <FolderAdd />
-              {formatMessage('common.newGroup')}
-            </AuthButton>
+            {breadcrumbItem?.length === 1 && (
+              <AuthButton
+                auth={ButtonPermission['SourceFlow.add']}
+                type="primary"
+                onClick={() => {
+                  addGroupModalRef?.current?.onOpen?.(1);
+                }}
+              >
+                <FolderAdd />
+                {formatMessage('common.newGroup')}
+              </AuthButton>
+            )}
             <AuthButton auth={ButtonPermission['SourceFlow.add']} type="primary" onClick={onAddHandle}>
               + {formatMessage('collectionFlow.newFlow')}
             </AuthButton>
@@ -320,11 +380,23 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
       >
         <Flex justify="space-between" align="center" style={{ marginBottom: 16, marginTop: 16, padding: '0 16px' }}>
           <Flex align="center" gap={16}>
-            <Button size="small" style={{ background: 'var(--supos-switchwrap-bg-color)' }}>
-              <Undo />
-              {formatMessage('common.back')}
-            </Button>
-            <Breadcrumb items={[{ title: 'sample' }]} />
+            {breadcrumbItem?.length > 1 && (
+              <Button
+                size="small"
+                style={{ background: 'var(--supos-switchwrap-bg-color)' }}
+                onClick={() => {
+                  searchForm.setFieldsValue({
+                    groupId: undefined,
+                  });
+                  setBreadcrumbItem((pre: any) => pre.slice(0, -1));
+                  onSearch?.();
+                }}
+              >
+                <Undo />
+                {formatMessage('common.back')}
+              </Button>
+            )}
+            <Breadcrumb items={breadcrumbItem} separator=">" />
           </Flex>
           <Segmented
             size="small"
@@ -359,23 +431,35 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                     <ProCard
                       key={d?.id}
                       header={{
-                        customIconBg: '#A8A8A8',
+                        customIconBg: d.category === 'group' ? '#A8A8A8' : undefined,
                         customIcon: (
                           <Flex align="center" justify="center">
-                            <Folder size="28" style={{ color: 'white' }} />
+                            {d.category === 'group' ? (
+                              <Folder size="28" style={{ color: 'white' }} />
+                            ) : (
+                              <FlowData size="28" />
+                            )}
                           </Flex>
-                          // <Flex align="center" justify="center">
-                          //   <FlowData size="28" />
-                          // </Flex>
                         ),
                         title: d.flowName,
-                        titleDescription: formatTimestamp(d?.createTime),
-                        onClick: hasPermission(ButtonPermission['SourceFlow.design'])
-                          ? () =>
-                              navigate(
-                                `/collection-flow/flow-editor?${getSearchParamsString({ id: d.id, name: d.flowName, status: d.flowStatus, flowId: d.flowId, from: location.pathname })}`
-                              )
-                          : undefined,
+                        titleDescription: formatTimestamp(d?.createAt),
+                        onClick:
+                          d.category === 'group'
+                            ? () => {
+                                setBreadcrumbItem((pre: any) => {
+                                  return [...pre, { title: d.name }];
+                                });
+                                searchForm.setFieldsValue({
+                                  groupId: d.id,
+                                });
+                                onSearch?.();
+                              }
+                            : hasPermission(ButtonPermission['SourceFlow.design'])
+                              ? () =>
+                                  navigate(
+                                    `/collection-flow/flow-editor?${getSearchParamsString({ id: d.id, name: d.flowName, status: d.flowStatus, flowId: d.flowId, from: location.pathname })}`
+                                  )
+                              : undefined,
                       }}
                       statusHeader={{
                         statusTag: (
@@ -450,17 +534,37 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                           <Flex
                             style={{
                               borderRadius: 3,
-                              // backgroundColor: 'var(--supos-image-card-color)',
-                              backgroundColor: '#A8A8A8',
+                              backgroundColor: item.category === 'group' ? '#A8A8A8' : '#F4F4F4',
                               padding: 6,
                               height: 26,
                             }}
                           >
                             <Flex align="center" justify="center">
-                              <Folder size="14" style={{ color: 'white' }} />
+                              {item.category === 'group' ? (
+                                <Folder size="16" style={{ color: 'white' }} />
+                              ) : (
+                                <FlowData size="16" style={{ color: 'black' }} />
+                              )}
                             </Flex>
                           </Flex>
-                          {hasDesign ? (
+                          {item.category === 'group' ? (
+                            <Button
+                              type="link"
+                              className="table-link-button"
+                              onClick={() => {
+                                searchForm.setFieldsValue({
+                                  groupId: item.id,
+                                });
+                                setBreadcrumbItem((pre: any) => {
+                                  return [...pre, { title: item.name }];
+                                });
+                                onSearch?.();
+                              }}
+                              title={text}
+                            >
+                              {text}
+                            </Button>
+                          ) : hasDesign ? (
                             <Button
                               className="table-link-button"
                               type="link"
@@ -513,7 +617,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   },
                   {
                     title: () => formatMessage('common.creationTime'),
-                    dataIndex: 'createTime',
+                    dataIndex: 'createAt',
                     width: '15%',
                     sorter: true,
                     render: (item: any) => formatTimestamp(item),
@@ -568,7 +672,8 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           formItemOptions={formItemOptions(isEdit)}
         />
       </ComDrawer>
-      {FormModalDom}
+      <AddGroupModal ref={addGroupModalRef} refreshRequest={refreshRequest} />
+      <MoveGroupModal ref={moveGroupModalRef} refreshRequest={refreshRequest} />
     </ComLayout>
   );
 };

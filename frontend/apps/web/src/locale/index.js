@@ -757,6 +757,9 @@ const messages = {
   'uns.uploadSuccess': '文件上传成功',
   'uns.waitingFormParsing': '等待解析...',
   'uns.deployNewApp': '点击部署新应用',
+  'uns.newGroup': '新增组',
+  'uns.editGroup': '编辑组',
+  'uns.moveToGroup': '移入分组',
 
   //公共通用模块
   'common.url': '地址',
