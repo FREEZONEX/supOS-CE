@@ -5,10 +5,11 @@ const baseUrl = '/inter-api/supos/uns/dashboard';
 const api = new ApiWrapper(baseUrl);
 
 // 获取列表 category: group-分组 file-文件   不传=全部; groupId=分组ID（非必填）; k=搜索关键字;page pageSize
-export const getDashboardAndGroupList = async (params?: Record<string, unknown>) =>
+export const getDashboardAndGroupList = async (params?: Record<string, unknown>, config?: any) =>
   api.get('/getGroupedDashboardList', {
     params,
     [CustomAxiosConfigEnum.BusinessResponse]: true,
+    ...config,
   });
 
 // 新增文件

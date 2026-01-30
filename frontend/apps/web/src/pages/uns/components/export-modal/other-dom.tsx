@@ -1,13 +1,22 @@
 import { useBaseStore } from '@/stores/base';
-import { ConfigProvider, Form, type FormInstance } from 'antd';
+import { ConfigProvider, Form, type FormInstance, TreeSelect } from 'antd';
 import ProTreeSelect from '@/components/pro-tree-select/ProTreeSelect.tsx';
-import { flowPage } from '@/apis/inter-api/flow.ts';
-import { flowPage as EventFlowPage } from '@/apis/inter-api/event-flow.ts';
+import { getFlowAndGroupList } from '@/apis/inter-api/flow.ts';
+import { getEventFlowAndGroupList } from '@/apis/inter-api/event-flow.ts';
 import useTranslate from '@/hooks/useTranslate.ts';
-import { getDashboardList } from '@/apis/inter-api/dashboard.ts';
+import { getDashboardAndGroupList } from '@/apis/inter-api/dashboard.ts';
+import { FlowData, Folder } from '@carbon/icons-react';
+const { SHOW_PARENT } = TreeSelect;
+
+const TreeNode = (dataNode: any) => {
+  if (dataNode.category === 'group') {
+    return <Folder style={{ flexShrink: 0, marginRight: '5px' }} />;
+  }
+  return <FlowData style={{ flexShrink: 0, marginRight: '5px' }} />;
+};
 
 const OtherDom = ({ form }: { form: FormInstance }) => {
-  const { containerList, dashboardType } = useBaseStore((state) => ({
+  const { containerList } = useBaseStore((state) => ({
     containerList: state.containerList,
     dashboardType: state.dashboardType,
   }));
@@ -41,82 +50,33 @@ const OtherDom = ({ form }: { form: FormInstance }) => {
           {hasNodeRed && (
             <Form.Item label={formatMessage('home.sourceFlow')} name="sourceFlowExportParam">
               <ProTreeSelect
+                showSearch={false}
+                loadDataEnable
                 lazy
+                listHeight={350}
                 maxTagCount="responsive"
+                showSwitcherIcon
                 treeCheckable
-                api={(params) =>
-                  flowPage({
-                    k: params?.searchValue,
-                    pageNo: params?.pageNo,
-                    pageSize: params?.pageSize,
-                  }).then((data) => {
-                    return {
-                      pageNo: data?.pageNo,
-                      pageSize: data?.pageSize,
-                      total: data?.total,
-                      data: data?.data?.map((item: any) => ({
-                        ...item,
-                        value: item.id,
-                        title: item.flowName,
-                        key: item.id,
-                      })),
-                    };
-                  })
-                }
-              />
-            </Form.Item>
-          )}
-          {hasEventflow && (
-            <Form.Item label={formatMessage('home.eventFlow')} name="eventFlowExportParam">
-              <ProTreeSelect
+                fieldNames={{ label: 'name', value: 'id' }}
+                showCheckedStrategy={SHOW_PARENT}
                 allowClear
-                maxTagCount="responsive"
-                treeCheckable
-                showSwitcherIcon={false}
-                lazy={true}
-                api={(params) =>
-                  EventFlowPage({
-                    k: params?.searchValue,
-                    pageNo: params?.pageNo,
-                    pageSize: params?.pageSize,
-                  }).then((data) => {
+                api={(params, config) =>
+                  getFlowAndGroupList(
+                    {
+                      k: params?.searchValue,
+                      groupId: params?.key ? params?.key : undefined,
+                      pageNo: params?.pageNo,
+                      pageSize: params?.pageSize,
+                    },
+                    config
+                  ).then((data) => {
                     return {
                       pageNo: data?.pageNo,
                       pageSize: data?.pageSize,
                       total: data?.total,
                       data: data?.data?.map((item: any) => ({
                         ...item,
-                        value: item.id,
-                        title: item.flowName,
-                        key: item.id,
-                      })),
-                    };
-                  })
-                }
-              />
-            </Form.Item>
-          )}
-          {
-            <Form.Item label={formatMessage('home.dashboard')} name="dashboardExportParam">
-              <ProTreeSelect
-                allowClear
-                maxTagCount="responsive"
-                treeCheckable
-                showSwitcherIcon={false}
-                lazy={true}
-                api={(params) =>
-                  getDashboardList({
-                    k: params?.searchValue,
-                    pageNo: params?.pageNo,
-                    pageSize: params?.pageSize,
-                    type: dashboardType?.length >= 2 ? undefined : dashboardType?.includes('fuxa') ? 2 : 1,
-                  }).then((data) => {
-                    return {
-                      pageNo: data?.pageNo,
-                      pageSize: data?.pageSize,
-                      total: data?.total,
-                      data: data?.data?.map((item: any) => ({
-                        ...item,
+                        isLeaf: !item.hasChildren,
                         value: item.id,
                         title: item.name,
                         key: item.id,
@@ -124,6 +84,89 @@ const OtherDom = ({ form }: { form: FormInstance }) => {
                     };
                   })
                 }
+                treeNodeIcon={TreeNode}
+              />
+            </Form.Item>
+          )}
+          {hasEventflow && (
+            <Form.Item label={formatMessage('home.eventFlow')} name="eventFlowExportParam">
+              <ProTreeSelect
+                showSearch={false}
+                loadDataEnable
+                lazy
+                listHeight={350}
+                maxTagCount="responsive"
+                showSwitcherIcon
+                treeCheckable
+                fieldNames={{ label: 'name', value: 'id' }}
+                showCheckedStrategy={SHOW_PARENT}
+                allowClear
+                api={(params, config) =>
+                  getEventFlowAndGroupList(
+                    {
+                      k: params?.searchValue,
+                      groupId: params?.key ? params?.key : undefined,
+                      pageNo: params?.pageNo,
+                      pageSize: params?.pageSize,
+                    },
+                    config
+                  ).then((data) => {
+                    return {
+                      pageNo: data?.pageNo,
+                      pageSize: data?.pageSize,
+                      total: data?.total,
+                      data: data?.data?.map((item: any) => ({
+                        ...item,
+                        isLeaf: !item.hasChildren,
+                        value: item.id,
+                        title: item.name,
+                        key: item.id,
+                      })),
+                    };
+                  })
+                }
+                treeNodeIcon={TreeNode}
+              />
+            </Form.Item>
+          )}
+          {
+            <Form.Item label={formatMessage('home.dashboard')} name="dashboardExportParam">
+              <ProTreeSelect
+                showSearch={false}
+                loadDataEnable
+                lazy
+                listHeight={350}
+                maxTagCount="responsive"
+                showSwitcherIcon
+                treeCheckable
+                fieldNames={{ label: 'name', value: 'id' }}
+                showCheckedStrategy={SHOW_PARENT}
+                allowClear
+                api={(params, config) =>
+                  getDashboardAndGroupList(
+                    {
+                      k: params?.searchValue,
+                      groupId: params?.key ? params?.key : undefined,
+                      pageNo: params?.pageNo,
+                      pageSize: params?.pageSize,
+                    },
+                    config
+                  ).then((data) => {
+                    return {
+                      pageNo: data?.pageNo,
+                      pageSize: data?.pageSize,
+                      total: data?.total,
+                      data: data?.data?.map((item: any) => ({
+                        ...item,
+                        isLeaf: !item.hasChildren,
+                        value: item.id,
+                        title: item.name,
+                        key: item.id,
+                      })),
+                    };
+                  })
+                }
+                treeNodeIcon={TreeNode}
               />
             </Form.Item>
           }
