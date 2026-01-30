@@ -1,7 +1,15 @@
 import { type FC, useRef, useState } from 'react';
 import { App, Breadcrumb, Button, Empty, Flex, Form, Pagination, Segmented, Tag } from 'antd';
 import { useNavigate } from 'react-router';
-import { addFlow, copyFlow, deleteFlow, editFlow, flowPage, markFlow, unmarkFlow } from '@/apis/inter-api/event-flow';
+import {
+  addFlow,
+  copyFlow,
+  deleteFlow,
+  editFlow,
+  getEventFlowAndGroupList,
+  markFlow,
+  unmarkFlow,
+} from '@/apis/inter-api/event-flow';
 import { usePagination, useTranslate } from '@/hooks';
 import type { PageProps } from '@/common-types';
 import { useActivate } from '@/contexts/tabs-lifecycle-context';
@@ -51,7 +59,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   const [show, setShow] = useState(false);
   const [breadcrumbItem, setBreadcrumbItem] = useState<any>([{ title: formatMessage('common.all') }]);
   const { loading, pagination, data, reload, refreshRequest, setSearchParams, onChange } = usePagination({
-    fetchApi: flowPage,
+    fetchApi: getEventFlowAndGroupList,
     initPageSize: 18,
   });
   const [mode, setMode] = useLocalStorageState<string>('SUPOS_EVENTFLOW_MODE', {
@@ -263,7 +271,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
       {
         key: 'moveToGroup',
         label: formatMessage('uns.moveToGroup'),
-        // auth: ButtonPermission['Dashboards.edit'],
+        auth: ButtonPermission['EventFlow.moveToGroup'],
         onClick: () => {
           moveGroupModalRef.current?.onOpen(2, { bizId: record.id, id: record.groupId });
         },
@@ -378,7 +386,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                 auth={ButtonPermission['EventFlow.add']}
                 type="primary"
                 onClick={() => {
-                  addGroupModalRef?.current?.onOpen?.(3);
+                  addGroupModalRef?.current?.onOpen?.(2);
                 }}
               >
                 <FolderAdd />
@@ -454,7 +462,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                             )}
                           </Flex>
                         ),
-                        title: d.flowName,
+                        title: d.name,
                         titleDescription: formatTimestamp(d?.createAt),
                         onClick:
                           d.category === 'group'
@@ -475,17 +483,20 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                               : undefined,
                       }}
                       statusHeader={{
-                        statusTag: (
-                          <Tag
-                            style={{ borderRadius: 15, lineHeight: '16px', margin: 0 }}
-                            bordered={false}
-                            color={
-                              (runStatusOptions?.find((f: any) => f.value === d.flowStatus)?.bgType || 'red') as any
-                            }
-                          >
-                            {titleStatehandle(d)}
-                          </Tag>
-                        ),
+                        statusTag:
+                          d.category !== 'group' ? (
+                            <Tag
+                              style={{ borderRadius: 15, lineHeight: '16px', margin: 0 }}
+                              bordered={false}
+                              color={
+                                (runStatusOptions?.find((f: any) => f.value === d.flowStatus)?.bgType || 'red') as any
+                              }
+                            >
+                              {titleStatehandle(d)}
+                            </Tag>
+                          ) : (
+                            <div></div>
+                          ),
                         pinOptions,
                         actions,
                       }}
@@ -527,7 +538,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                 [
                   {
                     titleIntlId: 'common.name',
-                    dataIndex: 'flowName',
+                    dataIndex: 'name',
                     key: 'flowName',
                     width: '14%',
                     sorter: true,
