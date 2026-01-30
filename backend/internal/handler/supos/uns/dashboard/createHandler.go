@@ -1,12 +1,11 @@
 package dashboard
 
 import (
-	"net/http"
-
 	"backend/internal/logic/supos/uns/dashboard"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"net/http"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
@@ -21,12 +20,14 @@ func CreateHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		l := dashboard.NewCreateLogic(r.Context(), svcCtx)
+
 		model := &relationDB.DashboardModel{
 			Name:        req.Name,
 			Type:        req.Type,
-			GroupId:     req.GroupId,
 			Description: req.Description,
+			GroupId:     req.GroupId,
 		}
+
 		resp, err := l.Create(model, getUsername(r))
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)

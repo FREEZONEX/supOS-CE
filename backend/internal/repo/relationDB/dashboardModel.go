@@ -9,7 +9,7 @@ type DashboardModel struct {
 	ID          string    `gorm:"column:id;primaryKey" json:"id"`
 	Name        string    `gorm:"column:name" json:"name"`
 	Type        int       `gorm:"column:type" json:"type"` // 1-grafana 2-fuxa
-	GroupId     int64     `gorm:"column:group_id;comment:分组ID" json:"groupId"`
+	GroupId     *int64    `gorm:"column:group_id;comment:分组ID" json:"groupId"`
 	NeedInit    bool      `gorm:"column:need_init" json:"needInit"` // 是否需要初始化
 	Description string    `gorm:"column:description" json:"description"`
 	JsonContent string    `gorm:"column:json_content" json:"jsonContent"`

@@ -484,6 +484,10 @@
                 "flowName": {
                   "type": "string"
                 },
+                "groupId": {
+                  "description": "分组ID",
+                  "type": "integer"
+                },
                 "template": {
                   "type": "string"
                 }
@@ -1791,6 +1795,10 @@
                 },
                 "flowName": {
                   "type": "string"
+                },
+                "groupId": {
+                  "description": "分组ID",
+                  "type": "integer"
                 },
                 "template": {
                   "type": "string"
@@ -13429,7 +13437,7 @@
       }
     }
   },
-  "x-date": "2026-01-29 16:31:36",
+  "x-date": "2026-01-30 10:06:57",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

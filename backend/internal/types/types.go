@@ -294,8 +294,8 @@ type CreateUnsResult struct {
 type DashboardDto struct {
 	ID          string `json:"id,optional,omitzero"`
 	Name        string `json:"name"`
-	Type        int    `json:"type"`             // 1-grafana 2-fuxa
-	GroupId     int64  `json:"groupId,optional"` // 分组ID
+	Type        int    `json:"type"`                    // 1-grafana 2-fuxa
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 	NeedInit    bool   `json:"needInit,optional"`
 	Description string `json:"description,optional,omitzero"`
 	JsonContent string `json:"jsonContent,optional,omitzero"`
@@ -382,6 +382,7 @@ type EventFlowCreateReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional"` // 分组ID
 }
 
 type EventFlowDeleteReq struct {
@@ -1186,6 +1187,7 @@ type SourceFlowCreateReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional"` // 分组ID
 }
 
 type SourceFlowDeleteReq struct {
