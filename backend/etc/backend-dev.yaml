@@ -51,8 +51,8 @@ NodeRed:
     Host: eventflow
     Port: "1889"
 Kong:
-  Host: 100.100.100.22
-  Port: 34098
+  Host: kong
+  Port: 8001
 OssConf:
   OssType: local # 如果不需要minio,可以填写local,默认存储路径为 ../oss
   PublicBucketName:
