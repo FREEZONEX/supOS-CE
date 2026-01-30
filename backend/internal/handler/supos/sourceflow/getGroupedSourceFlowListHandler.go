@@ -9,6 +9,7 @@ import (
 	"backend/internal/logic/supos/sourceflow"
 	"backend/internal/svc"
 	"backend/internal/types"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
@@ -22,6 +23,7 @@ func GetGroupedSourceFlowListHandler(svcCtx *svc.ServiceContext) http.HandlerFun
 		}
 
 		l := sourceflow.NewGetGroupedSourceFlowListLogic(r.Context(), svcCtx)
+		req.GroupType = 1
 		resp, err := l.GetGroupedSourceFlowList(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)

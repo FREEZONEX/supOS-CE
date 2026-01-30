@@ -617,7 +617,7 @@ type GroupFlowVO struct {
 	Name        string `json:"name"`
 	Description string `json:"description,optional"`
 	Sort        int32  `json:"sort,optional"`
-	GroupId     int64  `json:"groupId,optional"`
+	GroupId     *int64 `json:"groupId,optional"`
 	CreateAt    int64  `json:"createAt,optional"`
 	Creator     string `json:"creator,optional,omitzero"`
 	FlowName    string `json:"flowName,optional"`
@@ -1186,7 +1186,7 @@ type SourceFlowCreateReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
-	GroupId     *int64 `json:"groupId,optional"` // 分组ID
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 }
 
 type SourceFlowDeleteReq struct {

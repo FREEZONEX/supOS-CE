@@ -23,6 +23,7 @@ func GetGroupedEventFlowListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc
 		}
 
 		l := sourceflow.NewGetGroupedSourceFlowListLogic(r.Context(), svcCtx)
+		req.GroupType = 2
 		resp, err := l.GetGroupedSourceFlowList(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)

@@ -187,10 +187,10 @@ func (m *GroupMapper) OperationGroup(db *gorm.DB, req *types.OperationGroupReq) 
 	switch *group.Type {
 	case 1:
 		tableName = "supos_node_flows"
-		flowType = " and template = node-red"
+		flowType = " and template = 'node-red'"
 	case 2:
 		tableName = "supos_node_flows"
-		flowType = " and template = event-flow"
+		flowType = " and template = 'event-flow'"
 	case 3:
 		flowType = " "
 		tableName = "uns_dashboard"
