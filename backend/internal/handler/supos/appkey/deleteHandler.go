@@ -1,28 +1,33 @@
 package appkey
 
 import (
-	"net/http"
-	"strconv"
-
 	"backend/internal/logic/supos/appkey"
 	"backend/internal/svc"
+	"backend/internal/types"
+	"net/http"
 
-	"gitee.com/unitedrhino/share/errors"
-	"gitee.com/unitedrhino/share/result"
+	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 // 删除密钥
 func DeleteHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		idStr := r.PathValue("id")
-		id, err := strconv.ParseInt(idStr, 10, 64)
-		if err != nil {
-			result.Http(w, r, nil, errors.Parameter.WithMsg("id无效"))
+		var req types.DeleteIDReq
+		if err := httpx.Parse(r, &req); err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
 		l := appkey.NewDeleteLogic(r.Context(), svcCtx)
-		err = l.Delete(id)
-		result.Http(w, r, nil, err)
+		var err = l.Delete(&req)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			result := &types.JsonResult{
+				Code: 200,
+				Msg:  "成功",
+			}
+			httpx.OkJsonCtx(r.Context(), w, result)
+		}
 	}
 }

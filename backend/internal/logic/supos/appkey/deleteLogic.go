@@ -1,6 +1,7 @@
 package appkey
 
 import (
+	"backend/internal/types"
 	"context"
 
 	"backend/internal/logic/supos/appkey/service"
@@ -24,9 +25,9 @@ func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogi
 	}
 }
 
-func (l *DeleteLogic) Delete(id int64) error {
+func (l *DeleteLogic) Delete(req *types.DeleteIDReq) error {
 	appKeyService := spring.GetBean[*service.AppKeyService]()
-	err := appKeyService.DeleteSecretKey(l.ctx, id)
+	err := appKeyService.DeleteSecretKey(l.ctx, req.ID)
 	if err != nil {
 		return err
 	}

@@ -348,6 +348,10 @@ type DbFieldsInfoVoResp struct {
 	Data []FieldDefine `json:"data"`
 }
 
+type DeleteIDReq struct {
+	ID int64 `path:"id"`
+}
+
 type DetailRequest struct {
 	ID string `form:"id"`
 }
@@ -382,7 +386,7 @@ type EventFlowCreateReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
-	GroupId     *int64 `json:"groupId,optional"` // 分组ID
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 }
 
 type EventFlowDeleteReq struct {

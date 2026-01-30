@@ -2,12 +2,14 @@ package service
 
 import (
 	"backend/internal/common"
+	"backend/internal/config"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/spring"
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"gitee.com/unitedrhino/share/errors"
@@ -16,6 +18,10 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 )
+
+type ServiceContext struct {
+	Config config.Config
+}
 
 const (
 	StatusEnabled  int32 = 1 // 启用
@@ -39,11 +45,11 @@ func init() {
 	})
 }
 
-func (s *AppKeyService) Init() error {
+func (s *AppKeyService) Init(c config.Config) error {
 	// 初始化Konga配置，这里可以从配置文件读取
-	s.host = "kong"
-	s.port = "8001"
-	s.path = "consumers/59d1ef15-24a5-4373-b957-e8192c15ff6e/key-auth"
+	s.host = c.Kong.Host
+	s.port = strconv.Itoa(c.Kong.Port)
+	s.path = "kong/home/consumers/59d1ef15-24a5-4373-b957-e8192c15ff6e/key-auth"
 	return nil
 }
 

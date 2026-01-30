@@ -13,6 +13,7 @@ import (
 	"backend/internal/common/event"
 	"backend/internal/config"
 	"backend/internal/handler"
+	service "backend/internal/logic/supos/appkey/service"
 	_ "backend/internal/logic/supos/uns/dashboard/service"
 	"backend/internal/logic/supos/uns/system"
 	_ "backend/internal/logic/supos/uns/topology/service" // 导入触发 init() 注册
@@ -47,6 +48,14 @@ func main() {
 	server.PrintRoutes()
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	spring.RegisterBean[*svc.ServiceContext](ctx)
+
+	// 初始化 AppKeyService
+	appKeyService := spring.GetBean[*service.AppKeyService]()
+	if err := appKeyService.Init(c); err != nil {
+		logx.Errorf("Failed to initialize AppKeyService: %v", err)
+		os.Exit(-1)
+	}
+
 	spring.RefreshBeanContext()
 	_ = spring.PublishEvent(&event.ContextRefreshedEvent{SvcContext: ctx})
 	defer func() {

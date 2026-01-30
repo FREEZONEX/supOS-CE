@@ -25,10 +25,14 @@ service backend {
 
     @doc "删除密钥"
     @handler delete
-    delete /:id () returns ()
+    delete /:id (DeleteIDReq) returns ()
 }
 
 type (
+    DeleteIDReq {
+        ID int64 `path:"id"`
+    }
+
     CreateAppKeyReq {
     }
 
