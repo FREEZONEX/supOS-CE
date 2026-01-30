@@ -21,7 +21,7 @@ service backend {
 
     @doc "查询密钥列表"
     @handler list
-    get /list () returns ()
+    get /list () returns (ListAppKeyResp)
 
     @doc "删除密钥"
     @handler delete
@@ -46,8 +46,7 @@ type (
     }
 
     ListAppKeyResp {
-        Code int32         `json:"code"`
-        Msg  string        `json:"msg"`
+        BaseResult
         Data []*AppKeyInfo `json:"data"`
     }
 )

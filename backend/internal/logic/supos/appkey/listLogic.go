@@ -33,8 +33,7 @@ func (l *ListLogic) List() (*types.ListAppKeyResp, error) {
 	}
 
 	return &types.ListAppKeyResp{
-		Code: 200,
-		Msg:  "success",
-		Data: list,
+		BaseResult: types.BaseResult{Code: 200, Msg: "ok"},
+		Data:       list,
 	}, nil
 }

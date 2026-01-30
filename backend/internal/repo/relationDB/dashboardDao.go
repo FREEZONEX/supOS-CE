@@ -239,7 +239,7 @@ type GroupedDashboardItem struct {
 	GroupType   int64     `gorm:"column:group_type" json:"groupType"`    // 类型：1-sourceflow 2-eventflow 3-datasource
 	Name        string    `gorm:"column:name" json:"name"`               // 名称
 	Description string    `gorm:"column:description" json:"description"` // 描述
-	GroupID     int64     `gorm:"column:group_id" json:"groupId"`        // 分组ID
+	GroupID     *int64    `gorm:"column:group_id" json:"groupId"`        // 分组ID
 	Sort        int32     `gorm:"column:sort" json:"sort"`               // 排序字段
 	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`      // 创建时间
 	Creator     string    `gorm:"column:creator" json:"creator"`         // 创建人

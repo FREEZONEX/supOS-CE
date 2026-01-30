@@ -58,27 +58,16 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 	var groupBizVOList []types.GroupBizVO
 	for _, item := range items {
 		groupBizVO := types.GroupBizVO{}
-		//存在分组
-		if item.GroupType != 0 {
-			// 处理分组数据
-			groupBizVO.ID = item.ID
-			groupBizVO.GroupType = &item.GroupType
-			groupBizVO.Name = item.Name
-			groupBizVO.Description = item.Description
-			groupBizVO.Sort = item.Sort
-			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
+		groupBizVO.ID = item.ID
+		groupBizVO.Name = item.Name
+		groupBizVO.Description = item.Description
+		groupBizVO.GroupType = &item.GroupType
+		groupBizVO.Sort = item.Sort
+		groupBizVO.CreateAt = item.CreateAt.UnixMilli()
+		groupBizVO.Category = item.Category
+		groupBizVO.Creator = item.Creator
+		if item.GroupID != nil {
 			groupBizVO.GroupId = item.GroupID
-			groupBizVO.Category = item.Category
-			groupBizVO.Creator = item.Creator
-		} else if item.GroupType == 0 {
-			// 处理未分组的dashboard数据
-			groupBizVO.ID = item.ID
-			groupBizVO.Name = item.Name
-			groupBizVO.Description = item.Description
-			groupBizVO.CreateAt = item.CreateAt.UnixMilli()
-			groupBizVO.GroupId = item.GroupID
-			groupBizVO.Category = item.Category
-			groupBizVO.Creator = item.Creator
 		}
 		groupBizVOList = append(groupBizVOList, groupBizVO)
 	}

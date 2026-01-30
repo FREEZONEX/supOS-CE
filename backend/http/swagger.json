@@ -81,7 +81,47 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "appSecretKey",
+                      "appSecretValue",
+                      "status",
+                      "createTime"
+                    ],
+                    "properties": {
+                      "appSecretKey": {
+                        "type": "string"
+                      },
+                      "appSecretValue": {
+                        "type": "string"
+                      },
+                      "createTime": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -13437,7 +13477,7 @@
       }
     }
   },
-  "x-date": "2026-01-30 10:06:57",
+  "x-date": "2026-01-30 10:47:42",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

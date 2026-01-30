@@ -600,7 +600,7 @@ type GroupBizVO struct {
 	Name        string `json:"name"`
 	Description string `json:"description,optional"`
 	Sort        int32  `json:"sort,optional"`
-	GroupId     int64  `json:"groupId,optional"`
+	GroupId     *int64 `json:"groupId,optional"`
 	CreateAt    int64  `json:"createAt,optional"`
 	Creator     string `json:"creator,optional,omitzero"`
 }
@@ -786,8 +786,7 @@ type LabelVo struct {
 }
 
 type ListAppKeyResp struct {
-	Code int32         `json:"code"`
-	Msg  string        `json:"msg"`
+	BaseResult
 	Data []*AppKeyInfo `json:"data"`
 }
 
