@@ -16,19 +16,20 @@ import (
 
 // GroupedSourceFlowItem 分组和未分组source flow统一返回结构
 type GroupedSourceFlowItem struct {
-	ID          string    `gorm:"column:id" json:"id"`                   // ID
-	Category    string    `gorm:"column:category" json:"category"`       // 分类 group-分组 file-文件
-	GroupType   int64     `gorm:"column:group_type" json:"groupType"`    // 类型：GROUP 表示分组，BIZ 表示未分组的source flow
-	Name        string    `gorm:"column:name" json:"name"`               // 名称
-	Description string    `gorm:"column:description" json:"description"` // 描述
-	GroupID     *int64    `gorm:"column:group_id" json:"groupId"`        // 分组ID
-	Sort        int32     `gorm:"column:sort" json:"sort"`               // 排序字段
-	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`      // 创建时间
-	Creator     string    `gorm:"column:creator" json:"creator"`         // 创建人
-	FlowName    string    `gorm:"column:flow_name" json:"flowName"`
-	FlowID      string    `gorm:"column:flow_id" json:"flowId"`
-	FlowStatus  string    `gorm:"column:flow_status" json:"flowStatus"`
-	Template    string    `gorm:"column:template" json:"template"`
+	ID          string    `gorm:"column:id" json:"id"`                    // ID
+	Category    string    `gorm:"column:category" json:"category"`        // 分类 group-分组 file-文件
+	GroupType   int64     `gorm:"column:group_type" json:"groupType"`     // 类型：GROUP 表示分组，BIZ 表示未分组的source flow
+	Name        string    `gorm:"column:name" json:"name"`                // 名称
+	Description string    `gorm:"column:description" json:"description"`  // 描述
+	GroupID     *int64    `gorm:"column:group_id" json:"groupId"`         // 分组ID
+	Sort        int32     `gorm:"column:sort" json:"sort"`                // 排序字段
+	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`       // 创建时间
+	Creator     string    `gorm:"column:creator" json:"creator"`          // 创建人
+	FlowName    string    `gorm:"column:flow_name" json:"flowName"`       // flow名称
+	FlowID      string    `gorm:"column:flow_id" json:"flowId"`           // flow ID
+	FlowStatus  string    `gorm:"column:flow_status" json:"flowStatus"`   // flow状态
+	Template    string    `gorm:"column:template" json:"template"`        // 模板类型
+	HasChildren bool      `gorm:"column:has_children" json:"hasChildren"` // 是否有子节点
 }
 
 // GetGroupedSourceFlowList 按分组获取source flow列表
@@ -62,12 +63,15 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
 		    null as flow_name,
 		    null as flow_id,
 		    null as flow_status,
-		    null as template
+		    null as template,
+		    EXISTS (
+				SELECT 1
+				FROM supos_node_flows u
+				WHERE u.group_id = g.id
+    		) AS has_children
 		FROM resource_group g
 		WHERE g.type = $1
-
 		UNION ALL
-
 		SELECT
 		    u.id::varchar AS id,
 		 	'file' AS category,
@@ -81,7 +85,8 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
 		    u.flow_name AS flow_name,
 		    u.flow_id AS flow_id,
 		    u.flow_status AS flow_status,
-		    u.template AS template
+		    u.template AS template,
+		    FALSE AS has_children
 		FROM supos_node_flows u
 		LEFT JOIN supos_node_flow_top_recodes r
 		    ON u.id = r.id

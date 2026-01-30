@@ -66,6 +66,7 @@ func (l *GetGroupedDashboardListLogic) GetGroupedDashboardList(req *types.GroupP
 		groupBizVO.CreateAt = item.CreateAt.UnixMilli()
 		groupBizVO.Category = item.Category
 		groupBizVO.Creator = item.Creator
+		groupBizVO.HasChildren = item.HasChildren
 		if item.GroupID != nil {
 			groupBizVO.GroupId = item.GroupID
 		}

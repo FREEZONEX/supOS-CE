@@ -58,34 +58,20 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 	for _, item := range items {
 		groupFlowVO := types.GroupFlowVO{}
 		//存在分组
+		groupFlowVO.ID = item.ID
+		groupFlowVO.Category = item.Category
+		groupFlowVO.Name = item.Name
+		groupFlowVO.Description = item.Description
+		groupFlowVO.Sort = item.Sort
+		groupFlowVO.CreateAt = item.CreateAt.UnixMilli()
+		groupFlowVO.Creator = item.Creator
+		groupFlowVO.FlowName = item.FlowName
+		groupFlowVO.FlowID = item.FlowID
+		groupFlowVO.FlowStatus = item.FlowStatus
+		groupFlowVO.Template = item.Template
+		groupFlowVO.HasChildren = item.HasChildren
 		if item.GroupType != 0 {
-			// 处理分组数据
-			groupFlowVO.ID = item.ID
-			groupFlowVO.Category = item.Category
 			groupFlowVO.GroupType = &item.GroupType
-			groupFlowVO.Name = item.Name
-			groupFlowVO.Description = item.Description
-			groupFlowVO.Sort = item.Sort
-			groupFlowVO.CreateAt = item.CreateAt.UnixMilli()
-			groupFlowVO.Creator = item.Creator
-			groupFlowVO.FlowName = item.FlowName
-			groupFlowVO.FlowID = item.FlowID
-			groupFlowVO.FlowStatus = item.FlowStatus
-			groupFlowVO.Template = item.Template
-		} else if item.GroupType == 0 {
-			// 处理未分组的source flow数据
-			groupFlowVO.ID = item.ID
-			groupFlowVO.Category = item.Category
-			groupFlowVO.Name = item.Name
-			groupFlowVO.Description = item.Description
-			groupFlowVO.Sort = item.Sort
-			groupFlowVO.CreateAt = item.CreateAt.UnixMilli()
-			groupFlowVO.GroupId = item.GroupID
-			groupFlowVO.Creator = item.Creator
-			groupFlowVO.FlowName = item.FlowName
-			groupFlowVO.FlowID = item.FlowID
-			groupFlowVO.FlowStatus = item.FlowStatus
-			groupFlowVO.Template = item.Template
 		}
 		groupVOList = append(groupVOList, groupFlowVO)
 	}

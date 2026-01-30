@@ -234,15 +234,16 @@ func (m *DashboardMapper) DeleteBatchIds(db *gorm.DB, ids []string) error {
 
 // GroupedDashboardItem 分组和未分组dashboard统一返回结构
 type GroupedDashboardItem struct {
-	ID          string    `gorm:"column:id" json:"id"`                   // ID
-	Category    string    `gorm:"column:category" json:"category"`       // 分类 group-分组 file-文件
-	GroupType   int64     `gorm:"column:group_type" json:"groupType"`    // 类型：1-sourceflow 2-eventflow 3-datasource
-	Name        string    `gorm:"column:name" json:"name"`               // 名称
-	Description string    `gorm:"column:description" json:"description"` // 描述
-	GroupID     *int64    `gorm:"column:group_id" json:"groupId"`        // 分组ID
-	Sort        int32     `gorm:"column:sort" json:"sort"`               // 排序字段
-	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`      // 创建时间
-	Creator     string    `gorm:"column:creator" json:"creator"`         // 创建人
+	ID          string    `gorm:"column:id" json:"id"`                    // ID
+	Category    string    `gorm:"column:category" json:"category"`        // 分类 group-分组 file-文件
+	GroupType   int64     `gorm:"column:group_type" json:"groupType"`     // 类型：1-sourceflow 2-eventflow 3-datasource
+	Name        string    `gorm:"column:name" json:"name"`                // 名称
+	Description string    `gorm:"column:description" json:"description"`  // 描述
+	GroupID     *int64    `gorm:"column:group_id" json:"groupId"`         // 分组ID
+	Sort        int32     `gorm:"column:sort" json:"sort"`                // 排序字段
+	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`       // 创建时间
+	Creator     string    `gorm:"column:creator" json:"creator"`          // 创建人
+	HasChildren bool      `gorm:"column:has_children" json:"hasChildren"` // 是否有子节点
 }
 
 // GetGroupedDashboardList 按分组获取dashboard列表
@@ -270,11 +271,14 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 		    NULL AS group_id,
 		    g.sort AS sort,
 		    g.create_at AS create_at,
-		    g.creator AS creator
+		    g.creator AS creator,
+		    EXISTS (
+				SELECT 1
+				FROM uns_dashboard u
+				WHERE u.group_id = g.id
+   			) AS has_children
 		FROM resource_group g
-
 		UNION ALL
-
 		SELECT
 		    u.id AS id,
 		    'file' AS category,
@@ -284,7 +288,8 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 		    u.group_id AS group_id,
 		    COALESCE(r.mark,0) AS sort,
 		    u.create_time AS create_at,
-			u.creator AS creator
+			u.creator AS creator,
+			false AS has_children
 		FROM uns_dashboard u
 		LEFT JOIN uns_dashboard_top_recodes r
 		    ON u.id = r.id::varchar

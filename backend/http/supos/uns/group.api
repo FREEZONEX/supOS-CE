@@ -117,6 +117,7 @@ type (
         GroupId *int64 `json:"groupId,optional"`
         CreateAt int64 `json:"createAt,optional"`
         Creator     string `json:"creator,optional,omitzero"`
+        HasChildren bool  `json:"hasChildren,optional"`
     }
 
     OperationGroupTopReq {

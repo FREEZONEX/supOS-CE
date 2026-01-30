@@ -203,5 +203,6 @@ type (
         FlowID      string `json:"flowId,optional"`
         FlowStatus  string `json:"flowStatus,optional"`
         Template    string `json:"template,optional"`
+        HasChildren bool  `json:"hasChildren,optional"`
     }
 )

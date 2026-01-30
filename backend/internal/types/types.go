@@ -607,6 +607,7 @@ type GroupBizVO struct {
 	GroupId     *int64 `json:"groupId,optional"`
 	CreateAt    int64  `json:"createAt,optional"`
 	Creator     string `json:"creator,optional,omitzero"`
+	HasChildren bool   `json:"hasChildren,optional"`
 }
 
 type GroupByTypeQuery struct {
@@ -628,6 +629,7 @@ type GroupFlowVO struct {
 	FlowID      string `json:"flowId,optional"`
 	FlowStatus  string `json:"flowStatus,optional"`
 	Template    string `json:"template,optional"`
+	HasChildren bool   `json:"hasChildren,optional"`
 }
 
 type GroupIDReq struct {

@@ -957,6 +957,9 @@
                       "groupType": {
                         "type": "integer"
                       },
+                      "hasChildren": {
+                        "type": "boolean"
+                      },
                       "id": {
                         "type": "string"
                       },
@@ -2213,6 +2216,9 @@
                       },
                       "groupType": {
                         "type": "integer"
+                      },
+                      "hasChildren": {
+                        "type": "boolean"
                       },
                       "id": {
                         "type": "string"
@@ -6188,6 +6194,9 @@
                       },
                       "groupType": {
                         "type": "integer"
+                      },
+                      "hasChildren": {
+                        "type": "boolean"
                       },
                       "id": {
                         "type": "string"
@@ -13488,7 +13497,7 @@
       }
     }
   },
-  "x-date": "2026-01-30 14:23:17",
+  "x-date": "2026-01-30 14:52:02",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
