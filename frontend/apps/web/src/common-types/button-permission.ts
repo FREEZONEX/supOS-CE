@@ -41,6 +41,7 @@ export const ButtonPermission = {
   'SourceFlow.nodeManagement': 'SourceFlow.node_management',
   'SourceFlow.process': 'SourceFlow.copy',
   'SourceFlow.copy': 'SourceFlow.copy',
+  'SourceFlow.moveToGroup': 'SourceFlow.moveToGroup',
   // 事件流程 - nodered
   'EventFlow.add': 'EventFlow.add',
   'EventFlow.edit': 'EventFlow.edit',
@@ -53,6 +54,7 @@ export const ButtonPermission = {
   'EventFlow.nodeManagement': 'EventFlow.node_management',
   'EventFlow.process': 'EventFlow.process',
   'EventFlow.copy': 'EventFlow.copy',
+  'EventFlow.moveToGroup': 'EventFlow.moveToGroup',
   // 数据看板
   'Dashboards.add': 'Dashboards.add',
   'Dashboards.preview': 'Dashboards.preview',
@@ -62,6 +64,7 @@ export const ButtonPermission = {
   'Dashboards.save': 'Dashboards.save',
   'Dashboards.export': 'Dashboards.export',
   'Dashboards.import': 'Dashboards.import',
+  'Dashboards.moveToGroup': 'Dashboards.moveToGroup',
   // 用户管理
   'UserManagement.add': 'UserManagement.add',
   'UserManagement.edit': 'UserManagement.edit',

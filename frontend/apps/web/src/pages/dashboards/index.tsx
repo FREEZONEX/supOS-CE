@@ -271,7 +271,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
       {
         key: 'moveToGroup',
         label: formatMessage('uns.moveToGroup'),
-        // auth: ButtonPermission['Dashboards.edit'],
+        auth: ButtonPermission['Dashboards.moveToGroup'],
         onClick: () => {
           moveGroupModalRef.current?.onOpen(3, { bizId: record.id, id: record.groupId });
         },
