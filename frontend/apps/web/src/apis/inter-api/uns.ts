@@ -15,11 +15,6 @@ export const getModelInfo = async (params?: Record<string, unknown>) => api.get(
 export const getInstanceInfo = async (params?: Record<string, unknown>) =>
   api.get('/instance', { params, _noMessage: true }); // 查询模型字段声明
 export const deleteTreeNode = async (params?: Record<string, unknown>) => api.delete('', { params }); // 删除树节点
-export const getDashboardList = async (params?: Record<string, unknown>) =>
-  api.get('/dashboard', {
-    params,
-    [CustomAxiosConfigEnum.BusinessResponse]: true,
-  }); // 获取dashboard
 /**
  * 首次传入 checkSmallFile: true ,
  * 如果是小文件，直接返回下载内容

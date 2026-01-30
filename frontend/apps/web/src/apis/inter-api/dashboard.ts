@@ -5,7 +5,7 @@ const baseUrl = '/inter-api/supos/uns/dashboard';
 const api = new ApiWrapper(baseUrl);
 
 // 获取列表 category: group-分组 file-文件   不传=全部; groupId=分组ID（非必填）; k=搜索关键字;page pageSize
-export const getDashboardList = async (params?: Record<string, unknown>) =>
+export const getDashboardAndGroupList = async (params?: Record<string, unknown>) =>
   api.get('/getGroupedDashboardList', {
     params,
     [CustomAxiosConfigEnum.BusinessResponse]: true,
@@ -40,3 +40,10 @@ export const createDashboard = async (alias: string) => await api.post(`/createG
 // 检查dashboard
 export const checkDashboardIsExist = async (params?: Record<string, unknown>) =>
   api.get('/isExist', { params, [CustomAxiosConfigEnum.NoCode]: true });
+
+// 只有dashboard的接口
+export const getDashboardList = async (params?: Record<string, unknown>) =>
+  api.get('', {
+    params,
+    [CustomAxiosConfigEnum.BusinessResponse]: true,
+  }); // 获取dashboard

@@ -37,7 +37,7 @@ const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ ref
     const value = await form.validateFields();
     return optGroup({
       bizId: value?.bizId,
-      id: value?.id?.value,
+      id: value?.id,
       status: true,
     }).then(() => {
       onClose?.();
@@ -89,16 +89,15 @@ const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ ref
                 label: formatMessage('common.group'),
                 properties: {
                   api: (key?: string) =>
-                    getGroupList({ page: 1, pageSize: 100, key, type }).then((res) => {
+                    getGroupList({ page: 1, pageSize: 1000, key, type }).then((res) => {
                       return (
                         res.map((item: any) => ({
                           ...item,
                           label: item.name,
-                          value: item.id,
+                          value: item.id + '',
                         })) || []
                       );
                     }),
-                  labelInValue: true,
                   showSearch: true,
                 },
               },

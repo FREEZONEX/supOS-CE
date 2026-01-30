@@ -9,9 +9,9 @@ import styles from './index.module.scss';
 import classNames from 'classnames';
 import { debounce } from 'lodash-es';
 import ComInput from '@/components/com-input';
-import { getDashboardList } from '@/apis/inter-api';
 import usePropsValue from '@/hooks/usePropsValue.ts';
 import usePagination from '@/hooks/usePagination.ts';
+import { getDashboardList } from '@/apis/inter-api/dashboard.ts';
 
 const CONTAINER_HEIGHT = 200;
 const PAGE_SIZE = 20;
