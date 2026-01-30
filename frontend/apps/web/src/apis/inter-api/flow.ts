@@ -55,3 +55,10 @@ export const unmarkFlow = async (id: string) => api.delete(`/flow/unmark?id=${id
 
 // 换绑
 export const bindFlowForUns = async (params: any) => api.post(`/flow/bindUns`, null, { params }); // 获取dashboard信息
+
+// 获取列表 category: group-分组 file-文件   不传=全部; groupId=分组ID（非必填）; k=搜索关键字;page pageSize
+export const getFlowAndGroupList = async (params?: Record<string, unknown>) =>
+  api.get('/flow/getGroupedSourceFlowList', {
+    params,
+    [CustomAxiosConfigEnum.BusinessResponse]: true,
+  });

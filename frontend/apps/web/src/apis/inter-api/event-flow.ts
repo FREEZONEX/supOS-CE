@@ -46,3 +46,10 @@ export const processList = async () =>
 // 置顶
 export const markFlow = async (id: string) => api.post('/mark', { id });
 export const unmarkFlow = async (id: string) => api.delete(`/unmark?id=${id}`);
+
+// 获取列表 category: group-分组 file-文件   不传=全部; groupId=分组ID（非必填）; k=搜索关键字;page pageSize
+export const getEventFlowAndGroupList = async (params?: Record<string, unknown>) =>
+  api.get('/getGroupedEventFlowList', {
+    params,
+    [CustomAxiosConfigEnum.BusinessResponse]: true,
+  });
