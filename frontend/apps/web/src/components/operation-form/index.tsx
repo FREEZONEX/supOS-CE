@@ -1,9 +1,10 @@
 import type { CSSProperties, FC, ReactNode } from 'react';
-import { Button, Divider, Flex, Form, type FormInstance, type FormProps, Typography } from 'antd';
+import { Divider, Flex, Form, type FormInstance, type FormProps, Typography } from 'antd';
 import RenderFormItem, { type RenderFormItemProps } from '../operation-form/render-form-item';
 import { useTranslate } from '@/hooks';
 import { v4 as uuidv4 } from 'uuid';
 import './index.scss';
+import ComButton from '@/components/com-button';
 
 const { Title } = Typography;
 
@@ -69,7 +70,7 @@ const OperationForm: FC<OperationFormProps> = ({
         footer
       ) : (
         <Flex gap="10px" justify="end">
-          <Button
+          <ComButton
             style={{
               flex: 1,
               minWidth: 0,
@@ -84,8 +85,8 @@ const OperationForm: FC<OperationFormProps> = ({
             title={formatMessage('common.cancel')}
           >
             {formatMessage('common.cancel')}
-          </Button>
-          <Button
+          </ComButton>
+          <ComButton
             style={{
               flex: 1,
               minWidth: 0,
@@ -99,7 +100,7 @@ const OperationForm: FC<OperationFormProps> = ({
             title={formatMessage('common.save')}
           >
             {formatMessage('common.save')}
-          </Button>
+          </ComButton>
         </Flex>
       )}
     </Form>

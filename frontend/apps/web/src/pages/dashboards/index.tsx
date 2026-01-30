@@ -2,12 +2,12 @@ import { type FC, useRef, useState } from 'react';
 import { App, Breadcrumb, Button, Empty, Flex, Form, Pagination, Segmented } from 'antd';
 import { useNavigate } from 'react-router';
 import {
-  getDashboardList,
   markDashboard,
   unmarkDashboard,
   addDashboard,
   editDashboard,
   deleteDashboard,
+  getDashboardAndGroupList,
 } from '@/apis/inter-api/dashboard';
 import { usePagination, useTranslate } from '@/hooks';
 import { useActivate } from '@/contexts/tabs-lifecycle-context';
@@ -71,7 +71,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
     setSearchParams,
     onChange,
   } = usePagination({
-    fetchApi: getDashboardList,
+    fetchApi: getDashboardAndGroupList,
     initPageSize: 18,
   });
   const [mode, setMode] = useLocalStorageState<string>('SUPOS_DASHBOARD_MODE', {
@@ -102,6 +102,10 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
     return [
       {
         label: `${isEdit ? formatMessage('common.edit') : formatMessage('common.create')} ${formatMessage('dashboards.dashboard')}`,
+      },
+      {
+        name: 'groupId',
+        hidden: true,
       },
       {
         label: formatMessage('common.name'),
@@ -141,11 +145,16 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   const onAddHandle = () => {
     form.resetFields();
     setIsEdit(false);
+    if (breadcrumbItem?.length === 2) {
+      form.setFieldsValue({
+        groupId: breadcrumbItem?.[1]?.groupId,
+      });
+    }
     if (show) return;
     setShow(true);
   };
   const onDeleteHandle = (item: any) => {
-    deleteDashboard(item.id)
+    return deleteDashboard(item.id)
       .then(() => {
         message.success(formatMessage('common.deleteSuccessfully'));
         reload();
@@ -159,7 +168,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   };
 
   const onSave = () => {
-    form
+    return form
       .validateFields()
       .then((info) => {
         const params = info;
@@ -167,7 +176,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           params.id = clickItem.id;
         }
         const request = isEdit ? editDashboard : addDashboard;
-        request(params)
+        return request(params)
           .then(() => {
             message.success(formatMessage('common.optsuccess'));
             onClose();
@@ -264,7 +273,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
         label: formatMessage('uns.moveToGroup'),
         // auth: ButtonPermission['Dashboards.edit'],
         onClick: () => {
-          moveGroupModalRef.current?.onOpen(3, { bizId: record.id });
+          moveGroupModalRef.current?.onOpen(3, { bizId: record.id, id: record.groupId });
         },
         extra: (
           <Flex justify="center" align="center">
@@ -454,7 +463,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                           d.category === 'group'
                             ? () => {
                                 setBreadcrumbItem((pre: any) => {
-                                  return [...pre, { title: d.name }];
+                                  return [...pre, { title: d.name, groupId: d.id }];
                                 });
                                 searchForm.setFieldsValue({
                                   groupId: d.id,
@@ -547,7 +556,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                                   groupId: item.id,
                                 });
                                 setBreadcrumbItem((pre: any) => {
-                                  return [...pre, { title: item.name }];
+                                  return [...pre, { title: item.name, groupId: item.id }];
                                 });
                                 onSearch?.();
                               }}
@@ -584,13 +593,13 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     titleIntlId: 'common.description',
                     dataIndex: 'description',
-                    width: '30%',
+                    width: '20%',
                     ellipsis: true,
                   },
                   {
                     title: () => formatMessage('common.creationTime'),
                     dataIndex: 'createAt',
-                    width: '15%',
+                    width: '10%',
                     sorter: true,
                     render: (item: any) => formatTimestamp(item),
                   },

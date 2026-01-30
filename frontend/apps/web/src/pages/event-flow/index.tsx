@@ -90,6 +90,10 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
       label: `${formatMessage(`eventFlow.${isEdit}Flow`)}`,
     },
     {
+      name: 'groupId',
+      hidden: true,
+    },
+    {
       label: formatMessage('common.name'),
       name: 'flowName',
       rules: [
@@ -136,6 +140,11 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   const onAddHandle = () => {
     setIsEdit('create');
     form.resetFields();
+    if (breadcrumbItem?.length === 2) {
+      form.setFieldsValue({
+        groupId: breadcrumbItem?.[1]?.groupId,
+      });
+    }
     if (show) return;
     setShow(true);
   };
@@ -148,7 +157,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
       create: addFlow,
     };
     const api = apiObj[isEdit || 'create'];
-    api({
+    return api({
       ...values,
       template: isEdit === 'edit' ? undefined : values.template,
       id: isEdit === 'edit' ? values.id : undefined,
@@ -164,7 +173,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
       });
   };
   const onDeleteHandle = (item: any) => {
-    deleteFlow(item.id).then(() => {
+    return deleteFlow(item.id).then(() => {
       message.success(formatMessage('common.deleteSuccessfully'));
       reload();
     });
@@ -256,7 +265,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
         label: formatMessage('uns.moveToGroup'),
         // auth: ButtonPermission['Dashboards.edit'],
         onClick: () => {
-          moveGroupModalRef.current?.onOpen(2, { bizId: record.id });
+          moveGroupModalRef.current?.onOpen(2, { bizId: record.id, id: record.groupId });
         },
         extra: (
           <Flex justify="center" align="center">
@@ -451,7 +460,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                           d.category === 'group'
                             ? () => {
                                 setBreadcrumbItem((pre: any) => {
-                                  return [...pre, { title: d.name }];
+                                  return [...pre, { title: d.name, groupId: d.id }];
                                 });
                                 searchForm.setFieldsValue({
                                   groupId: d.id,
@@ -551,7 +560,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                                   groupId: item.id,
                                 });
                                 setBreadcrumbItem((pre: any) => {
-                                  return [...pre, { title: item.name }];
+                                  return [...pre, { title: item.name, groupId: item.id }];
                                 });
                                 onSearch?.();
                               }}

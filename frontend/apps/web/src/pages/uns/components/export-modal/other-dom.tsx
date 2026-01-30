@@ -4,7 +4,7 @@ import ProTreeSelect from '@/components/pro-tree-select/ProTreeSelect.tsx';
 import { flowPage } from '@/apis/inter-api/flow.ts';
 import { flowPage as EventFlowPage } from '@/apis/inter-api/event-flow.ts';
 import useTranslate from '@/hooks/useTranslate.ts';
-import { getDashboardList } from '@/apis/inter-api/uns';
+import { getDashboardList } from '@/apis/inter-api/dashboard.ts';
 
 const OtherDom = ({ form }: { form: FormInstance }) => {
   const { containerList, dashboardType } = useBaseStore((state) => ({
