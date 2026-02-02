@@ -11,8 +11,7 @@ import styles from './index.module.scss';
 import CodeMirror from '@uiw/react-codemirror';
 import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
 import codeStyles from '@/theme/codemirror.module.scss';
-import { json, jsonParseLinter } from '@codemirror/lang-json';
-import { linter, lintGutter } from '@codemirror/lint';
+import { yaml } from '@codemirror/lang-yaml';
 import ComEllipsis from '@/components/com-ellipsis';
 import ComCheckbox from '@/components/com-checkbox';
 
@@ -172,13 +171,7 @@ const CodeCom = ({ value, onChange }: { value?: string; onChange?: (v: string) =
         }}
         className={codeStyles['custom-theme']}
       >
-        <CodeMirror
-          theme={codemirrorTheme}
-          onChange={onChange}
-          value={value}
-          height={'200px'}
-          extensions={[json(), linter(jsonParseLinter()), lintGutter()]}
-        />
+        <CodeMirror theme={codemirrorTheme} onChange={onChange} value={value} height={'200px'} extensions={[yaml()]} />
       </div>
     </div>
   );
