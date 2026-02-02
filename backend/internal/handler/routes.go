@@ -19,6 +19,7 @@ import (
 	suposmenu "backend/internal/handler/supos/menu"
 	suposmount "backend/internal/handler/supos/mount"
 	suposnodered "backend/internal/handler/supos/nodered"
+	suposopen "backend/internal/handler/supos/open"
 	suposresource "backend/internal/handler/supos/resource"
 	supossourceflow "backend/internal/handler/supos/sourceflow"
 	supossourceflowservice_api "backend/internal/handler/supos/sourceflow/service_api"
@@ -426,6 +427,21 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: suposnodered.ProxyNodeRedFlowsHandler(serverCtx),
 			},
 		},
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 模板实例附件上传
+					Method:  http.MethodPost,
+					Path:    "/attachment",
+					Handler: suposopen.AttachmentUploadHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/open-api/uns"),
 	)
 
 	server.AddRoutes(

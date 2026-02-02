@@ -1,0 +1,25 @@
+info(
+    title: "UNS Open API"
+    desc: "UNS Open API"
+    author: "System Generated"
+    version: "v1"
+)
+
+@server(
+    group: supos/open
+    prefix: /open-api/uns
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+
+    @doc(
+        summary: "模板实例附件上传"
+        injectFormdataParam: "files"
+    )
+    @handler attachmentUpload
+    post /attachment (AttachmentUploadReq) returns (AttachmentUploadResp)
+
+}
+
+type (
+)

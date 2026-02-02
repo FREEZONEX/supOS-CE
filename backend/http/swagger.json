@@ -13349,6 +13349,77 @@
         }
       }
     },
+    "/open-api/uns/attachment": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "模板实例附件上传",
+        "operationId": "supos/OpenAttachmentUpload",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "alias",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "list": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "unsAlias",
+                      "originalName",
+                      "attachmentName",
+                      "attachmentPath",
+                      "extensionName",
+                      "createAt"
+                    ],
+                    "properties": {
+                      "attachmentName": {
+                        "type": "string"
+                      },
+                      "attachmentPath": {
+                        "type": "string"
+                      },
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "extensionName": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "originalName": {
+                        "type": "string"
+                      },
+                      "unsAlias": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/service-api/supos/flow/by/aliases": {
       "post": {
         "consumes": [
@@ -13497,7 +13568,7 @@
       }
     }
   },
-  "x-date": "2026-01-30 14:52:02",
+  "x-date": "2026-02-02 15:15:53",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
