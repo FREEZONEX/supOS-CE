@@ -731,6 +731,7 @@
   "uns.containerConfiguration": "Container Configuration",
   "uns.stripPath": "Strip Path",
   "uns.preserveHost": "Preserve Host",
+  "uns.clickUploadImage": "Click to upload .tar image",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

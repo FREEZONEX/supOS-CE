@@ -770,6 +770,7 @@ const messages = {
   'uns.containerConfiguration': '容器配置',
   'uns.stripPath': '去除路径',
   'uns.preserveHost': '保留主机头',
+  'uns.clickUploadImage': '点击上传 .tar 镜像',
 
   //公共通用模块
   'common.url': '地址',

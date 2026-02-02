@@ -6,7 +6,7 @@ import ComButton from '@/components/com-button';
 import ComUploadPicture from '@/components/com-upload-picture';
 import ComDraggerUpload from '@/components/com-dragger-upload';
 import usePropsValue from '@/hooks/usePropsValue.ts';
-import { ChevronDown, ChevronUp, ContainerSoftware, Settings, Wikis } from '@carbon/icons-react';
+import { ChevronDown, ChevronUp, ContainerSoftware, FolderAdd, Settings, Wikis } from '@carbon/icons-react';
 import styles from './index.module.scss';
 import CodeMirror from '@uiw/react-codemirror';
 import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
@@ -39,6 +39,7 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
 
   const onClose = () => {
     setVisible(false);
+    setShowAdvanced(false);
     form.resetFields();
   };
 
@@ -106,7 +107,7 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
               <Input />
             </Form.Item>
             <Form.Item name="icon" label={formatMessage('uns.appIcon')}>
-              <ComUploadPicture />
+              <ComUploadPicture className={styles['icon-upload']} />
             </Form.Item>
             <Divider style={{ background: '#e0e0e0', margin: '16px 0' }} />
             <Form.Item name="app">
@@ -217,7 +218,17 @@ const ImageCom = ({
         style={{ marginBottom: 16 }}
       />
       <div style={{ display: v.type === 'image' ? 'inherit' : 'none' }}>
-        <ComDraggerUpload value={v?.image} onChange={(image) => setV((pre: ImageComProps) => ({ ...pre, image }))} />
+        <ComDraggerUpload
+          className={styles['image-upload']}
+          value={v?.image}
+          onChange={(image) => setV((pre: ImageComProps) => ({ ...pre, image }))}
+        >
+          <Flex align="center" justify="center" vertical gap={8}>
+            <FolderAdd size={40} style={{ color: '#E0E0E0' }} />
+            <ComEllipsis>{formatMessage('uns.clickUploadImage')}</ComEllipsis>
+            <ComEllipsis>{formatMessage('common.theFileSizeMax', { size: '2GB' })}</ComEllipsis>
+          </Flex>
+        </ComDraggerUpload>
       </div>
       <div style={{ display: v.type === 'registry' ? 'inherit' : 'none' }}>
         <Input

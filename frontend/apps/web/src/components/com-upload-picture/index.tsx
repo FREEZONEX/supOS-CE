@@ -10,6 +10,7 @@ export interface UploadPictureProps extends Omit<UploadProps, 'onChange'> {
   value?: UploadFile;
   onChange?: (file: UploadFile) => void;
   acceptList?: string[];
+  className?: string;
 }
 
 const ComUploadPicture: FC<UploadPictureProps> = ({
@@ -17,6 +18,7 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
   onChange,
   maxCount = 1,
   acceptList = ['jpg', 'jpeg', 'png', 'svg'],
+  className,
   ...restProps
 }) => {
   const { message } = App.useApp();
@@ -54,7 +56,7 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
   };
 
   return (
-    <>
+    <div className={className}>
       <Upload
         action=""
         listType="picture-card"
@@ -72,7 +74,7 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
         )}
       </Upload>
       <span style={{ color: '#6F6F6F', marginTop: 4 }}>{formatMessage('common.imageSize', { size: '28*28' })}</span>
-    </>
+    </div>
   );
 };
 export default ComUploadPicture;
