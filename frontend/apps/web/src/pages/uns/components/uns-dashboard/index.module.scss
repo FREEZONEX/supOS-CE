@@ -90,3 +90,21 @@
     background: rgb(var(--supos-theme-color-rgb), 0.1);
   }
 }
+
+.add-app-modal-divider {
+  cursor: pointer;
+
+  &:hover {
+    &::before {
+      border-block-start-color: var(--supos-theme-color);
+    }
+
+    &::after {
+      border-block-start-color: var(--supos-theme-color);
+    }
+
+    .add-app-modal-divider-center {
+      color: var(--supos-theme-color);
+    }
+  }
+}
