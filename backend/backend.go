@@ -37,7 +37,11 @@ func main() {
 		confFile = "etc/backend-local.yaml"
 	}
 	utils.ConfMustLoad(confFile, &c)
-	server := rest.MustNewServer(c.RestConf, rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
+	// 提供 Swagger UI 静态资源
+	swaggerUIPath := "swagger/dist"
+	server := rest.MustNewServer(c.RestConf,
+		rest.WithFileServer("/files/", http.Dir("/app/go-edge")),
+		rest.WithFileServer("/swagger-ui/", http.Dir(swaggerUIPath)))
 	defer server.Stop()
 
 	system.SetupLog(c.Log)
