@@ -2,13 +2,7 @@ import { useEffect, useState } from 'react';
 import { App, message, Space, Tag } from 'antd';
 import { Add, IbmCloudDirectLink_2Dedicated } from '@carbon/icons-react';
 import { useTranslate } from '@/hooks';
-import {
-  createSecretKey,
-  deleteSecretKey,
-  queryMenuList,
-  querySecretKeyList,
-  updateSecretKey,
-} from '@/apis/inter-api/open-data';
+import { createSecretKey, deleteSecretKey, querySecretKeyList, updateSecretKey } from '@/apis/inter-api/open-data';
 import { ButtonPermission } from '@/common-types/button-permission';
 import { ComLayout, ComContent, ComCopy, ProTable, ComBtnTabs, AuthWrapper, AuthButton } from '@/components';
 import ServerTabs from './ServerTabs';
@@ -28,7 +22,6 @@ const OpenData = () => {
   const commonFormatMessage = useTranslate();
 
   const [dataSource, setDataSource] = useState<dataItemTypes[]>([]);
-  const [options, setOptions] = useState<any[]>([]);
   const { modal } = App.useApp();
 
   const columns = [
@@ -116,16 +109,6 @@ const OpenData = () => {
     getDataSource();
   }, []);
 
-  useEffect(() => {
-    queryMenuList().then((data = []) => {
-      const newData: any[] = [{ label: formatMessage('builtIn'), value: 'builtIn' }];
-      data.forEach((item: any) => {
-        newData.push({ label: item.appName, value: item.menuUrl, isNewWindow: true });
-      });
-      setOptions(newData);
-    });
-  }, []);
-
   const getDataSource = () => {
     querySecretKeyList().then((data = []) => {
       setDataSource(data);
@@ -201,7 +184,12 @@ const OpenData = () => {
         }}
       >
         <ProTable columns={columns} dataSource={dataSource} pagination={false} />
-        <ComBtnTabs className={styles.buttonTabs} activeKey="builtIn" options={options} onSelect={handleSelect} />
+        <ComBtnTabs
+          className={styles.buttonTabs}
+          activeKey="builtIn"
+          options={[{ label: formatMessage('builtIn'), value: 'builtIn' }]}
+          onSelect={handleSelect}
+        />
         <ServerTabs appSceretKey={dataSource[0]?.appSecretKey} />
       </ComContent>
     </ComLayout>
