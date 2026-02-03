@@ -181,9 +181,10 @@ const OpenData = () => {
           display: 'flex',
           flexDirection: 'column',
           padding: '30px 36px',
+          overflow: 'auto',
         }}
       >
-        <ProTable columns={columns} dataSource={dataSource} pagination={false} />
+        <ProTable wrapperStyle={{ flexShrink: 0 }} columns={columns} dataSource={dataSource} pagination={false} />
         <ComBtnTabs
           className={styles.buttonTabs}
           activeKey="builtIn"
