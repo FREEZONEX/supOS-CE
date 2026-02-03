@@ -181,7 +181,6 @@ const OpenData = () => {
           display: 'flex',
           flexDirection: 'column',
           padding: '30px 36px',
-          overflow: 'auto',
         }}
       >
         <ProTable wrapperStyle={{ flexShrink: 0 }} columns={columns} dataSource={dataSource} pagination={false} />
