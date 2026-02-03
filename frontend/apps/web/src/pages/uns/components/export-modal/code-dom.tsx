@@ -88,7 +88,7 @@ export const CodeDom = () => {
         )}
       </div>
       <Flex justify="end" gap={8} style={{ marginTop: 16 }}>
-        {jsonData && smallFile && (
+        {
           <ComButton
             type="primary"
             onClick={() => {
@@ -96,22 +96,22 @@ export const CodeDom = () => {
                 downloadFn({ data: JSON.stringify(jsonData), name: 'uns.json' });
               });
             }}
+            disabled={!(jsonData && smallFile)}
           >
             <Download />
             {formatMessage('common.download')}
           </ComButton>
-        )}
-        {smallFile && (
-          <Button
-            type="primary"
-            onClick={() => {
-              copy(jsonData);
-            }}
-          >
-            <Copy />
-            {formatMessage('common.copy')}
-          </Button>
-        )}
+        }
+        <Button
+          type="primary"
+          onClick={() => {
+            copy(jsonData);
+          }}
+          disabled={!(jsonData && smallFile)}
+        >
+          <Copy />
+          {formatMessage('common.copy')}
+        </Button>
       </Flex>
     </>
   );
