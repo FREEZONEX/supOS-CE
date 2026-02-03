@@ -44,7 +44,7 @@ func main() {
 		rest.WithFileServer("/swagger-ui/", http.Dir(swaggerUIPath)))
 	defer server.Stop()
 
-	system.SetupLog(c.Log)
+	system.SetLogLevel(c.Log.Level)
 
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)

@@ -14,10 +14,11 @@ interface ComDraggerUploadProps extends Omit<DrawerProps, 'action' | 'fileList' 
   onChange?: (fileList: UploadFile[]) => void;
   acceptList?: string[];
   style?: CSSProperties;
+  className?: string;
 }
 
 const ComDraggerUpload = forwardRef<DraggerRef, ComDraggerUploadProps>(
-  ({ value, onChange, defaultValue, acceptList = [], children, style, ...restProps }, ref) => {
+  ({ value, onChange, defaultValue, acceptList = [], children, style, className, ...restProps }, ref) => {
     const [fileList, setFileList] = usePropsValue<UploadFile[]>({
       value,
       onChange,
@@ -38,7 +39,7 @@ const ComDraggerUpload = forwardRef<DraggerRef, ComDraggerUploadProps>(
     };
 
     return (
-      <div style={style}>
+      <div style={style} className={className}>
         <Dragger
           className="com-dragger-upload"
           action=""
