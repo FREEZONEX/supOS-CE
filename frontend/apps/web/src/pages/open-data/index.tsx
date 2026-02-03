@@ -136,7 +136,7 @@ const OpenData = () => {
     modal.confirm({
       title: formatMessage('deleteConfirm'),
       onOk: () => {
-        deleteSecretKey(record.id).then(() => {
+        return deleteSecretKey(record.id).then(() => {
           message.success(formatMessage('deleteSuccessfully'));
           getDataSource();
         });
