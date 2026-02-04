@@ -78,3 +78,5 @@ NodeRed:
 Kong:
   Host: kong
   Port: 8001
+#max file size 100MB
+MaxBytes: 104857600
