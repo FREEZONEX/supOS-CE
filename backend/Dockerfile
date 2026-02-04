@@ -1,6 +1,7 @@
 # Use official Go image as build environment
 FROM golang:1.24-alpine AS builder
-
+# 设置 Alpine 使用国内镜像源
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 # Set working directory
 WORKDIR /app
 
