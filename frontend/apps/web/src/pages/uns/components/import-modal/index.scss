@@ -39,12 +39,13 @@
 .import-upload {
   .ant-upload-drag {
     //height: 200px;
-    //background: var(--supos-charttop-bg-color);
+    background: transparent;
   }
 }
 
 .upload-file {
   .ant-upload-drag {
     height: 170px !important;
+    background: var(--supos-charttop-bg-color);
   }
 }

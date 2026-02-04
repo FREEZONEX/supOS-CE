@@ -14,8 +14,10 @@ const useUnsGlobalWs = () => {
   useSSE('/inter-api/supos/uns/newMsg?globalTopology=true&token=' + getToken(), {
     onMessage: (event) => {
       try {
-        const data = JSON.parse(event.data);
-        setData(data);
+        if (event.data !== 'Connected') {
+          const data = JSON.parse(event.data);
+          setData(data);
+        }
       } catch (e) {
         console.log(e);
         setData({});
