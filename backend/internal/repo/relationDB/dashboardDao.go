@@ -3,6 +3,7 @@ package relationDB
 import (
 	"backend/internal/types"
 	"backend/share/base"
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -40,7 +41,16 @@ func (m *DashboardMapper) Insert(db *gorm.DB, dashboard *DashboardModel) error {
 	return nil
 }
 func (m *DashboardMapper) SaveBatch(db *gorm.DB, dashboard []*DashboardModel) error {
-	err := db.Create(dashboard).Error
+	err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(dashboard).Error
+	if err != nil {
+		logx.Errorf("failed to insert dashboard: %v", err)
+		return err
+	}
+	return nil
+}
+func (m *DashboardMapper) Save(ctx context.Context, dashboard []*DashboardModel) error {
+	db := GetDb(ctx)
+	err := db.Clauses(clause.OnConflict{DoNothing: true}).Save(dashboard).Error
 	if err != nil {
 		logx.Errorf("failed to insert dashboard: %v", err)
 		return err

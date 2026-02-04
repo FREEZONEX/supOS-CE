@@ -9,32 +9,17 @@ import (
 	"context"
 	"net/http"
 
-	"backend/internal/svc"
 	"backend/internal/types"
-
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type ExportLogic struct {
-	logx.Logger
-	ctx    context.Context
-	svcCtx *svc.ServiceContext
 }
 
-// UNS 导出
-func NewExportLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ExportLogic {
-	return &ExportLogic{
-		Logger: logx.WithContext(ctx),
-		ctx:    ctx,
-		svcCtx: svcCtx,
-	}
-}
-
-func (l *ExportLogic) Export(w http.ResponseWriter, req *types.ExportReq) (*types.BaseResult, error) {
+func (l ExportLogic) Export(ctx context.Context, w http.ResponseWriter, req *types.ExportReq) (*types.BaseResult, error) {
 	serv := spring.GetBean[*service.UnsImportExportService]()
-	if req.SrcFlowExportParam != nil || req.EventFlowExportParam != nil || req.DashboardExportParam != nil {
-		serv.ExportGlobal(l.ctx, w, req)
-		return nil, nil
-	}
-	return serv.Export(l.ctx, w, req)
+	return serv.Export(ctx, w, req)
+}
+func (l ExportLogic) ExportGlobal(ctx context.Context, w http.ResponseWriter, req *types.GlobalExportParam) {
+	serv := spring.GetBean[*service.UnsImportExportService]()
+	serv.ExportGlobal(ctx, w, req)
 }

@@ -242,6 +242,12 @@ func setFieldValue(field reflect.Value, fieldName, value string) {
 			} else {
 				addr = field.Elem().Addr().Interface()
 			}
+			if kind >= reflect.Bool && kind <= reflect.Complex128 {
+				_, err := fmt.Sscan(value, addr)
+				if err == nil {
+					return
+				}
+			}
 		}
 	} else if field.Kind() == reflect.String {
 		field.SetString(value)
@@ -254,6 +260,11 @@ func setFieldValue(field reflect.Value, fieldName, value string) {
 			logx.Errorf("Set Datetime Field Err:%v, field=%s, value=%v", err, fieldName, value)
 		}
 		return
+	} else if kind := field.Kind(); kind >= reflect.Bool && kind <= reflect.Complex128 {
+		_, err := fmt.Sscan(value, addr)
+		if err == nil {
+			return
+		}
 	}
 	err := json.Unmarshal([]byte(value), addr)
 	if err != nil {
@@ -383,6 +394,9 @@ func init() {
 	}
 }
 func parseGormFields(ts any) (fieldIndexMap map[string]int) {
+	return parseTagFields(ts, "grom")
+}
+func parseTagFields(ts any, tags ...string) (fieldIndexMap map[string]int) {
 	t := reflect.TypeOf(ts)
 	// 如果传入的是指针，获取其指向的类型
 	if t.Kind() == reflect.Ptr {
@@ -395,13 +409,14 @@ func parseGormFields(ts any) (fieldIndexMap map[string]int) {
 	fieldIndexMap = make(map[string]int, 16)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		tag := field.Tag.Get("gorm")
-		if tag == "" {
-			continue
-		}
-		name := parseColumnName(tag)
-		if len(name) > 0 {
-			fieldIndexMap[name] = i
+		for _, tagName := range tags {
+			tag := field.Tag.Get(tagName)
+			if tag != "" {
+				name := parseColumnName(tag)
+				if len(name) > 0 {
+					fieldIndexMap[name] = i
+				}
+			}
 		}
 	}
 	return

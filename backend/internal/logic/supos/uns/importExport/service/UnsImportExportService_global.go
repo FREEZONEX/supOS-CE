@@ -3,6 +3,7 @@ package service
 import (
 	"archive/zip"
 	"backend/internal/common"
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/utils/datetimeutils"
 	"backend/internal/types"
 	"backend/share/base"
@@ -59,11 +60,11 @@ func (l *UnsImportExportService) Order() int {
 	return 9000
 }
 
-func (l *UnsImportExportService) ExportGlobal(ctx context.Context, w http.ResponseWriter, req *types.ExportReq) {
+func (l *UnsImportExportService) ExportGlobal(ctx context.Context, w http.ResponseWriter, req *types.GlobalExportParam) {
 	_initExporters()
 	log := logx.WithContext(ctx)
 	// 设置附件下载头
-	attachFileName := `UNS_` + datetimeutils.DateSimple() + ".zip"
+	attachFileName := `GlobalUNS_` + datetimeutils.DateSimple() + ".zip"
 	log.Info("全局导出：", attachFileName)
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Disposition", `attachment; filename=`+attachFileName)
@@ -124,7 +125,15 @@ func (l *UnsImportExportService) ImportGlobal(ctx context.Context, zipFileName s
 		if er != nil {
 			writeError(respWriter, er, i == TotalTasks-1)
 		} else {
+			module := fileName
+			if dot := strings.Index(module, "."); dot > 0 {
+				module = module[:dot]
+			}
+			if moduleMsg := I18nUtils.GetMessage("import." + module); !strings.HasPrefix(moduleMsg, "import.") {
+				module = moduleMsg
+			}
 			statusWriter := func(status *common.RunningStatus) {
+				status.Module = module
 				if status.Progress != nil {
 					// 单个任务的进度转为整体进度
 					*status.Progress *= (common.Float3(i) + 1) / common.Float3(TotalTasks)

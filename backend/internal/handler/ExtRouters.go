@@ -30,7 +30,11 @@ func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		rest.Route{
 			Method:  http.MethodPost,
 			Path:    "/inter-api/supos/uns/importExport/export",
-			Handler: imexport.ExportHandler(serverCtx),
+			Handler: imexport.ExportHandler,
+		}, rest.Route{
+			Method:  http.MethodPost,
+			Path:    "/inter-api/supos/uns/importExport/export/global",
+			Handler: imexport.ExportGlobalHandler,
 		}, rest.Route{
 			Method:  http.MethodDelete, // 删除指定路径下的所有文件夹和文件，不要带超时时间
 			Path:    "/inter-api/supos/uns",

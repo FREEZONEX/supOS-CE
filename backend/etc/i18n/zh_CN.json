@@ -1659,5 +1659,9 @@
   "PgPersistentService": "创建关系表",
   "TsdbPersistentService": "创建时序表",
   "SourceFlowService": "创建Node-red流程",
-  "UnsTopologyService": "更新拓扑"
+  "UnsTopologyService": "更新拓扑",
+  "import.uns": "统一命名空间(UNS)",
+  "import.source_flow": "Node-red流程",
+  "import.event_flow": "Node-red事件流",
+  "import.dashboard": "Grafana面板"
 }

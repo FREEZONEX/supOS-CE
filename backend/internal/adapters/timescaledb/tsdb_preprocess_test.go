@@ -74,7 +74,7 @@ func TestPreprocess_SingleUnsNoConflict(t *testing.T) {
 
 	testData := []serviceApi.UnsData{
 		{
-			Uns: unsInfo,
+			Uns: &types.UnsDefinition{CreateTopicDto: *unsInfo},
 			Data: []map[string]string{
 				{
 					constants.SysFieldCreateTime: "1000.5",
@@ -141,7 +141,7 @@ func TestPreprocess_WithConflictData(t *testing.T) {
 
 	testData := []serviceApi.UnsData{
 		{
-			Uns: unsInfo,
+			Uns: &types.UnsDefinition{CreateTopicDto: *unsInfo},
 			Data: []map[string]string{
 				{
 					constants.SysFieldCreateTime: "500.0", // 小于阈值，应该进入conflict
@@ -199,7 +199,7 @@ func TestPreprocess_DatetimeFieldConversion(t *testing.T) {
 
 	testData := []serviceApi.UnsData{
 		{
-			Uns: unsInfo,
+			Uns: &types.UnsDefinition{CreateTopicDto: *unsInfo},
 			Data: []map[string]string{
 				{
 					constants.SysFieldCreateTime: "1000.0",
@@ -245,13 +245,13 @@ func TestPreprocess_MultipleUns(t *testing.T) {
 
 	testData := []serviceApi.UnsData{
 		{
-			Uns: uns1,
+			Uns: &types.UnsDefinition{CreateTopicDto: *uns1},
 			Data: []map[string]string{
 				{constants.SysFieldCreateTime: "1000.0", "temp": "25.5"},
 			},
 		},
 		{
-			Uns: uns2,
+			Uns: &types.UnsDefinition{CreateTopicDto: *uns2},
 			Data: []map[string]string{
 				{constants.SysFieldCreateTime: "2000.0", "pressure": "101.3"},
 			},
@@ -322,7 +322,7 @@ func TestPreprocess_TimestampThreshold(t *testing.T) {
 
 			testData := []serviceApi.UnsData{
 				{
-					Uns: unsInfo,
+					Uns: &types.UnsDefinition{CreateTopicDto: *unsInfo},
 					Data: []map[string]string{
 						{
 							constants.SysFieldCreateTime: tc.timestamp,
@@ -369,7 +369,7 @@ func TestPreprocess_FieldIndexMapping(t *testing.T) {
 
 	testData := []serviceApi.UnsData{
 		{
-			Uns: unsInfo,
+			Uns: &types.UnsDefinition{CreateTopicDto: *unsInfo},
 			Data: []map[string]string{
 				{
 					constants.SysFieldCreateTime: "1000.0",
@@ -414,7 +414,7 @@ func TestPreprocess_InvalidTimestampHandling(t *testing.T) {
 
 	testData := []serviceApi.UnsData{
 		{
-			Uns: unsInfo,
+			Uns: &types.UnsDefinition{CreateTopicDto: *unsInfo},
 			Data: []map[string]string{
 				{constants.SysFieldCreateTime: "invalid", "value": "100"}, // 无效时间戳
 				{constants.SysFieldCreateTime: "0", "value": "200"},       // 时间戳为0
@@ -454,7 +454,7 @@ func TestPreprocess_MaxTimestampUpdate(t *testing.T) {
 
 	testData := []serviceApi.UnsData{
 		{
-			Uns: unsInfo,
+			Uns: &types.UnsDefinition{CreateTopicDto: *unsInfo},
 			Data: []map[string]string{
 				{constants.SysFieldCreateTime: "500.0", "value": "100"},
 				{constants.SysFieldCreateTime: "1500.0", "value": "200"},
@@ -511,7 +511,7 @@ func TestPreprocess_Integration(t *testing.T) {
 
 	testData := []serviceApi.UnsData{
 		{
-			Uns: uns1,
+			Uns: &types.UnsDefinition{CreateTopicDto: *uns1},
 			Data: []map[string]string{
 				{constants.SysFieldCreateTime: "400.0", "temperature": "22.5", "battery": "95.0"},
 				{constants.SysFieldCreateTime: "600.0", "temperature": "23.0", "battery": "94.5"},
@@ -519,7 +519,7 @@ func TestPreprocess_Integration(t *testing.T) {
 			},
 		},
 		{
-			Uns: uns2,
+			Uns: &types.UnsDefinition{CreateTopicDto: *uns2},
 			Data: []map[string]string{
 				{constants.SysFieldCreateTime: "900.0", "pressure": "101.3", "state": "normal"},
 				{constants.SysFieldCreateTime: "1100.0", "pressure": "101.2", "state": "normal"},

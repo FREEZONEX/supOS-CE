@@ -2,6 +2,7 @@ package relationDB
 
 import (
 	"backend/internal/types"
+	"context"
 
 	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -41,6 +42,18 @@ func (m *GroupMapper) SaveBatch(db *gorm.DB, groups []*GroupModel) error {
 	if len(groups) == 0 {
 		return nil
 	}
+	err := db.Create(groups).Error
+	if err != nil {
+		logx.Errorf("failed to batch insert groups: %v", err)
+		return err
+	}
+	return nil
+}
+func (m *GroupMapper) Save(ctx context.Context, groups []*GroupModel) error {
+	if len(groups) == 0 {
+		return nil
+	}
+	db := GetDb(ctx)
 	err := db.Create(groups).Error
 	if err != nil {
 		logx.Errorf("failed to batch insert groups: %v", err)

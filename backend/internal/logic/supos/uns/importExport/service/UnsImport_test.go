@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -23,10 +24,7 @@ func TestZip(t *testing.T) {
 	// 遍历ZIP中的所有文件和目录
 	for _, f := range r.File {
 		// 打印文件信息
-		t.Logf("文件名: %s\n", f.Name)
-		t.Logf("压缩大小: %d\n", f.CompressedSize64)
-		t.Logf("未压缩大小: %d\n", f.UncompressedSize64)
-		t.Logf("是否为目录: %v\n", f.FileInfo().IsDir())
+		t.Logf("文件名: %s, dir:%s,压缩大小: %d,未压缩大小: %d,是否为目录: %v\n", f.Name, filepath.Dir(f.Name), f.CompressedSize64, f.UncompressedSize64, f.FileInfo().IsDir())
 		rd, er := f.Open()
 		if er != nil {
 			t.Error(er)

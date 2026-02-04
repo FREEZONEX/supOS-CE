@@ -455,16 +455,8 @@ type ExportPathResult struct {
 }
 
 type ExportReq struct {
-	CheckSmallFile       *bool                  `json:"checkSmallFile,optional,omitempty,omitzero"`
-	UserId               string                 `json:"userId,optional,omitempty,omitzero"`
-	Language             string                 `json:"language,optional,omitempty,omitzero"`
-	ExportType           string                 `json:"exportType,optional,omitempty,omitzero"`
-	FileType             string                 `json:"fileType,optional,omitempty,omitzero"`
-	Folders              []int64                `json:"folders,string,optional,omitempty,omitzero"`
-	Files                []int64                `json:"files,string,optional,omitempty,omitzero"`
-	SrcFlowExportParam   *SourceFlowExportParam `json:"sourceFlowExportParam,optional,omitzero"`
-	EventFlowExportParam *EventFlowExportParam  `json:"eventFlowExportParam,optional,omitzero"`
-	DashboardExportParam *DashboardExportParam  `json:"dashboardExportParam,optional,omitzero"`
+	UnsExportParam
+	CheckSmallFile *bool `json:"checkSmallFile,optional,omitempty,omitzero"`
 }
 
 type ExportResp struct {
@@ -578,6 +570,14 @@ type GetUnsI18nMessagesReq struct {
 
 type GetUnsI18nMessagesResp struct {
 	Messages map[string]string `json:"messages"`
+}
+
+type GlobalExportParam struct {
+	Name                 string                 `json:"name,optional,omitempty,omitzero"`
+	UnsExportParam       *UnsExportParam        `json:"unsExportParam,optional,omitzero"`
+	SrcFlowExportParam   *SourceFlowExportParam `json:"sourceFlowExportParam,optional,omitzero"`
+	EventFlowExportParam *EventFlowExportParam  `json:"eventFlowExportParam,optional,omitzero"`
+	DashboardExportParam *DashboardExportParam  `json:"dashboardExportParam,optional,omitzero"`
 }
 
 type GlobalTopologyData struct {
@@ -1454,6 +1454,12 @@ type UnsDataResponse struct {
 type UnsDataResponseVo struct {
 	NotExists   []string          `json:"notExists,omitempty"`
 	ErrorFields map[string]string `json:"errorFields,omitempty"`
+}
+
+type UnsExportParam struct {
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+	Folders    []int64 `json:"folders,string,optional,omitempty,omitzero"`
+	Files      []int64 `json:"files,string,optional,omitempty,omitzero"`
 }
 
 type UnsHistoryQueryResult struct {

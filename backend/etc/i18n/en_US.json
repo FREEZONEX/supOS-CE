@@ -1657,5 +1657,9 @@
   "PgPersistentService": "Create Relational Table",
   "TsdbPersistentService": "Create Time-series Table",
   "SourceFlowService": "Create Source Flow",
-  "UnsTopologyService": "Update Topology"
+  "UnsTopologyService": "Update Topology",
+  "import.uns": "uns",
+  "import.source_flow": "SourceFlow",
+  "import.event_flow": "EventFlow",
+  "import.dashboard": "dashboard"
 }

@@ -2,6 +2,7 @@ package jsonstream
 
 import (
 	"bufio"
+	"bytes"
 	"cmp"
 	"encoding/csv"
 	"encoding/json"
@@ -31,6 +32,15 @@ func Csv2JsonStream[Node any, ID cmp.Ordered](
 		defer csvWriter.Close()
 		err := csvExporter(csvWriter)
 		if err != nil {
+			var buf bytes.Buffer
+			encoder := json.NewEncoder(&buf)
+			encoder.SetEscapeHTML(false) // Optional: disable HTML escaping
+			// Encode the string
+			if err := encoder.Encode(err.Error()); err != nil {
+				buf.WriteString(err.Error())
+			}
+			_, _ = jsonWriter.Write([]byte(fmt.Sprintf(`{"code":500,"msg":"%s"}`, buf.String())))
+
 			errChan <- fmt.Errorf("CSV 导出失败: %v", err)
 			return
 		}
@@ -61,7 +71,6 @@ func Csv2JsonStream[Node any, ID cmp.Ordered](
 
 	return countNodes, nil
 }
-
 func csvStreamWriteJson[Node any, ID cmp.Ordered](
 	csvData *io.PipeReader,
 	jsonWriter io.Writer,
@@ -74,18 +83,45 @@ func csvStreamWriteJson[Node any, ID cmp.Ordered](
 	childrenName string,
 	fullList bool,
 ) (int, error) {
-
 	// 读取 CSV 表头
 	csvReader := csv.NewReader(csvData)
 	headers, err := csvReader.Read()
 	if err != nil {
-		return -1, fmt.Errorf("读取CSV表头失败: %v", err)
+		if err == io.EOF {
+			if fullList {
+				jsonWriter.Write([]byte("[]"))
+			}
+			return 0, nil
+		} else {
+			return -1, fmt.Errorf("读取CSV表头失败: %v", err)
+		}
 	}
+	nextNode := func() (node *Node, err error) {
+		record, err := csvReader.Read()
+		if err != nil {
+			return nil, err
+		}
+		newNode := csv2node(headers, record)
+		return newNode, nil
+	}
+	return StreamWriteJson(jsonWriter, nodeGetChildren, nodeSetChildren, getId, getParentId, nextNode, childrenName, fullList)
+}
+func StreamWriteJson[Node any, ID cmp.Ordered](
+	jsonWriter io.Writer,
+	nodeGetChildren func(*Node) []*Node,
+	nodeSetChildren func(*Node, []*Node),
+	getId func(*Node) ID,
+	getParentId func(*Node) ID,
+	nextNode func() (*Node, error),
+	childrenName string,
+	fullList bool,
+) (int, error) {
+
 	writer := bufio.NewWriter(jsonWriter)
 
 	if fullList {
 		// 开始写入 JSON 数组的开始标记
-		if _, err = writer.Write([]byte("[\n")); err != nil {
+		if _, err := writer.Write([]byte("[\n")); err != nil {
 			return -1, err
 		}
 	}
@@ -106,15 +142,14 @@ func csvStreamWriteJson[Node any, ID cmp.Ordered](
 	childrenStart := fmt.Sprintf(",\"%s\":[", childrenName)
 	countNodes := 0
 	for isFirst := true; ; {
-		record, err := csvReader.Read()
+		newNode, err := nextNode()
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return countNodes, fmt.Errorf("读取CSV行失败: %v", err)
+			return countNodes, err
 		}
-		countNodes++
 		// 转换为 JSON 对象
-		newNode := csv2node(headers, record)
+		countNodes++
 		// 处理栈的状态
 		if len(stack) == 0 {
 			// 栈为空，这是一个根节点
