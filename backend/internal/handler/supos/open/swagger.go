@@ -10,7 +10,7 @@ import (
 func SwaggerYamlHandler(w http.ResponseWriter, r *http.Request) {
 	_, filename, _, _ := runtime.Caller(0)
 	dir := filepath.Dir(filename)
-	http.ServeFile(w, r, filepath.Join(dir, "swagger.yaml"))
+	http.ServeFile(w, r, filepath.Join(dir, "Tier0.openapi.yaml"))
 }
 
 // SwaggerUIHandler 提供 Swagger UI 静态资源的访问

@@ -67,7 +67,7 @@ func addSwaggerRoutes(server *rest.Server) {
 	server.AddRoutes([]rest.Route{
 		{
 			Method:  http.MethodGet,
-			Path:    "/swagger.yaml",
+			Path:    "/Tier0.openapi.yaml",
 			Handler: open.SwaggerYamlHandler,
 		},
 	}, rest.WithTimeout(0))
