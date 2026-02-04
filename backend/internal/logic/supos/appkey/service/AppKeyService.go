@@ -141,11 +141,11 @@ func (s *AppKeyService) GetSecretKeyList(ctx context.Context) ([]*types.AppKeyIn
 	resp := make([]*types.AppKeyInfo, 0, len(list))
 	for _, item := range list {
 		resp = append(resp, &types.AppKeyInfo{
-			ID:             item.ID,
+			ID:             strconv.FormatInt(item.ID, 10),
 			AppSecretKey:   item.AppSecretKey,
 			AppSecretValue: item.AppSecretValue,
 			Status:         item.Status,
-			CreateTime:     item.CreateTime.Format("2006-01-02 15:04:05"),
+			CreateTime:     item.CreateTime.UnixMilli(),
 		})
 	}
 

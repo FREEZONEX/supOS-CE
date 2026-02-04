@@ -36,6 +36,9 @@
     },
     "/inter-api/supos/app/secretKey": {
       "put": {
+        "consumes": [
+          "application/json"
+        ],
         "produces": [
           "application/json"
         ],
@@ -44,6 +47,28 @@
         ],
         "summary": "更新密钥状态",
         "operationId": "supos/AppkeyUpdate",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "appSecretKey",
+                "status"
+              ],
+              "properties": {
+                "appSecretKey": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -106,10 +131,10 @@
                         "type": "string"
                       },
                       "createTime": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "id": {
-                        "type": "integer"
+                        "type": "string"
                       },
                       "status": {
                         "type": "integer"
@@ -13568,7 +13593,7 @@
       }
     }
   },
-  "x-date": "2026-02-02 15:15:53",
+  "x-date": "2026-02-03 17:00:52",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

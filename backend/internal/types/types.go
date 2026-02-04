@@ -33,11 +33,11 @@ type AliasRequest struct {
 }
 
 type AppKeyInfo struct {
-	ID             int64  `json:"id"`
+	ID             string `json:"id"`
 	AppSecretKey   string `json:"appSecretKey"`
 	AppSecretValue string `json:"appSecretValue"`
 	Status         int32  `json:"status"`
-	CreateTime     string `json:"createTime"`
+	CreateTime     int64  `json:"createTime"`
 }
 
 type AttachmentDeleteReq struct {

@@ -3,7 +3,7 @@ package appkey
 import (
 	"net/http"
 
-	"gitee.com/unitedrhino/share/result"
+	"github.com/zeromicro/go-zero/rest/httpx"
 
 	"backend/internal/logic/supos/appkey"
 	"backend/internal/svc"
@@ -14,6 +14,10 @@ func ListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := appkey.NewListLogic(r.Context(), svcCtx)
 		resp, err := l.List()
-		result.Http(w, r, resp, err)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+		} else {
+			httpx.OkJsonCtx(r.Context(), w, resp)
+		}
 	}
 }

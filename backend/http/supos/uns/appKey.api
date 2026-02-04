@@ -17,7 +17,7 @@ service backend {
 
     @doc "更新密钥状态"
     @handler update
-    put / () returns ()
+    put / (UpdateAppKeyReq) returns ()
 
     @doc "查询密钥列表"
     @handler list
@@ -42,11 +42,11 @@ type (
     }
 
     AppKeyInfo {
-        ID             int64     `json:"id"`
+        ID             string     `json:"id"`
         AppSecretKey   string    `json:"appSecretKey"`
         AppSecretValue string    `json:"appSecretValue"`
         Status         int32     `json:"status"`
-        CreateTime     string    `json:"createTime"`
+        CreateTime     int64    `json:"createTime"`
     }
 
     ListAppKeyResp {
