@@ -188,7 +188,7 @@ func (s *AppKeyService) createKongaKey(key string) (*KongaSecretKeyVo, error) {
 	body := map[string]string{
 		"key": key,
 	}
-
+	logx.Infof("buildKongaUrl :%v", url)
 	resp, err := resty.New().R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(body).
