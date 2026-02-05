@@ -139,6 +139,9 @@ func (l *UnsImportExportService) ImportGlobal(ctx context.Context, zipFileName s
 					I := common.Float3(i)
 					N := common.Float3(TotalTasks)
 					*status.Progress = (I + *status.Progress*(I+1)) / N
+					if *status.Progress > 100 {
+						*status.Progress = 100
+					}
 				}
 				tsJson, _ := json.Marshal(status)
 				_, Er := respWriter.Write(append(tsJson, '\n', '\n'))
