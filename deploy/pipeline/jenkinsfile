@@ -73,7 +73,7 @@ pipeline {
                             docker.build("${UNS_IMAGE_TAG}", "-f ./Dockerfile .")
 
                             sh '''
-                                docker save  ${UNS_IMAGE_TAG} | xz -z -T0 -v >./deploy/images/tier0-uns.tar.xz
+                                docker save  ${UNS_IMAGE_TAG} | xz -z -T0 -v >../deploy/images/tier0-uns.tar.xz
                                 echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY"
                                 docker push "${UNS_IMAGE_TAG}"
                             '''
@@ -86,7 +86,7 @@ pipeline {
                             // 构建前端 Docker 镜像
                             docker.build("${FRONTEND_IMAGE_TAG}", "-f ./Dockerfile-CN .")
                             sh '''
-                                docker save  ${FRONTEND_IMAGE_TAG} | xz -z -T0 -v >./deploy/images/tier0-frontend.tar.xz
+                                docker save  ${FRONTEND_IMAGE_TAG} | xz -z -T0 -v >../deploy/images/tier0-frontend.tar.xz
                                 echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY"
                                 docker push "${FRONTEND_IMAGE_TAG}"
                             '''
