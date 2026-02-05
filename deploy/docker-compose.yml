@@ -102,7 +102,7 @@ services:
     networks:
       - edge_network
   emqx:
-    image: emqx/emgx:5.8
+    image: emqx/emqx:5.8
     container_name: emqx
     ports:
       - "1883:1883"   # MQTT端口
