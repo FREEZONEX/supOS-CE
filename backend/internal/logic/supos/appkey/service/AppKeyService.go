@@ -49,7 +49,7 @@ func (s *AppKeyService) Init(c config.Config) error {
 	// 初始化Konga配置，这里可以从配置文件读取
 	s.host = c.Kong.Host
 	s.port = strconv.Itoa(c.Kong.Port)
-	s.path = "kong/home/consumers/59d1ef15-24a5-4373-b957-e8192c15ff6e/key-auth"
+	s.path = "consumers/59d1ef15-24a5-4373-b957-e8192c15ff6e/key-auth"
 	return nil
 }
 
