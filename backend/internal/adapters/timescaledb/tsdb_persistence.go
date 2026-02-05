@@ -151,25 +151,27 @@ func fixTable(conn *pgxpool.Conn, uns *types.UnsDefinition) error {
 	if er != nil {
 		return er
 	}
-	tableInfo := info[uns.TableName]
 	// 构建当前字段类型映射
 	curFieldTypes := make(map[string]*types.FieldDefine)
 	for _, field := range uns.Fields {
 		curFieldTypes[field.Name] = field
 	}
 	renameColSQL := ""
-	for field, Type := range tableInfo.FieldTypes {
-		_, exists := curFieldTypes[field]
-		if !exists {
-			if Type == types.FieldTypeLong && field != constants.SystemSeqTag && !strings.Contains(field, "_") {
-				renameColSQL = "ALTER TABLE " + uns.TableName + ` RENAME COLUMN "` + field + `" TO "` + constants.QosField + `"`
+	tableInfo := info[uns.TableName]
+	if tableInfo != nil {
+		for field, Type := range tableInfo.FieldTypes {
+			_, exists := curFieldTypes[field]
+			if !exists {
+				if Type == types.FieldTypeLong && field != constants.SystemSeqTag && !strings.Contains(field, "_") {
+					renameColSQL = "ALTER TABLE " + uns.TableName + ` RENAME COLUMN "` + field + `" TO "` + constants.QosField + `"`
 
-				delete(curFieldTypes, constants.QosField)
+					delete(curFieldTypes, constants.QosField)
+				}
+				continue
 			}
-			continue
+			// 从映射中移除已存在的字段
+			delete(curFieldTypes, field)
 		}
-		// 从映射中移除已存在的字段
-		delete(curFieldTypes, field)
 	}
 	if len(renameColSQL) == 0 && len(curFieldTypes) == 0 {
 		return nil
