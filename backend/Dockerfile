@@ -41,6 +41,9 @@ WORKDIR /app
 COPY --from=builder /app/backend .
 RUN chmod +x ./backend
 
+# swagger
+COPY --from=builder /app/swagger ./swagger
+
 # Copy configuration files from build stage
 COPY --from=builder /app/etc ./etc
 
