@@ -445,7 +445,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
         </Flex>
         <div style={{ flex: 1, padding: '0 16px 16px', overflow: 'auto', alignItems: 'center' }}>
           {mode === 'card' ? (
-            data.length > 0 ? (
+            data?.length > 0 ? (
               <ProCardContainer>
                 {data?.map((d: any) => {
                   return (
