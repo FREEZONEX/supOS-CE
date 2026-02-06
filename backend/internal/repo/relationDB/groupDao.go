@@ -148,37 +148,56 @@ func (m *GroupMapper) UpdateSortById(db *gorm.DB, id int64, sort int32) error {
 	return nil
 }
 
-// CleanBizGroupById 清除分组下的所有业务关联（将业务的分组ID设为NULL）
-func (m *GroupMapper) CleanBizGroupById(db *gorm.DB, id int64) error {
-	// 执行三个更新语句，确保在同一个事务中执行
-	err := db.Transaction(func(tx *gorm.DB) error {
-		// 更新 uns_dashboard 表
-		if err := tx.Exec(`UPDATE "uns_dashboard" SET group_id = NULL WHERE group_id = ?`, id).Error; err != nil {
-			logx.Errorf("failed to update uns_dashboard group_id: %v", err)
-			return err
-		}
-
-		// 更新 supos_node_flows 表
-		if err := tx.Exec(`UPDATE "supos_node_flows" SET group_id = NULL WHERE group_id = ?`, id).Error; err != nil {
-			logx.Errorf("failed to update supos_node_flows group_id: %v", err)
-			return err
-		}
-
-		// 更新 supos_event_flows 表
-		if err := tx.Exec(`UPDATE "supos_event_flows" SET group_id = NULL WHERE group_id = ?`, id).Error; err != nil {
-			logx.Errorf("failed to update supos_event_flows group_id: %v", err)
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		logx.Errorf("failed to clean biz group by id: %v", err)
-		return err
+/**
+  清除分组下的所有业务关联
+  groupType 1 对应 supos_node_flows 表   deleteSourceFlowLogic.go
+  groupType 2 对应 supos_node_flows 表   deleteEventFlowLogic.go
+  groupType 3 对应 uns_dashboard 表 deleteLogic.go
+  先通过groupType判断对应的业务表   通过groupId查询所有的业务数据，执行对应的delete方法
+*/
+// CleanBizGroupById 查询分组下的所有业务数据
+func (m *GroupMapper) CleanBizGroupById(db *gorm.DB, groupId int64, groupType *int16) (
+	sourceFlows []*NoderedSourceFlow,
+	eventFlows []*NoderedSourceFlow,
+	dashboards []*DashboardModel,
+	err error,
+) {
+	if groupType == nil {
+		logx.Infof("groupType is nil, cannot determine business table")
+		return
 	}
 
-	return nil
+	// 根据 groupType 执行对应的查询操作
+	switch *groupType {
+	case 1: // groupType 1 对应 supos_node_flows 表 (source flow)
+		// 查询该分组下的所有 source flow
+		err = db.Where("flow_id is not null AND group_id = ? AND template = ?", groupId, "node-red").Find(&sourceFlows).Error
+		if err != nil {
+			logx.Errorf("failed to select source flows by group id: %v", err)
+			return
+		}
+
+	case 2: // groupType 2 对应 supos_node_flows 表 (event flow)
+		// 查询该分组下的所有 event flow
+		err = db.Where("flow_id is not null AND group_id = ? AND template = ?", groupId, "event-flow").Find(&eventFlows).Error
+		if err != nil {
+			logx.Errorf("failed to select event flows by group id: %v", err)
+			return
+		}
+
+	case 3: // groupType 3 对应 uns_dashboard 表 (dashboard)
+		// 查询该分组下的所有 dashboard
+		err = db.Where("group_id = ?", groupId).Find(&dashboards).Error
+		if err != nil {
+			logx.Errorf("failed to select dashboards by group id: %v", err)
+			return
+		}
+
+	default:
+		logx.Infof("unknown group type: %d", *groupType)
+	}
+
+	return
 }
 
 // OperationGroup 操作分组数据（移入移出）

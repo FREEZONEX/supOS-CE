@@ -73,6 +73,9 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 		if item.GroupType != 0 {
 			groupFlowVO.GroupType = &item.GroupType
 		}
+		if item.GroupID != nil {
+			groupFlowVO.GroupId = item.GroupID
+		}
 		groupVOList = append(groupVOList, groupFlowVO)
 	}
 
