@@ -22,6 +22,8 @@ const JsonDom = ({ initTreeData, onCloseModal }: any) => {
   const { message, modal } = App.useApp();
   const { copy } = useClipboard();
   const [socketData, setSocketData] = useState<SocketDataType>({});
+  const [moduleMap, setModuleMap] = useState(new Map());
+  console.log(moduleMap);
   const [loading, setLoading] = useState(false);
   const timer = useRef<number>();
 
@@ -49,8 +51,17 @@ const JsonDom = ({ initTreeData, onCloseModal }: any) => {
       readerSSE(
         response,
         (data: any) => {
-          setSocketData(data);
-          if (data.finished) initTreeData({ reset: true });
+          setModuleMap((prevMap) => {
+            const newMap = new Map(prevMap);
+            newMap.set(data.module, data);
+            return newMap;
+          });
+          setSocketData({
+            code: data?.code,
+            finished: data?.progress >= 100,
+            progress: data?.progress,
+          });
+          if (data?.progress >= 100) initTreeData({ reset: true });
         },
         () => {
           setLoading(false);
@@ -65,11 +76,12 @@ const JsonDom = ({ initTreeData, onCloseModal }: any) => {
   const onReupload = () => {
     setLoading(false);
     setSocketData({});
+    setModuleMap(new Map());
     setJsonValue(undefined);
   };
 
   const { code, finished, progress } = socketData;
-  const reimport = finished && code !== 200;
+  const reimport = finished;
   const onClose = () => {
     onCloseModal?.();
   };
@@ -79,9 +91,9 @@ const JsonDom = ({ initTreeData, onCloseModal }: any) => {
       clearInterval(timer.current);
       if (socketData.code === 200) {
         message.success(formatMessage('uns.importFinished'));
-        setTimeout(() => {
-          onClose();
-        }, 3000);
+        // setTimeout(() => {
+        //   onClose();
+        // }, 3000);
       }
     }
     if (socketData.code === 206) {

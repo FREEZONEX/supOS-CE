@@ -10,6 +10,9 @@ import { CodeDom } from '@/pages/uns/components/export-modal/code-dom.tsx';
 import ComButton from '../../../../components/com-button';
 import OtherDom from '@/pages/uns/components/export-modal/other-dom.tsx';
 import ComStatusDot from '@/components/com-status-dot/ComStatusDot.tsx';
+import { processedCheckedKeys } from '@/pages/uns/store/utils.ts';
+import { downloadFn, getParamsForArray, SelectAllId } from '@/utils';
+import { exportExcelGlobal } from '@/apis/inter-api';
 
 interface ExportModalRef {
   setOpen: Dispatch<SetStateAction<boolean>>;
@@ -98,19 +101,71 @@ const Tab = ({ form }: { form: FormInstance }) => {
   );
 };
 
+const getParams = (list: any) => {
+  if (list.some((s: any) => s.value === SelectAllId)) {
+    return {};
+  }
+  return list.reduce(
+    (result: any, item: any) => {
+      if (item.category === 'group') {
+        result.gids.push(item.id);
+      } else if (item.category === 'file') {
+        result.ids.push(item.id);
+      }
+      return result;
+    },
+    { gids: [] as number[], ids: [] as number[] }
+  );
+};
+
 const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open: boolean; onClose: () => void }) => {
   const formatMessage = useTranslate();
-  const { tabType, checkedKeys, allChecked } = useTreeStore((state) => ({
+  const { tabType, checkedKeys, allChecked, treeData } = useTreeStore((state) => ({
     tabType: state.tabType,
     setTabType: state.setTabType,
     checkedKeys: state.checkedKeys,
     allChecked: state.allChecked,
+    treeData: state.treeData,
   }));
   const [form] = Form.useForm();
 
   const onExport = async () => {
     const values = await form.validateFields();
-    console.log(values, checkedKeys, allChecked);
+    const params: any = {};
+    if (allChecked) {
+      params['unsExportParam'] = {
+        exportType: 'ALL',
+      };
+    } else {
+      // 根据checkedKeys匹配节点信息
+      const matchedNodes = processedCheckedKeys({
+        checkedKeys,
+        strategy: 'SHOW_PARENT',
+        treeData, // 添加treeData参数
+      });
+      params['unsExportParam'] = {
+        ...getParamsForArray(matchedNodes as any[], 'pathType', {
+          groups: {
+            0: 'folders',
+            2: 'files',
+          },
+          extract: 'id',
+        }),
+        checkSmallFile: false,
+      };
+    }
+    if (values.dashboardExportParam?.length > 0) {
+      params['dashboardExportParam'] = getParams(values.dashboardExportParam);
+    }
+    if (values.sourceFlowExportParam?.length > 0) {
+      params['sourceFlowExportParam'] = getParams(values.sourceFlowExportParam);
+    }
+    if (values.eventFlowExportParam?.length > 0) {
+      params['eventFlowExportParam'] = getParams(values.eventFlowExportParam);
+    }
+    return exportExcelGlobal(params).then((zip) => {
+      downloadFn({ data: zip, name: 'global-export.zip' });
+    });
   };
   return (
     <Flex

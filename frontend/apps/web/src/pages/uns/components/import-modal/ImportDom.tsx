@@ -17,6 +17,7 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
   const formatMessage = useTranslate();
   const [loading, setLoading] = useState(false);
   const [socketData, setSocketData] = useState<SocketDataType>({});
+  const [moduleMap, setModuleMap] = useState(new Map());
   const timer = useRef<number>();
 
   const beforeUpload = (file: any) => {
@@ -24,13 +25,13 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
     if (['json', 'zip'].includes(fileType.toLowerCase())) {
       setFileList([file]);
     } else {
-      message.warning(formatMessage('common.theFileFormatType', { fileType: '.json' }));
+      message.warning(formatMessage('common.theFileFormatType', { fileType: '.json,.zip' }));
     }
     return false;
   };
 
   const { code, finished, progress } = socketData;
-  const reimport = finished && code !== 200;
+  const reimport = finished;
 
   const onSave = async () => {
     try {
@@ -49,8 +50,17 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
       readerSSE(
         response,
         (data: any) => {
-          setSocketData(data);
-          if (data.finished) initTreeData({ reset: true });
+          setModuleMap((prevMap) => {
+            const newMap = new Map(prevMap);
+            newMap.set(data.module, data);
+            return newMap;
+          });
+          setSocketData({
+            code: data?.code,
+            finished: data?.progress >= 100,
+            progress: data?.progress,
+          });
+          if (data?.progress >= 100) initTreeData({ reset: true });
         },
         () => {
           setLoading(false);
@@ -66,6 +76,7 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
     setLoading(false);
     setSocketData({});
     setFileList([]);
+    setModuleMap(new Map());
     setTimeout(() => {
       if (uploadRef.current) uploadRef?.current?.nativeElement?.querySelector('input').click();
     });
@@ -79,9 +90,9 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
       clearInterval(timer.current);
       if (socketData.code === 200) {
         message.success(formatMessage('uns.importFinished'));
-        setTimeout(() => {
-          onClose();
-        }, 3000);
+        // setTimeout(() => {
+        //   onClose();
+        // }, 3000);
       }
     }
     if (socketData.code === 206) {
@@ -151,16 +162,21 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
               {finished ? code === 200 ? <CheckmarkFilled fill={'#24a148'} /> : <ErrorFilled fill={'#da1e28'} /> : null}
             </Flex>
             <ComEllipsis style={{ color: '#525252' }}>{formatMessage('uns.individualProgress')}</ComEllipsis>
-            <InlineLoading
-              title={'123'}
-              style={{ width: '100%' }}
-              status={finished ? (code === 200 ? 'finished' : 'error') : 'active'}
-              description={
-                <Flex justify="space-between">
-                  <span>等接口</span>
-                </Flex>
-              }
-            />
+            {Array.from(moduleMap.values()).map((item: any) => {
+              return (
+                <InlineLoading
+                  key={item.module}
+                  title={item.module}
+                  style={{ width: '100%' }}
+                  status={item?.finished ? (item?.code === 200 ? 'finished' : 'error') : 'active'}
+                  description={
+                    <Flex justify="space-between">
+                      <span>{item.module}</span>
+                    </Flex>
+                  }
+                />
+              );
+            })}
           </div>
         )}
       </div>

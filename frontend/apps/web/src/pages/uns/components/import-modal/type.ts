@@ -5,4 +5,5 @@ export interface SocketDataType {
   progress?: number;
   task?: string;
   errTipFile?: string;
+  module?: string;
 }

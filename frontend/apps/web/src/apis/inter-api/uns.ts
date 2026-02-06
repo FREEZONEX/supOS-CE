@@ -26,6 +26,11 @@ export const exportExcel = async (data: any) =>
   api.post('/importExport/export', data, {
     [CustomAxiosConfigEnum.NoCode]: true,
   }); //导出excel
+
+// 全局导出
+export const exportExcelGlobal = async (data: any) =>
+  api.post('/importExport/export/global', data, { responseType: 'blob', [CustomAxiosConfigEnum.NoCode]: true }); //导出excel
+
 export const searchRestField = async (data: any) => api.post('/searchRestField', data); // 从RestApi搜系模型字段
 
 // 报警列表页
