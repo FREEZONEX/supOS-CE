@@ -86,7 +86,7 @@
   <div class="pf-v5-c-login-left">
     <div class="pf-v5-c-login-l-top">
       <img class="supos-login-slogan" src="" />
-      <div class="pf-v5-c-login-l-t-right"></div>
+      <#-- <div class="pf-v5-c-login-l-t-right"></div> -->
     </div>
     <div class="pf-v5-c-login-l-bottom">
       <img class="supos-logo" src="" />
