@@ -1,26 +1,30 @@
 {
+  "_comment_general": "通用配置：browserTitle-浏览器标题，browserIco-浏览器图标文件名，loginPageTheme-登录页主题，可选值：dark | light",
   "general": {
     "browserTitle": "",
     "browserIco": "",
     "loginPageTheme": ""
   },
+  "_comment_dark": "深色主题配置：logo-Logo图片，loginSloganImg-登录页标语图，loginBackgroundImg-登录背景图",
   "dark": {
     "logo": "",
     "loginSloganImg": "",
     "loginBackgroundImg": ""
   },
+  "_comment_light": "浅色主题配置（同dark字段含义）",
   "light": {
     "logo": "",
     "loginSloganImg": "",
     "loginBackgroundImg": ""
   },
+  "_comment_default": "⚠ 以下不是可用字段，仅作说明描述;其中 ’|‘ 表示选项",
   "default": {
     "readonly": true,
     "message": "不需要动,默认的内容",
     "browserTitle": "TierO",
     "browserIco": "logo-ico.svg",
     "loginPageTheme": "light | dark",
-    "logo": "logo-${isDark ? 'dark' : 'light'}.svg",
+    "logo": "logo-light.svg | logo-dark.svg",
     "loginSloganImg": "",
     "loginBackgroundImg": ""
   }
