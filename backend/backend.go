@@ -38,10 +38,19 @@ func main() {
 	}
 	utils.ConfMustLoad(confFile, &c)
 	// 提供 Swagger UI 静态资源
-	server := rest.MustNewServer(c.RestConf,
-		rest.WithFileServer("/files/", http.Dir("/app/go-edge")),
-		//rest.WithFileServer("/swagger-ui", http.Dir("swagger/dist")))
-		rest.WithFileServer("/swagger-ui", http.Dir("/app/swagger/dist")))
+	var opts []rest.RunOption
+	opts = append(opts, rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
+
+	// 判断是否是本地开发环境
+	if info, er := os.Stat("../deploy/"); er == nil && info.IsDir() {
+		// 本地开发环境
+		opts = append(opts, rest.WithFileServer("/swagger-ui", http.Dir("swagger/dist")))
+	} else {
+		// 生产环境
+		opts = append(opts, rest.WithFileServer("/swagger-ui", http.Dir("/app/swagger/dist")))
+	}
+
+	server := rest.MustNewServer(c.RestConf, opts...)
 	defer server.Stop()
 
 	system.SetLogLevel(c.Log.Level)
