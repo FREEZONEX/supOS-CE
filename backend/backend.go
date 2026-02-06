@@ -38,10 +38,10 @@ func main() {
 	}
 	utils.ConfMustLoad(confFile, &c)
 	// 提供 Swagger UI 静态资源
-	swaggerUIPath := "swagger/dist"
 	server := rest.MustNewServer(c.RestConf,
 		rest.WithFileServer("/files/", http.Dir("/app/go-edge")),
-		rest.WithFileServer("/swagger-ui", http.Dir(swaggerUIPath)))
+		//rest.WithFileServer("/swagger-ui", http.Dir("swagger/dist")))
+		rest.WithFileServer("/swagger-ui", http.Dir("/app/swagger/dist")))
 	defer server.Stop()
 
 	system.SetLogLevel(c.Log.Level)
