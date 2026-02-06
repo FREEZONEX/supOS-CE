@@ -68,6 +68,7 @@ pipeline {
 
                     parallelStages['构建后端镜像'] = {
                         dir("backend") {
+                            sh "ls -R"
                             echo "--> 正在构建镜像: ${UNS_IMAGE_TAG}"
                             // 构建后端 Docker 镜像
                             docker.build("${UNS_IMAGE_TAG}", "-f ./Dockerfile .")
