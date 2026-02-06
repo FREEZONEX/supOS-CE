@@ -19,30 +19,43 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-func NodeRedImport(ctx context.Context, apiHost string, srcFlow bool, reader io.Reader, statusConsumer func(status *common.RunningStatus)) error {
+func NodeRedImport(ctx context.Context, apiHost string, srcFlow bool, reader io.Reader, statusConsumer func(status *common.RunningStatus)) {
 	var flowMapper = dao.NewNoderedSourceFlowRepo(ctx)
 	var groupMapper dao.GroupMapper
 	var flowUnsMapper dao.NodeFlowModelMapper
-	return nodeRedImport(ctx, apiHost, srcFlow, reader, statusConsumer, flowMapper.MultiInsert, groupMapper.Save, flowUnsMapper.SaveBatch)
+	nodeRedImport(ctx, apiHost, srcFlow, reader, statusConsumer, flowMapper.MultiInsert, groupMapper.Save, flowUnsMapper.SaveBatch)
 }
 func nodeRedImport(ctx context.Context, apiHost string, srcFlow bool, reader io.Reader, statusConsumer func(status *common.RunningStatus),
 	saveFlow func(ctx context.Context, data []*dao.NoderedSourceFlow) error,
 	saveGroup func(ctx context.Context, groups []*dao.GroupModel) error,
 	saveFlowUns func(ctx context.Context, list []*dao.NoderedFlowNode) error,
-) error {
+) {
 	decoder := json.NewDecoder(reader)
 	_, err := decoder.Token()
 	if err != nil {
-		return err
+		if statusConsumer != nil {
+			prog := common.Float3(0)
+			statusConsumer(&common.RunningStatus{
+				Code: 500, Msg: err.Error(),
+				Progress: &prog, Finished: base.OptionalTrue})
+		}
+		return
 	}
-	progress := 0.0
+	progress := common.Float3(0.0)
 	// 处理对象中的字段
+	var someError error
 	for decoder.More() {
 		// 读取字段名
 		fieldName, er := decoder.Token()
 		if er != nil {
 			logx.WithContext(ctx).Errorf("错误Token :%v", fieldName)
-			return jsonErr(er)
+			er = jsonErr(er)
+			if statusConsumer != nil {
+				statusConsumer(&common.RunningStatus{
+					Code: 500, Msg: err.Error(),
+					Progress: &progress, Finished: base.OptionalTrue})
+			}
+			return
 		}
 
 		propName, isString := fieldName.(string)
@@ -68,8 +81,7 @@ func nodeRedImport(ctx context.Context, apiHost string, srcFlow bool, reader io.
 			if progress <= 75 {
 				progress += 25.0
 			}
-			prog := common.Float3(progress)
-			status := &common.RunningStatus{Task: propName, Progress: &prog}
+			status := &common.RunningStatus{Task: propName, Progress: &progress}
 			if err != nil {
 				status.Code = 500
 				status.Msg = err.Error()
@@ -80,14 +92,22 @@ func nodeRedImport(ctx context.Context, apiHost string, srcFlow bool, reader io.
 		} else if !okName {
 			logx.WithContext(ctx).Errorf("未知字段 :%v", propName)
 		}
+		if err != nil {
+			someError = err
+		}
 	}
-	if statusConsumer != nil && progress < 100 {
-		prog := common.Float3(100)
-		statusConsumer(&common.RunningStatus{
+	if statusConsumer != nil {
+		progress = 100
+		status := &common.RunningStatus{
+			Code:     200,
 			Task:     I18nUtils.GetMessage("uns.create.task.name.final"),
-			Progress: &prog, Finished: base.OptionalTrue})
+			Progress: &progress, Finished: base.OptionalTrue}
+		if someError != nil {
+			status.Code = 500
+			status.Msg = someError.Error()
+		}
+		statusConsumer(status)
 	}
-	return nil
 }
 
 func importTags(ctx context.Context, apiHost string, decoder *json.Decoder) (err error) {

@@ -105,7 +105,7 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 		}
 	}
 
-	progress := 0.0
+	progress := common.Float3(0.0)
 	creatorUser := auth.ResolveUserID(ctx)
 	consumer := func(readSize int64, propName string, nodes []*dao.DashboardModel) {
 		dashes := make([]*dao.DashboardModel, 0, 512)
@@ -124,7 +124,7 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 			}
 		}
 		if readSize < size {
-			progress = 0.2 * float64(readSize) / float64(size)
+			progress = 0.2 * common.Float3(readSize) / common.Float3(size)
 		} else if progress < 90 {
 			progress += 5
 		}
@@ -159,22 +159,22 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 			}
 		}
 		if statusConsumer != nil {
-			prog := common.Float3(progress)
-			statusConsumer(&common.RunningStatus{Progress: &prog, Code: code, Msg: msg, Task: task})
+			statusConsumer(&common.RunningStatus{Progress: &progress, Code: code, Msg: msg, Task: task})
 		}
 	}
 	errConsumer := func(node *dao.DashboardModel) {
 	}
 	err := jsonstream.DecodeJsonTreeToFlat(reader, 1000, tree2flat, consumer, errConsumer)
-	if statusConsumer != nil && progress < 100 {
+	if statusConsumer != nil {
 		code, msg := 200, ""
 		if err != nil {
 			code = 500
 			msg = err.Error()
 		}
-		prog := common.Float3(100)
+		progress = 100
 		statusConsumer(&common.RunningStatus{
+			Code: code, Msg: msg,
 			Task:     I18nUtils.GetMessage("uns.create.task.name.final"),
-			Progress: &prog, Finished: base.OptionalTrue, Code: code, Msg: msg})
+			Progress: &progress, Finished: base.OptionalTrue})
 	}
 }

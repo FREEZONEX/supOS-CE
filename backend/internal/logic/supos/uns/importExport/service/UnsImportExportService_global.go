@@ -97,7 +97,7 @@ func (l *UnsImportExportService) ImportGlobal(ctx context.Context, zipFileName s
 	r, err := zip.NewReader(readAt, fileSize)
 	if err != nil {
 		log.Errorf("fail to open zip %v, %s", err, zipFileName)
-		writeError(respWriter, err, true)
+		writeErrorFinished("openZip", respWriter, err, 100)
 		return
 	}
 	// 遍历所有文件
@@ -117,29 +117,31 @@ func (l *UnsImportExportService) ImportGlobal(ctx context.Context, zipFileName s
 				}
 			}
 		}
+		module := fileName
+		if dot := strings.Index(module, "."); dot > 0 {
+			module = module[:dot]
+		}
+		if moduleMsg := I18nUtils.GetMessage("import." + module); !strings.HasPrefix(moduleMsg, "import.") {
+			module = moduleMsg
+		}
 		if exportService == nil {
-			writeError(respWriter, fmt.Errorf("unknown file name: %s", fileName), i == TotalTasks-1)
+			writeError(module, respWriter, fmt.Errorf("unknown file name: %s", fileName))
 			continue
 		}
 		fr, er := f.Open()
 		if er != nil {
-			writeError(respWriter, er, i == TotalTasks-1)
+			writeError(module, respWriter, er)
 		} else {
-			module := fileName
-			if dot := strings.Index(module, "."); dot > 0 {
-				module = module[:dot]
-			}
-			if moduleMsg := I18nUtils.GetMessage("import." + module); !strings.HasPrefix(moduleMsg, "import.") {
-				module = moduleMsg
-			}
 			statusWriter := func(status *common.RunningStatus) {
 				status.Module = module
 				if status.Progress != nil {
 					// 单个任务的进度转为整体进度
-					*status.Progress *= (common.Float3(i) + 1) / common.Float3(TotalTasks)
-				}
-				if status.Finished != nil && i < TotalTasks-1 {
-					status.Finished = nil
+					I := common.Float3(i)
+					N := common.Float3(TotalTasks)
+					*status.Progress = (I + *status.Progress*(I+1)) / N
+					if *status.Progress > 100 {
+						*status.Progress = 100
+					}
 				}
 				tsJson, _ := json.Marshal(status)
 				_, Er := respWriter.Write(append(tsJson, '\n', '\n'))
@@ -153,7 +155,13 @@ func (l *UnsImportExportService) ImportGlobal(ctx context.Context, zipFileName s
 		}
 	}
 }
-func writeError(respWriter io.Writer, err error, finish bool) {
-	status := &common.RunningStatus{Code: 500, Msg: err.Error(), Finished: &finish}
+func writeError(module string, respWriter io.Writer, err error) {
+	writeErrorFinished(module, respWriter, err, 0)
+}
+func writeErrorFinished(module string, respWriter io.Writer, err error, progress common.Float3) {
+	status := &common.RunningStatus{Module: module, Code: 500, Msg: err.Error(), Finished: base.OptionalTrue}
+	if progress > 0 {
+		status.Progress = &progress
+	}
 	responseWriterStatusConsumer{respWriter: respWriter}.write(status)
 }
