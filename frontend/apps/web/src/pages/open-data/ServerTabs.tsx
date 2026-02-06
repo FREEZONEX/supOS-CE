@@ -73,7 +73,7 @@ const ServerTabs = (props: PropsTypes) => {
   };
 
   const handleLink = () => {
-    window.open('/swagger-ui/index.html#/');
+    window.open('/swagger-ui/');
   };
 
   const operations = useMemo(() => {

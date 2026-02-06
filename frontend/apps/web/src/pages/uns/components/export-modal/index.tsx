@@ -1,6 +1,6 @@
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { type FC, useImperativeHandle, useMemo, useState } from 'react';
-import { Divider, Flex, Form, type FormInstance, Segmented } from 'antd';
+import { App, Divider, Flex, Form, type FormInstance, Segmented } from 'antd';
 import { useTranslate } from '@/hooks';
 import ProModal from '@/components/pro-modal';
 import { UnsTree } from '@/pages/uns/components/export-modal/uns-tree.tsx';
@@ -11,8 +11,9 @@ import ComButton from '../../../../components/com-button';
 import OtherDom from '@/pages/uns/components/export-modal/other-dom.tsx';
 import ComStatusDot from '@/components/com-status-dot/ComStatusDot.tsx';
 import { processedCheckedKeys } from '@/pages/uns/store/utils.ts';
-import { downloadFn, getParamsForArray, SelectAllId } from '@/utils';
+import { getParamsForArray, SelectAllId } from '@/utils';
 import { exportExcelGlobal } from '@/apis/inter-api';
+import { useDownloadNotification } from '@/hooks/useDownloadNotification';
 
 interface ExportModalRef {
   setOpen: Dispatch<SetStateAction<boolean>>;
@@ -128,10 +129,21 @@ const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open
     treeData: state.treeData,
   }));
   const [form] = Form.useForm();
+  const [showDownloadNotification, contextHolder] = useDownloadNotification();
+  const { message } = App.useApp();
 
   const onExport = async () => {
     const values = await form.validateFields();
     const params: any = {};
+    if (
+      !(allChecked || checkedKeys?.length) &&
+      !values?.dashboardExportParam?.length &&
+      !values?.eventFlowExportParam?.length &&
+      !values?.sourceFlowExportParam?.length
+    ) {
+      message.warning(formatMessage('home.mustOne'));
+      return;
+    }
     if (allChecked) {
       params['unsExportParam'] = {
         exportType: 'ALL',
@@ -164,7 +176,7 @@ const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open
       params['eventFlowExportParam'] = getParams(values.eventFlowExportParam);
     }
     return exportExcelGlobal(params).then((zip) => {
-      downloadFn({ data: zip, name: 'global-export.zip' });
+      showDownloadNotification({ data: zip, name: 'global-export.zip' });
     });
   };
   return (
@@ -174,6 +186,7 @@ const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open
       }}
       vertical
     >
+      {contextHolder}
       <div
         style={{
           marginBottom: 24,

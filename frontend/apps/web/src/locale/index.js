@@ -771,6 +771,10 @@ const messages = {
   'uns.stripPath': '去除路径',
   'uns.preserveHost': '保留主机头',
   'uns.clickUploadImage': '点击上传 .tar 镜像',
+  'uns.exportFileReady': '您的导出文件已准备就绪。',
+  'uns.downloadAutoMsg': '下载应会自动开始。如果没有开始，请',
+  'uns.toDownload': '去下载。',
+  'uns.clickHere': '点击这里',
 
   //公共通用模块
   'common.url': '地址',
