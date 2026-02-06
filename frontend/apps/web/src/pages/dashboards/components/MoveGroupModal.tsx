@@ -18,12 +18,19 @@ export interface MoveGroupModalProps {
 const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ refreshRequest }, ref) => {
   const [visible, setVisible] = useState(false);
   const [type, setType] = useState(1);
+  const [oldId, setOldId] = useState('5');
   const formatMessage = useTranslate();
   const [form] = Form.useForm();
   const { message } = App.useApp();
 
   const onOpen = (type: number, props: any) => {
-    form.setFieldsValue(props);
+    form.setFieldsValue({
+      ...props,
+      id: props?.id ? props.id + '' : '-9999',
+    });
+    if (props.id) {
+      setOldId(props.id);
+    }
     setType(type);
     setVisible(true);
   };
@@ -37,8 +44,8 @@ const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ ref
     const value = await form.validateFields();
     return optGroup({
       bizId: value?.bizId,
-      id: value?.id,
-      status: true,
+      id: value?.id === '-9999' ? oldId : value?.id,
+      status: value?.id !== '-9999',
     }).then(() => {
       onClose?.();
       refreshRequest?.();
@@ -53,6 +60,7 @@ const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ ref
 
   return (
     <ProModal
+      destroyOnHidden
       open={visible}
       onCancel={onClose}
       title={formatMessage('uns.moveToGroup')}
@@ -87,16 +95,22 @@ const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ ref
                 name: 'id',
                 type: 'Select',
                 label: formatMessage('common.group'),
+                rules: [{ required: true, message: formatMessage('common.select') }],
                 properties: {
+                  isRequest: visible,
                   api: (key?: string) =>
                     getGroupList({ page: 1, pageSize: 1000, key, type }).then((res) => {
-                      return (
-                        res.map((item: any) => ({
+                      return [
+                        {
+                          label: formatMessage('uns.rootDirectory'),
+                          value: '-9999',
+                        },
+                        ...(res?.map((item: any) => ({
                           ...item,
                           label: item.name,
                           value: item.id + '',
-                        })) || []
-                      );
+                        })) || []),
+                      ];
                     }),
                   showSearch: true,
                 },
