@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"backend/internal/handler/supos/open"
 	imexport "backend/internal/handler/supos/uns/importExport"
 	"backend/internal/handler/supos/uns/system"
 	unsHandler "backend/internal/handler/supos/uns/uns"
@@ -14,7 +13,6 @@ import (
 
 func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	addProfiles(server)
-	addSwaggerRoutes(server)
 
 	server.AddRoutes(rest.WithMiddlewares(
 		[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
@@ -65,16 +63,6 @@ func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		}...,
 	))
-}
-func addSwaggerRoutes(server *rest.Server) {
-	// 提供 swagger.yaml 文件
-	server.AddRoutes([]rest.Route{
-		{
-			Method:  http.MethodGet,
-			Path:    "/swagger/Tier0.openapi.yaml",
-			Handler: open.SwaggerYamlHandler,
-		},
-	}, rest.WithTimeout(0))
 }
 
 func addProfiles(server *rest.Server) {

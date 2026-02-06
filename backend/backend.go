@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"strings"
@@ -21,11 +22,16 @@ import (
 	"backend/internal/svc"
 	"backend/share/spring"
 
+	"embed"
+
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
 	_ "github.com/zeromicro/go-zero/core/proc" //开启pprof采集 https://mp.weixin.qq.com/s/yYFM3YyBbOia3qah3eRVQA
 	"github.com/zeromicro/go-zero/rest"
 )
+
+//go:embed swagger/dist/*
+var swaggerFS embed.FS
 
 func main() {
 	defer utils.Recover(context.Background())
@@ -42,13 +48,23 @@ func main() {
 	opts = append(opts, rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
 
 	// 判断是否是本地开发环境
-	if info, er := os.Stat("../deploy/"); er == nil && info.IsDir() {
-		// 本地开发环境
-		opts = append(opts, rest.WithFileServer("/swagger-ui", http.Dir("swagger/dist")))
-	} else {
-		// 生产环境
-		opts = append(opts, rest.WithFileServer("/swagger-ui", http.Dir("/app/swagger/dist")))
+	//if info, er := os.Stat("../deploy/"); er == nil && info.IsDir() {
+	//	// 本地开发环境
+	//	opts = append(opts, rest.WithFileServer("/swagger-ui", http.Dir("swagger/dist")))
+	//} else {
+	//	// 生产环境
+	//	opts = append(opts, rest.WithFileServer("/swagger-ui", http.Dir("/app/swagger/dist")))
+	//}
+
+	swaggerSubFS, err := fs.Sub(swaggerFS, "swagger/dist")
+	if err != nil {
+		panic(err)
 	}
+
+	opts = append(opts, rest.WithFileServer(
+		"/swagger-ui",
+		http.FS(swaggerSubFS),
+	))
 
 	server := rest.MustNewServer(c.RestConf, opts...)
 	defer server.Stop()
