@@ -84,8 +84,8 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
             >
               {formatMessage('common.cancel')}
             </ComButton>
-            <ComButton type="primary" variant="solid" onClick={onSave} title={formatMessage('common.save')}>
-              {formatMessage('common.save')}
+            <ComButton type="primary" variant="solid" onClick={onSave} title={formatMessage('uns.deployNow')}>
+              {formatMessage('uns.deployNow')}
             </ComButton>
           </Flex>
         </>

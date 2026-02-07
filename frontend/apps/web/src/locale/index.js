@@ -776,6 +776,7 @@ const messages = {
   'uns.toDownload': '去下载。',
   'uns.clickHere': '点击这里',
   'uns.rootDirectory': '根目录',
+  'uns.deployNow': '立即部署',
 
   //公共通用模块
   'common.url': '地址',
