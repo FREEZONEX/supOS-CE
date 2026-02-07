@@ -12,7 +12,6 @@ import (
 	suposeventflow "backend/internal/handler/supos/eventflow"
 	suposeventflowservice_api "backend/internal/handler/supos/eventflow/service_api"
 	suposexample "backend/internal/handler/supos/example"
-	suposglobal "backend/internal/handler/supos/global"
 	suposgroup "backend/internal/handler/supos/group"
 	suposi18n "backend/internal/handler/supos/i18n"
 	suposkong "backend/internal/handler/supos/kong"
@@ -257,45 +256,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/example"),
-	)
-
-	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
-			[]rest.Route{
-				{
-					// 全局数据导出
-					Method:  http.MethodPost,
-					Path:    "/data/export",
-					Handler: suposglobal.DataExportHandler(serverCtx),
-				},
-				{
-					// 全局数据导入
-					Method:  http.MethodPost,
-					Path:    "/data/import",
-					Handler: suposglobal.DataImportHandler(serverCtx),
-				},
-				{
-					// 根据路径下载文件
-					Method:  http.MethodPost,
-					Path:    "/file/download",
-					Handler: suposglobal.FileDownloadHandler(serverCtx),
-				},
-				{
-					// 确认导出记录
-					Method:  http.MethodPost,
-					Path:    "/user/exportRecordConfirm",
-					Handler: suposglobal.UserExportRecordConfirmHandler(serverCtx),
-				},
-				{
-					// 获取导出记录
-					Method:  http.MethodPost,
-					Path:    "/user/getExportRecords",
-					Handler: suposglobal.UserGetExportRecordsHandler(serverCtx),
-				},
-			}...,
-		),
-		rest.WithPrefix("/inter-api/supos/global"),
 	)
 
 	server.AddRoutes(

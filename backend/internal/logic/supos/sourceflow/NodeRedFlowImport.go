@@ -245,7 +245,7 @@ func importFlows(ctx context.Context, srcFlow bool, dec *json.Decoder,
 		return i
 	}
 
-	creatorUser := auth.ResolveUserID(ctx)
+	creatorUser := auth.ResolveUserName(ctx)
 	consumer := func(readSize int64, propName string, nodes []*dao.NoderedFlow) {
 		flows := make([]*dao.NoderedFlow, 0, len(nodes))
 		groups := make([]*dao.NoderedFlow, 0, 64)

@@ -106,7 +106,7 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 	}
 
 	progress := common.Float3(0.0)
-	creatorUser := auth.ResolveUserID(ctx)
+	creatorUser := auth.ResolveUserName(ctx)
 	consumer := func(readSize int64, propName string, nodes []*dao.DashboardModel) {
 		dashes := make([]*dao.DashboardModel, 0, 512)
 		groups := make([]*dao.GroupModel, 0, 16)
