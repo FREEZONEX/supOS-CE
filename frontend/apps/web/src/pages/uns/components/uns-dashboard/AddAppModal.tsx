@@ -100,7 +100,12 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
             style={{ height: isFullscreen ? 'inherit' : 650, overflow: 'auto', padding: 6 }}
           >
             <Form.Item name="name" label={formatMessage('common.name')} rules={[{ required: true }]}>
-              <Input />
+              <Input
+                count={{
+                  show: true,
+                  max: 10,
+                }}
+              />
             </Form.Item>
             <Form.Item name="description" label={formatMessage('common.description')}>
               <Input />

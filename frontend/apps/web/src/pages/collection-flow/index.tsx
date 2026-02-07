@@ -351,10 +351,6 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
               form={searchForm}
               formItemOptions={[
                 {
-                  hidden: true,
-                  name: 'groupId',
-                },
-                {
                   name: 'groupId',
                   hidden: true,
                 },

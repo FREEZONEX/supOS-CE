@@ -52,7 +52,10 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
         (data: any) => {
           setModuleMap((prevMap) => {
             const newMap = new Map(prevMap);
-            newMap.set(data.module, data);
+            newMap.set(data.module || 'uns', {
+              module: 'uns',
+              ...data,
+            });
             return newMap;
           });
           setSocketData({
