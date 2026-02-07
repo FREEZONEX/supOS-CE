@@ -525,7 +525,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     titleIntlId: 'common.name',
                     dataIndex: 'name',
-                    width: '14%',
+                    width: 200,
                     sorter: true,
                     render: (text: any, item: any) => {
                       const hasDesign = hasPermission(ButtonPermission['Dashboards.design']);
@@ -588,25 +588,25 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     titleIntlId: 'dashboards.dashboardsTemplate',
                     dataIndex: 'typeName',
-                    width: '10%',
+                    width: 150,
                   },
                   {
                     titleIntlId: 'common.description',
                     dataIndex: 'description',
-                    width: '20%',
+                    width: 400,
                     ellipsis: true,
                   },
                   {
                     title: () => formatMessage('common.creationTime'),
                     dataIndex: 'createAt',
-                    width: '10%',
+                    width: 200,
                     sorter: true,
                     render: (item: any) => formatTimestamp(item),
                   },
                   {
                     title: () => formatMessage('common.creator'),
                     dataIndex: 'creator',
-                    width: '10%',
+                    width: 150,
                   },
                 ] as any
               }
