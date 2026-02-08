@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	suposapp "backend/internal/handler/supos/app"
 	suposauth "backend/internal/handler/supos/auth"
 	suposdevtools "backend/internal/handler/supos/devtools"
 	suposeventflow "backend/internal/handler/supos/eventflow"
@@ -703,6 +704,27 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/uns/importExport"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 获取已安装应用列表
+					Method:  http.MethodGet,
+					Path:    "/app/list",
+					Handler: suposapp.ListInstalledAppsHandler(serverCtx),
+				},
+				{
+					// 批量修改文件值
+					Method:  http.MethodPost,
+					Path:    "/app/install",
+					Handler: suposapp.InstallAppsHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos"),
 	)
 
 	server.AddRoutes(

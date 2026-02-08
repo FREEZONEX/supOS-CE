@@ -179,7 +179,7 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 
 	// 6. 根据 openType 调整路径
 	if menuDto.OpenType != 2 {
-		path = "/third-apps/" + serviceName + path
+		path = "/apps/" + serviceName + path
 	}
 
 	// 7. 创建或更新路由
