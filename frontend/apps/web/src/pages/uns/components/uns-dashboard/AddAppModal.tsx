@@ -16,6 +16,8 @@ import ComEllipsis from '@/components/com-ellipsis';
 import ComCheckbox from '@/components/com-checkbox';
 import { installApp } from '@/apis/inter-api/app.ts';
 import { fetchBaseStore } from '@/stores/base';
+import jsYaml from 'js-yaml';
+import { type Diagnostic, linter, lintGutter } from '@codemirror/lint';
 
 export interface AddAppModalRef {
   onOpen: (type: number, props?: any) => void;
@@ -25,6 +27,21 @@ export interface AddAppModalRef {
 export interface AddAppModalProps {
   [key: string]: any;
 }
+
+const placeholder = `services:
+  frontend:
+    image: xxxx
+    container_name: frontend
+    ports:
+      - "4000:4000"
+    environment:
+      - TZ=UTC
+    command: serve -s /app/web-dist -l 3000
+    volumes:
+      - /etc/docker/certs:/certs
+    networks:
+      - edge_network
+    restart: always`;
 
 const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
   const [visible, setVisible] = useState(false);
@@ -222,23 +239,28 @@ const CodeCom = ({ value, onChange }: { value?: string; onChange?: (v: string) =
           onChange={onChange}
           value={value}
           height={'200px'}
-          extensions={[yaml()]}
-          placeholder={
-            'services:\n' +
-            '  frontend:\n' +
-            '    image: xxxx\n' +
-            '    container_name: frontend\n' +
-            '    ports:\n' +
-            '      - "4000:4000"\n' +
-            '    environment:\n' +
-            '      - TZ=UTC\n' +
-            '    command: serve -s /app/web-dist -l 3000\n' +
-            '    volumes:\n' +
-            '      - /etc/docker/certs:/certs\n' +
-            '    networks:\n' +
-            '      - edge_network\n' +
-            '    restart: always'
-          }
+          extensions={[
+            yaml(),
+            linter((view) => {
+              const diagnostics: Diagnostic[] = [];
+              const doc = view.state.doc.toString();
+              try {
+                jsYaml.load(doc);
+              } catch (e: any) {
+                if (e.mark) {
+                  diagnostics.push({
+                    from: e.mark.position,
+                    to: e.mark.position + 1,
+                    severity: 'error',
+                    message: e.reason,
+                  });
+                }
+              }
+              return diagnostics;
+            }),
+            lintGutter(),
+          ]}
+          placeholder={placeholder}
         />
       </div>
     </div>
