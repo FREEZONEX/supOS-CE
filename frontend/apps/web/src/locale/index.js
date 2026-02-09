@@ -777,6 +777,8 @@ const messages = {
   'uns.clickHere': '点击这里',
   'uns.rootDirectory': '根目录',
   'uns.deployNow': '立即部署',
+  'uns.stripPathPlaceholder': '剥离路径前缀',
+  'uns.preserveHostPlaceholder': '保留原始主机头',
 
   //公共通用模块
   'common.url': '地址',
@@ -1077,7 +1079,6 @@ const messages = {
   commandLineParameters: '命令行参数',
   commandLineParametersDesc: 'MCP Server 支持以下命令行参数',
   parameter: '参数',
-  description: '描述',
   default: '默认值',
   example: '示例',
   portDesc: '服务器监听端口号',

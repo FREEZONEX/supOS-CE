@@ -11,6 +11,7 @@ export interface UploadPictureProps extends Omit<UploadProps, 'onChange'> {
   onChange?: (file: UploadFile) => void;
   acceptList?: string[];
   className?: string;
+  onActionChange?: UploadProps['onChange'];
 }
 
 const ComUploadPicture: FC<UploadPictureProps> = ({
@@ -19,6 +20,8 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
   maxCount = 1,
   acceptList = ['jpg', 'jpeg', 'png', 'svg'],
   className,
+  action = '',
+  onActionChange,
   ...restProps
 }) => {
   const { message } = App.useApp();
@@ -35,20 +38,24 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
   const beforeUpload = (file: any) => {
     const fileType = file.name.split('.').pop();
     if (acceptList?.length === 0 || acceptList.includes(fileType.toLowerCase())) {
-      const previewUrl = URL.createObjectURL(file);
-      const newFile = {
-        ...file,
-        file,
-        url: previewUrl,
-        thumbUrl: previewUrl,
-        status: 'done',
-      };
-      setFileList([newFile]);
+      if (!action) {
+        const previewUrl = URL.createObjectURL(file);
+        const newFile = {
+          ...file,
+          file,
+          url: previewUrl,
+          thumbUrl: previewUrl,
+          status: 'done',
+        };
+        setFileList([newFile]);
+      }
     } else {
       message.warning(formatMessage('common.imgFormatSupport', { format: acceptMsg }));
       return Upload.LIST_IGNORE; //阻止无效文件挂载到组件本身
     }
-    return false; //阻止调用Upload上传
+    if (!action) {
+      return false;
+    } //阻止调用Upload上传
   };
 
   const onRemove = () => {
@@ -58,7 +65,7 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
   return (
     <div className={className}>
       <Upload
-        action=""
+        action={action}
         listType="picture-card"
         {...restProps}
         fileList={fileList}
@@ -66,6 +73,18 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
         beforeUpload={beforeUpload}
         onRemove={onRemove}
         ref={uploadRef}
+        onChange={
+          onActionChange
+            ? (info) => {
+                const { file } = info;
+                const fileType = file.name.split('.').pop() || '';
+                if (acceptList?.length === 0 || acceptList.includes(fileType.toLowerCase())) {
+                  setFileList(info.fileList);
+                  onActionChange?.(info);
+                }
+              }
+            : undefined
+        }
       >
         {fileList?.length >= maxCount ? null : (
           <button style={{ color: 'inherit', cursor: 'inherit', border: 0, background: 'none' }} type="button">

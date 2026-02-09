@@ -345,14 +345,7 @@ func ExtractAliases(nodes []map[string]any) []string {
 		if node == nil {
 			continue
 		}
-		for _, key := range []string{"selectedAlias", "selectedModelAlias", "alias", "unsAlias"} {
-			if val, ok := node[key]; ok {
-				if alias := strings.TrimSpace(fmt.Sprint(val)); alias != "" {
-					aliasSet[alias] = struct{}{}
-				}
-			}
-		}
-		if val, ok := node["selectedModel"]; ok {
+		if val, ok := node["selectedModelAlias"]; ok {
 			if alias := strings.TrimSpace(fmt.Sprint(val)); alias != "" {
 				aliasSet[alias] = struct{}{}
 			}
