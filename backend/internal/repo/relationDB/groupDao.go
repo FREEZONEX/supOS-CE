@@ -99,9 +99,17 @@ func (m *GroupMapper) SelectAll(db *gorm.DB) ([]*GroupModel, error) {
 }
 
 // SelectByType 根据 type 查询 Group
-func (m *GroupMapper) SelectByType(db *gorm.DB, typ int16) ([]*GroupModel, error) {
+func (m *GroupMapper) SelectByType(db *gorm.DB, typ int16, name string) ([]*GroupModel, error) {
 	var groups []*GroupModel
-	err := db.Where("type = ?", typ).Find(&groups).Error
+
+	query := db.Model(&GroupModel{})
+	query = db.Where("type = ? ", typ)
+
+	if name != "" {
+		query = query.Where("name LIKE ?", "%"+name+"%")
+	}
+
+	err := query.Find(&groups).Error
 	if err != nil {
 		logx.Errorf("failed to select groups by type: %v", err)
 		return nil, err

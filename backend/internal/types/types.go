@@ -611,7 +611,8 @@ type GroupBizVO struct {
 }
 
 type GroupByTypeQuery struct {
-	Type int16 `form:"type"` //1-sourceflow 2-eventflow 3-datasource
+	Type int16   `form:"type"` //1-sourceflow 2-eventflow 3-datasource
+	Name *string `form:"name,optional"`
 	PageInfo
 }
 

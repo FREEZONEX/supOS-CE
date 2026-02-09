@@ -53,6 +53,7 @@ type (
 
     GroupByTypeQuery {
         Type int16 `form:"type"` //1-sourceflow 2-eventflow 3-datasource
+        Name *string `form:"name,optional"`
         PageInfo                 // 分页参数
     }
 

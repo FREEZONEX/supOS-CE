@@ -2976,6 +2976,12 @@
             "required": true
           },
           {
+            "type": "string",
+            "name": "name",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
             "type": "integer",
             "description": "页码",
             "name": "page",
@@ -13593,7 +13599,7 @@
       }
     }
   },
-  "x-date": "2026-02-04 13:50:34",
+  "x-date": "2026-02-06 16:57:17",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
