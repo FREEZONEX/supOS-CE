@@ -934,6 +934,20 @@
             "name": "creator",
             "in": "query",
             "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "排序字段",
+            "name": "orderCode",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "boolean",
+            "description": "是否升序",
+            "name": "isAsc",
+            "in": "query",
+            "allowEmptyValue": true
           }
         ],
         "responses": {
@@ -2192,6 +2206,20 @@
           {
             "type": "string",
             "name": "creator",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "排序字段",
+            "name": "orderCode",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "boolean",
+            "description": "是否升序",
+            "name": "isAsc",
             "in": "query",
             "allowEmptyValue": true
           }
@@ -6095,6 +6123,20 @@
           {
             "type": "string",
             "name": "creator",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "排序字段",
+            "name": "orderCode",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "boolean",
+            "description": "是否升序",
+            "name": "isAsc",
             "in": "query",
             "allowEmptyValue": true
           }
@@ -13509,7 +13551,7 @@
       }
     }
   },
-  "x-date": "2026-02-07 16:10:37",
+  "x-date": "2026-02-09 10:30:31",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

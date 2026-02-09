@@ -645,6 +645,8 @@ type GroupPageRequest struct {
 	PageSize  int64  `form:"pageSize,default=10"`
 	Category  string `form:"category,optional"` //分类 group-分组 file-文件
 	Creator   string `form:"creator,optional"`
+	OrderCode string `form:"orderCode,optional"` // 排序字段
+	IsAsc     bool   `form:"isAsc,optional"`     // 是否升序
 }
 
 type GroupPageResultVO struct {

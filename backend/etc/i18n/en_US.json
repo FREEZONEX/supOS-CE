@@ -1789,5 +1789,6 @@
   "AppManagement.installationTime": "Installation time",
   "AppManagement.healthStates": "Health status",
   "AppManagement.config_update": "Update configuration",
-  "AppManagement.upload": "Upload"
+  "AppManagement.upload": "Upload",
+  "group.name.maxLength": "The group name has a maximum of 255 characters"
 }

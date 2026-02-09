@@ -140,11 +140,25 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
 		return nil, 0, err
 	}
 
+	// ---------- sorting ----------
+	sortSQL := " ORDER BY sort DESC"
+	if req.OrderCode != "" {
+		// 如果有指定排序字段，替换默认的 create_at 字段
+		ascDesc := "DESC"
+		if req.IsAsc {
+			ascDesc = "ASC"
+		}
+		sortSQL += fmt.Sprintf(", %s %s", req.OrderCode, ascDesc)
+	} else {
+		// 默认使用 create_at 降序
+		sortSQL += ", createAt DESC"
+	}
+
 	// ---------- pagination ----------
 	offset := (req.PageNo - 1) * req.PageSize
 	querySQL += fmt.Sprintf(
-		" ORDER BY sort DESC, create_at DESC LIMIT $%d OFFSET $%d",
-		paramIdx, paramIdx+1,
+		"%s LIMIT $%d OFFSET $%d",
+		sortSQL, paramIdx, paramIdx+1,
 	)
 	args = append(args, req.PageSize, offset)
 
