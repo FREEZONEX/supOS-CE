@@ -84,8 +84,8 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
             >
               {formatMessage('common.cancel')}
             </ComButton>
-            <ComButton type="primary" variant="solid" onClick={onSave} title={formatMessage('common.save')}>
-              {formatMessage('common.save')}
+            <ComButton type="primary" variant="solid" onClick={onSave} title={formatMessage('uns.deployNow')}>
+              {formatMessage('uns.deployNow')}
             </ComButton>
           </Flex>
         </>
@@ -100,7 +100,12 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
             style={{ height: isFullscreen ? 'inherit' : 650, overflow: 'auto', padding: 6 }}
           >
             <Form.Item name="name" label={formatMessage('common.name')} rules={[{ required: true }]}>
-              <Input />
+              <Input
+                count={{
+                  show: true,
+                  max: 10,
+                }}
+              />
             </Form.Item>
             <Form.Item name="description" label={formatMessage('common.description')}>
               <Input />

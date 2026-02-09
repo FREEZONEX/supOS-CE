@@ -126,10 +126,10 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 		}
 	}
 
+	i.parent = parent
 	if vo.Alias == "" {
 		vo.Alias = PathUtil.GenerateFileAlias(i.getPath())
 	}
-	i.parent = parent
 	if parent != nil {
 		if parent.Alias == "" {
 			parent.Alias = PathUtil.GenerateFileAlias(parent.getPath())

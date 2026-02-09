@@ -540,7 +540,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                     titleIntlId: 'common.name',
                     dataIndex: 'name',
                     key: 'flowName',
-                    width: '14%',
+                    width: 200,
                     sorter: true,
                     render: (text: any, item: any) => {
                       const hasDesign = hasPermission(ButtonPermission['EventFlow.design']);
@@ -602,7 +602,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     title: () => formatMessage('common.status'),
                     dataIndex: 'flowStatus',
-                    width: '8%',
+                    width: 150,
                     render: (flowStatus: any, item: any) => {
                       if (flowStatus) {
                         return (
@@ -623,26 +623,26 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                     titleIntlId: 'collectionFlow.flowTemplate',
                     dataIndex: 'template',
                     key: 'template',
-                    width: '10%',
+                    width: 150,
                   },
                   {
                     titleIntlId: 'common.description',
                     dataIndex: 'description',
                     key: 'description',
-                    width: '30%',
+                    width: 400,
                     ellipsis: true,
                   },
                   {
                     title: () => formatMessage('common.creationTime'),
                     dataIndex: 'createAt',
-                    width: '15%',
+                    width: 200,
                     sorter: true,
                     render: (item: any) => formatTimestamp(item),
                   },
                   {
                     title: () => formatMessage('common.creator'),
                     dataIndex: 'creator',
-                    width: '10%',
+                    width: 150,
                   },
                 ] as any
               }

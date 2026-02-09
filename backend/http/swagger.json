@@ -2569,96 +2569,6 @@
         }
       }
     },
-    "/inter-api/supos/global/data/export": {
-      "post": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "全局数据导出",
-        "operationId": "supos/GlobalDataExport",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
-          }
-        }
-      }
-    },
-    "/inter-api/supos/global/data/import": {
-      "post": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "全局数据导入",
-        "operationId": "supos/GlobalDataImport",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
-          }
-        }
-      }
-    },
-    "/inter-api/supos/global/file/download": {
-      "post": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "根据路径下载文件",
-        "operationId": "supos/GlobalFileDownload",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
-          }
-        }
-      }
-    },
-    "/inter-api/supos/global/user/exportRecordConfirm": {
-      "post": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "确认导出记录",
-        "operationId": "supos/GlobalUserExportRecordConfirm",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
-          }
-        }
-      }
-    },
-    "/inter-api/supos/global/user/getExportRecords": {
-      "post": {
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "https"
-        ],
-        "summary": "获取导出记录",
-        "operationId": "supos/GlobalUserGetExportRecords",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {}
-          }
-        }
-      }
-    },
     "/inter-api/supos/group": {
       "get": {
         "produces": [
@@ -13599,7 +13509,7 @@
       }
     }
   },
-  "x-date": "2026-02-06 16:57:17",
+  "x-date": "2026-02-07 16:10:37",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
