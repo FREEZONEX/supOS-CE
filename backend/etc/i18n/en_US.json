@@ -1744,7 +1744,6 @@
   "copilotkit.params": "Parameters",
   "copilotkit.env": "Environment variable",
   "copilotkit.example": "For example",
-  "description": "Description",
   "OpenData.appSceretKey": "App Key",
   "OpenData.creationTime": "Creation Time",
   "OpenData.status": "Status",

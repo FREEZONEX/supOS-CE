@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import ProModal from '@/components/pro-modal';
 import { useTranslate } from '@/hooks';
-import { Col, Divider, Flex, Form, Input, Row, Segmented, type UploadFile } from 'antd';
+import { App, Col, Divider, Flex, Form, Input, Row, Segmented, type UploadFile } from 'antd';
 import ComButton from '@/components/com-button';
 import ComUploadPicture from '@/components/com-upload-picture';
 import ComDraggerUpload from '@/components/com-dragger-upload';
@@ -14,6 +14,8 @@ import codeStyles from '@/theme/codemirror.module.scss';
 import { yaml } from '@codemirror/lang-yaml';
 import ComEllipsis from '@/components/com-ellipsis';
 import ComCheckbox from '@/components/com-checkbox';
+import { installApp } from '@/apis/inter-api/app.ts';
+import { fetchBaseStore } from '@/stores/base';
 
 export interface AddAppModalRef {
   onOpen: (type: number, props?: any) => void;
@@ -24,13 +26,12 @@ export interface AddAppModalProps {
   [key: string]: any;
 }
 
-const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) => {
+const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
   const [visible, setVisible] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const formatMessage = useTranslate();
   const [form] = Form.useForm();
-  // const { message } = App.useApp();
-  console.log(props);
+  const { message } = App.useApp();
 
   const onOpen = () => {
     setVisible(true);
@@ -44,7 +45,17 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
 
   const onSave = async () => {
     const value = await form.validateFields();
-    console.log(value);
+    return installApp({
+      ...value,
+      imagePath: value?.imageConfig?.type === 'image' ? value?.imageConfig?.imagePath : undefined,
+      imageUrl: value?.imageConfig?.type === 'registry' ? value?.imageConfig?.imageUrl : undefined,
+      iconFile: undefined,
+      imageConfig: undefined,
+    }).then(() => {
+      message.success(formatMessage('common.optsuccess'));
+      onClose?.();
+      fetchBaseStore?.();
+    });
   };
 
   useImperativeHandle(ref, () => ({
@@ -105,20 +116,37 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
                   show: true,
                   max: 10,
                 }}
+                placeholder={formatMessage('rule.pleaseInput', { label: formatMessage('common.name') })}
               />
             </Form.Item>
             <Form.Item name="description" label={formatMessage('common.description')}>
-              <Input />
+              <Input placeholder={formatMessage('rule.pleaseInput', { label: formatMessage('common.description') })} />
             </Form.Item>
-            <Form.Item name="icon" label={formatMessage('uns.appIcon')}>
-              <ComUploadPicture className={styles['icon-upload']} />
+            <Form.Item name="iconFile" label={formatMessage('uns.appIcon')}>
+              <ComUploadPicture
+                className={styles['icon-upload']}
+                action="/inter-api/supos/attachment/upload"
+                maxCount={1}
+                withCredentials={true}
+                onActionChange={(image) => {
+                  if (image?.file?.status === 'done') {
+                    form.setFieldValue('iconPath', image?.file?.response?.data?.storagePath);
+                  }
+                }}
+              />
+            </Form.Item>
+            <Form.Item hidden name="iconPath">
+              <Input />
             </Form.Item>
             <Divider style={{ background: '#e0e0e0', margin: '16px 0' }} />
-            <Form.Item name="app">
+            <Form.Item name="imageConfig">
               <ImageCom />
             </Form.Item>
-            <Form.Item name="route" label={formatMessage('uns.menuRouting')} rules={[{ required: true }]}>
-              <Input />
+            <Form.Item name="menuUrl" label={formatMessage('uns.menuRouting')} rules={[{ required: true }]}>
+              <Input
+                // addonBefore={window.location.origin + '/'}
+                placeholder={formatMessage('rule.pleaseInput', { label: formatMessage('uns.menuRouting') })}
+              />
             </Form.Item>
             <Divider style={{ margin: '16px 0' }} className={styles['add-app-modal-divider']}>
               <Flex align="center" gap={8} className={styles['add-app-modal-divider-center']} onClick={onOpenAdvanced}>
@@ -128,18 +156,31 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((props, ref) =>
               </Flex>
             </Divider>
             <div style={{ display: showAdvanced ? 'inherit' : 'none' }}>
-              <Form.Item name="config">
+              <Form.Item name="composeYaml">
                 <CodeCom />
               </Form.Item>
+              <ComEllipsis>{formatMessage('uns.optionalBehaviors')}</ComEllipsis>
               <Row>
                 <Col span={12}>
-                  <Form.Item name="stripPath" label={formatMessage('uns.stripPath')} valuePropName="checked">
-                    <ComCheckbox />
+                  <Form.Item name="routerTrim" valuePropName="checked">
+                    <ComCheckbox
+                      tooltip={{
+                        title: formatMessage('uns.stripPathPlaceholder'),
+                      }}
+                    >
+                      {formatMessage('uns.stripPath')}
+                    </ComCheckbox>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="preserveHost" label={formatMessage('uns.preserveHost')} valuePropName="checked">
-                    <ComCheckbox />
+                  <Form.Item name="keepHost" valuePropName="checked">
+                    <ComCheckbox
+                      tooltip={{
+                        title: formatMessage('uns.preserveHostPlaceholder'),
+                      }}
+                    >
+                      {formatMessage('uns.preserveHost')}
+                    </ComCheckbox>
                   </Form.Item>
                 </Col>
               </Row>
@@ -176,7 +217,29 @@ const CodeCom = ({ value, onChange }: { value?: string; onChange?: (v: string) =
         }}
         className={codeStyles['custom-theme']}
       >
-        <CodeMirror theme={codemirrorTheme} onChange={onChange} value={value} height={'200px'} extensions={[yaml()]} />
+        <CodeMirror
+          theme={codemirrorTheme}
+          onChange={onChange}
+          value={value}
+          height={'200px'}
+          extensions={[yaml()]}
+          placeholder={
+            'services:\n' +
+            '  frontend:\n' +
+            '    image: xxxx\n' +
+            '    container_name: frontend\n' +
+            '    ports:\n' +
+            '      - "4000:4000"\n' +
+            '    environment:\n' +
+            '      - TZ=UTC\n' +
+            '    command: serve -s /app/web-dist -l 3000\n' +
+            '    volumes:\n' +
+            '      - /etc/docker/certs:/certs\n' +
+            '    networks:\n' +
+            '      - edge_network\n' +
+            '    restart: always'
+          }
+        />
       </div>
     </div>
   );
@@ -217,9 +280,20 @@ const ImageCom = ({
       />
       <div style={{ display: v.type === 'image' ? 'inherit' : 'none' }}>
         <ComDraggerUpload
+          acceptList={['tar']}
           className={styles['image-upload']}
-          value={v?.image}
-          onChange={(image) => setV((pre: ImageComProps) => ({ ...pre, image }))}
+          value={v?.image || []}
+          size={1024 * 1024 * 1024 * 2}
+          action="/inter-api/supos/attachment/upload"
+          maxCount={1}
+          withCredentials={true}
+          onActionChange={(image) => {
+            setV((pre: ImageComProps) => ({
+              ...pre,
+              image: image?.fileList,
+              imagePath: image?.fileList?.[0]?.response?.data?.storagePath,
+            }));
+          }}
         >
           <Flex align="center" justify="center" vertical gap={8}>
             <FolderAdd size={40} style={{ color: '#E0E0E0' }} />
@@ -232,8 +306,8 @@ const ImageCom = ({
         <Input
           placeholder={formatMessage('uns.dockerExample', { example: 'grafana/grafana:latest' })}
           prefix={<Wikis />}
-          value={v.registry}
-          onChange={(e) => setV((pre: ImageComProps) => ({ ...pre, registry: e?.target?.value }))}
+          value={v.imageUrl}
+          onChange={(e) => setV((pre: ImageComProps) => ({ ...pre, imageUrl: e?.target?.value }))}
         />
       </div>
     </>

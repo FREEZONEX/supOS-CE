@@ -268,11 +268,18 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 2G
         reservations:
           memory: 512M
     environment:
       service_logo: keycloak-original.svg
+      JAVA_OPTS: >-
+        -Xms512m
+        -Xmx1g
+        -XX:MaxMetaspaceSize=256m
+        -XX:MetaspaceSize=256m
+        -Xss512k
+        -XX:+UseG1GC
       service_description: aboutus.keycloakDescription
       service_redirect_url: /keycloak/home/
       service_account: admin
