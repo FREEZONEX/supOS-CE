@@ -4,12 +4,13 @@
 package group
 
 import (
-	"context"
-	"time"
-
+	"backend/internal/common/I18nUtils"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"context"
+	"time"
+	"unicode/utf8"
 
 	"gitee.com/unitedrhino/share/stores"
 
@@ -48,6 +49,11 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 	}
 	if group == nil {
 		return nil, errors.Parameter.WithMsg("组不存在")
+	}
+
+	if utf8.RuneCountInString(*req.Name) > 255 {
+		message := I18nUtils.GetMessage("group.name.maxLength")
+		return nil, errors.Database.WithMsg(message).AddDetail(err)
 	}
 
 	// 检查组名是否已存在

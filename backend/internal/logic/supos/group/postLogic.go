@@ -4,9 +4,11 @@
 package group
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/utils/apiutil"
 	"context"
 	"time"
+	"unicode/utf8"
 
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
@@ -34,15 +36,21 @@ func NewPostLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PostLogic {
 }
 
 func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err error) {
-	if req.Name == nil || *req.Name == "" {
+	name := *req.Name
+	if req.Name == nil || name == "" {
 		return nil, errors.Parameter.WithMsg("组名称不能为空")
 	}
 
 	db := stores.GetCommonConn(l.ctx)
 	groupMapper := &relationDB.GroupMapper{}
 
+	if utf8.RuneCountInString(name) > 255 {
+		message := I18nUtils.GetMessage("group.name.maxLength")
+		return nil, errors.Database.WithMsg(message).AddDetail(err)
+	}
+
 	// 检查组名是否已存在
-	existingGroup, err := groupMapper.SelectByName(db, *req.Name)
+	existingGroup, err := groupMapper.SelectByName(db, name)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
 		return nil, errors.Database.WithMsg("创建组失败").AddDetail(err)
@@ -54,7 +62,7 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 	// 构建组模型
 	group := &relationDB.GroupModel{
 		Type:        req.Type,
-		Name:        *req.Name,
+		Name:        name,
 		Description: "",
 		Sort:        0,
 		UpdateAt:    time.Now(),

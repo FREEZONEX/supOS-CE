@@ -1791,5 +1791,6 @@
   "AppManagement.installationTime": "安装时间",
   "AppManagement.healthStates": "健康状态",
   "AppManagement.config_update": "更新配置",
-  "AppManagement.upload": "上传"
+  "AppManagement.upload": "上传",
+  "group.name.maxLength": "分组名称最多255个字符"
 }
