@@ -97,6 +97,7 @@ type (
         FlowName    string `json:"flowName"`
         Description string `json:"description,optional"`
         Template    string `json:"template,optional"`
+        GroupId     *int64  `json:"groupId,optional,string"`
     }
 
     SourceFlowListQuery {

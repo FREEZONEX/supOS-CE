@@ -1792,5 +1792,13 @@
   "AppManagement.config_update": "更新配置",
   "AppManagement.upload": "上传",
   "group.name.maxLength": "分组名称最多255个字符",
-  "group.description.maxLength": "分组描述最多512个字符"
+  "group.description.maxLength": "分组描述最多512个字符",
+  "group.create.failed": "创建分组失败",
+  "group.name.duplication": "组名称已存在",
+  "group.id.isnotblank": "组ID不能为空",
+  "group.query.failed": "查询组失败",
+  "group.notfound": "组不存在",
+  "group.update.failed": "更新组失败",
+  "group.update.success": "更新成功",
+  "group.name.isnotblank": "组名称不能为空"
 }

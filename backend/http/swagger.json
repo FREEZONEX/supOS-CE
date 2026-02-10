@@ -639,6 +639,9 @@
                 "flowName": {
                   "type": "string"
                 },
+                "groupId": {
+                  "type": "integer"
+                },
                 "sourceId": {
                   "type": "string"
                 },
@@ -2002,6 +2005,9 @@
                 },
                 "flowName": {
                   "type": "string"
+                },
+                "groupId": {
+                  "type": "integer"
                 },
                 "sourceId": {
                   "type": "string"
@@ -13551,7 +13557,7 @@
       }
     }
   },
-  "x-date": "2026-02-09 10:30:31",
+  "x-date": "2026-02-10 16:32:15",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

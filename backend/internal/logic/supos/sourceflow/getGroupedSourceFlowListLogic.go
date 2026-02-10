@@ -59,6 +59,7 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 		groupFlowVO := types.GroupFlowVO{}
 		//存在分组
 		groupFlowVO.ID = item.ID
+		groupFlowVO.GroupId = item.GroupID
 		groupFlowVO.Category = item.Category
 		groupFlowVO.Name = item.Name
 		groupFlowVO.Description = item.Description

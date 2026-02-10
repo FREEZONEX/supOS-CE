@@ -380,6 +380,7 @@ type EventFlowCopyReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"`
 }
 
 type EventFlowCreateReq struct {
@@ -1189,6 +1190,7 @@ type SourceFlowCopyReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"`
 }
 
 type SourceFlowCreateReq struct {

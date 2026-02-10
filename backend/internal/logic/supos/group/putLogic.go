@@ -35,7 +35,7 @@ func NewPutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PutLogic {
 
 func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err error) {
 	if req.ID == nil {
-		return nil, errors.Parameter.WithMsg("组ID不能为空")
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.id.isnotblank"))
 	}
 
 	db := stores.GetCommonConn(l.ctx)
@@ -45,10 +45,10 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 	group, err := groupMapper.SelectById(db, *req.ID)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
-		return nil, errors.Database.WithMsg("查询组失败").AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.query.failed")).AddDetail(err)
 	}
 	if group == nil {
-		return nil, errors.Parameter.WithMsg("组不存在")
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.notfound"))
 	}
 
 	if utf8.RuneCountInString(*req.Name) > 255 {
@@ -57,13 +57,13 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 	}
 
 	// 检查组名是否已存在
-	existingGroup, err := groupMapper.SelectByNameNotId(db, *req.ID, *req.Name)
+	existingGroup, err := groupMapper.SelectByNameNotId(db, *req.ID, *req.Name, *req.Type)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
-		return nil, errors.Database.WithMsg("修改组失败").AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.update.failed")).AddDetail(err)
 	}
 	if len(existingGroup) > 0 {
-		return nil, errors.Parameter.WithMsg("组名称已存在")
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.name.duplication"))
 	}
 
 	// 更新字段
@@ -84,12 +84,12 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 	// 执行更新
 	if err = groupMapper.UpdateById(db, group); err != nil {
 		l.Errorf("更新组失败: %v", err)
-		return nil, errors.Database.WithMsg("更新组失败").AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.update.failed")).AddDetail(err)
 	}
 
 	return &types.JsonResult{
 		Code: 0,
-		Msg:  "更新成功",
+		Msg:  I18nUtils.GetMessage("group.update.success"),
 		Data: nil,
 	}, nil
 }

@@ -1790,5 +1790,13 @@
   "AppManagement.config_update": "Update configuration",
   "AppManagement.upload": "Upload",
   "group.name.maxLength": "The group name has a maximum of 255 characters",
-  "group.description.maxLength": "The group description has a maximum of 512 characters"
+  "group.description.maxLength": "The group description has a maximum of 512 characters",
+  "group.create.failed": "Failed to create group",
+  "group.name.duplication": "Group name already exists",
+  "group.id.isnotblank": "Group ID cannot be empty",
+  "group.query.failed": "Failed to query group",
+  "group.notfound": "Group not found",
+  "group.update.failed": "Failed to update group",
+  "group.update.success": "Updated successfully",
+  "group.name.isnotblank": "Group name cannot be empty"
 }

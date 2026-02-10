@@ -39,7 +39,7 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 
 	name := *req.Name
 	if req.Name == nil || name == "" {
-		return nil, errors.Parameter.WithMsg("组名称不能为空")
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.name.isnotblank"))
 	}
 	db := stores.GetCommonConn(l.ctx)
 	groupMapper := &relationDB.GroupMapper{}
@@ -60,13 +60,13 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 	}
 
 	// 检查组名是否已存在
-	existingGroup, err := groupMapper.SelectByName(db, name)
+	existingGroup, err := groupMapper.SelectByName(db, name, *req.Type)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
-		return nil, errors.Database.WithMsg("创建组失败").AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.create.failed")).AddDetail(err)
 	}
 	if len(existingGroup) > 0 {
-		return nil, errors.Parameter.WithMsg("组名称已存在")
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.name.duplication"))
 	}
 
 	// 构建组模型
@@ -94,12 +94,12 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 	// 插入数据
 	if err = groupMapper.Insert(db, group); err != nil {
 		l.Errorf("创建组失败: %v", err)
-		return nil, errors.Database.WithMsg("创建组失败").AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.create.failed")).AddDetail(err)
 	}
 
 	return &types.JsonResult{
 		Code: 0,
-		Msg:  "创建成功",
+		Msg:  "ok",
 		Data: map[string]int64{"id": group.ID},
 	}, nil
 }
