@@ -779,6 +779,8 @@ const messages = {
   'uns.deployNow': '立即部署',
   'uns.stripPathPlaceholder': '剥离路径前缀',
   'uns.preserveHostPlaceholder': '保留原始主机头',
+  'uns.uploading': '正在上传',
+  'uns.uploadError': '上传失败',
 
   //公共通用模块
   'common.url': '地址',

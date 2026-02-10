@@ -740,6 +740,8 @@
   "uns.deployNow": "Deployment Now",
   "uns.stripPathPlaceholder": "Strip Path Prefix",
   "uns.preserveHostPlaceholder": "Preserve Original Host Header",
+  "uns.uploading": "Uploading",
+  "uns.uploadError": "Upload Error",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

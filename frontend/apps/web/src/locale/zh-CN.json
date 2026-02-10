@@ -740,6 +740,8 @@
   "uns.deployNow": "立即部署",
   "uns.stripPathPlaceholder": "剥离路径前缀",
   "uns.preserveHostPlaceholder": "保留原始主机头",
+  "uns.uploading": "正在上传",
+  "uns.uploadError": "上传失败",
   "common.url": "地址",
   "common.usage": "用法",
   "common.example": "示例",
