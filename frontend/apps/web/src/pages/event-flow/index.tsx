@@ -254,6 +254,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           setShow(true);
           form.setFieldsValue({
             id: record.id,
+            groupId: record.groupId,
           });
         },
       },
