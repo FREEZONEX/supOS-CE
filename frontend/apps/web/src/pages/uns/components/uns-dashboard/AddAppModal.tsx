@@ -62,6 +62,12 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
 
   const onSave = async () => {
     const value = await form.validateFields();
+    if (value?.imageConfig?.image?.[0]?.status === 'uploading') {
+      return message.warning(formatMessage('uns.uploading'));
+    }
+    if (value?.imageConfig?.image?.[0]?.status === 'error') {
+      return message.warning(formatMessage('uns.uploadError'));
+    }
     return installApp({
       ...value,
       imagePath: value?.imageConfig?.type === 'image' ? value?.imageConfig?.imagePath : undefined,
