@@ -6,7 +6,7 @@ import ComButton from '@/components/com-button';
 import ComUploadPicture from '@/components/com-upload-picture';
 import ComDraggerUpload from '@/components/com-dragger-upload';
 import usePropsValue from '@/hooks/usePropsValue.ts';
-import { ChevronDown, ChevronUp, ContainerSoftware, FolderAdd, Settings, Wikis } from '@carbon/icons-react';
+import { ContainerSoftware, FolderAdd, Wikis } from '@carbon/icons-react';
 import styles from './index.module.scss';
 import CodeMirror from '@uiw/react-codemirror';
 import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
@@ -29,9 +29,9 @@ export interface AddAppModalProps {
 }
 
 const placeholder = `services:
-  frontend:
-    image: xxxx
-    container_name: frontend
+  app-service:
+    image: username/repository:tag
+    container_name: my-web-app
     ports:
       - "4000:4000"
     environment:
@@ -45,7 +45,6 @@ const placeholder = `services:
 
 const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
   const [visible, setVisible] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const formatMessage = useTranslate();
   const [form] = Form.useForm();
   const { message } = App.useApp();
@@ -56,7 +55,6 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
 
   const onClose = () => {
     setVisible(false);
-    setShowAdvanced(false);
     form.resetFields();
   };
 
@@ -85,10 +83,6 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
     onOpen,
     onClose,
   }));
-
-  const onOpenAdvanced = () => {
-    setShowAdvanced((pre) => !pre);
-  };
 
   return (
     <ProModal
@@ -171,42 +165,43 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
                 placeholder={formatMessage('rule.pleaseInput', { label: formatMessage('uns.menuRouting') })}
               />
             </Form.Item>
-            <Divider style={{ margin: '16px 0' }} className={styles['add-app-modal-divider']}>
-              <Flex align="center" gap={8} className={styles['add-app-modal-divider-center']} onClick={onOpenAdvanced}>
-                <Settings />
-                <span>{formatMessage('uns.showAdvanced')}</span>
-                {showAdvanced ? <ChevronUp /> : <ChevronDown />}
-              </Flex>
-            </Divider>
-            <div style={{ display: showAdvanced ? 'inherit' : 'none' }}>
+            {/*<Divider style={{ margin: '16px 0' }} className={styles['add-app-modal-divider']}>*/}
+            {/*  <Flex align="center" gap={8} className={styles['add-app-modal-divider-center']} onClick={onOpenAdvanced}>*/}
+            {/*    <Settings />*/}
+            {/*    <span>{formatMessage('uns.showAdvanced')}</span>*/}
+            {/*    {showAdvanced ? <ChevronUp /> : <ChevronDown />}*/}
+            {/*  </Flex>*/}
+            {/*</Divider>*/}
+            <ComEllipsis>{formatMessage('uns.optionalBehaviors')}</ComEllipsis>
+            <Row>
+              <Col span={12}>
+                <Form.Item name="routerTrim" valuePropName="checked">
+                  <ComCheckbox
+                    tooltip={{
+                      title: formatMessage('uns.stripPathPlaceholder'),
+                    }}
+                  >
+                    {formatMessage('uns.stripPath')}
+                  </ComCheckbox>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="keepHost" valuePropName="checked">
+                  <ComCheckbox
+                    tooltip={{
+                      title: formatMessage('uns.preserveHostPlaceholder'),
+                    }}
+                  >
+                    {formatMessage('uns.preserveHost')}
+                  </ComCheckbox>
+                </Form.Item>
+              </Col>
+            </Row>
+            {/*<div style={{ display: showAdvanced ? 'inherit' : 'none' }}>*/}
+            <div>
               <Form.Item name="composeYaml">
                 <CodeCom />
               </Form.Item>
-              <ComEllipsis>{formatMessage('uns.optionalBehaviors')}</ComEllipsis>
-              <Row>
-                <Col span={12}>
-                  <Form.Item name="routerTrim" valuePropName="checked">
-                    <ComCheckbox
-                      tooltip={{
-                        title: formatMessage('uns.stripPathPlaceholder'),
-                      }}
-                    >
-                      {formatMessage('uns.stripPath')}
-                    </ComCheckbox>
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="keepHost" valuePropName="checked">
-                    <ComCheckbox
-                      tooltip={{
-                        title: formatMessage('uns.preserveHostPlaceholder'),
-                      }}
-                    >
-                      {formatMessage('uns.preserveHost')}
-                    </ComCheckbox>
-                  </Form.Item>
-                </Col>
-              </Row>
             </div>
           </Form>
         );
