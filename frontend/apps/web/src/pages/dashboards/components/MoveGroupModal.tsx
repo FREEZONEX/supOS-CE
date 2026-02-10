@@ -98,8 +98,8 @@ const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ ref
                 rules: [{ required: true, message: formatMessage('common.select') }],
                 properties: {
                   isRequest: visible,
-                  api: (key?: string) =>
-                    getGroupList({ page: 1, pageSize: 1000, key, type }).then((res) => {
+                  api: (name?: string) =>
+                    getGroupList({ page: 1, pageSize: 1000, name, type }).then((res) => {
                       return [
                         {
                           label: formatMessage('uns.rootDirectory'),

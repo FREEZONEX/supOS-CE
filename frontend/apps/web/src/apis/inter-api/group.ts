@@ -25,6 +25,6 @@ export const optGroup = async ({ bizId, id, status }: { bizId: string; id: strin
 
 // 获取分组列表 type 1-sourceflow 2-eventflow 3-datasource ,  page , size
 export const getGroupList = async (params?: Record<string, unknown>) =>
-  api.get('//by-type', {
+  api.get('/by-type', {
     params,
   });
