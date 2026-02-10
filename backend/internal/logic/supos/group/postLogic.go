@@ -36,15 +36,25 @@ func NewPostLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PostLogic {
 }
 
 func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err error) {
+
 	name := *req.Name
 	if req.Name == nil || name == "" {
 		return nil, errors.Parameter.WithMsg("组名称不能为空")
 	}
-
 	db := stores.GetCommonConn(l.ctx)
 	groupMapper := &relationDB.GroupMapper{}
 
 	if utf8.RuneCountInString(name) > 255 {
+		message := I18nUtils.GetMessage("group.name.maxLength")
+		return nil, errors.Database.WithMsg(message).AddDetail(err)
+	}
+
+	var desc string
+	if req.Description != nil {
+		desc = *req.Description
+	}
+
+	if utf8.RuneCountInString(desc) > 255 {
 		message := I18nUtils.GetMessage("group.name.maxLength")
 		return nil, errors.Database.WithMsg(message).AddDetail(err)
 	}
