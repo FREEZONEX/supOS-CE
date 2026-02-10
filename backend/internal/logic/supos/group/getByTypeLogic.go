@@ -36,7 +36,11 @@ func (l *GetByTypeLogic) GetByType(req *types.GroupByTypeQuery) (resp *types.Gro
 
 	// 使用 groupDao 查询
 	groupMapper := &relationDB.GroupMapper{}
-	groups, err := groupMapper.SelectByType(db, req.Type, *req.Name)
+	name := ""
+	if req.Name != nil {
+		name = *req.Name
+	}
+	groups, err := groupMapper.SelectByType(db, req.Type, name)
 	if err != nil {
 		l.Errorf("根据类型查询组列表失败: %v", err)
 		return nil, errors.Database.WithMsg("查询组列表失败").AddDetail(err)

@@ -287,7 +287,7 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 				FROM uns_dashboard u
 				WHERE u.group_id = g.id
    			) AS has_children
-		FROM resource_group g
+		FROM resource_group g where g.type = 3
 		UNION ALL
 		SELECT
 		    u.id AS id,
