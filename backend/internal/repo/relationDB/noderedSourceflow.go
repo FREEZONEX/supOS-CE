@@ -143,6 +143,9 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
 	// ---------- sorting ----------
 	sortSQL := " ORDER BY sort DESC"
 	if req.OrderCode != "" {
+		if req.OrderCode == "createAt" {
+			req.OrderCode = "create_at"
+		}
 		// 如果有指定排序字段，替换默认的 create_at 字段
 		ascDesc := "DESC"
 		if req.IsAsc {
@@ -151,7 +154,7 @@ func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
 		sortSQL += fmt.Sprintf(", %s %s", req.OrderCode, ascDesc)
 	} else {
 		// 默认使用 create_at 降序
-		sortSQL += ", createAt DESC"
+		sortSQL += ", create_at DESC"
 	}
 
 	// ---------- pagination ----------
