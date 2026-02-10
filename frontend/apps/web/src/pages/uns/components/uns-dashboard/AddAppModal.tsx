@@ -8,9 +8,6 @@ import ComDraggerUpload from '@/components/com-dragger-upload';
 import usePropsValue from '@/hooks/usePropsValue.ts';
 import { ContainerSoftware, FolderAdd, Wikis } from '@carbon/icons-react';
 import styles from './index.module.scss';
-import CodeMirror from '@uiw/react-codemirror';
-import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
-import codeStyles from '@/theme/codemirror.module.scss';
 import { yaml } from '@codemirror/lang-yaml';
 import ComEllipsis from '@/components/com-ellipsis';
 import ComCheckbox from '@/components/com-checkbox';
@@ -18,6 +15,7 @@ import { installApp } from '@/apis/inter-api/app.ts';
 import { fetchBaseStore } from '@/stores/base';
 import jsYaml from 'js-yaml';
 import { type Diagnostic, linter, lintGutter } from '@codemirror/lint';
+import ProCodemirror from '@/components/pro-codemirror';
 
 export interface AddAppModalRef {
   onOpen: (type: number, props?: any) => void;
@@ -225,45 +223,34 @@ const CodeCom = ({ value, onChange }: { value?: string; onChange?: (v: string) =
         <ContainerSoftware size={16} />
         <ComEllipsis>{formatMessage('uns.containerConfiguration')}</ComEllipsis>
       </Flex>
-      <div
-        style={{
-          borderRadius: 4,
-          border: '1px solid rgb(198, 198, 198)',
-          padding: 16,
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-        className={codeStyles['custom-theme']}
-      >
-        <CodeMirror
-          theme={codemirrorTheme}
-          onChange={onChange}
-          value={value}
-          height={'200px'}
-          extensions={[
-            yaml(),
-            linter((view) => {
-              const diagnostics: Diagnostic[] = [];
-              const doc = view.state.doc.toString();
-              try {
-                jsYaml.load(doc);
-              } catch (e: any) {
-                if (e.mark) {
-                  diagnostics.push({
-                    from: e.mark.position,
-                    to: e.mark.position + 1,
-                    severity: 'error',
-                    message: e.reason,
-                  });
-                }
+      <ProCodemirror
+        showExpanded
+        onChange={onChange}
+        value={value}
+        height={'200px'}
+        extensions={[
+          yaml(),
+          linter((view) => {
+            const diagnostics: Diagnostic[] = [];
+            const doc = view.state.doc.toString();
+            try {
+              jsYaml.load(doc);
+            } catch (e: any) {
+              if (e.mark) {
+                diagnostics.push({
+                  from: e.mark.position,
+                  to: e.mark.position + 1,
+                  severity: 'error',
+                  message: e.reason,
+                });
               }
-              return diagnostics;
-            }),
-            lintGutter(),
-          ]}
-          placeholder={placeholder}
-        />
-      </div>
+            }
+            return diagnostics;
+          }),
+          lintGutter(),
+        ]}
+        placeholder={placeholder}
+      />
     </div>
   );
 };
