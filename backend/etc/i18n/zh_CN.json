@@ -1800,5 +1800,11 @@
   "group.notfound": "组不存在",
   "group.update.failed": "更新组失败",
   "group.update.success": "更新成功",
-  "group.name.isnotblank": "组名称不能为空"
+  "group.name.isnotblank": "组名称不能为空",
+  "group.cleanbiz.query.failed": "查询分组关联的业务数据失败",
+  "group.sourceflow.delete.failed": "删除 source flow 失败",
+  "group.eventflow.delete.failed": "删除 event flow 失败",
+  "group.dashboard.delete.failed": "删除 dashboard 失败",
+  "group.delete.failed": "删除组失败",
+  "group.delete.success": "删除成功"
 }

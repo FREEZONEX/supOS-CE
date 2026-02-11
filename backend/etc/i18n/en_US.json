@@ -1798,5 +1798,11 @@
   "group.notfound": "Group not found",
   "group.update.failed": "Failed to update group",
   "group.update.success": "Updated successfully",
-  "group.name.isnotblank": "Group name cannot be empty"
+  "group.name.isnotblank": "Group name cannot be empty",
+  "group.cleanbiz.query.failed": "Failed to query business data associated with the group",
+  "group.sourceflow.delete.failed": "Failed to delete source flow",
+  "group.eventflow.delete.failed": "Failed to delete event flow",
+  "group.dashboard.delete.failed": "Failed to delete dashboard",
+  "group.delete.failed": "Failed to delete group",
+  "group.delete.success": "Deleted successfully"
 }
