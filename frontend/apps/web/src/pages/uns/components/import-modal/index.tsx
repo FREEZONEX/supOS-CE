@@ -1,10 +1,11 @@
 import { type FC, useImperativeHandle, useState } from 'react';
-import { Flex, Segmented } from 'antd';
+import { Flex, Segmented, Tooltip } from 'antd';
 import { useTranslate } from '@/hooks';
 import ProModal from '@/components/pro-modal';
 import './index.scss';
 import ImportDom from '@/pages/uns/components/import-modal/ImportDom.tsx';
 import JsonDom from '@/pages/uns/components/import-modal/JsonDom.tsx';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 
 export interface ImportModalProps {
   initTreeData: any;
@@ -33,8 +34,32 @@ const Module: FC<ImportModalProps> = (props) => {
       open={open}
       onCancel={onCloseModal}
       title={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'start',
+            alignItems: 'center',
+            cursor: 'pointer',
+            width: 'fit-content',
+          }}
+        >
           <span>{formatMessage('common.import')}</span>
+          <Tooltip
+            title={
+              <div>
+                {formatMessage('uns.supportScope')}
+                <div>
+                  •{' '}
+                  {formatMessage('uns.overallProject', {
+                    text: `UNS、${formatMessage('home.sourceFlow')}、${formatMessage('home.eventFlow')}、${formatMessage('home.dashboard')}`,
+                  })}
+                </div>
+                <div>• {formatMessage('uns.singleFile', { text: `UNS JSON${formatMessage('common.file')}` })}</div>
+              </div>
+            }
+          >
+            <QuestionCircleOutlined />
+          </Tooltip>
         </div>
       }
       width={460}
@@ -51,11 +76,11 @@ const Module: FC<ImportModalProps> = (props) => {
                 options={[
                   {
                     value: 'document',
-                    label: formatMessage('uns.importAll'),
+                    label: formatMessage('common.all'),
                   },
                   {
                     value: 'json',
-                    label: 'JSON',
+                    label: 'UNS',
                   },
                 ]}
                 value={type}

@@ -106,12 +106,12 @@ const ProCodemirror = (props: ProCodemirrorProps) => {
           {isExpanded ? (
             <Button color="default" variant="text">
               <ChevronUp size={16} />
-              <span style={{ marginLeft: 4 }}>{formatMessage('uns.showMore')}</span>
+              <span style={{ marginLeft: 4 }}>{formatMessage('uns.showLess')}</span>
             </Button>
           ) : (
             <Button color="default" variant="text">
               <ChevronDown size={16} />
-              <span style={{ marginLeft: 4 }}>{formatMessage('uns.showLess')}</span>
+              <span style={{ marginLeft: 4 }}>{formatMessage('uns.showMore')}</span>
             </Button>
           )}
         </div>

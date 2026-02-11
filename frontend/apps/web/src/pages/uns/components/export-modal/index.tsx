@@ -24,6 +24,7 @@ export interface ExportModalProps {
 }
 
 const Tab = ({ form }: { form: FormInstance }) => {
+  const formatMessage = useTranslate();
   const { tabType, setTabType, checkedKeys, allChecked } = useTreeStore((state) => ({
     tabType: state.tabType,
     setTabType: state.setTabType,
@@ -89,7 +90,7 @@ const Tab = ({ form }: { form: FormInstance }) => {
           label: (
             <Flex gap={4} align="center">
               <ComStatusDot status={othersStatus} />
-              <span>Others</span>
+              <span>{formatMessage('common.others')}</span>
             </Flex>
           ),
         },
