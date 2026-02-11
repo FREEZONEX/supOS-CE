@@ -76,6 +76,7 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
         indexUrl: value?.menuUrl,
         openType: 0,
         urlType: 2,
+        routeSource: 1,
         stripPath: value?.stripPath || false,
         iconUrl: value?.iconPath,
         preserveHost: value?.preserveHost || false,
