@@ -70,6 +70,15 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
       imageUrl: value?.imageConfig?.type === 'registry' ? value?.imageConfig?.imageUrl : undefined,
       iconFile: undefined,
       imageConfig: undefined,
+      menu: {
+        name: value?.name,
+        description: value?.description,
+        indexUrl: value?.menuUrl,
+        openType: 1,
+        stripPath: value?.stripPath,
+        iconUrl: value?.iconPath,
+        preserveHost: value?.preserveHost,
+      },
     }).then(() => {
       message.success(formatMessage('common.optsuccess'));
       onClose?.();
