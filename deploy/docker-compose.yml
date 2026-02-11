@@ -74,7 +74,10 @@ services:
       - UNS_ADD_BATCH_SIZE=1000
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
+      - ${VOLUMES_PATH}/edge/attachment/:/app/go-edge/attachment/
+      - ${VOLUMES_PATH}/edge/apps/:/app/data/apps/
       - /etc/docker/certs:/certs
+
     ports:
       - "18998:8080"
     networks:
@@ -375,6 +378,9 @@ services:
       KONG_PLUGINS: bundled,supos-auth-checker,supos-url-transformer
       KONG_PG_POOL_SIZE: 2
       KONG_LOG_LEVEL: error
+      KONG_NGINX_HTTP_PROXY_CONNECT_TIMEOUT: 300000
+      KONG_NGINX_HTTP_PROXY_SEND_TIMEOUT: 300000
+      KONG_NGINX_HTTP_PROXY_READ_TIMEOUT: 300000
     volumes:
       - ${VOLUMES_PATH}/kong/certificationfile:/etc/kong/ssl:ro
       - ${VOLUMES_PATH}/kong/kong_config.yml:/etc/kong/kong_config.yml
