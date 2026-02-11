@@ -1,0 +1,112 @@
+info(
+    title: "Attachment Management"
+    desc: "Manage file attachments"
+    author: "System"
+    version: "v1"
+)
+
+@server(
+    group: supos/attachment
+    prefix: /inter-api/supos/attachment
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "Upload attachment"
+    @handler uploadAttachment
+    post /upload (UploadAttachmentRequest) returns (UploadAttachmentResponse)
+
+    @doc "Download attachment"
+    @handler downloadAttachment
+    get /download (DownloadAttachmentRequest) returns ()
+
+    @doc "Delete attachment"
+    @handler deleteAttachment
+    delete /delete (DeleteAttachmentRequest) returns (DeleteAttachmentResponse)
+
+    @doc "List attachments"
+    @handler listAttachments
+    get /list (ListAttachmentsRequest) returns (ListAttachmentsResponse)
+}
+
+type (
+    // Request types
+    UploadAttachmentRequest {
+        File *multipart.FileHeader `form:"file"`
+        Category string `form:"category,optional"`
+        Description string `form:"description,optional"`
+        Tags []string `form:"tags,optional"`
+    }
+
+    DownloadAttachmentRequest {
+        FileID string `form:"fileId"`
+        Filename string `form:"filename,optional"`
+    }
+
+    DeleteAttachmentRequest {
+        FileID string `form:"fileId"`
+    }
+
+    ListAttachmentsRequest {
+        Category string `form:"category,optional"`
+        Tag string `form:"tag,optional"`
+        Page int `form:"page,optional,default=1"`
+        PageSize int `form:"pageSize,optional,default=20"`
+    }
+
+    // Response types
+    UploadAttachmentResponse {
+        Code int `json:"code"`
+        Message string `json:"message,optional"`
+        Data UploadResult `json:"data"`
+    }
+
+    DeleteAttachmentResponse {
+        Code int `json:"code"`
+        Message string `json:"message,optional"`
+        Data DeleteResult `json:"data"`
+    }
+
+    ListAttachmentsResponse {
+        Code int `json:"code"`
+        Message string `json:"message,optional"`
+        Data ListResult `json:"data"`
+        Total int `json:"total"`
+    }
+
+    // Data types
+    UploadResult {
+        FileID string `json:"fileId"`
+        Filename string `json:"filename"`
+        FileSize int64 `json:"fileSize"`
+        FileType string `json:"fileType"`
+        MD5 string `json:"md5"`
+        UploadTime string `json:"uploadTime"`
+        DownloadURL string `json:"downloadUrl"`
+    }
+
+    DeleteResult {
+        FileID string `json:"fileId"`
+        Success bool `json:"success"`
+    }
+
+    ListResult {
+        Items []AttachmentInfo `json:"items"`
+        Page int `json:"page"`
+        PageSize int `json:"pageSize"`
+        TotalPages int `json:"totalPages"`
+    }
+
+    AttachmentInfo {
+        FileID string `json:"fileId"`
+        Filename string `json:"filename"`
+        FileSize int64 `json:"fileSize"`
+        FileType string `json:"fileType"`
+        Category string `json:"category,optional"`
+        Description string `json:"description,optional"`
+        Tags []string `json:"tags,optional"`
+        MD5 string `json:"md5"`
+        UploadTime string `json:"uploadTime"`
+        Uploader string `json:"uploader,optional"`
+        DownloadCount int64 `json:"downloadCount"`
+    }
+)

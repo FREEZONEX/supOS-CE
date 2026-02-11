@@ -6,6 +6,7 @@ import (
 	"backend/internal/common/errors"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net"
 	"net/url"
@@ -172,8 +173,9 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 		return errors.NewBuzError(500, "menu.save.failed")
 	}
 	for _, existShowName := range existShowNames {
-		if existShowName.Name != menuDto.Name {
-			return errors.NewBuzError(500, "menu.showname.exist")
+		if existShowName.Name == menuDto.Name {
+			log.Printf("菜单已经存在： %s", menuDto.ShowName)
+			return nil
 		}
 	}
 

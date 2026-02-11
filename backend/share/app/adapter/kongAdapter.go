@@ -1,20 +1,20 @@
 package adapter
 
 import (
-	"backend/internal/adapters/kong/dto"
 	"backend/internal/adapters/kong/logic"
+	"backend/internal/repo/relationDB"
 	"backend/share/app/model"
 	"context"
 	"fmt"
 	"log"
-	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kong/go-kong/kong"
 )
 
-func RegisterRouter(vendorName string, appName string, host string, port int) error {
+func RegisterRouter(appHost string, port int, stripPath bool) error {
 	// 1. 初始化 Kong 客户端
 	client, err := kong.NewClient(kong.String("http://kong:8001"), nil)
 	if err != nil {
@@ -22,8 +22,8 @@ func RegisterRouter(vendorName string, appName string, host string, port int) er
 	}
 
 	// 定义服务名和路由路径
-	serviceName := fmt.Sprintf("%s-%s-service", vendorName, appName)
-	routePath := fmt.Sprintf("/apps/%s-%s", vendorName, appName)
+	serviceName := appHost
+	routePath := fmt.Sprintf("/apps/%s", appHost)
 
 	ctx := context.Background()
 
@@ -32,7 +32,7 @@ func RegisterRouter(vendorName string, appName string, host string, port int) er
 	newService := &kong.Service{
 		Name:     kong.String(serviceName),
 		Protocol: kong.String("http"),
-		Host:     kong.String(host),
+		Host:     kong.String(appHost),
 		Port:     kong.Int(port),
 	}
 
@@ -46,14 +46,12 @@ func RegisterRouter(vendorName string, appName string, host string, port int) er
 			return err
 		}
 		// 3. 注册 Route
-		routeName := fmt.Sprintf("%s-%s-route", vendorName, appName)
+		routeName := appHost
 		newRoute := &kong.Route{
-			Name:  kong.String(routeName),
-			Paths: kong.StringSlice(routePath),
-			// 将此路由绑定到刚刚创建的 Service
-			Service: service,
-			// 是否在转发时剥离匹配的路径前缀
-			StripPath: kong.Bool(true),
+			Name:      kong.String(routeName),
+			Paths:     kong.StringSlice(routePath),
+			Service:   service,
+			StripPath: kong.Bool(stripPath),
 		}
 
 		// 判断route是否存在
@@ -68,82 +66,193 @@ func RegisterRouter(vendorName string, appName string, host string, port int) er
 		}
 	}
 	return nil
-
 }
 
-func SaveMenu(showName string, desc string, indexUrl string) error {
-	// 从 indexUrl 中提取 IP 和端口
-	ip, port, err := extractHostAndPort(indexUrl)
+func SaveMenu(menu *model.MenuModel) error {
+	log.Printf("[app]: 开始保存菜单: %s, indexUrl: %s", menu.Name, menu.IndexUrl)
+
+	// 1. 解析indexUrl，分离host和port
+	host, port, err := parseIndexUrl(menu.IndexUrl)
 	if err != nil {
-		return fmt.Errorf("解析 indexUrl 失败: %v", err)
+		log.Printf("[app]: 解析indexUrl失败: %v", err)
+		return fmt.Errorf("解析indexUrl失败: %v", err)
 	}
 
-	// 构建服务名称（使用域名格式）
-	appDomain := fmt.Sprintf("%s-%d", ip, port)
-	// 替换点号为横杠，使其符合域名格式
-	appDomain = strings.ReplaceAll(appDomain, ".", "-")
+	log.Printf("[app]: 解析结果 - Host: %s, Port: %d", host, port)
 
-	menuDto := &dto.MenuDto{
-		ServiceName: appDomain,
-		Name:        appDomain,
-		ShowName:    showName,
-		Description: desc,
-		BaseURL:     indexUrl,
-		IsMenu:      true,
+	// 2. 调用RegisterRouter，注册kong的service和router
+	if err := RegisterRouter(host, port, menu.StripPath); err != nil {
+		log.Printf("[app]: 注册Kong路由失败: %v", err)
+		return fmt.Errorf("注册Kong路由失败: %v", err)
 	}
-	// 创建 MenuLogic 实例
-	menuLogic := logic.NewMenuLogic("kong", 8001)
-	// 方式1：完整创建菜单
-	return menuLogic.CreateMenu(menuDto, true)
+
+	log.Printf("[app]: Kong路由注册成功")
+
+	// 3. 将菜单数据保存到数据库表supos_resource
+	if err := saveMenuToDatabase(menu); err != nil {
+		log.Printf("[app]: 保存菜单到数据库失败: %v", err)
+		// 注意：这里不返回错误，因为Kong路由已经注册成功
+		// 数据库保存失败不影响路由功能
+	}
+
+	log.Printf("[app]: 菜单保存完成: %s", menu.Name)
+	return nil
 }
 
-// extractHostAndPort 从 URL 中提取主机和端口
-func extractHostAndPort(urlStr string) (string, int, error) {
-	// 确保 URL 有协议前缀
-	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
-		urlStr = "http://" + urlStr
+// parseIndexUrl 解析indexUrl，分离host和port
+func parseIndexUrl(indexUrl string) (string, int, error) {
+	if indexUrl == "" {
+		return "", 0, fmt.Errorf("indexUrl不能为空")
 	}
 
-	// 解析 URL
-	parsedURL, err := url.Parse(urlStr)
-	if err != nil {
-		return "", 0, fmt.Errorf("URL 解析失败: %v", err)
+	// 移除协议前缀
+	url := indexUrl
+	if strings.HasPrefix(url, "http://") {
+		url = strings.TrimPrefix(url, "http://")
+	} else if strings.HasPrefix(url, "https://") {
+		url = strings.TrimPrefix(url, "https://")
 	}
 
-	// 提取主机和端口
-	host := parsedURL.Hostname()
-	if host == "" {
-		return "", 0, fmt.Errorf("URL 中未找到主机名")
-	}
+	// 分割host和port
+	var host string
+	var port int = 80 // 默认端口
 
-	portStr := parsedURL.Port()
-	port := 80 // 默认 HTTP 端口
+	if strings.Contains(url, ":") {
+		parts := strings.Split(url, ":")
+		if len(parts) != 2 {
+			return "", 0, fmt.Errorf("无效的URL格式: %s", indexUrl)
+		}
+		host = parts[0]
+		portStr := parts[1]
 
-	if portStr != "" {
+		// 移除端口后的路径（如果有）
+		if strings.Contains(portStr, "/") {
+			portStr = strings.Split(portStr, "/")[0]
+		}
+
+		// 转换端口为整数
 		portInt, err := strconv.Atoi(portStr)
 		if err != nil {
-			return "", 0, fmt.Errorf("端口解析失败: %v", err)
+			return "", 0, fmt.Errorf("无效的端口号: %s", portStr)
 		}
 		port = portInt
 	} else {
-		// 根据协议设置默认端口
-		if parsedURL.Scheme == "https" {
-			port = 443
+		// 没有端口号，使用默认端口
+		host = url
+		// 移除路径部分（如果有）
+		if strings.Contains(host, "/") {
+			host = strings.Split(host, "/")[0]
 		}
+	}
+
+	// 验证host
+	if host == "" {
+		return "", 0, fmt.Errorf("无法解析host: %s", indexUrl)
 	}
 
 	return host, port, nil
 }
 
-func deleteMenu(appConf *model.AppConfig) {
+// saveMenuToDatabase 将菜单数据保存到数据库表supos_resource
+func saveMenuToDatabase(menu *model.MenuModel) error {
+	log.Printf("[app]: 开始保存菜单到数据库: %s", menu.Name)
+
+	// 创建上下文
+	ctx := context.Background()
+
+	// 获取数据库连接
+	db := relationDB.GetDb(ctx)
+	if db == nil {
+		log.Printf("[app]: 无法获取数据库连接")
+		return fmt.Errorf("无法获取数据库连接")
+	}
+
+	// 检查是否已存在相同code的菜单
+	var existingCount int64
+	err := db.Model(&relationDB.SuposResource{}).
+		Where("code = ?", menu.Name).
+		Count(&existingCount).Error
+	if err != nil {
+		log.Printf("[app]: 查询现有菜单失败: %v", err)
+		return fmt.Errorf("查询现有菜单失败: %v", err)
+	}
+	// 父级菜单
+	var p int64 = 4
+	// 创建菜单资源对象
+	menuResource := &relationDB.SuposResource{
+		ParentID:        &p,
+		Code:            menu.Name,
+		NameCode:        stringPtr(menu.Name),
+		URL:             stringPtr(menu.IndexUrl),
+		DescriptionCode: stringPtr(menu.Description),
+		URLType:         intPtr(2),
+		Type:            2,              // 假设1表示菜单类型
+		OpenType:        intPtr(1),      // 默认打开类型
+		Sort:            intPtr(0),      // 默认排序
+		Enable:          boolPtr(true),  // 启用
+		EditEnable:      boolPtr(true),  // 可编辑
+		HomeEnable:      boolPtr(true),  // 非首页
+		Fixed:           boolPtr(false), // 非固定
+		Icon:            stringPtr(menu.IconUrl),
+		CreateAt:        time.Now(),
+		UpdateAt:        time.Now(),
+	}
+
+	// 根据stripPath设置URL类型
+	urlType := 0 // 默认类型
+	if menu.StripPath {
+		urlType = 1 // 剥离路径类型
+	}
+	menuResource.URLType = &urlType
+
+	log.Printf("[app]: 菜单资源对象创建成功: Code=%s, URL=%s", menuResource.Code, *menuResource.URL)
+
+	// 保存到数据库
+	if existingCount > 0 {
+		// 更新现有记录
+		err = db.Model(&relationDB.SuposResource{}).
+			Where("code = ?", menu.Name).
+			Updates(menuResource).Error
+		if err != nil {
+			log.Printf("[app]: 更新菜单到数据库失败: %v", err)
+			return fmt.Errorf("更新菜单到数据库失败: %v", err)
+		}
+		log.Printf("[app]: 菜单更新到数据库成功: %s", menu.Name)
+	} else {
+		// 创建新记录
+		err = db.Create(menuResource).Error
+		if err != nil {
+			log.Printf("[app]: 保存菜单到数据库失败: %v", err)
+			return fmt.Errorf("保存菜单到数据库失败: %v", err)
+		}
+		log.Printf("[app]: 菜单保存到数据库成功: %s (ID: %d)", menu.Name, menuResource.ID)
+	}
+
+	return nil
+}
+
+func deleteMenu(appName string) {
 	// 创建 MenuLogic 实例
 	menuLogic := logic.NewMenuLogic("kong", 8001)
 
 	// 删除菜单
-	err := menuLogic.DeleteMenu(fmt.Sprintf("%s-%s", appConf.VendorName, appConf.Name))
+	err := menuLogic.DeleteMenu(appName)
 	if err != nil {
 		log.Printf("删除菜单失败: %v", err)
 	} else {
 		log.Println("菜单删除成功")
 	}
+}
+
+// Helper functions for pointer creation
+func intPtr(i int) *int {
+	return &i
+}
+
+func boolPtr(b bool) *bool {
+	return &b
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

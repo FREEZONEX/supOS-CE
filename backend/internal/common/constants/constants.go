@@ -188,7 +188,7 @@ func init() {
 	UnsOverdueDelete = getEnvAsInt("UNS_HISTORY_OVER_DUE", 7)
 	TokenMaxAge = getEnvAsInt("TOKEN_MAX_AGE", 3600)
 
-	// Initialize the set of system fields
+	// InitializeEndpointId the set of system fields
 	SystemFields = map[string]struct{}{
 		SystemSeqTag:       {},
 		SysFieldID:         {},

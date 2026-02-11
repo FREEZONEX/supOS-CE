@@ -3,11 +3,12 @@ package app
 import (
 	"net/http"
 
-	"github.com/zeromicro/go-zero/rest/httpx"
-	"backend/internal/types"
 	"backend/internal/logic/supos/app"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"backend/share/app/model"
+
+	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 // ListInstalledAppsHandler 获取已安装应用列表
@@ -39,11 +40,8 @@ func InstallAppsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			Description: req.Description,
 			ImagePath:   req.ImagePath,
 			ImageUrl:    req.ImageUrl,
-			IconPath:    req.IconPath,
-			MenuUrl:     req.MenuUrl,
+			Menu:        req.Menu,
 			ComposeYaml: req.ComposeYaml,
-			RouterTrim:  req.RouterTrim,
-			KeepHost:    req.KeepHost,
 		}
 
 		// 验证模型
@@ -58,10 +56,10 @@ func InstallAppsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
 			httpx.OkJsonCtx(r.Context(), w, map[string]interface{}{
-				"code": 200,
+				"code":    200,
 				"message": "安装成功",
 				"data": map[string]interface{}{
-					"name": featureModel.Name,
+					"name":    featureModel.Name,
 					"success": true,
 				},
 			})

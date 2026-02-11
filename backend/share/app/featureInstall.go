@@ -17,6 +17,7 @@ func InstallFeature(fc *model.NewFeatureModel) error {
 	if err := fc.Validate(); err != nil {
 		return err
 	}
+
 	// 加载镜像
 	switch fc.GetImageSource() {
 	case "local":
@@ -32,13 +33,15 @@ func InstallFeature(fc *model.NewFeatureModel) error {
 			}
 		}
 	}
-	// 部署docker compose文件
-	defaultNetwork := "tier0_edge_network"
-	if err := adapter.DeployComposeYaml(fc.ComposeYaml, defaultNetwork); err != nil {
-		return err
+	if fc.ComposeYaml != "" {
+		// 部署docker compose文件
+		defaultNetwork := "tier0_edge_network"
+		if err := adapter.DeployComposeYaml(fc.ComposeYaml, defaultNetwork); err != nil {
+			return err
+		}
 	}
 	// 注册菜单
-	if err := adapter.SaveMenu(fc.Name, fc.Description, fc.MenuUrl); err != nil {
+	if err := adapter.SaveMenu(fc.Menu); err != nil {
 		return err
 	}
 	// 将应用配置写到本地文件,文件名为fc.Name.json
@@ -75,7 +78,7 @@ func saveFeatureConfig(fc *model.NewFeatureModel) error {
 	}
 
 	// 5. 记录日志
-	log.Printf("功能配置已保存: %s, 安装时间: %s", fc.Name, fc.InstallTime)
+	log.Printf("[app]: 功能配置已保存: %s, 安装时间: %s", fc.Name, fc.InstallTime)
 	return nil
 }
 

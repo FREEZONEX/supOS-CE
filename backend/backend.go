@@ -36,7 +36,10 @@ func main() {
 		confFile = "etc/backend-local.yaml"
 	}
 	utils.ConfMustLoad(confFile, &c)
-	server := rest.MustNewServer(c.RestConf, rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
+	// 设置最大请求体大小为2GB
+	c.MaxBytes = 2 * 1024 * 1024 * 1024
+	server := rest.MustNewServer(c.RestConf,
+		rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
 	defer server.Stop()
 
 	system.SetLogLevel(c.Log.Level)

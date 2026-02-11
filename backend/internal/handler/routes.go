@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	suposapp "backend/internal/handler/supos/app"
+	suposattachment "backend/internal/handler/supos/attachment"
 	suposauth "backend/internal/handler/supos/auth"
 	suposdevtools "backend/internal/handler/supos/devtools"
 	suposeventflow "backend/internal/handler/supos/eventflow"
@@ -726,7 +727,33 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		),
 		rest.WithPrefix("/inter-api/supos"),
 	)
-
+	// 添加通用附件管理路由
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 上传附件
+					Method:  http.MethodPost,
+					Path:    "/attachment/upload",
+					Handler: suposattachment.UploadAttachmentHandler(serverCtx),
+				},
+				{
+					// 下载附件
+					Method:  http.MethodGet,
+					Path:    "/attachment/download",
+					Handler: suposattachment.DownloadAttachmentHandler(serverCtx),
+				},
+				{
+					// 列出附件
+					Method:  http.MethodGet,
+					Path:    "/attachment/list",
+					Handler: suposattachment.ListAttachmentsHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos"),
+	)
 	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},

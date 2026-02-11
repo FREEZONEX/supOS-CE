@@ -1,6 +1,7 @@
 package model
 
 import (
+	"backend/internal/common/errors"
 	"backend/share/app/util"
 	"fmt"
 	"os"
@@ -25,24 +26,10 @@ type NewFeatureModel struct {
 	// ImageUrl 镜像URL（远程镜像地址）
 	ImageUrl string `json:"imageUrl" yaml:"imageUrl"`
 
-	// IconPath 图标文件路径
-	IconPath string `json:"iconPath" yaml:"iconPath"`
-
-	// MenuUrl 菜单URL地址
-	MenuUrl string `json:"menuUrl" yaml:"menuUrl"`
-
 	// ComposeYaml Docker Compose配置内容
 	ComposeYaml string `json:"composeYaml" yaml:"composeYaml"`
 
-	// RouterTrim 路由路径是否去除前缀
-	// true: 去除匹配的路由前缀
-	// false: 保留完整路径
-	RouterTrim bool `json:"routerTrim" yaml:"routerTrim"`
-
-	// KeepHost 是否保持原始主机头
-	// true: 保持原始请求的主机头
-	// false: 使用目标服务的主机头
-	KeepHost bool `json:"keepHost" yaml:"keepHost"`
+	Menu *MenuModel `json:"menu" yaml:"menu"`
 
 	InstallTime string `json:"installTime,omitempty"`
 }
@@ -59,7 +46,7 @@ func (m *NewFeatureModel) Validate() error {
 	}
 	// 验证该名称是否已经存在
 	fullPath := filepath.Join(util.AppInstalledDir, m.Name)
-	if _, err := os.Stat(fullPath); err != nil {
+	if _, err := os.Stat(fullPath); err == nil {
 		return fmt.Errorf("app name has been used")
 	}
 
@@ -81,32 +68,12 @@ func (m *NewFeatureModel) Validate() error {
 		}
 	}
 
-	// 验证图标文件是否存在（如果提供了图标路径）
-	if m.IconPath != "" {
-		if _, err := os.Stat(m.IconPath); os.IsNotExist(err) {
-			return fmt.Errorf("图标文件不存在: %s", m.IconPath)
-		}
-
-		// 验证图标文件格式
-		ext := filepath.Ext(m.IconPath)
-		supportedIconExts := []string{".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico"}
-		valid := false
-		for _, supportedExt := range supportedIconExts {
-			if strings.EqualFold(ext, supportedExt) {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return fmt.Errorf("不支持的图标文件格式: %s，仅支持 %v 格式", ext, supportedIconExts)
-		}
-	}
-
 	// 验证菜单URL格式（如果提供了菜单URL）
-	if m.MenuUrl != "" {
-		if !strings.HasPrefix(m.MenuUrl, "http") {
-			return fmt.Errorf("菜单URL格式不正确，应以 'http' 开头，包含容器名和端口")
-		}
+	if m.Menu == nil {
+		return errors.NewAppErrorWithMsg("menu can't be empty")
+	}
+	if err := m.Menu.Validate(); err != nil {
+		return err
 	}
 
 	// 验证Docker Compose配置（如果提供了）

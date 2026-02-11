@@ -98,31 +98,15 @@ type SearchAppsRequest struct {
 
 // InstallAppRequest 安装应用请求
 type InstallAppRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description,optional"`
-	ImagePath   string `json:"imagePath,optional"`
-	ImageUrl    string `json:"imageUrl,optional"`
-	IconPath    string `json:"iconPath,optional"`
-	MenuUrl     string `json:"menuUrl"`
-	ComposeYaml string `json:"composeYaml"`
-	RouterTrim  bool   `json:"routerTrim,optional,default=true"`
-	KeepHost    bool   `json:"keepHost,optional,default=false"`
+	Name        string           `json:"name"`
+	Description string           `json:"description,optional"`
+	ImagePath   string           `json:"imagePath,optional"`
+	ImageUrl    string           `json:"imageUrl,optional"`
+	Menu        *model.MenuModel `json:"menu"`
+	ComposeYaml string           `json:"composeYaml"`
 }
 
 // UninstallAppRequest 卸载应用请求
 type UninstallAppRequest struct {
 	Name string `path:"name"`
-}
-
-// UpdateAppRequest 更新应用请求
-type UpdateAppRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description,optional"`
-	ImagePath   string `json:"imagePath,optional"`
-	ImageUrl    string `json:"imageUrl,optional"`
-	IconPath    string `json:"iconPath,optional"`
-	MenuUrl     string `json:"menuUrl,optional"`
-	ComposeYaml string `json:"composeYaml,optional"`
-	RouterTrim  *bool  `json:"routerTrim,optional"`
-	KeepHost    *bool  `json:"keepHost,optional"`
 }
