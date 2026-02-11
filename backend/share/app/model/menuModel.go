@@ -41,11 +41,6 @@ type MenuModel struct {
 // Validate 验证菜单模型字段
 func (m *MenuModel) Validate() error {
 
-	// 验证 Name 字段
-	if err := validateName(m.Name); err != nil {
-		return err
-	}
-
 	// 验证 IndexUrl 字段
 	if err := validateIndexUrl(m.IndexUrl); err != nil {
 		return err
