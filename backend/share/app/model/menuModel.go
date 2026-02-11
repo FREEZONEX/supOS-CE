@@ -70,7 +70,7 @@ func (m *MenuModel) ValidateForCreate() error {
 
 	// 创建时 Name 必须非空
 	if strings.TrimSpace(m.Name) == "" {
-		return errors.Parameter.WithMsg(fmt.Sprintf("菜单名称不能为空"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("menu.name.empty"))
 	}
 
 	return nil
@@ -147,17 +147,17 @@ func validateDisplayName(displayName string) error {
 
 func validateIndexUrl(indexUrl string) error {
 	if strings.TrimSpace(indexUrl) == "" {
-		return errors.Parameter.WithMsg(fmt.Sprintf("菜单URL不能为空"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("menu.url.empty"))
 	}
 
 	// 检查URL格式
 	if !isValidUrlOrPath(indexUrl) {
-		return errors.Parameter.WithMsg(fmt.Sprintf("无效的菜单索引URL格式，必须是有效的URL或路径"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("menu.url.invalid"))
 	}
 
 	// URL长度限制
 	if len(indexUrl) > 500 {
-		return errors.Parameter.WithMsg(fmt.Sprintf("菜单索引URL长度不能超过500个字符"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("menu.url.length.exceed"))
 	}
 
 	return nil
@@ -171,12 +171,12 @@ func validateIconUrl(iconUrl string) error {
 
 	// 检查图标URL格式
 	if !isValidUrlOrPath(iconUrl) {
-		return errors.Parameter.WithMsg(fmt.Sprintf("无效的图标URL格式，必须是有效的URL或路径"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("menu.icon.url.invalid"))
 	}
 
 	// URL长度限制
 	if len(iconUrl) > 500 {
-		return errors.Parameter.WithMsg(fmt.Sprintf("图标URL长度不能超过500个字符"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("menu.icon.url.exceed"))
 	}
 
 	return nil
@@ -190,7 +190,7 @@ func validateDescription(description string) error {
 
 	// 描述长度限制
 	if len(description) > 200 {
-		return errors.Parameter.WithMsg(fmt.Sprintf("菜单描述长度不能超过200个字符"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("menu.desc.exceed"))
 	}
 
 	return nil

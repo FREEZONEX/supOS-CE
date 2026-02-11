@@ -209,13 +209,6 @@ func saveMenuToDatabase(menu *model.MenuModel) error {
 		UpdateAt:        time.Now(),
 	}
 
-	// 根据stripPath设置URL类型
-	urlType := 0 // 默认类型
-	if menu.StripPath {
-		urlType = 1 // 剥离路径类型
-	}
-	menuResource.URLType = &urlType
-
 	log.Printf("[app]: 菜单资源对象创建成功: Code=%s, URL=%s", menuResource.Code, *menuResource.URL)
 
 	// 保存到数据库

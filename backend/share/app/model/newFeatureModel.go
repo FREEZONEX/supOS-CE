@@ -37,27 +37,27 @@ type NewFeatureModel struct {
 // Validate 验证模型数据的有效性
 func (m *NewFeatureModel) Validate() error {
 	if m.Name == "" {
-		return errors.Parameter.WithMsg(fmt.Sprintf("app name can't be empty"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("app.name.empty"))
 	}
 
 	// 验证非法字符
 	if !ValidateFilenameBasic(m.Name) {
-		return fmt.Errorf("app name contains invalid characters")
+		return fmt.Errorf("app.name.invalid")
 	}
 	// 验证该名称是否已经存在
 	fullPath := filepath.Join(util.AppInstalledDir, m.Name)
 	if _, err := os.Stat(fullPath); err == nil {
-		return errors.Parameter.WithMsg(fmt.Sprintf("app name has been used"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("app.name.exist"))
 	}
 
 	// 镜像路径和URL至少需要提供一个
 	if m.ImagePath == "" && m.ImageUrl == "" {
-		return errors.Parameter.WithMsg(fmt.Sprintf("镜像路径和镜像URL至少需要提供一个"))
+		return errors.Parameter.WithMsg(fmt.Sprintf("app.image.empty"))
 	}
 
 	// 验证菜单URL格式（如果提供了菜单URL）
 	if m.Menu == nil {
-		return errors.Parameter.WithMsg("menu can't be empty")
+		return errors.Parameter.WithMsg("menu.empty")
 	}
 	if err := m.Menu.Validate(); err != nil {
 		return err
@@ -67,7 +67,7 @@ func (m *NewFeatureModel) Validate() error {
 	if m.ComposeYaml != "" {
 		// 简单的YAML格式验证
 		if !strings.Contains(m.ComposeYaml, "services:") {
-			return errors.Parameter.WithMsg(fmt.Sprintf("Docker Compose配置格式不正确，应包含 'services' 字段"))
+			return errors.Parameter.WithMsg(fmt.Sprintf("app.compose.content.empty"))
 		}
 	}
 
@@ -126,24 +126,24 @@ func (m *NewFeatureModel) GetImageIdentifier() string {
 func LoadFromFile(filePath string) (*NewFeatureModel, error) {
 	// 检查文件是否存在
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("配置文件不存在: %s", filePath)
+		return nil, errors.Parameter.WithMsg(fmt.Sprintf("配置文件不存在: %s", filePath))
 	}
 
 	// 读取文件内容
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("读取配置文件失败: %v", err)
+		return nil, errors.Parameter.WithMsg(fmt.Sprintf("读取配置文件失败: %v", err))
 	}
 
 	// 解析YAML
 	var model NewFeatureModel
 	if err := yaml.Unmarshal(data, &model); err != nil {
-		return nil, fmt.Errorf("解析YAML配置失败: %v", err)
+		return nil, errors.Parameter.WithMsg(fmt.Sprintf("解析YAML配置失败: %v", err))
 	}
 
 	// 验证模型
 	if err := model.Validate(); err != nil {
-		return nil, fmt.Errorf("配置验证失败: %v", err)
+		return nil, errors.Parameter.WithMsg(fmt.Sprintf("配置验证失败: %v", err))
 	}
 
 	return &model, nil
