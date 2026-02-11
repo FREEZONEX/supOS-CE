@@ -4,6 +4,7 @@
 package group
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/logic/supos/eventflow"
 	"backend/internal/logic/supos/sourceflow"
 	dashboardLogic "backend/internal/logic/supos/uns/dashboard"
@@ -11,6 +12,7 @@ import (
 	"backend/internal/svc"
 	"backend/internal/types"
 	"context"
+	"strconv"
 
 	"gitee.com/unitedrhino/share/stores"
 
@@ -42,13 +44,13 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 		l.Errorf("查询组失败: %v", err)
 		return &types.JsonResult{
 			Code: 500,
-			Msg:  "查询组失败: " + err.Error(),
+			Msg:  I18nUtils.GetMessage("group.query.failed") + ": " + err.Error(),
 		}, nil
 	}
 	if group == nil {
 		return &types.JsonResult{
 			Code: 400,
-			Msg:  "组不存在",
+			Msg:  I18nUtils.GetMessage("group.notfound"),
 		}, nil
 	}
 
@@ -58,7 +60,7 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 		l.Errorf("查询分组关联的业务数据失败: %v", err)
 		return &types.JsonResult{
 			Code: 500,
-			Msg:  "查询分组关联的业务数据失败: " + err.Error(),
+			Msg:  I18nUtils.GetMessage("group.cleanbiz.query.failed") + ": " + err.Error(),
 		}, nil
 	}
 
@@ -71,15 +73,11 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 				continue
 			}
 			req := &types.SourceFlowDeleteReq{
-				ID: flow.FlowID,
+				ID: strconv.FormatInt(flow.ID, 10),
 			}
 			err = sourceflow.NewDeleteSourceFlowLogic(l.ctx, l.svcCtx).DeleteSourceFlow(req)
 			if err != nil {
 				l.Errorf("删除 source flow 失败: %v", err)
-				//return &types.JsonResult{
-				//	Code: 500,
-				//	Msg:  "删除 source flow 失败: " + err.Error(),
-				//}, nil
 			}
 		}
 
@@ -87,15 +85,11 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 		// 删除 event flow
 		for _, flow := range eventFlows {
 			req := &types.EventFlowDeleteReq{
-				ID: flow.FlowID,
+				ID: strconv.FormatInt(flow.ID, 10),
 			}
 			err = eventflow.NewDeleteEventFlowLogic(l.ctx, l.svcCtx).DeleteEventFlow(req)
 			if err != nil {
 				l.Errorf("删除 event flow 失败: %v", err)
-				//return &types.JsonResult{
-				//	Code: 500,
-				//	Msg:  "删除 event flow 失败: " + err.Error(),
-				//}, nil
 			}
 		}
 
@@ -105,10 +99,6 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 			_, err = dashboardLogic.NewDeleteLogic(l.ctx, l.svcCtx).Delete(d.ID)
 			if err != nil {
 				l.Errorf("删除 dashboard 失败: %v", err)
-				//return &types.JsonResult{
-				//	Code: 500,
-				//	Msg:  "删除 dashboard 失败: " + err.Error(),
-				//}, nil
 			}
 		}
 
@@ -121,13 +111,13 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 		l.Errorf("删除组失败: %v", err)
 		return &types.JsonResult{
 			Code: 500,
-			Msg:  "删除组失败: " + err.Error(),
+			Msg:  I18nUtils.GetMessage("group.delete.failed") + ": " + err.Error(),
 		}, nil
 	}
 
 	return &types.JsonResult{
 		Code: 200,
-		Msg:  "success",
+		Msg:  I18nUtils.GetMessage("group.delete.success"),
 		Data: nil,
 	}, nil
 }

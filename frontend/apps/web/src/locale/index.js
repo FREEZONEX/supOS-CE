@@ -378,7 +378,7 @@ const messages = {
   'home.uns': 'UNS',
   'home.sourceFlow': '数据连接',
   'home.eventFlow': '事件流程',
-  'home.dashboard': '仪表盘',
+  'home.dashboard': '数据看板',
   'home.noExport': '无已导出文件',
   'home.fiveRecord': '最近5条导出记录',
   'home.exportSuccess': '执行成功,请稍后在已导出中查看',
@@ -506,7 +506,7 @@ const messages = {
   'uns.autoDashboard': '生成数据看板',
   'uns.deleteAutoFlow': '删除数据连接',
   'uns.deleteAutoDashboard': '删除数据看板',
-  'uns.dashboard': '仪表盘',
+  'uns.dashboard': '数据看板',
   'uns.type': '类型',
   'uns.minute': '分钟',
   'uns.second': '秒',
@@ -781,6 +781,9 @@ const messages = {
   'uns.preserveHostPlaceholder': '保留原始主机头',
   'uns.uploading': '正在上传',
   'uns.uploadError': '上传失败',
+  'uns.supportScope': '支持范围',
+  'uns.overallProject': '完整项目: {text}',
+  'uns.singleFile': '单个文件: {text}',
 
   //公共通用模块
   'common.url': '地址',

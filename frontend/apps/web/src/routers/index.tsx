@@ -195,7 +195,7 @@ export const childrenRoutes = [
     Component: DevPage,
     handle: {
       showName: 'devPage',
-      type: 'dev',
+      type: 'all',
     },
   },
   {
