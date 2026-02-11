@@ -74,10 +74,11 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
         name: value?.name,
         description: value?.description,
         indexUrl: value?.menuUrl,
-        openType: 1,
-        stripPath: value?.stripPath,
+        openType: 0,
+        urlType: 2,
+        stripPath: value?.stripPath || false,
         iconUrl: value?.iconPath,
-        preserveHost: value?.preserveHost,
+        preserveHost: value?.preserveHost || false,
       },
     }).then(() => {
       message.success(formatMessage('common.optsuccess'));
@@ -154,7 +155,7 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
                 withCredentials={true}
                 onActionChange={(image) => {
                   if (image?.file?.status === 'done') {
-                    form.setFieldValue('iconPath', image?.file?.response?.data?.storagePath);
+                    form.setFieldValue('iconPath', image?.file?.response?.data?.downloadUrl);
                   }
                 }}
               />
@@ -182,7 +183,7 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
             <ComEllipsis>{formatMessage('uns.optionalBehaviors')}</ComEllipsis>
             <Row>
               <Col span={12}>
-                <Form.Item name="routerTrim" valuePropName="checked">
+                <Form.Item name="stripPath" valuePropName="checked">
                   <ComCheckbox
                     tooltip={{
                       title: formatMessage('uns.stripPathPlaceholder'),
@@ -193,7 +194,7 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="keepHost" valuePropName="checked">
+                <Form.Item name="preserveHost" valuePropName="checked">
                   <ComCheckbox
                     tooltip={{
                       title: formatMessage('uns.preserveHostPlaceholder'),
@@ -310,7 +311,7 @@ const ImageCom = ({
             setV((pre: ImageComProps) => ({
               ...pre,
               image: image?.fileList,
-              imagePath: image?.fileList?.[0]?.response?.data?.storagePath,
+              imagePath: image?.fileList?.[0]?.response?.data?.fileId,
             }));
           }}
         >

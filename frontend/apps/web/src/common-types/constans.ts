@@ -21,6 +21,7 @@ export const STORAGE_PATH = '/files/system/resource';
 export const CUSTOM_MENU_ICON = '/inter-api/supos/uns/attachment'; // 自定义上传icon位置
 export const CUSTOM_MENU_ICON_PRE = '/uns/'; // 自定义上传icon位置
 export const CUSTOM_MENU_ICON_PRE1 = '__templates__'; // 自定义上传icon位置
+export const CUSTOM_APP_ICON_PRE = '/inter-api/supos/attachment/download'; // 明河app上传icon位置
 // 菜单放的路径
 export const MENU_TARGET_PATH = '/supos';
 // 高阶使用等放的路径
