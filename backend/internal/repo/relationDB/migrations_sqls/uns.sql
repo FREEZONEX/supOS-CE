@@ -313,3 +313,25 @@ CREATE TABLE if not exists "uns_mount_extend" (
 alter table uns_namespace add if not exists "parent_data_type" int2 NULL;
 
 alter table uns_dashboard add if not exists "need_init" bool DEFAULT false;
+
+CREATE TABLE if not exists "resource_group" (
+"id" BIGSERIAL PRIMARY KEY,
+"type" int2 NOT NULL,
+"name" varchar(255)  NOT NULL,
+"description" varchar(512) ,
+"sort" int4,
+"creator" varchar(128) NULL,
+"create_at" timestamptz(6) DEFAULT now(),
+"update_at" timestamptz(6) DEFAULT now()
+);
+COMMENT ON COLUMN "resource_group"."type" IS '1-sourceFlow 2-eventFlow 3-dashboard';
+
+alter table uns_dashboard add if not exists "group_id" int8 null default NULL;
+alter table supos_node_flows add if not exists "group_id" int8 null default NULL;
+
+CREATE TABLE if not exists "resource_app_key" (
+"id" BIGSERIAL PRIMARY KEY,
+"app_secret_key" varchar(200) NOT NULL,
+"app_secret_value" varchar(200) NOT NULL,
+"status" int2 default 1,
+"create_time" timestamptz(6) DEFAULT now());

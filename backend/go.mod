@@ -9,12 +9,14 @@ require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.6.0
+	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/expr-lang/expr v1.17.6
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/goburrow/cache v0.1.4
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
+	github.com/h2non/gock v1.2.0
 	github.com/jinzhu/copier v0.4.0
 	github.com/kong/go-kong v0.72.1
 	github.com/lib/pq v1.10.9
@@ -50,6 +52,7 @@ require (
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
 	github.com/hibiken/asynq v0.25.1 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

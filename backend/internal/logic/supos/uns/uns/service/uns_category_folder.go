@@ -5,13 +5,14 @@ import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
-	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
 	"context"
 	"strings"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 // buildCategoryFolderDto 构建分类文件夹DTO
@@ -26,7 +27,7 @@ func buildCategoryFolderDto(parentAlias *string, mountType *int16, mountSource *
 		dto.MountType = mountType
 	} else {
 		// 没有父别名的情况
-		dto.Alias = PathUtil.GenerateAliasWithRandom("_" + strings.ToLower(fdt.Name()) + "_")
+		dto.Alias = "_" + strings.ToLower(fdt.Name()) + "_"
 		dto.ParentAlias = nil
 	}
 
@@ -43,6 +44,11 @@ func buildCategoryFolderDto(parentAlias *string, mountType *int16, mountSource *
 
 // appendCategoryFolders 追加分类文件夹
 func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types.CreateTopicDto, errorTip map[string]string) []*types.CreateTopicDto {
+	logx.WithContext(ctx).Debugfn(func() any {
+		return "before:uns: [" + strings.Join(base.Map(dtos, func(e *types.CreateTopicDto) string {
+			return e.Alias
+		}), ",") + "]"
+	})
 	// 收集所有非空的 parentAlias
 	parentAliasList := base.MapKeys(base.MapArrayToMap[*types.CreateTopicDto, string, bool](dtos, func(dto *types.CreateTopicDto) (ok bool, k string, v bool) {
 		pa := dto.ParentAlias
@@ -230,6 +236,10 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			validTopicDtos = append(validTopicDtos, categoryDto)
 		}
 	}
-
+	logx.WithContext(ctx).Debugfn(func() any {
+		return "After:uns: [" + strings.Join(base.Map(validTopicDtos, func(e *types.CreateTopicDto) string {
+			return e.Alias
+		}), ",") + "]"
+	})
 	return validTopicDtos
 }

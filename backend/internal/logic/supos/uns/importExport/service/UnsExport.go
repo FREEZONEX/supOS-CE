@@ -70,7 +70,7 @@ func (l *UnsImportExportService) doExport(w http.ResponseWriter, attachmentName 
 	if len(msg) > 0 {
 		w.Header().Set("X-Msg", msg)
 	}
-	l.streamedExportUns(w, req)
+	l.streamedExportUns(w, &req.UnsExportParam)
 }
 
 func label2FileData(lb *dao.UnsLabel) *FileData {
@@ -80,8 +80,18 @@ func (l *UnsImportExportService) labelCsv2FileData(headers, values []string) *Fi
 	return &FileData{Name: values[0]}
 }
 
+func (l *UnsImportExportService) ExportStream(ctx context.Context, arg *types.GlobalExportParam) (exporter func(writer io.Writer)) {
+	if req := arg.UnsExportParam; req != nil {
+		return func(writer io.Writer) {
+			l.streamedExportUns(writer, req)
+		}
+	} else {
+		return nil
+	}
+}
+
 // 流式写入json 返回给客户端
-func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *types.ExportReq) {
+func (l *UnsImportExportService) streamedExportUns(out io.Writer, exportReq *types.UnsExportParam) {
 	fmt.Fprintln(out, "{") //开始 JSON 对象
 	//if flusher, ok := w.(http.Flusher); ok {
 	//	flusher.Flush()

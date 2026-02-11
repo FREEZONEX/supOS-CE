@@ -95,7 +95,7 @@ func SaveBatch(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsDat
 			}
 			var batch = &pgx.Batch{}
 			for _, table := range segment {
-				sql, params := getInsertStatement(&table.Uns.CreateTopicDto, table.Data)
+				sql, params := getInsertStatement(table.Uns, table.Data)
 				logx.Debugf("insert sql: %s, values: %+v", sql, params)
 				batch.Queue(sql, params...)
 			}

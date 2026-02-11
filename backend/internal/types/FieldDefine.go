@@ -147,8 +147,13 @@ func (f *FieldDefine) GetLastTime() int64 {
 func (f *FieldDefine) tryFillLastValue() {
 	if uns, ok := f.Uns.(*UnsDefinition); ok && UnsLastValueFill != nil {
 		UnsLastValueFill(uns)
+
 		if f.LastTime == 0 {
-			f.LastTime = -1
+			uns.Lock.Lock()
+			if f.LastTime == 0 {
+				f.LastTime = -1
+			}
+			uns.Lock.Unlock()
 		}
 	}
 }

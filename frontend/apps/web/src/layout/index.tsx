@@ -29,7 +29,6 @@ const Module = () => {
     systemInfo: state.systemInfo,
   }));
 
-  console.log(systemInfo.enableAi);
   // const systemInfo = useBaseStore((state) => state.systemInfo);
   const formatMessage = useTranslate();
   const copilotCatRef = useRef<CopilotRefProps>(null);

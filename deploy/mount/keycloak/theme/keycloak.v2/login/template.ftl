@@ -36,7 +36,7 @@
         </#list>
     </#if>
     <title>${msg("loginTitle",(realm.displayName!''))}</title>
-    <link rel="icon" type="image/svg+xml" href="/files/system/resource/supos/logo-ico-edge.svg" id="dynamic-favicon"/>
+    <link rel="icon" type="image/svg+xml" href="/files/system/resource/supos/logo-ico.svg" id="dynamic-favicon"/>
     <#if properties.stylesCommon?has_content>
         <#list properties.stylesCommon?split(' ') as style>
             <link href="${url.resourcesCommonPath}/${style}" rel="stylesheet" />
@@ -85,13 +85,12 @@
 <div class="${properties.kcLogin!}">
   <div class="pf-v5-c-login-left">
     <div class="pf-v5-c-login-l-top">
-      <img class="supos-login-slogan" src="${url.resourcesPath}/img/supos-edge-logo.svg" />
-<#--      <div class="pf-v5-c-login-l-t-right"></div>-->
+      <img class="supos-login-slogan" src="" />
+      <#-- <div class="pf-v5-c-login-l-t-right"></div> -->
     </div>
-<#--    <div class="pf-v5-c-login-l-bottom">-->
-<#--      <img class="supos-logo" src="" />-->
-<#--      <div>${msg("customIndustrialOperatingSystem")}</div>-->
-<#--    </div>-->
+    <div class="pf-v5-c-login-l-bottom">
+      <img class="supos-logo" src="" />
+    </div>
   </div>
   <div class="${properties.kcLoginContainer!}">
     <main class="${properties.kcLoginMain!}" id="main" style="display:none;">

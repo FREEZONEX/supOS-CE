@@ -26,9 +26,9 @@
   font-weight: bold;
   background-color: var(--pf-v5-global--BackgroundColor--light-300);
   /* background-image: url("../img/login-background.png"); */
-  background-size: 100% auto;
+  background-size: cover;
   background-repeat: no-repeat;
-  background-position: bottom;
+  background-position: center;
 }
 
 .pf-v5-c-login-l-top {
@@ -58,9 +58,7 @@
 }
 
 .supos-logo {
-  height: 40px;
-  width: 100px;
-  margin-right: 10px;
+  width: 300px;
 }
 
 .pf-v5-c-login__main {

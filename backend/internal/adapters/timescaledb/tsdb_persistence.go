@@ -71,8 +71,8 @@ func persistence(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsD
 	}
 	return nil
 }
-func column2uns(cols []string, reference *types.UnsDefinition) *types.CreateTopicDto {
-	var uns = &types.CreateTopicDto{Fields: make([]*types.FieldDefine, 0, 32), TableName: "uns_timeserial",
+func column2uns(cols []string, reference *types.UnsDefinition) *types.UnsDefinition {
+	var uns = types.CreateTopicDto{Fields: make([]*types.FieldDefine, 0, 32), TableName: "uns_timeserial",
 		DataSrcID: types.SrcJdbcTypeTimeScaleDB.Id()}
 	for _, col := range cols {
 		fd := &types.FieldDefine{
@@ -88,9 +88,9 @@ func column2uns(cols []string, reference *types.UnsDefinition) *types.CreateTopi
 
 		uns.Fields = append(uns.Fields, fd)
 	}
-	return uns
+	return &types.UnsDefinition{CreateTopicDto: uns}
 }
-func copyAndMergeFromTempTable(conn *pgxpool.Conn, uns *types.CreateTopicDto, defaultSchema string, params copyParams) error {
+func copyAndMergeFromTempTable(conn *pgxpool.Conn, uns *types.UnsDefinition, defaultSchema string, params copyParams) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*15)
 	defer cancel()
 	tx, err := conn.Begin(ctx)
@@ -146,30 +146,32 @@ func copyAndMergeFromTempTable(conn *pgxpool.Conn, uns *types.CreateTopicDto, de
 	// 4. 提交事务，提交时临时表自动销毁
 	return tx.Commit(ctx)
 }
-func fixTable(conn *pgxpool.Conn, uns *types.CreateTopicDto) error {
+func fixTable(conn *pgxpool.Conn, uns *types.UnsDefinition) error {
 	info, er := postgresql.ListTableInfos(conn, []string{uns.TableName})
 	if er != nil {
 		return er
 	}
-	tableInfo := info[uns.TableName]
 	// 构建当前字段类型映射
 	curFieldTypes := make(map[string]*types.FieldDefine)
 	for _, field := range uns.Fields {
 		curFieldTypes[field.Name] = field
 	}
 	renameColSQL := ""
-	for field, Type := range tableInfo.FieldTypes {
-		_, exists := curFieldTypes[field]
-		if !exists {
-			if Type == types.FieldTypeLong && field != constants.SystemSeqTag && !strings.Contains(field, "_") {
-				renameColSQL = "ALTER TABLE " + uns.TableName + ` RENAME COLUMN "` + field + `" TO "` + constants.QosField + `"`
+	tableInfo := info[uns.TableName]
+	if tableInfo != nil {
+		for field, Type := range tableInfo.FieldTypes {
+			_, exists := curFieldTypes[field]
+			if !exists {
+				if Type == types.FieldTypeLong && field != constants.SystemSeqTag && !strings.Contains(field, "_") {
+					renameColSQL = "ALTER TABLE " + uns.TableName + ` RENAME COLUMN "` + field + `" TO "` + constants.QosField + `"`
 
-				delete(curFieldTypes, constants.QosField)
+					delete(curFieldTypes, constants.QosField)
+				}
+				continue
 			}
-			continue
+			// 从映射中移除已存在的字段
+			delete(curFieldTypes, field)
 		}
-		// 从映射中移除已存在的字段
-		delete(curFieldTypes, field)
 	}
 	if len(renameColSQL) == 0 && len(curFieldTypes) == 0 {
 		return nil
@@ -241,7 +243,7 @@ func copyDataToTable(ctx context.Context, conn copyFromer, tableName string, par
 	return err
 }
 
-func mergeFromTempTable(ctx context.Context, conn pgx.Tx, uns *types.CreateTopicDto, tempTableName string) error {
+func mergeFromTempTable(ctx context.Context, conn pgx.Tx, uns *types.UnsDefinition, tempTableName string) error {
 	primaryFields := uns.GetPrimaryField()
 	// 合并数据SQL
 	mergeSQL := &base.StringBuilder{}

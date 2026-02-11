@@ -1,0 +1,109 @@
+openapi: 3.0.1
+info:
+  title: Tier0
+  description: ''
+  version: 1.0.0
+tags:
+  - name: 文件夹&文件管理
+paths:
+  /open-api/uns/attachment:
+    post:
+      summary: 文件附件上传
+      deprecated: false
+      description: ''
+      operationId: uploadUnsAttachment
+      tags:
+        - 文件夹&文件管理
+      parameters:
+        - name: alias
+          in: query
+          description: 文件别名
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  format: binary
+                  type: string
+                  description: 附件，支持多个附件上传，单个附件最大10MB
+                  example: ''
+              required:
+                - files
+            examples: {}
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 状态码 200-成功 400-参数错误 500-接口异常
+                  msg:
+                    type: string
+                    description: 响应消息
+                  data:
+                    type: object
+                    properties:
+                      list:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                              description: 附件ID
+                            unsAlias:
+                              type: string
+                              description: 文件别名
+                            originalName:
+                              type: string
+                              description: 原始名称
+                            attachmentName:
+                              type: string
+                              description: 附件名称
+                            attachmentPath:
+                              type: string
+                              description: 路径
+                            extensionName:
+                              type: string
+                              description: 扩展名
+                            createAt:
+                              type: integer
+                              description: 创建时间戳
+                        description: 附件列表
+                    description: 响应数据
+              example:
+                code: 200
+                msg: success
+                data:
+                  list:
+                    - id: 2018886520454250500
+                      unsAlias: _ffff_b80af0c5e140458288b2
+                      originalName: notification-openapi-V7.yaml
+                      attachmentName: 2018886520441667584.yaml
+                      attachmentPath: _ffff_b80af0c5e140458288b2/2018886520441667584.yaml
+                      extensionName: YAML
+                      createAt: 1770175030231
+          headers: {}
+      security:
+        - apikey-header-apikey: []
+components:
+  schemas: {}
+  responses: {}
+  securitySchemes:
+    apikey-header-apikey:
+      type: apiKey
+      in: header
+      name: apikey
+servers: []
+security:
+  - apikey-header-apikey: []

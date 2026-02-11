@@ -1,6 +1,7 @@
 package msg_consumer
 
 import (
+	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
@@ -10,9 +11,10 @@ import (
 	"backend/share/spring"
 	"context"
 	"strconv"
+	"sync"
 	"time"
 
-	"github.com/patrickmn/go-cache"
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 )
@@ -20,14 +22,24 @@ import (
 type UnsDefinitionService struct {
 	log                  logx.Logger
 	unsMapper            dao.UnsNamespaceRepo
-	cache                *cache.Cache // map[int64]*types.UnsDefinition
+	cache                *ristretto.Cache[string, *types.UnsDefinition]
+	locks                [1000]sync.RWMutex
 	persistentServiceMap map[types.SrcJdbcType]serviceApi.IPersistentService
 }
 
 func init() {
+	cache, err := ristretto.NewCache(&ristretto.Config[string, *types.UnsDefinition]{
+		NumCounters: 1e6,     // number of keys to track frequency of (1M).
+		MaxCost:     1 << 28, // maximum cost of cache (256M).
+		BufferItems: 64,      // number of keys per Get buffer.
+	})
+	if err != nil {
+		logx.Errorf("init cache err: %v", err)
+		panic(err)
+	}
 	spring.RegisterBean[*UnsDefinitionService](&UnsDefinitionService{
 		log:   logx.WithContext(context.Background()),
-		cache: cache.New(10*time.Minute, 5*time.Minute),
+		cache: cache,
 	})
 }
 
@@ -42,30 +54,38 @@ func (u *UnsDefinitionService) GetDefinitionByPath(path string) *types.UnsDefini
 	return u.getByAliasOrPath(keyPathPrev, path, u.unsMapper.GetByPath)
 }
 
-func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.UnsDefinition) {
+const costObj = 4
+const costRef = 2
+const costNil = 1
+
+func (u *UnsDefinitionService) GetDefinitionById(id int64) *types.UnsDefinition {
 	c := u.cache
-	idStr := strconv.FormatInt(id, 10)
-	vu, exist := c.Get(idStr)
-	if exist && vu != nil {
-		rs = vu.(*types.UnsDefinition)
-	} else if !exist {
+	idStr := id2key(id)
+	rs, exist := c.Get(idStr)
+	if !exist {
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
 		defer cancel()
 		db := dao.GetDb(ctx)
 		po, _ := u.unsMapper.SelectById(db, id)
 		if po != nil {
 			rs = po2dto(po)
-			c.Set(idStr, rs, 10*time.Minute)
-			c.Set(keyAliasPrev+po.Alias, idStr, 10*time.Minute)
+			c.SetWithTTL(idStr, rs, costObj, 10*time.Minute)
+			key := ""
+			if constants.UseAliasAsTopic {
+				key = alias2key(po.Alias)
+			} else {
+				key = path2key(po.Path)
+			}
+			c.SetWithTTL(key, &types.UnsDefinition{CreateTopicDto: types.CreateTopicDto{Id: rs.Id}}, costRef, 10*time.Minute)
 		} else {
-			c.Set(idStr, nil, 1*time.Minute) //占位
+			c.SetWithTTL(idStr, nil, costNil, 1*time.Minute) //占位
 		}
 	}
-	return
+	return rs
 }
 func (u *UnsDefinitionService) DeleteByIds(ids []int64) error {
 	for _, id := range ids {
-		u.cache.Delete(strconv.FormatInt(id, 10))
+		u.cache.Del(id2key(id))
 	}
 	return nil
 }
@@ -115,35 +135,58 @@ func (u *UnsDefinitionService) OnEventUpdateInstanceEvent0(ev *event.UpdateInsta
 	}
 }
 func (u *UnsDefinitionService) invalidCache(id int64, alias, path string) {
-	u.cache.Delete(strconv.FormatInt(id, 10))
-	u.cache.Delete(keyAliasPrev + alias)
-	u.cache.Delete(keyPathPrev + path)
+	u.cache.Del(id2key(id))
+	u.cache.Del(alias2key(alias))
+	u.cache.Del(path2key(path))
 }
+
+func id2key(id int64) string {
+	return strconv.FormatInt(id, 36)
+}
+func alias2key(alias string) string {
+	return keyAliasPrev + alias
+}
+func path2key(path string) string {
+	return keyPathPrev + path
+}
+
 func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query func(db *gorm.DB, arg string) (*dao.UnsNamespace, error)) (rs *types.UnsDefinition) {
 	key := kPrev + arg
 	c := u.cache
+
 	idObj, has := c.Get(key)
 	if !has {
-		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
-		defer cancel()
-		db := dao.GetDb(ctx)
-		po, _ := query(db, arg)
-		if po != nil {
-			rs = po2dto(po)
-			idStr := strconv.FormatInt(po.Id, 10)
-			c.Set(key, idStr, 10*time.Minute)
-			c.Set(idStr, rs, 10*time.Minute)
+		index := base.Abs(base.HashCode(arg)) % len(u.locks)
+		u.locks[index].Lock()
+
+		idObj, has = c.Get(key)
+		if !has {
+			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
+			defer cancel()
+			db := dao.GetDb(ctx)
+			po, _ := query(db, arg)
+			if po != nil {
+				rs = po2dto(po)
+				idKey := id2key(rs.Id)
+				c.SetWithTTL(key, &types.UnsDefinition{CreateTopicDto: types.CreateTopicDto{Id: rs.Id}}, costRef, 13*time.Minute)
+				c.SetWithTTL(idKey, rs, costObj, 10*time.Minute)
+				c.Wait()
+			} else {
+				c.SetWithTTL(key, nil, costNil, 2*time.Minute) //占位
+			}
+			u.locks[index].Unlock()
+		} else if idObj != nil {
+			u.locks[index].Unlock()
+			return u.GetDefinitionById(idObj.Id)
 		} else {
-			c.Set(key, "-1", 2*time.Minute) //占位
+			u.locks[index].Unlock()
 		}
-	} else {
-		vu, exist := c.Get(idObj.(string))
-		if exist && vu != nil {
-			rs = vu.(*types.UnsDefinition)
-		}
+	} else if idObj != nil {
+		return u.GetDefinitionById(idObj.Id)
 	}
 	return
 }
+
 func po2dto(po *dao.UnsNamespace) *types.UnsDefinition {
 	rs := UnsConverter.Po2Dto(po)
 	fields := rs.Fields

@@ -1,8 +1,11 @@
 package relationDB
 
 import (
+	"backend/internal/types"
 	"backend/share/base"
+	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -38,7 +41,16 @@ func (m *DashboardMapper) Insert(db *gorm.DB, dashboard *DashboardModel) error {
 	return nil
 }
 func (m *DashboardMapper) SaveBatch(db *gorm.DB, dashboard []*DashboardModel) error {
-	err := db.Create(dashboard).Error
+	err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(dashboard).Error
+	if err != nil {
+		logx.Errorf("failed to insert dashboard: %v", err)
+		return err
+	}
+	return nil
+}
+func (m *DashboardMapper) Save(ctx context.Context, dashboard []*DashboardModel) error {
+	db := GetDb(ctx)
+	err := db.Clauses(clause.OnConflict{DoNothing: true}).Save(dashboard).Error
 	if err != nil {
 		logx.Errorf("failed to insert dashboard: %v", err)
 		return err
@@ -228,6 +240,163 @@ func (m *DashboardMapper) DeleteBatchIds(db *gorm.DB, ids []string) error {
 		return err
 	}
 	return nil
+}
+
+// GroupedDashboardItem 分组和未分组dashboard统一返回结构
+type GroupedDashboardItem struct {
+	ID          string    `gorm:"column:id" json:"id"`                    // ID
+	Category    string    `gorm:"column:category" json:"category"`        // 分类 group-分组 file-文件
+	GroupType   int64     `gorm:"column:group_type" json:"groupType"`     // 类型：1-sourceflow 2-eventflow 3-datasource
+	Name        string    `gorm:"column:name" json:"name"`                // 名称
+	Description string    `gorm:"column:description" json:"description"`  // 描述
+	GroupID     *int64    `gorm:"column:group_id" json:"groupId"`         // 分组ID
+	Sort        int32     `gorm:"column:sort" json:"sort"`                // 排序字段
+	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`       // 创建时间
+	Creator     string    `gorm:"column:creator" json:"creator"`          // 创建人
+	HasChildren bool      `gorm:"column:has_children" json:"hasChildren"` // 是否有子节点
+}
+
+// GetGroupedDashboardList 按分组获取dashboard列表
+func (m *DashboardMapper) GetGroupedDashboardList(
+	db *gorm.DB,
+	req *types.GroupPageRequest,
+) ([]*GroupedDashboardItem, int64, error) {
+
+	var (
+		items []*GroupedDashboardItem
+		total int64
+	)
+
+	whereConditions := make([]string, 0)
+	args := make([]interface{}, 0)
+
+	// ---------- base SQL ----------
+	baseSQL := `
+		SELECT
+		    g.id::varchar AS id,
+		    'group' AS category,
+		    g.type AS group_type,
+		    g.name AS name,
+		    g.description AS description,
+		    NULL AS group_id,
+		    g.sort AS sort,
+		    g.create_at AS create_at,
+		    g.creator AS creator,
+		    EXISTS (
+				SELECT 1
+				FROM uns_dashboard u
+				WHERE u.group_id = g.id
+   			) AS has_children
+		FROM resource_group g where g.type = 3
+		UNION ALL
+		SELECT
+		    u.id AS id,
+		    'file' AS category,
+		    $1 AS group_type,
+		    u.name AS name,
+		    u.description AS description,
+		    u.group_id AS group_id,
+		    COALESCE(r.mark,0) AS sort,
+		    u.create_time AS create_at,
+			u.creator AS creator,
+			false AS has_children
+		FROM uns_dashboard u
+		LEFT JOIN uns_dashboard_top_recodes r
+		    ON u.id = r.id::varchar
+	`
+
+	// $1
+	args = append(args, req.GroupType)
+	paramIdx := 2
+
+	// ---------- WHERE conditions ----------
+
+	// groupId
+	if req.GroupId > 0 {
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("group_id = $%d", paramIdx),
+		)
+		args = append(args, req.GroupId)
+		paramIdx++
+	} else {
+		whereConditions = append(whereConditions, "group_id IS NULL")
+	}
+
+	// category
+	if req.Category != "" {
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("category = $%d", paramIdx),
+		)
+		args = append(args, req.Category)
+		paramIdx++
+	}
+
+	// keyword
+	if req.K != "" {
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf(
+				"(name ILIKE $%d OR description ILIKE $%d)",
+				paramIdx, paramIdx+1,
+			),
+		)
+		like := "%" + req.K + "%"
+		args = append(args, like, like)
+		paramIdx += 2
+	}
+
+	// ---------- final query SQL ----------
+	querySQL := baseSQL
+	if len(whereConditions) > 0 {
+		querySQL = `
+			SELECT * FROM (` + baseSQL + `) t
+			WHERE ` + strings.Join(whereConditions, " AND ")
+	}
+
+	// ---------- COUNT ----------
+	countSQL := "SELECT COUNT(*) FROM (" + querySQL + ") t"
+	if err := db.Raw(countSQL, args...).Scan(&total).Error; err != nil {
+		logx.Errorf("failed to count grouped dashboard list: %v", err)
+		return nil, 0, err
+	}
+
+	// ---------- sorting ----------
+	sortSQL := " ORDER BY sort DESC"
+	if req.OrderCode != "" {
+		// 如果有指定排序字段，替换默认的 create_at 字段
+		if req.OrderCode == "createAt" {
+			req.OrderCode = "create_at"
+		}
+
+		ascDesc := "DESC"
+		if req.IsAsc {
+			ascDesc = "ASC"
+		}
+		sortSQL += fmt.Sprintf(", %s %s", req.OrderCode, ascDesc)
+	} else {
+		// 默认使用 create_at 降序
+		sortSQL += ", create_at DESC"
+	}
+
+	// ---------- pagination ----------
+	offset := (req.PageNo - 1) * req.PageSize
+	querySQL += fmt.Sprintf(
+		"%s LIMIT $%d OFFSET $%d",
+		sortSQL, paramIdx, paramIdx+1,
+	)
+	args = append(args, req.PageSize, offset)
+
+	logx.Debugf("group sql: %s , args: %+v", querySQL, args)
+
+	// ---------- query ----------
+	if err := db.Raw(querySQL, args...).Scan(&items).Error; err != nil {
+		logx.Errorf("failed to get grouped dashboard list: %v", err)
+		return nil, 0, err
+	}
+
+	return items, total, nil
 }
 
 // SelectDashboardsToInit selects dashboards that need to be initialized.

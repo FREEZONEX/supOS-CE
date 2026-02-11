@@ -34,6 +34,152 @@
         }
       }
     },
+    "/inter-api/supos/app/secretKey": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "更新密钥状态",
+        "operationId": "supos/AppkeyUpdate",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "appSecretKey",
+                "status"
+              ],
+              "properties": {
+                "appSecretKey": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建密钥",
+        "operationId": "supos/AppkeyCreate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/secretKey/list": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询密钥列表",
+        "operationId": "supos/AppkeyList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "appSecretKey",
+                      "appSecretValue",
+                      "status",
+                      "createTime"
+                    ],
+                    "properties": {
+                      "appSecretKey": {
+                        "type": "string"
+                      },
+                      "appSecretValue": {
+                        "type": "string"
+                      },
+                      "createTime": {
+                        "type": "integer"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/secretKey/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "删除密钥",
+        "operationId": "supos/AppkeyDelete",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
     "/inter-api/supos/auth/logout": {
       "delete": {
         "produces": [
@@ -414,6 +560,10 @@
                 "flowName": {
                   "type": "string"
                 },
+                "groupId": {
+                  "description": "分组ID",
+                  "type": "integer"
+                },
                 "template": {
                   "type": "string"
                 }
@@ -488,6 +638,9 @@
                 },
                 "flowName": {
                   "type": "string"
+                },
+                "groupId": {
+                  "type": "integer"
                 },
                 "sourceId": {
                   "type": "string"
@@ -703,6 +856,159 @@
                         "type": "string"
                       },
                       "mark": {
+                        "type": "integer"
+                      },
+                      "template": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/event/getGroupedEventFlowList": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "分页按分组获取event flow列表",
+        "operationId": "supos/EventflowGetGroupedEventFlowList",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "groupType",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "name": "groupId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "k",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "分类 group-分组 file-文件",
+            "name": "category",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "creator",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "排序字段",
+            "name": "orderCode",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "boolean",
+            "description": "是否升序",
+            "name": "isAsc",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "category": {
+                        "description": "分类 group-分组 file-文件",
+                        "type": "string"
+                      },
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "flowId": {
+                        "type": "string"
+                      },
+                      "flowName": {
+                        "type": "string"
+                      },
+                      "flowStatus": {
+                        "type": "string"
+                      },
+                      "groupId": {
+                        "type": "integer"
+                      },
+                      "groupType": {
+                        "type": "integer"
+                      },
+                      "hasChildren": {
+                        "type": "boolean"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "sort": {
                         "type": "integer"
                       },
                       "template": {
@@ -1586,6 +1892,10 @@
                 "flowName": {
                   "type": "string"
                 },
+                "groupId": {
+                  "description": "分组ID",
+                  "type": "integer"
+                },
                 "template": {
                   "type": "string"
                 }
@@ -1695,6 +2005,9 @@
                 },
                 "flowName": {
                   "type": "string"
+                },
+                "groupId": {
+                  "type": "integer"
                 },
                 "sourceId": {
                   "type": "string"
@@ -1839,6 +2152,159 @@
                 },
                 "version": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/flow/getGroupedSourceFlowList": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "分页按分组获取source flow列表",
+        "operationId": "supos/SourceflowGetGroupedSourceFlowList",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "groupType",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "name": "groupId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "k",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "分类 group-分组 file-文件",
+            "name": "category",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "creator",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "排序字段",
+            "name": "orderCode",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "boolean",
+            "description": "是否升序",
+            "name": "isAsc",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "category": {
+                        "description": "分类 group-分组 file-文件",
+                        "type": "string"
+                      },
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "flowId": {
+                        "type": "string"
+                      },
+                      "flowName": {
+                        "type": "string"
+                      },
+                      "flowStatus": {
+                        "type": "string"
+                      },
+                      "groupId": {
+                        "type": "integer"
+                      },
+                      "groupType": {
+                        "type": "integer"
+                      },
+                      "hasChildren": {
+                        "type": "boolean"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "sort": {
+                        "type": "integer"
+                      },
+                      "template": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
                 }
               }
             }
@@ -2137,16 +2603,296 @@
         }
       }
     },
-    "/inter-api/supos/global/data/export": {
-      "post": {
+    "/inter-api/supos/group": {
+      "get": {
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "全局数据导出",
-        "operationId": "supos/GlobalDataExport",
+        "summary": "查询组列表",
+        "operationId": "supos/GroupGet",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "type",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "name",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "页码",
+            "name": "page",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "每页大小",
+            "name": "size",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "orders": {
+                  "description": "排序",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "field": {
+                        "description": "//排序的字段名",
+                        "type": "string"
+                      },
+                      "sort": {
+                        "description": "排序方式：0 从小到大, 1 从大到小",
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "page": {
+                  "description": "页码",
+                  "type": "integer"
+                },
+                "size": {
+                  "description": "每页大小",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "properties": {
+                  "createAt": {
+                    "type": "string"
+                  },
+                  "creator": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "sort": {
+                    "type": "integer"
+                  },
+                  "type": {
+                    "type": "integer"
+                  },
+                  "updateAt": {
+                    "type": "string"
+                  }
+                }
+              },
+              "properties": {
+                "createAt": {
+                  "type": "string"
+                },
+                "creator": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                },
+                "updateAt": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "更新组",
+        "operationId": "supos/GroupPut",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建组",
+        "operationId": "supos/GroupPost",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/group/batch": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "批量删除组",
+        "operationId": "supos/GroupBatchDelete",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "ids"
+              ],
+              "properties": {
+                "ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -2155,74 +2901,293 @@
         }
       }
     },
-    "/inter-api/supos/global/data/import": {
-      "post": {
+    "/inter-api/supos/group/by-type": {
+      "get": {
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "全局数据导入",
-        "operationId": "supos/GlobalDataImport",
+        "summary": "根据类型查询组列表",
+        "operationId": "supos/GroupGetByType",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "1-sourceflow 2-eventflow 3-datasource",
+            "name": "type",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "name",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "页码",
+            "name": "page",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "每页大小",
+            "name": "size",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "orders": {
+                  "description": "排序",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "field": {
+                        "description": "//排序的字段名",
+                        "type": "string"
+                      },
+                      "sort": {
+                        "description": "排序方式：0 从小到大, 1 从大到小",
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "page": {
+                  "description": "页码",
+                  "type": "integer"
+                },
+                "size": {
+                  "description": "每页大小",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "createAt": {
+                        "type": "string"
+                      },
+                      "creator": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "sort": {
+                        "type": "integer"
+                      },
+                      "type": {
+                        "type": "integer"
+                      },
+                      "updateAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/inter-api/supos/global/file/download": {
+    "/inter-api/supos/group/operationGroup": {
       "post": {
+        "consumes": [
+          "application/json"
+        ],
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "根据路径下载文件",
-        "operationId": "supos/GlobalFileDownload",
+        "summary": "操作分组数据（移入移出）",
+        "operationId": "supos/GroupOperationGroup",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "bizId",
+                "status"
+              ],
+              "properties": {
+                "bizId": {
+                  "description": "业务ID",
+                  "type": "string"
+                },
+                "id": {
+                  "description": "组ID",
+                  "type": "integer"
+                },
+                "status": {
+                  "description": "true移入，false移出",
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/inter-api/supos/global/user/exportRecordConfirm": {
+    "/inter-api/supos/group/operationGroupTop": {
       "post": {
+        "consumes": [
+          "application/json"
+        ],
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "确认导出记录",
-        "operationId": "supos/GlobalUserExportRecordConfirm",
+        "summary": "置顶分组",
+        "operationId": "supos/GroupOperationGroupTop",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "id",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "description": "组ID",
+                  "type": "integer"
+                },
+                "status": {
+                  "description": "true置顶（sort字段设置为1），false取消置顶(sort字段设置为0)",
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/inter-api/supos/global/user/getExportRecords": {
-      "post": {
+    "/inter-api/supos/group/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
         "produces": [
           "application/json"
         ],
         "schemes": [
           "https"
         ],
-        "summary": "获取导出记录",
-        "operationId": "supos/GlobalUserGetExportRecords",
+        "summary": "根据ID删除组",
+        "operationId": "supos/GroupDelete",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
-            "schema": {}
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -4743,6 +5708,10 @@
                       "description": {
                         "type": "string"
                       },
+                      "groupId": {
+                        "description": "分组ID",
+                        "type": "integer"
+                      },
                       "id": {
                         "type": "string"
                       },
@@ -4814,6 +5783,10 @@
                 },
                 "description": {
                   "type": "string"
+                },
+                "groupId": {
+                  "description": "分组ID",
+                  "type": "integer"
                 },
                 "id": {
                   "type": "string"
@@ -4888,6 +5861,10 @@
                 },
                 "description": {
                   "type": "string"
+                },
+                "groupId": {
+                  "description": "分组ID",
+                  "type": "integer"
                 },
                 "id": {
                   "type": "string"
@@ -5092,6 +6069,147 @@
                 "data": {},
                 "msg": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/uns/dashboard/getGroupedDashboardList": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "分页按分组获取dashboard列表",
+        "operationId": "supos/Uns/DashboardGetGroupedDashboardList",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "groupType",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "name": "groupId",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "k",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 10,
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "分类 group-分组 file-文件",
+            "name": "category",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "creator",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "排序字段",
+            "name": "orderCode",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "boolean",
+            "description": "是否升序",
+            "name": "isAsc",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "category": {
+                        "description": "分类 group-分组 file-文件",
+                        "type": "string"
+                      },
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "groupId": {
+                        "type": "integer"
+                      },
+                      "groupType": {
+                        "type": "integer"
+                      },
+                      "hasChildren": {
+                        "type": "boolean"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "sort": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
                 }
               }
             }
@@ -12220,6 +13338,77 @@
         }
       }
     },
+    "/open-api/uns/attachment": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "模板实例附件上传",
+        "operationId": "supos/OpenAttachmentUpload",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "alias",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "list": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "unsAlias",
+                      "originalName",
+                      "attachmentName",
+                      "attachmentPath",
+                      "extensionName",
+                      "createAt"
+                    ],
+                    "properties": {
+                      "attachmentName": {
+                        "type": "string"
+                      },
+                      "attachmentPath": {
+                        "type": "string"
+                      },
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "extensionName": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "originalName": {
+                        "type": "string"
+                      },
+                      "unsAlias": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/service-api/supos/flow/by/aliases": {
       "post": {
         "consumes": [
@@ -12368,7 +13557,7 @@
       }
     }
   },
-  "x-date": "2026-01-19 14:35:33",
+  "x-date": "2026-02-10 16:32:15",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

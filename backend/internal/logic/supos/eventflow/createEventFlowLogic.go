@@ -38,7 +38,11 @@ func (l *CreateEventFlowLogic) CreateEventFlow(req *types.EventFlowCreateReq) (s
 		FlowName:    req.FlowName,
 		Description: req.Description,
 		Template:    req.Template,
+		GroupId:     req.GroupId,
 	}
+	//if req.GroupId != nil {
+	//	srcReq.GroupId = req.GroupId
+	//}
 	return sourceflow.NewCreateSourceFlowLogic(l.ctx, l.svcCtx).
 		CreateFlowWithType(srcReq, constants.FlowTypeEVENTFLOW)
 }

@@ -21,48 +21,34 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
-func (l *UnsImportExportService) ImportUns(fileName string, fileSize int64, respWriter io.Writer) (w io.Writer, waiter func()) {
+func (l *UnsImportExportService) Import(ctx context.Context, fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
+	logx.WithContext(ctx).Infof("UNS导入ByReader: %s (size=%d)\n", fileName, fileSize)
+	l.ImportStream(ctx, fileName, fileSize, reader, responseWriterStatusConsumer{respWriter: respWriter}.write)
+}
 
-	l.log.Infof("UNS导入: %s (size=%d)\n", fileName, fileSize)
-	//
-	pipeReader, pipeWriter := io.Pipe()
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		//
-		l.doImport(fileName, fileSize, pipeReader, respWriter)
-		wg.Done()
-		_, _ = io.Copy(io.Discard, pipeReader) //防止坏的文件或其他意外让json没有读完导致外面的 w.Write()卡死
-	}()
-	return &noBufferWriter{tar: pipeWriter}, func() {
-		wg.Wait()
+type responseWriterStatusConsumer struct {
+	respWriter io.Writer
+}
+
+func (r responseWriterStatusConsumer) write(status *common.RunningStatus) {
+	tsJson, _ := json.Marshal(status)
+	_, er := r.respWriter.Write(append(tsJson, '\n', '\n'))
+	r.respWriter.(http.Flusher).Flush()
+	if er != nil {
+		logx.Error("导入进度发送失败:", er)
 	}
 }
-func (l *UnsImportExportService) ImportUnsDirect(fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
-	l.log.Infof("UNS导入ByReader: %s (size=%d)\n", fileName, fileSize)
-	l.doImport(fileName, fileSize, reader, respWriter)
-}
-
-type noBufferWriter struct {
-	tar io.Writer
-}
-
-func (fr *noBufferWriter) Write(p []byte) (int, error) {
-	return fr.tar.Write(p)
-}
-func (fr *noBufferWriter) ReadFrom(r io.Reader) (n int64, err error) {
-	return io.Copy(struct{ io.Writer }{fr.tar}, r)
-}
-
-func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeReader io.Reader, respWriter io.Writer) {
+func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName string, fileSize int64, reader io.Reader, statusConsumer func(status *common.RunningStatus)) {
 	var errFile *os.File
 	var errBufWriter *bufio.Writer
 	errFileRelativePath := ""
 	var errJsonEncoder *json.Encoder
 
+	log := logx.WithContext(ctx)
 	pushStatus := func(status *common.RunningStatus) {
 		task := status.Task
 		segments := strings.Split(task, ".")
@@ -71,12 +57,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 		} else if sz == 1 {
 			status.Task = I18nUtils.GetMessage(status.Task)
 		}
-		tsJson, _ := json.Marshal(status)
-		_, er := respWriter.Write(append(tsJson, '\n', '\n'))
-		respWriter.(http.Flusher).Flush()
-		if er != nil {
-			l.log.Error("导入进度发送失败:", er)
-		}
+		statusConsumer(status)
 	}
 	createErrorFile := func() bool {
 		if errFile != nil {
@@ -90,7 +71,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 		_ = os.MkdirAll(filepath.Dir(tarPath), os.ModeDir)
 		errFile, err = os.Create(tarPath)
 		if err != nil {
-			l.log.Error("创建错误提示文件失败", err, tarPath)
+			log.Error("创建错误提示文件失败", err, tarPath)
 		} else {
 			errBufWriter = bufio.NewWriter(errFile)
 			_ = errBufWriter.WriteByte('[')
@@ -106,7 +87,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 	prevTask := ""
 
 	countUns, countErr := 0, 0
-	er := jsonstream.DecodeJsonTreeToFlat(pipeReader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
+	er := jsonstream.DecodeJsonTreeToFlat(reader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
 		if prevReadSize < readSize {
 			newProgress := 20 * float64(readSize) / TOTAL_SIZE
 			if newProgress <= progress {
@@ -139,7 +120,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 			})
 			_, er := l.labelService.CreateBatch(context.Background(), labelNames)
 			if er != nil {
-				l.log.Error("创建标签失败", er)
+				log.Error("创建标签失败", er)
 			}
 		case Template, UNS:
 			if propName == UNS {
@@ -188,7 +169,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 		_ = errJsonEncoder.Encode(errNode)
 	})
 	if er != nil {
-		l.log.Error("JsonDecodeError", er)
+		log.Error("JsonDecodeError", er)
 		first := errFile == nil
 		createErrorFile()
 		if !first {

@@ -8,17 +8,19 @@ import (
 
 	suposapp "backend/internal/handler/supos/app"
 	suposattachment "backend/internal/handler/supos/attachment"
+	suposappkey "backend/internal/handler/supos/appkey"
 	suposauth "backend/internal/handler/supos/auth"
 	suposdevtools "backend/internal/handler/supos/devtools"
 	suposeventflow "backend/internal/handler/supos/eventflow"
 	suposeventflowservice_api "backend/internal/handler/supos/eventflow/service_api"
 	suposexample "backend/internal/handler/supos/example"
-	suposglobal "backend/internal/handler/supos/global"
+	suposgroup "backend/internal/handler/supos/group"
 	suposi18n "backend/internal/handler/supos/i18n"
 	suposkong "backend/internal/handler/supos/kong"
 	suposmenu "backend/internal/handler/supos/menu"
 	suposmount "backend/internal/handler/supos/mount"
 	suposnodered "backend/internal/handler/supos/nodered"
+	suposopen "backend/internal/handler/supos/open"
 	suposresource "backend/internal/handler/supos/resource"
 	supossourceflow "backend/internal/handler/supos/sourceflow"
 	supossourceflowservice_api "backend/internal/handler/supos/sourceflow/service_api"
@@ -42,6 +44,39 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 创建密钥
+					Method:  http.MethodPost,
+					Path:    "/",
+					Handler: suposappkey.CreateHandler(serverCtx),
+				},
+				{
+					// 更新密钥状态
+					Method:  http.MethodPut,
+					Path:    "/",
+					Handler: suposappkey.UpdateHandler(serverCtx),
+				},
+				{
+					// 删除密钥
+					Method:  http.MethodDelete,
+					Path:    "/:id",
+					Handler: suposappkey.DeleteHandler(serverCtx),
+				},
+				{
+					// 查询密钥列表
+					Method:  http.MethodGet,
+					Path:    "/list",
+					Handler: suposappkey.ListHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/app/secretKey"),
+	)
+
 	server.AddRoutes(
 		[]rest.Route{
 			{
@@ -140,6 +175,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: suposeventflow.ListEventFlowsHandler(serverCtx),
 				},
 				{
+					// 分页按分组获取event flow列表
+					Method:  http.MethodGet,
+					Path:    "/event/getGroupedEventFlowList",
+					Handler: suposeventflow.GetGroupedEventFlowListHandler(serverCtx),
+				},
+				{
 					// Mark a  flow by id
 					Method:  http.MethodPost,
 					Path:    "/event/mark",
@@ -224,38 +265,56 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
-					// 全局数据导出
-					Method:  http.MethodPost,
-					Path:    "/data/export",
-					Handler: suposglobal.DataExportHandler(serverCtx),
+					// 查询组列表
+					Method:  http.MethodGet,
+					Path:    "/",
+					Handler: suposgroup.GetHandler(serverCtx),
 				},
 				{
-					// 全局数据导入
+					// 创建组
 					Method:  http.MethodPost,
-					Path:    "/data/import",
-					Handler: suposglobal.DataImportHandler(serverCtx),
+					Path:    "/",
+					Handler: suposgroup.PostHandler(serverCtx),
 				},
 				{
-					// 根据路径下载文件
-					Method:  http.MethodPost,
-					Path:    "/file/download",
-					Handler: suposglobal.FileDownloadHandler(serverCtx),
+					// 更新组
+					Method:  http.MethodPut,
+					Path:    "/",
+					Handler: suposgroup.PutHandler(serverCtx),
 				},
 				{
-					// 确认导出记录
-					Method:  http.MethodPost,
-					Path:    "/user/exportRecordConfirm",
-					Handler: suposglobal.UserExportRecordConfirmHandler(serverCtx),
+					// 根据ID删除组
+					Method:  http.MethodDelete,
+					Path:    "/:id",
+					Handler: suposgroup.DeleteHandler(serverCtx),
 				},
 				{
-					// 获取导出记录
+					// 批量删除组
+					Method:  http.MethodDelete,
+					Path:    "/batch",
+					Handler: suposgroup.BatchDeleteHandler(serverCtx),
+				},
+				{
+					// 根据类型查询组列表
+					Method:  http.MethodGet,
+					Path:    "/by-type",
+					Handler: suposgroup.GetByTypeHandler(serverCtx),
+				},
+				{
+					// 操作分组数据（移入移出）
 					Method:  http.MethodPost,
-					Path:    "/user/getExportRecords",
-					Handler: suposglobal.UserGetExportRecordsHandler(serverCtx),
+					Path:    "/operationGroup",
+					Handler: suposgroup.OperationGroupHandler(serverCtx),
+				},
+				{
+					// 置顶分组
+					Method:  http.MethodPost,
+					Path:    "/operationGroupTop",
+					Handler: suposgroup.OperationGroupTopHandler(serverCtx),
 				},
 			}...,
 		),
-		rest.WithPrefix("/inter-api/supos/global"),
+		rest.WithPrefix("/inter-api/supos/group"),
 	)
 
 	server.AddRoutes(
@@ -330,6 +389,21 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: suposnodered.ProxyNodeRedFlowsHandler(serverCtx),
 			},
 		},
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// 模板实例附件上传
+					Method:  http.MethodPost,
+					Path:    "/attachment",
+					Handler: suposopen.AttachmentUploadHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/open-api/uns"),
 	)
 
 	server.AddRoutes(
@@ -416,6 +490,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Method:  http.MethodPost,
 					Path:    "/flow/deploy",
 					Handler: supossourceflow.DeploySourceFlowHandler(serverCtx),
+				},
+				{
+					// 分页按分组获取source flow列表
+					Method:  http.MethodGet,
+					Path:    "/flow/getGroupedSourceFlowList",
+					Handler: supossourceflow.GetGroupedSourceFlowListHandler(serverCtx),
 				},
 				{
 					// Mark a source flow by id
@@ -605,6 +685,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Method:  http.MethodGet,
 					Path:    "/getByUns",
 					Handler: suposunsdashboard.GetByUnsHandler(serverCtx),
+				},
+				{
+					// 分页按分组获取dashboard列表
+					Method:  http.MethodGet,
+					Path:    "/getGroupedDashboardList",
+					Handler: suposunsdashboard.GetGroupedDashboardListHandler(serverCtx),
 				},
 				{
 					// 检查 Dashboard 是否存在

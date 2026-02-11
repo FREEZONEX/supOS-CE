@@ -45,12 +45,29 @@ func DecodeJsonTreeToFlat[TreeNode any, FlatNode any](
 ) error {
 	lr := &loggedReader{tar: reader}
 	decoder := json.NewDecoder(lr)
+	return decodeJsonTreeToFlat(decoder, lr, batchSize, tree2flat, consumer, errConsumer)
+}
 
-	// 确保第一个 token 是对象开始
-	token, err := decoder.Token()
-	if err != nil {
-		return err
-	}
+// DecodeJsonTreeToFlat 把树形json流式解析为平铺结构
+func DecodeJsonTreeToFlatByJsonDecoder[TreeNode any, FlatNode any](
+	decoder *json.Decoder,
+	batchSize int,
+	tree2flat func(propName string, node, parent *TreeNode) *FlatNode,
+	consumer func(readSize int64, propName string, nodes []*FlatNode),
+	errConsumer func(node *TreeNode),
+) error {
+	return decodeJsonTreeToFlat(decoder, &loggedReader{}, batchSize, tree2flat, consumer, errConsumer)
+}
+
+// DecodeJsonTreeToFlat 把树形json流式解析为平铺结构
+func decodeJsonTreeToFlat[TreeNode any, FlatNode any](
+	decoder *json.Decoder,
+	lr *loggedReader,
+	batchSize int,
+	tree2flat func(propName string, node, parent *TreeNode) *FlatNode,
+	consumer func(readSize int64, propName string, nodes []*FlatNode),
+	errConsumer func(node *TreeNode),
+) error {
 	batchSize = max(batchSize, 1)
 	ctx := &parseContext[TreeNode, FlatNode]{
 		batchSize:   batchSize,
@@ -67,6 +84,11 @@ func DecodeJsonTreeToFlat[TreeNode any, FlatNode any](
 	{
 		var defNode TreeNode
 		ctx.fieldIndexMap, ctx.childrenName = parseJsonFields(defNode)
+	}
+	// 确保第一个 token 是对象开始
+	token, err := decoder.Token()
+	if err != nil {
+		return err
 	}
 	if delim, ok := token.(json.Delim); !ok {
 		return fmt.Errorf("expected json start")

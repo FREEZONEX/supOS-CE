@@ -69,6 +69,7 @@ func (l *CopySourceFlowLogic) CopyFlowWithType(req *types.SourceFlowCopyReq, flo
 		FlowName:    name,
 		Description: strings.TrimSpace(req.Description),
 		Template:    template,
+		GroupId:     req.GroupId,
 	}
 	record, err := flowcommon.CopyFlow(l.ctx, l.svcCtx, repo, srcID, input, client)
 	if err != nil {

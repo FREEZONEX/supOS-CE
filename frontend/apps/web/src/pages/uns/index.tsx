@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import { App } from 'antd';
 import { useDeepCompareEffect } from 'ahooks';
 import { useTranslate } from '@/hooks';
@@ -17,6 +17,8 @@ import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
 import { setAiResult, useAiStore } from '@/stores/ai-store.ts';
 import { UnsContextProvider } from './UnsContext';
+import type { PageProps } from '@/common-types.ts';
+import { useNavigate } from 'react-router';
 
 const initNode = {
   key: '',
@@ -24,7 +26,8 @@ const initNode = {
   pathType: null,
 };
 
-const Module = () => {
+const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
+  const navigate = useNavigate();
   const { treeType, selectedNode, operationFns } = useTreeStore((state) => ({
     treeType: state.treeType,
     selectedNode: state.selectedNode,
@@ -32,7 +35,7 @@ const Module = () => {
   }));
   const stateRef = useTreeStoreRef();
 
-  const { loadData, setSelectedNode, setCurrentTreeMapType } = getTreeStoreSnapshot(stateRef, (state) => ({
+  const { loadData, setSelectedNode, setCurrentTreeMapType, setTreeMap } = getTreeStoreSnapshot(stateRef, (state) => ({
     loadData: state.loadData,
     setSelectedNode: state.setSelectedNode,
     setTreeMap: state.setTreeMap,
@@ -55,6 +58,14 @@ const Module = () => {
     }
   }, [aiResult?.uns]);
 
+  useEffect(() => {
+    if (locationTreeMap) {
+      // 点击logo过来的需要跳到overview页
+      setTreeMap(true);
+      changeCurrentPath();
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [locationTreeMap]);
   // uns、template、label删除操作
   const handleDelete = (item: UnsTreeNode) => {
     const { id } = item;
@@ -156,11 +167,11 @@ const Module = () => {
   );
 };
 
-const WrapperModule = () => {
+const WrapperModule: FC<PageProps> = ({ location }) => {
   return (
     <TreeStoreProvider>
       <UnsContextProvider>
-        <Module />
+        <Module locationTreeMap={location?.state?.treeMap} />
       </UnsContextProvider>
     </TreeStoreProvider>
   );

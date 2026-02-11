@@ -1,6 +1,7 @@
 # Use official Go image as build environment
 FROM golang:1.24-alpine AS builder
-
+# 设置 Alpine 使用国内镜像源
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 # Set working directory
 WORKDIR /app
 
@@ -20,6 +21,8 @@ RUN go mod download
 # Copy source code
 COPY . .
 
+COPY swagger ./swagger
+
 # Build application - static compilation
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o backend ./backend.go
 
@@ -37,6 +40,9 @@ WORKDIR /app
 # Copy binary file from build stage
 COPY --from=builder /app/backend .
 RUN chmod +x ./backend
+
+# swagger
+#COPY --from=builder /app/swagger ./swagger
 
 # Copy configuration files from build stage
 COPY --from=builder /app/etc ./etc

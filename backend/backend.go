@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"backend/internal/common/event"
 	"backend/internal/config"
 	"backend/internal/handler"
+	service "backend/internal/logic/supos/appkey/service"
 	_ "backend/internal/logic/supos/uns/dashboard/service"
 	"backend/internal/logic/supos/uns/system"
 	_ "backend/internal/logic/supos/uns/topology/service" // 导入触发 init() 注册
@@ -20,11 +22,16 @@ import (
 	"backend/internal/svc"
 	"backend/share/spring"
 
+	"embed"
+
 	"gitee.com/unitedrhino/share/utils"
 	"github.com/zeromicro/go-zero/core/logx"
 	_ "github.com/zeromicro/go-zero/core/proc" //开启pprof采集 https://mp.weixin.qq.com/s/yYFM3YyBbOia3qah3eRVQA
 	"github.com/zeromicro/go-zero/rest"
 )
+
+//go:embed swagger/dist/*
+var swaggerFS embed.FS
 
 func main() {
 	defer utils.Recover(context.Background())
@@ -38,8 +45,21 @@ func main() {
 	utils.ConfMustLoad(confFile, &c)
 	// 设置最大请求体大小为2GB
 	c.MaxBytes = 2 * 1024 * 1024 * 1024
-	server := rest.MustNewServer(c.RestConf,
-		rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
+	// 提供 Swagger UI 静态资源
+	var opts []rest.RunOption
+	opts = append(opts, rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
+
+	swaggerSubFS, err := fs.Sub(swaggerFS, "swagger/dist")
+	if err != nil {
+		panic(err)
+	}
+
+	opts = append(opts, rest.WithFileServer(
+		"/swagger-ui",
+		http.FS(swaggerSubFS),
+	))
+
+	server := rest.MustNewServer(c.RestConf, opts...)
 	defer server.Stop()
 
 	system.SetLogLevel(c.Log.Level)
@@ -50,6 +70,14 @@ func main() {
 	server.PrintRoutes()
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	spring.RegisterBean[*svc.ServiceContext](ctx)
+
+	// 初始化 AppKeyService
+	appKeyService := spring.GetBean[*service.AppKeyService]()
+	if err := appKeyService.Init(c); err != nil {
+		logx.Errorf("Failed to initialize AppKeyService: %v", err)
+		os.Exit(-1)
+	}
+
 	spring.RefreshBeanContext()
 	_ = spring.PublishEvent(&event.ContextRefreshedEvent{SvcContext: ctx})
 	defer func() {

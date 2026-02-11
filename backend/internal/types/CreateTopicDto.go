@@ -9,13 +9,6 @@ import (
 	"strings"
 )
 
-func (c *CreateTopicDto) GetFieldDefines() *FieldDefines {
-	if c.FieldDefines == nil && len(c.Fields) > 0 {
-		c.SetFields(c.Fields)
-	}
-	return c.FieldDefines
-}
-
 // GetId 获取 Id
 func (c *CreateTopicDto) GetId() int64 {
 	return c.Id
@@ -254,19 +247,6 @@ func (c *CreateTopicDto) GetTimestampField() string {
 		}
 	}
 
-	return ""
-}
-
-// GetQualityField returns the quality field name
-func (c *CreateTopicDto) GetQualityField() string {
-	if len(c.Fields) > 2 {
-		// Find quality field (implementation depends on FieldUtils and dataSrcId.typeCode)
-		for _, f := range c.Fields {
-			if f.Type == FieldTypeLong && f.IsSystemField() && !base.P2v(f.Unique) {
-				return f.Name
-			}
-		}
-	}
 	return ""
 }
 

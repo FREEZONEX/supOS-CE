@@ -32,6 +32,14 @@ type AliasRequest struct {
 	Alias string `path:"alias"`
 }
 
+type AppKeyInfo struct {
+	ID             string `json:"id"`
+	AppSecretKey   string `json:"appSecretKey"`
+	AppSecretValue string `json:"appSecretValue"`
+	Status         int32  `json:"status"`
+	CreateTime     int64  `json:"createTime"`
+}
+
 type AttachmentDeleteReq struct {
 	ObjectName string `form:"objectName"`
 }
@@ -144,6 +152,9 @@ type ContainerInfo struct {
 	Version     string                 `json:"version,optional"`
 	Description string                 `json:"description,optional"`
 	EnvMap      map[string]interface{} `json:"envMap,optional"`
+}
+
+type CreateAppKeyReq struct {
 }
 
 type CreateFileDto struct {
@@ -283,13 +294,25 @@ type CreateUnsResult struct {
 type DashboardDto struct {
 	ID          string `json:"id,optional,omitzero"`
 	Name        string `json:"name"`
-	Type        int    `json:"type"` // 1-grafana 2-fuxa
+	Type        int    `json:"type"`                    // 1-grafana 2-fuxa
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 	NeedInit    bool   `json:"needInit,optional"`
 	Description string `json:"description,optional,omitzero"`
 	JsonContent string `json:"jsonContent,optional,omitzero"`
 	Creator     string `json:"creator,optional,omitzero"`
 	UpdateTime  string `json:"updateTime,optional,omitzero"`
 	CreateTime  string `json:"createTime,optional,omitzero"`
+}
+
+type DashboardExportParam struct {
+	GroupIds   []int64  `json:"gids,string,optional,omitempty,omitzero"`
+	DashIds    []string `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string   `json:"exportType,optional,omitempty,omitzero"`
+}
+
+type DashboardGroupPageResp struct {
+	PageResultDTO
+	Data []GroupBizVO `json:"data"`
 }
 
 type DashboardPageResp struct {
@@ -325,6 +348,10 @@ type DbFieldsInfoVoResp struct {
 	Data []FieldDefine `json:"data"`
 }
 
+type DeleteIDReq struct {
+	ID int64 `path:"id"`
+}
+
 type DetailRequest struct {
 	ID string `form:"id"`
 }
@@ -353,12 +380,14 @@ type EventFlowCopyReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"`
 }
 
 type EventFlowCreateReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 }
 
 type EventFlowDeleteReq struct {
@@ -368,6 +397,17 @@ type EventFlowDeleteReq struct {
 type EventFlowDeployReq struct {
 	ID    string                   `json:"id"`
 	Flows []map[string]interface{} `json:"flows,optional"`
+}
+
+type EventFlowExportParam struct {
+	GroupIds   []int64 `json:"gids,string,optional,omitempty,omitzero"`
+	FlowIds    []int64 `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+}
+
+type EventFlowGroupPageResp struct {
+	PageResultDTO
+	Data []GroupFlowVO `json:"data"`
 }
 
 type EventFlowInfo struct {
@@ -416,13 +456,8 @@ type ExportPathResult struct {
 }
 
 type ExportReq struct {
-	CheckSmallFile *bool   `json:"checkSmallFile,optional,omitempty,omitzero"`
-	UserId         string  `json:"userId,optional,omitempty,omitzero"`
-	Language       string  `json:"language,optional,omitempty,omitzero"`
-	ExportType     string  `json:"exportType,optional,omitempty,omitzero"`
-	FileType       string  `json:"fileType,optional,omitempty,omitzero"`
-	Folders        []int64 `json:"folders,string,optional,omitempty,omitzero"`
-	Files          []int64 `json:"files,string,optional,omitempty,omitzero"`
+	UnsExportParam
+	CheckSmallFile *bool `json:"checkSmallFile,optional,omitempty,omitzero"`
 }
 
 type ExportResp struct {
@@ -538,6 +573,14 @@ type GetUnsI18nMessagesResp struct {
 	Messages map[string]string `json:"messages"`
 }
 
+type GlobalExportParam struct {
+	Name                 string                 `json:"name,optional,omitempty,omitzero"`
+	UnsExportParam       *UnsExportParam        `json:"unsExportParam,optional,omitzero"`
+	SrcFlowExportParam   *SourceFlowExportParam `json:"sourceFlowExportParam,optional,omitzero"`
+	EventFlowExportParam *EventFlowExportParam  `json:"eventFlowExportParam,optional,omitzero"`
+	DashboardExportParam *DashboardExportParam  `json:"dashboardExportParam,optional,omitzero"`
+}
+
 type GlobalTopologyData struct {
 	ModelNum             int64             `json:"Folder"`               // Number of models (path_type=0)
 	InstanceNum          int64             `json:"File"`                 // Number of instances (path_type=2)
@@ -549,6 +592,87 @@ type GlobalTopologyData struct {
 	Protocol             map[string]int64  `json:"protocol"`             // Protocol counts: {"mqtt": 200, "opcua": 50}
 	ICMPStates           []interface{}     `json:"icmpStates"`           // ICMP ping states
 	MountStatus          map[string]string `json:"mountStatus"`          // Mount status by alias
+}
+
+type GroupBatchDeleteReq struct {
+	IDs []int64 `json:"ids"`
+}
+
+type GroupBizVO struct {
+	ID          string `json:"id"`
+	Category    string `json:"category,optional"` //分类 group-分组 file-文件
+	GroupType   *int64 `json:"groupType,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	GroupId     *int64 `json:"groupId,optional"`
+	CreateAt    int64  `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
+	HasChildren bool   `json:"hasChildren,optional"`
+}
+
+type GroupByTypeQuery struct {
+	Type int16   `form:"type"` //1-sourceflow 2-eventflow 3-datasource
+	Name *string `form:"name,optional"`
+	PageInfo
+}
+
+type GroupFlowVO struct {
+	ID          string `json:"id"`
+	Category    string `json:"category,optional"` //分类 group-分组 file-文件
+	GroupType   *int64 `json:"groupType,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	GroupId     *int64 `json:"groupId,optional"`
+	CreateAt    int64  `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
+	FlowName    string `json:"flowName,optional"`
+	FlowID      string `json:"flowId,optional"`
+	FlowStatus  string `json:"flowStatus,optional"`
+	Template    string `json:"template,optional"`
+	HasChildren bool   `json:"hasChildren,optional"`
+}
+
+type GroupIDReq struct {
+	ID int64 `path:"id"`
+}
+
+type GroupPageRequest struct {
+	GroupType int64  `form:"groupType,optional"`
+	GroupId   int64  `form:"groupId,optional"`
+	K         string `form:"k,optional"`
+	PageNo    int64  `form:"pageNo,default=1"`
+	PageSize  int64  `form:"pageSize,default=10"`
+	Category  string `form:"category,optional"` //分类 group-分组 file-文件
+	Creator   string `form:"creator,optional"`
+	OrderCode string `form:"orderCode,optional"` // 排序字段
+	IsAsc     bool   `form:"isAsc,optional"`     // 是否升序
+}
+
+type GroupPageResultVO struct {
+	PageNo   int64     `json:"pageNo"`
+	PageSize int64     `json:"pageSize"`
+	Total    int64     `json:"total"`
+	Code     int64     `json:"code"`
+	Data     []GroupVO `json:"data"`
+}
+
+type GroupQuery struct {
+	Type *int16  `form:"type,optional"`
+	Name *string `form:"name,optional"`
+	PageInfo
+}
+
+type GroupVO struct {
+	ID          int64  `json:"id"`
+	Type        *int16 `json:"type,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	UpdateAt    string `json:"updateAt,optional"`
+	CreateAt    string `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
 }
 
 type HistoryValueRequest struct {
@@ -671,6 +795,11 @@ type LabelVo struct {
 	SubscribeAt        int64  `json:"subscribeAt,omitzero"`
 }
 
+type ListAppKeyResp struct {
+	BaseResult
+	Data []*AppKeyInfo `json:"data"`
+}
+
 type ListAttachmentReq struct {
 	Alias string `form:"alias"`
 }
@@ -749,6 +878,17 @@ type MountDetailVo struct {
 	MountType   *int16 `json:"mountType,omitempty,string"`
 	MountSource string `json:"mountSource,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`
+}
+
+type OperationGroupReq struct {
+	ID     *int64  `json:"id,string"` //组ID
+	BizId  *string `json:"bizId"`     //业务ID
+	Status *bool   `json:"status"`    // true移入，false移出
+}
+
+type OperationGroupTopReq struct {
+	ID     *int64 `json:"id,string"` //组ID
+	Status *bool  `json:"status"`    // true置顶（sort字段设置为1），false取消置顶(sort字段设置为0)
 }
 
 type OperationResult struct {
@@ -958,6 +1098,14 @@ type RouteListResp struct {
 	Data []SimpleRouteVO `json:"data"`
 }
 
+type SaveGroupReq struct {
+	ID          *int64  `json:"id,string,optional"`
+	Type        *int16  `json:"type,optional"`
+	Name        *string `json:"name,optional"`
+	Description *string `json:"description,optional"`
+	Sort        *int32  `json:"sort,optional"`
+}
+
 type SaveMenuReq struct {
 	ServiceName string `form:"serviceName,optional"` // 服务名（可选）
 	Name        string `form:"name"`                 // 名称，唯一标识一个菜单
@@ -1042,12 +1190,14 @@ type SourceFlowCopyReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"`
 }
 
 type SourceFlowCreateReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 }
 
 type SourceFlowDeleteReq struct {
@@ -1062,6 +1212,17 @@ type SourceFlowDeployReq struct {
 type SourceFlowDeployResult struct {
 	FlowID  string `json:"flowId,optional"`
 	Version string `json:"version,optional"`
+}
+
+type SourceFlowExportParam struct {
+	GroupIds   []int64 `json:"gids,string,optional,omitempty,omitzero"`
+	FlowIds    []int64 `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+}
+
+type SourceFlowGroupPageResp struct {
+	PageResultDTO
+	Data []GroupFlowVO `json:"data"`
 }
 
 type SourceFlowInfo struct {
@@ -1300,6 +1461,12 @@ type UnsDataResponseVo struct {
 	ErrorFields map[string]string `json:"errorFields,omitempty"`
 }
 
+type UnsExportParam struct {
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+	Folders    []int64 `json:"folders,string,optional,omitempty,omitzero"`
+	Files      []int64 `json:"files,string,optional,omitempty,omitzero"`
+}
+
 type UnsHistoryQueryResult struct {
 }
 
@@ -1326,6 +1493,11 @@ type UnsTreeCondition struct {
 type UnsTreePageResp struct {
 	PageResultDTO
 	Data []*TopicTreeResult `json:"data,omitempty,optional"`
+}
+
+type UpdateAppKeyReq struct {
+	AppSecretKey string `json:"appSecretKey"`
+	Status       int32  `json:"status"`
 }
 
 type UpdateFileDTO struct {

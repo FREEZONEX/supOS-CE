@@ -479,13 +479,14 @@ const FormContent: FC<FormContentProps> = ({
         {
           formType: 'input',
           formProps: {
+            rules: [{ required: true }],
             name: 'alias',
             label: formatMessage('uns.alias'),
             tooltip: {
               title: formatMessage('uns.aliasTooltip'),
             },
           },
-          childProps: { disabled: true },
+          childProps: {},
         },
         {
           formType: 'input',

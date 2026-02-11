@@ -49,5 +49,5 @@ type UnsDetail interface {
 
 var _ UnsDetail = &types.InstanceDetail{}
 var _ UnsDetail = &types.ModelDetail{}
-var _ types.UnsInfo = &types.CreateTopicDto{}
+var _ types.UnsInfo = &types.UnsDefinition{}
 var _ types.UnsInfo = &dao.UnsNamespace{}

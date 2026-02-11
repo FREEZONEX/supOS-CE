@@ -102,7 +102,7 @@ services:
     networks:
       - edge_network
   emqx:
-    image: eco-registry.supos.com/sup9bnlh/emqx:5.8
+    image: emqx/emqx:5.8
     container_name: emqx
     ports:
       - "1883:1883"   # MQTT端口
@@ -129,7 +129,7 @@ services:
     networks:
       - edge_network
   nodered:
-    image: eco-registry.supos.com/sup9bnlh/node-red:4.0.8-22
+    image: nodered/node-red:4.0.8-22
     container_name: nodered
     user: root
     ports:
@@ -154,7 +154,7 @@ services:
     networks:
       - edge_network
   eventflow:
-    image: eco-registry.supos.com/sup9bnlh/node-red:4.0.8-22
+    image: nodered/node-red:4.0.8-22
     container_name: eventflow
     user: root
     ports:
@@ -177,7 +177,7 @@ services:
     networks:
       - edge_network
   grafana:
-    image: eco-registry.supos.com/sup9bnlh/grafana:11.5.6
+    image: grafana/grafana:11.5.6
     profiles:
       - grafana
     container_name: grafana
@@ -216,7 +216,7 @@ services:
     networks:
       - edge_network
   portainer:
-    image: eco-registry.supos.com/sup9bnlh/portainer-ce:2.23.0
+    image: portainer/portainer-ce:2.23.0
     container_name: portainer
     environment:
       service_logo: portainer.svg
@@ -231,7 +231,7 @@ services:
     networks:
       - edge_network
   postgresql:
-    image: eco-registry.supos.com/sup9bnlh/timescaledb:2.20.0-pg17
+    image: timescale/timescaledb:2.20.0-pg17
     container_name: postgresql
     environment:
       TZ: UTC  # 设置容器时区
@@ -260,7 +260,7 @@ services:
     networks:
       - edge_network
   keycloak:
-    image: eco-registry.supos.com/sup9bnlh/keycloak:26.0
+    image: keycloak/keycloak:26.0
     container_name: keycloak
     ports:
       - "8081:8080"
@@ -268,11 +268,18 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 2G
         reservations:
           memory: 512M
     environment:
       service_logo: keycloak-original.svg
+      JAVA_OPTS: >-
+        -Xms512m
+        -Xmx1g
+        -XX:MaxMetaspaceSize=256m
+        -XX:MetaspaceSize=256m
+        -Xss512k
+        -XX:+UseG1GC
       service_description: aboutus.keycloakDescription
       service_redirect_url: /keycloak/home/
       service_account: admin
@@ -318,7 +325,7 @@ services:
     networks:
       - edge_network
   tsdb:
-    image: eco-registry.supos.com/sup9bnlh/timescaledb:2.20.0-pg17
+    image: timescale/timescaledb:2.20.0-pg17
     container_name: tsdb
     environment:
       TZ: UTC  # 设置容器时区
@@ -346,7 +353,7 @@ services:
     networks:
       - edge_network
   kong:
-    image: eco-registry.supos.com/sup9bnlh/kong:3.9.0
+    image: kong:3.9.0
     container_name: kong
     environment:
       KONG_WORKER_STATE_UPDATE_FREQUENCY: 30
@@ -392,7 +399,7 @@ services:
     networks:
       - edge_network
   konga:
-    image: eco-registry.supos.com/sup9bnlh/konga:0.14.9
+    image: suposce/konga:1.0.0
     container_name: konga
     profiles:
       - konga
@@ -414,7 +421,7 @@ services:
     networks:
       - edge_network
   minio:
-    image: eco-registry.supos.com/sup9bnlh/minio:RELEASE.2024-12-18T13-15-44Z
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
     container_name: minio
     profiles:
       - minio
