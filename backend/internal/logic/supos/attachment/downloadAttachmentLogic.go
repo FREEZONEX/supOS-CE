@@ -1,6 +1,7 @@
 package attachment
 
 import (
+	"backend/share/app/util"
 	"context"
 	"fmt"
 	"io"
@@ -41,8 +42,7 @@ func (l *DownloadAttachmentLogic) DownloadAttachment(req *types.DownloadAttachme
 	// filePath := filepath.Join(l.svcCtx.Config.Attachment.StorageRoot, fileInfo.RelativePath)
 
 	// 临时实现：从固定目录查找
-	storageRoot := "/app/go-edge/attachments"
-	filePath := l.findFileByID(storageRoot, req.FileID)
+	filePath := util.FindFileByID(util.ATTACHMENT_DIR, req.FileID)
 	if filePath == "" {
 		return errors.NotFind.WithMsg("文件不存在")
 	}
@@ -98,27 +98,6 @@ func (l *DownloadAttachmentLogic) DownloadAttachment(req *types.DownloadAttachme
 
 	l.Infof("文件下载成功: %s (大小: %d bytes)", filename, fileInfo.Size())
 	return nil
-}
-
-// findFileByID 根据文件ID查找文件路径
-func (l *DownloadAttachmentLogic) findFileByID(rootDir, fileID string) string {
-	// 递归查找包含fileID的文件
-	var foundPath string
-	filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
-			return nil
-		}
-
-		// 检查文件名是否包含fileID
-		if strings.Contains(info.Name(), fileID) {
-			foundPath = path
-			return filepath.SkipAll // 找到后停止遍历
-		}
-
-		return nil
-	})
-
-	return foundPath
 }
 
 // serveRange 处理断点续传

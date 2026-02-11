@@ -1,4 +1,4 @@
-package util
+package app
 
 import (
 	"crypto/md5"
@@ -346,7 +346,7 @@ func (m *AttachmentManager) generateThumbnail(imagePath, fileID string) (string,
 
 // generateDownloadURL 生成下载URL
 func (m *AttachmentManager) generateDownloadURL(fileID string) string {
-	return fmt.Sprintf("/attachment/download/%s", fileID)
+	return fmt.Sprintf("/inter-api/supos/attachment/download?fileId=%s", fileID)
 }
 
 // generateThumbnailURL 生成缩略图URL
@@ -354,7 +354,7 @@ func (m *AttachmentManager) generateThumbnailURL(thumbnailPath string) string {
 	if thumbnailPath == "" {
 		return ""
 	}
-	return fmt.Sprintf("/attachment/thumbnail/%s", filepath.Base(thumbnailPath))
+	return fmt.Sprintf("/inter-api/supos/attachment/thumbnail?fileId=%s", filepath.Base(thumbnailPath))
 }
 
 // DownloadFile 下载文件

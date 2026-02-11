@@ -3,7 +3,7 @@ package attachment
 import (
 	"backend/internal/svc"
 	"backend/internal/types"
-	"backend/share/app/util"
+	"backend/share/app"
 	"context"
 	"fmt"
 	"mime/multipart"
@@ -40,7 +40,7 @@ func (l *UploadAttachmentLogic) UploadAttachment(req *types.UploadAttachmentRequ
 	//}
 
 	// 3. 使用附件管理器上传文件
-	attachmentInfo, err := util.UploadAttachment(req.FileHeader, req.Category, req.Description, req.Tags)
+	attachmentInfo, err := app.UploadAttachment(req.FileHeader, req.Category, req.Description, req.Tags)
 	if err != nil {
 		l.Errorf("上传附件失败: %v", err)
 		return nil, errors.Failure.WithMsg("上传附件失败")
@@ -62,7 +62,7 @@ func (l *UploadAttachmentLogic) UploadAttachment(req *types.UploadAttachmentRequ
 		FileType:    attachmentInfo.FileType,
 		MD5:         attachmentInfo.MD5,
 		UploadTime:  attachmentInfo.UploadTime.Format("2006-01-02 15:04:05"),
-		StoragePath: attachmentInfo.StoragePath,
+		DownloadUrl: attachmentInfo.DownloadURL,
 	}
 
 	resp := &types.UploadAttachmentResponse{

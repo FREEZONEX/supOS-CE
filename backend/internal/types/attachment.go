@@ -61,7 +61,7 @@ type UploadResult struct {
 	FileType    string `json:"fileType"`
 	MD5         string `json:"md5"`
 	UploadTime  string `json:"uploadTime"`
-	StoragePath string `json:"storagePath"`
+	DownloadUrl string `json:"downloadUrl"`
 }
 
 // DeleteResult 删除结果

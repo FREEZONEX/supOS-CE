@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"backend/internal/common/errors"
+	"backend/share/app/util"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"gitee.com/unitedrhino/share/errors"
 )
 
 // PortainerConfig Portainer 配置
@@ -40,7 +42,7 @@ func DefaultPortainerConfig() *PortainerConfig {
 		Password:   getEnvOrDefault("PORTAINER_PASSWORD", "adminpassword"),
 		APIKey:     getEnvOrDefault("PORTAINER_API_KEY", ""),
 		EndpointID: getEnvIntOrDefault("PORTAINER_ENDPOINT_ID", 0),
-		Timeout:    getEnvIntOrDefault("PORTAINER_TIMEOUT", 300),
+		Timeout:    getEnvIntOrDefault("PORTAINER_TIMEOUT", 300000),
 	}
 }
 
@@ -68,7 +70,7 @@ func (p *PortainerAdapter) InitializeEndpointId() error {
 
 	// 4. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 5. 发送请求
@@ -169,7 +171,7 @@ func (p *PortainerAdapter) InitializeStackId(endpointId int, composeYaml string)
 
 	// 4. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 5. 发送请求
@@ -252,7 +254,7 @@ func (p *PortainerAdapter) createEmptyStack(endpointId int, composeYml string) e
 
 	// 5. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 6. 发送请求
@@ -322,7 +324,7 @@ func (p *PortainerAdapter) verifyStackExists(stackID int) error {
 
 	// 3. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 4. 发送请求
@@ -400,7 +402,7 @@ func (p *PortainerAdapter) autoInitializeEndpointId(composeYaml string) error {
 			log.Printf("[app]: StackId 自动初始化成功: %d", p.config.StackId)
 		} else {
 			log.Printf("[app]: StackId 自动初始化失败: %v", err)
-			return errors.NewAppErrorWithMsg("Stack初始化失败")
+			return errors.Parameter.WithMsg("Stack初始化失败")
 		}
 	}
 	return nil
@@ -455,7 +457,7 @@ func (p *PortainerAdapter) getContainerInfo(containerName string) (*ContainerInf
 
 	// 3. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return nil, fmt.Errorf("添加认证头失败: %v", err)
+		return nil, fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 4. 发送请求
@@ -499,7 +501,7 @@ func (p *PortainerAdapter) isContainerInNetwork(containerID, networkName string)
 
 	// 3. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		log.Printf("[app]: 添加认证头失败: %v", err)
+		log.Printf("[app]: add authorize header failed: %v", err)
 		return false
 	}
 
@@ -554,7 +556,7 @@ func (p *PortainerAdapter) getNetworkID(networkName string) (string, error) {
 
 	// 3. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return "", fmt.Errorf("添加认证头失败: %v", err)
+		return "", fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 4. 发送请求
@@ -623,7 +625,7 @@ func (p *PortainerAdapter) connectContainerToNetwork(containerID, networkID, con
 
 	// 5. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 6. 发送请求
@@ -759,9 +761,6 @@ func (p *PortainerAdapter) addAuthHeader(req *http.Request) error {
 
 // PullImageFromRemote 使用 Portainer API 拉取远程镜像
 func (p *PortainerAdapter) PullImageFromRemote(imageUrl string) error {
-	if imageUrl == "" {
-		return fmt.Errorf("镜像URL不能为空")
-	}
 
 	// 验证镜像URL格式
 	if !strings.Contains(imageUrl, ":") {
@@ -781,7 +780,7 @@ func (p *PortainerAdapter) PullImageFromRemote(imageUrl string) error {
 	// 3. 创建请求
 	req, err := http.NewRequest("POST", fullURL, nil)
 	if err != nil {
-		return fmt.Errorf("创建请求失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("创建请求镜像失败: %v", err))
 	}
 
 	// 4. 设置请求头
@@ -789,13 +788,13 @@ func (p *PortainerAdapter) PullImageFromRemote(imageUrl string) error {
 
 	// 5. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 6. 发送请求
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("发送请求失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("发送请求镜像失败: %v", err))
 	}
 	defer resp.Body.Close()
 
@@ -803,7 +802,7 @@ func (p *PortainerAdapter) PullImageFromRemote(imageUrl string) error {
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		log.Printf("[app]: Portainer API 返回错误: %s, 响应: %s, url: %s", resp.Status, string(body), fullURL)
-		return fmt.Errorf("image pull failed, error: %s", string(body))
+		return errors.Parameter.WithMsg(fmt.Sprintf("image pull failed, error: %s", string(body)))
 	}
 
 	// 8. 读取拉取进度
@@ -872,7 +871,7 @@ func (p *PortainerAdapter) verifyImageExists(imageUrl string) error {
 
 	// 3. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 4. 发送请求
@@ -923,33 +922,30 @@ func (p *PortainerAdapter) verifyImageExists(imageUrl string) error {
 }
 
 // LoadImageFromLocal 使用 Portainer API 加载本地镜像文件
-func (p *PortainerAdapter) LoadImageFromLocal(imagePath string) error {
-	if imagePath == "" {
-		return fmt.Errorf("镜像文件路径不能为空")
+func (p *PortainerAdapter) LoadImageFromLocal(imageId string) error {
+	if imageId == "" {
+		return errors.Parameter.WithMsg("镜像文件路径不能为空")
 	}
-
-	// 检查文件是否存在
-	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
-		return fmt.Errorf("镜像文件不存在: %s", imagePath)
+	filePath := util.FindFileByID(util.ATTACHMENT_DIR, imageId)
+	if filePath == "" {
+		return errors.Parameter.WithMsg("文件不存在：" + imageId)
 	}
-
 	// 验证文件格式
-	ext := filepath.Ext(imagePath)
+	ext := filepath.Ext(filePath)
 	if ext != ".tar" && ext != ".tar.gz" && ext != ".tgz" {
-		return fmt.Errorf("不支持的镜像文件格式: %s，仅支持 .tar, .tar.gz, .tgz 格式", ext)
+		return errors.Parameter.WithMsg(fmt.Sprintf("不支持的镜像文件格式: %s，仅支持 .tar, .tar.gz, .tgz 格式", ext))
 	}
 
-	log.Printf("[app]: 开始通过 Portainer 加载本地镜像文件: %s", imagePath)
-
+	log.Printf("[app]: 开始通过 Portainer 加载本地镜像文件: %s", filePath)
 	// 1. 读取镜像文件
-	fileData, err := os.ReadFile(imagePath)
+	fileData, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("读取镜像文件失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("读取镜像文件失败: %v", err))
 	}
 
-	fileInfo, err := os.Stat(imagePath)
+	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		return fmt.Errorf("获取文件信息失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("获取文件信息失败: %v", err))
 	}
 	log.Printf("[app]: 镜像文件大小: %.2f MB", float64(fileInfo.Size())/1024/1024)
 
@@ -960,38 +956,39 @@ func (p *PortainerAdapter) LoadImageFromLocal(imagePath string) error {
 	// 3. 创建请求
 	req, err := http.NewRequest("POST", url, bytes.NewReader(fileData))
 	if err != nil {
-		return fmt.Errorf("创建请求失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("创建请求失败: %v", err))
 	}
 
 	// 4. 设置请求头
 	// Portainer 的镜像加载接口需要 multipart/form-data 或 application/x-tar
 	req.Header.Set("Content-Type", "application/x-tar")
-	if strings.HasSuffix(imagePath, ".gz") || strings.HasSuffix(imagePath, ".tgz") {
+	if strings.HasSuffix(filePath, ".gz") || strings.HasSuffix(filePath, ".tgz") {
 		req.Header.Set("Content-Type", "application/x-gzip")
 	}
 
 	// 5. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("add authorize header failed: %v", err))
 	}
 
 	// 6. 发送请求
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("发送请求失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("failed to send request: %v", err))
 	}
 	defer resp.Body.Close()
 
 	// 7. 检查响应状态
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("Portainer API 返回错误: %s, 响应: %s", resp.Status, string(body))
+		log.Printf("Portainer API 返回错误: %s, 响应: %s", resp.Status, string(body))
+		return errors.Parameter.WithMsg(fmt.Sprintf("load image failed: %s", string(body)))
 	}
 
 	// 8. 读取响应
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("读取响应失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("读取响应失败: %v", err))
 	}
 
 	// 9. 解析响应，获取加载的镜像信息
@@ -1019,10 +1016,10 @@ func (p *PortainerAdapter) LoadImageFromLocal(imagePath string) error {
 					}
 				}
 			}
-			log.Printf("[app]: Portainer 本地镜像加载完成: %s", imagePath)
+			log.Printf("[app]: Portainer 本地镜像加载完成: %s", filePath)
 			return nil
 		}
-		return fmt.Errorf("解析响应失败: %v, 响应: %s", err, respStr)
+		return errors.Parameter.WithMsg(fmt.Sprintf("解析响应失败: %v", err))
 	}
 
 	// 10. 处理JSON格式的响应
@@ -1053,7 +1050,7 @@ func (p *PortainerAdapter) LoadImageFromLocal(imagePath string) error {
 		}
 	}
 
-	log.Printf("[app]: Portainer 本地镜像加载完成: %s", imagePath)
+	log.Printf("[app]: Portainer 本地镜像加载完成: %s", filePath)
 	return nil
 }
 
@@ -1077,7 +1074,7 @@ func PullImageFromRemote(imageUrl string) error {
 // DeployComposeYaml 使用 Portainer API 部署 Docker Compose 配置
 func (p *PortainerAdapter) deployComposeYaml(composeYaml string, network string) error {
 	if composeYaml == "" {
-		return fmt.Errorf("Docker Compose 配置不能为空")
+		return errors.Parameter.WithMsg(fmt.Sprintf("Docker Compose 配置不能为空"))
 	}
 
 	log.Printf("[app]: 开始通过 Portainer 部署 Docker Compose 配置")
@@ -1092,7 +1089,7 @@ func (p *PortainerAdapter) deployComposeYaml(composeYaml string, network string)
 
 	reqJSON, err := json.Marshal(composeReq)
 	if err != nil {
-		return fmt.Errorf("序列化请求体失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("Failed to serialize the request body: %v", err))
 	}
 
 	// 2. 构建请求URL
@@ -1102,7 +1099,7 @@ func (p *PortainerAdapter) deployComposeYaml(composeYaml string, network string)
 	// 3. 创建请求
 	req, err := http.NewRequest("PUT", url, bytes.NewReader(reqJSON))
 	if err != nil {
-		return fmt.Errorf("创建请求失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("create deploy request failed: %v", err))
 	}
 
 	// 4. 设置请求头
@@ -1110,13 +1107,13 @@ func (p *PortainerAdapter) deployComposeYaml(composeYaml string, network string)
 
 	// 5. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("add authorize header failed: %v", err))
 	}
 
 	// 6. 发送请求
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("发送请求失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("failed to send request: %v", err))
 	}
 	defer resp.Body.Close()
 
@@ -1124,18 +1121,18 @@ func (p *PortainerAdapter) deployComposeYaml(composeYaml string, network string)
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
 		log.Printf("[app]: 部署yaml到portainer失败， url=%s, composeYaml=%s", url, composeYaml)
-		return fmt.Errorf("deploy yaml failed: %s", string(body))
+		return errors.Parameter.WithMsg(fmt.Sprintf("deploy yaml failed: %s", string(body)))
 	}
 
 	// 8. 解析响应
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("读取响应失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("read response failed: %v", err))
 	}
 
 	var stackResp map[string]interface{}
 	if err := json.Unmarshal(body, &stackResp); err != nil {
-		return fmt.Errorf("解析响应失败: %v, 响应: %s", err, string(body))
+		return errors.Parameter.WithMsg(fmt.Sprintf("parse response failed: %v", err))
 	}
 
 	// 9. 提取 Stack ID 和名称
@@ -1175,7 +1172,7 @@ func (p *PortainerAdapter) joinStackContainersToNetwork(stackID int, stackName, 
 	// 1. 获取 Stack 中的所有容器
 	containers, err := p.getStackContainers(stackID, stackName)
 	if err != nil {
-		return fmt.Errorf("获取 Stack 容器失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("获取 Stack 容器失败: %v", err))
 	}
 
 	if len(containers) == 0 {
@@ -1241,7 +1238,7 @@ func (p *PortainerAdapter) getStackContainers(stackID int, stackName string) ([]
 	}
 
 	if err := p.addAuthHeader(req); err != nil {
-		return nil, fmt.Errorf("添加认证头失败: %v", err)
+		return nil, fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	resp, err := p.client.Do(req)
@@ -1325,7 +1322,7 @@ func (p *PortainerAdapter) createCustomNetwork(networkName string) (string, erro
 	req.Header.Set("Content-Type", "application/json")
 
 	if err := p.addAuthHeader(req); err != nil {
-		return "", fmt.Errorf("添加认证头失败: %v", err)
+		return "", fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	resp, err := p.client.Do(req)
@@ -1432,7 +1429,7 @@ func (p *PortainerAdapter) getStackStatus(stackID int) (string, error) {
 
 	// 3. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return "", fmt.Errorf("添加认证头失败: %v", err)
+		return "", fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 4. 发送请求
@@ -1529,7 +1526,7 @@ func (p *PortainerAdapter) DeleteContainer(containerNameOrID string, force bool,
 
 	// 3. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 4. 发送请求
@@ -1581,7 +1578,7 @@ func (p *PortainerAdapter) DeleteImage(imageNameOrID string, force bool, pruneCh
 
 	// 3. 添加认证头
 	if err := p.addAuthHeader(req); err != nil {
-		return fmt.Errorf("添加认证头失败: %v", err)
+		return fmt.Errorf("add authorize header failed: %v", err)
 	}
 
 	// 4. 发送请求

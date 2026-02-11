@@ -4,6 +4,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // localFileHeader 实现了 multipart.File 接口的本地文件包装器
@@ -86,4 +87,25 @@ func CopyDirectory(src, dst string) error {
 	}
 
 	return nil
+}
+
+// FindFileByID 根据文件ID查找文件路径
+func FindFileByID(rootDir, fileID string) string {
+	// 递归查找包含fileID的文件
+	var foundPath string
+	filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() {
+			return nil
+		}
+
+		// 检查文件名是否包含fileID
+		if strings.Contains(info.Name(), fileID) {
+			foundPath = path
+			return filepath.SkipAll // 找到后停止遍历
+		}
+
+		return nil
+	})
+
+	return foundPath
 }

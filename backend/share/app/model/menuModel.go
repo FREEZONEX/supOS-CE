@@ -1,9 +1,10 @@
 package model
 
 import (
-	"backend/internal/common/errors"
 	"fmt"
 	"strings"
+
+	"gitee.com/unitedrhino/share/errors"
 )
 
 // MenuModel 菜单模型
@@ -74,7 +75,7 @@ func (m *MenuModel) ValidateForCreate() error {
 
 	// 创建时 Name 必须非空
 	if strings.TrimSpace(m.Name) == "" {
-		return fmt.Errorf("菜单名称不能为空")
+		return errors.Parameter.WithMsg(fmt.Sprintf("菜单名称不能为空"))
 	}
 
 	return nil
@@ -125,19 +126,12 @@ func (m *MenuModel) IsInternalPath() bool {
 
 func validateName(name string) error {
 	if strings.TrimSpace(name) == "" {
-		return errors.NewAppErrorWithMsg("menu name can't be empty")
+		return errors.Parameter.WithMsg(fmt.Sprintf("menu name can't be empty"))
 	}
 
 	// 名称长度限制
 	if len(name) > 100 {
-		return fmt.Errorf("菜单名称长度不能超过100个字符")
-	}
-
-	// 名称格式检查（只允许字母、数字、下划线、中划线）
-	for _, r := range name {
-		if !isValidNameChar(r) {
-			return fmt.Errorf("菜单名称只能包含字母、数字、下划线和中划线")
-		}
+		return errors.Parameter.WithMsg(fmt.Sprintf("菜单名称长度不能超过100个字符"))
 	}
 
 	return nil
@@ -158,17 +152,17 @@ func validateDisplayName(displayName string) error {
 
 func validateIndexUrl(indexUrl string) error {
 	if strings.TrimSpace(indexUrl) == "" {
-		return fmt.Errorf("菜单索引URL不能为空")
+		return errors.Parameter.WithMsg(fmt.Sprintf("菜单URL不能为空"))
 	}
 
 	// 检查URL格式
 	if !isValidUrlOrPath(indexUrl) {
-		return fmt.Errorf("无效的菜单索引URL格式，必须是有效的URL或路径")
+		return errors.Parameter.WithMsg(fmt.Sprintf("无效的菜单索引URL格式，必须是有效的URL或路径"))
 	}
 
 	// URL长度限制
 	if len(indexUrl) > 500 {
-		return fmt.Errorf("菜单索引URL长度不能超过500个字符")
+		return errors.Parameter.WithMsg(fmt.Sprintf("菜单索引URL长度不能超过500个字符"))
 	}
 
 	return nil
@@ -182,30 +176,12 @@ func validateIconUrl(iconUrl string) error {
 
 	// 检查图标URL格式
 	if !isValidUrlOrPath(iconUrl) {
-		return fmt.Errorf("无效的图标URL格式，必须是有效的URL或路径")
+		return errors.Parameter.WithMsg(fmt.Sprintf("无效的图标URL格式，必须是有效的URL或路径"))
 	}
 
 	// URL长度限制
 	if len(iconUrl) > 500 {
-		return fmt.Errorf("图标URL长度不能超过500个字符")
-	}
-
-	// 检查文件扩展名（如果是本地文件）
-	if strings.HasPrefix(iconUrl, "/") {
-		ext := strings.ToLower(getFileExtension(iconUrl))
-		if ext != "" {
-			allowedExtensions := []string{".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico"}
-			found := false
-			for _, allowed := range allowedExtensions {
-				if ext == allowed {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return fmt.Errorf("不支持的图标文件格式: %s，支持的格式: %v", ext, allowedExtensions)
-			}
-		}
+		return errors.Parameter.WithMsg(fmt.Sprintf("图标URL长度不能超过500个字符"))
 	}
 
 	return nil
@@ -219,7 +195,7 @@ func validateDescription(description string) error {
 
 	// 描述长度限制
 	if len(description) > 200 {
-		return fmt.Errorf("菜单描述长度不能超过200个字符")
+		return errors.Parameter.WithMsg(fmt.Sprintf("菜单描述长度不能超过200个字符"))
 	}
 
 	return nil

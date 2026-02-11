@@ -6,4 +6,6 @@ const (
 
 	// DefaultTempDir 默认临时目录
 	DefaultTempDir = "/tmp"
+
+	ATTACHMENT_DIR = "/app/go-edge/attachment"
 )

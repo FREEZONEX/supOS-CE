@@ -1,13 +1,13 @@
 package model
 
 import (
-	"backend/internal/common/errors"
 	"backend/share/app/util"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"gitee.com/unitedrhino/share/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,7 +20,7 @@ type NewFeatureModel struct {
 	// Description 功能描述
 	Description string `json:"description" yaml:"description"`
 
-	// ImagePath 镜像文件路径（本地文件路径）
+	// ImagePath 镜像文件路径（本地文件路径fileId）
 	ImagePath string `json:"imagePath" yaml:"imagePath"`
 
 	// ImageUrl 镜像URL（远程镜像地址）
@@ -37,7 +37,7 @@ type NewFeatureModel struct {
 // Validate 验证模型数据的有效性
 func (m *NewFeatureModel) Validate() error {
 	if m.Name == "" {
-		return fmt.Errorf("app name can't be empty")
+		return errors.Parameter.WithMsg(fmt.Sprintf("app name can't be empty"))
 	}
 
 	// 验证非法字符
@@ -47,30 +47,17 @@ func (m *NewFeatureModel) Validate() error {
 	// 验证该名称是否已经存在
 	fullPath := filepath.Join(util.AppInstalledDir, m.Name)
 	if _, err := os.Stat(fullPath); err == nil {
-		return fmt.Errorf("app name has been used")
+		return errors.Parameter.WithMsg(fmt.Sprintf("app name has been used"))
 	}
 
 	// 镜像路径和URL至少需要提供一个
 	if m.ImagePath == "" && m.ImageUrl == "" {
-		return fmt.Errorf("镜像路径和镜像URL至少需要提供一个")
-	}
-
-	// 如果提供了镜像路径，验证文件是否存在
-	if m.ImagePath != "" {
-		if _, err := os.Stat(m.ImagePath); os.IsNotExist(err) {
-			return fmt.Errorf("镜像文件不存在: %s", m.ImagePath)
-		}
-
-		// 验证文件格式
-		ext := filepath.Ext(m.ImagePath)
-		if ext != ".tar" && ext != ".tar.gz" && ext != ".tgz" {
-			return fmt.Errorf("不支持的镜像文件格式: %s，仅支持 .tar, .tar.gz, .tgz 格式", ext)
-		}
+		return errors.Parameter.WithMsg(fmt.Sprintf("镜像路径和镜像URL至少需要提供一个"))
 	}
 
 	// 验证菜单URL格式（如果提供了菜单URL）
 	if m.Menu == nil {
-		return errors.NewAppErrorWithMsg("menu can't be empty")
+		return errors.Parameter.WithMsg("menu can't be empty")
 	}
 	if err := m.Menu.Validate(); err != nil {
 		return err
@@ -79,8 +66,8 @@ func (m *NewFeatureModel) Validate() error {
 	// 验证Docker Compose配置（如果提供了）
 	if m.ComposeYaml != "" {
 		// 简单的YAML格式验证
-		if !strings.Contains(m.ComposeYaml, "version:") && !strings.Contains(m.ComposeYaml, "services:") {
-			return fmt.Errorf("Docker Compose配置格式不正确，应包含 'version' 和 'services' 字段")
+		if !strings.Contains(m.ComposeYaml, "services:") {
+			return errors.Parameter.WithMsg(fmt.Sprintf("Docker Compose配置格式不正确，应包含 'services' 字段"))
 		}
 	}
 

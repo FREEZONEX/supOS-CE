@@ -7,10 +7,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
+	"gitee.com/unitedrhino/share/errors"
 	"github.com/kong/go-kong/kong"
 )
 
@@ -75,15 +77,14 @@ func SaveMenu(menu *model.MenuModel) error {
 	host, port, err := parseIndexUrl(menu.IndexUrl)
 	if err != nil {
 		log.Printf("[app]: 解析indexUrl失败: %v", err)
-		return fmt.Errorf("解析indexUrl失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("parse indexUrl failed: %v", err))
 	}
 
 	log.Printf("[app]: 解析结果 - Host: %s, Port: %d", host, port)
-
 	// 2. 调用RegisterRouter，注册kong的service和router
 	if err := RegisterRouter(host, port, menu.StripPath); err != nil {
 		log.Printf("[app]: 注册Kong路由失败: %v", err)
-		return fmt.Errorf("注册Kong路由失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("register route failed: %v", err))
 	}
 
 	log.Printf("[app]: Kong路由注册成功")
@@ -164,7 +165,7 @@ func saveMenuToDatabase(menu *model.MenuModel) error {
 	db := relationDB.GetDb(ctx)
 	if db == nil {
 		log.Printf("[app]: 无法获取数据库连接")
-		return fmt.Errorf("无法获取数据库连接")
+		return errors.Parameter.WithMsg(fmt.Sprintf("can't connect to postgres database"))
 	}
 
 	// 检查是否已存在相同code的菜单
@@ -174,26 +175,36 @@ func saveMenuToDatabase(menu *model.MenuModel) error {
 		Count(&existingCount).Error
 	if err != nil {
 		log.Printf("[app]: 查询现有菜单失败: %v", err)
-		return fmt.Errorf("查询现有菜单失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("search menu failed: %v", err))
 	}
+
+	u, err := url.Parse(menu.IndexUrl)
+	if err != nil {
+		panic(err)
+	}
+
+	serviceName := u.Hostname() // frontend-app
+	path := u.Path
+
 	// 父级菜单
 	var p int64 = 4
 	// 创建菜单资源对象
 	menuResource := &relationDB.SuposResource{
 		ParentID:        &p,
-		Code:            menu.Name,
-		NameCode:        stringPtr(menu.Name),
-		URL:             stringPtr(menu.IndexUrl),
+		Code:            serviceName,
+		NameCode:        stringPtr(serviceName),
+		URL:             stringPtr(path), // 相对路由
 		DescriptionCode: stringPtr(menu.Description),
 		URLType:         intPtr(2),
 		Type:            2,              // 假设1表示菜单类型
-		OpenType:        intPtr(1),      // 默认打开类型
+		OpenType:        intPtr(0),      // 默认打开类型
 		Sort:            intPtr(0),      // 默认排序
 		Enable:          boolPtr(true),  // 启用
 		EditEnable:      boolPtr(true),  // 可编辑
 		HomeEnable:      boolPtr(true),  // 非首页
 		Fixed:           boolPtr(false), // 非固定
 		Icon:            stringPtr(menu.IconUrl),
+		RouteSource:     intPtr(1),
 		CreateAt:        time.Now(),
 		UpdateAt:        time.Now(),
 	}
@@ -215,7 +226,7 @@ func saveMenuToDatabase(menu *model.MenuModel) error {
 			Updates(menuResource).Error
 		if err != nil {
 			log.Printf("[app]: 更新菜单到数据库失败: %v", err)
-			return fmt.Errorf("更新菜单到数据库失败: %v", err)
+			return errors.Parameter.WithMsg(fmt.Sprintf("update menu failed: %v", err))
 		}
 		log.Printf("[app]: 菜单更新到数据库成功: %s", menu.Name)
 	} else {
@@ -223,7 +234,7 @@ func saveMenuToDatabase(menu *model.MenuModel) error {
 		err = db.Create(menuResource).Error
 		if err != nil {
 			log.Printf("[app]: 保存菜单到数据库失败: %v", err)
-			return fmt.Errorf("保存菜单到数据库失败: %v", err)
+			return errors.Parameter.WithMsg(fmt.Sprintf("create menu failed: %v", err))
 		}
 		log.Printf("[app]: 菜单保存到数据库成功: %s (ID: %d)", menu.Name, menuResource.ID)
 	}
