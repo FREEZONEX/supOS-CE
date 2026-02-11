@@ -141,36 +141,27 @@ func LoadFromFile(filePath string) (*NewFeatureModel, error) {
 		return nil, errors.Parameter.WithMsg(fmt.Sprintf("解析YAML配置失败: %v", err))
 	}
 
-	// 验证模型
-	if err := model.Validate(); err != nil {
-		return nil, errors.Parameter.WithMsg(fmt.Sprintf("配置验证失败: %v", err))
-	}
-
 	return &model, nil
 }
 
 // SaveToFile 将模型保存到YAML文件
 func (m *NewFeatureModel) SaveToFile(filePath string) error {
-	// 验证模型
-	if err := m.Validate(); err != nil {
-		return fmt.Errorf("模型验证失败: %v", err)
-	}
 
 	// 转换为YAML
 	data, err := yaml.Marshal(m)
 	if err != nil {
-		return fmt.Errorf("序列化YAML失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("序列化YAML失败: %v", err))
 	}
 
 	// 确保目录存在
 	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("创建目录失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("创建目录失败: %v", err))
 	}
 
 	// 写入文件
 	if err := os.WriteFile(filePath, data, 0644); err != nil {
-		return fmt.Errorf("写入文件失败: %v", err)
+		return errors.Parameter.WithMsg(fmt.Sprintf("写入文件失败: %v", err))
 	}
 
 	return nil

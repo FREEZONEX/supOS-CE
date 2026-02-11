@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -70,19 +69,25 @@ func RegisterRouter(appHost string, port int, stripPath bool) error {
 	return nil
 }
 
-func SaveMenu(menu *model.MenuModel) error {
+func SaveMenu(menu *model.MenuModel, appDomain string, appPort int) error {
 	log.Printf("[app]: 开始保存菜单: %s, indexUrl: %s", menu.Name, menu.IndexUrl)
 
 	// 1. 解析indexUrl，分离host和port
-	host, port, err := parseIndexUrl(menu.IndexUrl)
+	/*host, port, err := parseIndexUrl(menu.IndexUrl)
 	if err != nil {
 		log.Printf("[app]: 解析indexUrl失败: %v", err)
 		return errors.Parameter.WithMsg(fmt.Sprintf("parse indexUrl failed: %v", err))
 	}
 
-	log.Printf("[app]: 解析结果 - Host: %s, Port: %d", host, port)
+
+	log.Printf("[app]: 解析结果 - Host: %s, Port: %d", host, port)*/
+
+	if !strings.HasPrefix(menu.IndexUrl, "http://") && !strings.HasPrefix(menu.IndexUrl, "https://") {
+		menu.IndexUrl = fmt.Sprintf("/apps/%s%s", appDomain, menu.IndexUrl)
+	}
+
 	// 2. 调用RegisterRouter，注册kong的service和router
-	if err := RegisterRouter(host, port, menu.StripPath); err != nil {
+	if err := RegisterRouter(appDomain, appPort, menu.StripPath); err != nil {
 		log.Printf("[app]: 注册Kong路由失败: %v", err)
 		return errors.Parameter.WithMsg(fmt.Sprintf("register route failed: %v", err))
 	}
@@ -90,7 +95,7 @@ func SaveMenu(menu *model.MenuModel) error {
 	log.Printf("[app]: Kong路由注册成功")
 
 	// 3. 将菜单数据保存到数据库表supos_resource
-	if err := saveMenuToDatabase(menu); err != nil {
+	if err := saveMenuToDatabase(menu, appDomain); err != nil {
 		log.Printf("[app]: 保存菜单到数据库失败: %v", err)
 		// 注意：这里不返回错误，因为Kong路由已经注册成功
 		// 数据库保存失败不影响路由功能
@@ -155,7 +160,7 @@ func parseIndexUrl(indexUrl string) (string, int, error) {
 }
 
 // saveMenuToDatabase 将菜单数据保存到数据库表supos_resource
-func saveMenuToDatabase(menu *model.MenuModel) error {
+func saveMenuToDatabase(menu *model.MenuModel, appDomain string) error {
 	log.Printf("[app]: 开始保存菜单到数据库: %s", menu.Name)
 
 	// 创建上下文
@@ -167,33 +172,33 @@ func saveMenuToDatabase(menu *model.MenuModel) error {
 		log.Printf("[app]: 无法获取数据库连接")
 		return errors.Parameter.WithMsg(fmt.Sprintf("can't connect to postgres database"))
 	}
+	//
+	//u, err0 := url.Parse(menu.IndexUrl)
+	//if err0 != nil {
+	//	panic(err0)
+	//}
+	//
+	//menuCode := u.Hostname() // frontend-app
+	//path := u.Path
 
 	// 检查是否已存在相同code的菜单
 	var existingCount int64
 	err := db.Model(&relationDB.SuposResource{}).
-		Where("code = ?", menu.Name).
+		Where("code = ?", appDomain).
 		Count(&existingCount).Error
 	if err != nil {
 		log.Printf("[app]: 查询现有菜单失败: %v", err)
 		return errors.Parameter.WithMsg(fmt.Sprintf("search menu failed: %v", err))
 	}
 
-	u, err := url.Parse(menu.IndexUrl)
-	if err != nil {
-		panic(err)
-	}
-
-	serviceName := u.Hostname() // frontend-app
-	path := u.Path
-
 	// 父级菜单
 	var p int64 = 4
 	// 创建菜单资源对象
 	menuResource := &relationDB.SuposResource{
 		ParentID:        &p,
-		Code:            serviceName,
-		NameCode:        stringPtr(serviceName),
-		URL:             stringPtr(path), // 相对路由
+		Code:            appDomain,
+		NameCode:        stringPtr(menu.Name),
+		URL:             stringPtr(menu.IndexUrl), // 相对路由
 		DescriptionCode: stringPtr(menu.Description),
 		URLType:         intPtr(2),
 		Type:            2,              // 假设1表示菜单类型
