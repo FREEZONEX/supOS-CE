@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gopkg.in/yaml.v3"
 )
 
 // PortainerConfig Portainer 配置
@@ -802,7 +803,7 @@ func (p *PortainerAdapter) PullImageFromRemote(imageUrl string) error {
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		log.Printf("[app]: Portainer API 返回错误: %s, 响应: %s, url: %s", resp.Status, string(body), fullURL)
-		return errors.Parameter.WithMsg(fmt.Sprintf("image pull failed, error: %s", string(body)))
+		return nil
 	}
 
 	// 8. 读取拉取进度
@@ -1157,7 +1158,8 @@ func (p *PortainerAdapter) deployComposeYaml(composeYaml string, network string)
 	// 11. 将部署完的容器加入到指定 Docker 网络
 	if network != "" {
 		log.Printf("[app]: 开始将 Stack %s 中的容器加入到网络 %s", stackName, network)
-		if err := p.joinStackContainersToNetwork(int(stackID), stackName, network); err != nil {
+		containerName, _ := extractContainerNameFromCompose(composeYaml)
+		if err := p.joinStackContainersToNetwork(containerName, stackName, network); err != nil {
 			log.Printf("[app]: 警告: 将容器加入到网络失败: %v", err)
 			// 不因为网络加入失败而返回错误，记录日志但继续执行
 		}
@@ -1167,10 +1169,36 @@ func (p *PortainerAdapter) deployComposeYaml(composeYaml string, network string)
 	return nil
 }
 
+// extractContainerNameFromCompose 从 Compose YAML 中提取服务名称
+func extractContainerNameFromCompose(composeYaml string) (string, error) {
+
+	// 解析 YAML
+	var composeConfig map[string]interface{}
+	if err := yaml.Unmarshal([]byte(composeYaml), &composeConfig); err != nil {
+		return "", fmt.Errorf("解析 YAML 失败: %v", err)
+	}
+
+	// 检查 services 部分
+	services, ok := composeConfig["services"].(map[string]interface{})
+	if !ok || len(services) == 0 {
+		return "", fmt.Errorf("没有找到 services 部分")
+	}
+
+	// 获取第一个服务名称
+	for _, serviceConfig := range services {
+		serviceMap, _ := serviceConfig.(map[string]interface{})
+		if containerName, ok := serviceMap["container_name"].(string); ok && containerName != "" {
+			return containerName, nil
+		}
+	}
+
+	return "", fmt.Errorf("没有找到服务名称")
+}
+
 // joinStackContainersToNetwork 将 Stack 中的所有容器加入到指定网络
-func (p *PortainerAdapter) joinStackContainersToNetwork(stackID int, stackName, networkName string) error {
+func (p *PortainerAdapter) joinStackContainersToNetwork(containerName, stackName, networkName string) error {
 	// 1. 获取 Stack 中的所有容器
-	containers, err := p.getStackContainers(stackID, stackName)
+	containers, err := p.getStackContainers(containerName)
 	if err != nil {
 		return errors.Parameter.WithMsg(fmt.Sprintf("获取 Stack 容器失败: %v", err))
 	}
@@ -1186,10 +1214,7 @@ func (p *PortainerAdapter) joinStackContainersToNetwork(stackID int, stackName, 
 	networkID, err := p.getNetworkID(networkName)
 	if err != nil {
 		log.Printf("[app]: 网络 %s 不存在，尝试创建", networkName)
-		networkID, err = p.createCustomNetwork(networkName)
-		if err != nil {
-			return fmt.Errorf("创建网络 %s 失败: %v", networkName, err)
-		}
+		return fmt.Errorf("创建网络 %s 失败: %v", networkName, err)
 	}
 
 	// 3. 将每个容器加入到网络
@@ -1228,7 +1253,7 @@ func (p *PortainerAdapter) joinStackContainersToNetwork(stackID int, stackName, 
 }
 
 // getStackContainers 获取 Stack 中的所有容器
-func (p *PortainerAdapter) getStackContainers(stackID int, stackName string) ([]ContainerListItem, error) {
+func (p *PortainerAdapter) getStackContainers(containerName string) ([]ContainerListItem, error) {
 	// 1. 获取所有容器
 	url := fmt.Sprintf("%s/endpoints/%d/docker/containers/json", p.config.BaseURL, p.config.EndpointID)
 
@@ -1269,10 +1294,8 @@ func (p *PortainerAdapter) getStackContainers(stackID int, stackName string) ([]
 		for _, name := range container.Names {
 			// 移除开头的斜杠
 			cleanName := strings.TrimPrefix(name, "/")
-			// 检查是否以 stackName_ 开头
-			if strings.HasPrefix(cleanName, stackName+"_") {
+			if containerName == cleanName {
 				stackContainers = append(stackContainers, container)
-				break
 			}
 		}
 	}

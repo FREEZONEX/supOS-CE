@@ -3,8 +3,10 @@ package model
 import (
 	"backend/share/app/util"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"gitee.com/unitedrhino/share/errors"
@@ -65,13 +67,260 @@ func (m *NewFeatureModel) Validate() error {
 
 	// 验证Docker Compose配置（如果提供了）
 	if m.ComposeYaml != "" {
-		// 简单的YAML格式验证
-		if !strings.Contains(m.ComposeYaml, "services:") {
-			return errors.Parameter.WithMsg(fmt.Sprintf("app.compose.content.empty"))
+		if err := validateComposeYaml(m.ComposeYaml); err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+// validateComposeYaml 验证 Docker Compose YAML 配置
+func validateComposeYaml(composeYaml string) error {
+	if composeYaml == "" {
+		return errors.Parameter.WithMsg("Docker Compose 配置不能为空")
+	}
+
+	// 1. 验证 YAML 格式
+	var composeConfig map[string]interface{}
+	if err := yaml.Unmarshal([]byte(composeYaml), &composeConfig); err != nil {
+		return errors.Parameter.WithMsg(fmt.Sprintf("YAML 格式错误: %v", err))
+	}
+
+	// 2. 验证 services 部分
+	services, ok := composeConfig["services"].(map[string]interface{})
+	if !ok || len(services) == 0 {
+		return errors.Parameter.WithMsg("必须包含至少一个 service")
+	}
+
+	// 3. 验证只能有一个服务
+	if len(services) > 1 {
+		return errors.Parameter.WithMsg("只能包含一个服务（container）")
+	}
+
+	// 4. 验证不能包含 network 声明
+	if _, hasNetwork := composeConfig["networks"]; hasNetwork {
+		return errors.Parameter.WithMsg("不能包含 network 声明，系统会自动管理网络")
+	}
+
+	// 5. 验证每个服务的配置
+	for serviceName, serviceConfig := range services {
+		serviceMap, ok := serviceConfig.(map[string]interface{})
+		if !ok {
+			return errors.Parameter.WithMsg(fmt.Sprintf("服务 %s 配置格式错误", serviceName))
+		}
+
+		// 验证必需的服务字段
+		if _, ok := serviceMap["image"]; !ok {
+			// 检查是否有 build 配置
+			if _, hasBuild := serviceMap["build"]; !hasBuild {
+				return errors.Parameter.WithMsg(fmt.Sprintf("服务 %s 必须指定 image 或 build 配置", serviceName))
+			}
+		}
+
+		// 验证 container_name 配置
+		if containerName, ok := serviceMap["container_name"].(string); ok && containerName != "" {
+			// 验证 container_name 格式
+			if err := validateContainerName(containerName); err != nil {
+				return errors.Parameter.WithMsg(fmt.Sprintf("服务 %s 的 container_name 格式错误: %v", serviceName, err))
+			}
+		} else {
+			// 如果没有 container_name，使用服务名称作为容器名称
+			log.Printf("[app]: 服务 %s 没有指定 container_name，将使用服务名称作为容器名称", serviceName)
+		}
+
+		// 验证端口配置（可选）
+		if portsConfig, ok := serviceMap["ports"].([]interface{}); ok {
+			for i, portItem := range portsConfig {
+				portStr, ok := portItem.(string)
+				if !ok {
+					return errors.Parameter.WithMsg(fmt.Sprintf("服务 %s 的端口配置 %d 格式错误", serviceName, i))
+				}
+
+				// 验证端口格式
+				if err := validatePortFormat(portStr); err != nil {
+					return errors.Parameter.WithMsg(fmt.Sprintf("服务 %s 的端口配置错误: %v", serviceName, err))
+				}
+			}
+		}
+
+		// 验证不能包含自定义网络配置
+		if networksConfig, ok := serviceMap["networks"].([]interface{}); ok {
+			if len(networksConfig) > 0 {
+				return errors.Parameter.WithMsg(fmt.Sprintf("服务 %s 不能包含 networks 配置，系统会自动管理网络", serviceName))
+			}
+		}
+		if networksConfig, ok := serviceMap["networks"].(map[string]interface{}); ok {
+			if len(networksConfig) > 0 {
+				return errors.Parameter.WithMsg(fmt.Sprintf("服务 %s 不能包含 networks 配置，系统会自动管理网络", serviceName))
+			}
+		}
+
+		// 验证其他重要字段
+		validateServiceOptionalFields(serviceName, serviceMap)
+	}
+
+	return nil
+}
+
+// validateContainerName 验证容器名称格式
+func validateContainerName(containerName string) error {
+	if containerName == "" {
+		return fmt.Errorf("容器名称不能为空")
+	}
+
+	// 检查长度
+	if len(containerName) > 255 {
+		return fmt.Errorf("容器名称长度不能超过255个字符")
+	}
+
+	// 检查非法字符（Docker 容器名称限制）
+	// Docker 容器名称只能包含: [a-zA-Z0-9][a-zA-Z0-9_.-]
+	for i, ch := range containerName {
+		if i == 0 {
+			// 第一个字符必须是字母或数字
+			if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {
+				return fmt.Errorf("容器名称必须以字母或数字开头")
+			}
+		} else {
+			// 后续字符可以是字母、数字、下划线、点或短横线
+			if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ||
+				ch == '_' || ch == '.' || ch == '-') {
+				return fmt.Errorf("容器名称包含非法字符 '%c'，只能包含字母、数字、下划线、点和短横线", ch)
+			}
+		}
+	}
+
+	// 检查保留名称
+	reservedNames := []string{"none", "host", "bridge"}
+	for _, reserved := range reservedNames {
+		if strings.EqualFold(containerName, reserved) {
+			return fmt.Errorf("容器名称不能使用保留名称 '%s'", reserved)
+		}
+	}
+
+	return nil
+}
+
+// validatePortFormat 验证端口格式
+func validatePortFormat(portStr string) error {
+	portStr = strings.TrimSpace(portStr)
+	if portStr == "" {
+		return fmt.Errorf("端口字符串为空")
+	}
+
+	// 检查格式: 可能的形式有:
+	// 1. "8080" - 仅容器端口
+	// 2. "8080:80" - 主机端口:容器端口
+	// 3. "127.0.0.1:8080:80" - IP:主机端口:容器端口
+	// 4. "8080:80/tcp" - 带协议
+	// 5. "127.0.0.1:8080:80/udp" - 完整格式
+
+	// 分割协议部分
+	parts := strings.Split(portStr, "/")
+	if len(parts) > 2 {
+		return fmt.Errorf("端口格式错误: %s", portStr)
+	}
+
+	portWithoutProtocol := parts[0]
+	if len(parts) == 2 {
+		protocol := strings.ToLower(parts[1])
+		if protocol != "tcp" && protocol != "udp" {
+			return fmt.Errorf("不支持的协议: %s", protocol)
+		}
+	}
+
+	// 分割端口部分
+	portParts := strings.Split(portWithoutProtocol, ":")
+	if len(portParts) > 3 {
+		return fmt.Errorf("端口格式错误: %s", portStr)
+	}
+
+	// 验证每个端口号
+	for _, portPart := range portParts {
+		// 如果是 IP 地址，跳过验证
+		if isIPAddress(portPart) {
+			continue
+		}
+
+		// 验证端口号
+		port, err := strconv.Atoi(portPart)
+		if err != nil {
+			return fmt.Errorf("无效的端口号: %s", portPart)
+		}
+
+		if port < 1 || port > 65535 {
+			return fmt.Errorf("端口号超出范围 (1-65535): %d", port)
+		}
+	}
+
+	return nil
+}
+
+// isIPAddress 检查字符串是否是 IP 地址
+func isIPAddress(str string) bool {
+	// 简单检查是否是 IPv4 地址格式
+	parts := strings.Split(str, ".")
+	if len(parts) != 4 {
+		return false
+	}
+
+	for _, part := range parts {
+		num, err := strconv.Atoi(part)
+		if err != nil || num < 0 || num > 255 {
+			return false
+		}
+	}
+
+	return true
+}
+
+// validateServiceOptionalFields 验证服务的可选字段
+func validateServiceOptionalFields(serviceName string, serviceConfig map[string]interface{}) {
+	// 验证环境变量
+	if env, ok := serviceConfig["environment"]; ok {
+		switch envVal := env.(type) {
+		case map[string]interface{}:
+			// 格式正确
+		case []interface{}:
+			// 数组格式
+			for i, item := range envVal {
+				if _, ok := item.(string); !ok {
+					log.Printf("[app]: 警告: 服务 %s 的环境变量 %d 格式错误", serviceName, i)
+				}
+			}
+		default:
+			log.Printf("[app]: 警告: 服务 %s 的环境变量格式错误", serviceName)
+		}
+	}
+
+	// 验证卷挂载
+	if volumes, ok := serviceConfig["volumes"]; ok {
+		if volumeList, ok := volumes.([]interface{}); ok {
+			for i, volume := range volumeList {
+				if _, ok := volume.(string); !ok {
+					log.Printf("[app]: 警告: 服务 %s 的卷配置 %d 格式错误", serviceName, i)
+				}
+			}
+		} else {
+			log.Printf("[app]: 警告: 服务 %s 的卷配置格式错误", serviceName)
+		}
+	}
+
+	// 验证重启策略
+	if restart, ok := serviceConfig["restart"].(string); ok {
+		validRestartPolicies := []string{"no", "always", "on-failure", "unless-stopped"}
+		valid := false
+		for _, policy := range validRestartPolicies {
+			if restart == policy {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			log.Printf("[app]: 警告: 服务 %s 的重启策略 '%s' 无效", serviceName, restart)
+		}
+	}
 }
 
 func ValidateFilenameBasic(filename string) bool {

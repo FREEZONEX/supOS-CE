@@ -72,27 +72,15 @@ func RegisterRouter(appHost string, port int, stripPath bool) error {
 func SaveMenu(menu *model.MenuModel, appDomain string, appPort int) error {
 	log.Printf("[app]: 开始保存菜单: %s, indexUrl: %s", menu.Name, menu.IndexUrl)
 
-	// 1. 解析indexUrl，分离host和port
-	/*host, port, err := parseIndexUrl(menu.IndexUrl)
-	if err != nil {
-		log.Printf("[app]: 解析indexUrl失败: %v", err)
-		return errors.Parameter.WithMsg(fmt.Sprintf("parse indexUrl failed: %v", err))
-	}
-
-
-	log.Printf("[app]: 解析结果 - Host: %s, Port: %d", host, port)*/
-
 	if !strings.HasPrefix(menu.IndexUrl, "http://") && !strings.HasPrefix(menu.IndexUrl, "https://") {
 		menu.IndexUrl = fmt.Sprintf("/apps/%s%s", appDomain, menu.IndexUrl)
+		// 2. 调用RegisterRouter，注册kong的service和router
+		if err := RegisterRouter(appDomain, appPort, menu.StripPath); err != nil {
+			log.Printf("[app]: 注册Kong路由失败: %v", err)
+			return errors.Parameter.WithMsg(fmt.Sprintf("register route failed: %v", err))
+		}
+		log.Printf("[app]: Kong路由注册成功")
 	}
-
-	// 2. 调用RegisterRouter，注册kong的service和router
-	if err := RegisterRouter(appDomain, appPort, menu.StripPath); err != nil {
-		log.Printf("[app]: 注册Kong路由失败: %v", err)
-		return errors.Parameter.WithMsg(fmt.Sprintf("register route failed: %v", err))
-	}
-
-	log.Printf("[app]: Kong路由注册成功")
 
 	// 3. 将菜单数据保存到数据库表supos_resource
 	if err := saveMenuToDatabase(menu, appDomain); err != nil {

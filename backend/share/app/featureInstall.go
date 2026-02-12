@@ -18,6 +18,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+//
+/**
+ * TODO 1. iconUrl、description字段非必填校验
+*       2. 异常信息国际化
+*       3. 容器名、端口占用校验
+*/
+
 func InstallFeature(fc *model.NewFeatureModel) error {
 	if err := fc.Validate(); err != nil {
 		return err
