@@ -392,16 +392,14 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Route{
-				{
-					// 模板实例附件上传
-					Method:  http.MethodPost,
-					Path:    "/attachment",
-					Handler: suposopen.AttachmentUploadHandler(serverCtx),
-				},
-			}...,
-		),
+		[]rest.Route{
+			{
+				// 模板实例附件上传
+				Method:  http.MethodPost,
+				Path:    "/attachment",
+				Handler: suposopen.AttachmentUploadHandler(serverCtx),
+			},
+		},
 		rest.WithPrefix("/open-api/uns"),
 	)
 
