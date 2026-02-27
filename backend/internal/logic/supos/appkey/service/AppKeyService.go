@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/common"
+	"backend/internal/common/event"
 	"backend/internal/config"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
@@ -50,6 +51,36 @@ func (s *AppKeyService) Init(c config.Config) error {
 	s.host = c.Kong.Host
 	s.port = strconv.Itoa(c.Kong.Port)
 	s.path = "consumers/59d1ef15-24a5-4373-b957-e8192c15ff6e/key-auth"
+	return nil
+}
+
+// OnEventContextRefreshed 监听应用上下文刷新事件，自动创建appKey
+func (s *AppKeyService) OnEventContextRefreshed(event *event.ContextRefreshedEvent) error {
+	logx.Infof("AppKeyService: Checking for existing secret keys...")
+
+	// 获取密钥列表
+	ctx := context.Background()
+	keyList, err := s.GetSecretKeyList(ctx)
+	if err != nil {
+		logx.Errorf("AppKeyService: Failed to get secret key list: %v", err)
+		return err
+	}
+
+	// 判断列表是否为空
+	if len(keyList) == 0 {
+		logx.Infof("AppKeyService: No secret keys found, automatically creating one...")
+		success, err := s.CreateSecretKey(ctx)
+		if err != nil {
+			logx.Errorf("AppKeyService: Failed to create secret key: %v", err)
+			return err
+		}
+		if success {
+			logx.Infof("AppKeyService: Secret key created successfully")
+		}
+	} else {
+		logx.Infof("AppKeyService: Found %d existing secret keys, no action needed", len(keyList))
+	}
+
 	return nil
 }
 
