@@ -62,6 +62,7 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
             code: data?.code,
             finished: data?.progress >= 100,
             progress: data?.progress,
+            errTipFile: data?.errTipFile,
           });
           if (data?.progress >= 100) initTreeData({ reset: true });
         },
