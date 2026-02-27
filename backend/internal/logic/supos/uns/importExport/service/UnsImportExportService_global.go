@@ -8,7 +8,6 @@ import (
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
-	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -32,6 +31,7 @@ func (x exportServiceSlice) Less(i, j int) bool { return x[i].Order() < x[j].Ord
 func (x exportServiceSlice) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 var exportLock sync.Mutex
+var exportServiceNameMap map[string]ExportService
 
 func _initExporters() {
 	if exporters == nil {
@@ -39,19 +39,16 @@ func _initExporters() {
 		if exporters == nil {
 			exporters = spring.GetBeansOfType[ExportService]()
 			sort.Sort(exportServiceSlice(exporters))
+			exportServiceNameMap = make(map[string]ExportService, max(len(exporters), 8))
+			for _, exportService := range exporters {
+				exportServiceNameMap[exportService.FileName()] = exportService
+			}
 		}
 		exportLock.Unlock()
 	}
 }
 func getExporterByFileName(name string) ExportService {
-	i := base.BinarySearch(len(exporters), func(i int) int {
-		return cmp.Compare(exporters[i].FileName(), name)
-	})
-	if i >= 0 {
-		return exporters[i]
-	} else {
-		return nil
-	}
+	return exportServiceNameMap[name]
 }
 func (l *UnsImportExportService) FileName() string {
 	return "uns.json"
