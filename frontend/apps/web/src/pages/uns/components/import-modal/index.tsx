@@ -34,14 +34,12 @@ const Module: FC<ImportModalProps> = (props) => {
       open={open}
       onCancel={onCloseModal}
       title={
-        <div
+        <Flex
           style={{
-            display: 'flex',
-            justifyContent: 'start',
-            alignItems: 'center',
             cursor: 'pointer',
             width: 'fit-content',
           }}
+          gap={8}
         >
           <span>{formatMessage('common.import')}</span>
           <Tooltip
@@ -60,7 +58,7 @@ const Module: FC<ImportModalProps> = (props) => {
           >
             <QuestionCircleOutlined />
           </Tooltip>
-        </div>
+        </Flex>
       }
       width={460}
       maskClosable={false}

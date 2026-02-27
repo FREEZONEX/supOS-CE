@@ -8,7 +8,7 @@ tags:
 paths:
   /open-api/uns/attachment:
     post:
-      summary: 文件附件上传
+      summary: 附件上传
       deprecated: false
       description: ''
       operationId: uploadUnsAttachment
@@ -17,7 +17,7 @@ paths:
       parameters:
         - name: alias
           in: query
-          description: 文件别名
+          description: 文件或文件夹别名
           required: true
           schema:
             type: string

@@ -140,7 +140,7 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
               <Input
                 count={{
                   show: true,
-                  max: 10,
+                  max: 50,
                 }}
                 placeholder={formatMessage('rule.pleaseInput', { label: formatMessage('common.name') })}
               />

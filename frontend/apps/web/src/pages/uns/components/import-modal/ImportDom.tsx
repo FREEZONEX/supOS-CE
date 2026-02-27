@@ -121,7 +121,7 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
           ref={uploadRef}
           className={cx('import-upload', fileList?.length > 0 && 'upload-file')}
           action=""
-          accept=".json"
+          accept=".json,.zip"
           maxCount={1}
           disabled={loading}
           beforeUpload={beforeUpload}
