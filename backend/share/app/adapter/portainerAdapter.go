@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -1091,6 +1092,7 @@ func (p *PortainerAdapter) deployComposeYaml(ctx context.Context, composeYaml st
 		"PullImage":        false,
 	}
 
+	_, containerName, _ := extractContainerNameFromCompose(ctx, composeYaml)
 	reqJSON, err := json.Marshal(composeReq)
 	if err != nil {
 		return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.compose.request.serialize.failed"))
@@ -1161,7 +1163,7 @@ func (p *PortainerAdapter) deployComposeYaml(ctx context.Context, composeYaml st
 	// 11. 将部署完的容器加入到指定 Docker 网络
 	if network != "" {
 		log.Printf("[app]: 开始将 Stack %s 中的容器加入到网络 %s", stackName, network)
-		containerName, _ := extractContainerNameFromCompose(ctx, composeYaml)
+
 		if err := p.joinStackContainersToNetwork(ctx, containerName, stackName, network); err != nil {
 			log.Printf("[app]: 警告: 将容器加入到网络失败: %v", err)
 			// 不因为网络加入失败而返回错误，记录日志但继续执行
@@ -1172,30 +1174,33 @@ func (p *PortainerAdapter) deployComposeYaml(ctx context.Context, composeYaml st
 	return nil
 }
 
-// extractContainerNameFromCompose 从 Compose YAML 中提取服务名称
-func extractContainerNameFromCompose(ctx context.Context, composeYaml string) (string, error) {
+// extractContainerNameFromCompose 从 Compose YAML 中提取服务名称和容器名称
+func extractContainerNameFromCompose(ctx context.Context, composeYaml string) (serviceName, containerName string, err error) {
 
 	// 解析 YAML
 	var composeConfig map[string]interface{}
 	if err := yaml.Unmarshal([]byte(composeYaml), &composeConfig); err != nil {
-		return "", errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.yaml.parse.failed"))
+		return "", "", errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.yaml.parse.failed"))
 	}
 
 	// 检查 services 部分
 	services, ok := composeConfig["services"].(map[string]interface{})
 	if !ok || len(services) == 0 {
-		return "", errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.yaml.no.services"))
+		return "", "", errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.yaml.no.services"))
 	}
 
 	// 获取第一个服务名称
-	for _, serviceConfig := range services {
+	for svcName, serviceConfig := range services {
 		serviceMap, _ := serviceConfig.(map[string]interface{})
-		if containerName, ok := serviceMap["container_name"].(string); ok && containerName != "" {
-			return containerName, nil
+		// 如果没有指定 container_name，使用服务名作为容器名
+		if cn, ok := serviceMap["container_name"].(string); ok && cn != "" {
+			return svcName, cn, nil
 		}
+		// 如果只有一个服务且没有指定 container_name，使用服务名
+		return svcName, svcName, nil
 	}
 
-	return "", errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.yaml.no.service.name"))
+	return "", "", errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.yaml.no.service.name"))
 }
 
 // joinStackContainersToNetwork 将 Stack 中的所有容器加入到指定网络
@@ -1510,6 +1515,26 @@ func DeployComposeYaml(ctx context.Context, yaml string, network string) error {
 	return adapter.deployComposeYaml(ctx, yaml, network)
 }
 
+// CheckResourceAvailable 检查资源是否可用，包括端口占用情况
+func CheckResourceAvailable(ctx context.Context, containerName string, svcName string, containerPorts []int) error {
+	config := DefaultPortainerConfig()
+
+	adapter := NewPortainerAdapter(ctx, config, "")
+	//if exist, err := adapter.CheckServiceExists(ctx, svcName); exist || err != nil {
+	//	return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.service.existed", svcName))
+	//}
+	if exist, err := adapter.CheckContainerExists(ctx, containerName); exist || err != nil {
+		return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.container.existed", containerName))
+	}
+
+	// 验证映射的端口是否已经被占用
+	if err := adapter.checkPortAvailability(ctx, containerPorts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // 环境变量辅助函数
 func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
@@ -1648,4 +1673,198 @@ func (p *PortainerAdapter) DeleteImage(ctx context.Context, imageNameOrID string
 
 	log.Printf("[app]: 镜像 %s 删除成功", imageNameOrID)
 	return nil
+}
+
+func isHostPortOccupied(port int) bool {
+	// host.docker.internal 是指向宿主机的特殊域名
+	// 注意：需要在 docker run 时加上 --add-host=host.docker.internal:host-gateway
+	address := fmt.Sprintf("host.docker.internal:%d", port)
+
+	conn, err := net.DialTimeout("tcp", address, 2*time.Second)
+	if err != nil {
+		// 如果是 connection refused，通常说明端口没被监听
+		return false
+	}
+	conn.Close()
+	return true
+}
+
+// checkPortAvailability 检查端口是否已经被占用
+func (p *PortainerAdapter) checkPortAvailability(ctx context.Context, exposedPorts []int) error {
+	if len(exposedPorts) == 0 {
+		return nil
+	}
+
+	log.Printf("[app]: 开始检查端口占用情况: %v", exposedPorts)
+
+	for _, port := range exposedPorts {
+		// 尝试在指定端口上建立 TCP 连接
+		addr := fmt.Sprintf("host.docker.internal:%d", port)
+		conn, err := net.DialTimeout("tcp", addr, 2*time.Second)
+		if err == nil {
+			// 如果能成功连接，说明端口已被占用
+			conn.Close()
+			log.Printf("[app]: 端口 %d 已被占用 (TCP 检测到监听)", port)
+			return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.port.occupied", port))
+		}
+
+		log.Printf("[app]: 端口检测异常, %v", err)
+	}
+
+	log.Printf("[app]: 所有指定端口 %v 均可用", exposedPorts)
+	return nil
+}
+
+// CheckContainerExists 检查容器是否存在
+func (p *PortainerAdapter) CheckContainerExists(ctx context.Context, containerName string) (bool, error) {
+	if containerName == "" {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.container.name.empty"))
+	}
+
+	log.Printf("[app]: 检查容器是否存在: %s", containerName)
+
+	// 1. 构建请求URL
+	url := fmt.Sprintf("%s/endpoints/%d/docker/containers/json", p.config.BaseURL, p.config.EndpointID)
+
+	// 2. 创建请求
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.container.list.request.create.failed"))
+	}
+
+	// 3. 添加认证头
+	if err := p.addAuthHeader(req); err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.request.auth.failed"))
+	}
+
+	// 4. 发送请求
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.container.list.request.send.failed"))
+	}
+	defer resp.Body.Close()
+
+	// 5. 检查响应状态
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.api.error", string(body)))
+	}
+
+	// 6. 解析响应
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.response.read.failed"))
+	}
+
+	var containers []ContainerListItem
+	if err := json.Unmarshal(body, &containers); err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.container.list.parse.failed"))
+	}
+
+	// 7. 查找容器
+	for _, container := range containers {
+		for _, name := range container.Names {
+			// 移除开头的斜杠
+			cleanName := strings.TrimPrefix(name, "/")
+			if cleanName == containerName {
+				log.Printf("[app]: 容器已存在: %s", containerName)
+				return true, nil
+			}
+		}
+	}
+
+	log.Printf("[app]: 容器不存在: %s", containerName)
+	return false, nil
+}
+
+// CheckServiceExists 检查 Stack 中的服务是否存在
+func (p *PortainerAdapter) CheckServiceExists(ctx context.Context, serviceName string) (bool, error) {
+	if serviceName == "" {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.service.name.empty"))
+	}
+
+	log.Printf("[app]: 检查服务是否存在: %s", serviceName)
+
+	// 1. 获取所有 Stack
+	url := fmt.Sprintf("%s/stacks", p.config.BaseURL)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.stack.list.request.create.failed"))
+	}
+
+	if err := p.addAuthHeader(req); err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.request.auth.failed"))
+	}
+
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.stack.list.request.send.failed"))
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.api.error", string(body)))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.response.read.failed"))
+	}
+
+	var stacks []map[string]interface{}
+	if err := json.Unmarshal(body, &stacks); err != nil {
+		return false, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.stack.list.parse.failed"))
+	}
+	log.Printf("1.==== %v =====", stacks)
+	// 2. 检查每个 Stack 的服务
+	for _, stack := range stacks {
+		stackID, ok := stack["Id"].(float64)
+		if !ok {
+			continue
+		}
+
+		// 获取 Stack 详细信息
+		stackDetailURL := fmt.Sprintf("%s/stacks/%d", p.config.BaseURL, int(stackID))
+		stackReq, err := http.NewRequest("GET", stackDetailURL, nil)
+		if err != nil {
+			continue
+		}
+
+		if err := p.addAuthHeader(stackReq); err != nil {
+			continue
+		}
+
+		stackResp, err := p.client.Do(stackReq)
+		if err != nil {
+			continue
+		}
+
+		if stackResp.StatusCode == http.StatusOK {
+			stackBody, _ := io.ReadAll(stackResp.Body)
+			var stackDetail map[string]interface{}
+			if err := json.Unmarshal(stackBody, &stackDetail); err == nil {
+				log.Printf("2. ==== %v =====", stackDetail)
+				// 解析 StackFileContent (YAML)
+				if composeContent, ok := stackDetail["StackFileContent"].(string); ok {
+					log.Printf("3. ==== %v =====", composeContent)
+					var composeConfig map[string]interface{}
+					if err := yaml.Unmarshal([]byte(composeContent), &composeConfig); err == nil {
+						if services, ok := composeConfig["services"].(map[string]interface{}); ok {
+							if _, exists := services[serviceName]; exists {
+								log.Printf("[app]: 服务已存在于 Stack 中: %s", serviceName)
+								stackResp.Body.Close()
+								return true, nil
+							}
+						}
+					}
+				}
+			}
+		}
+		stackResp.Body.Close()
+	}
+
+	log.Printf("[app]: 服务不存在: %s", serviceName)
+	return false, nil
 }

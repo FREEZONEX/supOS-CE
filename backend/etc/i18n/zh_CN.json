@@ -1852,6 +1852,7 @@
   "portainer.container.delete.request.create.failed": "创建删除容器请求失败",
   "portainer.container.delete.request.send.failed": "发送删除容器请求失败",
   "portainer.container.nameOrId.empty": "容器名称或ID不能为空",
+  "portainer.service.name.empty": "服务名称不能为空",
   "portainer.network.not.found": "网络不存在",
   "portainer.network.create.request.create.failed": "创建网络创建请求失败",
   "portainer.network.create.request.send.failed": "发送网络创建请求失败",
@@ -1900,5 +1901,8 @@
   "portainer.auth.response.parse.failed": "解析认证响应失败",
   "portainer.connect.request.serialize.failed": "序列化连接请求失败",
   "portainer.stack.create.request.serialize.failed": "序列化Stack创建请求失败",
-  "portainer.network.create.request_serialize_failed": "序列化网络创建请求失败"
+  "portainer.network.create.request_serialize_failed": "序列化网络创建请求失败",
+  "portainer.container.existed": "容器名 %s 已存在",
+  "portainer.service.existed": "服务名 %s 已存在",
+  "portainer.port.occupied": "端口 %d 已被占用"
 }

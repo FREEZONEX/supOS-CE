@@ -51,7 +51,7 @@ func InstallFeature(ctx context.Context, fc *model.NewFeatureModel) error {
 
 	if fc.ComposeYaml != "" {
 		// 从 Compose YAML 中提取容器名称和端口
-		name, ports, err := extractContainerInfoFromCompose(fc.ComposeYaml)
+		svcName, name, exposedPorts, ports, err := extractContainerInfoFromCompose(fc.ComposeYaml)
 		if err != nil {
 			log.Printf("[app]: 警告: 从 Compose YAML 提取容器信息失败: %v", err)
 			// 不因为提取失败而停止安装
@@ -59,6 +59,9 @@ func InstallFeature(ctx context.Context, fc *model.NewFeatureModel) error {
 			containerName = name
 			containerPorts = ports
 			log.Printf("[app]: 从 Compose YAML 提取到容器信息: 名称=%s, 端口=%v", containerName, containerPorts)
+		}
+		if err := adapter.CheckResourceAvailable(ctx, name, svcName, exposedPorts); err != nil {
+			return err
 		}
 		// 部署docker compose文件
 		defaultNetwork := "tier0_edge_network"
@@ -80,18 +83,18 @@ func InstallFeature(ctx context.Context, fc *model.NewFeatureModel) error {
 	return saveFeatureConfig(fc)
 }
 
-func extractContainerInfoFromCompose(composeYaml string) (string, []int, error) {
+func extractContainerInfoFromCompose(composeYaml string) (string, string, []int, []int, error) {
 
 	// 解析 YAML
 	var composeConfig map[string]interface{}
 	if err := yaml.Unmarshal([]byte(composeYaml), &composeConfig); err != nil {
-		return "", nil, errors.Parameter.WithMsg(fmt.Sprintf("解析 Compose YAML 失败: %v", err))
+		return "", "", nil, nil, errors.Parameter.WithMsg(fmt.Sprintf("解析 Compose YAML 失败: %v", err))
 	}
 
 	// 检查 services 部分
 	services, ok := composeConfig["services"].(map[string]interface{})
 	if !ok || len(services) == 0 {
-		return "", nil, errors.Parameter.WithMsg(fmt.Sprintf("Compose YAML 中没有找到 services 部分"))
+		return "", "", nil, nil, errors.Parameter.WithMsg(fmt.Sprintf("Compose YAML 中没有找到 services 部分"))
 	}
 
 	// 获取第一个服务（通常只有一个主要服务）
@@ -106,7 +109,7 @@ func extractContainerInfoFromCompose(composeYaml string) (string, []int, error) 
 	// 解析服务配置
 	serviceConfig, ok := firstServiceConfig.(map[string]interface{})
 	if !ok {
-		return "", nil, errors.Parameter.WithMsg(fmt.Sprintf("服务配置格式错误"))
+		return "", "", nil, nil, errors.Parameter.WithMsg(fmt.Sprintf("服务配置格式错误"))
 	}
 
 	// 提取容器名称
@@ -120,6 +123,7 @@ func extractContainerInfoFromCompose(composeYaml string) (string, []int, error) 
 
 	// 提取端口
 	var ports []int
+	var exposedPorts []int
 	if portsConfig, ok := serviceConfig["ports"].([]interface{}); ok {
 		for _, portItem := range portsConfig {
 			portStr, ok := portItem.(string)
@@ -135,6 +139,7 @@ func extractContainerInfoFromCompose(composeYaml string) (string, []int, error) 
 
 			// 获取容器内部端口（通常是第二部分）
 			var containerPortStr string
+			var exposedPortStr string
 			if len(portParts) == 2 {
 				// 格式: "主机端口:容器端口"
 				containerPortStr = portParts[1]
@@ -142,6 +147,7 @@ func extractContainerInfoFromCompose(composeYaml string) (string, []int, error) 
 				// 格式: "容器端口" 或 "主机端口"
 				containerPortStr = portParts[0]
 			}
+			exposedPortStr = portParts[0]
 
 			// 移除可能的协议后缀（如 /tcp, /udp）
 			if slashIndex := strings.Index(containerPortStr, "/"); slashIndex != -1 {
@@ -150,12 +156,14 @@ func extractContainerInfoFromCompose(composeYaml string) (string, []int, error) 
 
 			// 转换为整数
 			port, err := parsePort(containerPortStr)
+			exposedPort, err := parsePort(exposedPortStr)
 			if err != nil {
 				log.Printf("[app]: 警告: 无法解析端口 %s: %v", containerPortStr, err)
 				continue
 			}
 
 			ports = append(ports, port)
+			exposedPorts = append(exposedPorts, exposedPort)
 		}
 	}
 
@@ -180,7 +188,7 @@ func extractContainerInfoFromCompose(composeYaml string) (string, []int, error) 
 	}
 
 	log.Printf("[app]: 从 Compose YAML 提取信息: 容器名称=%s, 端口=%v", containerName, ports)
-	return containerName, ports, nil
+	return firstServiceName, containerName, exposedPorts, ports, nil
 }
 
 // parsePort 解析端口字符串
