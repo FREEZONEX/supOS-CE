@@ -5,6 +5,7 @@ import (
 	"backend/internal/common/utils/datetimeutils"
 	"backend/internal/types"
 	"backend/share/base"
+	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -117,14 +118,15 @@ func checkFieldValue(fieldType types.FieldType, v string, maxStrLen int) (newVal
 			}
 		}
 	}
+	ctx := context.Background()
 	if len(errField) > 0 {
 		qos = 0x400000000000000
-		errMsg = I18nUtils.GetMessage("uns.invalid.type", v)
+		errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.invalid.type", v)
 	}
 	if len(errOutOfRange) > 0 {
 		qos = 0x80000000000000 //超量程（工程单位）值"
 		var tip = fmt.Sprintf("%s...len=%d", v[:min(10, len(v))], len(v))
-		errMsg = I18nUtils.GetMessage("uns.invalid.toLong", tip)
+		errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.invalid.toLong", tip)
 	}
 	return
 }

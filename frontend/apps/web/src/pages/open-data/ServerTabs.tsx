@@ -27,11 +27,11 @@ const ServerTabs = (props: PropsTypes) => {
         />
       ),
     },
-    {
-      key: 'websocket',
-      label: 'websocket',
-      children: <ServerDemo {...(demoData?.websocket as any)?.({})} className={styles.demoBox} />,
-    },
+    // {
+    //   key: 'websocket',
+    //   label: 'websocket',
+    //   children: <ServerDemo {...(demoData?.websocket as any)?.({})} className={styles.demoBox} />,
+    // },
     {
       key: 'MQTT',
       label: 'MQTT',

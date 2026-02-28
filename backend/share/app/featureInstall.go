@@ -4,6 +4,7 @@ import (
 	"backend/share/app/adapter"
 	"backend/share/app/model"
 	"backend/share/app/util"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -25,7 +26,7 @@ import (
 *       3. 容器名、端口占用校验
 */
 
-func InstallFeature(fc *model.NewFeatureModel) error {
+func InstallFeature(ctx context.Context, fc *model.NewFeatureModel) error {
 	if err := fc.Validate(); err != nil {
 		return err
 	}
@@ -34,13 +35,13 @@ func InstallFeature(fc *model.NewFeatureModel) error {
 	switch fc.GetImageSource() {
 	case "local":
 		{
-			if err := adapter.LoadImageFromLocal(fc.ImagePath); err != nil {
+			if err := adapter.LoadImageFromLocal(ctx, fc.ImagePath); err != nil {
 				return err
 			}
 		}
 	case "remote":
 		{
-			if err := adapter.PullImageFromRemote(fc.ImageUrl); err != nil {
+			if err := adapter.PullImageFromRemote(ctx, fc.ImageUrl); err != nil {
 				return err
 			}
 		}
@@ -61,7 +62,7 @@ func InstallFeature(fc *model.NewFeatureModel) error {
 		}
 		// 部署docker compose文件
 		defaultNetwork := "tier0_edge_network"
-		if err := adapter.DeployComposeYaml(fc.ComposeYaml, defaultNetwork); err != nil {
+		if err := adapter.DeployComposeYaml(ctx, fc.ComposeYaml, defaultNetwork); err != nil {
 			return err
 		}
 	}

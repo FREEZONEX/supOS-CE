@@ -1,6 +1,7 @@
 package system
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/serviceApi"
 	"backend/internal/common/utils/apiutil"
 	"backend/internal/common/utils/dbpool"
@@ -43,6 +44,11 @@ func Devtest(ctx context.Context, params map[string][]string) (resp map[string]i
 						resp[a] = uns
 					}
 				}
+			}
+		}
+		if i18nKeys := params["i18n"]; len(i18nKeys) > 0 {
+			for _, k := range i18nKeys {
+				resp[k] = I18nUtils.GetMessageWithCtx(ctx, k)
 			}
 		}
 	}

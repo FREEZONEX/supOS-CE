@@ -38,14 +38,15 @@ func NewPostLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PostLogic {
 func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err error) {
 
 	name := *req.Name
+	ctx := l.ctx
 	if req.Name == nil || name == "" {
-		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.name.isnotblank"))
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.name.isnotblank"))
 	}
 	db := stores.GetCommonConn(l.ctx)
 	groupMapper := &relationDB.GroupMapper{}
 
 	if utf8.RuneCountInString(name) > 255 {
-		message := I18nUtils.GetMessage("group.name.maxLength")
+		message := I18nUtils.GetMessageWithCtx(ctx, "group.name.maxLength")
 		return nil, errors.Database.WithMsg(message).AddDetail(err)
 	}
 
@@ -55,7 +56,7 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 	}
 
 	if utf8.RuneCountInString(desc) > 255 {
-		message := I18nUtils.GetMessage("group.name.maxLength")
+		message := I18nUtils.GetMessageWithCtx(ctx, "group.name.maxLength")
 		return nil, errors.Database.WithMsg(message).AddDetail(err)
 	}
 
@@ -63,10 +64,10 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 	existingGroup, err := groupMapper.SelectByName(db, name, *req.Type)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
-		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.create.failed")).AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.create.failed")).AddDetail(err)
 	}
 	if len(existingGroup) > 0 {
-		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.name.duplication"))
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.name.duplication"))
 	}
 
 	// 构建组模型
@@ -94,7 +95,7 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 	// 插入数据
 	if err = groupMapper.Insert(db, group); err != nil {
 		l.Errorf("创建组失败: %v", err)
-		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.create.failed")).AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.create.failed")).AddDetail(err)
 	}
 
 	return &types.JsonResult{

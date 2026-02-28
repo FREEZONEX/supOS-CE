@@ -178,8 +178,8 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
     "head": {
          "version": "1.0.0",
          "cmd": 5
-     },    
-     "data": { 
+     },
+     "data": {
          "source": {
              "topic": [               // ${getIntl('supportWildcard')}
                 "SIMEvent_Alarm_PADeviceConditionClassType_.*",
@@ -197,11 +197,11 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
                     value: `{
     "head": {
          "version": "1.0.0",
-         "cmd": 2      
+         "cmd": 2
      },
      "data": {
          "requestCmd": 5,            // ${getIntl('requestCommandNumber')}
-         "msg": "",                
+         "msg": "",
          "code": number               // ${getIntl('responseCode')}
     }
 }
@@ -215,8 +215,8 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
     "head": {
          "version": "1.0.0",
          "cmd": 6
-      },       
-     "data": { 
+      },
+     "data": {
          "source": "6a5375b29c63516de6c2a82e9cbb113c",  // ${getIntl('collectorAlias')}
          "payload": [
              {
@@ -281,18 +281,18 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
               maxCollapsedNumberOfRows: 26,
               value: `
       const mqtt = require('mqtt');
-    
+
       const options = {
-        clean: true, 
-        connectTimeout: 4000, 
+        clean: true,
+        connectTimeout: 4000,
         clientId: 'emqx_test',
         rejectUnauthorized: false,
       };
-    
+
       const connectUrl ='ws://${hostName}:8083/mqtt';
-    
+
       const client = mqtt.connect(connectUrl, options);
-    
+
       client.on('connect', function () {
         console.log('Connected');
         client.subscribe('${topic}', function (err) {
@@ -302,7 +302,7 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
           }
         });
       });
-      
+
       client.on('message', function (topic, message) {
         console.log(topic, message.toString());
       });
@@ -360,10 +360,10 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
               maxCollapsedNumberOfRows: 26,
               value: `
        import com.alibaba.fastjson.JSONObject;
-       import org.eclipse.paho.client.mqttv3.*; 
-       
+       import org.eclipse.paho.client.mqttv3.*;
+
        public class MqttDemo {
-    
+
         public static void main(String[] args) {
             //${getIntl('uns.mqttServer')}
             String broker = "tcp://${hostName}:${tcpPort}";
@@ -381,7 +381,7 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
     ${fieldExampleList?.map((item: any) => `        resource.put("${item.key}", ${item.type === 'string' ? '"' + item.value + '"' : item.type === 'datetime' ? item.value + 'L' : item.value});`).join('\n')}
             String content = resource.toString();
             root.put("_resource_", resource);
-            
+
             try {
                 //${getIntl('uns.mqttCreateClient')}
                 MqttAsyncClient client = new MqttAsyncClient(broker, clientId);
@@ -390,25 +390,25 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
                 options.setCleanSession(true);
                 options.setConnectionTimeout(10);
                 options.setAutomaticReconnect(true);
-    
+
                 //${getIntl('uns.mqttConnect')}
                 client.setCallback(new MqttCallback() {
                     @Override
                     public void connectionLost(Throwable cause) {
                         System.out.println("Connection to MQTT broker lost!");
                     }
-    
+
                     @Override
                     public void messageArrived(String topic, MqttMessage message) throws Exception {
                         System.out.printf("Message arrived. Topic: %s Message: %s%n", topic, new String(message.getPayload()));
                     }
-    
+
                     @Override
                     public void deliveryComplete(IMqttDeliveryToken token) {
                         System.out.println("Delivery is complete!");
                     }
                 });
-                
+
                 //${getIntl('uns.ConnectToMQTTServer')}
                 System.out.println("Connecting to broker: " + broker);
                 IMqttToken token = client.connect(options);
@@ -416,7 +416,7 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
                 if (token.isComplete() && token.getException() == null) {
                     System.out.println("Connected with result code " + token.getResponse().toString());
                 }
-    
+
                 //${getIntl('uns.mqttPublish')}
                 for (int i = 0; i< 20; i++) {
                     MqttMessage message = new MqttMessage(content.getBytes());
@@ -425,8 +425,8 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
                     client.publish(topic, message);
                     Thread.sleep(1000);
                 }
-    
-    
+
+
                 //${getIntl('uns.mqttDisconnect')}
                 Thread.sleep(10000);
                 client.disconnect();
@@ -471,9 +471,9 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
       String jdbcUrl = "jdbc:TAOS-RS://localhost:6041?user=root&password=taosdata";
       try (Connection conn = DriverManager.getConnection(jdbcUrl)) {
           System.out.println("Connected to " + jdbcUrl + " successfully.");
-  
+
           // you can use the connection for execute SQL here
-  
+
       } catch (Exception ex) {
           // please refer to the JDBC specifications for detailed exceptions info
           System.out.printf("Failed to connect to %s, %sErrMessage: %s%n",
@@ -512,7 +512,7 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
             maxCollapsedNumberOfRows: 26,
             value: `
   import taosrest
-  
+
   def create_connection():
       conn = None
       url="http://localhost:6041"
@@ -521,13 +521,13 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
                                   user="root",
                                   password="taosdata",
                                   timeout=30)
-          
+
           print(f"Connected to {url} successfully.");
       except Exception as err:
           print(f"Failed to connect to {url} , ErrMessage:{err}")
       finally:
           if conn:
-              conn.close() 
+              conn.close()
 `,
           },
         ],
@@ -555,14 +555,14 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
             maxCollapsedNumberOfRows: 26,
             value: `
   package main
-  
+
   import (
       "database/sql"
       "fmt"
       "log"
       _ "github.com/taosdata/driver-go/v3/taosRestful"
   )
-  
+
   func main() {
       // use
       // var taosDSN = "root:taosdata@http(localhost:6041)/dbName"
@@ -603,7 +603,7 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
               <table class="demo-table">
                 <tr>
                   <th>${getIntl('parameter')}</th>
-                  <th>${getIntl('description')}</th>
+                  <th>${getIntl('common.description')}</th>
                   <th>${getIntl('default')}</th>
                   <th>${getIntl('example')}</th>
                 </tr>
@@ -650,7 +650,7 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
               <table class="demo-table">
                 <tr>
                   <th>${getIntl('environmentVariables')}</th>
-                  <th>${getIntl('description')}</th>
+                  <th>${getIntl('common.description')}</th>
                   <th>${getIntl('correspondingCommandLineParameter')}</th>
                 </tr>
                 <tr>

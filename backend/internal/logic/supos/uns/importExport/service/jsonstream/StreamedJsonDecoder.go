@@ -2,6 +2,7 @@ package jsonstream
 
 import (
 	"backend/internal/common/I18nUtils"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,10 +23,11 @@ func (l *loggedReader) Read(p []byte) (n int, err error) {
 }
 
 type parseContext[TreeNode any, FlatNode any] struct {
+	context       context.Context
 	batchSize     int
 	reader        *loggedReader
 	decoder       *json.Decoder
-	tree2flat     func(propName string, node, parent *TreeNode) *FlatNode
+	tree2flat     func(ctx context.Context, propName string, node, parent *TreeNode) *FlatNode
 	errConsumer   func(node *TreeNode)
 	consumer      func(readSize int64, propName string, nodes []*FlatNode)
 	fieldIndexMap map[string]int
@@ -37,39 +39,43 @@ type parseContext[TreeNode any, FlatNode any] struct {
 
 // DecodeJsonTreeToFlat 把树形json流式解析为平铺结构
 func DecodeJsonTreeToFlat[TreeNode any, FlatNode any](
+	ctx context.Context,
 	reader io.Reader,
 	batchSize int,
-	tree2flat func(propName string, node, parent *TreeNode) *FlatNode,
+	tree2flat func(ctx context.Context, propName string, node, parent *TreeNode) *FlatNode,
 	consumer func(readSize int64, propName string, nodes []*FlatNode),
 	errConsumer func(node *TreeNode),
 ) error {
 	lr := &loggedReader{tar: reader}
 	decoder := json.NewDecoder(lr)
-	return decodeJsonTreeToFlat(decoder, lr, batchSize, tree2flat, consumer, errConsumer)
+	return decodeJsonTreeToFlat(ctx, decoder, lr, batchSize, tree2flat, consumer, errConsumer)
 }
 
 // DecodeJsonTreeToFlat 把树形json流式解析为平铺结构
 func DecodeJsonTreeToFlatByJsonDecoder[TreeNode any, FlatNode any](
+	ctx context.Context,
 	decoder *json.Decoder,
 	batchSize int,
-	tree2flat func(propName string, node, parent *TreeNode) *FlatNode,
+	tree2flat func(ctx context.Context, propName string, node, parent *TreeNode) *FlatNode,
 	consumer func(readSize int64, propName string, nodes []*FlatNode),
 	errConsumer func(node *TreeNode),
 ) error {
-	return decodeJsonTreeToFlat(decoder, &loggedReader{}, batchSize, tree2flat, consumer, errConsumer)
+	return decodeJsonTreeToFlat(ctx, decoder, &loggedReader{}, batchSize, tree2flat, consumer, errConsumer)
 }
 
 // DecodeJsonTreeToFlat 把树形json流式解析为平铺结构
 func decodeJsonTreeToFlat[TreeNode any, FlatNode any](
+	Ctx context.Context,
 	decoder *json.Decoder,
 	lr *loggedReader,
 	batchSize int,
-	tree2flat func(propName string, node, parent *TreeNode) *FlatNode,
+	tree2flat func(ctx context.Context, propName string, node, parent *TreeNode) *FlatNode,
 	consumer func(readSize int64, propName string, nodes []*FlatNode),
 	errConsumer func(node *TreeNode),
 ) error {
 	batchSize = max(batchSize, 1)
 	ctx := &parseContext[TreeNode, FlatNode]{
+		context:     Ctx,
 		batchSize:   batchSize,
 		reader:      lr,
 		decoder:     decoder,
@@ -100,7 +106,7 @@ func decodeJsonTreeToFlat[TreeNode any, FlatNode any](
 			// 读取字段名
 			fieldName, er := decoder.Token()
 			if er != nil {
-				return jsonErr(er)
+				return jsonErr(Ctx, er)
 			}
 
 			propName, isString := fieldName.(string)
@@ -112,7 +118,7 @@ func decodeJsonTreeToFlat[TreeNode any, FlatNode any](
 			// 读取数组开始标记
 			t, err := decoder.Token()
 			if err != nil {
-				return jsonErr(err)
+				return jsonErr(Ctx, err)
 			}
 			if t != json.Delim('[') {
 				continue // 跳过未知字段的值
@@ -128,7 +134,7 @@ func decodeJsonTreeToFlat[TreeNode any, FlatNode any](
 		// 读取对象结束标记
 		t, err := decoder.Token()
 		if err != nil {
-			return jsonErr(err)
+			return jsonErr(Ctx, err)
 		}
 		if t != json.Delim('}') {
 			return fmt.Errorf("expected object end, got %v", t)
@@ -139,7 +145,7 @@ func decodeJsonTreeToFlat[TreeNode any, FlatNode any](
 	}
 }
 func accept[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode], node, parent *TreeNode, propName string) bool {
-	flat := ctx.tree2flat(propName, node, parent)
+	flat := ctx.tree2flat(ctx.context, propName, node, parent)
 	if flat == nil {
 		ctx.prevPropName = propName
 		ctx.errConsumer(node)
@@ -177,9 +183,9 @@ func finish[TreeNode any, FlatNode any](ctx *parseContext[TreeNode, FlatNode]) {
 		ctx.cacheBatch = ctx.cacheBatch[:0]
 	}
 }
-func jsonErr(err error) error {
+func jsonErr(ctx context.Context, err error) error {
 	if je, is := err.(*json.SyntaxError); is {
-		return fmt.Errorf("%s: %d: %v", I18nUtils.GetMessage("uns.import.json.error"), je.Offset, je.Error())
+		return fmt.Errorf("%s: %d: %v", I18nUtils.GetMessageWithCtx(ctx, "uns.import.json.error"), je.Offset, je.Error())
 	}
 	return err
 }

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"strings"
+	"time"
 
 	"gitee.com/unitedrhino/share/conf"
 	"gitee.com/unitedrhino/share/stores"
@@ -27,15 +28,16 @@ func Migrate(c conf.Database) error {
 	//if c.IsInitTable == false {
 	//	return nil
 	//}
-	db := stores.GetCommonConn(context.TODO())
-
 	fs.WalkDir(sqlFiles, "migrations_sqls", func(path string, d fs.DirEntry, err error) error {
 		if strings.HasSuffix(path, ".sql") && !d.IsDir() {
 			if bs, er := sqlFiles.ReadFile(path); er == nil && len(bs) > 0 {
 				sqlContent := strings.Split(string(bs), ";")
 				if len(sqlContent) > 0 {
 					for _, sql := range sqlContent {
+						ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+						db := stores.GetCommonConn(ctx)
 						err := db.Exec(sql).Error
+						cancel()
 						if err != nil {
 							log.Println("SQL WARN:", err, sql)
 						} else {
@@ -49,6 +51,8 @@ func Migrate(c conf.Database) error {
 		}
 		return nil
 	})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	db := stores.GetCommonConn(ctx)
 	addPrimaryKeyForFlowUnsLink(db)
 	var unsDao UnsNamespaceRepo
 	unsDao.migrate(db)
@@ -60,6 +64,7 @@ func Migrate(c conf.Database) error {
 		// &UnsNamespace{},
 		&UnsLabel{},
 	)
+	cancel()
 
 	return err
 }

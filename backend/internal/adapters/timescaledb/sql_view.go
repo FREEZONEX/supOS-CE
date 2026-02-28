@@ -48,6 +48,8 @@ func (g *SQLGenerator) GenerateViewSQL(
 				// FLOAT 类型需要转换为 float4
 				selectExpr = fmt.Sprintf(`"%s"::real`, sourceCol)
 			}
+		}
+		if field.Name != selectExpr && !strings.Contains(selectExpr, " as ") {
 			// 添加别名
 			selectExpr = fmt.Sprintf(`%s as "%s"`, selectExpr, field.Name)
 		}

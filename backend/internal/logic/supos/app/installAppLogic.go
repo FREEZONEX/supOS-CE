@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"backend/internal/common/I18nUtils"
 	"backend/internal/svc"
 	"backend/internal/types"
 	"backend/share/app"
@@ -43,7 +42,7 @@ func (l *InstallAppLogic) InstallApp(req *types.InstallAppRequest) (resp *types.
 	}
 
 	// 调用安装功能
-	if err := app.InstallFeature(featureModel); err != nil {
+	if err := app.InstallFeature(l.ctx, featureModel); err != nil {
 		logx.Errorf("[InstallApp] 安装应用失败: %v", err)
 		return nil, err
 	}
@@ -53,14 +52,12 @@ func (l *InstallAppLogic) InstallApp(req *types.InstallAppRequest) (resp *types.
 	responseData := types.InstallResult{
 		Name:        req.Name,
 		Success:     true,
-		Message:     I18nUtils.GetMessage("app.install.success"),
 		InstallTime: installTime,
 	}
 
 	logx.Info("[InstallApp] 应用安装成功:", req.Name)
 	return &types.InstallAppResponse{
-		Code:    200,
-		Message: I18nUtils.GetMessage("app.install.success"),
-		Data:    responseData,
+		Code: 200,
+		Data: responseData,
 	}, nil
 }

@@ -14,7 +14,7 @@ func (l *UnsTemplateService) UpdateBaseInfo(ctx context.Context, req *types.Upda
 	db := dao.GetDb(ctx)
 	uns, er := l.unsMapper.SelectById(db, req.ID)
 	if er != nil || uns == nil {
-		rs.Msg = I18nUtils.GetMessage("uns.template.not.exists")
+		rs.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 		return
 	}
 	unsDto := &types.CreateTopicDto{
@@ -36,7 +36,7 @@ func (l *UnsTemplateService) UpdateFieldsAndDesc(ctx context.Context, req *types
 	db := dao.GetDb(ctx)
 	uns, er := l.unsMapper.GetByAlias(db, req.Alias)
 	if er != nil || uns == nil {
-		rs.Msg = I18nUtils.GetMessage("uns.template.not.exists")
+		rs.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 		return
 	}
 	unsDto := &types.CreateTopicDto{
@@ -58,7 +58,7 @@ func (l *UnsTemplateService) UpdateSubscribe(ctx context.Context, req *types.Upd
 	db := dao.GetDb(ctx)
 	uns, er := l.unsMapper.SelectById(db, req.ID)
 	if er != nil || uns == nil {
-		rs.Msg = I18nUtils.GetMessage("uns.template.not.exists")
+		rs.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 		return
 	}
 	unsDto := &types.CreateTopicDto{

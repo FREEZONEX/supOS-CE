@@ -46,11 +46,11 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 	if len(idMap) < len(ids) {
 		resp.Code = 400
 		if len(idMap) == 0 {
-			resp.Msg = I18nUtils.GetMessage("uns.folder.or.file.not.found") + ":" + fmt.Sprintf("%+v", ids)
+			resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found") + ":" + fmt.Sprintf("%+v", ids)
 		} else {
 			for _, id := range ids {
 				if !base.MapContainsKey(idMap, id) {
-					resp.Msg = I18nUtils.GetMessage("uns.folder.or.file.not.found") + ":" + strconv.FormatInt(id, 10)
+					resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found") + ":" + strconv.FormatInt(id, 10)
 					break
 				}
 			}
