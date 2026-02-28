@@ -15,7 +15,7 @@ type MenuModel struct {
 	Name string `json:"name" yaml:"name" gorm:"column:name;not null;uniqueIndex"`
 
 	// Description 菜单描述
-	Description string `json:"description,optional" yaml:"description" gorm:"column:description"`
+	Description string `json:"description" yaml:"description" gorm:"column:description"`
 
 	// IndexUrl 菜单索引URL
 	// 菜单项对应的前端路由或页面URL
@@ -35,7 +35,7 @@ type MenuModel struct {
 
 	// IconUrl 图标URL
 	// 菜单图标地址，可以是本地路径或远程URL
-	IconUrl string `json:"iconUrl,optional" yaml:"iconUrl" gorm:"column:icon_url"`
+	IconUrl string `json:"iconUrl" yaml:"iconUrl" gorm:"column:icon_url"`
 }
 
 // Validate 验证菜单模型字段

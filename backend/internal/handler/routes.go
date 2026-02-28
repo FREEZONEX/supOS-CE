@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	suposapp "backend/internal/handler/supos/app"
-	suposattachment "backend/internal/handler/supos/attachment"
 	suposappkey "backend/internal/handler/supos/appkey"
+	suposattachment "backend/internal/handler/supos/attachment"
 	suposauth "backend/internal/handler/supos/auth"
 	suposdevtools "backend/internal/handler/supos/devtools"
 	suposeventflow "backend/internal/handler/supos/eventflow"
@@ -49,6 +49,51 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
+					// Install a new application
+					Method:  http.MethodPost,
+					Path:    "/install",
+					Handler: suposapp.InstallAppHandler(serverCtx),
+				},
+				{
+					// List all installed applications
+					Method:  http.MethodGet,
+					Path:    "/installed",
+					Handler: suposapp.ListInstalledAppsHandler(serverCtx),
+				},
+				{
+					// Get application details by name
+					Method:  http.MethodGet,
+					Path:    "/installed/:name",
+					Handler: suposapp.GetAppByNameHandler(serverCtx),
+				},
+				{
+					// Search installed applications
+					Method:  http.MethodGet,
+					Path:    "/installed/search",
+					Handler: suposapp.SearchAppsHandler(serverCtx),
+				},
+				{
+					// Uninstall an application
+					Method:  http.MethodDelete,
+					Path:    "/uninstall/:name",
+					Handler: suposapp.UninstallAppHandler(serverCtx),
+				},
+				{
+					// Update application configuration
+					Method:  http.MethodPut,
+					Path:    "/update",
+					Handler: suposapp.UpdateAppHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/app"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
 					// 创建密钥
 					Method:  http.MethodPost,
 					Path:    "/",
@@ -75,6 +120,39 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/inter-api/supos/app/secretKey"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// Delete attachment
+					Method:  http.MethodDelete,
+					Path:    "/delete",
+					Handler: suposattachment.DeleteAttachmentHandler(serverCtx),
+				},
+				{
+					// Download attachment
+					Method:  http.MethodGet,
+					Path:    "/download",
+					Handler: suposattachment.DownloadAttachmentHandler(serverCtx),
+				},
+				{
+					// List attachments
+					Method:  http.MethodGet,
+					Path:    "/list",
+					Handler: suposattachment.ListAttachmentsHandler(serverCtx),
+				},
+				{
+					// Upload attachment
+					Method:  http.MethodPost,
+					Path:    "/upload",
+					Handler: suposattachment.UploadAttachmentHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api/supos/attachment"),
 	)
 
 	server.AddRoutes(
@@ -393,6 +471,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 
 	server.AddRoutes(
 		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
 				{
 					// 模板实例附件上传
@@ -792,53 +871,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		rest.WithPrefix("/inter-api/supos/uns/importExport"),
 	)
 
-	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
-			[]rest.Route{
-				{
-					// 获取已安装应用列表
-					Method:  http.MethodGet,
-					Path:    "/app/list",
-					Handler: suposapp.ListInstalledAppsHandler(serverCtx),
-				},
-				{
-					// 批量修改文件值
-					Method:  http.MethodPost,
-					Path:    "/app/install",
-					Handler: suposapp.InstallAppsHandler(serverCtx),
-				},
-			}...,
-		),
-		rest.WithPrefix("/inter-api/supos"),
-	)
-	// 添加通用附件管理路由
-	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
-			[]rest.Route{
-				{
-					// 上传附件
-					Method:  http.MethodPost,
-					Path:    "/attachment/upload",
-					Handler: suposattachment.UploadAttachmentHandler(serverCtx),
-				},
-				{
-					// 下载附件
-					Method:  http.MethodGet,
-					Path:    "/attachment/download",
-					Handler: suposattachment.DownloadAttachmentHandler(serverCtx),
-				},
-				{
-					// 列出附件
-					Method:  http.MethodGet,
-					Path:    "/attachment/list",
-					Handler: suposattachment.ListAttachmentsHandler(serverCtx),
-				},
-			}...,
-		),
-		rest.WithPrefix("/inter-api/supos"),
-	)
 	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},

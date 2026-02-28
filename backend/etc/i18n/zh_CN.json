@@ -1886,6 +1886,8 @@
   "portainer.compose.deploy.request.create.failed": "create deploy request failed",
   "portainer.compose.deploy.request.send.failed": "failed to send request",
   "portainer.compose.deploy.failed": "deploy yaml failed: %s",
+  "app.parameter.invalid": "参数不合法",
+  "app.install.success": "应用安装成功",
   "portainer.compose.response.read.failed": "read response failed",
   "portainer.compose.response.parse.failed": "parse response failed",
   "portainer.yaml.parse.failed": "解析 YAML 失败",

@@ -110,3 +110,15 @@ type InstallAppRequest struct {
 type UninstallAppRequest struct {
 	Name string `path:"name"`
 }
+
+type UpdateAppRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	ImagePath   string `json:"imagePath,optional"`
+	ImageUrl    string `json:"imageUrl,optional"`
+	IconPath    string `json:"iconPath,optional"`
+	MenuUrl     string `json:"menuUrl,optional"`
+	ComposeYaml string `json:"composeYaml,optional"`
+	RouterTrim  *bool  `json:"routerTrim,optional"`
+	KeepHost    *bool  `json:"keepHost,optional"`
+}

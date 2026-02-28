@@ -34,6 +34,338 @@
         }
       }
     },
+    "/inter-api/supos/app/install": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Install a new application",
+        "operationId": "supos/AppInstallApp",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "name",
+                "menuUrl",
+                "composeYaml"
+              ],
+              "properties": {
+                "composeYaml": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "iconPath": {
+                  "type": "string"
+                },
+                "imagePath": {
+                  "type": "string"
+                },
+                "imageUrl": {
+                  "type": "string"
+                },
+                "keepHost": {
+                  "type": "boolean",
+                  "default": false,
+                  "example": false
+                },
+                "menuUrl": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "routerTrim": {
+                  "type": "boolean",
+                  "default": true,
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "success"
+                  ],
+                  "properties": {
+                    "installTime": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/installed": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "List all installed applications",
+        "operationId": "supos/AppListInstalledApps",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "description",
+                      "imageSource",
+                      "menuUrl",
+                      "installed"
+                    ],
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "imageSource": {
+                        "type": "string"
+                      },
+                      "installTime": {
+                        "type": "string"
+                      },
+                      "installed": {
+                        "type": "boolean"
+                      },
+                      "menuUrl": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/installed/search": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Search installed applications",
+        "operationId": "supos/AppSearchApps",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "keyword",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "description",
+                      "imageSource",
+                      "menuUrl",
+                      "installed"
+                    ],
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "imageSource": {
+                        "type": "string"
+                      },
+                      "installTime": {
+                        "type": "string"
+                      },
+                      "installed": {
+                        "type": "boolean"
+                      },
+                      "menuUrl": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/installed/{name}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Get application details by name",
+        "operationId": "supos/AppGetAppByName",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "description",
+                    "imageSource",
+                    "imagePath",
+                    "imageUrl",
+                    "iconPath",
+                    "menuUrl",
+                    "composeYaml",
+                    "routerTrim",
+                    "keepHost",
+                    "installTime"
+                  ],
+                  "properties": {
+                    "composeYaml": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "iconPath": {
+                      "type": "string"
+                    },
+                    "imagePath": {
+                      "type": "string"
+                    },
+                    "imageSource": {
+                      "type": "string"
+                    },
+                    "imageUrl": {
+                      "type": "string"
+                    },
+                    "installTime": {
+                      "type": "string"
+                    },
+                    "keepHost": {
+                      "type": "boolean"
+                    },
+                    "menuUrl": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "routerTrim": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/inter-api/supos/app/secretKey": {
       "put": {
         "consumes": [
@@ -176,6 +508,470 @@
           "200": {
             "description": "",
             "schema": {}
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/uninstall/{name}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Uninstall an application",
+        "operationId": "supos/AppUninstallApp",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "success"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/app/update": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Update application configuration",
+        "operationId": "supos/AppUpdateApp",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "composeYaml": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "iconPath": {
+                  "type": "string"
+                },
+                "imagePath": {
+                  "type": "string"
+                },
+                "imageUrl": {
+                  "type": "string"
+                },
+                "keepHost": {
+                  "type": "boolean"
+                },
+                "menuUrl": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "routerTrim": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "success"
+                  ],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/attachment/delete": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Delete attachment",
+        "operationId": "supos/AttachmentDeleteAttachment",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "fileId",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "fileId",
+                    "success"
+                  ],
+                  "properties": {
+                    "fileId": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/attachment/download": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Download attachment",
+        "operationId": "supos/AttachmentDownloadAttachment",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "fileId",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "filename",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/inter-api/supos/attachment/list": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "List attachments",
+        "operationId": "supos/AttachmentListAttachments",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "category",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "tag",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "page",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 20,
+            "name": "pageSize",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "page",
+                    "pageSize",
+                    "totalPages"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "fileId",
+                          "filename",
+                          "fileSize",
+                          "fileType",
+                          "md5",
+                          "uploadTime",
+                          "downloadCount"
+                        ],
+                        "properties": {
+                          "category": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "downloadCount": {
+                            "type": "integer"
+                          },
+                          "fileId": {
+                            "type": "string"
+                          },
+                          "fileSize": {
+                            "type": "integer"
+                          },
+                          "fileType": {
+                            "type": "string"
+                          },
+                          "filename": {
+                            "type": "string"
+                          },
+                          "md5": {
+                            "type": "string"
+                          },
+                          "tags": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "uploadTime": {
+                            "type": "string"
+                          },
+                          "uploader": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "pageSize": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inter-api/supos/attachment/upload": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Upload attachment",
+        "operationId": "supos/AttachmentUploadAttachment",
+        "parameters": [
+          {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "name": "file",
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "category",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "description",
+            "in": "formData",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "name": "tags",
+            "in": "formData",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "fileId",
+                    "filename",
+                    "fileSize",
+                    "fileType",
+                    "md5",
+                    "uploadTime",
+                    "downloadUrl"
+                  ],
+                  "properties": {
+                    "downloadUrl": {
+                      "type": "string"
+                    },
+                    "fileId": {
+                      "type": "string"
+                    },
+                    "fileSize": {
+                      "type": "integer"
+                    },
+                    "fileType": {
+                      "type": "string"
+                    },
+                    "filename": {
+                      "type": "string"
+                    },
+                    "md5": {
+                      "type": "string"
+                    },
+                    "uploadTime": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -13557,7 +14353,7 @@
       }
     }
   },
-  "x-date": "2026-02-10 16:32:15",
+  "x-date": "2026-02-28 10:14:19",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
