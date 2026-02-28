@@ -67,7 +67,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	u.log.Debugf("[%d] args: %+v", len(args.Topics), args)
 	topicDtos := args.Topics
-	pathMap := initParamsUns(topicDtos, errTipMap)
+	pathMap := initParamsUns(ctx, topicDtos, errTipMap)
 	if len(pathMap) == 0 {
 		u.log.Info("不存在任何文件夹或文件, 无法继续保存")
 		return errTipMap
@@ -114,7 +114,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		}
 	}
 	for _, vs := range pathMap {
-		tryFillIdOrAlias(vs, existsUns, dbFiles, errTipMap)
+		tryFillIdOrAlias(ctx, vs, existsUns, dbFiles, errTipMap)
 	}
 	paramFiles, paramFolders := pathMap[constants.PathTypeFile], pathMap[constants.PathTypeDir]
 	addFiles := make(map[int64]*dao.UnsNamespace)
@@ -130,7 +130,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			return base.P2v(t.ParentAlias)
 		})
 		if len(loopFolders) > 0 {
-			msg := I18nUtils.GetMessage("uns.circularDependency")
+			msg := I18nUtils.GetMessageWithCtx(ctx, "uns.circularDependency")
 			for _, folder := range loopFolders {
 				errTipMap[folder.GainBatchIndex()] = msg + ": " + folder.Alias
 			}
@@ -316,7 +316,7 @@ func (u *UnsAddService) OnEventContextRefreshedEvent3(ev *event.ContextRefreshed
 				if po.PathType == constants.PathTypeFile {
 					srcId := po.GetSrcJdbcType()
 					filesToMigrate[srcId] = append(filesToMigrate[srcId], po)
-					fd, _ := FieldUtils.ProcessFieldDefines(srcId, po.Fields, true, true)
+					fd, _ := FieldUtils.ProcessFieldDefines(context.Background(), srcId, po.Fields, true, true)
 					if fd != nil {
 						po.TableName_ = &fd.TableName
 						po.Fields = fd.Fields
@@ -424,7 +424,7 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 				FromImport:       args.FromImport,
 				Creates:          createFiles,
 				Updates:          notifyUpdate,
-				DelegateAware:    getEventStatusCallback(args.StatusConsumer),
+				DelegateAware:    getEventStatusCallback(ctx, args.StatusConsumer),
 			})
 		}
 		if len(deleteFiles) > 0 {
@@ -462,7 +462,7 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 			return result
 		} else if folder == nil {
 			result.Code = 400
-			result.Msg = I18nUtils.GetMessage("uns.folder.not.found") + ":id=" + strconv.Itoa(int(*topicDto.ParentId))
+			result.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.not.found") + ":parent=" + strconv.Itoa(int(*topicDto.ParentId))
 			return result
 		}
 

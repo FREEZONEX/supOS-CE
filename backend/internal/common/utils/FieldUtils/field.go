@@ -5,6 +5,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/types"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -36,13 +37,13 @@ func GetQualityField(fields []*types.FieldDefine, dataType int16) *types.FieldDe
 }
 
 // ValidateFields validates a slice of field definitions
-func ValidateFields(fields []*types.FieldDefine, checkSysField bool) error {
+func ValidateFields(ctx context.Context, fields []*types.FieldDefine, checkSysField bool) error {
 	seen := make(map[string]bool)
 	for _, f := range fields {
 		if fieldType, ok := types.GetFieldTypeByName(f.Type); ok {
 			f.Type = fieldType.Name()
 		} else {
-			return errors.New(I18nUtils.GetMessage("uns.invalid.type", f.Type))
+			return errors.New(I18nUtils.GetMessageWithCtx(ctx, "uns.invalid.type", f.Type))
 		}
 		name := strings.TrimSpace(f.Name)
 		if name == "" {
@@ -182,7 +183,7 @@ var _True = true
 var _False = false
 
 // ProcessFieldDefines validates and processes a list of field definitions, optionally adding system fields.
-func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
+func ProcessFieldDefines(ctx context.Context, jdbcType types.SrcJdbcType, fields []*types.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
 	if len(fields) == 0 {
 		return nil, nil
 	}
@@ -199,7 +200,7 @@ func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine
 		SetDefaultMaxLen(f)
 	}
 
-	if err := ValidateFields(processedFields, checkSysField); err != nil {
+	if err := ValidateFields(ctx, processedFields, checkSysField); err != nil {
 		return nil, err
 	}
 

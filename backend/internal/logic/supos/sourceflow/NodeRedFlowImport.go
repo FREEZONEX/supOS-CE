@@ -49,7 +49,7 @@ func nodeRedImport(ctx context.Context, apiHost string, srcFlow bool, reader io.
 		fieldName, er := decoder.Token()
 		if er != nil {
 			logx.WithContext(ctx).Errorf("错误Token :%v", fieldName)
-			er = jsonErr(er)
+			er = jsonErr(ctx, er)
 			if statusConsumer != nil {
 				statusConsumer(&common.RunningStatus{
 					Code: 500, Msg: err.Error(),
@@ -100,7 +100,7 @@ func nodeRedImport(ctx context.Context, apiHost string, srcFlow bool, reader io.
 		progress = 100
 		status := &common.RunningStatus{
 			Code:     200,
-			Task:     I18nUtils.GetMessage("uns.create.task.name.final"),
+			Task:     I18nUtils.GetMessageWithCtx(ctx, "uns.create.task.name.final"),
 			Progress: &progress, Finished: base.OptionalTrue}
 		if someError != nil {
 			status.Code = 500
@@ -148,7 +148,7 @@ func importTags(ctx context.Context, apiHost string, decoder *json.Decoder) (err
 }
 
 func importFlowUnsLink(ctx context.Context, dec *json.Decoder, SaveBatch func(ctx context.Context, list []*dao.NoderedFlowNode) error) (err error) {
-	node2vo := func(prop string, i, parent *dao.NoderedFlowNode) *dao.NoderedFlowNode {
+	node2vo := func(c context.Context, prop string, i, parent *dao.NoderedFlowNode) *dao.NoderedFlowNode {
 		return i
 	}
 	consumer := func(readSize int64, propName string, nodes []*dao.NoderedFlowNode) {
@@ -156,7 +156,7 @@ func importFlowUnsLink(ctx context.Context, dec *json.Decoder, SaveBatch func(ct
 	}
 	errConsumer := func(node *dao.NoderedFlowNode) {
 	}
-	err = jsonstream.DecodeJsonTreeToFlatByJsonDecoder(dec, 1000, node2vo, consumer, errConsumer)
+	err = jsonstream.DecodeJsonTreeToFlatByJsonDecoder(ctx, dec, 1000, node2vo, consumer, errConsumer)
 	return
 }
 
@@ -169,7 +169,7 @@ func importNodes(ctx context.Context, apiHost string, decoder *json.Decoder) (er
 		if delim, ok := token.(json.Delim); !ok || delim != '[' {
 			logx.WithContext(ctx).Errorf("Nodes token err:%v, token=%v", er, token)
 			w.Write([]byte(`]`))
-			err = jsonErr(fmt.Errorf("nodes token err:%v, token=%v", er, token))
+			err = jsonErr(ctx, fmt.Errorf("nodes token err:%v, token=%v", er, token))
 			return
 		}
 		for decoder.More() {
@@ -198,7 +198,7 @@ func importNodes(ctx context.Context, apiHost string, decoder *json.Decoder) (er
 		token, er = decoder.Token()
 		if delim, ok := token.(json.Delim); !ok || delim != ']' {
 			logx.WithContext(ctx).Errorf("END Nodes token err:%v, token=%v", er, token)
-			err = jsonErr(fmt.Errorf("end nodes token err:%v, token=%v", er, token))
+			err = jsonErr(ctx, fmt.Errorf("end nodes token err:%v, token=%v", er, token))
 		}
 		existsFlows, er := listNodeFlows(ctx, apiHost)
 		if er != nil {
@@ -241,7 +241,7 @@ func importFlows(ctx context.Context, srcFlow bool, dec *json.Decoder,
 	saveFlow func(ctx context.Context, data []*dao.NoderedSourceFlow) error,
 	saveGroup func(ctx context.Context, groups []*dao.GroupModel) error,
 ) error {
-	node2vo := func(prop string, i, parent *dao.NoderedFlow) *dao.NoderedFlow {
+	node2vo := func(c context.Context, prop string, i, parent *dao.NoderedFlow) *dao.NoderedFlow {
 		return i
 	}
 
@@ -279,13 +279,13 @@ func importFlows(ctx context.Context, srcFlow bool, dec *json.Decoder,
 	}
 	errConsumer := func(node *dao.NoderedFlow) {
 	}
-	err := jsonstream.DecodeJsonTreeToFlatByJsonDecoder(dec, 1000, node2vo, consumer, errConsumer)
+	err := jsonstream.DecodeJsonTreeToFlatByJsonDecoder(ctx, dec, 1000, node2vo, consumer, errConsumer)
 	return err
 }
-func jsonErr(err error) error {
+func jsonErr(ctx context.Context, err error) error {
 	if err != nil {
 		if je, is := err.(*json.SyntaxError); is {
-			return fmt.Errorf("%s: %d: %v", I18nUtils.GetMessage("uns.import.json.error"), je.Offset, je.Error())
+			return fmt.Errorf("%s: %d: %v", I18nUtils.GetMessageWithCtx(ctx, "uns.import.json.error"), je.Offset, je.Error())
 		}
 	}
 	return err

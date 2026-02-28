@@ -53,9 +53,9 @@ func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName stri
 		task := status.Task
 		segments := strings.Split(task, ".")
 		if sz := len(segments); sz > 1 {
-			status.Task = I18nUtils.GetMessage(segments[sz-2])
+			status.Task = I18nUtils.GetMessageWithCtx(ctx, segments[sz-2])
 		} else if sz == 1 {
-			status.Task = I18nUtils.GetMessage(status.Task)
+			status.Task = I18nUtils.GetMessageWithCtx(ctx, status.Task)
 		}
 		statusConsumer(status)
 	}
@@ -87,7 +87,7 @@ func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName stri
 	prevTask := ""
 
 	countUns, countErr := 0, 0
-	er := jsonstream.DecodeJsonTreeToFlat(reader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
+	er := jsonstream.DecodeJsonTreeToFlat(ctx, reader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
 		if prevReadSize < readSize {
 			newProgress := 20 * float64(readSize) / TOTAL_SIZE
 			if newProgress <= progress {
@@ -135,7 +135,7 @@ func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName stri
 				}
 			}
 			countUns += len(nodes)
-			errTipMap := l.unsAddService.CreateModelAndInstancesInner(context.Background(), bo.CreateModelInstancesArgs{
+			errTipMap := l.unsAddService.CreateModelAndInstancesInner(ctx, bo.CreateModelInstancesArgs{
 				Topics:     nodes,
 				FromImport: true,
 				StatusConsumer: func(status *common.RunningStatus) {
@@ -177,7 +177,7 @@ func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName stri
 		}
 		_ = errJsonEncoder.Encode(er.Error())
 	}
-	status := &common.RunningStatus{Code: 200, Msg: I18nUtils.GetMessage("uns.import.rs.ok"), Task: I18nUtils.GetMessage("uns.create.task.name.final")}
+	status := &common.RunningStatus{Code: 200, Msg: I18nUtils.GetMessageWithCtx(ctx, "uns.import.rs.ok"), Task: I18nUtils.GetMessageWithCtx(ctx, "uns.create.task.name.final")}
 	status.SetProgress(100)
 	status.Finished = base.OptionalTrue
 	if errFile != nil {
@@ -187,13 +187,13 @@ func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName stri
 		er = errFile.Close()
 		status.Code = 206
 		if countUns == countErr {
-			status.Msg = I18nUtils.GetMessage("global.import.rs.allErr")
+			status.Msg = I18nUtils.GetMessageWithCtx(ctx, "global.import.rs.allErr")
 		} else {
-			status.Msg = I18nUtils.GetMessage("uns.import.rs.hasErr") + fmt.Sprintf(": %d/%d", countErr, countUns)
+			status.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.import.rs.hasErr") + fmt.Sprintf(": %d/%d", countErr, countUns)
 		}
 		status.ErrTipFile = errFileRelativePath
 	} else if countUns == 0 {
-		status.Msg = I18nUtils.GetMessage("uns.noData")
+		status.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.noData")
 	}
 	pushStatus(status)
 }

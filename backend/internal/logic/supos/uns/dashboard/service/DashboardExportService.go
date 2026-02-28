@@ -86,7 +86,7 @@ func (*DashboardExportService) ImportStream(ctx context.Context, fileName string
 func importDashboards(ctx context.Context, size int64, statusConsumer func(status *common.RunningStatus), reader io.Reader,
 	groupSave func(ctx context.Context, list []*dao.GroupModel) error, dashSave func(ctx context.Context, list []*dao.DashboardModel) error) {
 
-	tree2flat := func(propName string, node, parent *dao.DashboardModel) *dao.DashboardModel {
+	tree2flat := func(c context.Context, propName string, node, parent *dao.DashboardModel) *dao.DashboardModel {
 		return node
 	}
 	flowType := int16(3)
@@ -164,7 +164,7 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 	}
 	errConsumer := func(node *dao.DashboardModel) {
 	}
-	err := jsonstream.DecodeJsonTreeToFlat(reader, 1000, tree2flat, consumer, errConsumer)
+	err := jsonstream.DecodeJsonTreeToFlat(ctx, reader, 1000, tree2flat, consumer, errConsumer)
 	if statusConsumer != nil {
 		code, msg := 200, ""
 		if err != nil {
@@ -174,7 +174,7 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 		progress = 100
 		statusConsumer(&common.RunningStatus{
 			Code: code, Msg: msg,
-			Task:     I18nUtils.GetMessage("uns.create.task.name.final"),
+			Task:     I18nUtils.GetMessageWithCtx(ctx, "uns.create.task.name.final"),
 			Progress: &progress, Finished: base.OptionalTrue})
 	}
 }

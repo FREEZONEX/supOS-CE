@@ -37,20 +37,20 @@ func NewDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteLogi
 func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 	db := stores.GetCommonConn(l.ctx)
 	groupMapper := &relationDB.GroupMapper{}
-
+	ctx := l.ctx
 	// 查询组是否存在
 	group, err := groupMapper.SelectById(db, req.ID)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
 		return &types.JsonResult{
 			Code: 500,
-			Msg:  I18nUtils.GetMessage("group.query.failed") + ": " + err.Error(),
+			Msg:  I18nUtils.GetMessageWithCtx(ctx, "group.query.failed") + ": " + err.Error(),
 		}, nil
 	}
 	if group == nil {
 		return &types.JsonResult{
 			Code: 400,
-			Msg:  I18nUtils.GetMessage("group.notfound"),
+			Msg:  I18nUtils.GetMessageWithCtx(ctx, "group.notfound"),
 		}, nil
 	}
 
@@ -60,7 +60,7 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 		l.Errorf("查询分组关联的业务数据失败: %v", err)
 		return &types.JsonResult{
 			Code: 500,
-			Msg:  I18nUtils.GetMessage("group.cleanbiz.query.failed") + ": " + err.Error(),
+			Msg:  I18nUtils.GetMessageWithCtx(ctx, "group.cleanbiz.query.failed") + ": " + err.Error(),
 		}, nil
 	}
 
@@ -111,13 +111,13 @@ func (l *DeleteLogic) Delete(req *types.GroupIDReq) (*types.JsonResult, error) {
 		l.Errorf("删除组失败: %v", err)
 		return &types.JsonResult{
 			Code: 500,
-			Msg:  I18nUtils.GetMessage("group.delete.failed") + ": " + err.Error(),
+			Msg:  I18nUtils.GetMessageWithCtx(ctx, "group.delete.failed") + ": " + err.Error(),
 		}, nil
 	}
 
 	return &types.JsonResult{
 		Code: 200,
-		Msg:  I18nUtils.GetMessage("group.delete.success"),
+		Msg:  I18nUtils.GetMessageWithCtx(ctx, "group.delete.success"),
 		Data: nil,
 	}, nil
 }

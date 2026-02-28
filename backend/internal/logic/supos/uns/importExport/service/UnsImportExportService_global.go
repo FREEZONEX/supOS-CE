@@ -118,7 +118,7 @@ func (l *UnsImportExportService) ImportGlobal(ctx context.Context, zipFileName s
 		if dot := strings.Index(module, "."); dot > 0 {
 			module = module[:dot]
 		}
-		if moduleMsg := I18nUtils.GetMessage("import." + module); !strings.HasPrefix(moduleMsg, "import.") {
+		if moduleMsg := I18nUtils.GetMessageWithCtx(ctx, "import."+module); !strings.HasPrefix(moduleMsg, "import.") {
 			module = moduleMsg
 		}
 		if exportService == nil {

@@ -33,7 +33,7 @@ func (l *UnsQueryService) GetInstanceDetail(ctx context.Context, req *types.Inst
 		return
 	} else if po == nil {
 		resp.Code = 200
-		resp.Msg = I18nUtils.GetMessage("uns.file.not.found")
+		resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.file.not.found")
 		return
 	}
 	l.setDetailInfo(ctx, po, detail, true)
@@ -55,7 +55,7 @@ func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.Mod
 		return
 	} else if po == nil {
 		resp.Code = 200
-		resp.Msg = I18nUtils.GetMessage("uns.model.not.found")
+		resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.model.not.found")
 		return
 	}
 	dto := &types.ModelDetail{}

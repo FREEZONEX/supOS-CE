@@ -28,6 +28,6 @@ func (l *AppsLogic) ListInstalledApps() ([]model.NewFeatureModel, error) {
 
 func (l *AppsLogic) InstallApp(fc *model.NewFeatureModel) error {
 	// 调用之前实现的 InstallFeature 函数
-	err := app.InstallFeature(fc)
+	err := app.InstallFeature(l.ctx, fc)
 	return err
 }

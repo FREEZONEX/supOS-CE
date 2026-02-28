@@ -34,8 +34,9 @@ func NewPutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PutLogic {
 }
 
 func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err error) {
+	ctx := l.ctx
 	if req.ID == nil {
-		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.id.isnotblank"))
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.id.isnotblank"))
 	}
 
 	db := stores.GetCommonConn(l.ctx)
@@ -45,14 +46,14 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 	group, err := groupMapper.SelectById(db, *req.ID)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
-		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.query.failed")).AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.query.failed")).AddDetail(err)
 	}
 	if group == nil {
-		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.notfound"))
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.notfound"))
 	}
 
 	if utf8.RuneCountInString(*req.Name) > 255 {
-		message := I18nUtils.GetMessage("group.name.maxLength")
+		message := I18nUtils.GetMessageWithCtx(ctx, "group.name.maxLength")
 		return nil, errors.Database.WithMsg(message).AddDetail(err)
 	}
 
@@ -60,10 +61,10 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 	existingGroup, err := groupMapper.SelectByNameNotId(db, *req.ID, *req.Name, *req.Type)
 	if err != nil {
 		l.Errorf("查询组失败: %v", err)
-		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.update.failed")).AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.update.failed")).AddDetail(err)
 	}
 	if len(existingGroup) > 0 {
-		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessage("group.name.duplication"))
+		return nil, errors.Parameter.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.name.duplication"))
 	}
 
 	// 更新字段
@@ -84,12 +85,12 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 	// 执行更新
 	if err = groupMapper.UpdateById(db, group); err != nil {
 		l.Errorf("更新组失败: %v", err)
-		return nil, errors.Database.WithMsg(I18nUtils.GetMessage("group.update.failed")).AddDetail(err)
+		return nil, errors.Database.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "group.update.failed")).AddDetail(err)
 	}
 
 	return &types.JsonResult{
 		Code: 0,
-		Msg:  I18nUtils.GetMessage("group.update.success"),
+		Msg:  I18nUtils.GetMessageWithCtx(ctx, "group.update.success"),
 		Data: nil,
 	}, nil
 }
