@@ -79,7 +79,17 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
                 const { file } = info;
                 const fileType = file.name.split('.').pop() || '';
                 if (acceptList?.length === 0 || acceptList.includes(fileType.toLowerCase())) {
-                  setFileList(info.fileList);
+                  const updatedFileList = info.fileList.map((item) => {
+                    if (item.status === 'done' && item.response?.data?.downloadUrl) {
+                      return {
+                        ...item,
+                        url: item.response.data.downloadUrl,
+                        thumbUrl: item.response.data.downloadUrl,
+                      };
+                    }
+                    return item;
+                  });
+                  setFileList(updatedFileList);
                   onActionChange?.(info);
                 }
               }
