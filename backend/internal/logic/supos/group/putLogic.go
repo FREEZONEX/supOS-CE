@@ -63,7 +63,7 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 	}
 
 	if utf8.RuneCountInString(desc) > 512 {
-		message := I18nUtils.GetMessage("group.description.maxLength")
+		message := I18nUtils.GetMessageWithCtx(ctx, "group.description.maxLength")
 		return nil, errors.Database.WithMsg(message).AddDetail(err)
 	}
 
