@@ -745,6 +745,7 @@
   "uns.supportScope": "Scope of support",
   "uns.overallProject": "Complete project: {text}",
   "uns.singleFile": "Single file: {text}",
+  "uns.deleteGroupInfo": "Deleting a group will simultaneously delete all {module} under it. This operation is not recoverable. Do you want to confirm the deletion?",
   "common.url": "URL",
   "common.usage": "Usage",
   "common.example": "Example",

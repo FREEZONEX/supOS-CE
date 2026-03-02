@@ -221,7 +221,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           auth: ButtonPermission['SourceFlow.delete'],
           onClick: () => {
             modal.confirm({
-              title: formatMessage('common.deleteConfirm'),
+              title: formatMessage('uns.deleteGroupInfo', { module: formatMessage('home.sourceFlow') }),
               onOk: () => {
                 return deleteGroup(record.id).then(() => {
                   message.success(formatMessage('common.optsuccess'));

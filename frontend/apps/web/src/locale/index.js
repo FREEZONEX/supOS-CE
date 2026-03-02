@@ -784,6 +784,7 @@ const messages = {
   'uns.supportScope': '支持范围',
   'uns.overallProject': '完整项目: {text}',
   'uns.singleFile': '单个文件: {text}',
+  'uns.deleteGroupInfo': '删除分组将同步删除其下所有的{module}，此操作不可恢复,是否确认删除?',
 
   //公共通用模块
   'common.url': '地址',
