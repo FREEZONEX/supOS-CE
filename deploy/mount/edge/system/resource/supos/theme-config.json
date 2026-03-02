@@ -17,7 +17,7 @@
     "loginSloganImg": "",
     "loginBackgroundImg": ""
   },
-  "_comment_default": "⚠ 以下不是可用字段，仅作说明描述;其中 ’|‘ 表示选项",
+  "_comment_default": "⚠ 以下不是可用字段，仅作说明描述;其中 '|' 表示选项",
   "default": {
     "readonly": true,
     "message": "不需要动,默认的内容",
