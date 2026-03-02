@@ -130,7 +130,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 }
 func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns_old(alias string) (*types.JsonResult, error) {
 	// 1. 获取 UNS 定义
-	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, alias)
+	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, alias, "")
 	if err != nil || unsResp == nil || unsResp.Data == nil {
 		l.Logger.Errorf("failed to get uns definition for alias %s: %v", alias, err)
 		return &types.JsonResult{

@@ -52,7 +52,7 @@ func (l *BindUnsLogic) BindUns(dashboardID string, unsAlias string) (*types.Json
 	}
 
 	// 检查 UNS 是否存在
-	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, unsAlias)
+	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, unsAlias, "")
 	if err != nil {
 		l.Logger.Errorf("failed to get uns definition for alias %s: %v", unsAlias, err)
 		return &types.JsonResult{

@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (l *UnsQueryService) GetInstanceDetail(ctx context.Context, req *types.InstanceDetailReq, alias string) (resp *types.InstanceDetailResp, err error) {
+func (l *UnsQueryService) GetInstanceDetail(ctx context.Context, req *types.InstanceDetailReq, alias string, path string) (resp *types.InstanceDetailResp, err error) {
 	detail := &types.InstanceDetail{}
 	db := dao.GetDb(ctx)
 	var po *dao.UnsNamespace
@@ -25,6 +25,8 @@ func (l *UnsQueryService) GetInstanceDetail(ctx context.Context, req *types.Inst
 		po, err = l.unsMapper.SelectById(db, id)
 	} else if len(alias) > 0 {
 		po, err = l.unsMapper.GetByAlias(db, alias)
+	} else if len(path) > 0 {
+		po, err = l.unsMapper.GetByPath(db, path)
 	}
 	resp = &types.InstanceDetailResp{}
 	if err != nil {
@@ -40,13 +42,15 @@ func (l *UnsQueryService) GetInstanceDetail(ctx context.Context, req *types.Inst
 	resp.Data = detail
 	return
 }
-func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.ModelDetailReq, alias string) (resp *types.ModelDetailResp, err error) {
+func (l *UnsQueryService) GetModelDefinition(ctx context.Context, req *types.ModelDetailReq, alias string, path string) (resp *types.ModelDetailResp, err error) {
 	db := dao.GetDb(ctx)
 	var po *dao.UnsNamespace
 	if id := req.Id; id > 0 {
 		po, err = l.unsMapper.SelectById(db, id)
 	} else if len(alias) > 0 {
 		po, err = l.unsMapper.GetByAlias(db, alias)
+	} else if len(path) > 0 {
+		po, err = l.unsMapper.GetByPath(db, path)
 	}
 	resp = &types.ModelDetailResp{}
 	if err != nil {
