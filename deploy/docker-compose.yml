@@ -86,6 +86,8 @@ services:
       postgresql:
         condition: service_healthy
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   marimo:
     image: suposce/marimo:latest
     container_name: marimo

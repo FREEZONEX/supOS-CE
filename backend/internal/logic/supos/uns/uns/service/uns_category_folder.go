@@ -107,7 +107,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			// 验证 parentDataType 是否有效
 			if topicDto.ParentDataType == nil || *topicDto.ParentDataType < 1 || *topicDto.ParentDataType > 3 {
 				if topicDto.Id == 0 {
-					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.file.type.invalid")
+					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.file.type.invalid")
 				} else {
 					validTopicDtos = append(validTopicDtos, topicDto)
 				}
@@ -115,7 +115,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			}
 			// 判断父级类型和文件类型是否匹配
 			if !enums.IsTypeMatched(topicDto.ParentDataType, topicDto.DataType) {
-				errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.category.type.not.eq")
+				errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.category.type.not.eq")
 				continue
 			}
 			parentAlias := base.P2v(topicDto.ParentAlias)
@@ -125,7 +125,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			if parentUnsPo != nil && parentUnsPo.DataType != nil {
 				// 检查文件类型和父级文件夹类型是否一致
 				if *parentUnsPo.DataType > 0 && *parentUnsPo.DataType != PDT {
-					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.category.type.not.eq")
+					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.category.type.not.eq")
 					continue
 				}
 				if *parentUnsPo.DataType == PDT {
@@ -139,7 +139,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			// 如果当前列表中已存在父级文件夹，并且类型为归类文件夹
 			if parentDto != nil && parentDto.DataType != nil {
 				if *parentDto.DataType > 0 && *parentDto.DataType != PDT {
-					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.category.type.not.eq")
+					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.category.type.not.eq")
 					continue
 				}
 				if *parentDto.DataType == PDT {

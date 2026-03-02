@@ -54,7 +54,7 @@ func NewCreateGrafanaByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonResult, error) {
 	def := l.unsDefinitionService.GetDefinitionByAlias(alias)
 	if def == nil {
-		return &types.JsonResult{Code: 400, Msg: I18nUtils.GetMessage("uns.file.not.exist")}, nil
+		return &types.JsonResult{Code: 400, Msg: I18nUtils.GetMessageWithCtx(l.ctx, "uns.file.not.exist")}, nil
 	}
 	uns := def.CreateTopicDto
 	jdbcType := types.SrcJdbcType(uns.DataSrcID)

@@ -10,6 +10,7 @@ import (
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -83,7 +84,7 @@ func nodeGetParentId(node *FileData) int64 {
 	return node.parentId
 }
 
-func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
+func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.CreateTopicDto {
 	if i.Name == "" {
 		i.Error = "Empty " + prop
 		return nil
@@ -106,22 +107,22 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 			vo.PathType = constants.PathTypeFile
 			if ok, _ := strconv.ParseBool(os.Getenv("SYS_OS_ENABLE_AUTO_CATEGORIZATION")); ok {
 				if i.ParentDataType == "" {
-					i.Error = I18nUtils.GetMessage("uns.excel.parentDataType.is.blank")
+					i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.excel.parentDataType.is.blank")
 					return nil
 				}
 			}
 		case TYPE_FOLDER:
 			vo.PathType = constants.PathTypeDir
 			if i.Name == "label" || i.Name == "template" {
-				i.Error = I18nUtils.GetMessage("uns.folder.reserved.word")
+				i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.reserved.word")
 				return nil
 			}
 			if len(i.Name) > 63 {
-				i.Error = I18nUtils.GetMessage("uns.folder.length.limit.exceed")
+				i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.length.limit.exceed")
 				return nil
 			}
 		default:
-			i.Error = I18nUtils.GetMessage("uns.import.type.error")
+			i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.import.type.error")
 			return nil
 		}
 	}
@@ -144,7 +145,7 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 		vo.ModelAlias = &i.TemplateAlias
 	}
 	if template := i.Template; template != nil {
-		vo.Template = node2vo(Template, template, nil)
+		vo.Template = node2vo(ctx, Template, template, nil)
 	}
 	if len(i.Description) > 0 {
 		vo.Description = &i.Description
@@ -166,7 +167,7 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 					vo.JsonFields = i.Fields
 				}
 			} else {
-				i.Error = I18nUtils.GetMessage("uns.import.dataType.error")
+				i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.import.dataType.error")
 				return nil
 			}
 		case constants.PathTypeDir:

@@ -31,7 +31,7 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 		tar, _ := r.unsMapper.SelectById(db, singleId)
 		if tar == nil {
 			resp.Code = 400
-			resp.Msg = I18nUtils.GetMessage("uns.folder.or.file.not.found")
+			resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found")
 			return resp, err
 		}
 		unsPos = []*dao.UnsNamespace{tar}
@@ -48,7 +48,7 @@ func (r *UnsRemoveService) removeModelOrInstance(ctx context.Context, singleId i
 		}
 		if len(unsPos) == 0 {
 			resp.Code = 400
-			resp.Msg = I18nUtils.GetMessage("uns.folder.or.file.not.found")
+			resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found")
 			return resp, err
 		}
 	}

@@ -184,7 +184,7 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
             <ComEllipsis>{formatMessage('uns.optionalBehaviors')}</ComEllipsis>
             <Row>
               <Col span={12}>
-                <Form.Item name="stripPath" valuePropName="checked">
+                <Form.Item name="stripPath" valuePropName="checked" initialValue={true}>
                   <ComCheckbox
                     tooltip={{
                       title: formatMessage('uns.stripPathPlaceholder'),

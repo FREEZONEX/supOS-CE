@@ -1850,6 +1850,7 @@
   "portainer.container.delete.request.create.failed": "Failed to create delete container request",
   "portainer.container.delete.request.send.failed": "Failed to send delete container request",
   "portainer.container.nameOrId.empty": "Container name or ID cannot be empty",
+  "portainer.service.name.empty": "Service name cannot be empty",
   "portainer.network.not.found": "Network not found",
   "portainer.network.create.request.create.failed": "Failed to create network creation request",
   "portainer.network.create.request.send.failed": "Failed to send network creation request",
@@ -1884,6 +1885,8 @@
   "portainer.compose.deploy.request.create.failed": "create deploy request failed",
   "portainer.compose.deploy.request.send.failed": "failed to send request",
   "portainer.compose.deploy.failed": "deploy yaml failed: %s",
+  "app.parameter.invalid": "Invalid parameter",
+  "app.install.success": "Application installed successfully",
   "portainer.compose.response.read.failed": "read response failed",
   "portainer.compose.response.parse.failed": "parse response failed",
   "portainer.yaml.parse.failed": "Failed to parse YAML",
@@ -1896,5 +1899,8 @@
   "portainer.auth.response.parse.failed": "Failed to parse authentication response",
   "portainer.connect.request.serialize.failed": "Failed to serialize connection request",
   "portainer.stack.create.request.serialize.failed": "Failed to serialize Stack creation request",
-  "portainer.network.create.request_serialize_failed": "Failed to serialize network creation request"
+  "portainer.network.create.request_serialize_failed": "Failed to serialize network creation request",
+  "portainer.container.existed": "Container %s has exist",
+  "portainer.service.existed": "Service %s has exist",
+  "portainer.port.occupied": "Port %d is already in use"
 }

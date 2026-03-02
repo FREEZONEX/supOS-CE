@@ -43,7 +43,7 @@ func (l *UnsLabelService) Create(ctx context.Context, req *types.CreateLabelReq)
 		return
 	} else if countExits > 0 {
 		resp.Code = 400
-		resp.Msg = I18nUtils.GetMessage("uns.label.already.exists")
+		resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.label.already.exists")
 		return
 	}
 	// 写入数据库
@@ -102,13 +102,13 @@ func (l *UnsLabelService) Update(ctx context.Context, req *types.UpdateLabelReq)
 	db := dao.GetDb(ctx)
 	item, _ := l.labelMapper.FindOne(db, req.ID)
 	if item == nil {
-		return &types.BaseResult{Code: 400, Msg: I18nUtils.GetMessage("uns.label.not.exists")}, nil
+		return &types.BaseResult{Code: 400, Msg: I18nUtils.GetMessageWithCtx(ctx, "uns.label.not.exists")}, nil
 	}
 	items, er := l.labelMapper.FindByNames(db, []string{req.LabelName})
 	if er != nil {
 		return nil, er
 	} else if len(items) > 1 || (len(items) == 1 && items[0].ID != item.ID) {
-		return &types.BaseResult{Code: 400, Msg: I18nUtils.GetMessage("uns.label.already.exists")}, nil
+		return &types.BaseResult{Code: 400, Msg: I18nUtils.GetMessageWithCtx(ctx, "uns.label.already.exists")}, nil
 	}
 	item.UpdateAt = time.Now()
 	item.LabelName = req.LabelName
@@ -204,7 +204,7 @@ func (l *UnsLabelService) CancelLabelByNames(ctx context.Context, unsAlias strin
 	db := dao.GetDb(ctx)
 	uns, er := l.unsMapper.GetByAlias(db, unsAlias)
 	if uns == nil {
-		return errors.NewCodeError(400, I18nUtils.GetMessage("uns.file.not.exist"))
+		return errors.NewCodeError(400, I18nUtils.GetMessageWithCtx(ctx, "uns.file.not.exist"))
 	} else if er != nil {
 		return er
 	}

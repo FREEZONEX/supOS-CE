@@ -663,6 +663,11 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
                   <td>${getIntl('suposApiKeyDesc')}</td>
                   <td>--supos-api-key</td>
                 </tr>
+                <tr>
+                  <td>SUPOS_OPEN_PATH</td>
+                  <td>${getIntl('openapiPathDesc')}</td>
+                  <td>--openapi-path</td>
+                </tr>
               </table>
             `,
           },
@@ -688,7 +693,8 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
       "args": ["-y", "@sup-platform/mcp-server"],
       "env": {
         "SUPOS_API_URL": "xxx",
-        "SUPOS_API_KEY": "xxx"
+        "SUPOS_API_KEY": "xxx",
+        "SUPOS_OPEN_PATH": "xxx"
       }
     },
     "mcp-server-supos-streamable": { // ${getIntl('streamableTransport')}

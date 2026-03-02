@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -40,11 +41,11 @@ func (m *CheckTokenWareMiddleware) Handle(next http.HandlerFunc) http.HandlerFun
 			flag := os.Getenv("SYS_OS_AUTH_ENABLE")
 			return flag == "" || strings.EqualFold(flag, "false")
 		}()
-
+		ctx := context.WithValue(r.Context(), "lang", r.Header.Get("Accept-Language"))
 		cookieToken, err := apiutil.GetCookie(r, constants.AccessTokenKey)
 		if err != nil || cookieToken == "" {
 			if authDisabled {
-				r = r.WithContext(apiutil.SetUserInContext(r.Context(), vo.Guest()))
+				r = r.WithContext(apiutil.SetUserInContext(ctx, vo.Guest()))
 				next(w, r)
 				return
 			}
@@ -60,7 +61,7 @@ func (m *CheckTokenWareMiddleware) Handle(next http.HandlerFunc) http.HandlerFun
 		entry, ok := cache.TokenCache.Get(cookieToken)
 		if !ok || entry == nil || entry.Token == nil || entry.Token.AccessToken == "" {
 			if authDisabled {
-				r = r.WithContext(apiutil.SetUserInContext(r.Context(), vo.Guest()))
+				r = r.WithContext(apiutil.SetUserInContext(ctx, vo.Guest()))
 				next(w, r)
 				return
 			}
@@ -70,10 +71,10 @@ func (m *CheckTokenWareMiddleware) Handle(next http.HandlerFunc) http.HandlerFun
 
 		cache.TokenCache.Refresh(cookieToken)
 
-		user, _, fetchErr := authsvc.FetchUserInfo(r.Context(), m.keycloak, entry.Token.AccessToken, true, m.defaultHome, m.realm)
+		user, _, fetchErr := authsvc.FetchUserInfo(ctx, m.keycloak, entry.Token.AccessToken, true, m.defaultHome, m.realm)
 		if fetchErr != nil {
 			if authDisabled {
-				r = r.WithContext(apiutil.SetUserInContext(r.Context(), vo.Guest()))
+				r = r.WithContext(apiutil.SetUserInContext(ctx, vo.Guest()))
 				next(w, r)
 				return
 			}
@@ -83,7 +84,7 @@ func (m *CheckTokenWareMiddleware) Handle(next http.HandlerFunc) http.HandlerFun
 
 		if user == nil {
 			if authDisabled {
-				r = r.WithContext(apiutil.SetUserInContext(r.Context(), vo.Guest()))
+				r = r.WithContext(apiutil.SetUserInContext(ctx, vo.Guest()))
 				next(w, r)
 				return
 			}
@@ -91,7 +92,7 @@ func (m *CheckTokenWareMiddleware) Handle(next http.HandlerFunc) http.HandlerFun
 			return
 		}
 
-		r = r.WithContext(apiutil.SetUserInContext(r.Context(), user))
+		r = r.WithContext(apiutil.SetUserInContext(ctx, user))
 		next(w, r)
 	}
 }

@@ -59,7 +59,7 @@ func TestImportFile(t *testing.T) {
 
 func TestDecodeStreamedJson(t *testing.T) {
 	bigJson := bytes.NewBuffer([]byte(__realJson))
-	err := jsonstream.DecodeJsonTreeToFlat(bigJson, 10, node2vo, func(rd int64, propName string, ns []*types.CreateTopicDto) {
+	err := jsonstream.DecodeJsonTreeToFlat(t.Context(), bigJson, 10, node2vo, func(rd int64, propName string, ns []*types.CreateTopicDto) {
 		jsonBytes, _ := json.Marshal(ns)
 		t.Logf("readSize=%d, prop=%s , Nodes[%d]: %v", rd, propName, len(ns), string(jsonBytes))
 	}, func(node *FileData) {

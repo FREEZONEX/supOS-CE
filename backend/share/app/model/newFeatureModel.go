@@ -44,7 +44,7 @@ func (m *NewFeatureModel) Validate() error {
 
 	// 验证非法字符
 	if !ValidateFilenameBasic(m.Name) {
-		return fmt.Errorf("app.name.invalid")
+		return errors.Parameter.WithMsg(fmt.Sprintf("app.name.invalid"))
 	}
 	// 验证该名称是否已经存在
 	fullPath := filepath.Join(util.AppInstalledDir, m.Name)
