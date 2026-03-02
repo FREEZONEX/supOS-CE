@@ -244,16 +244,17 @@ func (m *DashboardMapper) DeleteBatchIds(db *gorm.DB, ids []string) error {
 
 // GroupedDashboardItem 分组和未分组dashboard统一返回结构
 type GroupedDashboardItem struct {
-	ID          string    `gorm:"column:id" json:"id"`                    // ID
-	Category    string    `gorm:"column:category" json:"category"`        // 分类 group-分组 file-文件
-	GroupType   int64     `gorm:"column:group_type" json:"groupType"`     // 类型：1-sourceflow 2-eventflow 3-datasource
-	Name        string    `gorm:"column:name" json:"name"`                // 名称
-	Description string    `gorm:"column:description" json:"description"`  // 描述
-	GroupID     *int64    `gorm:"column:group_id" json:"groupId"`         // 分组ID
-	Sort        int32     `gorm:"column:sort" json:"sort"`                // 排序字段
-	CreateAt    time.Time `gorm:"column:create_at" json:"createAt"`       // 创建时间
-	Creator     string    `gorm:"column:creator" json:"creator"`          // 创建人
-	HasChildren bool      `gorm:"column:has_children" json:"hasChildren"` // 是否有子节点
+	ID          string     `gorm:"column:id" json:"id"`                    // ID
+	Category    string     `gorm:"column:category" json:"category"`        // 分类 group-分组 file-文件
+	GroupType   int64      `gorm:"column:group_type" json:"groupType"`     // 类型：1-sourceflow 2-eventflow 3-datasource
+	Name        string     `gorm:"column:name" json:"name"`                // 名称
+	Description string     `gorm:"column:description" json:"description"`  // 描述
+	GroupID     *int64     `gorm:"column:group_id" json:"groupId"`         // 分组ID
+	Sort        int32      `gorm:"column:sort" json:"sort"`                // 排序字段
+	MarkTime    *time.Time `gorm:"column:mark_time" json:"markTime"`       // 置顶时间
+	CreateAt    time.Time  `gorm:"column:create_at" json:"createAt"`       // 创建时间
+	Creator     string     `gorm:"column:creator" json:"creator"`          // 创建人
+	HasChildren bool       `gorm:"column:has_children" json:"hasChildren"` // 是否有子节点
 }
 
 // GetGroupedDashboardList 按分组获取dashboard列表
@@ -280,6 +281,7 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 		    g.description AS description,
 		    NULL AS group_id,
 		    g.sort AS sort,
+		    g.mark_time AS mark_time,
 		    g.create_at AS create_at,
 		    g.creator AS creator,
 		    EXISTS (
@@ -297,6 +299,7 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 		    u.description AS description,
 		    u.group_id AS group_id,
 		    COALESCE(r.mark,0) AS sort,
+		    r.mark_time AS mark_time,
 		    u.create_time AS create_at,
 			u.creator AS creator,
 			false AS has_children
@@ -363,9 +366,9 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 	}
 
 	// ---------- sorting ----------
-	sortSQL := " ORDER BY sort DESC"
+	var sortSQL string
 	if req.OrderCode != "" {
-		// 如果有指定排序字段，替换默认的 create_at 字段
+		// 如果有指定排序字段，排序优先级：sort > OrderCode > mark_time > create_at
 		if req.OrderCode == "createAt" {
 			req.OrderCode = "create_at"
 		}
@@ -374,10 +377,10 @@ func (m *DashboardMapper) GetGroupedDashboardList(
 		if req.IsAsc {
 			ascDesc = "ASC"
 		}
-		sortSQL += fmt.Sprintf(", %s %s", req.OrderCode, ascDesc)
+		sortSQL = fmt.Sprintf(" ORDER BY sort DESC, %s %s, CASE WHEN sort = 1 THEN mark_time ELSE create_at END DESC", req.OrderCode, ascDesc)
 	} else {
-		// 默认使用 create_at 降序
-		sortSQL += ", create_at DESC"
+		// 如果没有指定排序字段，排序优先级：sort > mark_time > create_at
+		sortSQL = " ORDER BY sort DESC, CASE WHEN sort = 1 THEN mark_time ELSE create_at END DESC"
 	}
 
 	// ---------- pagination ----------

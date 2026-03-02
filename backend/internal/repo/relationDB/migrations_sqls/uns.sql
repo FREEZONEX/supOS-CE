@@ -322,9 +322,12 @@ CREATE TABLE if not exists "resource_group" (
 "sort" int4,
 "creator" varchar(128) NULL,
 "create_at" timestamptz(6) DEFAULT now(),
-"update_at" timestamptz(6) DEFAULT now()
+"update_at" timestamptz(6) DEFAULT now(),
+"mark_time" timestamptz(6) NULL DEFAULT NULL
 );
 COMMENT ON COLUMN "resource_group"."type" IS '1-sourceFlow 2-eventFlow 3-dashboard';
+
+alter table resource_group add if not exists "mark_time" timestamptz(6) NULL DEFAULT NULL;
 
 alter table uns_dashboard add if not exists "group_id" int8 null default NULL;
 alter table supos_node_flows add if not exists "group_id" int8 null default NULL;

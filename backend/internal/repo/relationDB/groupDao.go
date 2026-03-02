@@ -3,6 +3,7 @@ package relationDB
 import (
 	"backend/internal/types"
 	"context"
+	"time"
 
 	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -144,11 +145,23 @@ func (m *GroupMapper) DeleteBatchIds(db *gorm.DB, ids []int64) error {
 	return nil
 }
 
-// UpdateSortById 根据 ID 更新 Group 的 Sort 字段
+// UpdateSortById 根据 ID 更新 Group 的 Sort 字段和 MarkTime 字段
 func (m *GroupMapper) UpdateSortById(db *gorm.DB, id int64, sort int32) error {
+	updateData := map[string]interface{}{
+		"sort": sort,
+	}
+
+	if sort == 1 {
+		// 置顶时，设置 mark_time 为当前系统时间
+		updateData["mark_time"] = time.Now()
+	} else {
+		// 取消置顶时，设置 mark_time 为 null
+		updateData["mark_time"] = nil
+	}
+
 	err := db.Model(&GroupModel{}).
 		Where("id = ?", id).
-		Update("sort", sort).Error
+		Updates(updateData).Error
 	if err != nil {
 		logx.Errorf("failed to update group sort: %v", err)
 		return err
