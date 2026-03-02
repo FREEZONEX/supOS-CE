@@ -218,7 +218,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           auth: ButtonPermission['Dashboards.delete'],
           onClick: () => {
             modal.confirm({
-              title: formatMessage('common.deleteConfirm'),
+              title: formatMessage('uns.deleteGroupInfo', { module: formatMessage('home.dashboard') }),
               onOk: () => {
                 return deleteGroup(record.id).then(() => {
                   message.success(formatMessage('common.optsuccess'));
