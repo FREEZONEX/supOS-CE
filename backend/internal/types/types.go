@@ -3,6 +3,11 @@
 
 package types
 
+import (
+	"mime/multipart"
+	"backend/share/app/model"
+)
+
 type AdminResetPwdReq struct {
 	UserID   string `json:"userId"`
 	Password string `json:"password"`
@@ -31,37 +36,37 @@ type AliasPathReq struct {
 type AliasRequest struct {
 	Alias string `path:"alias"`
 }
-//
-//type AppDetail struct {
-//	Name        string `json:"name"`
-//	Description string `json:"description"`
-//	ImageSource string `json:"imageSource"`
-//	ImagePath   string `json:"imagePath,omitempty"`
-//	ImageUrl    string `json:"imageUrl,omitempty"`
-//	IconPath    string `json:"iconPath,omitempty"`
-//	MenuUrl     string `json:"menuUrl"`
-//	ComposeYaml string `json:"composeYaml"`
-//	RouterTrim  bool   `json:"routerTrim"`
-//	KeepHost    bool   `json:"keepHost"`
-//	InstallTime string `json:"installTime,omitempty"`
-//	Status      string `json:"status,optional"`
-//}
-//
-//type AppDetailResponse struct {
-//	Code    int       `json:"code"`
-//	Message string    `json:"message,optional"`
-//	Data    AppDetail `json:"data"`
-//}
-//
-//type AppInfo struct {
-//	Name        string `json:"name"`
-//	Description string `json:"description"`
-//	ImageSource string `json:"imageSource"`
-//	MenuUrl     string `json:"menuUrl"`
-//	Installed   bool   `json:"installed"`
-//	InstallTime string `json:"installTime,optional"`
-//	Status      string `json:"status,optional"`
-//}
+
+type AppDetail struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageSource string `json:"imageSource"`
+	ImagePath   string `json:"imagePath,omitempty"`
+	ImageUrl    string `json:"imageUrl,omitempty"`
+	IconPath    string `json:"iconPath,omitempty"`
+	MenuUrl     string `json:"menuUrl"`
+	ComposeYaml string `json:"composeYaml"`
+	RouterTrim  bool   `json:"routerTrim"`
+	KeepHost    bool   `json:"keepHost"`
+	InstallTime string `json:"installTime,omitempty"`
+	Status      string `json:"status,optional"`
+}
+
+type AppDetailResponse struct {
+	Code    int       `json:"code"`
+	Message string    `json:"message,optional"`
+	Data    AppDetail `json:"data"`
+}
+
+type AppInfo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageSource string `json:"imageSource"`
+	MenuUrl     string `json:"menuUrl"`
+	Installed   bool   `json:"installed"`
+	InstallTime string `json:"installTime,optional"`
+	Status      string `json:"status,optional"`
+}
 
 type AppKeyInfo struct {
 	ID             string `json:"id"`
@@ -79,19 +84,19 @@ type AttachmentDownloadReq struct {
 	ObjectName string `form:"objectName"`
 }
 
-//type AttachmentInfo struct {
-//	FileID        string   `json:"fileId"`
-//	Filename      string   `json:"filename"`
-//	FileSize      int64    `json:"fileSize"`
-//	FileType      string   `json:"fileType"`
-//	Category      string   `json:"category,optional"`
-//	Description   string   `json:"description,optional"`
-//	Tags          []string `json:"tags,optional"`
-//	MD5           string   `json:"md5"`
-//	UploadTime    string   `json:"uploadTime"`
-//	Uploader      string   `json:"uploader,optional"`
-//	DownloadCount int64    `json:"downloadCount"`
-//}
+type AttachmentInfo struct {
+	FileID        string   `json:"fileId"`
+	Filename      string   `json:"filename"`
+	FileSize      int64    `json:"fileSize"`
+	FileType      string   `json:"fileType"`
+	Category      string   `json:"category,optional"`
+	Description   string   `json:"description,optional"`
+	Tags          []string `json:"tags,optional"`
+	MD5           string   `json:"md5"`
+	UploadTime    string   `json:"uploadTime"`
+	Uploader      string   `json:"uploader,optional"`
+	DownloadCount int64    `json:"downloadCount"`
+}
 
 type AttachmentPreviewReq struct {
 	ObjectName string `form:"objectName"`
@@ -393,24 +398,24 @@ type DbFieldsInfoVoResp struct {
 	Data []FieldDefine `json:"data"`
 }
 
-//type DeleteAttachmentRequest struct {
-//	FileID string `form:"fileId"`
-//}
-//
-//type DeleteAttachmentResponse struct {
-//	Code    int          `json:"code"`
-//	Message string       `json:"message,optional"`
-//	Data    DeleteResult `json:"data"`
-//}
+type DeleteAttachmentRequest struct {
+	FileID string `form:"fileId"`
+}
+
+type DeleteAttachmentResponse struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message,optional"`
+	Data    DeleteResult `json:"data"`
+}
 
 type DeleteIDReq struct {
 	ID int64 `path:"id"`
 }
 
-//type DeleteResult struct {
-//	FileID  string `json:"fileId"`
-//	Success bool   `json:"success"`
-//}
+type DeleteResult struct {
+	FileID  string `json:"fileId"`
+	Success bool   `json:"success"`
+}
 
 type DetailRequest struct {
 	ID string `form:"id"`
@@ -420,10 +425,10 @@ type DetectRemoveReq struct {
 	Id int64 `form:"id"`
 }
 
-//type DownloadAttachmentRequest struct {
-//	FileID   string `form:"fileId"`
-//	Filename string `form:"filename,optional"`
-//}
+type DownloadAttachmentRequest struct {
+	FileID   string `form:"fileId"`
+	Filename string `form:"filename,optional"`
+}
 
 type EmailUpdateReq struct {
 	Email string `form:"email"`
@@ -580,9 +585,13 @@ type FlowUNMarkReq struct {
 	ID string `form:"id,optional"`
 }
 
-//type GetAppRequest struct {
-//	Name string `path:"name"`
-//}
+type GetAppRequest struct {
+	Name string `path:"name"`
+}
+
+type GetByPathReq struct {
+	Path string `form:"path"`
+}
 
 type GetByUnsReq struct {
 	UnsAlias string `form:"unsAlias"`
@@ -763,37 +772,38 @@ type IDList struct {
 	IDs []int64 `json:"ids"`
 }
 
-//type InstallAppRequest struct {
-//	Name        string `json:"name"`
-//	Description string `json:"description,optional"`
-//	ImagePath   string `json:"imagePath,optional"`
-//	ImageUrl    string `json:"imageUrl,optional"`
-//	IconPath    string `json:"iconPath,optional"`
-//	MenuUrl     string `json:"menuUrl"`
-//	ComposeYaml string `json:"composeYaml"`
-//	RouterTrim  bool   `json:"routerTrim,optional,default=true"`
-//	KeepHost    bool   `json:"keepHost,optional,default=false"`
-//}
-//
-//type InstallAppResponse struct {
-//	Code    int           `json:"code"`
-//	Message string        `json:"message,optional"`
-//	Data    InstallResult `json:"data"`
-//}
-//
-//type InstallResult struct {
-//	Name        string `json:"name"`
-//	Success     bool   `json:"success"`
-//	Message     string `json:"message,optional"`
-//	InstallTime string `json:"installTime,optional"`
-//}
-//
-//type InstalledAppsResponse struct {
-//	Code    int       `json:"code"`
-//	Message string    `json:"message,optional"`
-//	Data    []AppInfo `json:"data"`
-//	Total   int       `json:"total"`
-//}
+type InstallAppRequest struct {
+	Name        string           `json:"name"`
+	Description string           `json:"description,optional"`
+	ImagePath   string           `json:"imagePath,optional"`
+	ImageUrl    string           `json:"imageUrl,optional"`
+	IconPath    string           `json:"iconPath,optional"`
+	MenuUrl     string           `json:"menuUrl"`
+	Menu        *model.MenuModel `json:"menu"`
+	ComposeYaml string           `json:"composeYaml"`
+	RouterTrim  bool             `json:"routerTrim,optional,default=true"`
+	KeepHost    bool             `json:"keepHost,optional,default=false"`
+}
+
+type InstallAppResponse struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message,optional"`
+	Data    InstallResult `json:"data"`
+}
+
+type InstallResult struct {
+	Name        string `json:"name"`
+	Success     bool   `json:"success"`
+	Message     string `json:"message,optional"`
+	InstallTime string `json:"installTime,optional"`
+}
+
+type InstalledAppsResponse struct {
+	Code    int       `json:"code"`
+	Message string    `json:"message,optional"`
+	Data    []AppInfo `json:"data"`
+	Total   int       `json:"total"`
+}
 
 type InstanceDetail struct {
 	Id               string                 `json:"id"`
@@ -909,26 +919,26 @@ type ListAttachmentResp struct {
 	List []UnsAttachmentBo `json:"list"`
 }
 
-//type ListAttachmentsRequest struct {
-//	Category string `form:"category,optional"`
-//	Tag      string `form:"tag,optional"`
-//	Page     int    `form:"page,optional,default=1"`
-//	PageSize int    `form:"pageSize,optional,default=20"`
-//}
-//
-//type ListAttachmentsResponse struct {
-//	Code    int        `json:"code"`
-//	Message string     `json:"message,optional"`
-//	Data    ListResult `json:"data"`
-//	Total   int        `json:"total"`
-//}
-//
-//type ListResult struct {
-//	Items      []AttachmentInfo `json:"items"`
-//	Page       int              `json:"page"`
-//	PageSize   int              `json:"pageSize"`
-//	TotalPages int              `json:"totalPages"`
-//}
+type ListAttachmentsRequest struct {
+	Category string `form:"category,optional"`
+	Tag      string `form:"tag,optional"`
+	Page     int    `form:"page,optional,default=1"`
+	PageSize int    `form:"pageSize,optional,default=20"`
+}
+
+type ListAttachmentsResponse struct {
+	Code    int        `json:"code"`
+	Message string     `json:"message,optional"`
+	Data    ListResult `json:"data"`
+	Total   int        `json:"total"`
+}
+
+type ListResult struct {
+	Items      []AttachmentInfo `json:"items"`
+	Page       int              `json:"page"`
+	PageSize   int              `json:"pageSize"`
+	TotalPages int              `json:"totalPages"`
+}
 
 type ListTypesResult struct {
 	BaseResult
@@ -1258,9 +1268,9 @@ type SaveResourceReq struct {
 	Children    []SaveResourceReq `json:"children,optional"`
 }
 
-//type SearchAppsRequest struct {
-//	Keyword string `form:"keyword,optional"`
-//}
+type SearchAppsRequest struct {
+	Keyword string `form:"keyword,optional"`
+}
 
 type SearchPagedReq struct {
 	Key              string  `form:"k,optional"`
@@ -1555,21 +1565,21 @@ type TreeOuterStructureVo struct {
 	Children []*TreeOuterStructureVo `json:"children"`
 }
 
-//type UninstallAppRequest struct {
-//	Name string `path:"name"`
-//}
-//
-//type UninstallAppResponse struct {
-//	Code    int             `json:"code"`
-//	Message string          `json:"message,optional"`
-//	Data    UninstallResult `json:"data"`
-//}
-//
-//type UninstallResult struct {
-//	Name    string `json:"name"`
-//	Success bool   `json:"success"`
-//	Message string `json:"message,optional"`
-//}
+type UninstallAppRequest struct {
+	Name string `path:"name"`
+}
+
+type UninstallAppResponse struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message,optional"`
+	Data    UninstallResult `json:"data"`
+}
+
+type UninstallResult struct {
+	Name    string `json:"name"`
+	Success bool   `json:"success"`
+	Message string `json:"message,optional"`
+}
 
 type UnmarkRequest struct {
 	ID string `form:"id"`
@@ -1642,23 +1652,23 @@ type UpdateAppKeyReq struct {
 	Status       int32  `json:"status"`
 }
 
-//type UpdateAppRequest struct {
-//	Name        string `json:"name"`
-//	Description string `json:"description,optional"`
-//	ImagePath   string `json:"imagePath,optional"`
-//	ImageUrl    string `json:"imageUrl,optional"`
-//	IconPath    string `json:"iconPath,optional"`
-//	MenuUrl     string `json:"menuUrl,optional"`
-//	ComposeYaml string `json:"composeYaml,optional"`
-//	RouterTrim  *bool  `json:"routerTrim,optional"`
-//	KeepHost    *bool  `json:"keepHost,optional"`
-//}
-//
-//type UpdateAppResponse struct {
-//	Code    int          `json:"code"`
-//	Message string       `json:"message,optional"`
-//	Data    UpdateResult `json:"data"`
-//}
+type UpdateAppRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	ImagePath   string `json:"imagePath,optional"`
+	ImageUrl    string `json:"imageUrl,optional"`
+	IconPath    string `json:"iconPath,optional"`
+	MenuUrl     string `json:"menuUrl,optional"`
+	ComposeYaml string `json:"composeYaml,optional"`
+	RouterTrim  *bool  `json:"routerTrim,optional"`
+	KeepHost    *bool  `json:"keepHost,optional"`
+}
+
+type UpdateAppResponse struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message,optional"`
+	Data    UpdateResult `json:"data"`
+}
 
 type UpdateFileDTO struct {
 	Alias string                 `json:"alias"`
@@ -1694,11 +1704,11 @@ type UpdatePersonConfigReq struct {
 	MainLanguage string `json:"mainLanguage"`
 }
 
-//type UpdateResult struct {
-//	Name    string `json:"name"`
-//	Success bool   `json:"success"`
-//	Message string `json:"message,optional"`
-//}
+type UpdateResult struct {
+	Name    string `json:"name"`
+	Success bool   `json:"success"`
+	Message string `json:"message,optional"`
+}
 
 type UpdateTemplateBaseInfoReq struct {
 	ID          int64  `form:"id"`
@@ -1768,32 +1778,32 @@ type UpdateUnsDto struct {
 	CreateAt                      int64                  `json:"createAt,optional,omitzero"`
 }
 
-//type UploadAttachmentRequest struct {
-//	File        []byte   `form:"file"`
-//	Category    string   `form:"category,optional"`
-//	Description string   `form:"description,optional"`
-//	Tags        []string `form:"tags,optional"`
-//}
-//
-//type UploadAttachmentResponse struct {
-//	Code    int          `json:"code"`
-//	Message string       `json:"message,optional"`
-//	Data    UploadResult `json:"data"`
-//}
+type UploadAttachmentRequest struct {
+	FileHeader  *multipart.FileHeader `form:"file"`
+	Category    string                `form:"category,optional"`
+	Description string                `form:"description,optional"`
+	Tags        []string              `form:"tags,optional"`
+}
+
+type UploadAttachmentResponse struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message,optional"`
+	Data    UploadResult `json:"data"`
+}
 
 type UploadReq struct {
 	File string `form:"file,multipart/form-data"`
 }
 
-//type UploadResult struct {
-//	FileID      string `json:"fileId"`
-//	Filename    string `json:"filename"`
-//	FileSize    int64  `json:"fileSize"`
-//	FileType    string `json:"fileType"`
-//	MD5         string `json:"md5"`
-//	UploadTime  string `json:"uploadTime"`
-//	DownloadURL string `json:"downloadUrl"`
-//}
+type UploadResult struct {
+	FileID      string `json:"fileId"`
+	Filename    string `json:"filename"`
+	FileSize    int64  `json:"fileSize"`
+	FileType    string `json:"fileType"`
+	MD5         string `json:"md5"`
+	UploadTime  string `json:"uploadTime"`
+	DownloadUrl string `json:"downloadUrl"`
+}
 
 type UserCreateReq struct {
 	ID        string        `json:"id,optional"`

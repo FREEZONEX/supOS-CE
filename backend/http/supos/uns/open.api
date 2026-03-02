@@ -8,7 +8,6 @@ info(
 @server(
     group: supos/open
     prefix: /open-api/uns
-    middleware: CheckTokenWare,InitCtxsWare
 )
 service backend {
 
@@ -19,7 +18,52 @@ service backend {
     @handler attachmentUpload
     post /attachment (AttachmentUploadReq) returns (AttachmentUploadResp)
 
+    @doc(
+        summary: "查询文件夹schema 元数据结构"
+        description: "文件夹schema 定义结构"
+    )
+    @handler getFolderSchema
+    get /folder/schema returns (ResultVO)
+
+    @doc(
+        summary: "查询文件schema 元数据结构"
+        description: "文件schema 定义结构"
+    )
+    @handler getFileSchema
+    get /file/schema returns (ResultVO)
+
+    @doc(
+        summary: "别名查询文件夹详情"
+        description: "根据文件夹别名查询文件夹详细信息"
+    )
+    @handler getFolderByAlias
+    get /folder/:alias returns (ResultVO)
+
+    @doc(
+        summary: "别名查询文件详情"
+        description: "根据文件别名查询文件详细信息"
+    )
+    @handler getFileByAlias
+    get /file/:alias returns (ResultVO)
+
+    @doc(
+        summary: "路径查询文件夹详情"
+        description: "根据路径查询文件夹详细信息"
+    )
+    @handler getFolderByPath
+    get /folder/byPath (GetByPathReq) returns (ResultVO)
+
+    @doc(
+        summary: "路径查询文件详情"
+        description: "根据路径查询文件详细信息"
+    )
+    @handler getFileByPath
+    get /file/byPath (GetByPathReq) returns (ResultVO)
+
 }
 
 type (
+    GetByPathReq {
+        path string `form:"path"`
+    }
 )

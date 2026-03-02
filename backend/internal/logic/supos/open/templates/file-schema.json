@@ -1,0 +1,169 @@
+{
+  "name": "Topic",
+  "description": "UNS topic",
+  "versions": {
+    "v1alpha1": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "文件 id"
+          },
+          "alias": {
+            "type": "string",
+            "description": "别名"
+          },
+          "referenceAlias": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "引用的文件别名"
+          },
+          "frequency": {
+            "type": "string",
+            "description": "聚合文件类型：整数+聚合频率：时(h)、分(m)、秒(s)"
+          },
+          "namespace": {
+            "type": "string",
+            "description": "命名空间"
+          },
+          "expression": {
+            "type": "string",
+            "description": "计算文件类型 - 表达式"
+          },
+          "dataType": {
+            "type": "integer",
+            "description": "1--时序，2--关系，3--计算型, 6--聚合 7--引用"
+          },
+          "attachment": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fileType": {
+                  "type": "string",
+                  "description": "附件文件类型"
+                },
+                "fileUrl": {
+                  "type": "string",
+                  "description": "附件文件地址"
+                },
+                "fileName": {
+                  "type": "string",
+                  "description": "附件文件名"
+                }
+              }
+            }
+          },
+          "extendProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "健信息"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "值信息"
+                }
+              }
+            }
+          },
+          "subscribe": {
+            "type": "boolean",
+            "description": "是否订阅"
+          },
+          "mountSource": {
+            "type": "string",
+            "description": "挂载来源"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "标签 id"
+            }
+          },
+          "displayName": {
+            "type": "string",
+            "description": "显示名称"
+          },
+          "name": {
+            "type": "string",
+            "description": "原始名称"
+          },
+          "persistence": {
+            "type": "boolean",
+            "description": "是否持久化"
+          },
+          "definition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "字段名"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "INTEGER",
+                    "LONG",
+                    "FLOAT",
+                    "DOUBLE",
+                    "BOOLEAN",
+                    "DATETIME",
+                    "STRING"
+                  ],
+                  "description": "字段类型"
+                },
+                "maxLen": {
+                  "type": "integer",
+                  "description": "最大长度"
+                },
+                "remark": {
+                  "type": "string",
+                  "description": "字段描述"
+                },
+                "displayName": {
+                  "type": "string",
+                  "description": "显示名"
+                },
+                "systemField": {
+                  "type": "boolean",
+                  "description": "是否系统字段"
+                }
+              }
+            }
+          },
+          "mountType": {
+            "type": "integer",
+            "description": "0--非挂载（uns 创建),10-采集器,11-视频采集器,12-时序库连接器,13-GRPC网关,14-IOT网关（MQTT),15-模拟采集器,50-消息队列,60-IT 接口,70-数据库"
+          },
+          "updateDate": {
+            "type": "string",
+            "description": "更新时间"
+          },
+          "createDate": {
+            "type": "string",
+            "description": "创建时间"
+          },
+          "templateId": {
+            "type": "integer",
+            "description": "引用模版 id"
+          }
+        }
+      }
+    }
+  },
+  "$metadata": {
+    "name": "topic.uns.supos.com",
+    "creationTimestamp": "2025-07-09T06:21:57Z",
+    "modifiedTimestamp": "2025-07-09T06:31:08Z"
+  }
+}

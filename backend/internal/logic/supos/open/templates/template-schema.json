@@ -1,0 +1,83 @@
+{
+  "name": "Template",
+  "description": "UNS template",
+  "versions": {
+    "v1alpha1": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "subscribe": {
+            "type": "boolean",
+            "description": "是否订阅"
+          },
+          "createDate": {
+            "type": "string",
+            "description": "创建时间"
+          },
+          "definition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "字段名"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "INTEGER",
+                    "LONG",
+                    "FLOAT",
+                    "DOUBLE",
+                    "BOOLEAN",
+                    "DATETIME",
+                    "STRING"
+                  ],
+                  "description": "字段类型"
+                },
+                "maxLen": {
+                  "type": "integer",
+                  "description": "最大长度"
+                },
+                "remark": {
+                  "type": "string",
+                  "description": "字段描述"
+                },
+                "displayName": {
+                  "type": "string",
+                  "description": "显示名称"
+                },
+                "systemField": {
+                  "type": "boolean",
+                  "description": "是否系统字段"
+                }
+              }
+            }
+          },
+          "updateDate": {
+            "type": "string",
+            "description": "更新时间"
+          },
+          "subscribeFrequency": {
+            "type": "string",
+            "description": "整数+订阅频率：天(d)、时(h)、分(m)、秒(s)"
+          },
+          "id": {
+            "type": "integer",
+            "description": "文件夹 id"
+          },
+          "name": {
+            "type": "string",
+            "description": "显示名称"
+          }
+        }
+      }
+    }
+  },
+  "$metadata": {
+    "name": "template.uns.supos.com",
+    "creationTimestamp": "2025-07-09T06:21:57Z",
+    "modifiedTimestamp": "2025-07-09T06:31:09Z"
+  }
+}

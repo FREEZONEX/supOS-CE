@@ -14205,6 +14205,202 @@
         }
       }
     },
+    "/open-api/uns/file/byPath": {
+      "get": {
+        "description": "根据路径查询文件详细信息",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "路径查询文件详情",
+        "operationId": "supos/OpenGetFileByPath",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "path",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/file/schema": {
+      "get": {
+        "description": "文件schema 定义结构",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询文件schema 元数据结构",
+        "operationId": "supos/OpenGetFileSchema",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/file/{alias}": {
+      "get": {
+        "description": "根据文件别名查询文件详细信息",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "别名查询文件详情",
+        "operationId": "supos/OpenGetFileByAlias",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/folder/byPath": {
+      "get": {
+        "description": "根据路径查询文件夹详细信息",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "路径查询文件夹详情",
+        "operationId": "supos/OpenGetFolderByPath",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "path",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/folder/schema": {
+      "get": {
+        "description": "文件夹schema 定义结构",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询文件夹schema 元数据结构",
+        "operationId": "supos/OpenGetFolderSchema",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/folder/{alias}": {
+      "get": {
+        "description": "根据文件夹别名查询文件夹详细信息",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "别名查询文件夹详情",
+        "operationId": "supos/OpenGetFolderByAlias",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/service-api/supos/flow/by/aliases": {
       "post": {
         "consumes": [
@@ -14353,7 +14549,7 @@
       }
     }
   },
-  "x-date": "2026-02-28 10:14:19",
+  "x-date": "2026-03-02 11:36:03",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

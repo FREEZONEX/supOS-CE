@@ -477,6 +477,42 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/attachment",
 				Handler: suposopen.AttachmentUploadHandler(serverCtx),
 			},
+			{
+				// 别名查询文件详情
+				Method:  http.MethodGet,
+				Path:    "/file/:alias",
+				Handler: suposopen.GetFileByAliasHandler(serverCtx),
+			},
+			{
+				// 路径查询文件详情
+				Method:  http.MethodGet,
+				Path:    "/file/byPath",
+				Handler: suposopen.GetFileByPathHandler(serverCtx),
+			},
+			{
+				// 查询文件schema 元数据结构
+				Method:  http.MethodGet,
+				Path:    "/file/schema",
+				Handler: suposopen.GetFileSchemaHandler(serverCtx),
+			},
+			{
+				// 别名查询文件夹详情
+				Method:  http.MethodGet,
+				Path:    "/folder/:alias",
+				Handler: suposopen.GetFolderByAliasHandler(serverCtx),
+			},
+			{
+				// 路径查询文件夹详情
+				Method:  http.MethodGet,
+				Path:    "/folder/byPath",
+				Handler: suposopen.GetFolderByPathHandler(serverCtx),
+			},
+			{
+				// 查询文件夹schema 元数据结构
+				Method:  http.MethodGet,
+				Path:    "/folder/schema",
+				Handler: suposopen.GetFolderSchemaHandler(serverCtx),
+			},
 		},
 		rest.WithPrefix("/open-api/uns"),
 	)

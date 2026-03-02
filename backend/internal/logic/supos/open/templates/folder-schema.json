@@ -1,0 +1,135 @@
+{
+  "name": "Path",
+  "description": "UNS path",
+  "versions": {
+    "v1alpha1": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "attachment": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fileName": {
+                  "type": "string",
+                  "description": "附件文件名"
+                },
+                "fileType": {
+                  "type": "string",
+                  "description": "附件文件类型"
+                },
+                "fileUrl": {
+                  "type": "string",
+                  "description": "附件文件地址"
+                }
+              }
+            }
+          },
+          "templateId": {
+            "type": "integer",
+            "description": "引用模版 id"
+          },
+          "updateDate": {
+            "type": "string",
+            "description": "更新时间"
+          },
+          "subscribeFrequency": {
+            "type": "string",
+            "description": "整数+订阅频率：天(d)、时(h)、分(m)、秒(s)"
+          },
+          "id": {
+            "type": "integer",
+            "description": "文件夹 id"
+          },
+          "namespace": {
+            "type": "string",
+            "description": "命名空间"
+          },
+          "extendProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "健信息"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "值信息"
+                }
+              }
+            }
+          },
+          "subscribe": {
+            "type": "boolean",
+            "description": "是否订阅"
+          },
+          "createDate": {
+            "type": "string",
+            "description": "创建时间"
+          },
+          "alias": {
+            "type": "string",
+            "description": "别名"
+          },
+          "definition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "systemField": {
+                  "type": "boolean",
+                  "description": "是否系统字段"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "字段名"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "INTEGER",
+                    "LONG",
+                    "FLOAT",
+                    "DOUBLE",
+                    "BOOLEAN",
+                    "DATETIME",
+                    "STRING"
+                  ],
+                  "description": "字段类型"
+                },
+                "maxLen": {
+                  "type": "integer",
+                  "description": "最大长度"
+                },
+                "remark": {
+                  "type": "string",
+                  "description": "字段描述"
+                },
+                "displayName": {
+                  "type": "string",
+                  "description": "显示名"
+                }
+              }
+            }
+          },
+          "displayName": {
+            "type": "string",
+            "description": "显示名称"
+          },
+          "name": {
+            "type": "string",
+            "description": "原始名称"
+          }
+        }
+      }
+    }
+  },
+  "$metadata": {
+    "name": "path.uns.supos.com",
+    "creationTimestamp": "2025-07-09T06:21:57Z",
+    "modifiedTimestamp": "2025-07-09T06:31:09Z"
+  }
+}

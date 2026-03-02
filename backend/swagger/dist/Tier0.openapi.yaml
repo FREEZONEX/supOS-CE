@@ -4,7 +4,7 @@ info:
   description: ''
   version: 1.0.0
 tags:
-  - name: 文件夹&文件管理
+  - name: 文件夹/文件管理
 paths:
   /open-api/uns/attachment:
     post:
@@ -13,7 +13,7 @@ paths:
       description: ''
       operationId: uploadUnsAttachment
       tags:
-        - 文件夹&文件管理
+        - 文件夹/文件管理
       parameters:
         - name: alias
           in: query
@@ -96,8 +96,576 @@ paths:
           headers: {}
       security:
         - apikey-header-apikey: []
+  /open-api/uns/folder/schema:
+    get:
+      summary: 查询文件夹schema 元数据结构
+      deprecated: false
+      description: 文件夹schema 定义结构
+      tags:
+        - 文件夹/文件管理
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+          headers: {}
+      security:
+        - apikey-header-apikey: []
+  /open-api/uns/file/schema:
+    get:
+      summary: 查询文件schema 元数据结构
+      deprecated: false
+      description: 文件夹schema 定义结构
+      tags:
+        - 文件夹/文件管理
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+          headers: {}
+      security:
+        - apikey-header-apikey: []
+  /open-api/uns/folder/{alias}:
+    get:
+      summary: 别名查询文件夹详情
+      deprecated: false
+      description: 根据文件夹别名查询文件夹详细信息。
+      operationId: getModelDefinition
+      tags:
+        - 文件夹/文件管理
+      parameters:
+        - name: alias
+          in: path
+          description: 别名
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 63
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 错误码，200--正常，其他失败
+                    format: int32
+                  msg:
+                    type: string
+                    description: 错误信息
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: ID
+                      name:
+                        type: string
+                        description: 名称
+                        minLength: 1
+                        maxLength: 63
+                      displayName:
+                        type: string
+                        description: 显示名
+                        maxLength: 128
+                      alias:
+                        type: string
+                        description: 别名
+                      parentAlias:
+                        type: string
+                        description: 父级别名
+                      path:
+                        type: string
+                        description: 全路径
+                      pathName:
+                        type: string
+                        description: 路径名
+                      description:
+                        type: string
+                        description: 模型描述
+                      definition:
+                        type: array
+                        description: 字段定义
+                        items:
+                          $ref: '#/components/schemas/FieldDefine'
+                      extendProperties:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          description: 扩展字段JSON
+                        description: 扩展属性
+                        properties: {}
+                      templateAlias:
+                        type: string
+                        description: 关联的模板别名
+                      updateTime:
+                        type: integer
+                        description: 修改时间--单位：毫秒
+                        format: int64
+                      createTime:
+                        type: integer
+                        description: 创建时间--单位：毫秒
+                        format: int64
+          headers: {}
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+          headers: {}
+        '405':
+          description: Method Not Allowed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+          headers: {}
+      security:
+        - apikey-header-apikey: []
+  /open-api/uns/file/{alias}:
+    get:
+      summary: 别名查询文件详情
+      deprecated: false
+      description: 根据文件别名查询文件详细信息。
+      operationId: getInstanceDetail
+      tags:
+        - 文件夹/文件管理
+      parameters:
+        - name: alias
+          in: path
+          description: 别名
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 63
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 错误码，0--正常，其他失败
+                    format: int32
+                  msg:
+                    type: string
+                    description: 错误信息
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: 文件ID
+                      name:
+                        type: string
+                        description: 文件名
+                      displayName:
+                        type: string
+                        description: 显示名
+                      alias:
+                        type: string
+                        description: 别名
+                      parentAlias:
+                        type: string
+                        description: 父级别名
+                      path:
+                        type: string
+                        description: 全路径
+                      dataType:
+                        type: integer
+                        description: 1--时序，2--关系，3--计算型, 6--聚合 7--引用
+                        format: int32
+                      parentDataType:
+                        type: integer
+                        description: >-
+                          文件分类类型：1-状态/结果 2-操作
+                          3-指标/度量，当环境变量ENABLE_AUTO_CATEGORIZATION为true时有效;dataType与parentDataType对应关系：关系型-状态/结果，时序型-指标/度量，JSONB-操作，其他类型-状态/结果或指标/度量，默认为状态/结果
+                      pathType:
+                        type: integer
+                        description: 文件类型 0--文件夹，2--文件
+                        format: int32
+                      definition:
+                        type: array
+                        description: 字段定义
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: 字段名：字母开头，支持字母、数字和下划线 最长63
+                            type:
+                              type: string
+                              description: >-
+                                字段类型：INTEGER, LONG, FLOAT, DOUBLE, BOOLEAN,
+                                DATETIME, STRING
+                            unique:
+                              type: boolean
+                              description: 是否唯一约束，新建模板时，此参数不生效
+                            index:
+                              type: string
+                              description: 对应的协议字段key，新建模板时，此参数不生效
+                            displayName:
+                              type: string
+                              description: 显式名
+                            remark:
+                              type: string
+                              description: 备注
+                            maxLen:
+                              type: integer
+                              description: 最大长度(string字段类型生效)
+                              format: int32
+                            systemField:
+                              type: boolean
+                              description: 是否系统参数，新建模板时，此参数不生效
+                          required:
+                            - name
+                            - type
+                      description:
+                        type: string
+                        description: 描述
+                      persistence:
+                        type: boolean
+                        description: 是否持久化
+                      pathName:
+                        type: string
+                        description: 文件路径名
+                      templateAlias:
+                        type: string
+                        description: 引用的模板别名
+                      extendProperties:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          description: 扩展字段JSON
+                        description: 扩展属性
+                        properties: {}
+                      updateTime:
+                        type: integer
+                        description: 修改时间--单位：毫秒
+                        format: int64
+                      createTime:
+                        type: integer
+                        description: 创建时间--单位：毫秒
+                        format: int64
+                      labelList:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              description: 标签ID
+                            labelName:
+                              type: string
+                              description: 标签名称
+                        description: 标签列表
+          headers: {}
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+          headers: {}
+        '405':
+          description: Method Not Allowed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+          headers: {}
+      security:
+        - apikey-header-apikey: []
+  /open-api/uns/folder/byPath:
+    get:
+      summary: 路径查询文件夹详情
+      deprecated: false
+      description: 根据路径查询文件夹详细信息。
+      operationId: folderDetailByPath
+      tags:
+        - 文件夹/文件管理
+      parameters:
+        - name: path
+          in: query
+          description: ''
+          required: false
+          example: 路径
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 错误码，200--正常，其他失败
+                    format: int32
+                  msg:
+                    type: string
+                    description: 错误信息
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: ID
+                      alias:
+                        type: string
+                        description: 别名
+                      parentAlias:
+                        type: string
+                        description: 父级别名
+                      path:
+                        type: string
+                        description: 全路径
+                      definition:
+                        type: array
+                        description: 字段定义
+                        items:
+                          $ref: '#/components/schemas/FieldDefine'
+                      description:
+                        type: string
+                        description: 模型描述
+                      name:
+                        type: string
+                        description: 名称
+                      displayName:
+                        type: string
+                        description: 显示名
+                      pathName:
+                        type: string
+                        description: 路径名
+                      extendProperties:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          description: 扩展字段JSON
+                        description: 扩展属性
+                        properties: {}
+                      templateAlias:
+                        type: string
+                        description: 关联的模板别名
+                      updateTime:
+                        type: integer
+                        description: 修改时间--单位：毫秒
+                        format: int64
+                      createTime:
+                        type: integer
+                        description: 创建时间--单位：毫秒
+                        format: int64
+          headers: {}
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+          headers: {}
+        '405':
+          description: Method Not Allowed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+          headers: {}
+      security:
+        - apikey-header-apikey: []
+  /open-api/uns/file/byPath:
+    get:
+      summary: 路径查询文件详情
+      deprecated: false
+      description: 根据路径查询文件详细信息。
+      operationId: fileDetailByPath
+      tags:
+        - 文件夹/文件管理
+      parameters:
+        - name: path
+          in: query
+          description: ''
+          required: false
+          example: 路径
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 错误码，0--正常，其他失败
+                    format: int32
+                  msg:
+                    type: string
+                    description: 错误信息
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: 文件ID
+                      name:
+                        type: string
+                        description: 文件名
+                      displayName:
+                        type: string
+                        description: 显示名
+                      alias:
+                        type: string
+                        description: 别名
+                      parentAlias:
+                        type: string
+                        description: 父级别名
+                      path:
+                        type: string
+                        description: 全路径
+                      dataType:
+                        type: integer
+                        description: 1--时序，2--关系，3--计算型, 6--聚合 7--引用
+                        format: int32
+                      parentDataType:
+                        type: integer
+                        description: >-
+                          文件分类类型：1-状态/结果 2-操作
+                          3-指标/度量，当环境变量ENABLE_AUTO_CATEGORIZATION为true时有效;dataType与parentDataType对应关系：关系型-状态/结果，时序型-指标/度量，JSONB-操作，其他类型-状态/结果或指标/度量，默认为状态/结果
+                      pathType:
+                        type: integer
+                        description: 文件类型 0--文件夹，2--文件
+                        format: int32
+                      definition:
+                        type: array
+                        description: 字段定义
+                        items:
+                          $ref: '#/components/schemas/FieldDefine'
+                      description:
+                        type: string
+                        description: 描述
+                      persistence:
+                        type: boolean
+                        description: 是否持久化
+                      pathName:
+                        type: string
+                        description: 文件路径名
+                      templateAlias:
+                        type: string
+                        description: 引用的模板别名
+                      extendProperties:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          description: 扩展字段JSON
+                        description: 扩展属性
+                        properties: {}
+                      updateTime:
+                        type: integer
+                        description: 修改时间--单位：毫秒
+                        format: int64
+                      createTime:
+                        type: integer
+                        description: 创建时间--单位：毫秒
+                        format: int64
+                      labelList:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: 标签ID
+                            labelName:
+                              type: string
+                              description: 标签名称
+                        description: 标签列表
+          headers: {}
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+          headers: {}
+        '405':
+          description: Method Not Allowed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+          headers: {}
+      security:
+        - apikey-header-apikey: []
 components:
-  schemas: {}
+  schemas:
+    ResultVO:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: 状态码 200-成功 400-参数错误 500-接口异常
+        msg:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          properties: {}
+          description: 响应数据
+    FieldDefine:
+      required:
+        - name
+        - type
+      type: object
+      properties:
+        name:
+          type: string
+          description: 字段名：字母开头，支持字母、数字和下划线，最长63
+        type:
+          type: string
+          description: 字段类型：INTEGER, LONG, FLOAT, DOUBLE, BOOLEAN, DATETIME, STRING
+        unique:
+          type: boolean
+          description: 是否唯一约束，新建模板时，此参数不生效
+        index:
+          type: string
+          description: 对应的协议字段key，新建模板时，此参数不生效
+        displayName:
+          type: string
+          description: 显式名
+        remark:
+          type: string
+          description: 备注
+        maxLen:
+          type: integer
+          description: 最大长度(string字段类型生效)
+          format: int32
+        systemField:
+          type: boolean
+          description: 是否系统参数，新建模板时，此参数不生效
+      description: 新增的字段
   responses: {}
   securitySchemes:
     apikey-header-apikey:
@@ -105,5 +673,4 @@ components:
       in: header
       name: apikey
 servers: []
-security:
-  - apikey-header-apikey: []
+security: []

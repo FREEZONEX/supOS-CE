@@ -1,0 +1,38 @@
+{
+  "name": "Label",
+  "description": "uns label",
+  "versions": {
+    "v1alpha1": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Label name"
+          },
+          "subscribe": {
+            "type": "boolean",
+            "description": "Subscribed or not"
+          },
+          "subscribeFrequency": {
+            "description": "Integer + subscription frequency: day(d), hour(h), minute(m), second(s)",
+            "type": "string"
+          },
+          "createDate": {
+            "type": "string",
+            "description": "Creation time"
+          }
+        }
+      }
+    }
+  },
+  "$metadata": {
+    "name": "label.uns.supos.com",
+    "creationTimestamp": "2025-07-09T06:21:57Z",
+    "modifiedTimestamp": "2025-07-09T06:31:09Z"
+  }
+}
