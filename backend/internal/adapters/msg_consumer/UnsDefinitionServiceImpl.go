@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgraph-io/ristretto/v2"
+	"github.com/karlseguin/ccache/v2"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 )
@@ -22,24 +22,15 @@ import (
 type UnsDefinitionService struct {
 	log                  logx.Logger
 	unsMapper            dao.UnsNamespaceRepo
-	cache                *ristretto.Cache[string, *types.UnsDefinition]
+	cache                *ccache.Cache
 	locks                [1000]sync.RWMutex
 	persistentServiceMap map[types.SrcJdbcType]serviceApi.IPersistentService
 }
 
 func init() {
-	cache, err := ristretto.NewCache(&ristretto.Config[string, *types.UnsDefinition]{
-		NumCounters: 1e6,     // number of keys to track frequency of (1M).
-		MaxCost:     1 << 28, // maximum cost of cache (256M).
-		BufferItems: 64,      // number of keys per Get buffer.
-	})
-	if err != nil {
-		logx.Errorf("init cache err: %v", err)
-		panic(err)
-	}
 	spring.RegisterBean[*UnsDefinitionService](&UnsDefinitionService{
 		log:   logx.WithContext(context.Background()),
-		cache: cache,
+		cache: ccache.New(ccache.Configure().MaxSize(1100000).Buckets(64).GetsPerPromote(3)),
 	})
 }
 
@@ -54,38 +45,39 @@ func (u *UnsDefinitionService) GetDefinitionByPath(path string) *types.UnsDefini
 	return u.getByAliasOrPath(keyPathPrev, path, u.unsMapper.GetByPath)
 }
 
-const costObj = 4
-const costRef = 2
-const costNil = 1
-
-func (u *UnsDefinitionService) GetDefinitionById(id int64) *types.UnsDefinition {
+func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.UnsDefinition) {
 	c := u.cache
 	idStr := id2key(id)
-	rs, exist := c.Get(idStr)
-	if !exist {
+	item := c.Get(idStr)
+	if item == nil || item.Expired() {
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
 		defer cancel()
 		db := dao.GetDb(ctx)
 		po, _ := u.unsMapper.SelectById(db, id)
 		if po != nil {
 			rs = po2dto(po)
-			c.SetWithTTL(idStr, rs, costObj, 10*time.Minute)
+			c.Set(idStr, rs, 10*time.Minute)
 			key := ""
 			if constants.UseAliasAsTopic {
 				key = alias2key(po.Alias)
 			} else {
 				key = path2key(po.Path)
 			}
-			c.SetWithTTL(key, &types.UnsDefinition{CreateTopicDto: types.CreateTopicDto{Id: rs.Id}}, costRef, 10*time.Minute)
+			c.Set(key, rs.Id, 10*time.Minute)
 		} else {
-			c.SetWithTTL(idStr, nil, costNil, 1*time.Minute) //占位
+			c.Set(idStr, nil, 1*time.Minute) //占位
 		}
+	} else {
+		if item.TTL() < 10*time.Second { //过期时间不到10秒，续期5分钟,避免对象使用中突然被释放遇到NPE
+			item.Extend(5 * time.Minute)
+		}
+		rs = item.Value().(*types.UnsDefinition)
 	}
 	return rs
 }
 func (u *UnsDefinitionService) DeleteByIds(ids []int64) error {
 	for _, id := range ids {
-		u.cache.Del(id2key(id))
+		u.cache.Delete(id2key(id))
 	}
 	return nil
 }
@@ -135,9 +127,9 @@ func (u *UnsDefinitionService) OnEventUpdateInstanceEvent0(ev *event.UpdateInsta
 	}
 }
 func (u *UnsDefinitionService) invalidCache(id int64, alias, path string) {
-	u.cache.Del(id2key(id))
-	u.cache.Del(alias2key(alias))
-	u.cache.Del(path2key(path))
+	u.cache.Delete(id2key(id))
+	u.cache.Delete(alias2key(alias))
+	u.cache.Delete(path2key(path))
 }
 
 func id2key(id int64) string {
@@ -154,35 +146,31 @@ func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query 
 	key := kPrev + arg
 	c := u.cache
 
-	idObj, has := c.Get(key)
-	if !has {
+	idObj := c.Get(key)
+	if idObj == nil || idObj.Expired() {
 		index := base.Abs(base.HashCode(arg)) % len(u.locks)
 		u.locks[index].Lock()
 
-		idObj, has = c.Get(key)
-		if !has {
+		idObj = c.Get(key)
+		if idObj == nil || idObj.Expired() {
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
 			defer cancel()
 			db := dao.GetDb(ctx)
 			po, _ := query(db, arg)
 			if po != nil {
-				rs = po2dto(po)
-				idKey := id2key(rs.Id)
-				c.SetWithTTL(key, &types.UnsDefinition{CreateTopicDto: types.CreateTopicDto{Id: rs.Id}}, costRef, 13*time.Minute)
-				c.SetWithTTL(idKey, rs, costObj, 10*time.Minute)
-				c.Wait()
+				idKey := id2key(po.Id)
+				c.Set(key, po.Id, 13*time.Minute)
+				c.Set(idKey, po2dto(po), 10*time.Minute)
 			} else {
-				c.SetWithTTL(key, nil, costNil, 2*time.Minute) //占位
+				c.Set(key, int64(-1), 2*time.Minute) //占位
 			}
 			u.locks[index].Unlock()
-		} else if idObj != nil {
-			u.locks[index].Unlock()
-			return u.GetDefinitionById(idObj.Id)
 		} else {
 			u.locks[index].Unlock()
+			return u.GetDefinitionById(idObj.Value().(int64))
 		}
-	} else if idObj != nil {
-		return u.GetDefinitionById(idObj.Id)
+	} else {
+		return u.GetDefinitionById(idObj.Value().(int64))
 	}
 	return
 }

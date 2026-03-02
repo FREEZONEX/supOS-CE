@@ -7,9 +7,9 @@ require (
 	gitee.com/unitedrhino/share v1.5.53
 	github.com/buger/jsonparser v1.1.1
 	github.com/bwmarrin/snowflake v0.3.0
+	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.6.0
-	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/expr-lang/expr v1.17.6
 	github.com/go-resty/resty/v2 v2.7.0
@@ -18,6 +18,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/h2non/gock v1.2.0
 	github.com/jinzhu/copier v0.4.0
+	github.com/karlseguin/ccache/v2 v2.0.8
 	github.com/kong/go-kong v0.72.1
 	github.com/lib/pq v1.10.9
 	github.com/magiconair/properties v1.8.7
