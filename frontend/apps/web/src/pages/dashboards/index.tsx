@@ -644,7 +644,15 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
         )}
       </ComContent>
       <ComDrawer title=" " open={show} onClose={onClose}>
-        <OperationForm form={form} onCancel={onClose} onSave={onSave} formItemOptions={formItemOptions(isEdit)} />
+        <OperationForm
+          form={form}
+          formConfig={{
+            initialValues: { type: 1 },
+          }}
+          onCancel={onClose}
+          onSave={onSave}
+          formItemOptions={formItemOptions(isEdit)}
+        />
       </ComDrawer>
       <AddGroupModal ref={addGroupModalRef} refreshRequest={refreshRequest} />
       <MoveGroupModal ref={moveGroupModalRef} refreshRequest={refreshRequest} />
