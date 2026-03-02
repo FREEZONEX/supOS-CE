@@ -56,6 +56,16 @@ func (l *PutLogic) Put(req *types.SaveGroupReq) (resp *types.JsonResult, err err
 		return nil, errors.Database.WithMsg(message).AddDetail(err)
 	}
 
+	var desc string
+	if req.Description != nil {
+		desc = *req.Description
+	}
+
+	if utf8.RuneCountInString(desc) > 512 {
+		message := I18nUtils.GetMessage("group.description.maxLength")
+		return nil, errors.Database.WithMsg(message).AddDetail(err)
+	}
+
 	// 检查组名是否已存在
 	existingGroup, err := groupMapper.SelectByNameNotId(db, *req.ID, *req.Name, *req.Type)
 	if err != nil {

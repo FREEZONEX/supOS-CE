@@ -54,8 +54,8 @@ func (l *PostLogic) Post(req *types.SaveGroupReq) (resp *types.JsonResult, err e
 		desc = *req.Description
 	}
 
-	if utf8.RuneCountInString(desc) > 255 {
-		message := I18nUtils.GetMessage("group.name.maxLength")
+	if utf8.RuneCountInString(desc) > 512 {
+		message := I18nUtils.GetMessage("group.description.maxLength")
 		return nil, errors.Database.WithMsg(message).AddDetail(err)
 	}
 
