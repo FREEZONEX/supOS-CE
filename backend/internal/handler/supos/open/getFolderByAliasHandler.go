@@ -8,14 +8,21 @@ import (
 
 	"backend/internal/logic/supos/open"
 	"backend/internal/svc"
+	"backend/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 // 别名查询文件夹详情
 func GetFolderByAliasHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var req types.AliasPathReq
+		if err := httpx.Parse(r, &req); err != nil {
+			httpx.ErrorCtx(r.Context(), w, err)
+			return
+		}
+
 		l := open.NewGetFolderByAliasLogic(r.Context(), svcCtx)
-		resp, err := l.GetFolderByAlias()
+		resp, err := l.GetFolderByAlias(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
