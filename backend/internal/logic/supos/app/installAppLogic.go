@@ -31,13 +31,27 @@ func NewInstallAppLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Instal
 func (l *InstallAppLogic) InstallApp(req *types.InstallAppRequest) (resp *types.InstallAppResponse, err error) {
 	logx.Info("[InstallApp] 开始安装应用:", req.Name)
 
+	// 转换 Menu 类型
+	var menuModel *model.MenuModel
+	if req.Menu != nil {
+		menuModel = &model.MenuModel{
+			Name:         req.Menu.Name,
+			Description:  req.Menu.Description,
+			IndexUrl:     req.Menu.IndexUrl,
+			OpenType:     req.Menu.OpenType,
+			StripPath:    req.Menu.StripPath,
+			PreserveHost: req.Menu.PreserveHost,
+			IconUrl:      req.Menu.IconUrl,
+		}
+	}
+
 	// 将请求转换为 NewFeatureModel
 	featureModel := &model.NewFeatureModel{
 		Name:        req.Name,
 		Description: req.Description,
 		ImagePath:   req.ImagePath,
 		ImageUrl:    req.ImageUrl,
-		Menu:        req.Menu,
+		Menu:        menuModel,
 		ComposeYaml: req.ComposeYaml,
 	}
 

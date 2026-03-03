@@ -42,20 +42,32 @@ type (
         Name string `path:"name"`
     }
 
-    SearchAppsRequest {
-        Keyword string `form:"keyword,optional"`
+    // Menu 菜单配置
+    Menu {
+        Name         string `json:"name,optional"`
+        Description  string `json:"description,optional"`
+        IndexUrl     string `json:"indexUrl"`
+        OpenType     int    `json:"openType,optional,default=0"`
+        StripPath    bool   `json:"stripPath,optional,default=true"`
+        PreserveHost bool   `json:"preserveHost,optional,default=false"`
+        IconUrl      string `json:"iconUrl,optional"`
     }
 
     InstallAppRequest {
-        Name        string `json:"name"`
-        Description string `json:"description,optional"`
-        ImagePath   string `json:"imagePath,optional"`
-        ImageUrl    string `json:"imageUrl,optional"`
-        IconPath    string `json:"iconPath,optional"`
-        MenuUrl     string `json:"menuUrl"`
-        ComposeYaml string `json:"composeYaml"`
-        RouterTrim  bool   `json:"routerTrim,optional,default=true"`
-        KeepHost    bool   `json:"keepHost,optional,default=false"`
+        Name        string           `json:"name"`
+        Description string           `json:"description,optional"`
+        ImagePath   string           `json:"imagePath,optional"`
+        ImageUrl    string           `json:"imageUrl,optional"`
+        IconPath    string           `json:"iconPath,optional"`
+        MenuUrl     string           `json:"menuUrl"`
+        Menu        *Menu `json:"menu,optional"`
+        ComposeYaml string           `json:"composeYaml"`
+        RouterTrim  bool             `json:"routerTrim,optional,default=true"`
+        KeepHost    bool             `json:"keepHost,optional,default=false"`
+    }
+
+    SearchAppsRequest {
+        Keyword string `form:"keyword,optional"`
     }
 
     UninstallAppRequest {

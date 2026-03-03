@@ -28,19 +28,19 @@ func NewUploadAttachmentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 	}
 }
 
-func (l *UploadAttachmentLogic) UploadAttachment(req *types.UploadAttachmentRequest) (*types.UploadAttachmentResponse, error) {
+func (l *UploadAttachmentLogic) UploadAttachment(fileHeader *multipart.FileHeader, category, description string, tags []string) (*types.UploadAttachmentResponse, error) {
 	// 1. 验证文件大小（最大2GB）
-	if req.FileHeader.Size > 2*1024*1024*1024 { // 2GB
+	if fileHeader.Size > 2*1024*1024*1024 { // 2GB
 		return nil, errors.Parameter.WithMsg("文件大小超过2GB限制")
 	}
 
 	// 2. 验证文件类型
-	//if err := l.validateFileType(req.FileHeader); err != nil {
+	//if err := l.validateFileType(fileHeader); err != nil {
 	//	return nil, err
 	//}
 
 	// 3. 使用附件管理器上传文件
-	attachmentInfo, err := app.UploadAttachment(req.FileHeader, req.Category, req.Description, req.Tags)
+	attachmentInfo, err := app.UploadAttachment(fileHeader, category, description, tags)
 	if err != nil {
 		l.Errorf("上传附件失败: %v", err)
 		return nil, errors.Failure.WithMsg("上传附件失败")

@@ -31,7 +31,6 @@ service backend {
 type (
     // Request types
     UploadAttachmentRequest {
-        File []byte `form:"file"`
         Category string `form:"category,optional"`
         Description string `form:"description,optional"`
         Tags []string `form:"tags,optional"`
@@ -81,7 +80,7 @@ type (
         FileType string `json:"fileType"`
         MD5 string `json:"md5"`
         UploadTime string `json:"uploadTime"`
-        DownloadURL string `json:"downloadUrl"`
+        DownloadUrl string `json:"downloadUrl"`
     }
 
     DeleteResult {

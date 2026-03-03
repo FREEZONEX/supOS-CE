@@ -6,7 +6,6 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 	"backend/internal/logic/supos/attachment"
 	"backend/internal/svc"
-	"backend/internal/types"
 )
 
 // UploadAttachmentHandler 上传附件
@@ -32,16 +31,8 @@ func UploadAttachmentHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		description := r.FormValue("description")
 		tags := r.Form["tags"] // 支持多个tag
 
-		// 创建请求对象
-		req := &types.UploadAttachmentRequest{
-			FileHeader: fileHeader,
-			Category:   category,
-			Description: description,
-			Tags:       tags,
-		}
-
 		l := attachment.NewUploadAttachmentLogic(r.Context(), svcCtx)
-		resp, err := l.UploadAttachment(req)
+		resp, err := l.UploadAttachment(fileHeader, category, description, tags)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

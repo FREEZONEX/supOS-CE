@@ -3,11 +3,6 @@
 
 package types
 
-import (
-	"mime/multipart"
-	"backend/share/app/model"
-)
-
 type AdminResetPwdReq struct {
 	UserID   string `json:"userId"`
 	Password string `json:"password"`
@@ -773,16 +768,16 @@ type IDList struct {
 }
 
 type InstallAppRequest struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description,optional"`
-	ImagePath   string           `json:"imagePath,optional"`
-	ImageUrl    string           `json:"imageUrl,optional"`
-	IconPath    string           `json:"iconPath,optional"`
-	MenuUrl     string           `json:"menuUrl"`
-	Menu        *model.MenuModel `json:"menu"`
-	ComposeYaml string           `json:"composeYaml"`
-	RouterTrim  bool             `json:"routerTrim,optional,default=true"`
-	KeepHost    bool             `json:"keepHost,optional,default=false"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	ImagePath   string `json:"imagePath,optional"`
+	ImageUrl    string `json:"imageUrl,optional"`
+	IconPath    string `json:"iconPath,optional"`
+	MenuUrl     string `json:"menuUrl"`
+	Menu        *Menu  `json:"menu,optional"`
+	ComposeYaml string `json:"composeYaml"`
+	RouterTrim  bool   `json:"routerTrim,optional,default=true"`
+	KeepHost    bool   `json:"keepHost,optional,default=false"`
 }
 
 type InstallAppResponse struct {
@@ -965,6 +960,16 @@ type MakeSingleLabelReq struct {
 
 type MarkTopRequest struct {
 	ID string `json:"id"`
+}
+
+type Menu struct {
+	Name         string `json:"name,optional"`
+	Description  string `json:"description,optional"`
+	IndexUrl     string `json:"indexUrl"`
+	OpenType     int    `json:"openType,optional,default=0"`
+	StripPath    bool   `json:"stripPath,optional,default=true"`
+	PreserveHost bool   `json:"preserveHost,optional,default=false"`
+	IconUrl      string `json:"iconUrl,optional"`
 }
 
 type MockInstanceTopologyReq struct {
@@ -1779,10 +1784,9 @@ type UpdateUnsDto struct {
 }
 
 type UploadAttachmentRequest struct {
-	FileHeader  *multipart.FileHeader `form:"file"`
-	Category    string                `form:"category,optional"`
-	Description string                `form:"description,optional"`
-	Tags        []string              `form:"tags,optional"`
+	Category    string   `form:"category,optional"`
+	Description string   `form:"description,optional"`
+	Tags        []string `form:"tags,optional"`
 }
 
 type UploadAttachmentResponse struct {

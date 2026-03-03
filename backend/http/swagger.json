@@ -80,6 +80,41 @@
                   "default": false,
                   "example": false
                 },
+                "menu": {
+                  "type": "object",
+                  "required": [
+                    "indexUrl"
+                  ],
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "iconUrl": {
+                      "type": "string"
+                    },
+                    "indexUrl": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "openType": {
+                      "type": "integer",
+                      "default": 0,
+                      "example": 0
+                    },
+                    "preserveHost": {
+                      "type": "boolean",
+                      "default": false,
+                      "example": false
+                    },
+                    "stripPath": {
+                      "type": "boolean",
+                      "default": true,
+                      "example": true
+                    }
+                  }
+                },
                 "menuUrl": {
                   "type": "string"
                 },
@@ -892,15 +927,6 @@
         "summary": "Upload attachment",
         "operationId": "supos/AttachmentUploadAttachment",
         "parameters": [
-          {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            },
-            "name": "file",
-            "in": "formData",
-            "required": true
-          },
           {
             "type": "string",
             "name": "category",
@@ -14549,7 +14575,7 @@
       }
     }
   },
-  "x-date": "2026-03-02 11:36:03",
+  "x-date": "2026-03-03 14:13:23",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

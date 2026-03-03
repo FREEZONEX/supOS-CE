@@ -5,10 +5,12 @@
 target/
 build/
 .claude/
+docs/
 # IntelliJ IDEA specific files
 .idea/
 *.iml
 *.iws
+.claude_instructions
 
 # OS specific files
 .DS_Store

@@ -12,7 +12,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -40,8 +42,8 @@ type PortainerConfig struct {
 
 // SystemStats 系统统计信息结构体
 type SystemStats struct {
-    MemoryTotal uint64 `json:"MemoryTotal"`
-    MemoryUsed  uint64 `json:"MemoryUsed"`
+	MemoryTotal uint64 `json:"MemoryTotal"`
+	MemoryUsed  uint64 `json:"MemoryUsed"`
 }
 
 // DefaultPortainerConfig 默认 Portainer 配置
@@ -1881,98 +1883,63 @@ func (p *PortainerAdapter) CheckServiceExists(ctx context.Context, serviceName s
 	return false, nil
 }
 
-// GetSystemStats 获取系统统计信息
-func (p *PortainerAdapter) GetSystemStats(ctx context.Context) (*SystemStats, error) {
-	log.Printf("[app]: 开始获取系统统计信息")
+// CheckSystemMemoryAvailable 检查系统内存使用率是否超过90%
+func (p *PortainerAdapter) CheckSystemMemoryAvailable(ctx context.Context) error {
+	log.Printf("[app]: 开始检查系统内存使用率")
 
-	// 1. 构建请求URL
-	url := fmt.Sprintf("%s/endpoints/%d/docker/system", p.config.BaseURL, p.config.EndpointID)
-
-	// 2. 创建请求
-	req, err := http.NewRequest("GET", url, nil)
+	// 使用 free 命令获取内存信息
+	cmd := exec.Command("free", "-m")
+	output, err := cmd.Output()
 	if err != nil {
-		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.request.create.failed"))
+		log.Printf("[app]: 警告: 无法执行 free 命令，跳过内存检查: %v", err)
+		return nil
 	}
 
-	// 3. 添加认证头
-	if err := p.addAuthHeader(req); err != nil {
-		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.request.auth.failed"))
-	}
+	// 解析 free 命令的输出
+	// 输出格式示例:
+	//               total        used        free      shared  buff/cache   available
+	// Mem:           7982        2345        3456         123        2180        5234
+	lines := strings.Split(string(output), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "Mem:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 3 {
+				// fields[0] = "Mem:"
+				// fields[1] = total (MB)
+				// fields[2] = used (MB)
+				// fields[3] = free (MB)
 
-	// 4. 发送请求
-	resp, err := p.client.Do(req)
-	if err != nil {
-		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.request.send.failed"))
-	}
-	defer resp.Body.Close()
+				total, err := strconv.ParseFloat(fields[1], 64)
+				if err != nil {
+					log.Printf("[app]: 警告: 解析内存总量失败: %v", err)
+					return nil
+				}
 
-	// 5. 检查响应状态
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		log.Printf("[app]: Portainer API 返回错误: %s, 响应: %s", resp.Status, string(body))
-		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.error"))
-	}
+				used, err := strconv.ParseFloat(fields[2], 64)
+				if err != nil {
+					log.Printf("[app]: 警告: 解析内存使用量失败: %v", err)
+					return nil
+				}
 
-	// 6. 解析响应
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.response.read.failed"))
-	}
+				// 计算内存使用率
+				memoryUsagePercent := (used / total) * 100
 
-	var systemData map[string]interface{}
-	if err := json.Unmarshal(body, &systemData); err != nil {
-		log.Printf("[app]: 解析系统统计失败，响应内容: %s", string(body))
-		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.parse.failed"))
-	}
+				log.Printf("[app]: 系统内存使用率: %.2f%% (已用: %.2f MB / 总计: %.2f MB)",
+					memoryUsagePercent, used, total)
 
-	// 7. 提取内存信息
-	stats := &SystemStats{}
+				// 检查是否超过阈值
+				if memoryUsagePercent > 90.0 {
+					log.Printf("[app]: 系统内存使用率超过90%%阈值: %.2f%%", memoryUsagePercent)
+					return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.memory.usage.too.high", fmt.Sprintf("%.2f", memoryUsagePercent)))
+				}
 
-	// 尝试从 Statistics.Memory 获取
-	if statistics, ok := systemData["Statistics"].(map[string]interface{}); ok {
-		if memory, ok := statistics["Memory"].(map[string]interface{}); ok {
-			if total, ok := memory["Total"].(float64); ok {
-				stats.MemoryTotal = uint64(total)
-			}
-			if used, ok := memory["Used"].(float64); ok {
-				stats.MemoryUsed = uint64(used)
+				log.Printf("[app]: 系统内存使用率正常（%.2f%%），可以继续部署", memoryUsagePercent)
+				return nil
 			}
 		}
 	}
 
-	// 验证数据有效性
-	if stats.MemoryTotal == 0 {
-		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.invalid.data"))
-	}
-
-	log.Printf("[app]: 系统内存总容量: %.2f GB", float64(stats.MemoryTotal)/1024/1024/1024)
-	log.Printf("[app]: 系统内存已使用: %.2f GB", float64(stats.MemoryUsed)/1024/1024/1024)
-
-	return stats, nil
-}
-
-// CheckSystemMemoryAvailable 检查系统内存使用率是否超过95%
-func (p *PortainerAdapter) CheckSystemMemoryAvailable(ctx context.Context) error {
-	log.Printf("[app]: 开始检查系统内存使用率")
-
-	// 1. 获取系统统计信息
-	stats, err := p.GetSystemStats(ctx)
-	if err != nil {
-		return err
-	}
-
-	// 2. 计算内存使用率
-	memoryUsagePercent := (float64(stats.MemoryUsed) / float64(stats.MemoryTotal)) * 100
-
-	log.Printf("[app]: 系统内存使用率: %.2f%%", memoryUsagePercent)
-
-	// 3. 检查是否超过阈值
-	if memoryUsagePercent > 95.0 {
-		log.Printf("[app]: 系统内存使用率超过95%%阈值: %.2f%%", memoryUsagePercent)
-		return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.memory.usage.too.high", memoryUsagePercent))
-	}
-
-	log.Printf("[app]: 系统内存使用率正常（%.2f%%），可以继续部署", memoryUsagePercent)
+	log.Printf("[app]: 警告: 无法解析 free 命令输出，跳过内存检查")
 	return nil
 }
 
