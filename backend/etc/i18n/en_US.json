@@ -1897,6 +1897,7 @@
   "portainer.auth.request.send.failed": "Failed to send authentication request",
   "portainer.auth.response.read.failed": "Failed to read authentication response",
   "portainer.auth.response.parse.failed": "Failed to parse authentication response",
+  "portainer.system.memory.usage.too.high": "System memory usage is too high (current: %.2f%%), exceeding the 95%% threshold, please free up system memory before trying again",
   "portainer.connect.request.serialize.failed": "Failed to serialize connection request",
   "portainer.stack.create.request.serialize.failed": "Failed to serialize Stack creation request",
   "portainer.network.create.request_serialize_failed": "Failed to serialize network creation request",

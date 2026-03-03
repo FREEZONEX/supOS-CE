@@ -1899,6 +1899,7 @@
   "portainer.auth.request.send.failed": "发送认证请求失败",
   "portainer.auth.response.read.failed": "读取认证响应失败",
   "portainer.auth.response.parse.failed": "解析认证响应失败",
+  "portainer.system.memory.usage.too.high": "系统内存使用率过高（当前: %.2f%%），超过95%阈值，请释放系统内存后再试",
   "portainer.connect.request.serialize.failed": "序列化连接请求失败",
   "portainer.stack.create.request.serialize.failed": "序列化Stack创建请求失败",
   "portainer.network.create.request_serialize_failed": "序列化网络创建请求失败",
