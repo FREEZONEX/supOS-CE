@@ -1521,11 +1521,17 @@ func DeployComposeYaml(ctx context.Context, yaml string, network string) error {
 	return adapter.deployComposeYaml(ctx, yaml, network)
 }
 
-// CheckResourceAvailable 检查资源是否可用，包括端口占用情况
+// CheckResourceAvailable 检查资源是否可用，包括端口占用情况和系统内存使用率
 func CheckResourceAvailable(ctx context.Context, containerName string, svcName string, containerPorts []int) error {
 	config := DefaultPortainerConfig()
 
 	adapter := NewPortainerAdapter(ctx, config, "")
+
+	// 1. 首先检查系统内存
+	if err := adapter.CheckSystemMemoryAvailable(ctx); err != nil {
+		return err
+	}
+
 	//if exist, err := adapter.CheckServiceExists(ctx, svcName); exist || err != nil {
 	//	return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.service.existed", svcName))
 	//}
@@ -1533,7 +1539,7 @@ func CheckResourceAvailable(ctx context.Context, containerName string, svcName s
 		return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.container.existed", containerName))
 	}
 
-	// 验证映射的端口是否已经被占用
+	// 3. 验证映射的端口是否已经被占用
 	if err := adapter.checkPortAvailability(ctx, containerPorts); err != nil {
 		return err
 	}
