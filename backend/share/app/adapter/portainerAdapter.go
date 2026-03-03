@@ -1874,3 +1874,73 @@ func (p *PortainerAdapter) CheckServiceExists(ctx context.Context, serviceName s
 	log.Printf("[app]: 服务不存在: %s", serviceName)
 	return false, nil
 }
+
+// GetSystemStats 获取系统统计信息
+func (p *PortainerAdapter) GetSystemStats(ctx context.Context) (*SystemStats, error) {
+	log.Printf("[app]: 开始获取系统统计信息")
+
+	// 1. 构建请求URL
+	url := fmt.Sprintf("%s/endpoints/%d/docker/system", p.config.BaseURL, p.config.EndpointID)
+
+	// 2. 创建请求
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.request.create.failed"))
+	}
+
+	// 3. 添加认证头
+	if err := p.addAuthHeader(req); err != nil {
+		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.request.auth.failed"))
+	}
+
+	// 4. 发送请求
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.request.send.failed"))
+	}
+	defer resp.Body.Close()
+
+	// 5. 检查响应状态
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Printf("[app]: Portainer API 返回错误: %s, 响应: %s", resp.Status, string(body))
+		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.error"))
+	}
+
+	// 6. 解析响应
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.response.read.failed"))
+	}
+
+	var systemData map[string]interface{}
+	if err := json.Unmarshal(body, &systemData); err != nil {
+		log.Printf("[app]: 解析系统统计失败，响应内容: %s", string(body))
+		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.parse.failed"))
+	}
+
+	// 7. 提取内存信息
+	stats := &SystemStats{}
+
+	// 尝试从 Statistics.Memory 获取
+	if statistics, ok := systemData["Statistics"].(map[string]interface{}); ok {
+		if memory, ok := statistics["Memory"].(map[string]interface{}); ok {
+			if total, ok := memory["Total"].(float64); ok {
+				stats.MemoryTotal = uint64(total)
+			}
+			if used, ok := memory["Used"].(float64); ok {
+				stats.MemoryUsed = uint64(used)
+			}
+		}
+	}
+
+	// 验证数据有效性
+	if stats.MemoryTotal == 0 {
+		return nil, errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.stats.invalid.data"))
+	}
+
+	log.Printf("[app]: 系统内存总容量: %.2f GB", float64(stats.MemoryTotal)/1024/1024/1024)
+	log.Printf("[app]: 系统内存已使用: %.2f GB", float64(stats.MemoryUsed)/1024/1024/1024)
+
+	return stats, nil
+}
