@@ -709,6 +709,17 @@ func (u *UnsAddService) trySetId(
 				}
 			}
 		}
+		if unsDto.WithFlags != nil {
+			newUns.WithFlags = unsDto.WithFlags
+		} else {
+			dbFlags := base.P2v(dbPo.WithFlags)
+			if dbFlags == 0 {
+				dbFlags = generateFlag(unsDto)
+			} else {
+				dbFlags = updateFlags(unsDto, dbFlags)
+			}
+			newUns.WithFlags = &dbFlags
+		}
 	} else {
 		newUns.Name = strings.TrimSpace(newUns.Name)
 		if len(newUns.Name) == 0 {
@@ -716,8 +727,7 @@ func (u *UnsAddService) trySetId(
 			return nil, DB_EXISTS
 		}
 		if unsDto.WithFlags == nil {
-			flag := generateFlag(unsDto.AddFlow, unsDto.Save2Db, unsDto.AddDashBoard,
-				unsDto.RetainTableWhenDeleteInstance, unsDto.SubscribeEnable, unsDto.AccessLevel)
+			flag := generateFlag(unsDto)
 			newUns.WithFlags = &flag
 		}
 		//if newUns.ReadWriteMode == "" {
@@ -758,35 +768,28 @@ func normalFields(fs []*types.FieldDefine) []*types.FieldDefine {
 		return !e.IsSystemField()
 	})
 }
-func generateFlag(addFlow, saveToDB, addDashBoard, retainTableWhenDeleteInstance, subscribeEnable *bool, accessLevel string) int32 {
-	flags := int32(0)
-
-	if is(addFlow) {
-		flags |= constants.UnsFlagWithFlow
+func updateFlags(u *types.CreateTopicDto, flags int32) int32 {
+	fm := u.GetFlagsMap()
+	for fl, sw := range fm {
+		if sw != nil {
+			if *sw {
+				flags |= fl
+			} else {
+				flags &= ^fl
+			}
+		}
 	}
-	if is(saveToDB) {
-		flags |= constants.UnsFlagWithSave2DB
-	}
-	if is(addDashBoard) {
-		flags |= constants.UnsFlagWithDashboard
-	}
-	if is(retainTableWhenDeleteInstance) {
-		flags |= constants.UnsFlagRetainTableWhenDelInstance
-	}
-	if accessLevel == constants.AccessLevelReadOnly {
-		flags |= constants.UnsFlagAccessLevelReadOnly
-	}
-	if accessLevel == constants.AccessLevelReadWrite {
-		flags |= constants.UnsFlagAccessLevelReadWrite
-	}
-	if is(subscribeEnable) {
-		flags |= constants.UnsFlagWithSubscribeEnable
-	}
-
 	return flags
 }
-func is(b *bool) bool {
-	return b != nil && *b
+func generateFlag(u *types.CreateTopicDto) int32 {
+	flags := int32(0)
+	fm := u.GetFlagsMap()
+	for fl, sw := range fm {
+		if sw != nil && *sw {
+			flags |= fl
+		}
+	}
+	return flags
 }
 
 type unsDtoTreeNodes struct {

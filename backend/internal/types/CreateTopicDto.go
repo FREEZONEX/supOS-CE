@@ -462,3 +462,17 @@ func (c *CreateTopicDto) GetSrcJdbcType() SrcJdbcType {
 func (c *CreateTopicDto) GetStatus() *int16 {
 	return &c.Status
 }
+func (c *CreateTopicDto) GetFlagsMap() map[int32]*bool {
+	fm := make(map[int32]*bool, 16)
+	fm[constants.UnsFlagWithFlow] = c.AddFlow
+	fm[constants.UnsFlagWithSave2DB] = c.Save2Db
+	fm[constants.UnsFlagWithDashboard] = c.AddDashBoard
+	fm[constants.UnsFlagRetainTableWhenDelInstance] = c.RetainTableWhenDeleteInstance
+	fm[constants.UnsFlagWithSubscribeEnable] = c.SubscribeEnable
+	if accessLevel := c.AccessLevel; accessLevel != "" {
+		fm[constants.UnsFlagAccessLevelReadOnly] = base.V2p(accessLevel == constants.AccessLevelReadOnly)
+		fm[constants.UnsFlagAccessLevelReadWrite] = base.V2p(accessLevel == constants.AccessLevelReadWrite)
+	}
+
+	return fm
+}

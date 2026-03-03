@@ -1,11 +1,12 @@
 import { type FC, useImperativeHandle, useState } from 'react';
-import { Flex, Segmented, Tooltip } from 'antd';
+import { Button, Flex, Segmented, Tooltip } from 'antd';
 import { useTranslate } from '@/hooks';
 import ProModal from '@/components/pro-modal';
 import './index.scss';
 import ImportDom from '@/pages/uns/components/import-modal/ImportDom.tsx';
 import JsonDom from '@/pages/uns/components/import-modal/JsonDom.tsx';
 import { QuestionCircleOutlined } from '@ant-design/icons';
+import { Download } from '@carbon/icons-react';
 
 export interface ImportModalProps {
   initTreeData: any;
@@ -68,7 +69,7 @@ const Module: FC<ImportModalProps> = (props) => {
       {(isFullscreen) => {
         return (
           <Flex vertical style={{ height: isFullscreen ? '100%' : 500 }}>
-            <div style={{ flexShrink: 0, paddingBottom: 16 }}>
+            <Flex style={{ flexShrink: 0, paddingBottom: 16 }} align="center" justify="space-between">
               <Segmented<string>
                 defaultValue={'document'}
                 options={[
@@ -86,7 +87,19 @@ const Module: FC<ImportModalProps> = (props) => {
                   setType(value);
                 }}
               />
-            </div>
+              {type === 'json' && (
+                <Button
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`/inter-api/supos/uns/importExport/template/download?fileType=json`, '_self');
+                  }}
+                >
+                  <Download />
+                  {formatMessage('common.downloadTemplate')}
+                </Button>
+              )}
+            </Flex>
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <div style={{ display: type === 'document' ? 'inherit' : 'none', height: '100%' }}>
                 <ImportDom initTreeData={initTreeData} onCloseModal={onCloseModal} />

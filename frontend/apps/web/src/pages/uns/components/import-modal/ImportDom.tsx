@@ -1,7 +1,7 @@
 import cx from 'classnames';
-import { CheckmarkFilled, Download, ErrorFilled, FolderAdd } from '@carbon/icons-react';
+import { CheckmarkFilled, ErrorFilled, FolderAdd } from '@carbon/icons-react';
 import ComEllipsis from '../../../../components/com-ellipsis';
-import { App, Button, Divider, Flex, Progress, Upload, type UploadFile } from 'antd';
+import { App, Divider, Flex, Progress, Upload, type UploadFile } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslate } from '@/hooks';
 import ComButton from '../../../../components/com-button';
@@ -140,19 +140,10 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
               {!socketData?.finished && formatMessage('uns.waitingFormParsing')}
             </Flex>
           ) : (
-            <div style={{ height: 170 }}>
+            <Flex style={{ height: 170 }} vertical align="center" justify="center" gap={8}>
               <FolderAdd size={48} style={{ color: '#E0E0E0' }} />
               <ComEllipsis style={{ padding: '16px 0' }}>{formatMessage('common.clickOrDragForUpload')}</ComEllipsis>
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(`/inter-api/supos/uns/importExport/template/download?fileType=json`, '_self');
-                }}
-              >
-                <Download />
-                {formatMessage('common.downloadTemplate')}
-              </Button>
-            </div>
+            </Flex>
           )}
         </Dragger>
       </div>
