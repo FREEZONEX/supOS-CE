@@ -38,6 +38,12 @@ type PortainerConfig struct {
 	StackId int
 }
 
+// SystemStats 系统统计信息结构体
+type SystemStats struct {
+    MemoryTotal uint64 `json:"MemoryTotal"`
+    MemoryUsed  uint64 `json:"MemoryUsed"`
+}
+
 // DefaultPortainerConfig 默认 Portainer 配置
 func DefaultPortainerConfig() *PortainerConfig {
 	return &PortainerConfig{
