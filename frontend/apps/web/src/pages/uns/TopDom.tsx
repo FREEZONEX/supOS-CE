@@ -1,5 +1,5 @@
 import { Button, Flex } from 'antd';
-import { Copy, Rss, Workspace } from '@carbon/icons-react';
+import { Copy, Rss } from '@carbon/icons-react';
 import { ButtonPermission } from '@/common-types/button-permission';
 import { getTreeStoreSnapshot, useTreeStore, useTreeStoreRef } from './store/treeStore';
 import { useClipboard, useTranslate } from '@/hooks';
@@ -16,12 +16,7 @@ interface TopDomProps {
   currentUnusedTopicNode: any;
   changeCurrentPath: any;
 }
-const TopDom: FC<TopDomProps> = ({
-  setCurrentUnusedTopicNode,
-  unusedTopicBreadcrumbList,
-  currentUnusedTopicNode,
-  changeCurrentPath,
-}) => {
+const TopDom: FC<TopDomProps> = ({ setCurrentUnusedTopicNode, unusedTopicBreadcrumbList, currentUnusedTopicNode }) => {
   const systemInfo = useBaseStore((state) => state.systemInfo);
   const formatMessage = useTranslate();
   const exportRef = useRef<any>(null);
@@ -80,7 +75,7 @@ const TopDom: FC<TopDomProps> = ({
   );
 
   const stateRef = useTreeStoreRef();
-  const { loadData, setTreeMap } = getTreeStoreSnapshot(stateRef, (state) => ({
+  const { loadData } = getTreeStoreSnapshot(stateRef, (state) => ({
     loadData: state.loadData,
     setTreeMap: state.setTreeMap,
   }));
@@ -145,16 +140,16 @@ const TopDom: FC<TopDomProps> = ({
             {formatMessage('uns.export')}
           </Button>
         </AuthWrapper>
-        <Button
-          title={formatMessage('uns.backOverview')}
-          style={{ padding: 8 }}
-          onClick={() => {
-            setTreeMap(true);
-            changeCurrentPath();
-          }}
-        >
-          <Workspace size={16} />
-        </Button>
+        {/*<Button*/}
+        {/*  title={formatMessage('uns.backOverview')}*/}
+        {/*  style={{ padding: 8 }}*/}
+        {/*  onClick={() => {*/}
+        {/*    setTreeMap(true);*/}
+        {/*    changeCurrentPath();*/}
+        {/*  }}*/}
+        {/*>*/}
+        {/*  <Workspace size={16} />*/}
+        {/*</Button>*/}
       </div>
       <ImportModal importRef={importRef} initTreeData={loadData} />
       <ExportModal exportRef={exportRef} />
