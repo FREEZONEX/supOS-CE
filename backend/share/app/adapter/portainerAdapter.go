@@ -1969,3 +1969,10 @@ func (p *PortainerAdapter) CheckSystemMemoryAvailable(ctx context.Context) error
 	log.Printf("[app]: 系统内存使用率正常（%.2f%%），可以继续部署", memoryUsagePercent)
 	return nil
 }
+
+// CheckSystemMemoryAvailable 检查系统内存使用率是否超过95%（全局函数）
+func CheckSystemMemoryAvailable(ctx context.Context) error {
+	config := DefaultPortainerConfig()
+	adapter := NewPortainerAdapter(ctx, config, "")
+	return adapter.CheckSystemMemoryAvailable(ctx)
+}
