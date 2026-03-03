@@ -82,7 +82,7 @@ const (
 	CookieMaxAge        = 60 * 60 * 24 * 365
 
 	// Regex Strings
-	AliasReg = `[a-zA-Z_$][a-zA-Z0-9_$]*$`
+	AliasReg = `^[a-zA-Z_$][a-zA-Z0-9_$]*$`
 	TopicReg = `^[\x{4e00}-\x{9fa5}a-zA-Z0-9/_-]+$`
 	NameReg  = `^[\x{4e00}-\x{9fa5}a-zA-Z0-9_-]+$`
 
