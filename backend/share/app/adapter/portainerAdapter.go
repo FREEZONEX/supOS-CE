@@ -1944,3 +1944,28 @@ func (p *PortainerAdapter) GetSystemStats(ctx context.Context) (*SystemStats, er
 
 	return stats, nil
 }
+
+// CheckSystemMemoryAvailable 检查系统内存使用率是否超过95%
+func (p *PortainerAdapter) CheckSystemMemoryAvailable(ctx context.Context) error {
+	log.Printf("[app]: 开始检查系统内存使用率")
+
+	// 1. 获取系统统计信息
+	stats, err := p.GetSystemStats(ctx)
+	if err != nil {
+		return err
+	}
+
+	// 2. 计算内存使用率
+	memoryUsagePercent := (float64(stats.MemoryUsed) / float64(stats.MemoryTotal)) * 100
+
+	log.Printf("[app]: 系统内存使用率: %.2f%%", memoryUsagePercent)
+
+	// 3. 检查是否超过阈值
+	if memoryUsagePercent > 95.0 {
+		log.Printf("[app]: 系统内存使用率超过95%%阈值: %.2f%%", memoryUsagePercent)
+		return errors.Server.WithMsg(I18nUtils.GetMessageWithCtx(ctx, "portainer.system.memory.usage.too.high", memoryUsagePercent))
+	}
+
+	log.Printf("[app]: 系统内存使用率正常（%.2f%%），可以继续部署", memoryUsagePercent)
+	return nil
+}
