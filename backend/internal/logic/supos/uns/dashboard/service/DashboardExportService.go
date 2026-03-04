@@ -11,6 +11,7 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -40,20 +41,33 @@ func (*DashboardExportService) ExportStream(ctx context.Context, arg *types.Glob
 	}
 	log := logx.WithContext(ctx)
 	return func(jsonWriter io.Writer) {
-		mapper := dao.DashboardMapper{}
-		csv2po := func(headers, values []string) *dao.DashboardModel {
-			return mapper.Csv2Model(headers, values)
+		{
+			var mapper dao.DashboardMapper
+			csv2po := func(headers, values []string) *dao.DashboardModel {
+				return mapper.Csv2Model(headers, values)
+			}
+			fmt.Fprintln(jsonWriter, `{ "data":`)
+			_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
+				return mapper.ExportByGroupAndIds(ctx, req.GroupIds, req.DashIds, writer)
+			}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, csv2po, true)
+			if err != nil {
+				log.Error("Dashboard Csv2JsonStream err:", err)
+			}
 		}
-		fmt.Fprintln(jsonWriter, `{ "data":`)
-		_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
-			return mapper.ExportByGroupAndIds(ctx, req.GroupIds, req.DashIds, writer)
-		}, jsonWriter, nodeGetChildren, nodeSetChildren, nodeGetId, nodeGetParentId, csv2po, true)
-		if err == nil {
-			fmt.Fprintln(jsonWriter, `}`)
-		} else {
-			log.Error("Dashboard Csv2JsonStream err:", err)
+		{
+			var mapper dao.DashboardRefMapper
+			csv2po := func(headers, values []string) *dao.DashboardRefModel {
+				return mapper.Csv2Model(headers, values)
+			}
+			_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
+				return mapper.ExportByGroupAndIds(ctx, req.GroupIds, req.DashIds, writer)
+			}, jsonWriter, refGetChildren, refSetChildren, refGetId, refGetParentId, csv2po, true)
+			if err != nil {
+				log.Error("DashboardRef Csv2JsonStream err:", err)
+			}
+			fmt.Fprintln(jsonWriter, `, "unsRefs":`)
 		}
-
+		fmt.Fprintln(jsonWriter, `}`)
 	}
 }
 func nodeGetChildren(node *dao.DashboardModel) []*dao.DashboardModel {
@@ -75,15 +89,84 @@ func nodeGetParentId(node *dao.DashboardModel) string {
 	}
 	return strconv.FormatInt(gid, 10)
 }
-
+func refGetChildren(node *dao.DashboardRefModel) []*dao.DashboardRefModel {
+	return nil
+}
+func refSetChildren(node *dao.DashboardRefModel, children []*dao.DashboardRefModel) {
+}
+func refGetId(node *dao.DashboardRefModel) string {
+	return node.DashboardID
+}
+func refGetParentId(node *dao.DashboardRefModel) string {
+	return ""
+}
 func (*DashboardExportService) ImportStream(ctx context.Context, fileName string, size int64, reader io.Reader, statusConsumer func(status *common.RunningStatus)) {
 	var dashMapper dao.DashboardMapper
 	var groupMapper dao.GroupMapper
+	var unsLinkMapper dao.DashboardRefMapper
 
-	importDashboards(ctx, size, statusConsumer, reader, groupMapper.Save, dashMapper.Save)
+	decoder := json.NewDecoder(reader)
+	_, err := decoder.Token()
+	if err != nil {
+		if statusConsumer != nil {
+			prog := common.Float3(0)
+			statusConsumer(&common.RunningStatus{
+				Code: 500, Msg: err.Error(),
+				Progress: &prog, Finished: base.OptionalTrue})
+		}
+		return
+	}
+	progress := common.Float3(0)
+	for decoder.More() {
+		// 读取字段名
+		fieldName, er := decoder.Token()
+		if er != nil {
+			logx.WithContext(ctx).Errorf("错误Token :%v", fieldName)
+			er = jsonErr(ctx, er)
+			if statusConsumer != nil {
+				statusConsumer(&common.RunningStatus{
+					Code: 500, Msg: err.Error(),
+					Progress: &progress, Finished: base.OptionalTrue})
+			}
+			return
+		}
+
+		propName, isString := fieldName.(string)
+		if !isString {
+			logx.WithContext(ctx).Errorf("未知Token :%v", fieldName)
+			// 跳过未知字段的值
+			continue
+		}
+		switch propName {
+		case "data":
+			importDashboards(ctx, size, &progress, statusConsumer, decoder, groupMapper.Save, dashMapper.Save)
+			if progress < 50 && statusConsumer != nil {
+				progress = 50
+				status := &common.RunningStatus{Task: propName, Progress: &progress}
+				statusConsumer(status)
+			}
+		case "unsRefs":
+			importDashUnsLink(ctx, &progress, statusConsumer, decoder, unsLinkMapper.SaveBatch)
+		}
+	}
+	if statusConsumer != nil {
+		progress = 100
+		status := &common.RunningStatus{
+			Code:     200,
+			Task:     I18nUtils.GetMessageWithCtx(ctx, "uns.create.task.name.final"),
+			Progress: &progress, Finished: base.OptionalTrue}
+		statusConsumer(status)
+	}
 }
-
-func importDashboards(ctx context.Context, size int64, statusConsumer func(status *common.RunningStatus), reader io.Reader,
+func jsonErr(ctx context.Context, err error) error {
+	if err != nil {
+		if je, is := err.(*json.SyntaxError); is {
+			return fmt.Errorf("%s: %d: %v", I18nUtils.GetMessageWithCtx(ctx, "uns.import.json.error"), je.Offset, je.Error())
+		}
+	}
+	return err
+}
+func importDashboards(ctx context.Context, size int64, progress *common.Float3, statusConsumer func(status *common.RunningStatus), dec *json.Decoder,
 	groupSave func(ctx context.Context, list []*dao.GroupModel) error, dashSave func(ctx context.Context, list []*dao.DashboardModel) error) {
 
 	tree2flat := func(c context.Context, propName string, node, parent *dao.DashboardModel) *dao.DashboardModel {
@@ -105,7 +188,6 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 		}
 	}
 
-	progress := common.Float3(0.0)
 	creatorUser := auth.ResolveUserName(ctx)
 	consumer := func(readSize int64, propName string, nodes []*dao.DashboardModel) {
 		dashes := make([]*dao.DashboardModel, 0, 512)
@@ -124,9 +206,9 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 			}
 		}
 		if readSize < size {
-			progress = 0.2 * common.Float3(readSize) / common.Float3(size)
-		} else if progress < 90 {
-			progress += 5
+			*progress = 0.2 * common.Float3(readSize) / common.Float3(size)
+		} else if *progress < 90 {
+			*progress += 5
 		}
 		code, msg := 200, ""
 		task := "save"
@@ -159,22 +241,34 @@ func importDashboards(ctx context.Context, size int64, statusConsumer func(statu
 			}
 		}
 		if statusConsumer != nil {
-			statusConsumer(&common.RunningStatus{Progress: &progress, Code: code, Msg: msg, Task: task})
+			statusConsumer(&common.RunningStatus{Progress: progress, Code: code, Msg: msg, Task: task})
 		}
 	}
 	errConsumer := func(node *dao.DashboardModel) {
 	}
-	err := jsonstream.DecodeJsonTreeToFlat(ctx, reader, 1000, tree2flat, consumer, errConsumer)
-	if statusConsumer != nil {
-		code, msg := 200, ""
-		if err != nil {
-			code = 500
-			msg = err.Error()
-		}
-		progress = 100
-		statusConsumer(&common.RunningStatus{
-			Code: code, Msg: msg,
-			Task:     I18nUtils.GetMessageWithCtx(ctx, "uns.create.task.name.final"),
-			Progress: &progress, Finished: base.OptionalTrue})
+	_ = jsonstream.DecodeJsonTreeToFlatByJsonDecoder(ctx, dec, 1000, tree2flat, consumer, errConsumer)
+}
+func importDashUnsLink(ctx context.Context, progress *common.Float3, statusConsumer func(status *common.RunningStatus),
+	dec *json.Decoder, saveDashUns func(ctx context.Context, refers []*dao.DashboardRefModel) error) {
+
+	tree2flat := func(c context.Context, propName string, node, parent *dao.DashboardRefModel) *dao.DashboardRefModel {
+		return node
 	}
+	consumer := func(readSize int64, propName string, nodes []*dao.DashboardRefModel) {
+		err := saveDashUns(ctx, nodes)
+		task := "save dashboard unsLinks"
+		code, msg := 200, "ok"
+		if err != nil {
+			code, msg = 500, err.Error()
+		}
+		if statusConsumer != nil {
+			if *progress < 90 {
+				*progress += 1
+			}
+			statusConsumer(&common.RunningStatus{Progress: progress, Code: code, Msg: msg, Task: task})
+		}
+	}
+	errConsumer := func(node *dao.DashboardRefModel) {
+	}
+	_ = jsonstream.DecodeJsonTreeToFlatByJsonDecoder(ctx, dec, 1000, tree2flat, consumer, errConsumer)
 }

@@ -19,10 +19,6 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-var selectColumns = []string{"id", "path_type", "parent_id", "model_id", "alias", "name", "display_name",
-	"expression", "description", "label_ids",
-	"protocol", "refers", "data_type", "parent_data_type", "with_flags", "fields"}
-
 func (p UnsNamespaceRepo) ExportCsv(ctx context.Context, pathTypes []int16, w io.Writer) error {
 	dbPool := getDbPool()
 	conn, err := dbPool.Acquire(ctx)
@@ -32,8 +28,8 @@ func (p UnsNamespaceRepo) ExportCsv(ctx context.Context, pathTypes []int16, w io
 	defer conn.Release()
 
 	query := fmt.Sprintf(`COPY 
-           (SELECT %s FROM uns_namespace WHERE path_type in(%s) and status=1 and id>1000  and (data_type is null OR data_type<>5 ) order by lay_rec asc) 
-            TO STDOUT WITH CSV HEADER`, strings.Join(selectColumns, ","),
+           (SELECT * FROM uns_namespace WHERE path_type in(%s) and status=1 and id>1000  and (data_type is null OR data_type<>5 ) order by lay_rec asc) 
+            TO STDOUT WITH CSV HEADER`,
 		strings.Join(base.Map(pathTypes, func(e int16) string {
 			return strconv.Itoa(int(e))
 		}), ","))

@@ -9,6 +9,7 @@ import (
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/base"
 	noderedclient "backend/share/clients/nodered"
 	"backend/share/clients/nodered/templates"
 	"backend/share/spring"
@@ -78,14 +79,18 @@ func (s *SourceFlowService) OnEventBatchCreateTableEvent(ev *event.BatchCreateTa
 	if ev == nil {
 		return nil
 	}
+	creates := base.Filter(ev.Creates[constants.PathTypeFile], func(e *types.CreateTopicDto) bool {
+		return shouldProvisionFlow(e)
+	})
+	updates := base.Filter(ev.Updates[constants.PathTypeFile], func(e *types.CreateTopicDto) bool {
+		return shouldProvisionFlow(e)
+	})
+	if len(creates) == 0 && len(updates) == 0 {
+		return nil
+	}
 	ctx := ev.Context
 	if ctx == nil {
 		ctx = context.Background()
-	}
-
-	files := ev.Creates[constants.PathTypeFile]
-	if len(files) == 0 {
-		return nil
 	}
 
 	tpl, err := loadMockTemplate()
@@ -102,10 +107,17 @@ func (s *SourceFlowService) OnEventBatchCreateTableEvent(ev *event.BatchCreateTa
 	}
 	repo := repoFactory(context.Background())
 	var errs []error
-	for _, dto := range files {
-		if !shouldProvisionFlow(dto) {
-			continue
-		}
+	upserts := append(creates, updates...)
+	var nm dao.NodeFlowModelMapper
+	aliasMap := nm.ListUnsExistsFlows(ctx, base.Map(upserts, func(e *types.CreateTopicDto) string {
+		return e.Alias
+	}))
+	if len(aliasMap) > 0 {
+		upserts = base.Filter(upserts, func(e *types.CreateTopicDto) bool {
+			return !aliasMap[e.Alias]
+		})
+	}
+	for _, dto := range upserts {
 		creator := s.create
 		if creator == nil {
 			creator = s.createMockFlow
@@ -122,14 +134,7 @@ func (s *SourceFlowService) OnEventBatchCreateTableEvent(ev *event.BatchCreateTa
 }
 
 func shouldProvisionFlow(dto *types.CreateTopicDto) bool {
-	if dto == nil {
-		return false
-	}
-	if dto.PathType != constants.PathTypeFile {
-		return false
-	}
-	addFlow := dto.GetAddFlow()
-	return addFlow != nil && *addFlow
+	return dto != nil && base.P2v(dto.GetAddFlow()) && dto.PathType == constants.PathTypeFile
 }
 
 func loadMockTemplate() (string, error) {

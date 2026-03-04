@@ -122,7 +122,7 @@ nodeflow_data AS (
         d.group_id as original_group_id,
         2 as display_order,
         COALESCE(d.group_id, 0) as sort_group_id
-    FROM supos_node_flows d WHERE "template"='`).Append(base.SanYuan(srcFlow, "node-red", "event-flow")).Append(`'`)
+    FROM supos_node_flows d WHERE "template"='`).Append(base.SanYuan(srcFlow, TemplateTypeSrcFlow, TemplateTypeEventFlow)).Append(`'`)
 
 	if hasGroup || hasIds {
 		sql.Append(` AND (`)

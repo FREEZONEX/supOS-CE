@@ -18,23 +18,21 @@ import (
 func NodeRedFlowExport(ctx context.Context, groupIds []int64, ids []int64, srcFlow bool, apiHost string) func(io.Writer) {
 	return func(jsonWriter io.Writer) {
 		mapper := dao.NodeRedFlowExporter{}
-		csv2po := func(headers, values []string) *dao.NoderedFlow {
-			return mapper.Csv2Model(headers, values)
-		}
-		var flowGetId func(node *dao.NoderedFlow) int64
 		var flowIds map[string]bool
+		var hasFlowId bool
 		if sz := 4*len(groupIds) + len(ids); sz > 0 {
 			flowIds = make(map[string]bool, sz)
-			flowGetId = func(node *dao.NoderedFlow) int64 {
-				if flowId := node.FlowID; node.ExportType == "" && len(flowId) > 0 {
-					flowIds[flowId] = true
-				}
-				return node.ID
+			hasFlowId = true
+		}
+		csv2po := func(headers, values []string) *dao.NoderedFlow {
+			node := mapper.Csv2Model(headers, values)
+			if flowId := node.FlowID; hasFlowId && node.ExportType == "" && len(flowId) > 0 {
+				flowIds[flowId] = true
 			}
-		} else {
-			flowGetId = func(node *dao.NoderedFlow) int64 {
-				return node.ID
-			}
+			return node
+		}
+		flowGetId := func(node *dao.NoderedFlow) int64 {
+			return node.ID
 		}
 		log := logx.WithContext(ctx)
 		//sourceFlow: flows, nodes(flowNodes+globalNodes), unsRefs, tags
