@@ -149,6 +149,7 @@ func importTags(ctx context.Context, apiHost string, decoder *json.Decoder) (err
 
 func importFlowUnsLink(ctx context.Context, dec *json.Decoder, SaveBatch func(ctx context.Context, list []*dao.NoderedFlowNode) error) (err error) {
 	node2vo := func(c context.Context, prop string, i, parent *dao.NoderedFlowNode) *dao.NoderedFlowNode {
+		i.CreateTime = time.Now()
 		return i
 	}
 	consumer := func(readSize int64, propName string, nodes []*dao.NoderedFlowNode) {
@@ -246,6 +247,7 @@ func importFlows(ctx context.Context, srcFlow bool, dec *json.Decoder,
 	}
 
 	creatorUser := auth.ResolveUserName(ctx)
+	Template := base.SanYuan(srcFlow, dao.TemplateTypeSrcFlow, dao.TemplateTypeEventFlow)
 	consumer := func(readSize int64, propName string, nodes []*dao.NoderedFlow) {
 		flows := make([]*dao.NoderedFlow, 0, len(nodes))
 		groups := make([]*dao.NoderedFlow, 0, 64)
@@ -256,11 +258,15 @@ func importFlows(ctx context.Context, srcFlow bool, dec *json.Decoder,
 			if n.ExportType == "group" {
 				groups = append(groups, n)
 			} else {
+				n.Template = Template
 				flows = append(flows, n)
 			}
 		}
 		if len(flows) > 0 {
-			saveFlow(ctx, flows)
+			er := saveFlow(ctx, flows)
+			if er != nil {
+				logx.WithContext(ctx).Error("save flow err:", er)
+			}
 		}
 		if len(groups) > 0 {
 			flowType := base.V2p(base.SanYuan(srcFlow, int16(1), int16(2)))
@@ -274,7 +280,10 @@ func importFlows(ctx context.Context, srcFlow bool, dec *json.Decoder,
 					Creator:     v.Creator,
 				}
 			}
-			saveGroup(ctx, base.Map(groups, v2g))
+			er := saveGroup(ctx, base.Map(groups, v2g))
+			if er != nil {
+				logx.WithContext(ctx).Error("save group err:", er)
+			}
 		}
 	}
 	errConsumer := func(node *dao.NoderedFlow) {

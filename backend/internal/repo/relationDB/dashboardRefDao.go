@@ -1,6 +1,8 @@
 package relationDB
 
 import (
+	"context"
+
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -19,7 +21,8 @@ func (m DashboardRefMapper) Insert(db *gorm.DB, ref *DashboardRefModel) error {
 	}
 	return nil
 }
-func (m DashboardRefMapper) SaveBatch(db *gorm.DB, refers []*DashboardRefModel) error {
+func (m DashboardRefMapper) SaveBatch(ctx context.Context, refers []*DashboardRefModel) error {
+	db := GetDb(ctx)
 	err := db.Model(&DashboardRefModel{}).Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(refers, 1000).Error
 	if err != nil {
 		logx.Errorf("failed to insert dashboard ref: %v", err)

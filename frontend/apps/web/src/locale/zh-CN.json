@@ -779,6 +779,8 @@
   "common.all": "全部",
   "common.file": "文件",
   "common.group": "分组",
+  "common.flow": "流程",
+  "common.dashboard": "看板",
   "common.toDo": "待办中心",
   "common.completed": "已办",
   "common.myCompletedList": "我的已办",

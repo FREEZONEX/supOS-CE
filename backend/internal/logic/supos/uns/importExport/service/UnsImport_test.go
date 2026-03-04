@@ -14,7 +14,7 @@ import (
 
 func TestZip(t *testing.T) {
 	// 打开ZIP文件
-	zipPath := "F:\\download\\HKXexport_260120.zip"
+	zipPath := "F:\\download\\global-export.zip"
 	r, err := zip.OpenReader(zipPath)
 	if err != nil {
 		panic(err)
@@ -37,13 +37,14 @@ func TestZip(t *testing.T) {
 	}
 
 }
+
 func TestImportFile(t *testing.T) {
 	file, er := os.Open("F:\\data\\uns-uat.json")
 	if er != nil {
 		t.Fatal(er)
 	}
 	defer file.Close()
-	err := jsonstream.DecodeJsonTreeToFlat(file, 100, node2vo, func(rd int64, propName string, ns []*types.CreateTopicDto) {
+	err := jsonstream.DecodeJsonTreeToFlat(t.Context(), file, 100, node2vo, func(rd int64, propName string, ns []*types.CreateTopicDto) {
 		jsonBytes, _ := json.Marshal(ns)
 		t.Logf("readSize=%d, prop=%s , Nodes[%d]: %v", rd, propName, len(ns), string(jsonBytes))
 	}, func(node *FileData) {
@@ -92,7 +93,7 @@ func TestLabelImport(t *testing.T) {
 }
 `
 	bigJson := bytes.NewBuffer([]byte(__json))
-	err := jsonstream.DecodeJsonTreeToFlat(bigJson, 100, node2vo, func(rd int64, propName string, ns []*types.CreateTopicDto) {
+	err := jsonstream.DecodeJsonTreeToFlat(t.Context(), bigJson, 100, node2vo, func(rd int64, propName string, ns []*types.CreateTopicDto) {
 		jsonBytes, _ := json.Marshal(ns)
 		t.Logf("readSize=%d, prop=%s , Nodes[%d]: %v", rd, propName, len(ns), string(jsonBytes))
 	}, func(node *FileData) {

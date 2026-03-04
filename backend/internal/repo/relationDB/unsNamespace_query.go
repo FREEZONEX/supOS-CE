@@ -243,7 +243,7 @@ func (p UnsNamespaceRepo) CountChildrenTree(db *gorm.DB, folderIds []int64) (int
 func (p UnsNamespaceRepo) ExistsTimeSeriaNoneTables(db *gorm.DB) (bool, error) {
 	var idLong sql.NullInt64
 	err := p.model(db).Select("id").
-		Where(" path_type =2 and data_type =1 and (table_name is null or table_name='') limit 1").Scan(&idLong).Error
+		Where(" path_type =2 and data_type =1 and (table_name is null or table_name='') and status=1 limit 1").Scan(&idLong).Error
 	if err != nil {
 		return false, stores.ErrFmt(err)
 	}

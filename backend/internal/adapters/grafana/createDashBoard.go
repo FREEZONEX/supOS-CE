@@ -15,9 +15,11 @@ import (
 )
 
 // Create 创建仪表板的主方法
-func (g *GrafanaEventHandler) Create(ctx context.Context, jdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, flowName string, fromImport bool, username string) {
+func (g *GrafanaEventHandler) create(ctx context.Context, jdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, flowName string, fromImport bool, username string) {
 	// 和 CE 一样，现在不区分导入的情况
-
+	if len(topics) == 0 {
+		return
+	}
 	storageAdapter := g.getPersistentService(jdbcType)
 	if storageAdapter == nil {
 		g.log.Errorf("忽略不支持的 jdbcType=%s", jdbcType.Alias)
@@ -28,26 +30,10 @@ func (g *GrafanaEventHandler) Create(ctx context.Context, jdbcType types.SrcJdbc
 	startTime := time.Now()
 	g.log.Infof("开始创建仪表板，预计数量：%d, 流程：%s, 数据源类型：%s", len(topics), flowName, jdbcType.Alias)
 
-	//var seqMergeUns []*types.CreateTopicDto
-	var normalUns = make([]*types.CreateTopicDto, 0, len(topics))
-	//isSeq := jdbcType.TypeCode() == constants.TimeSequenceType
-	for _, topic := range topics {
-		if !base.P2v(topic.AddDashBoard) {
-			continue
-		}
-		/*	if fromImport && isSeq && topic.GetTbFieldName() != "" {
-				seqMergeUns = append(seqMergeUns, topic)
-			} else {
-			}*/
-		normalUns = append(normalUns, topic)
-	}
-	if len(normalUns) > 0 {
+	createdCount := g.createIndividualDashboards(ctx, topics, ds, jdbcType, fromImport, username)
 
-		createdCount := g.createIndividualDashboards(ctx, normalUns, ds, jdbcType, fromImport, username)
-
-		elapsed := time.Since(startTime)
-		g.log.Infof("完成创建仪表板，实际创建：%d, 耗时：%v, 流程：%s", createdCount, elapsed, flowName)
-	}
+	elapsed := time.Since(startTime)
+	g.log.Infof("完成创建仪表板，实际创建：%d, 耗时：%v, 流程：%s", createdCount, elapsed, flowName)
 
 	//// 处理组合仪表板
 	//if fromImport && len(seqMergeUns) > 0 {

@@ -9,6 +9,26 @@ import (
 	"time"
 )
 
+func Test_filterJsonbMsgByUns(t *testing.T) {
+	unsInfo := types.CreateTopicDto{
+		Id:    1,
+		Alias: "test_uns",
+		Fields: procFields([]*types.FieldDefine{
+			{
+				Name: "json",
+				Type: types.FieldTypeString,
+			},
+		}),
+		Timestamps: [2]int64{0, 0},
+	}
+	dataList := []map[string]string{
+		{"json": "1"},
+		{"json": "123456"},
+	}
+	errMsg := filterMsgByUns(&types.UnsDefinition{CreateTopicDto: unsInfo}, dataList)
+	t.Log(errMsg)
+	t.Logf("%+v", dataList)
+}
 func Test_filterMsgByUns(t *testing.T) {
 	unsInfo := types.CreateTopicDto{
 		Id:        1,

@@ -25,6 +25,11 @@ type NoderedFlow struct {
 	Sort       int32          `gorm:"-" json:"sort,omitzero"`
 }
 
+const (
+	TemplateTypeSrcFlow   = "node-red"
+	TemplateTypeEventFlow = "event-flow"
+)
+
 func (NoderedFlow) TableName() string {
 	return "supos_node_flows"
 }

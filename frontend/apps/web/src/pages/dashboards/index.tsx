@@ -359,6 +359,15 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   properties: {
                     placeholder: formatMessage('common.searchPlaceholder'),
                     defaultValue: 'all',
+                    options: [
+                      { value: 'all', label: formatMessage('common.all'), title: formatMessage('common.all') },
+                      { value: 'group', label: formatMessage('common.group'), title: formatMessage('common.group') },
+                      {
+                        value: 'file',
+                        label: formatMessage('common.dashboard'),
+                        title: formatMessage('common.dashboard'),
+                      },
+                    ],
                   },
                 },
                 {
@@ -396,23 +405,27 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
       >
         <Flex justify="space-between" align="center" style={{ marginBottom: 16, marginTop: 16, padding: '0 16px' }}>
           <Flex align="center" gap={16}>
-            {breadcrumbItem?.length > 1 && (
-              <Button
-                size="small"
-                style={{ background: 'var(--supos-switchwrap-bg-color)' }}
-                onClick={() => {
-                  searchForm.setFieldsValue({
-                    groupId: undefined,
-                  });
-                  setBreadcrumbItem((pre: any) => pre.slice(0, -1));
-                  onSearch?.();
-                }}
-              >
-                <Undo />
-                {formatMessage('common.back')}
-              </Button>
+            {breadcrumbItem?.length > 1 ? (
+              <>
+                <Button
+                  size="small"
+                  style={{ background: 'var(--supos-switchwrap-bg-color)' }}
+                  onClick={() => {
+                    searchForm.setFieldsValue({
+                      groupId: undefined,
+                    });
+                    setBreadcrumbItem((pre: any) => pre.slice(0, -1));
+                    onSearch?.();
+                  }}
+                >
+                  <Undo />
+                  {formatMessage('common.back')}
+                </Button>
+                <Breadcrumb items={breadcrumbItem} separator=">" />
+              </>
+            ) : (
+              <span></span>
             )}
-            <Breadcrumb items={breadcrumbItem} separator=">" />
           </Flex>
           <Segmented
             size="small"

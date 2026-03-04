@@ -18,23 +18,21 @@ import (
 func NodeRedFlowExport(ctx context.Context, groupIds []int64, ids []int64, srcFlow bool, apiHost string) func(io.Writer) {
 	return func(jsonWriter io.Writer) {
 		mapper := dao.NodeRedFlowExporter{}
-		csv2po := func(headers, values []string) *dao.NoderedFlow {
-			return mapper.Csv2Model(headers, values)
-		}
-		var flowGetId func(node *dao.NoderedFlow) int64
 		var flowIds map[string]bool
+		var hasFlowId bool
 		if sz := 4*len(groupIds) + len(ids); sz > 0 {
 			flowIds = make(map[string]bool, sz)
-			flowGetId = func(node *dao.NoderedFlow) int64 {
-				if flowId := node.FlowID; node.ExportType == "" && len(flowId) > 0 {
-					flowIds[flowId] = true
-				}
-				return node.ID
+			hasFlowId = true
+		}
+		csv2po := func(headers, values []string) *dao.NoderedFlow {
+			node := mapper.Csv2Model(headers, values)
+			if flowId := node.FlowID; hasFlowId && node.ExportType == "" && len(flowId) > 0 {
+				flowIds[flowId] = true
 			}
-		} else {
-			flowGetId = func(node *dao.NoderedFlow) int64 {
-				return node.ID
-			}
+			return node
+		}
+		flowGetId := func(node *dao.NoderedFlow) int64 {
+			return node.ID
 		}
 		log := logx.WithContext(ctx)
 		//sourceFlow: flows, nodes(flowNodes+globalNodes), unsRefs, tags
@@ -108,16 +106,18 @@ func NodeRedFlowExport(ctx context.Context, groupIds []int64, ids []int64, srcFl
 		fmt.Fprintln(jsonWriter, "}")
 	}
 }
-
 func exportNodes(ctx context.Context, jsonWriter io.Writer, apiHost string, flowIds map[string]bool, supModelIds *[]string) error {
 	allFlowConfigs, err := listNodeFlows(ctx, apiHost)
-	if allFlowConfigs != nil {
-		defer allFlowConfigs.Close()
-	}
 	if err != nil {
 		return err
 	}
-
+	return exportNodesByFlows(jsonWriter, allFlowConfigs, flowIds, supModelIds)
+}
+func exportNodesByFlows(jsonWriter io.Writer, allFlowConfigs io.ReadCloser, flowIds map[string]bool, supModelIds *[]string) error {
+	if allFlowConfigs != nil {
+		defer allFlowConfigs.Close()
+	}
+	var err error
 	fmt.Fprintln(jsonWriter, `, "nodes":[`)
 	if len(flowIds) == 0 && supModelIds == nil { //没有过滤条件，返回全部
 		_, err = io.Copy(jsonWriter, allFlowConfigs)

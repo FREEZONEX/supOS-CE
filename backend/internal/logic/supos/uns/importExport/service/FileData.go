@@ -36,28 +36,28 @@ type FileData struct {
 	Type string `json:"type,omitempty"`
 	Name string `json:"name"`
 	//Namespace         string               `json:"namespace,omitempty"`
-	Alias             string               `json:"alias,omitempty"`
-	DisplayName       string               `json:"displayName,omitempty"`
-	TemplateAlias     string               `json:"templateAlias,omitempty"`
-	Fields            []*types.FieldDefine `json:"fields,omitempty"`
-	DataType          string               `json:"dataType,omitempty"`
-	Refers            string               `json:"refers,omitempty"`
-	Expression        string               `json:"expression,omitempty"`
-	Description       string               `json:"description,omitempty"`
-	Label             string               `json:"label,omitempty"`
-	Frequency         string               `json:"frequency,omitempty"`
-	GenerateDashboard string               `json:"generateDashboard,omitempty"`
-	EnableHistory     string               `json:"enableHistory,omitempty"`
-	MockData          string               `json:"mockData,omitempty"`
-	ParentDataType    string               `json:"topicType,omitempty"`
-	Template          *FileData            `json:"template,omitempty"`
-	Children          []*FileData          `json:"children,omitempty"`
-	Error             string               `json:"error,omitempty"`
-
-	parent   *FileData
-	path     string
-	id       int64
-	parentId int64
+	Alias             string                 `json:"alias,omitempty"`
+	DisplayName       string                 `json:"displayName,omitempty"`
+	TemplateAlias     string                 `json:"templateAlias,omitempty"`
+	Fields            []*types.FieldDefine   `json:"fields,omitempty"`
+	DataType          string                 `json:"dataType,omitempty"`
+	Refers            string                 `json:"refers,omitempty"`
+	Expression        string                 `json:"expression,omitempty"`
+	Description       string                 `json:"description,omitempty"`
+	Label             string                 `json:"label,omitempty"`
+	Frequency         string                 `json:"frequency,omitempty"`
+	GenerateDashboard string                 `json:"generateDashboard,omitempty"`
+	EnableHistory     string                 `json:"enableHistory,omitempty"`
+	MockData          string                 `json:"mockData,omitempty"`
+	ParentDataType    string                 `json:"topicType,omitempty"`
+	Template          *FileData              `json:"template,omitempty"`
+	Children          []*FileData            `json:"children,omitempty"`
+	Error             string                 `json:"error,omitempty"`
+	Extend            map[string]interface{} `json:"extend,omitempty"` // Extended fields
+	parent            *FileData
+	path              string
+	id                int64
+	parentId          int64
 }
 
 func (node *FileData) getPath() string {
@@ -97,6 +97,7 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 		Alias:  i.Alias,
 		Name:   i.Name,
 		Fields: i.Fields,
+		Extend: i.Extend,
 	}
 	switch prop {
 	case Template:
@@ -323,7 +324,7 @@ func uns2DataVo(ctx *exportContext, unsPo types.UnsInfo) *FileData {
 	case constants.PathTypeDir:
 		data.Type = TYPE_FOLDER
 	}
-
+	data.Extend = unsPo.GetExtend()
 	return data
 }
 func _BOOL(b bool) string {
