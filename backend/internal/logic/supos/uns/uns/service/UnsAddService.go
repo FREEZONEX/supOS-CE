@@ -187,6 +187,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			labels.SetDto(createTopicDto)
 		}
 		if dbF != nil && base.P2v(dbF.Status) == OK {
+			createTopicDto.UpdateAt = createTime.UnixMilli()
 			dtoUpdateList = append(dtoUpdateList, createTopicDto)
 		} else {
 			if dbF != nil {
