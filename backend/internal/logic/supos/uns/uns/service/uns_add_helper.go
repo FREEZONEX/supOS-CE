@@ -595,6 +595,9 @@ func (u *UnsAddService) trySetId(
 
 	newUns := newUnsFile(unsDto)
 	if DB_EXISTS {
+		// 覆盖这俩不允许修改的字段
+		newUns.DataType = dbPo.DataType
+		newUns.ParentDataType = dbPo.ParentDataType
 		tar := *dbPo
 		_ = copier.CopyWithOption(&tar, newUns, copier.Option{IgnoreEmpty: true})
 		if newUns.ParentAlias != nil && *newUns.ParentAlias == "" {

@@ -50,7 +50,9 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 		}), ",") + "]"
 	})
 	// 收集所有非空的 parentAlias
+	aliasMap := make(map[string]*types.CreateTopicDto, len(dtos))
 	parentAliasList := base.MapKeys(base.MapArrayToMap[*types.CreateTopicDto, string, bool](dtos, func(dto *types.CreateTopicDto) (ok bool, k string, v bool) {
+		aliasMap[dto.Alias] = dto
 		pa := dto.ParentAlias
 		if pa == nil {
 			return false, "", false
@@ -68,6 +70,11 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 		parentUnsPoList, err := u.unsMapper.ListByAlias(db, parentAliasList)
 		if err == nil && len(parentUnsPoList) > 0 {
 			for _, unsPo := range parentUnsPoList {
+				if uns, has := aliasMap[unsPo.Alias]; has {
+					// 覆盖这俩不允许修改的字段
+					uns.DataType = unsPo.DataType
+					uns.ParentDataType = unsPo.ParentDataType
+				}
 				parentAliasMap[unsPo.Alias] = unsPo
 			}
 		}
@@ -88,12 +95,6 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 	rootUnsPoList, err := u.unsMapper.ListRootCategoryFolders(db)
 	if err == nil {
 		categoryFolderMap[""] = rootUnsPoList // Go 中用空字符串代替 null
-	}
-
-	// 创建 alias 到 CreateTopicDto 的映射
-	aliasMap := make(map[string]*types.CreateTopicDto)
-	for _, dto := range dtos {
-		aliasMap[dto.Alias] = dto
 	}
 
 	newCategoryAliasMap := make(map[string]*types.CreateTopicDto)
