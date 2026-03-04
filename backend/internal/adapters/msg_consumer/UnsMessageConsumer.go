@@ -1,6 +1,7 @@
 package msg_consumer
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
@@ -199,9 +200,11 @@ func procData(ctx context.Context, def *types.UnsDefinition, data []map[string]s
 	if base.P2v(def.DataType) == constants.JsonbType {
 		jsonbFiled := "json"
 		vm := data[0]
-		if _, has := vm[jsonbFiled]; !has {
+		if val, has := vm[jsonbFiled]; !has {
 			bs, _ := json.Marshal(data)
 			vm = map[string]string{jsonbFiled: b2s(bs)}
+		} else if vs := strings.TrimSpace(val); len(vs) == 0 || (vs[0] != '{' && vs[0] != '[') {
+			return nil, I18nUtils.GetMessageWithCtx(ctx, "uns.invalid.json")
 		}
 		list = []map[string]string{vm}
 		list = setLastData(ctx, list, def)

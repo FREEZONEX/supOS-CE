@@ -106,16 +106,18 @@ func NodeRedFlowExport(ctx context.Context, groupIds []int64, ids []int64, srcFl
 		fmt.Fprintln(jsonWriter, "}")
 	}
 }
-
 func exportNodes(ctx context.Context, jsonWriter io.Writer, apiHost string, flowIds map[string]bool, supModelIds *[]string) error {
 	allFlowConfigs, err := listNodeFlows(ctx, apiHost)
-	if allFlowConfigs != nil {
-		defer allFlowConfigs.Close()
-	}
 	if err != nil {
 		return err
 	}
-
+	return exportNodesByFlows(jsonWriter, allFlowConfigs, flowIds, supModelIds)
+}
+func exportNodesByFlows(jsonWriter io.Writer, allFlowConfigs io.ReadCloser, flowIds map[string]bool, supModelIds *[]string) error {
+	if allFlowConfigs != nil {
+		defer allFlowConfigs.Close()
+	}
+	var err error
 	fmt.Fprintln(jsonWriter, `, "nodes":[`)
 	if len(flowIds) == 0 && supModelIds == nil { //没有过滤条件，返回全部
 		_, err = io.Copy(jsonWriter, allFlowConfigs)
