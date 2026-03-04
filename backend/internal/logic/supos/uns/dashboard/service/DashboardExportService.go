@@ -59,13 +59,14 @@ func (*DashboardExportService) ExportStream(ctx context.Context, arg *types.Glob
 			csv2po := func(headers, values []string) *dao.DashboardRefModel {
 				return mapper.Csv2Model(headers, values)
 			}
+			fmt.Fprintln(jsonWriter, `, "unsRefs":`)
 			_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
 				return mapper.ExportByGroupAndIds(ctx, req.GroupIds, req.DashIds, writer)
 			}, jsonWriter, refGetChildren, refSetChildren, refGetId, refGetParentId, csv2po, true)
 			if err != nil {
 				log.Error("DashboardRef Csv2JsonStream err:", err)
 			}
-			fmt.Fprintln(jsonWriter, `, "unsRefs":`)
+
 		}
 		fmt.Fprintln(jsonWriter, `}`)
 	}
@@ -252,6 +253,7 @@ func importDashUnsLink(ctx context.Context, progress *common.Float3, statusConsu
 	dec *json.Decoder, saveDashUns func(ctx context.Context, refers []*dao.DashboardRefModel) error) {
 
 	tree2flat := func(c context.Context, propName string, node, parent *dao.DashboardRefModel) *dao.DashboardRefModel {
+		node.CreateAt = time.Now()
 		return node
 	}
 	consumer := func(readSize int64, propName string, nodes []*dao.DashboardRefModel) {

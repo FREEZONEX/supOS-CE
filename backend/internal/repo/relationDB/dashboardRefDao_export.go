@@ -13,7 +13,7 @@ import (
 func (m DashboardRefMapper) ExportByGroupAndIds(ctx context.Context, groupIds []int64, ids []string, w io.Writer) (err error) {
 	SQL := base.StringBuilder{}
 	SQL.Grow(128)
-	SQL.Append("select udr.dashboard_id, udr.uns_alias from uns_dashboard_ref udr")
+	SQL.Append("select * from uns_dashboard_ref udr")
 	if hasGrp, hasIds := len(groupIds) > 0, len(ids) > 0; hasGrp || hasIds {
 		SQL.Append(" join (select id from uns_dashboard where ")
 		if hasIds {

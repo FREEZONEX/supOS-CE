@@ -149,6 +149,7 @@ func importTags(ctx context.Context, apiHost string, decoder *json.Decoder) (err
 
 func importFlowUnsLink(ctx context.Context, dec *json.Decoder, SaveBatch func(ctx context.Context, list []*dao.NoderedFlowNode) error) (err error) {
 	node2vo := func(c context.Context, prop string, i, parent *dao.NoderedFlowNode) *dao.NoderedFlowNode {
+		i.CreateTime = time.Now()
 		return i
 	}
 	consumer := func(readSize int64, propName string, nodes []*dao.NoderedFlowNode) {
