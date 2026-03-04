@@ -390,7 +390,7 @@ func init() {
 	}
 }
 func parseGormFields(ts any) (fieldIndexMap map[string]int) {
-	return parseTagFields(ts, "grom")
+	return parseTagFields(ts, "gorm")
 }
 func parseTagFields(ts any, tags ...string) (fieldIndexMap map[string]int) {
 	t := reflect.TypeOf(ts)
