@@ -190,7 +190,7 @@ func getLayAndIdsInner(dirIds, fileIds []int64, layRecs []string) (layRec []stri
 	sort.Strings(dirLayRecs)
 
 	for id := range fileIdMap {
-		if dirIdMap[id] > 0 {
+		if dirIdMap[id] > 1 {
 			delete(fileIdMap, id)
 		}
 	}
