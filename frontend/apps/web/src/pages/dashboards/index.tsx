@@ -538,7 +538,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     titleIntlId: 'common.name',
                     dataIndex: 'name',
-                    width: 200,
+                    width: 500,
                     sorter: true,
                     render: (text: any, item: any) => {
                       const hasDesign = hasPermission(ButtonPermission['Dashboards.design']);
@@ -601,7 +601,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     titleIntlId: 'dashboards.dashboardsTemplate',
                     dataIndex: 'typeName',
-                    width: 150,
+                    width: 200,
                   },
                   {
                     titleIntlId: 'common.description',

@@ -550,7 +550,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     titleIntlId: 'common.name',
                     dataIndex: 'name',
-                    width: 200,
+                    width: 500,
                     sorter: true,
                     render: (text: any, item: any) => {
                       const hasDesign = hasPermission(ButtonPermission['SourceFlow.design']);
