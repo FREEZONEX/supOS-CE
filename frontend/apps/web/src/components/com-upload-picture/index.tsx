@@ -37,7 +37,6 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
 
   const beforeUpload = (file: any) => {
     const fileType = file.name.split('.').pop();
-    console.log(file);
     if (acceptList?.length === 0 || acceptList.includes(fileType.toLowerCase())) {
       if (!action) {
         const previewUrl = URL.createObjectURL(file);
@@ -78,7 +77,6 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
           onActionChange
             ? (info) => {
                 const { file } = info;
-                console.log(file);
                 const fileType = file.name.split('.').pop() || '';
                 if (acceptList?.length === 0 || acceptList.includes(fileType.toLowerCase())) {
                   const updatedFileList = info.fileList.map((item: any) => {
