@@ -13,7 +13,6 @@ import (
 	"strconv"
 
 	"gitee.com/unitedrhino/share/stores"
-	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
 
@@ -199,7 +198,7 @@ func (u *UnsAddService) getSrcUns(ctx context.Context, src *dao.UnsNamespace, re
 		} else {
 			nf.Alias = PathUtil.GenerateAliasWithRandom(srcUns.Name)
 		}
-		_ = copier.CopyWithOption(srcUns, nf, copier.Option{IgnoreEmpty: true})
+		srcUns = nf
 	} else {
 		srcUns.Alias = PathUtil.GenerateAliasWithRandom(srcUns.Name)
 	}

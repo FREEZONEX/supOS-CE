@@ -729,7 +729,7 @@ func (u *UnsAddService) trySetId(
 			errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.name.empty")
 			return nil, DB_EXISTS
 		}
-		if unsDto.WithFlags == nil {
+		if unsDto.WithFlags == nil || *unsDto.WithFlags == 0 {
 			flag := generateFlag(unsDto)
 			newUns.WithFlags = &flag
 		}
