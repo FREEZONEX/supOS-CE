@@ -101,6 +101,15 @@ const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ ref
                   filterOption: false,
                   api: (name?: string) =>
                     getGroupList({ page: 1, pageSize: 1000, name, type }).then((res) => {
+                      if (name) {
+                        return [
+                          ...(res?.map((item: any) => ({
+                            ...item,
+                            label: item.name,
+                            value: item.id + '',
+                          })) || []),
+                        ];
+                      }
                       return [
                         {
                           label: formatMessage('uns.rootDirectory'),
