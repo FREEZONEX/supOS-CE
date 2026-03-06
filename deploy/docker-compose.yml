@@ -4,7 +4,7 @@ networks:
 
 services:
   frontend:
-    image: eco-registry.supos.com/sup9bnlh/tier0-frontend:1.0.1-R6
+    image: eco-registry.supos.com/sup9bnlh/tier0-frontend:1.0.1-R8
     container_name: frontend
     ports:
       - "3010:3000"
@@ -32,7 +32,7 @@ services:
       - edge_network
     restart: always
   uns:
-    image: eco-registry.supos.com/sup9bnlh/tier0-uns:1.0.1-R6
+    image: eco-registry.supos.com/sup9bnlh/tier0-uns:1.0.1-R8
     container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}
