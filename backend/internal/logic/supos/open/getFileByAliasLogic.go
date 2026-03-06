@@ -53,10 +53,13 @@ func (l *GetFileByAliasLogic) GetFileByAlias(req *types.AliasPathReq) (resp *typ
 		}, nil
 	}
 
+	// 转换 Fields 到 Definition
+	convertedDetail := ConvertInstanceDetailToDefinition(instanceDetail.Data)
+
 	// 返回成功结果
 	return &types.ResultVO{
 		Code: 200,
 		Msg:  "成功",
-		Data: instanceDetail.Data,
+		Data: convertedDetail,
 	}, nil
 }

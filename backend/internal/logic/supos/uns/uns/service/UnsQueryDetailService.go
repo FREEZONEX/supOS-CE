@@ -103,6 +103,7 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file types.UnsInfo,
 	dto.SetDataType(file.GetDataType())
 	dto.SetParentDataType(file.GetParentDataType())
 	dto.SetAlias(file.GetAlias())
+	dto.SetParentAlias(file.GetParentAlias())
 	dto.SetPath(file.GetPath())
 	if constants.UseAliasAsTopic {
 		dto.SetTopic(file.GetAlias())

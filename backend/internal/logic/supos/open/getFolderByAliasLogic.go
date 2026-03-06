@@ -53,10 +53,13 @@ func (l *GetFolderByAliasLogic) GetFolderByAlias(req *types.AliasPathReq) (resp 
 		}, nil
 	}
 
+	// 转换 Fields 到 Definition
+	convertedDetail := ConvertModelDetailToDefinition(modelDefinition.Data)
+
 	// 返回成功结果
 	return &types.ResultVO{
 		Code: 200,
 		Msg:  "成功",
-		Data: modelDefinition.Data,
+		Data: convertedDetail,
 	}, nil
 }
