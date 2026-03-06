@@ -25,9 +25,9 @@ func (g *SQLGenerator) GenerateViewSQL(
 	for _, field := range unsInfo.GetFields() {
 		if field.IsSystemField() && field.Name != tbField {
 			var columnName = ""
-			if field.Type == types.FieldTypeLong && field.Name != constants.SystemSeqTag && field.Name != qos {
+			if field.Type == types.FieldTypeLong && field.Name != constants.SystemSeqTag && field.Name != qos && len(qos) > 0 {
 				columnName = fmt.Sprintf(`%s AS "%s"`, qos, field.Name)
-			} else if field.Type == types.FieldTypeDatetime && field.Name != ct {
+			} else if field.Type == types.FieldTypeDatetime && field.Name != ct && len(ct) > 0 {
 				columnName = fmt.Sprintf(`%s AS "%s"`, ct, field.Name)
 			} else {
 				columnName = fmt.Sprintf(`"%s"`, field.Name)
