@@ -5,14 +5,17 @@ package open
 
 import (
 	"context"
+	"embed"
 	"os"
-	"path/filepath"
 
 	"backend/internal/svc"
 	"backend/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
+
+//go:embed templates/*
+var templates embed.FS
 
 type GetFolderSchemaLogic struct {
 	logx.Logger
@@ -41,10 +44,10 @@ func (l *GetFolderSchemaLogic) GetFolderSchema() (resp *types.ResultVO, err erro
 	}
 
 	// 构建文件路径
-	filePath := filepath.Join("internal", "logic", "supos", "open", "templates", filename)
+	filePath := "templates/" + filename
 
-	// 读取文件内容
-	content, err := os.ReadFile(filePath)
+	// 读取文件内容（使用embed包读取嵌入的文件）
+	content, err := templates.ReadFile(filePath)
 	if err != nil {
 		l.Errorf("Failed to read file: %v", err)
 		return &types.ResultVO{

@@ -6,7 +6,6 @@ package open
 import (
 	"context"
 	"os"
-	"path/filepath"
 
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -40,11 +39,11 @@ func (l *GetFileSchemaLogic) GetFileSchema() (resp *types.ResultVO, err error) {
 		filename = "file-schema.json"
 	}
 
-	// 构建文件路径
-	filePath := filepath.Join("internal", "logic", "supos", "open", "templates", filename)
+	// 构建文件路径（使用嵌入的文件系统）
+	filePath := "templates/" + filename
 
 	// 读取文件内容
-	content, err := os.ReadFile(filePath)
+	content, err := templates.ReadFile(filePath)
 	if err != nil {
 		l.Errorf("Failed to read file: %v", err)
 		return &types.ResultVO{
