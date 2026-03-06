@@ -127,6 +127,7 @@ func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName stri
 				var insertTemplates []*types.CreateTopicDto
 				for _, n := range nodes {
 					if template := n.Template; template != nil {
+						n.ModelAlias = &template.Alias
 						insertTemplates = append(insertTemplates, template)
 					}
 				}

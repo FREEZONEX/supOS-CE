@@ -79,6 +79,25 @@ func (p UnsNamespaceRepo) GetByPath(db *gorm.DB, path string) (result *UnsNamesp
 	}
 	return &po, nil
 }
+func (p UnsNamespaceRepo) SelectByAlias(ctx context.Context, alias string) (result *UnsNamespace, err error) {
+	var po UnsNamespace
+	err = p.model(GetDb(ctx)).Where("alias = ? ", alias).Where("status = 1").First(&po).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return &po, nil
+}
+func (p UnsNamespaceRepo) SelectByPath(ctx context.Context, path string) (result *UnsNamespace, err error) {
+	var po UnsNamespace
+	err = p.model(GetDb(ctx)).
+		Where("pathash = hashtext(?)", path).
+		Where("path = ? ", path).
+		Where("status = 1").First(&po).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return &po, nil
+}
 func (p UnsNamespaceRepo) GetAliasByPath(db *gorm.DB, path string) (alias string) {
 	_ = p.model(db).Select([]string{"alias"}).
 		Where("pathash = hashtext(?)", path).

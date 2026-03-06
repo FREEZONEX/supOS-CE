@@ -167,21 +167,19 @@ func getLayAndIdsInner(dirIds, fileIds []int64, layRecs []string) (layRec []stri
 	fileIdMap := make(map[int64]int, len(fileIds))
 	for _, layerRec := range layRecs {
 		parts := strings.Split(layerRec, "/")
-		var idMap map[int64]int
 		{
 			id, _ := strconv.ParseInt(parts[len(parts)-1], 10, 64)
 			if _, has := dirMap[id]; has {
-				idMap = dirIdMap
 				dirMap[id] = layerRec
+				dirIdMap[id] += 1
 			} else {
-				idMap = fileIdMap
 				fMap[id] = layerRec
 			}
-			idMap[id] += 1
+			fileIdMap[id] += 1
 		}
 		for i := len(parts) - 2; i >= 0; i-- {
 			id, _ := strconv.ParseInt(parts[i], 10, 64)
-			idMap[id] += 1
+			fileIdMap[id] += 1
 		}
 	}
 	dirLayRecs := base.Filter(base.MapValues(dirMap), func(e string) bool {
@@ -189,9 +187,11 @@ func getLayAndIdsInner(dirIds, fileIds []int64, layRecs []string) (layRec []stri
 	})
 	sort.Strings(dirLayRecs)
 
-	for id := range fileIdMap {
-		if dirIdMap[id] > 1 {
-			delete(fileIdMap, id)
+	if len(dirIdMap) > 0 {
+		for id := range fileIdMap {
+			if dirIdMap[id] > 1 {
+				delete(fileIdMap, id)
+			}
 		}
 	}
 	if len(fMap) > 0 && len(dirLayRecs) > 0 {

@@ -242,8 +242,11 @@ func importFlows(ctx context.Context, srcFlow bool, dec *json.Decoder,
 	saveFlow func(ctx context.Context, data []*dao.NoderedSourceFlow) error,
 	saveGroup func(ctx context.Context, groups []*dao.GroupModel) error,
 ) error {
-	node2vo := func(c context.Context, prop string, i, parent *dao.NoderedFlow) *dao.NoderedFlow {
-		return i
+	node2vo := func(c context.Context, prop string, flow, parent *dao.NoderedFlow) *dao.NoderedFlow {
+		if parent != nil {
+			flow.GroupId = &parent.ID
+		}
+		return flow
 	}
 
 	creatorUser := auth.ResolveUserName(ctx)

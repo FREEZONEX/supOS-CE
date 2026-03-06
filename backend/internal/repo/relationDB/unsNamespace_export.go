@@ -107,7 +107,9 @@ func (p UnsNamespaceRepo) ExportCsvByLayRecAndIds(ctx context.Context, layRec []
 		return err
 	}
 	defer conn.Release()
-	err = conn.CopyTo(ctx, w, query.String())
+	sql := query.String()
+	logx.WithContext(ctx).Infof("UNS 导出 sql: %s", sql)
+	err = conn.CopyTo(ctx, w, sql)
 	return err
 }
 func (p UnsNamespaceRepo) ExportTimeSeriaNoneTables(ctx context.Context, w io.Writer) error {

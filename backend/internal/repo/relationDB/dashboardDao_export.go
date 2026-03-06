@@ -111,7 +111,6 @@ func dashboardGetCombineSQL(groupIds []int64, ids []string) string {
         0 as group_id,
         false as need_init,
         g.description,
-        NULL as json_content,
         NULL as creator,
         g.update_at as update_time,
         g.create_at as create_time,
@@ -136,7 +135,6 @@ dashboard_data AS (
         d.group_id,
         d.need_init,
         d.description,
-        d.json_content,
         d.creator,
         d.update_time,
         d.create_time,
@@ -173,7 +171,7 @@ combined_data AS (
 -- 最终结果
 SELECT 
     export_type, group_id, id, name, type,  need_init, description, 
-    json_content, creator, update_time, create_time
+    creator, update_time, create_time
 FROM combined_data
 ORDER BY 
     sort_group_id,

@@ -13,7 +13,7 @@ type DashboardModel struct {
 	ExportType  string            `gorm:"-"  json:"exportType,omitempty"`            // 导出类型：group-分组 默认：dashboard-面板
 	NeedInit    bool              `gorm:"column:need_init" json:"needInit,omitzero"` // 是否需要初始化
 	Description string            `gorm:"column:description" json:"description,omitempty"`
-	JsonContent string            `gorm:"column:json_content" json:"jsonContent,omitempty"`
+	JsonContent string            `gorm:"-" json:"jsonContent,omitempty"`
 	Creator     string            `gorm:"column:creator" json:"creator,omitempty"`
 	UpdateTime  time.Time         `gorm:"column:update_time;autoUpdateTime" json:"updateTime,omitzero"`
 	CreateTime  time.Time         `gorm:"column:create_time;autoCreateTime" json:"createTime,omitzero"`

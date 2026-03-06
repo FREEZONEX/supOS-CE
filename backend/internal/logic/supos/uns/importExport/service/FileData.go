@@ -49,6 +49,7 @@ type FileData struct {
 	GenerateDashboard string                 `json:"generateDashboard,omitempty"`
 	EnableHistory     string                 `json:"enableHistory,omitempty"`
 	MockData          string                 `json:"mockData,omitempty"`
+	WriteData         string                 `json:"writeData,omitempty"` //数据写值:accessLevel==READ_WRITE? TRUE: FALSE
 	ParentDataType    string                 `json:"topicType,omitempty"`
 	Template          *FileData              `json:"template,omitempty"`
 	Children          []*FileData            `json:"children,omitempty"`
@@ -192,7 +193,9 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 	if vo.PathType == constants.PathTypeFile {
 		vo.AddDashBoard = parseBoolP(i.GenerateDashboard)
 		vo.Save2Db = parseBoolP(i.EnableHistory)
-
+		if wd := i.WriteData; wd != "" {
+			vo.AccessLevel = base.SanYuan(base.P2v(parseBoolP(wd)), constants.AccessLevelReadWrite, constants.AccessLevelReadOnly)
+		}
 		if base.P2v(vo.DataType) == constants.JsonbType {
 			vo.AddFlow = base.OptionalFalse
 		} else {
@@ -320,6 +323,7 @@ func uns2DataVo(ctx *exportContext, unsPo types.UnsInfo) *FileData {
 			data.EnableHistory = _BOOL(constants.WithSave2db(fl))
 			data.GenerateDashboard = _BOOL(constants.WithDashBoard(fl))
 			data.MockData = _BOOL(constants.WithFlow(fl))
+			data.WriteData = _BOOL((fl & constants.UnsFlagAccessLevelReadWrite) == constants.UnsFlagAccessLevelReadWrite)
 		}
 	case constants.PathTypeDir:
 		data.Type = TYPE_FOLDER

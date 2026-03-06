@@ -8,7 +8,7 @@ import (
 )
 
 // 获取物理表字段（需要数据库连接）
-func getPhysicalTableFields(ctx context.Context, pool queryer) ([]*types.FieldDefine, error) {
+func getPhysicalTableFields(ctx context.Context, pool queryer) (fields []*types.FieldDefine, ct, qos string, er error) {
 	sql := `
 		SELECT column_name, data_type
 		FROM information_schema.columns
@@ -20,27 +20,28 @@ func getPhysicalTableFields(ctx context.Context, pool queryer) ([]*types.FieldDe
 	rows, err := pool.Query(ctx, sql)
 	if err != nil {
 		// 表可能不存在
-		return nil, nil
+		return nil, "", "", nil
 	}
 	defer rows.Close()
 
-	var fields []*types.FieldDefine
 	for rows.Next() {
 		var columnName, dataType string
 		if err := rows.Scan(&columnName, &dataType); err != nil {
-			return nil, err
+			return fields, "", "", err
 		}
-
-		// 跳过系统字段
-		if _, isSystem := constants.SystemFields[columnName]; isSystem {
+		if columnName == constants.SystemSeqTag {
 			continue
 		}
+		// 跳过系统字段
 
 		// 转换为 FieldType
 		var fieldType types.FieldType
 		switch dataType {
 		case "bigint", "int8":
 			fieldType = types.FieldTypeLong
+			if !strings.Contains(columnName, "_") {
+				qos = columnName
+			}
 		case "integer", "int4":
 			fieldType = types.FieldTypeInteger
 		case "double precision", "float8":
@@ -51,6 +52,9 @@ func getPhysicalTableFields(ctx context.Context, pool queryer) ([]*types.FieldDe
 			fieldType = types.FieldTypeBoolean
 		case "timestamp with time zone", "timestamptz":
 			fieldType = types.FieldTypeDatetime
+			if !strings.Contains(columnName, "_") {
+				ct = columnName
+			}
 		case "character varying", "varchar", "text":
 			fieldType = types.FieldTypeString
 		default:
@@ -68,5 +72,5 @@ func getPhysicalTableFields(ctx context.Context, pool queryer) ([]*types.FieldDe
 		fields = append(fields, field)
 	}
 
-	return fields, nil
+	return fields, ct, qos, nil
 }

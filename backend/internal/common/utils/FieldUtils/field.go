@@ -126,6 +126,8 @@ func SetDefaultMaxLen(field *types.FieldDefine) {
 		}
 
 		field.MaxLen = &defaultLen
+	} else if field.Type != types.FieldTypeString && field.MaxLen != nil {
+		field.MaxLen = nil //非字符串类型的忽略 maxLen
 	}
 }
 

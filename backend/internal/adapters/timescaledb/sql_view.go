@@ -1,6 +1,7 @@
 package timescaledb
 
 import (
+	"backend/internal/common/constants"
 	"backend/internal/types"
 	"fmt"
 	"strings"
@@ -9,6 +10,7 @@ import (
 // GenerateViewSQL 生成创建视图的 SQL
 func (g *SQLGenerator) GenerateViewSQL(
 	unsInfo types.UnsInfo,
+	ct, qos string,
 	vms []ViewMap,
 ) string {
 
@@ -22,7 +24,15 @@ func (g *SQLGenerator) GenerateViewSQL(
 	tbField := unsInfo.GetTbFieldName()
 	for _, field := range unsInfo.GetFields() {
 		if field.IsSystemField() && field.Name != tbField {
-			selectFields = append(selectFields, fmt.Sprintf(`"%s"`, field.Name))
+			var columnName = ""
+			if field.Type == types.FieldTypeLong && field.Name != constants.SystemSeqTag && field.Name != qos {
+				columnName = fmt.Sprintf(`%s AS "%s"`, qos, field.Name)
+			} else if field.Type == types.FieldTypeDatetime && field.Name != ct {
+				columnName = fmt.Sprintf(`%s AS "%s"`, ct, field.Name)
+			} else {
+				columnName = fmt.Sprintf(`"%s"`, field.Name)
+			}
+			selectFields = append(selectFields, columnName)
 		}
 	}
 	mappings := make(map[string]ViewMap, len(vms))
@@ -49,9 +59,9 @@ func (g *SQLGenerator) GenerateViewSQL(
 				selectExpr = fmt.Sprintf(`"%s"::real`, sourceCol)
 			}
 		}
-		if field.Name != selectExpr && !strings.Contains(selectExpr, " as ") {
+		if field.Name != selectExpr && !strings.Contains(selectExpr, " AS ") {
 			// 添加别名
-			selectExpr = fmt.Sprintf(`%s as "%s"`, selectExpr, field.Name)
+			selectExpr = fmt.Sprintf(`%s AS "%s"`, selectExpr, field.Name)
 		}
 		selectFields = append(selectFields, selectExpr)
 	}

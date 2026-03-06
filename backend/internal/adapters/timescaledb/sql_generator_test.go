@@ -42,7 +42,7 @@ func TestSQLGenerator_GenerateSyncSQLs(t *testing.T) {
 	var physicsTableFields []*types.FieldDefine
 
 	// 生成 SQL
-	result := sqlGen.GenerateSyncSQLs(physicsTableFields, unsList)
+	result := sqlGen.GenerateSyncSQLs(physicsTableFields, constants.SysFieldCreateTime, constants.QosField, unsList)
 
 	// 验证结果
 	assert.False(t, result.HasErrors())
@@ -151,7 +151,62 @@ func TestSQLGenerator_ExistingTable(t *testing.T) {
 	}
 
 	// 生成 SQL
-	result := sqlGen.GenerateSyncSQLs(physicsTableFields, unsList)
+	result := sqlGen.GenerateSyncSQLs(physicsTableFields, constants.SysFieldCreateTime, constants.QosField, unsList)
+
+	// 验证结果
+	//assert.False(t, result.HasErrors())
+	//assert.Equal(t, 0, len(result.CreateTableSQL))  // 表已存在，不需要创建
+	//assert.Greater(t, len(result.AlterTableSQL), 0) // 需要添加新字段
+	//assert.Greater(t, len(result.CreateViewSQL), 0) // 需要创建视图
+	//
+	//t.Logf("Alter Table SQL:\n%s", result.AlterTableSQL[0])
+	//t.Logf("Update Table SQL:\n%v", result.UpdateDataSQL)
+	//t.Logf("Create View SQL:\n%s", result.CreateViewSQL[0])
+
+	jsobs, _ := json.MarshalIndent(result, "", " ")
+	t.Logf("genSql: %+v\n", string(jsobs))
+}
+func TestSQLGenerator_View_ChangeFieldName(t *testing.T) {
+	sqlGen := NewSQLGenerator()
+
+	// 模拟已存在的物理表字段
+	physicsTableFields := []*types.FieldDefine{
+		{Name: "tag", Type: types.FieldTypeLong},
+		{Name: "timeStamp", Type: types.FieldTypeDatetime},
+		{Name: "quality", Type: types.FieldTypeLong},
+		{Name: "long_1", Type: types.FieldTypeLong},
+		{Name: "double_1", Type: types.FieldTypeDouble},
+		{Name: "double_2", Type: types.FieldTypeDouble},
+		{Name: "double_3", Type: types.FieldTypeDouble},
+	}
+
+	unsList := []UnsViewInfo{
+		{
+			Uns: &types.CreateTopicDto{
+				Id:        1003,
+				Alias:     "test_view_3",
+				TableName: "uns_timeserial",
+				Fields: []*types.FieldDefine{
+					{Name: "timeStamp", Type: types.FieldTypeDatetime, SystemField: base.OptionalTrue, Unique: base.OptionalTrue},
+					{Name: "quality", Type: types.FieldTypeLong},
+					{Name: "zz1", Type: types.FieldTypeInteger, Index: base.V2p("long_1")},
+					{Name: "bb", Type: types.FieldTypeDouble, Index: base.V2p("double_1")},
+				},
+			},
+			View: SimpleViewInfo{
+				SrcTable: "uns_timeserial",
+				Columns: []ViewColumnInfo{
+					{ColumnName: "timeStamp"},
+					{ColumnName: "quality"},
+					{ColumnName: "zz", SourceColumn: "long_1"},
+					{ColumnName: "bb", SourceColumn: "double_2"},
+				},
+			},
+		},
+	}
+
+	// 生成 SQL
+	result := sqlGen.GenerateSyncSQLs(physicsTableFields, constants.SysFieldCreateTime, constants.QosField, unsList)
 
 	// 验证结果
 	//assert.False(t, result.HasErrors())

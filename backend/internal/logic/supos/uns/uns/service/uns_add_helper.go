@@ -604,10 +604,14 @@ func (u *UnsAddService) trySetId(
 			tar.ParentAlias = nil
 			tar.ParentId = nil
 		}
-		unsDto = UnsConverter.Po2Dto(&tar)
+		paramFlags := base.P2v(unsDto.WithFlags)
+		UnsConverter.Po2DtoWithoutFlags(&tar, unsDto)
 		newUns = &tar
 		newUns.UpdateAt = ct
-
+		if paramFlags == 0 {
+			unsDto.WithFlags = nil
+			newUns.WithFlags = nil
+		}
 	}
 
 	dataType := int16(0)
