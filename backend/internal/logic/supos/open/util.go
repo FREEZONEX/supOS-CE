@@ -18,16 +18,12 @@ func ConvertInstanceDetailToDefinition(detail *types.InstanceDetail) interface{}
 	result["pathType"] = detail.PathType
 	result["createTime"] = detail.CreateTime
 	result["updateTime"] = detail.UpdateTime
-	result["protocol"] = detail.Protocol
-	result["modelDescription"] = detail.ModelDescription
 	result["description"] = detail.Description
 	result["persistence"] = detail.WithSave2db // withSave2db 转换为 persistence
-	result["refers"] = detail.Refers
 	result["name"] = detail.Name
 	result["displayName"] = detail.DisplayName
 	result["pathName"] = detail.PathName
 	result["extendProperties"] = detail.Extend // extend 转换为 extendProperties
-	result["payload"] = detail.Payload
 	result["templateName"] = detail.TemplateName
 	result["templateAlias"] = detail.TemplateAlias
 
@@ -60,7 +56,6 @@ func ConvertModelDetailToDefinition(detail *types.ModelDetail) interface{} {
 	result["modelName"] = detail.ModelName
 	result["extend"] = detail.Extend
 	result["templateAlias"] = detail.TemplateAlias
-	result["mount"] = detail.Mount
 
 	// 将 Fields 转换为 Definition
 	if detail.Fields != nil {
