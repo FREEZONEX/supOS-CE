@@ -133,7 +133,7 @@ func exportNodesByFlows(ctx context.Context, jsonWriter io.Writer, allFlowConfig
 		fmt.Fprintln(jsonWriter, `[]`)
 		return fmt.Errorf("json parse error: token=%s", token)
 	}
-	fmt.Fprintln(jsonWriter, `[\n`)
+	fmt.Fprintln(jsonWriter, "[\n")
 	// 流式读取数组元素
 	for i, n := 0, 0; decoder.More(); i++ {
 		var raw json.RawMessage
