@@ -98,7 +98,7 @@ func (g *SQLGenerator) getFieldMappings(unsInfo types.UnsInfo, viewColumns []Vie
 			}
 			if src2colmap[sourceCol] {
 				vm.expression = fmt.Sprintf(
-					`CASE WHEN "timeStamp" < to_timestamp(%d) THEN NULL ELSE %s END AS %s`, nowUnixTimestamp, sourceCol, fieldName)
+					`CASE WHEN "timeStamp" < to_timestamp(%d) THEN NULL ELSE "%s" END AS "%s"`, nowUnixTimestamp, sourceCol, fieldName)
 			}
 			newMappings = append(newMappings, vm)
 
