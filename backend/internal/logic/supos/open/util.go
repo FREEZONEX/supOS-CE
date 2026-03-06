@@ -27,6 +27,18 @@ func ConvertInstanceDetailToDefinition(detail *types.InstanceDetail) interface{}
 	result["templateName"] = detail.TemplateName
 	result["templateAlias"] = detail.TemplateAlias
 
+	// 转换标签列表
+	if detail.LabelList != nil && len(detail.LabelList) > 0 {
+		var labelList []map[string]interface{}
+		for _, label := range detail.LabelList {
+			labelList = append(labelList, map[string]interface{}{
+				"id":        label.ID,
+				"labelName": label.LabelName,
+			})
+		}
+		result["labelList"] = labelList
+	}
+
 	if detail.JsonFields != nil {
 		result["definition"] = detail.JsonFields
 	}
