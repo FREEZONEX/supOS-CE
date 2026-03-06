@@ -123,7 +123,7 @@ pipeline {
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
                         ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
-                        pkg=tier0-${VERSION}-${UNS_IMAGE_TAG}-${DATE}
+                        pkg=tier0-${VERSION}-${TAG}-${DATE}
                         mkdir ${pkg} && cp -r ${ZipDirAndFileLists} ${pkg}
 
                         /var/jenkins_home/paks/zip -q -r -y ${pkg}.zip ${pkg}
