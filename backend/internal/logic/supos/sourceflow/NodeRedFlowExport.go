@@ -111,14 +111,14 @@ func exportNodes(ctx context.Context, jsonWriter io.Writer, apiHost string, flow
 	if err != nil {
 		return err
 	}
-	return exportNodesByFlows(jsonWriter, allFlowConfigs, flowIds, supModelIds)
+	return exportNodesByFlows(ctx, jsonWriter, allFlowConfigs, flowIds, supModelIds)
 }
-func exportNodesByFlows(jsonWriter io.Writer, allFlowConfigs io.ReadCloser, flowIds map[string]bool, supModelIds *[]string) error {
+func exportNodesByFlows(ctx context.Context, jsonWriter io.Writer, allFlowConfigs io.ReadCloser, flowIds map[string]bool, supModelIds *[]string) error {
 	if allFlowConfigs != nil {
 		defer allFlowConfigs.Close()
 	}
 	var err error
-	fmt.Fprintln(jsonWriter, `, "nodes":[`)
+	fmt.Fprintln(jsonWriter, `, "nodes": `)
 	if len(flowIds) == 0 && supModelIds == nil { //没有过滤条件，返回全部
 		_, err = io.Copy(jsonWriter, allFlowConfigs)
 		return err
@@ -127,22 +127,23 @@ func exportNodesByFlows(jsonWriter io.Writer, allFlowConfigs io.ReadCloser, flow
 
 	// 读取起始数组标记
 	if token, err := decoder.Token(); err != nil {
-		fmt.Fprintln(jsonWriter, `]`)
+		fmt.Fprintln(jsonWriter, `[]`)
 		return err
 	} else if delim, ok := token.(json.Delim); !ok || delim != '[' {
-		fmt.Fprintln(jsonWriter, `]`)
+		fmt.Fprintln(jsonWriter, `[]`)
 		return fmt.Errorf("json parse error: token=%s", token)
 	}
+	fmt.Fprintln(jsonWriter, `[\n`)
 	// 流式读取数组元素
 	for i, n := 0, 0; decoder.More(); i++ {
 		var raw json.RawMessage
+
 		if err := decoder.Decode(&raw); err != nil {
-			if i > 0 {
-				fmt.Fprintln(jsonWriter, `]`)
-			} else {
-				fmt.Fprintln(jsonWriter, `[]`)
-			}
-			return err
+			break
+		}
+
+		if len(raw) == 0 || raw[0] != '{' {
+			continue
 		}
 		zBs, _, _, _ := jsonparser.Get(raw, "z")
 		idBs, _, _, _ := jsonparser.Get(raw, "id")
@@ -150,8 +151,9 @@ func exportNodesByFlows(jsonWriter io.Writer, allFlowConfigs io.ReadCloser, flow
 		z, id, Type := b2s(zBs), b2s(idBs), b2s(tpBs)
 		if len(flowIds) == 0 || ((z == "" && Type != "tab") || flowIds[z] || flowIds[id]) {
 			if n > 0 {
-				jsonWriter.Write([]byte(","))
+				jsonWriter.Write([]byte(", "))
 			}
+			logx.Infof("flow[%d-%d]: %v", i, n, string(raw))
 			n++
 			_, err = jsonWriter.Write(raw)
 			if supModelIds != nil && "supmodel" == Type {
