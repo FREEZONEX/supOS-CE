@@ -1,19 +1,32 @@
-import { type FC, useState } from 'react';
-import { App, Button, Empty, Flex, Form, Pagination, Segmented } from 'antd';
+import { type FC, useRef, useState } from 'react';
+import { App, Breadcrumb, Button, Empty, Flex, Form, Pagination, Segmented } from 'antd';
 import { useNavigate } from 'react-router';
 import {
-  getDashboardList,
+  markDashboard,
+  unmarkDashboard,
   addDashboard,
   editDashboard,
   deleteDashboard,
-  markDashboard,
-  unmarkDashboard,
-} from '@/apis/inter-api/uns';
+  getDashboardAndGroupList,
+} from '@/apis/inter-api/dashboard';
 import { usePagination, useTranslate } from '@/hooks';
 import { useActivate } from '@/contexts/tabs-lifecycle-context';
 import { ButtonPermission } from '@/common-types/button-permission.ts';
 import type { PageProps } from '@/common-types';
-import { Dashboard, Edit, Grid, List, Search, TrashCan, View } from '@carbon/icons-react';
+import {
+  Dashboard,
+  Edit,
+  FlowData,
+  Folder,
+  FolderAdd,
+  FolderMoveTo,
+  Grid,
+  List,
+  Search,
+  TrashCan,
+  Undo,
+  View,
+} from '@carbon/icons-react';
 import ComDrawer from '@/components/com-drawer';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
@@ -31,9 +44,14 @@ import ProCard from '@/components/pro-card/ProCard.tsx';
 import SecondaryList from '../../components/pro-card/SecondaryList.tsx';
 import { hasPermission } from '@/utils/auth.ts';
 import { formatTimestamp } from '@/utils/format.ts';
+import AddGroupModal from '@/pages/dashboards/components/AddGroupModal.tsx';
+import { deleteGroup, markGroup } from '@/apis/inter-api/group.ts';
+import MoveGroupModal from '@/pages/dashboards/components/MoveGroupModal.tsx';
 
 const CollectionFlow: FC<PageProps> = ({ title }) => {
   const { modal, message } = App.useApp();
+  const addGroupModalRef = useRef<any>(null);
+  const moveGroupModalRef = useRef<any>(null);
   const formatMessage = useTranslate();
   const dashboardType = useBaseStore((state) => state.dashboardType);
 
@@ -43,6 +61,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   const [show, setShow] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [clickItem, setClickItem] = useState<any>({});
+  const [breadcrumbItem, setBreadcrumbItem] = useState<any>([{ title: formatMessage('common.all') }]);
   const {
     loading,
     pagination,
@@ -52,7 +71,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
     setSearchParams,
     onChange,
   } = usePagination({
-    fetchApi: getDashboardList,
+    fetchApi: getDashboardAndGroupList,
     initPageSize: 18,
   });
   const [mode, setMode] = useLocalStorageState<string>('SUPOS_DASHBOARD_MODE', {
@@ -83,6 +102,10 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
     return [
       {
         label: `${isEdit ? formatMessage('common.edit') : formatMessage('common.create')} ${formatMessage('dashboards.dashboard')}`,
+      },
+      {
+        name: 'groupId',
+        hidden: true,
       },
       {
         label: formatMessage('common.name'),
@@ -122,11 +145,16 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   const onAddHandle = () => {
     form.resetFields();
     setIsEdit(false);
+    if (breadcrumbItem?.length === 2) {
+      form.setFieldsValue({
+        groupId: breadcrumbItem?.[1]?.groupId,
+      });
+    }
     if (show) return;
     setShow(true);
   };
   const onDeleteHandle = (item: any) => {
-    deleteDashboard(item.id)
+    return deleteDashboard(item.id)
       .then(() => {
         message.success(formatMessage('common.deleteSuccessfully'));
         reload();
@@ -140,7 +168,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   };
 
   const onSave = () => {
-    form
+    return form
       .validateFields()
       .then((info) => {
         const params = info;
@@ -148,7 +176,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           params.id = clickItem.id;
         }
         const request = isEdit ? editDashboard : addDashboard;
-        request(params)
+        return request(params)
           .then(() => {
             message.success(formatMessage('common.optsuccess'));
             onClose();
@@ -165,6 +193,48 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
   };
 
   const actions: any = (record: any) => {
+    if (record?.category === 'group') {
+      return [
+        {
+          key: 'edit',
+          label: formatMessage('common.edit'),
+          auth: ButtonPermission['Dashboards.edit'],
+          onClick: () => {
+            addGroupModalRef?.current?.onOpen?.(3, {
+              id: record.id,
+              name: record.name,
+              description: record.description,
+            });
+          },
+          extra: (
+            <Flex justify="center" align="center">
+              <Edit />
+            </Flex>
+          ),
+        },
+        {
+          key: 'delete',
+          label: formatMessage('common.delete'),
+          auth: ButtonPermission['Dashboards.delete'],
+          onClick: () => {
+            modal.confirm({
+              title: formatMessage('uns.deleteGroupInfo', { module: formatMessage('home.dashboard') }),
+              onOk: () => {
+                return deleteGroup(record.id).then(() => {
+                  message.success(formatMessage('common.optsuccess'));
+                  reload();
+                });
+              },
+            });
+          },
+          extra: (
+            <Flex justify="center" align="center">
+              <TrashCan />
+            </Flex>
+          ),
+        },
+      ];
+    }
     return [
       {
         key: 'preview',
@@ -199,6 +269,19 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
         ),
       },
       {
+        key: 'moveToGroup',
+        label: formatMessage('uns.moveToGroup'),
+        auth: ButtonPermission['Dashboards.moveToGroup'],
+        onClick: () => {
+          moveGroupModalRef.current?.onOpen(3, { bizId: record.id, id: record.groupId });
+        },
+        extra: (
+          <Flex justify="center" align="center">
+            <FolderMoveTo />
+          </Flex>
+        ),
+      },
+      {
         key: 'delete',
         label: formatMessage('common.delete'),
         auth: ButtonPermission['Dashboards.delete'],
@@ -206,12 +289,6 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
           modal.confirm({
             title: formatMessage('common.deleteConfirm'),
             onOk: () => onDeleteHandle(record),
-            okButtonProps: {
-              title: formatMessage('common.confirm'),
-            },
-            cancelButtonProps: {
-              title: formatMessage('common.cancel'),
-            },
           });
         },
         extra: (
@@ -225,18 +302,32 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
 
   const pinOptions = {
     onClick: (record: any) => {
-      const isMark = record?.mark === 1;
-      const api = isMark ? unmarkDashboard : markDashboard;
-      return api?.(record.id).then(() => {
-        message.success(formatMessage('common.optsuccess'));
-        reload();
-      });
+      const isMark = record?.sort === 1;
+      if (record?.category === 'group') {
+        return markGroup(record.id, !isMark).then(() => {
+          message.success(formatMessage('common.optsuccess'));
+          reload();
+        });
+      } else {
+        const api = isMark ? unmarkDashboard : markDashboard;
+        return api?.(record.id).then(() => {
+          message.success(formatMessage('common.optsuccess'));
+          reload();
+        });
+      }
     },
     renderPinIcon: (record: any) => {
-      return record?.mark !== 1;
+      return record?.sort !== 1;
     },
   };
 
+  const onSearch = () => {
+    const params = searchForm.getFieldsValue();
+    if (params?.category === 'all') {
+      params.category = undefined;
+    }
+    setSearchParams(params);
+  };
   return (
     <ComLayout loading={loading}>
       <ComContent
@@ -259,6 +350,27 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
               form={searchForm}
               formItemOptions={[
                 {
+                  hidden: true,
+                  name: 'groupId',
+                },
+                {
+                  type: 'Filter',
+                  name: 'category',
+                  properties: {
+                    placeholder: formatMessage('common.searchPlaceholder'),
+                    defaultValue: 'all',
+                    options: [
+                      { value: 'all', label: formatMessage('common.all'), title: formatMessage('common.all') },
+                      { value: 'group', label: formatMessage('common.group'), title: formatMessage('common.group') },
+                      {
+                        value: 'file',
+                        label: formatMessage('common.dashboard'),
+                        title: formatMessage('common.dashboard'),
+                      },
+                    ],
+                  },
+                },
+                {
                   name: 'k',
                   properties: {
                     prefix: <Search />,
@@ -269,19 +381,52 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                 },
               ]}
               formConfig={{
-                onFinish: () => {
-                  setSearchParams(searchForm.getFieldsValue());
-                },
+                onFinish: onSearch,
               }}
-              onSearch={() => setSearchParams(searchForm.getFieldsValue())}
+              onSearch={onSearch}
             />
+            {breadcrumbItem?.length === 1 && (
+              <AuthButton
+                auth={ButtonPermission['SourceFlow.add']}
+                type="primary"
+                onClick={() => {
+                  addGroupModalRef?.current?.onOpen?.(3);
+                }}
+              >
+                <FolderAdd />
+                {formatMessage('common.newGroup')}
+              </AuthButton>
+            )}
             <AuthButton auth={ButtonPermission['Dashboards.add']} type="primary" onClick={onAddHandle}>
               + {formatMessage('dashboards.newDashboard')}
             </AuthButton>
           </>
         }
       >
-        <Flex justify="flex-end" align="center" style={{ marginBottom: 16, marginTop: 16, paddingRight: 16 }}>
+        <Flex justify="space-between" align="center" style={{ marginBottom: 16, marginTop: 16, padding: '0 16px' }}>
+          <Flex align="center" gap={16}>
+            {breadcrumbItem?.length > 1 ? (
+              <>
+                <Button
+                  size="small"
+                  style={{ background: 'var(--supos-switchwrap-bg-color)' }}
+                  onClick={() => {
+                    searchForm.setFieldsValue({
+                      groupId: undefined,
+                    });
+                    setBreadcrumbItem((pre: any) => pre.slice(0, -1));
+                    onSearch?.();
+                  }}
+                >
+                  <Undo />
+                  {formatMessage('common.back')}
+                </Button>
+                <Breadcrumb items={breadcrumbItem} separator=">" />
+              </>
+            ) : (
+              <span></span>
+            )}
+          </Flex>
           <Segmented
             size="small"
             value={mode}
@@ -308,25 +453,49 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
         </Flex>
         <div style={{ flex: 1, padding: '0 16px 16px', overflow: 'auto', alignItems: 'center' }}>
           {mode === 'card' ? (
-            data.length > 0 ? (
+            data?.length > 0 ? (
               <ProCardContainer>
                 {data?.map((d: any) => {
                   return (
                     <ProCard
                       key={d?.id}
                       header={{
+                        customIconBg: d.category === 'group' ? '#A8A8A8' : undefined,
+                        customIcon: (
+                          <Flex align="center" justify="center">
+                            {d.category === 'group' ? (
+                              <Folder size="28" style={{ color: 'white' }} />
+                            ) : (
+                              <FlowData size="28" />
+                            )}
+                          </Flex>
+                        ),
                         title: d.name,
-                        titleDescription: formatTimestamp(d?.createTime),
-                        onClick: hasPermission(ButtonPermission['Dashboards.preview'])
-                          ? () =>
-                              navigate(
-                                `/dashboards/preview?${getSearchParamsString({ id: d.id, type: d.type, status: 'preview', name: d.name })}`
-                              )
-                          : undefined,
+                        titleDescription: formatTimestamp(d?.createAt),
+                        onClick:
+                          d.category === 'group'
+                            ? () => {
+                                setBreadcrumbItem((pre: any) => {
+                                  return [...pre, { title: d.name, groupId: d.id }];
+                                });
+                                searchForm.setFieldsValue({
+                                  groupId: d.id,
+                                });
+                                onSearch?.();
+                              }
+                            : hasPermission(ButtonPermission['Dashboards.preview'])
+                              ? () => {
+                                  setClickItem(d);
+                                  navigate(
+                                    `/dashboards/preview?${getSearchParamsString({ id: d.id, type: d.type, status: 'preview', name: d.name })}`
+                                  );
+                                }
+                              : undefined,
                       }}
                       statusHeader={{
                         statusTag: <div></div>,
                         pinOptions,
+                        actions,
                       }}
                       description={d?.description}
                       secondaryDescription={
@@ -347,7 +516,7 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                           ]}
                         />
                       }
-                      actions={actions}
+                      // actions={actions}
                       item={d}
                     />
                   );
@@ -369,51 +538,88 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
                   {
                     titleIntlId: 'common.name',
                     dataIndex: 'name',
-                    width: '20%',
+                    width: 500,
                     sorter: true,
                     render: (text: any, item: any) => {
                       const hasDesign = hasPermission(ButtonPermission['Dashboards.design']);
-                      if (hasDesign)
-                        return (
-                          <Button
-                            type="link"
-                            className="table-link-button"
-                            onClick={() => {
-                              setClickItem(item);
-                              navigate(
-                                `/dashboards/preview?${getSearchParamsString({ id: item.id, type: item.type, status: 'design', name: item.name })}`
-                              );
+                      return (
+                        <Flex gap={8} align="center">
+                          <Flex
+                            style={{
+                              borderRadius: 3,
+                              backgroundColor: item.category === 'group' ? '#A8A8A8' : '#F4F4F4',
+                              padding: 6,
+                              height: 26,
                             }}
-                            title={text}
                           >
-                            {text}
-                          </Button>
-                        );
-                      return text;
+                            <Flex align="center" justify="center">
+                              {item.category === 'group' ? (
+                                <Folder size="16" style={{ color: 'white' }} />
+                              ) : (
+                                <FlowData size="16" style={{ color: 'black' }} />
+                              )}
+                            </Flex>
+                          </Flex>
+                          {item.category === 'group' ? (
+                            <Button
+                              type="link"
+                              className="table-link-button"
+                              onClick={() => {
+                                searchForm.setFieldsValue({
+                                  groupId: item.id,
+                                });
+                                setBreadcrumbItem((pre: any) => {
+                                  return [...pre, { title: item.name, groupId: item.id }];
+                                });
+                                onSearch?.();
+                              }}
+                              title={text}
+                            >
+                              {text}
+                            </Button>
+                          ) : hasDesign ? (
+                            <Button
+                              type="link"
+                              className="table-link-button"
+                              onClick={() => {
+                                setClickItem(item);
+                                navigate(
+                                  `/dashboards/preview?${getSearchParamsString({ id: item.id, type: item.type, status: 'design', name: item.name })}`
+                                );
+                              }}
+                              title={text}
+                            >
+                              {text}
+                            </Button>
+                          ) : (
+                            text
+                          )}
+                        </Flex>
+                      );
                     },
                   },
                   {
                     titleIntlId: 'dashboards.dashboardsTemplate',
                     dataIndex: 'typeName',
-                    width: '10%',
+                    width: 200,
                   },
                   {
                     titleIntlId: 'common.description',
                     dataIndex: 'description',
-                    width: '30%',
+                    width: 400,
                     ellipsis: true,
                   },
                   {
                     title: () => formatMessage('common.creationTime'),
-                    dataIndex: 'createTime',
-                    width: '15%',
+                    dataIndex: 'createAt',
+                    width: 200,
                     sorter: true,
                     render: (item: any) => formatTimestamp(item),
                   },
                   {
                     title: () => formatMessage('common.creator'),
                     dataIndex: 'creator',
-                    width: '10%',
+                    width: 150,
                   },
                 ] as any
               }
@@ -451,8 +657,18 @@ const CollectionFlow: FC<PageProps> = ({ title }) => {
         )}
       </ComContent>
       <ComDrawer title=" " open={show} onClose={onClose}>
-        <OperationForm form={form} onCancel={onClose} onSave={onSave} formItemOptions={formItemOptions(isEdit)} />
+        <OperationForm
+          form={form}
+          formConfig={{
+            initialValues: { type: 1 },
+          }}
+          onCancel={onClose}
+          onSave={onSave}
+          formItemOptions={formItemOptions(isEdit)}
+        />
       </ComDrawer>
+      <AddGroupModal ref={addGroupModalRef} refreshRequest={refreshRequest} />
+      <MoveGroupModal ref={moveGroupModalRef} refreshRequest={refreshRequest} />
     </ComLayout>
   );
 };

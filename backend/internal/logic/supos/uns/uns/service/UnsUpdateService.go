@@ -38,7 +38,7 @@ func (s *UnsUpdateService) UpdateDetail(ctx context.Context, unsDto *types.Updat
 	}
 
 	if err != nil || unsPo == nil {
-		resp = &types.StringResult{BaseResult: types.BaseResult{Code: 400, Msg: I18nUtils.GetMessage("uns.folder.or.file.not.found")}}
+		resp = &types.StringResult{BaseResult: types.BaseResult{Code: 400, Msg: I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found")}}
 		return
 	}
 
@@ -113,7 +113,7 @@ func (s *UnsUpdateService) UpdateName(ctx context.Context, req *types.UpdateName
 	ctx = dao.SetDb(ctx, db)
 	unsPo, err := s.unsMapper.SelectById(db, req.Id)
 	if err != nil || unsPo == nil {
-		resp = &types.StringResult{BaseResult: types.BaseResult{Code: 400, Msg: I18nUtils.GetMessage("uns.folder.or.file.not.found")}}
+		resp = &types.StringResult{BaseResult: types.BaseResult{Code: 400, Msg: I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found")}}
 		return
 	}
 

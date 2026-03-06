@@ -51,7 +51,7 @@ func (l *UnsTemplateService) DetailById(ctx context.Context, req *types.WithID) 
 	po, err = l.unsMapper.SelectById(db, req.ID)
 	resp = &types.TemplateDetailResp{}
 	if po == nil {
-		resp.Code, resp.Msg = 404, I18nUtils.GetMessage("uns.template.not.exists")
+		resp.Code, resp.Msg = 404, I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 		return
 	}
 	resp.Code, resp.Msg = 200, "OK"
@@ -65,7 +65,7 @@ func (l *UnsTemplateService) DetailByAlias(ctx context.Context, req *types.WithA
 	po, err = l.unsMapper.GetByAlias(db, req.Alias)
 	resp = &types.TemplateDetailResp{}
 	if po == nil {
-		resp.Code, resp.Msg = 404, I18nUtils.GetMessage("uns.template.not.exists")
+		resp.Code, resp.Msg = 404, I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 		return
 	}
 	resp.Code, resp.Msg = 200, "OK"

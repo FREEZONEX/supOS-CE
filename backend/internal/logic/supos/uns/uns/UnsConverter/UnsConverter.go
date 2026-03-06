@@ -59,7 +59,7 @@ func Po2Dtos(poList []*dao.UnsNamespace) []*types.CreateTopicDto {
 	// BeanUtil.copyProperties equivalent - assuming a custom copy function
 	copier.CopyWithOption(&unsDtoList, poList, copier.Option{IgnoreEmpty: true})
 	for i, p := range poList {
-		po2Dto(p, unsDtoList[i])
+		po2Dto(p, unsDtoList[i], true)
 	}
 	return unsDtoList
 }
@@ -78,11 +78,14 @@ func Po2ApiDtos(poList []*dao.UnsNamespace) []*types.CreateTopicDto {
 func Po2Dto(p *dao.UnsNamespace) *types.CreateTopicDto {
 	unsDto := &types.CreateTopicDto{}
 	copier.CopyWithOption(unsDto, p, copier.Option{IgnoreEmpty: true})
-	po2Dto(p, unsDto)
+	po2Dto(p, unsDto, true)
 	return unsDto
 }
-func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
-
+func Po2DtoWithoutFlags(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
+	copier.CopyWithOption(unsDto, p, copier.Option{IgnoreEmpty: true})
+	po2Dto(p, unsDto, false)
+}
+func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto, procFlags bool) {
 	var withFlags int32
 	if p.WithFlags != nil {
 		withFlags = *p.WithFlags
@@ -96,12 +99,14 @@ func po2Dto(p *dao.UnsNamespace, unsDto *types.CreateTopicDto) {
 	} else {
 		unsDto.TableName = ""
 	}
-	unsDto.WithFlags = p.WithFlags
-	unsDto.AddFlow = boPt(constants.WithFlow(withFlags))
-	unsDto.AddDashBoard = boPt(constants.WithDashBoard(withFlags))
-	unsDto.Save2Db = boPt(constants.WithSave2db(withFlags))
-	unsDto.RetainTableWhenDeleteInstance = boPt(constants.WithRetainTableWhenDeleteInstance(withFlags))
-	unsDto.AccessLevel = constants.WithReadOnly(withFlags)
+	if procFlags {
+		unsDto.WithFlags = p.WithFlags
+		unsDto.AddFlow = boPt(constants.WithFlow(withFlags))
+		unsDto.AddDashBoard = boPt(constants.WithDashBoard(withFlags))
+		unsDto.Save2Db = boPt(constants.WithSave2db(withFlags))
+		unsDto.RetainTableWhenDeleteInstance = boPt(constants.WithRetainTableWhenDeleteInstance(withFlags))
+		unsDto.AccessLevel = constants.WithReadOnly(withFlags)
+	}
 	unsDto.ParentAlias = p.ParentAlias
 	unsDto.ParentId = p.ParentId
 	unsDto.Name = p.Name

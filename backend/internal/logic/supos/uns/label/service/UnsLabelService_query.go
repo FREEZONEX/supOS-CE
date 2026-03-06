@@ -32,7 +32,7 @@ func (l *UnsLabelService) Detail(ctx context.Context, req *types.WithID) (resp *
 	resp = &types.LabelDetailResult{}
 	item, _ := l.labelMapper.FindOne(db, req.ID)
 	if item == nil {
-		resp.Code, resp.Msg = 400, I18nUtils.GetMessage("uns.label.not.exists")
+		resp.Code, resp.Msg = 400, I18nUtils.GetMessageWithCtx(ctx, "uns.label.not.exists")
 		return nil, err
 	}
 	resp.Code = 200

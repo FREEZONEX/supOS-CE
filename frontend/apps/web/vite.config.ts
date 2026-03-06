@@ -44,6 +44,7 @@ export default defineConfig({
   },
   envPrefix: ['REACT_APP_', 'VITE_', 'OPENAI_'],
   server: {
+    host: devInfo.VITE_ENABLE_HOST,
     origin: devInfo.VITE_ASSET_PREFIX,
     proxy: {
       ...proxy,

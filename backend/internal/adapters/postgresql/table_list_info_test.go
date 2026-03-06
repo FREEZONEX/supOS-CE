@@ -5,6 +5,7 @@ import (
 	"backend/internal/types"
 	"backend/share/base"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -104,7 +105,7 @@ func TestPgTempTable(t *testing.T) {
 	t.Log(tag.RowsAffected())
 }
 func TestFillLastRecord(t *testing.T) {
-	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@100.100.100.20:31014/postgres")
+	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@192.168.236.101:2345/postgres")
 	if err != nil {
 		panic(err)
 	}
@@ -116,20 +117,23 @@ func TestFillLastRecord(t *testing.T) {
 			Unique: base.OptionalTrue,
 		},
 		{
-			Name:   "tm",
-			Type:   types.FieldTypeLong,
-			Unique: base.OptionalTrue,
-		},
-		{
-			Name: "wq",
+			Name: "double1",
 			Type: types.FieldTypeDouble,
 		},
 		{
-			Name: "status",
+			Name: "double2",
+			Type: types.FieldTypeDouble,
+		},
+		{
+			Name: "double3",
+			Type: types.FieldTypeDouble,
+		},
+		{
+			Name: "quality",
 			Type: types.FieldTypeLong,
 		}}
 	uns := &types.CreateTopicDto{
-		Alias:  "akseqxajk8",
+		Alias:  "opcua_demo_file_1003",
 		Fields: fields,
 	}
 	common.InitSnowflake(123)
@@ -137,4 +141,6 @@ func TestFillLastRecord(t *testing.T) {
 		return pool.Query(ctx, fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.GetTable(), uns.GetTimestampField()))
 	}
 	FillLastRecord(logx.WithContext(context.Background()), uns, pgQuery)
+	bs, err := json.Marshal(fields)
+	t.Logf("fs:%v, er=%v", string(bs), err)
 }

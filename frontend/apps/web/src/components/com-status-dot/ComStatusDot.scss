@@ -1,0 +1,49 @@
+.status-dot {
+  display: inline-block;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* stop保持独立，不跟随主题色 */
+.status-dot.stop {
+  background-color: #d1d5db;
+}
+
+/* active 状态跟随主题色（如果你希望普通 blue 也变主题色） */
+.status-dot.active {
+  background-color: var(--supos-theme-color, #3b82f6);
+}
+
+/* breathing 状态：中心实心 + 外圈呼吸，都跟随主题色 */
+.status-dot.breathing {
+  background-color: var(--supos-theme-color, #3b82f6);
+}
+
+.status-dot.unactive {
+  background-color: var(--supos-theme-color, #3b82f6);
+  opacity: 0.8;
+}
+
+.status-dot.breathing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+
+  /* 内外都用同一个变量 */
+  box-shadow: 0 0 0 var(--ring-min, 4px) rgb(var(--supos-theme-color-rgb, 59 130 246), var(--opacity-max, 0.5));
+  animation: pulse-ring var(--duration, 2.2s) infinite ease-in-out;
+}
+
+@keyframes pulse-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 var(--ring-min, 4px) rgb(var(--supos-theme-color-rgb, 59 130 246), var(--opacity-max, 0.5));
+  }
+
+  50% {
+    box-shadow: 0 0 0 var(--ring-max, 18px) rgb(var(--supos-theme-color-rgb, 59 130 246), var(--opacity-min, 0.15));
+  }
+}

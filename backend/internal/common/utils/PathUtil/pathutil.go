@@ -364,3 +364,19 @@ func max(a, b int) int {
 	}
 	return b
 }
+
+// SnakeToCamel 转换蛇形命名到驼峰命名
+func SnakeToCamel(snakeStr string) string {
+	// 首先，将蛇形字符串转换为小写，然后使用空格替换下划线
+	parts := strings.Split(strings.ToLower(snakeStr), "_")
+	// 将第一个单词的首字母保持小写，其余单词首字母大写
+	for i, part := range parts {
+		if i == 0 {
+			parts[i] = strings.ToLower(part) // 保持第一个单词小写
+		} else {
+			parts[i] = strings.Title(part) // 将其他单词首字母大写
+		}
+	}
+	// 重新连接单词，形成驼峰命名
+	return strings.Join(parts, "")
+}

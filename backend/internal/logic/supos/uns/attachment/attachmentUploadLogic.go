@@ -56,7 +56,9 @@ func (l *AttachmentUploadLogic) AttachmentUpload(req *types.AttachmentUploadReq)
 	if err != nil {
 		if errors.Cmp(err, errors.NotFind) {
 			logx.Errorf("找不到 UNS: %s", req.Alias)
-			return nil, err
+			msg := errors.Parameter.AddMsg("对应别名的文件或文件夹不存在")
+			msg.Code = 400
+			return nil, msg
 		}
 		return nil, err
 	}

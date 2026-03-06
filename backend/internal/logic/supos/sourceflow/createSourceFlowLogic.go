@@ -68,6 +68,7 @@ func (l *CreateSourceFlowLogic) createFlow(req *types.SourceFlowCreateReq, flowT
 		Description: strings.TrimSpace(req.Description),
 		Template:    template,
 		FlowStatus:  flowcommon.FlowStatusDraft,
+		GroupId:     req.GroupId,
 	}
 	userVo := resolveUser(l.ctx)
 	if userVo != nil {

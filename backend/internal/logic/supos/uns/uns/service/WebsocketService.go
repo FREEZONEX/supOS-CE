@@ -4,6 +4,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/datetimeutils"
 	"backend/internal/logic/supos/uns/topology/service"
 	"backend/internal/types"
 	"backend/share/base"
@@ -397,37 +398,39 @@ func (s *WebsocketService) SendMessage(wsMsg serviceApi.WebsocketMessage) {
 		// Send by UNS ID
 		if sessionsVal, ok := s.idToSessionsMap.Load(unsId); ok {
 			sessions := sessionsVal.(*sync.Map)
-			msg := processWsMsg(wsMsg)
-			sessions.Range(func(key, value any) bool {
-				sessionId := key.(string)
-				if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
-					subscription := subscriptionVal.(*WsSubscription)
-					subscription.WriteLock.Lock()
-					defer subscription.WriteLock.Unlock()
-					if _, err := subscription.conn.Write(msg); err != nil {
-						logx.Errorf("fail to sendMessage to[%s], unsId=%d", sessionId, unsId)
+			onWsMsg(wsMsg, func(msg []byte) {
+				sessions.Range(func(key, value any) bool {
+					sessionId := key.(string)
+					if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
+						subscription := subscriptionVal.(*WsSubscription)
+						subscription.WriteLock.Lock()
+						defer subscription.WriteLock.Unlock()
+						if _, err := subscription.conn.Write(msg); err != nil {
+							logx.Errorf("fail to sendMessage to[%s], unsId=%d", sessionId, unsId)
+						}
 					}
-				}
-				return true
+					return true
+				})
 			})
+
 		}
 	} else if path != "" {
 		// Send by topic path
 		if sessionsVal, ok := s.topicToSessionsMap.Load(path); ok {
 			sessions := sessionsVal.(*sync.Map)
-			msg := processWsMsg(wsMsg)
-
-			sessions.Range(func(key, value any) bool {
-				sessionId := key.(string)
-				if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
-					subscription := subscriptionVal.(*WsSubscription)
-					subscription.WriteLock.Lock()
-					defer subscription.WriteLock.Unlock()
-					if _, err := subscription.conn.Write(msg); err != nil {
-						logx.Errorf("fail to sendMessage to[%s], topic=%s", sessionId, path)
+			onWsMsg(wsMsg, func(msg []byte) {
+				sessions.Range(func(key, value any) bool {
+					sessionId := key.(string)
+					if subscriptionVal, ok := s.sessions.Load(sessionId); ok {
+						subscription := subscriptionVal.(*WsSubscription)
+						subscription.WriteLock.Lock()
+						defer subscription.WriteLock.Unlock()
+						if _, err := subscription.conn.Write(msg); err != nil {
+							logx.Errorf("fail to sendMessage to[%s], topic=%s", sessionId, path)
+						}
 					}
-				}
-				return true
+					return true
+				})
 			})
 		}
 	}
@@ -439,6 +442,25 @@ type TopicMessageInfo struct {
 	Data       map[string]any   `json:"data,omitempty"`
 	Dt         map[string]int64 `json:"dt,omitempty"`
 	Payload    string           `json:"payload,omitempty"`
+}
+
+func onWsMsg(message serviceApi.WebsocketMessage, consumer func([]byte)) {
+	needQueryDB := false
+	for _, f := range message.Def.Fields {
+		if f.LastTime < 1 {
+			needQueryDB = true
+			break
+		}
+	}
+	if needQueryDB {
+		go func() {
+			data := processWsMsg(message)
+			consumer(data)
+		}()
+	} else {
+		data := processWsMsg(message)
+		consumer(data)
+	}
 }
 
 func processWsMsg(message serviceApi.WebsocketMessage) []byte {
@@ -457,28 +479,29 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 				if (isRelation && name == constants.SysFieldCreateTime) || name == constants.SystemSeqTag || name == constants.SysFieldID {
 					continue
 				}
-				var v any
+				var v string
 				has := false
 				if hasDm {
 					v, has = dm[name]
 				}
-				if lv := f.GetLastValue(); !has && lv != nil {
-					if f.Type == types.FieldTypeDatetime {
-						if date, isDate := lv.(time.Time); isDate {
-							v = date.UnixMilli()
-						} else if long, isLong := lv.(int64); isLong {
-							v = long
-						}
-					} else {
-						v = lv
-					}
+				if lv := f.GetLastValue(); !has && lv != "" {
+					v = lv
 				}
-				if v != nil {
+				if v != "" {
 					switch f.Type {
-					case types.FieldTypeDouble, types.FieldTypeLong:
-						v = fmt.Sprint(v)
+					case types.FieldTypeInteger:
+						N, er := strconv.ParseInt(v, 10, 64)
+						if er == nil {
+							data[name] = N
+						}
+					case types.FieldTypeDatetime:
+						ct := datetimeutils.ParseTimestamp(v)
+						if ct > 0 {
+							data[name] = ct
+						}
+					default:
+						data[name] = v
 					}
-					data[name] = v
 				}
 				if lt := f.GetLastTime(); lt > 0 {
 					dt[name] = lt

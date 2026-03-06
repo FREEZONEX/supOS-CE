@@ -52,21 +52,17 @@ func NewCreateGrafanaByUnsLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 	}
 }
 func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonResult, error) {
-	uns := l.unsDefinitionService.GetDefinitionByAlias(alias)
-	if uns == nil {
-		return &types.JsonResult{Code: 400, Msg: I18nUtils.GetMessage("uns.file.not.exist")}, nil
+	def := l.unsDefinitionService.GetDefinitionByAlias(alias)
+	if def == nil {
+		return &types.JsonResult{Code: 400, Msg: I18nUtils.GetMessageWithCtx(l.ctx, "uns.file.not.exist")}, nil
 	}
+	uns := def.CreateTopicDto
 	jdbcType := types.SrcJdbcType(uns.DataSrcID)
 	columns := grafanautil.Fields2Columns(jdbcType, uns.Fields)
 	title := uns.Path
 	schema := "public"
-	table := uns.GetTable()
+	table := uns.Alias
 	tagNameCondition := ""
-
-	// 如果存在表字段名，调整表和条件
-	if strings.TrimSpace(uns.GetTbFieldName()) != "" {
-		tagNameCondition = fmt.Sprintf(" and %s='%d' ", constants.SystemSeqTag, uns.Id)
-	}
 	// 日志输出（Go中使用log包）
 	l.Logger.Debugf(">>>>> create grafana dashboard columns:%s,title:%s,schema:%s,table:%s,tagNameCondition:%s",
 		columns, title, schema, table, tagNameCondition)
@@ -110,7 +106,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 		*uns.WithFlags |= constants.UnsFlagWithDashboard
 	}
 
-	if err := l.unsAddService.CreateModelInstance(l.ctx, uns); err != nil {
+	if err := l.unsAddService.CreateModelInstance(l.ctx, &uns); err != nil {
 		fmt.Printf("Failed to create category model instance: %v\n", err)
 	}
 
@@ -134,7 +130,7 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 }
 func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns_old(alias string) (*types.JsonResult, error) {
 	// 1. 获取 UNS 定义
-	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, alias)
+	unsResp, err := l.unsQueryService.GetModelDefinition(l.ctx, &types.ModelDetailReq{}, alias, "")
 	if err != nil || unsResp == nil || unsResp.Data == nil {
 		l.Logger.Errorf("failed to get uns definition for alias %s: %v", alias, err)
 		return &types.JsonResult{

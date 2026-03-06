@@ -9,13 +9,6 @@ import (
 	"strings"
 )
 
-func (c *CreateTopicDto) GetFieldDefines() *FieldDefines {
-	if c.FieldDefines == nil && len(c.Fields) > 0 {
-		c.SetFields(c.Fields)
-	}
-	return c.FieldDefines
-}
-
 // GetId 获取 Id
 func (c *CreateTopicDto) GetId() int64 {
 	return c.Id
@@ -257,19 +250,6 @@ func (c *CreateTopicDto) GetTimestampField() string {
 	return ""
 }
 
-// GetQualityField returns the quality field name
-func (c *CreateTopicDto) GetQualityField() string {
-	if len(c.Fields) > 2 && c.DataSrcID > 0 {
-		// Find quality field (implementation depends on FieldUtils and dataSrcId.typeCode)
-		for _, f := range c.Fields {
-			if f.Name == constants.QosField || f.Name == "quality" {
-				return f.Name
-			}
-		}
-	}
-	return ""
-}
-
 // GetTable returns the table name
 func (c *CreateTopicDto) GetTable() string {
 	if c.TableName != "" {
@@ -481,4 +461,18 @@ func (c *CreateTopicDto) GetSrcJdbcType() SrcJdbcType {
 
 func (c *CreateTopicDto) GetStatus() *int16 {
 	return &c.Status
+}
+func (c *CreateTopicDto) GetFlagsMap() map[int32]*bool {
+	fm := make(map[int32]*bool, 16)
+	fm[constants.UnsFlagWithFlow] = c.AddFlow
+	fm[constants.UnsFlagWithSave2DB] = c.Save2Db
+	fm[constants.UnsFlagWithDashboard] = c.AddDashBoard
+	fm[constants.UnsFlagRetainTableWhenDelInstance] = c.RetainTableWhenDeleteInstance
+	fm[constants.UnsFlagWithSubscribeEnable] = c.SubscribeEnable
+	if accessLevel := c.AccessLevel; accessLevel != "" {
+		fm[constants.UnsFlagAccessLevelReadOnly] = base.V2p(accessLevel == constants.AccessLevelReadOnly)
+		fm[constants.UnsFlagAccessLevelReadWrite] = base.V2p(accessLevel == constants.AccessLevelReadWrite)
+	}
+
+	return fm
 }

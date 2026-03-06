@@ -1,0 +1,130 @@
+info(
+    title: "Group Management"
+    desc: "Manage resource groups"
+    author: "System Generated"
+    version: "v1"
+)
+
+@server(
+    group: supos/group
+    prefix: /inter-api/supos/group
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "查询组列表"
+    @handler get
+    get / (GroupQuery) returns ([]GroupVO)
+
+    @doc "根据类型查询组列表"
+    @handler getByType
+    get /by-type (GroupByTypeQuery) returns (GroupPageResultVO)
+
+    @doc "创建组"
+    @handler post
+    post / (SaveGroupReq) returns (JsonResult)
+
+    @doc "更新组"
+    @handler put
+    put / (SaveGroupReq) returns (JsonResult)
+
+    @doc "根据ID删除组"
+    @handler delete
+    delete /:id (GroupIDReq) returns (JsonResult)
+
+    @doc "批量删除组"
+    @handler batchDelete
+    delete /batch (GroupBatchDeleteReq) returns ()
+
+    @doc "操作分组数据（移入移出）"
+    @handler operationGroup
+    post /operationGroup (OperationGroupReq) returns (JsonResult)
+
+    @doc "置顶分组"
+    @handler operationGroupTop
+    post /operationGroupTop (OperationGroupTopReq) returns (JsonResult)
+}
+
+type (
+    GroupQuery {
+        Type *int16 `form:"type,optional"`
+        Name *string `form:"name,optional"`
+        PageInfo
+    }
+
+    GroupByTypeQuery {
+        Type int16 `form:"type"` //1-sourceflow 2-eventflow 3-datasource
+        Name *string `form:"name,optional"`
+        PageInfo                 // 分页参数
+    }
+
+    GroupVO {
+        ID int64 `json:"id"`
+        Type *int16 `json:"type,optional"`
+        Name string `json:"name"`
+        Description string `json:"description,optional"`
+        Sort int32 `json:"sort,optional"`
+        UpdateAt string `json:"updateAt,optional"`
+        CreateAt string `json:"createAt,optional"`
+        Creator     string `json:"creator,optional,omitzero"`
+    }
+
+    GroupPageResultVO {
+        PageNo int64 `json:"pageNo"`
+        PageSize int64 `json:"pageSize"`
+        Total int64 `json:"total"`
+        Code int64 `json:"code"`
+        Data []GroupVO `json:"data"`
+    }
+
+    SaveGroupReq {
+        ID *int64 `json:"id,string,optional"`
+        Type *int16 `json:"type,optional"`
+        Name *string `json:"name,optional"`
+        Description *string `json:"description,optional"`
+        Sort *int32 `json:"sort,optional"`
+    }
+
+    GroupIDReq {
+        ID int64 `path:"id"`
+    }
+
+    GroupBatchDeleteReq {
+        IDs []int64 `json:"ids"`
+    }
+
+    OperationGroupReq {
+        ID *int64 `json:"id,string"`//组ID
+        BizId *string `json:"bizId"`//业务ID
+        Status *bool `json:"status"`// true移入，false移出
+    }
+
+    GroupPageRequest {
+        GroupType int64 `form:"groupType,optional"`
+        GroupId int64 `form:"groupId,optional"`
+        K string `form:"k,optional"`
+        PageNo int64 `form:"pageNo,default=1"`
+        PageSize int64 `form:"pageSize,default=10"`
+        Category string `form:"category,optional"` //分类 group-分组 file-文件
+        Creator     string `form:"creator,optional"`
+        OrderCode string `form:"orderCode,optional"` // 排序字段
+        IsAsc     bool   `form:"isAsc,optional"`     // 是否升序
+    }
+
+    GroupBizVO {
+        ID string `json:"id"`
+        Category string `json:"category,optional"` //分类 group-分组 file-文件
+        GroupType *int64 `json:"groupType,optional"`
+        Name string `json:"name"`
+        Description string `json:"description,optional"`
+        Sort int32 `json:"sort,optional"`
+        GroupId *int64 `json:"groupId,optional"`
+        CreateAt int64 `json:"createAt,optional"`
+        Creator     string `json:"creator,optional,omitzero"`
+        HasChildren bool  `json:"hasChildren,optional"`
+    }
+
+    OperationGroupTopReq {
+        ID *int64 `json:"id,string"`//组ID
+        Status *bool `json:"status"`// true置顶（sort字段设置为1），false取消置顶(sort字段设置为0)
+    }
+)

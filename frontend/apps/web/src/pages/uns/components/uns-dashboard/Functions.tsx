@@ -10,6 +10,7 @@ import { useMenuNavigate } from '@/hooks';
 import { useThemeStore } from '@/stores/theme-store.ts';
 import styles from './index.module.scss';
 import { useActivate } from '@/contexts/tabs-lifecycle-context.ts';
+import NewApp from '@/pages/uns/components/uns-dashboard/NewApp.tsx';
 
 const Functions = () => {
   useActivate(() => {
@@ -20,7 +21,16 @@ const Functions = () => {
   }, []);
   const formatMessage = useTranslate();
   const { homeTree } = useBaseStore((state) => ({
-    homeTree: state.homeTree,
+    homeTree: state.homeTree?.map((m) => {
+      if (m.id === '4') {
+        return {
+          ...m,
+          children: [{ id: '-99999' }].concat(m?.children || []),
+        };
+      } else {
+        return m;
+      }
+    }),
   }));
   const list = homeTree?.map?.((item) => {
     if (item.children && item.children.length) {
@@ -39,10 +49,13 @@ const Functions = () => {
   const handleClickItem = (item: ResourceProps) => {
     handleNavigate(item);
   };
+
   return (
     <Flex vertical gap={24} style={{ marginBottom: 24 }}>
       <Flex justify="space-between" align="flex-start" gap={16}>
-        <ComEllipsis className={styles['title']}>{formatMessage('uns.functions')}</ComEllipsis>
+        <ComEllipsis className={styles['title']} style={{ lineHeight: 1 }}>
+          {formatMessage('uns.functions')}
+        </ComEllipsis>
         <Segmented<string>
           style={{ overflowX: 'auto' }}
           options={homeTree?.map((item) => ({
@@ -63,6 +76,13 @@ const Functions = () => {
             let unsMenuId;
             if (c?.url === '/uns') {
               unsMenuId = 'home_route_uns';
+            }
+            if (c?.id === '-99999') {
+              return (
+                <div key={c.id} className={styles['functions-item']}>
+                  <NewApp />
+                </div>
+              );
             }
             return (
               <div id={unsMenuId} key={c.id} className={styles['functions-item']}>

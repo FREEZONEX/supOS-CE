@@ -22,7 +22,7 @@ func NewVQT[T any](timestamp, quality int64, value T) *VQT[T] {
 }
 
 // GetVQTJSON generates VQT JSON string from topic metadata
-func GetVQTJSON(t, q int64, v any, metaDef *types.CreateTopicDto) (string, error) {
+func GetVQTJSON(t, q int64, v any, metaDef *types.UnsDefinition) (string, error) {
 	vqtMap := GetVQTMap(t, q, v, metaDef)
 	data, err := json.Marshal(vqtMap)
 	if err != nil {
@@ -32,7 +32,7 @@ func GetVQTJSON(t, q int64, v any, metaDef *types.CreateTopicDto) (string, error
 }
 
 // GetVQTMap generates VQT map from topic metadata
-func GetVQTMap(t, q int64, v any, metaDef *types.CreateTopicDto) map[string]any {
+func GetVQTMap(t, q int64, v any, metaDef *types.UnsDefinition) map[string]any {
 	vqt := make(map[string]any)
 
 	timestampField := metaDef.GetTimestampField()

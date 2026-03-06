@@ -6,19 +6,17 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/loggerlevel"
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/diskqueue"
 	"backend/share/spring"
 	"context"
-	"encoding/json"
-	"fmt"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
-	"google.golang.org/protobuf/proto"
 )
 
 type UnsQueueDataSinkService struct {
@@ -38,44 +36,12 @@ func init() {
 	})
 }
 
-func (s *UnsQueueDataSinkService) Sink(unsData []serviceApi.TopicMessage) {
-	if len(unsData) == 0 {
-		return
+func (s *UnsQueueDataSinkService) Sink(ctx context.Context, unsData []serviceApi.TopicMessage) {
+	if len(unsData) > 0 {
+		// 写入本地磁盘队列
+		binData := encodeMsg(ctx, unsData)
+		_ = s.queue.Put(binData) //TODO: 磁盘满的处理
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			unsDataJson, _ := json.Marshal(unsData)
-			s.log.Errorf("HandleThrow|error=%#v| [%d] unsData=%v", err, len(unsDataJson), b2s(unsDataJson))
-		}
-	}()
-
-	msgList := make([]*TopicMessage, len(unsData))
-	for i, d := range unsData {
-		dL := make([]*TopicMessage_DataArray, len(d.Data))
-		for n, vm := range d.Data {
-			dataMap := make(map[string]string, len(vm))
-			for k, v := range vm {
-				var vStr string
-				if str, ok := v.(string); ok {
-					vStr = str
-				} else if v != nil {
-					vStr = fmt.Sprint(v)
-				}
-				dataMap[k] = vStr
-			}
-			dL[n] = &TopicMessage_DataArray{Value: dataMap}
-		}
-		msgList[i] = &TopicMessage{Id: d.UnsId, DataSrcId: int32(d.DataSrcId), Data: dL}
-	}
-	list := TopicMessageList{Messages: msgList}
-	binData, err := proto.Marshal(&list) //TODO: 控制 binData 不超过 maxMsgSize
-	if err != nil {
-		s.log.Error(err)
-		return
-	}
-	// 写入本地磁盘队列
-	_ = s.queue.Put(binData) //TODO: 磁盘满的处理
-
 }
 
 func (s *UnsQueueDataSinkService) OnEventShutdown(evt *event.ContextClosedEvent) {
@@ -86,7 +52,7 @@ func (s *UnsQueueDataSinkService) OnEventShutdown(evt *event.ContextClosedEvent)
 
 func (s *UnsQueueDataSinkService) OnEventStart100(evt *event.ContextRefreshedEvent) {
 	s.defService = spring.GetBean[*UnsDefinitionService]()
-	dir := constants.LogPath + "/queue"
+	dir := constants.RootPath + "/queue"
 	err := os.MkdirAll(dir, 666)
 	if err != nil {
 		panic(err)
@@ -104,7 +70,7 @@ const maxWait time.Duration = 1 * time.Second
 func (s *UnsQueueDataSinkService) fetchData() {
 	tk := time.NewTicker(maxWait)
 	var size = 0
-	var msgToSend = make([]*TopicMessage, 0, fetchSize)
+	var msgToSend = make([]serviceApi.TopicMessage, 0, fetchSize)
 	for s.run {
 		select {
 		case <-tk.C:
@@ -114,23 +80,18 @@ func (s *UnsQueueDataSinkService) fetchData() {
 				size = 0
 				s.persistence(msgToSend)
 				msgToSend = msgToSend[:0]
+			} else if loggerlevel.DoStats {
+				logx.Stat("没数据")
 			}
 		case msg := <-s.queue.ReadChan():
-			var list TopicMessageList
-			er := proto.Unmarshal(msg, &list)
-			if er != nil {
-				s.log.Error("UnmarshalErr", er)
-				continue
-			}
-			msgs := list.Messages
+			var msgs []serviceApi.TopicMessage
+			decodeMsg(msg, &msgs)
 			if len(msgs) == 0 {
 				continue
 			}
 			for _, m := range msgs {
-				if m != nil {
-					msgToSend = append(msgToSend, m)
-					size += len(m.Data)
-				}
+				msgToSend = append(msgToSend, m)
+				size += len(m.Data)
 			}
 			if size >= fetchSize {
 				//上车
@@ -141,7 +102,7 @@ func (s *UnsQueueDataSinkService) fetchData() {
 		}
 	}
 }
-func (s *UnsQueueDataSinkService) persistence(msgLit []*TopicMessage) {
+func (s *UnsQueueDataSinkService) persistence(msgLit []serviceApi.TopicMessage) {
 	if s.persistentServiceMap == nil {
 		s.once.Do(func() {
 			s.persistentServiceMap = base.MapArrayToMap(spring.GetBeansOfType[serviceApi.IPersistentService](),
@@ -150,14 +111,12 @@ func (s *UnsQueueDataSinkService) persistence(msgLit []*TopicMessage) {
 				})
 		})
 	}
-	dsMap := base.MapAndFilterGroupBy[*TopicMessage, serviceApi.UnsData, types.SrcJdbcType](msgLit, func(e *TopicMessage) (ok bool, id types.SrcJdbcType, dat serviceApi.UnsData) {
-		def := s.defService.GetDefinitionById(e.Id)
+	dsMap := base.MapAndFilterGroupBy[serviceApi.TopicMessage, serviceApi.UnsData, types.SrcJdbcType](msgLit, func(e serviceApi.TopicMessage) (ok bool, id types.SrcJdbcType, dat serviceApi.UnsData) {
+		def := s.defService.GetDefinitionById(e.UnsId)
 		if def == nil || !base.P2v(def.Save2Db) {
 			return
 		}
-		return true, types.SrcJdbcType(e.DataSrcId), serviceApi.UnsData{Uns: def, Data: base.Map(e.Data, func(e *TopicMessage_DataArray) map[string]string {
-			return e.Value
-		})}
+		return true, e.DataSrcId, serviceApi.UnsData{Uns: def, Data: e.Data}
 	})
 	for ds, data := range dsMap {
 		sv := s.persistentServiceMap[ds]

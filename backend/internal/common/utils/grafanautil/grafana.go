@@ -21,6 +21,7 @@ import (
 	"backend/internal/common/constants"
 	grafanadto "backend/internal/common/dto/grafana"
 
+	"github.com/buger/jsonparser"
 	"github.com/zeromicro/go-zero/core/logx"
 
 	"github.com/google/uuid"
@@ -271,7 +272,7 @@ func CreateDashboard(uid string, ctx context.Context, table, tagNameCondition st
 	dbParams["sys_field_create_time"] = ct
 	dashboardJSON := FormatTemplateMap(template, dbParams)
 	logger := logx.WithContext(ctx)
-	logger.Debug("创建 dashboardJson 请求: ", dashboardJSON)
+	logger.Info("创建 dashboardJson 请求: ", dashboardJSON)
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBufferString(dashboardJSON))
 	if err != nil {
@@ -280,7 +281,7 @@ func CreateDashboard(uid string, ctx context.Context, table, tagNameCondition st
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logger.Debug("创建 dashboardJson 返回结果: ", string(body))
+	logger.Info("创建 dashboardJson 返回结果: ", string(body))
 
 	return nil
 }
@@ -397,11 +398,7 @@ func CreateTimeSeriesListDashboard(ctx context.Context, srcJdbcType types.SrcJdb
 	for i, topic := range topics {
 		columns := Fields2Columns(srcJdbcType, topic.Fields)
 		schema := "public"
-		table := topic.GetTable()
-		if dot := strings.Index(table, "."); dot > 0 {
-			schema = table[:dot]
-			table = table[dot+1:]
-		}
+		table := topic.Alias
 
 		// Panel's x-axis position
 		gridPosX := i * 8
@@ -548,7 +545,7 @@ func SetLanguage(ctx context.Context, language string) error {
 // Create creates a Grafana dashboard from JSON.
 func Create(ctx context.Context, dashboardJSON string) (bool, error) {
 	logger := logx.WithContext(ctx)
-	logger.Debugf("grafana 创建 dashboards 请求: %s", dashboardJSON)
+	logger.Infof("grafana 创建 dashboards 请求: %s", dashboardJSON)
 
 	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBufferString(dashboardJSON))
 	if err != nil {
@@ -557,7 +554,7 @@ func Create(ctx context.Context, dashboardJSON string) (bool, error) {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	logger.Debugf("grafana 创建 dashboards 返回结果: %s", string(body))
+	logger.Infof("grafana 创建 dashboards 返回结果: %s", string(body))
 
 	return resp.StatusCode == http.StatusOK, nil
 }
@@ -580,7 +577,23 @@ func Get(ctx context.Context, uuid string) (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", nil
 	}
-	return string(body), nil
+	dashboard, _, _, _ := jsonparser.Get(body, "dashboard")
+	if len(dashboard) == 0 {
+		return "", nil
+	}
+	var dashMap = map[string]any{}
+	err = json.Unmarshal(dashboard, &dashMap)
+	if err != nil {
+		return "", err
+	}
+	delete(dashMap, "id")
+	var rsMap = make(map[string]any, 4)
+	rsMap["dashboard"] = dashMap
+	rsMap["folderUid"] = ""
+	rsMap["message"] = ""
+	rsMap["overwrite"] = true
+	rsJson, _ := json.Marshal(rsMap)
+	return string(rsJson), nil
 }
 
 // Helper functions

@@ -6,6 +6,7 @@ import (
 	"backend/internal/common/errors"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net"
 	"net/url"
@@ -172,14 +173,15 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 		return errors.NewBuzError(500, "menu.save.failed")
 	}
 	for _, existShowName := range existShowNames {
-		if existShowName.Name != menuDto.Name {
-			return errors.NewBuzError(500, "menu.showname.exist")
+		if existShowName.Name == menuDto.Name {
+			log.Printf("菜单已经存在： %s", menuDto.ShowName)
+			return nil
 		}
 	}
 
 	// 6. 根据 openType 调整路径
 	if menuDto.OpenType != 2 {
-		path = "/third-apps/" + serviceName + path
+		path = "/apps/" + serviceName + path
 	}
 
 	// 7. 创建或更新路由

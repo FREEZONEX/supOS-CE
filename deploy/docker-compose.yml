@@ -4,7 +4,7 @@ networks:
 
 services:
   frontend:
-    image: tier0/tier0-frontend:1.0.0-R12
+    image: tier0/tier0-frontend:1.0.1-R8
     container_name: frontend
     ports:
       - "3010:3000"
@@ -32,7 +32,7 @@ services:
       - edge_network
     restart: always
   uns:
-    image: tier0/tier0-backend:1.0.0-R12
+    image: tier0/tier0-backend:1.0.1-R8
     container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}
@@ -74,6 +74,8 @@ services:
       - UNS_ADD_BATCH_SIZE=1000
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
+      - ${VOLUMES_PATH}/edge/attachment/:/app/go-edge/attachment/
+      - ${VOLUMES_PATH}/edge/apps/:/app/data/apps/
       - /etc/docker/certs:/certs
     ports:
       - "18998:8080"
@@ -83,6 +85,8 @@ services:
       postgresql:
         condition: service_healthy
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   marimo:
     image: suposce/marimo:latest
     container_name: marimo
@@ -268,19 +272,26 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
         reservations:
           memory: 512M
     environment:
       service_logo: keycloak-original.svg
+      JAVA_OPTS: >-
+        -Xms512m
+        -Xmx1g
+        -XX:MaxMetaspaceSize=256m
+        -XX:MetaspaceSize=256m
+        -Xss512k
+        -XX:+UseG1GC
       service_description: aboutus.keycloakDescription
       service_redirect_url: /keycloak/home/
       service_account: admin
       service_password: tier0
-      KC_SSL_REQUIRED: none # 不要求 SSL
-      KC_PROXY: passthrough # 设置代理模式
-      KC_HOSTNAME: "${ENTRANCE_DOMAIN}" # 指定主机名
-      KC_FRONTEND_URL: "${BASE_URL}" # 设置前端 URL
+      KC_SSL_REQUIRED: none  # 不要求 SSL
+      KC_PROXY: passthrough                       # 设置代理模式
+      KC_HOSTNAME: "${ENTRANCE_DOMAIN}"              # 指定主机名
+      KC_FRONTEND_URL: "${BASE_URL}"  # 设置前端 URL
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: tier0
       KC_COOKIE_SECURE: false # 禁用安全 cookie
@@ -367,6 +378,11 @@ services:
       KONG_PLUGINS: bundled,supos-auth-checker,supos-url-transformer
       KONG_PG_POOL_SIZE: 2
       KONG_LOG_LEVEL: error
+      KONG_NGINX_HTTP_CLIENT_MAX_BODY_SIZE: 2048m
+      KONG_NGINX_PROXY_CLIENT_MAX_BODY_SIZE: 2048m
+      KONG_NGINX_HTTP_PROXY_CONNECT_TIMEOUT: 300000
+      KONG_NGINX_HTTP_PROXY_SEND_TIMEOUT: 300000
+      KONG_NGINX_HTTP_PROXY_READ_TIMEOUT: 300000
     volumes:
       - ${VOLUMES_PATH}/kong/certificationfile:/etc/kong/ssl:ro
       - ${VOLUMES_PATH}/kong/kong_config.yml:/etc/kong/kong_config.yml

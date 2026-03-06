@@ -5,13 +5,14 @@ import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
 	"backend/internal/common/enums"
-	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
 	"context"
 	"strings"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 // buildCategoryFolderDto 构建分类文件夹DTO
@@ -26,7 +27,7 @@ func buildCategoryFolderDto(parentAlias *string, mountType *int16, mountSource *
 		dto.MountType = mountType
 	} else {
 		// 没有父别名的情况
-		dto.Alias = PathUtil.GenerateAliasWithRandom("_" + strings.ToLower(fdt.Name()) + "_")
+		dto.Alias = "_" + strings.ToLower(fdt.Name()) + "_"
 		dto.ParentAlias = nil
 	}
 
@@ -43,8 +44,15 @@ func buildCategoryFolderDto(parentAlias *string, mountType *int16, mountSource *
 
 // appendCategoryFolders 追加分类文件夹
 func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types.CreateTopicDto, errorTip map[string]string) []*types.CreateTopicDto {
+	logx.WithContext(ctx).Debugfn(func() any {
+		return "before:uns: [" + strings.Join(base.Map(dtos, func(e *types.CreateTopicDto) string {
+			return e.Alias
+		}), ",") + "]"
+	})
 	// 收集所有非空的 parentAlias
+	aliasMap := make(map[string]*types.CreateTopicDto, len(dtos))
 	parentAliasList := base.MapKeys(base.MapArrayToMap[*types.CreateTopicDto, string, bool](dtos, func(dto *types.CreateTopicDto) (ok bool, k string, v bool) {
+		aliasMap[dto.Alias] = dto
 		pa := dto.ParentAlias
 		if pa == nil {
 			return false, "", false
@@ -62,6 +70,11 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 		parentUnsPoList, err := u.unsMapper.ListByAlias(db, parentAliasList)
 		if err == nil && len(parentUnsPoList) > 0 {
 			for _, unsPo := range parentUnsPoList {
+				if uns, has := aliasMap[unsPo.Alias]; has {
+					// 覆盖这俩不允许修改的字段
+					uns.DataType = unsPo.DataType
+					uns.ParentDataType = unsPo.ParentDataType
+				}
 				parentAliasMap[unsPo.Alias] = unsPo
 			}
 		}
@@ -84,12 +97,6 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 		categoryFolderMap[""] = rootUnsPoList // Go 中用空字符串代替 null
 	}
 
-	// 创建 alias 到 CreateTopicDto 的映射
-	aliasMap := make(map[string]*types.CreateTopicDto)
-	for _, dto := range dtos {
-		aliasMap[dto.Alias] = dto
-	}
-
 	newCategoryAliasMap := make(map[string]*types.CreateTopicDto)
 
 	// 使用新的切片来存储有效元素，而不是在迭代中删除
@@ -101,7 +108,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			// 验证 parentDataType 是否有效
 			if topicDto.ParentDataType == nil || *topicDto.ParentDataType < 1 || *topicDto.ParentDataType > 3 {
 				if topicDto.Id == 0 {
-					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.file.type.invalid")
+					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.file.type.invalid")
 				} else {
 					validTopicDtos = append(validTopicDtos, topicDto)
 				}
@@ -109,7 +116,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			}
 			// 判断父级类型和文件类型是否匹配
 			if !enums.IsTypeMatched(topicDto.ParentDataType, topicDto.DataType) {
-				errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.category.type.not.eq")
+				errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.category.type.not.eq")
 				continue
 			}
 			parentAlias := base.P2v(topicDto.ParentAlias)
@@ -119,7 +126,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			if parentUnsPo != nil && parentUnsPo.DataType != nil {
 				// 检查文件类型和父级文件夹类型是否一致
 				if *parentUnsPo.DataType > 0 && *parentUnsPo.DataType != PDT {
-					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.category.type.not.eq")
+					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.category.type.not.eq")
 					continue
 				}
 				if *parentUnsPo.DataType == PDT {
@@ -133,7 +140,7 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			// 如果当前列表中已存在父级文件夹，并且类型为归类文件夹
 			if parentDto != nil && parentDto.DataType != nil {
 				if *parentDto.DataType > 0 && *parentDto.DataType != PDT {
-					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.category.type.not.eq")
+					errorTip[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.category.type.not.eq")
 					continue
 				}
 				if *parentDto.DataType == PDT {
@@ -230,6 +237,10 @@ func (u *UnsAddService) appendCategoryFolders(ctx context.Context, dtos []*types
 			validTopicDtos = append(validTopicDtos, categoryDto)
 		}
 	}
-
+	logx.WithContext(ctx).Debugfn(func() any {
+		return "After:uns: [" + strings.Join(base.Map(validTopicDtos, func(e *types.CreateTopicDto) string {
+			return e.Alias
+		}), ",") + "]"
+	})
 	return validTopicDtos
 }

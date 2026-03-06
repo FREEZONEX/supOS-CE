@@ -14,6 +14,15 @@ import (
 // 模板实例附件上传
 func AttachmentUploadHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		const maxBodySize = 10 << 20
+		r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+
+		if err := r.ParseMultipartForm(maxBodySize); err != nil { // 10MB max memory
+			httpx.ErrorCtx(r.Context(), w, errors.Parameter.WithMsg("uns.importDocumentMax"))
+			return
+		}
+
 		var req types.AttachmentUploadReq
 		if err := httpx.Parse(r, &req); err != nil {
 			result.Http(w, r, nil, errors.Parameter.WithMsg("入参不正确:"+err.Error()))

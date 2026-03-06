@@ -17,7 +17,7 @@ type sendBatcher interface {
 	SendBatch(context.Context, *pgx.Batch) pgx.BatchResults
 }
 
-func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.CreateTopicDto, tableInfoMap map[string]*TableInfo) []error {
+func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []types.UnsInfo, tableInfoMap map[string]*TableInfo) []error {
 	if len(topics) == 0 {
 		return nil
 	}
@@ -46,7 +46,7 @@ func BatchCreateTables(conn sendBatcher, defaultSchema string, topics []*types.C
 			alterTableSQLs = append(alterTableSQLs, createTableSQL)
 			if uns.GetSrcJdbcType().TypeCode() == constants.TimeSequenceType {
 				ct := uns.GetTimestampField()
-				timeScaleDbCreateTableSQL := "SELECT create_hypertable('" + dbName + ".\"" + tableName + "\"', '" + ct + "',chunk_time_interval => INTERVAL '7 day')"
+				timeScaleDbCreateTableSQL := "SELECT create_hypertable('" + dbName + ".\"" + tableName + "\"', '" + ct + "',chunk_time_interval => INTERVAL '1 day')"
 				hyperTableSQLs = append(hyperTableSQLs, timeScaleDbCreateTableSQL)
 			}
 		}

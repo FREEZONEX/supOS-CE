@@ -5,9 +5,12 @@ import (
 	"backend/internal/common/utils/JsonUtil"
 	"backend/internal/types"
 	"backend/share/base"
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -64,6 +67,7 @@ type UnsNamespace struct {
 	PathName            string `gorm:"-" json:"pathName"`
 	OldPath             string `gorm:"-" json:"oldPath"`
 	CountExistsSiblings int64  `gorm:"-" json:"countExistsSiblings"`
+	tmField             string `gorm:"-"`
 }
 
 func (u *UnsNamespace) String() string {
@@ -83,7 +87,22 @@ func (u *UnsNamespace) GetTbFieldName() string {
 	}
 	return ""
 }
+func (u *UnsNamespace) GetTimestampField() string {
+	if u.tmField != "" {
+		return u.tmField
+	}
 
+	if len(u.Fields) > 0 {
+		// Find timestamp field (implementation depends on FieldUtils)
+		for _, f := range u.Fields {
+			if f.Name == constants.SysFieldCreateTime || f.Name == "timestamp" {
+				u.tmField = f.Name
+				return u.tmField
+			}
+		}
+	}
+	return ""
+}
 func (u *UnsNamespace) GetLayRec() string {
 	return u.LayRec
 }
@@ -216,16 +235,72 @@ type UnsPo struct {
 }
 type Fields []*types.FieldDefine
 
+var _unsFieldsMap = parseTagFields(types.FieldDefine{}, "json")
+
+// UnmarshalJSON 实现自定义的 JSON 反序列化,兼容历史数据的 "maxLen":"512" 和新的 "maxLen":512
+func (f *Fields) UnmarshalJSON(data []byte) error {
+	dec := json.NewDecoder(bytes.NewReader(data))
+	arrToken, er := dec.Token()
+	if er != nil {
+		return er
+	} else if arrToken != json.Delim('[') {
+		return fmt.Errorf(`json: cannot unmarshal array into Go value of type %v`, arrToken)
+	}
+	for dec.More() {
+		obj, err := dec.Token()
+		if err != nil {
+			return err
+		} else if obj != json.Delim('{') {
+			return fmt.Errorf(`json: cannot unmarshal object by token: %v`, obj)
+		}
+		fieldDefine := &types.FieldDefine{}
+		fs := reflect.ValueOf(fieldDefine).Elem()
+		for dec.More() {
+			tk, err := dec.Token()
+			if err != nil {
+				continue
+			}
+			fieldName, ok := tk.(string)
+			if !ok {
+				continue
+			}
+			var raw json.RawMessage
+			err = dec.Decode(&raw)
+			if err != nil {
+				continue
+			}
+			if i, has := _unsFieldsMap[fieldName]; has {
+				if len(raw) > 2 && raw[0] == '"' && raw[len(raw)-1] == '"' {
+					raw = raw[1 : len(raw)-1]
+				}
+				setFieldValue(fs.Field(i), fieldName, string(raw))
+			}
+		}
+		end, er := dec.Token()
+		if er != nil {
+			return er
+		} else if end != json.Delim('}') {
+			return fmt.Errorf(`json: cannot unmarshal object into Go value of type %v`, end)
+		}
+		*f = append(*f, fieldDefine)
+	}
+	_, er = dec.Token()
+	if er != nil {
+		return er
+	}
+	return nil
+}
 func (f *Fields) Scan(value interface{}) error {
 	if value == nil {
 		*f = nil
 		return nil
 	}
-	bytes, ok := value.([]byte)
+	jsonBytes, ok := value.([]byte)
 	if !ok {
 		return errors.New("failed to scan Fields")
 	}
-	return json.Unmarshal(bytes, f)
+	err := f.UnmarshalJSON(jsonBytes)
+	return err
 }
 
 func (f Fields) Value() (rs driver.Value, er error) {

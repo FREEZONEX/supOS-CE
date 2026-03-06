@@ -1,0 +1,29 @@
+# Java class files
+*.class
+
+# Maven / Gradle files
+target/
+build/
+.claude/
+docs/
+# IntelliJ IDEA specific files
+.idea/
+*.iml
+*.iws
+.claude_instructions
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+supos_*
+JavaClient-*
+
+.vscode/
+.continue/

@@ -37,16 +37,19 @@ func (l *GetUnsLogic) GetUns(req *types.GetDefRequest) (resp *types.CreateTopicD
 	if defService == nil {
 		defService = spring.GetBean[serviceApi.IUnsDefinitionService]()
 	}
+	var uns *types.UnsDefinition
 	if unicode.IsDigit(rune(req.Uns[0])) {
 		id, _ := strconv.ParseInt(req.Uns, 10, 64)
 		if id > 0 {
-			resp = defService.GetDefinitionById(id)
+			uns = defService.GetDefinitionById(id)
 		}
 	} else {
-		resp = defService.GetDefinitionByAlias(req.Uns)
+		uns = defService.GetDefinitionByAlias(req.Uns)
 	}
-	if resp == nil {
+	if uns == nil {
 		err = errors.New("UnsDefinitionNotFound")
+	} else {
+		resp = &uns.CreateTopicDto
 	}
 	return
 }

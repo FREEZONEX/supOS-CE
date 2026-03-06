@@ -253,7 +253,6 @@ const usePagination = <T>({
     }
   }, []);
 
-  // eslint-disable-next-line react-hooks/refs
   return {
     setLoading,
     loading,
@@ -278,7 +277,7 @@ const usePagination = <T>({
     setSearchParams,
     setPagination,
     clearData,
-    hasMore: !data.length || data.length < totalRef.current,
+    hasMore: !data?.length || (data?.length || 0) < totalRef.current,
     rowSelection: {
       selectedRowKeys,
       onChange: rowSelectionChange,

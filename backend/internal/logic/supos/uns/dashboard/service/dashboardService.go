@@ -114,7 +114,19 @@ func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) e
 	})
 	return s.RemoveByUnsAliasList(aliasList)
 }
-
+func (s *DashboardService) ListUnsExistsDashboards(aliasList []string) map[string]bool {
+	dashboardRefMapper := relationDB.DashboardRefMapper{}
+	refs, _ := dashboardRefMapper.SelectByUnsAliases(relationDB.GetDb(context.Background()), aliasList)
+	if len(refs) > 0 {
+		withDashUns := make(map[string]bool, len(refs))
+		for _, ref := range refs {
+			withDashUns[ref.UnsAlias] = true
+		}
+		return withDashUns
+	} else {
+		return nil
+	}
+}
 func (s *DashboardService) RemoveByUnsAliasList(aliasList []string) error {
 	s.logger.Infof("removing dashboards for topics: %v", aliasList)
 	dashboardRefMapper := relationDB.DashboardRefMapper{}
@@ -158,16 +170,15 @@ func (s *DashboardService) CreateDashboards(ctx context.Context, dashboardVos []
 		}
 
 	}
-	db := relationDB.GetDb(ctx)
 	dashboardMapper := relationDB.DashboardMapper{}
-	err := dashboardMapper.SaveBatch(db, dashboards)
+	err := dashboardMapper.Save(ctx, dashboards)
 	if err != nil {
 		s.logger.Errorf("failed to insert dashboard by event: %v", err)
 		return err
 	}
 	// 创建引用关系
 	dashboardRefMapper := relationDB.DashboardRefMapper{}
-	return dashboardRefMapper.SaveBatch(db, refers)
+	return dashboardRefMapper.SaveBatch(ctx, refers)
 }
 
 // OnEventCreateDashboard 通过事件创建 Dashboard

@@ -1,5 +1,6 @@
 import defaultIconUrl from '@/assets/home-icons/default.svg';
 import {
+  CUSTOM_APP_ICON_PRE,
   CUSTOM_MENU_ICON,
   CUSTOM_MENU_ICON_PRE,
   CUSTOM_MENU_ICON_PRE1,
@@ -66,6 +67,13 @@ export const getImageSrcByTheme = (theme: string, iconName?: string) => {
     return {
       themeImageUrl: `${CUSTOM_MENU_ICON}?objectName=${encodeURI(iconName)}`,
       defaultImageUrl: `${CUSTOM_MENU_ICON}?objectName=${encodeURI(iconName)}`,
+      fallbackImageUrl,
+    };
+  }
+  if (iconName?.includes(CUSTOM_APP_ICON_PRE)) {
+    return {
+      themeImageUrl: iconName,
+      defaultImageUrl: iconName,
       fallbackImageUrl,
     };
   }
@@ -147,3 +155,15 @@ export function isInIframe(iframeNames: string[], type: string = 'iframe') {
     return true;
   }
 }
+
+// 获取url完整地址
+export const getIconUrl = (iconUrl?: string) => {
+  if (!iconUrl) return '';
+  if (iconUrl?.includes(CUSTOM_MENU_ICON_PRE) || iconUrl?.includes(CUSTOM_MENU_ICON_PRE1)) {
+    return `${CUSTOM_MENU_ICON}?objectName=${encodeURI(iconUrl)}`;
+  }
+  if (iconUrl?.includes(CUSTOM_APP_ICON_PRE)) {
+    return `${iconUrl}`;
+  }
+  return `${STORAGE_PATH}${MENU_TARGET_PATH}/${encodeURI(iconUrl)}`;
+};

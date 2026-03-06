@@ -64,7 +64,7 @@ func (l *UnsQueryService) GetLastMsgByPath(path string) ([]byte, error) {
 	}
 	return l.getLastMsg(def), nil
 }
-func (l *UnsQueryService) getLastMsg(def *types.CreateTopicDto) []byte {
+func (l *UnsQueryService) getLastMsg(def *types.UnsDefinition) []byte {
 	wsMsg := serviceApi.WebsocketMessage{Def: def}
 	return processWsMsg(wsMsg)
 }

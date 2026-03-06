@@ -1,13 +1,11 @@
 package postgresql
 
 import (
-	"backend/internal/types"
 	"backend/share/base"
 	"fmt"
 )
 
-func DeduplicationById(def *types.CreateTopicDto, data []map[string]string) []map[string]string {
-	pks := def.GetPrimaryField()
+func DeduplicationById(pks []string, data []map[string]string) []map[string]string {
 	if len(pks) == 0 {
 		return data
 	}

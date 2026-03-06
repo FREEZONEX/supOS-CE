@@ -59,3 +59,12 @@ OssConf:
   PrivateBucketName:
   TemporaryBucketName:
   StorePath: /uns
+
+log:
+  ServiceName: uns
+  Mode: console
+  Path: logs
+  Level: debug
+  KeepDays: 7
+#max file size 100MB
+MaxBytes: 104857600

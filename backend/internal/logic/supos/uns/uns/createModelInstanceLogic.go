@@ -4,7 +4,9 @@
 package uns
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/logic/supos/uns/uns/service"
+	"backend/internal/repo/relationDB"
 	"backend/share/spring"
 	"context"
 
@@ -30,6 +32,16 @@ func NewCreateModelInstanceLogic(ctx context.Context, svcCtx *svc.ServiceContext
 }
 
 func (l *CreateModelInstanceLogic) CreateModelInstance(req *types.CreateTopicDto) (resp *types.CreateUnsResp, err error) {
+	if alias := req.Alias; alias != "" {
+		var mapper relationDB.UnsNamespaceRepo
+		po, _ := mapper.GetByAlias(relationDB.GetDb(l.ctx), alias)
+		if po != nil {
+			var result types.CreateUnsResp
+			result.Code = 400
+			result.Msg = I18nUtils.GetMessageWithCtx(l.ctx, "uns.alias.has.exist")
+			return &result, nil
+		}
+	}
 	resp = spring.GetBean[*service.UnsAddService]().CreateModelInstance(l.ctx, req)
 	return
 }

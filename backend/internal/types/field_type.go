@@ -70,6 +70,19 @@ func (f FieldType) DefaultValue() any {
 	}
 	return nil
 }
+func (f FieldType) DefaultValueStr() string {
+	switch f {
+	case FieldTypeInteger, FieldTypeLong, FieldTypeFloat, FieldTypeDouble:
+		return "0"
+	case FieldTypeBoolean:
+		return "false"
+	case FieldTypeDatetime:
+		return fmt.Sprintf("%d", time.Now().UnixMilli())
+	case FieldTypeString:
+		return ""
+	}
+	return ""
+}
 func (f FieldType) ZeroValue() any {
 	switch f {
 	case FieldTypeInteger:

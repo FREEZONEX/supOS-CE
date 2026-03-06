@@ -63,6 +63,7 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(list []types.UpdateFileDTO) (resp
 	notExists := base.Filter(aliasList, func(alias string) bool {
 		return defService.GetDefinitionByAlias(alias) == nil
 	})
+	ctx := l.ctx
 	errorFields := make(map[string]string, 8)
 	for _, dto := range list {
 		body := dto.Data
@@ -80,7 +81,7 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(list []types.UpdateFileDTO) (resp
 				if !strings.HasPrefix(k, constants.SystemFieldPrev) && !base.MapContainsKey(body, k) {
 					resp.Code, resp.Msg = 400, ""
 					resp.Data = &types.UnsDataResponseVo{NotExists: notExists, ErrorFields: errorFields}
-					errorFields[k] = I18nUtils.GetMessage("uns.write.value.relation.pk.is.null")
+					errorFields[k] = I18nUtils.GetMessageWithCtx(ctx, "uns.write.value.relation.pk.is.null")
 					return
 				}
 			}
@@ -90,14 +91,14 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(list []types.UpdateFileDTO) (resp
 		for fieldName, v := range body {
 			fieldDefine := fMap[fieldName]
 			if fieldDefine == nil {
-				errorFields[alias+"."+fieldName] = I18nUtils.GetMessage("uns.field.not.found")
+				errorFields[alias+"."+fieldName] = I18nUtils.GetMessageWithCtx(ctx, "uns.field.not.found")
 				continue
 			}
 			if fieldName == qosField {
 				if qosStr, ok := v.(string); ok {
 					hex, er := strconv.ParseInt(qosStr, 16, 64)
 					if er != nil {
-						errorFields[alias+"."+fieldName] = I18nUtils.GetMessage("uns.field.type.un.match")
+						errorFields[alias+"."+fieldName] = I18nUtils.GetMessageWithCtx(ctx, "uns.field.type.un.match")
 						continue
 					}
 					v = hex
@@ -110,10 +111,10 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(list []types.UpdateFileDTO) (resp
 		}
 		rs := finddatautil.FindDataList(newBody, 1, def.GetFieldDefines())
 		if fieldName := rs.ErrorField; len(fieldName) > 0 {
-			errorFields[alias+"."+fieldName] = I18nUtils.GetMessage("uns.field.type.un.match")
+			errorFields[alias+"."+fieldName] = I18nUtils.GetMessageWithCtx(ctx, "uns.field.type.un.match")
 		}
 		if fieldName := rs.ToLongField; len(fieldName) > 0 {
-			errorFields[alias+"."+fieldName] = I18nUtils.GetMessage("uns.field.value.out.of.size")
+			errorFields[alias+"."+fieldName] = I18nUtils.GetMessageWithCtx(ctx, "uns.field.value.out.of.size")
 		}
 		jsonBs, _ := json.Marshal(newBody)
 		msgConsumer.OnMessageByAlias(l.ctx, alias, string(jsonBs))

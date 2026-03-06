@@ -166,7 +166,7 @@ func (l *UnsLabelService) MakeSingleLabel(ctx context.Context, req *types.MakeSi
 	labelPo, err = l.labelMapper.SelectById(db, labelId)
 	resp = &types.BaseResult{}
 	if err != nil || labelPo == nil {
-		resp.Code, resp.Msg = 400, I18nUtils.GetMessage("uns.label.not.exists")
+		resp.Code, resp.Msg = 400, I18nUtils.GetMessageWithCtx(ctx, "uns.label.not.exists")
 		return
 	}
 	ref, _ := l.labelRefMapper.FindOne(db, labelId, unsId)
@@ -177,7 +177,7 @@ func (l *UnsLabelService) MakeSingleLabel(ctx context.Context, req *types.MakeSi
 		}
 		uns, _ := l.unsMapper.SelectById(db, unsId)
 		if uns == nil {
-			resp.Code, resp.Msg = 400, I18nUtils.GetMessage("uns.file.not.exist")
+			resp.Code, resp.Msg = 400, I18nUtils.GetMessageWithCtx(ctx, "uns.file.not.exist")
 			return
 		}
 		err = l.labelRefMapper.SaveOrIgnore(db, []*dao.UnsLabelRef{{LabelID: labelId, UnsID: unsId}})

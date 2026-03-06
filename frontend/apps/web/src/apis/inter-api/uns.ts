@@ -15,20 +15,6 @@ export const getModelInfo = async (params?: Record<string, unknown>) => api.get(
 export const getInstanceInfo = async (params?: Record<string, unknown>) =>
   api.get('/instance', { params, _noMessage: true }); // 查询模型字段声明
 export const deleteTreeNode = async (params?: Record<string, unknown>) => api.delete('', { params }); // 删除树节点
-export const getDashboardList = async (params?: Record<string, unknown>) =>
-  api.get('/dashboard', {
-    params,
-    [CustomAxiosConfigEnum.BusinessResponse]: true,
-  }); // 获取dashboard
-export const addDashboard = async (data: any) => api.post('/dashboard', data); // 新增dashboard
-export const editDashboard = async (data: any) => api.put('/dashboard', data); // 编辑dashboard
-export const getDashboardByUns = async (unsAlias: string, config?: any) =>
-  api.get(`/dashboard/getByUns?unsAlias=${unsAlias}`, config); // 获取dashboard信息
-export const bindDashboardForUns = async (data: any) => api.post(`/dashboard/bindUns`, data); // 获取dashboard信息
-// 置顶
-export const markDashboard = async (id: string) => api.post('/dashboard/mark', { id });
-export const unmarkDashboard = async (id: string) => api.delete(`/dashboard/unmark?id=${id}`);
-export const deleteDashboard = async (uid: string) => api.delete(`/dashboard/${uid}`); // 删除dashboard
 /**
  * 首次传入 checkSmallFile: true ,
  * 如果是小文件，直接返回下载内容
@@ -40,8 +26,12 @@ export const exportExcel = async (data: any) =>
   api.post('/importExport/export', data, {
     [CustomAxiosConfigEnum.NoCode]: true,
   }); //导出excel
+
+// 全局导出
+export const exportExcelGlobal = async (data: any) =>
+  api.post('/importExport/export/global', data, { responseType: 'blob', [CustomAxiosConfigEnum.NoCode]: true }); //导出excel
+
 export const searchRestField = async (data: any) => api.post('/searchRestField', data); // 从RestApi搜系模型字段
-export const getDashboardDetail = async (id: any) => api.get(`/dashboard/${id}`); // 获取dashboard详情
 
 // 报警列表页
 export const getAlertList = async (params?: Record<string, unknown>) =>
@@ -159,8 +149,6 @@ export const getPlugI18Api = async (lang: string, pluginId: string[]) =>
 
 // ====================== 国际化相关 - end ================
 
-export const createDashboard = async (alias: string) => await api.post(`/dashboard/createGrafanaByUns/${alias}`);
-
 // 获取导出结果
 export const getUnsExportRecordsApi = async (params?: Record<string, unknown>) =>
   api.get('/excel/data/getExportRecords', params);
@@ -240,8 +228,6 @@ export const getFileSchema = async () => api.get('/file/schema', { [CustomAxiosC
 export const getFolderSchema = async () => api.get('/folder/schema', { [CustomAxiosConfigEnum.NoCode]: true });
 export const getTemplateSchema = async () => api.get('/template/schema', { [CustomAxiosConfigEnum.NoCode]: true });
 export const getLabelSchema = async () => api.get('/label/schema', { [CustomAxiosConfigEnum.NoCode]: true });
-export const checkDashboardIsExist = async (params?: Record<string, unknown>) =>
-  api.get('/dashboard/isExist', { params, [CustomAxiosConfigEnum.NoCode]: true });
 export const getEmptyFolder = async () => api.get(`/folder/empty`); // 获取所有空文件夹
 export const saveMount = async (data: any) =>
   api.post('/mount', data, {

@@ -18,7 +18,7 @@ func (l *UnsTemplateService) Create(ctx context.Context, req *types.CreateTempla
 	}
 	tmpl, _ := l.unsMapper.GetByAlias(db, req.Alias)
 	if tmpl != nil {
-		rs.Code, rs.Msg = 400, I18nUtils.GetMessage("uns.template.alias.already.exists")
+		rs.Code, rs.Msg = 400, I18nUtils.GetMessageWithCtx(ctx, "uns.template.alias.already.exists")
 		return
 	}
 	unsDto := &types.CreateTopicDto{}

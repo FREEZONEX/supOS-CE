@@ -11,7 +11,7 @@ import (
 )
 
 func TestInsertSQL(t *testing.T) {
-	def := &types.CreateTopicDto{Alias: "_dingdanceshi_edd1ebaeb5da4155bdbf", Fields: []*types.FieldDefine{
+	def := types.CreateTopicDto{Alias: "_dingdanceshi_edd1ebaeb5da4155bdbf", Fields: []*types.FieldDefine{
 		{
 			Name: "_id", Type: types.FieldTypeLong, Unique: base.OptionalTrue,
 		},
@@ -25,7 +25,7 @@ func TestInsertSQL(t *testing.T) {
 	data := []map[string]string{
 		{"timeStamp": "1763707635481", "wst": "25"}, {"_id": "10", "wst": "27"}, {"wst": "28"},
 	}
-	sql, args := getInsertStatement(def, data)
+	sql, args := getInsertStatement(&types.UnsDefinition{CreateTopicDto: def}, data)
 	t.Log(sql, args)
 
 	pool, err := pgxpool.New(context.Background(), "postgres://postgres:postgres@100.100.100.20:31014/postgres")

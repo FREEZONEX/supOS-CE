@@ -1,12 +1,5 @@
 import { useState, useEffect, type FC, useRef } from 'react';
-import {
-  createDashboard,
-  getInstanceInfo,
-  modifyModel,
-  // updateModelSubscribe,
-  checkDashboardIsExist,
-  getDashboardByUns,
-} from '@/apis/inter-api/uns';
+import { getInstanceInfo, modifyModel } from '@/apis/inter-api/uns';
 import { Button, Collapse, Flex, theme, Typography, App, Space } from 'antd';
 import Icon, { FullscreenOutlined } from '@ant-design/icons';
 import { CaretRight, Document, Code, TableSplit, SendAlt, ChartLine } from '@carbon/icons-react';
@@ -35,6 +28,7 @@ import EditButton from '@/pages/uns/components/EditButton.tsx';
 import screenfull from 'screenfull';
 import { CustomAxiosConfigEnum } from '@/utils';
 import useSSE from '@/hooks/useSSE.ts';
+import { checkDashboardIsExist, createDashboard, getDashboardByUns } from '@/apis/inter-api/dashboard.ts';
 
 const { Title } = Typography;
 

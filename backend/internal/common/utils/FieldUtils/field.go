@@ -5,6 +5,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/types"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -36,13 +37,13 @@ func GetQualityField(fields []*types.FieldDefine, dataType int16) *types.FieldDe
 }
 
 // ValidateFields validates a slice of field definitions
-func ValidateFields(fields []*types.FieldDefine, checkSysField bool) error {
+func ValidateFields(ctx context.Context, fields []*types.FieldDefine, checkSysField bool) error {
 	seen := make(map[string]bool)
 	for _, f := range fields {
 		if fieldType, ok := types.GetFieldTypeByName(f.Type); ok {
 			f.Type = fieldType.Name()
 		} else {
-			return errors.New(I18nUtils.GetMessage("uns.invalid.type", f.Type))
+			return errors.New(I18nUtils.GetMessageWithCtx(ctx, "uns.invalid.type", f.Type))
 		}
 		name := strings.TrimSpace(f.Name)
 		if name == "" {
@@ -125,6 +126,8 @@ func SetDefaultMaxLen(field *types.FieldDefine) {
 		}
 
 		field.MaxLen = &defaultLen
+	} else if field.Type != types.FieldTypeString && field.MaxLen != nil {
+		field.MaxLen = nil //非字符串类型的忽略 maxLen
 	}
 }
 
@@ -182,7 +185,7 @@ var _True = true
 var _False = false
 
 // ProcessFieldDefines validates and processes a list of field definitions, optionally adding system fields.
-func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
+func ProcessFieldDefines(ctx context.Context, jdbcType types.SrcJdbcType, fields []*types.FieldDefine, checkSysField bool, addSysField bool) (*TableFieldDefine, error) {
 	if len(fields) == 0 {
 		return nil, nil
 	}
@@ -199,7 +202,7 @@ func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine
 		SetDefaultMaxLen(f)
 	}
 
-	if err := ValidateFields(processedFields, checkSysField); err != nil {
+	if err := ValidateFields(ctx, processedFields, checkSysField); err != nil {
 		return nil, err
 	}
 
@@ -226,19 +229,19 @@ func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine
 		}
 
 		// Special handling for TimeScaleDB when there is only one non-system field named "value".
-		if jdbcType == types.SrcJdbcTypeTimeScaleDB && len(nonSysFields) == 1 && nonSysFields[0].Name == constants.SystemSeqValue {
-			theField := nonSysFields[0]
-			theField.Name = constants.SystemSeqValue // Ensure the name is correct
-			fNews = append(fNews, theField)
+		if jdbcType == types.SrcJdbcTypeTimeScaleDB {
+			tableName = "uns_timeserial"
+			name := constants.SystemSeqTag // Ensure the name is correct
 			tableValueField := &types.FieldDefine{
 				Name:        constants.SystemSeqTag,
 				Type:        types.FieldTypeLong,
 				Unique:      &_True,
-				TbValueName: &theField.Name,
+				TbValueName: &name,
 			}
 			fNews = append(fNews, tableValueField)
-
-			tableName = "supos_timeserial_" + strings.ToLower(theField.Type)
+			if len(nonSysFields) > 0 {
+				fNews = append(fNews, nonSysFields...)
+			}
 		} else {
 			// Default behavior for other time-series data
 			tableName = ""
@@ -246,7 +249,7 @@ func ProcessFieldDefines(jdbcType types.SrcJdbcType, fields []*types.FieldDefine
 		}
 
 		fNews = append(fNews, &types.FieldDefine{Name: constants.QosField, Type: types.FieldTypeLong})
-	} else {
+	} else if jdbcType.TypeCode() == constants.RelationType {
 		// Relational data
 		tableName = ""
 		fNews = make([]*types.FieldDefine, 0, len(processedFields)+2)

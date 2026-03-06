@@ -22,7 +22,15 @@ const (
 // It does NOT modify the original request.
 func SetUserInContext(ctx context.Context, user *vo.UserInfoVo) context.Context {
 	ctx = context.WithValue(ctx, UserKey, user)
-	ctx = i18ns.SetLangWithCtx(ctx, user.MainLanguage)
+	lang := user.MainLanguage
+	if lang == "" {
+		if Lang := ctx.Value("lang"); Lang != nil {
+			if langStr, ok := Lang.(string); ok && len(langStr) > 0 {
+				lang = langStr
+			}
+		}
+	}
+	ctx = i18ns.SetLangWithCtx(ctx, lang)
 	return ctx
 }
 

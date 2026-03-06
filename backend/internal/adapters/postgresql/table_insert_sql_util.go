@@ -8,12 +8,12 @@ import (
 	"time"
 )
 
-func getInsertStatement(uns *types.CreateTopicDto, data []map[string]string) (sql string, params []interface{}) {
+func getInsertStatement(uns *types.UnsDefinition, data []map[string]string) (sql string, params []interface{}) {
 
 	sw := base.StringBuilder{}
 	sw.Grow(64 + len(uns.Fields)*32)
 
-	table := getFullTableName(uns.GetTable())
+	table := GetFullTableName(uns.GetTable())
 	sw.Append("INSERT INTO ").Append(table).Append(" AS t(")
 
 	columns := uns.Fields
@@ -22,7 +22,7 @@ func getInsertStatement(uns *types.CreateTopicDto, data []map[string]string) (sq
 	}
 	sw.SetLast(')').Append(" VALUES ")
 
-	data = DeduplicationById(uns, data)
+	data = DeduplicationById(uns.GetPrimaryField(), data)
 
 	params = make([]interface{}, 0, len(data))
 
@@ -73,7 +73,7 @@ func getInsertStatement(uns *types.CreateTopicDto, data []map[string]string) (sq
 	}
 	return sw.String(), params
 }
-func GetUpdateColumns(uns *types.CreateTopicDto, updateColumns *base.StringBuilder) {
+func GetUpdateColumns(uns *types.UnsDefinition, updateColumns *base.StringBuilder) {
 	// 构建插入字段 和 更新字段
 	updateColumns.Grow(len(uns.Fields) * 32)
 	firstUpdate := false

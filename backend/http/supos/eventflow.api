@@ -52,6 +52,10 @@ service backend {
     @doc "delete Mark a  flow by id"
     @handler unmarkEventFlow
     delete /event/unmark (FlowUNMarkReq) returns ()
+
+    @doc "分页按分组获取event flow列表"
+    @handler GetGroupedEventFlowList
+    get /event/getGroupedEventFlowList (GroupPageRequest) returns (EventFlowGroupPageResp)
 }
 
 @server(
@@ -70,6 +74,7 @@ type (
         FlowName    string `json:"flowName"`
         Description string `json:"description,optional"`
         Template    string `json:"template,optional"`
+        GroupId     *int64  `json:"groupId,optional,string"`                  // 分组ID
     }
 
     EventFlowCopyReq {
@@ -77,6 +82,7 @@ type (
         FlowName    string `json:"flowName"`
         Description string `json:"description,optional"`
         Template    string `json:"template,optional"`
+        GroupId     *int64  `json:"groupId,optional,string"`
     }
 
     EventFlowListQuery {
@@ -128,5 +134,8 @@ type (
         Data     []EventFlowInfo `json:"data,optional"`
     }
 
-    
+    EventFlowGroupPageResp {
+        PageResultDTO
+        Data []GroupFlowVO `json:"data"`
+    }
 )

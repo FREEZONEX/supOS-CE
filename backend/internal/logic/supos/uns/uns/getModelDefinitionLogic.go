@@ -30,6 +30,6 @@ func NewGetModelDefinitionLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *GetModelDefinitionLogic) GetModelDefinition(req *types.ModelDetailReq) (resp *types.ModelDetailResp, err error) {
-	resp, err = spring.GetBean[*service.UnsQueryService]().GetModelDefinition(l.ctx, req, "")
+	resp, err = spring.GetBean[*service.UnsQueryService]().GetModelDefinition(l.ctx, req, "", "")
 	return
 }

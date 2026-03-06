@@ -25,6 +25,6 @@ func (l *UnsQueryService) DetectIfFieldReferenced(ctx context.Context, req *type
 		return
 	}
 	dataMap["referred"] = true
-	dataMap["tips"] = I18nUtils.GetMessage("uns.update.field.tips1")
+	dataMap["tips"] = I18nUtils.GetMessageWithCtx(ctx, "uns.update.field.tips1")
 	return
 }

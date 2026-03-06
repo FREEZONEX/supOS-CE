@@ -1,22 +1,22 @@
 import { type FC, useEffect, useRef, useState } from 'react';
 import { TreeView as TreeViewIcon } from '@carbon/icons-react';
-import { App, Drawer, Splitter } from 'antd';
+import { App, Drawer } from 'antd';
 import { useUnsTreeMapContext } from '@/UnsTreeMapContext.tsx';
 import { useMediaSize, useTranslate } from '@/hooks';
-import { Tree, UnusedTopicTree } from '@/pages/uns/components';
+import { Tree } from '@/pages/uns/components';
 import TreeNodeExtra from '@/pages/uns/components/uns-tree/TreeNodeExtra.tsx';
-import { ChevronDown, ChevronUp } from '@carbon/icons-react';
+// import { ChevronDown, ChevronUp } from '@carbon/icons-react';
 import { getTreeStoreSnapshot, useTreeStore, useTreeStoreRef } from '@/pages/uns/store/treeStore.tsx';
 import { getParentNodes } from '@/pages/uns/store/utils.ts';
 import type { InitTreeDataFnType, UnsTreeNode } from '@/pages/uns/types';
 import { getExternalTreeData } from '@/apis/inter-api/external.ts';
 import ComLeft from '@/components/com-layout/ComLeft';
-import Loading from '@/components/loading';
+// import Loading from '@/components/loading';
 import { useWebSocket } from 'ahooks';
 import { useBaseStore } from '@/stores/base';
 
 const panelCloseSize = 48;
-const panelOpenSize = 500;
+// const panelOpenSize = 500;
 const initNode = {
   key: '',
   id: '',
@@ -36,7 +36,7 @@ const LeftDom: FC<{
   handleDelete,
   currentUnusedTopicNode,
   setCurrentUnusedTopicNode,
-  unusedTopicBreadcrumbList,
+  // unusedTopicBreadcrumbList,
   setUnusedTopicBreadcrumbList,
   changeCurrentUnusedTopicPath,
 }) => {
@@ -62,7 +62,7 @@ const LeftDom: FC<{
     loadData: state.loadData,
     setCurrentTreeMapType: state.setCurrentTreeMapType,
   }));
-  const [unusedTopicLoading, setUnusedTopicLoading] = useState(false);
+  // const [unusedTopicLoading, setUnusedTopicLoading] = useState(false);
   const [unusedTopicPanelSize, setUnusedTopicPanelSize] = useState([0, panelCloseSize]);
 
   const splitterWrapRef = useRef<any>(null);
@@ -140,7 +140,7 @@ const LeftDom: FC<{
       // const prevController = abortControllerRef.current;
       // abortControllerRef.current = new AbortController();
       // prevController?.abort();
-      setUnusedTopicLoading(true);
+      // setUnusedTopicLoading(true);
       // getExternalTreeData({ key: query }, { signal: abortControllerRef.current.signal })
       getExternalTreeData({ key: query })
         .then((res: any) => {
@@ -166,7 +166,7 @@ const LeftDom: FC<{
           console.log(err);
         })
         .finally(() => {
-          setUnusedTopicLoading(false);
+          // setUnusedTopicLoading(false);
         });
     }
   };
@@ -189,54 +189,66 @@ const LeftDom: FC<{
   const { isH5 } = useMediaSize();
   const treeMapHtml = (
     <div ref={splitterWrapRef} style={{ height: 'calc(100% - 48px)' }}>
-      <Splitter layout="vertical" onResize={setUnusedTopicPanelSize} className="unusedTopicTree-Splitter">
-        <Splitter.Panel min={120} size={unusedTopicPanelSize[0]}>
-          <Tree
-            changeCurrentPath={changeCurrentPath}
-            treeNodeExtra={(dataNode) => {
-              return (
-                <TreeNodeExtra
-                  type={dataNode.pathType}
-                  handleDelete={() => handleDelete(dataNode)}
-                  handleCopy={() => handleCopy(dataNode)}
-                />
-              );
-            }}
-          />
-        </Splitter.Panel>
-        {/*暂时隐藏*/}
-        {treeType === 'uns' && !enableAutoCategorization && (
-          <Splitter.Panel size={unusedTopicPanelSize[1]} min={panelCloseSize} style={{ overflow: 'hidden' }}>
-            <div
-              className="unusedTopicTree-collapsible"
-              onClick={() => {
-                if (unusedTopicPanelSize[1] === panelCloseSize) {
-                  setUnusedTopicPanelSize([splitterWrapRef.current?.offsetHeight - panelOpenSize, panelOpenSize]);
-                } else {
-                  setUnusedTopicPanelSize([splitterWrapRef.current?.offsetHeight - panelCloseSize, panelCloseSize]);
-                }
-              }}
-            >
-              {formatMessage('uns.otherTopic', 'Raw Topics')}
-              {unusedTopicPanelSize[1] === panelCloseSize ? <ChevronUp /> : <ChevronDown />}
-            </div>
-            <div style={{ height: 'calc(100% - 48px)', padding: '8px 14px 0' }}>
-              <Loading spinning={unusedTopicLoading}>
-                <UnusedTopicTree
-                  unsTreeRef={unusedTopicTreeRef}
-                  treeData={unusedTopicTreeData}
-                  currentNode={currentUnusedTopicNode}
-                  initTreeData={initUnusedTopicTreeData}
-                  setTreeMap={setTreeMap}
-                  changeCurrentPath={changeCurrentUnusedTopicPath}
-                  treeType={treeType}
-                  unusedTopicBreadcrumbList={unusedTopicBreadcrumbList}
-                />
-              </Loading>
-            </div>
-          </Splitter.Panel>
-        )}
-      </Splitter>
+      <Tree
+        changeCurrentPath={changeCurrentPath}
+        treeNodeExtra={(dataNode) => {
+          return (
+            <TreeNodeExtra
+              type={dataNode.pathType}
+              handleDelete={() => handleDelete(dataNode)}
+              handleCopy={() => handleCopy(dataNode)}
+            />
+          );
+        }}
+      />
+      {/*<Splitter layout="vertical" onResize={setUnusedTopicPanelSize} className="unusedTopicTree-Splitter">*/}
+      {/*  <Splitter.Panel min={120} size={unusedTopicPanelSize[0]}>*/}
+      {/*    <Tree*/}
+      {/*      changeCurrentPath={changeCurrentPath}*/}
+      {/*      treeNodeExtra={(dataNode) => {*/}
+      {/*        return (*/}
+      {/*          <TreeNodeExtra*/}
+      {/*            type={dataNode.pathType}*/}
+      {/*            handleDelete={() => handleDelete(dataNode)}*/}
+      {/*            handleCopy={() => handleCopy(dataNode)}*/}
+      {/*          />*/}
+      {/*        );*/}
+      {/*      }}*/}
+      {/*    />*/}
+      {/*  </Splitter.Panel>*/}
+      {/*  /!*暂时隐藏*!/*/}
+      {/*  {treeType === 'uns' && !enableAutoCategorization && (*/}
+      {/*    <Splitter.Panel size={unusedTopicPanelSize[1]} min={panelCloseSize} style={{ overflow: 'hidden' }}>*/}
+      {/*      <div*/}
+      {/*        className="unusedTopicTree-collapsible"*/}
+      {/*        onClick={() => {*/}
+      {/*          if (unusedTopicPanelSize[1] === panelCloseSize) {*/}
+      {/*            setUnusedTopicPanelSize([splitterWrapRef.current?.offsetHeight - panelOpenSize, panelOpenSize]);*/}
+      {/*          } else {*/}
+      {/*            setUnusedTopicPanelSize([splitterWrapRef.current?.offsetHeight - panelCloseSize, panelCloseSize]);*/}
+      {/*          }*/}
+      {/*        }}*/}
+      {/*      >*/}
+      {/*        {formatMessage('uns.otherTopic', 'Raw Topics')}*/}
+      {/*        {unusedTopicPanelSize[1] === panelCloseSize ? <ChevronUp /> : <ChevronDown />}*/}
+      {/*      </div>*/}
+      {/*      <div style={{ height: 'calc(100% - 48px)', padding: '8px 14px 0' }}>*/}
+      {/*        <Loading spinning={unusedTopicLoading}>*/}
+      {/*          <UnusedTopicTree*/}
+      {/*            unsTreeRef={unusedTopicTreeRef}*/}
+      {/*            treeData={unusedTopicTreeData}*/}
+      {/*            currentNode={currentUnusedTopicNode}*/}
+      {/*            initTreeData={initUnusedTopicTreeData}*/}
+      {/*            setTreeMap={setTreeMap}*/}
+      {/*            changeCurrentPath={changeCurrentUnusedTopicPath}*/}
+      {/*            treeType={treeType}*/}
+      {/*            unusedTopicBreadcrumbList={unusedTopicBreadcrumbList}*/}
+      {/*          />*/}
+      {/*        </Loading>*/}
+      {/*      </div>*/}
+      {/*    </Splitter.Panel>*/}
+      {/*  )}*/}
+      {/*</Splitter>*/}
     </div>
   );
 

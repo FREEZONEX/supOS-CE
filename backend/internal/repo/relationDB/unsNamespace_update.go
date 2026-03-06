@@ -213,10 +213,19 @@ func parseColumnName(gormTag string) string {
 
 	// 查找column:xxx的模式
 	tagParts := strings.Split(gormTag, ";")
+	if len(tagParts) == 1 && !strings.Contains(gormTag, ":") {
+		tagParts = strings.Split(gormTag, ",")
+		return tagParts[0]
+	}
 	for _, part := range tagParts {
 		part = strings.TrimSpace(part)
 		if strings.HasPrefix(part, "column:") {
-			return strings.TrimPrefix(part, "column:")
+			col := strings.TrimPrefix(part, "column:")
+			fen := strings.Index(col, ";")
+			if fen > 0 {
+				col = col[:fen]
+			}
+			return col
 		}
 	}
 

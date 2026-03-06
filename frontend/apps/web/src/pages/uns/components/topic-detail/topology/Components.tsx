@@ -11,12 +11,12 @@ import { useBaseStore } from '@/stores/base';
 import postgresql from '@/assets/home-icons/postgresql.svg';
 import tdengine from '@/assets/home-icons/tdengine.png';
 import timescaleDB from '@/assets/home-icons/timescaleDB.svg';
-import { getDashboardList } from '@/apis/inter-api';
 import nodeRed from '@/assets/home-icons/node-red.svg';
 import ProTable from '@/components/pro-table';
 import ComCodeSnippet from '@/components/com-code-snippet';
 import ComFormula from '@/components/com-formula';
 import c2 from '@/assets/uns/cw.svg';
+import { getDashboardList } from '@/apis/inter-api/dashboard.ts';
 
 export const CommonNode = ({
   Icon,
