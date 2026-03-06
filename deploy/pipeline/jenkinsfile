@@ -123,11 +123,12 @@ pipeline {
                         VERSION=$(grep 'OS_VERSION=' .env.default | cut -d'=' -f2)
                         DATE=$(date +%y%m%d%H)
                         ZipDirAndFileLists=$(ls -a | sed -e 's/^.$//g' -e 's/^..$//g' -e 's/^.git.*//g' |egrep -v '^$')
-                        mkdir tier0-${VERSION}-${DATE} && cp -r ${ZipDirAndFileLists} tier0-${VERSION}-${DATE}
+                        pkg=tier0-${VERSION}-${UNS_IMAGE_TAG}-${DATE}
+                        mkdir ${pkg} && cp -r ${ZipDirAndFileLists} ${pkg}
 
-                        /var/jenkins_home/paks/zip -q -r -y tier0-${VERSION}-${DATE}.zip tier0-${VERSION}-${DATE}
-                        md5sum tier0-${VERSION}-${DATE}.zip > tier0-${VERSION}-${DATE}.zip.md5
-                        chmod 664 tier0-${VERSION}-${DATE}.zip*
+                        /var/jenkins_home/paks/zip -q -r -y ${pkg}.zip ${pkg}
+                        md5sum ${pkg}.zip > ${pkg}.zip.md5
+                        chmod 664 ${pkg}.zip*
                         '''
                     }
                 }
