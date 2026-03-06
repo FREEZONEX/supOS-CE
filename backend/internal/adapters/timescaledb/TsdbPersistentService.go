@@ -127,7 +127,7 @@ func (p *TsdbPersistentService) Save(topics []types.UnsInfo) error {
 	if err != nil {
 		return err
 	}
-	physicsTableFields, err := getPhysicalTableFields(ctx, p.dbPool)
+	physicsTableFields, ct, qos, err := getPhysicalTableFields(ctx, p.dbPool)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (p *TsdbPersistentService) Save(topics []types.UnsInfo) error {
 	for i, create := range topics {
 		unsList[i] = UnsViewInfo{Uns: create, View: views[create.GetAlias()]}
 	}
-	s := sqlGen.GenerateSyncSQLs(physicsTableFields, unsList)
+	s := sqlGen.GenerateSyncSQLs(physicsTableFields, ct, qos, unsList)
 	if createSQLs := s.CreateTableSQL; len(createSQLs) > 0 {
 		// 1. 创建物理表
 		err = postgresql.ExecSQLs(p.log, p.dbPool, createSQLs)

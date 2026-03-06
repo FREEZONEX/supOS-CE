@@ -8,6 +8,7 @@ import (
 // GenerateSyncSQLs 生成所有同步 SQL
 func (g *SQLGenerator) GenerateSyncSQLs(
 	physicsTableFields []*types.FieldDefine,
+	ct, qos string,
 	unsList []UnsViewInfo,
 ) *SyncSQLs {
 
@@ -43,7 +44,7 @@ func (g *SQLGenerator) GenerateSyncSQLs(
 		result.FieldMappings[unsInfo.GetAlias()] = mappingInfo
 
 		// 生成创建视图的 SQL
-		viewSQL := g.GenerateViewSQL(unsInfo, mappings)
+		viewSQL := g.GenerateViewSQL(unsInfo, ct, qos, mappings)
 		result.CreateViewSQL = append(result.CreateViewSQL, viewSQL)
 	}
 

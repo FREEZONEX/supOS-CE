@@ -44,7 +44,14 @@ func (*DashboardExportService) ExportStream(ctx context.Context, arg *types.Glob
 		{
 			var mapper dao.DashboardMapper
 			csv2po := func(headers, values []string) *dao.DashboardModel {
-				return mapper.Csv2Model(headers, values)
+				po := mapper.Csv2Model(headers, values)
+				jsonContent, err := grafanautil.Get(ctx, po.ID)
+				if err != nil {
+					logx.WithContext(ctx).Errorf("get grafana json content err: %v", err)
+				} else if len(jsonContent) > 0 {
+					po.JsonContent = jsonContent
+				}
+				return po
 			}
 			fmt.Fprintln(jsonWriter, `{ "data":`)
 			_, err := jsonstream.Csv2JsonStream(func(writer io.Writer) error {
@@ -171,6 +178,12 @@ func importDashboards(ctx context.Context, size int64, progress *common.Float3, 
 	groupSave func(ctx context.Context, list []*dao.GroupModel) error, dashSave func(ctx context.Context, list []*dao.DashboardModel) error) {
 
 	tree2flat := func(c context.Context, propName string, node, parent *dao.DashboardModel) *dao.DashboardModel {
+		if parent != nil {
+			pid, err := strconv.ParseInt(parent.ID, 10, 64)
+			if err == nil {
+				node.GroupId = &pid
+			}
+		}
 		return node
 	}
 	flowType := int16(3)
@@ -224,6 +237,7 @@ func importDashboards(ctx context.Context, size int64, progress *common.Float3, 
 		if len(dashes) > 0 {
 			err := dashSave(ctx, dashes)
 			if err != nil {
+				logx.WithContext(ctx).Error("dash save error :%v", err)
 				code = 500
 				msg = err.Error()
 			} else {
@@ -236,6 +250,8 @@ func importDashboards(ctx context.Context, size int64, progress *common.Float3, 
 							code = 500
 							msg = err.Error()
 						}
+					} else {
+						logx.WithContext(ctx).Errorf("面板json格式错误 : %v, id=%v", jsonContent, dash.ID)
 					}
 				}
 

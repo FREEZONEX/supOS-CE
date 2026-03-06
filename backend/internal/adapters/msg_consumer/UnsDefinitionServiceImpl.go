@@ -16,7 +16,6 @@ import (
 
 	"github.com/karlseguin/ccache/v2"
 	"github.com/zeromicro/go-zero/core/logx"
-	"gorm.io/gorm"
 )
 
 type UnsDefinitionService struct {
@@ -38,11 +37,11 @@ const keyAliasPrev = "a:"
 const keyPathPrev = "p:"
 
 func (u *UnsDefinitionService) GetDefinitionByAlias(alias string) *types.UnsDefinition {
-	return u.getByAliasOrPath(keyAliasPrev, alias, u.unsMapper.GetByAlias)
+	return u.getByAliasOrPath(keyAliasPrev, alias, u.unsMapper.SelectByAlias)
 }
 
 func (u *UnsDefinitionService) GetDefinitionByPath(path string) *types.UnsDefinition {
-	return u.getByAliasOrPath(keyPathPrev, path, u.unsMapper.GetByPath)
+	return u.getByAliasOrPath(keyPathPrev, path, u.unsMapper.SelectByPath)
 }
 
 func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.UnsDefinition) {
@@ -71,7 +70,9 @@ func (u *UnsDefinitionService) GetDefinitionById(id int64) (rs *types.UnsDefinit
 		if item.TTL() < 10*time.Second { //过期时间不到10秒，续期5分钟,避免对象使用中突然被释放遇到NPE
 			item.Extend(5 * time.Minute)
 		}
-		rs = item.Value().(*types.UnsDefinition)
+		if df, ok := item.Value().(*types.UnsDefinition); ok {
+			rs = df
+		}
 	}
 	return rs
 }
@@ -142,7 +143,7 @@ func path2key(path string) string {
 	return keyPathPrev + path
 }
 
-func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query func(db *gorm.DB, arg string) (*dao.UnsNamespace, error)) (rs *types.UnsDefinition) {
+func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query func(ctx context.Context, arg string) (*dao.UnsNamespace, error)) (rs *types.UnsDefinition) {
 	key := kPrev + arg
 	c := u.cache
 
@@ -155,16 +156,17 @@ func (u *UnsDefinitionService) getByAliasOrPath(kPrev string, arg string, query 
 		if idObj == nil || idObj.Expired() {
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(3*time.Second))
 			defer cancel()
-			db := dao.GetDb(ctx)
-			po, _ := query(db, arg)
+			po, _ := query(ctx, arg)
 			if po != nil {
 				idKey := id2key(po.Id)
 				c.Set(key, po.Id, 13*time.Minute)
-				c.Set(idKey, po2dto(po), 10*time.Minute)
+				rs = po2dto(po)
+				c.Set(idKey, rs, 10*time.Minute)
 			} else {
 				c.Set(key, int64(-1), 2*time.Minute) //占位
 			}
 			u.locks[index].Unlock()
+			return
 		} else {
 			u.locks[index].Unlock()
 			return u.GetDefinitionById(idObj.Value().(int64))
