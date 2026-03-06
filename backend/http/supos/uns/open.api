@@ -23,14 +23,14 @@ service backend {
         description: "文件夹schema 定义结构"
     )
     @handler getFolderSchema
-    get /folder/schema returns (ResultVO)
+    get /folder/schema returns ()
 
     @doc(
         summary: "查询文件schema 元数据结构"
         description: "文件schema 定义结构"
     )
     @handler getFileSchema
-    get /file/schema returns (ResultVO)
+    get /file/schema returns ()
 
     @doc(
         summary: "别名查询文件夹详情"
@@ -65,5 +65,34 @@ service backend {
 type (
     GetByPathReq {
         path string `form:"path"`
+    }
+
+    // 附件上传请求
+    AttachmentUploadReq {
+        // 模板实例别名
+        Alias string `form:"alias"`
+    }
+
+    // 附件上传响应
+    AttachmentUploadResp {
+        List []UnsAttachmentBo `json:"list"`
+    }
+
+    // 附件信息
+    UnsAttachmentBo {
+        // 主键ID
+        Id int64 `json:"id"`
+        // 关联模型实例别名
+        UnsAlias string `json:"unsAlias"`
+        // 原始名称
+        OriginalName string `json:"originalName"`
+        // 附件名称
+        AttachmentName string `json:"attachmentName"`
+        // 附件存储路径
+        AttachmentPath string `json:"attachmentPath"`
+        // 扩展名
+        ExtensionName string `json:"extensionName"`
+        // 附件上传时间（时间戳，毫秒）
+        CreateAt int64 `json:"createAt"`
     }
 )

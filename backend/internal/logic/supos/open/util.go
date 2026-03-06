@@ -57,7 +57,6 @@ func ConvertModelDetailToDefinition(detail *types.ModelDetail) interface{} {
 	result["name"] = detail.Name
 	result["displayName"] = detail.DisplayName
 	result["pathName"] = detail.PathName
-	result["modelId"] = detail.ModelId
 	result["modelName"] = detail.ModelName
 	result["extend"] = detail.Extend
 	result["templateAlias"] = detail.TemplateAlias
