@@ -157,7 +157,37 @@ func (p *TsdbPersistentService) Save(topics []types.UnsInfo) error {
 	retryCreateView := func(er error, index int, sql string) error {
 		logx.Errorf("CreateViewErr: %v, index=%d, sql=%s\n", er, index, sql)
 		var pgEr *pgconn.PgError
-		if errors.As(er, &pgEr) && pgEr.Code == "42809" {
+		isPgErr := errors.As(er, &pgEr)
+		if isPgErr && pgEr.Code == "42P16" {
+			sqlUp := strings.ToUpper(sql)
+			st := strings.Index(sqlUp, "VIEW")
+			end := -1
+			if st > 0 {
+				for i := st + 5; i <= len(sqlUp); i++ {
+					if unicode.IsSpace(rune(sqlUp[i])) {
+						end = i
+						break
+					}
+				}
+			}
+			if end > st {
+				viewName := strings.TrimSpace(sql[st+5 : end])
+				var execErr error
+				_, execErr = p.dbPool.Exec(context.Background(), "DROP VIEW IF EXISTS "+viewName)
+				if execErr != nil {
+					logx.Errorf("DropView[%s] fail %v", viewName, execErr)
+				} else {
+					_, execErr = p.dbPool.Exec(context.Background(), sql)
+					if execErr != nil {
+						logx.Errorf("重建视图失败 %v", viewName)
+					} else {
+						logx.WithContext(ctx).Info("重建视图成功: ", viewName)
+					}
+				}
+				return execErr
+			}
+		}
+		if isPgErr && pgEr.Code == "42809" {
 			sqlUp := strings.ToUpper(sql)
 			st := strings.Index(sqlUp, "VIEW")
 			end := -1

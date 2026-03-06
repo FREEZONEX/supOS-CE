@@ -5,10 +5,10 @@ package open
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 
 	"backend/internal/svc"
-	"backend/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,7 +28,7 @@ func NewGetFileSchemaLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Get
 	}
 }
 
-func (l *GetFileSchemaLogic) GetFileSchema() (resp *types.ResultVO, err error) {
+func (l *GetFileSchemaLogic) GetFileSchema() (resp map[string]interface{}, err error) {
 	// 根据语言环境变量选择对应的schema文件
 	lang := os.Getenv("SYS_OS_LANG")
 	var filename string
@@ -46,17 +46,17 @@ func (l *GetFileSchemaLogic) GetFileSchema() (resp *types.ResultVO, err error) {
 	content, err := templates.ReadFile(filePath)
 	if err != nil {
 		l.Errorf("Failed to read file: %v", err)
-		return &types.ResultVO{
-			Code: 500,
-			Msg:  "Failed to read file schema",
-			Data: nil,
-		}, err
+		return nil, err
 	}
 
-	// 返回结果
-	return &types.ResultVO{
-		Code: 200,
-		Msg:  "Success",
-		Data: string(content),
-	}, nil
+	// 解析JSON内容
+	var jsonData map[string]interface{}
+	err = json.Unmarshal(content, &jsonData)
+	if err != nil {
+		l.Errorf("Failed to parse JSON: %v", err)
+		return nil, err
+	}
+
+	// 直接返回JSON数据
+	return jsonData, nil
 }

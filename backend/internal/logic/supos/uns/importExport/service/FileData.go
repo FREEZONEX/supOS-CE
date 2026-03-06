@@ -93,7 +93,28 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 	if prop == Label {
 		return &types.CreateTopicDto{Name: i.Name}
 	}
-
+	if len(i.Fields) > 0 {
+		var fs []*types.FieldDefine
+		for _, field := range i.Fields {
+			if field == nil {
+				if fs == nil {
+					fs = make([]*types.FieldDefine, 0, len(i.Fields))
+				}
+				continue
+			}
+			if field.Type != types.FieldTypeString && field.MaxLen != nil {
+				field.MaxLen = nil
+			}
+		}
+		if fs != nil {
+			for _, field := range i.Fields {
+				if field != nil {
+					fs = append(fs, field)
+				}
+			}
+			i.Fields = fs
+		}
+	}
 	vo := &types.CreateTopicDto{
 		Alias:  i.Alias,
 		Name:   i.Name,
