@@ -1909,5 +1909,16 @@
   "portainer.network.create.request_serialize_failed": "序列化网络创建请求失败",
   "portainer.container.existed": "容器名 %s 已存在",
   "portainer.service.existed": "服务名 %s 已存在",
-  "portainer.port.occupied": "端口 %d 已被占用"
+  "portainer.port.occupied": "端口 %d 已被占用",
+  "uns.deployNow": "立即部署",
+  "uns.stripPathPlaceholder": "剥离路径前缀",
+  "uns.preserveHostPlaceholder": "保留原始主机头",
+  "uns.uploading": "正在上传",
+  "uns.uploadError": "上传失败",
+  "uns.supportScope": "支持范围",
+  "uns.overallProject": "完整项目: {text}",
+  "uns.singleFile": "单个文件: {text}",
+  "uns.deleteGroupInfo": "删除分组将同步删除其下所有的{module}，此操作不可恢复,是否确认删除?",
+  "common.flow": "流程",
+  "common.dashboard": "看板"
 }
