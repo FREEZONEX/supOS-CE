@@ -6,7 +6,7 @@ Timeout: 20000
 
 Database:
   DBType: pgsql
-  DSN: postgres://postgres:postgres@100.100.100.20:31014/postgres?search_path=supos
+  DSN: postgres://postgres:postgres@100.100.100.22:34099/postgres?search_path=supos
 
 
 log:
@@ -21,7 +21,7 @@ grafanaUrl: http://localhost:3030
 export:
   limitSmallFileRows: 50
 sink:
-  postgresql: postgres://postgres:postgres@100.100.100.20:31014/postgres
+  postgresql: postgres://postgres:postgres@100.100.100.22:34099/postgres
   timescaledb: postgres://postgres:postgres@100.100.100.20:31014/postgres
 
 #KeycloakDSN: postgres://postgres:postgres@100.100.100.20:31014/keycloak

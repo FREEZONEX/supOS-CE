@@ -16,6 +16,7 @@ import { fetchBaseStore } from '@/stores/base';
 import jsYaml from 'js-yaml';
 import { type Diagnostic, linter, lintGutter } from '@codemirror/lint';
 import ProCodemirror from '@/components/pro-codemirror';
+import ComRequire from '@/components/com-require';
 
 export interface AddAppModalRef {
   onOpen: (type: number, props?: any) => void;
@@ -165,7 +166,19 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
               <Input />
             </Form.Item>
             <Divider style={{ background: '#e0e0e0', margin: '16px 0' }} />
-            <Form.Item name="imageConfig">
+            <Form.Item
+              name="imageConfig"
+              rules={[
+                () => ({
+                  validator(_, value) {
+                    if (value?.imagePath || value?.imageUrl) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error(formatMessage('rule.required')));
+                  },
+                }),
+              ]}
+            >
               <ImageCom />
             </Form.Item>
             <Form.Item name="menuUrl" label={formatMessage('uns.menuRouting')} rules={[{ required: true }]}>
@@ -208,8 +221,47 @@ const AddAppModal = forwardRef<AddAppModalRef, AddAppModalProps>((_, ref) => {
             </Row>
             {/*<div style={{ display: showAdvanced ? 'inherit' : 'none' }}>*/}
             <div>
-              <Form.Item name="composeYaml">
-                <CodeCom />
+              <Form.Item
+                name="composeYaml"
+                rules={[
+                  {
+                    required: true,
+                    message: formatMessage('rule.pleaseInput', { label: formatMessage('uns.containerConfiguration') }),
+                  },
+                ]}
+                label={
+                  <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
+                    <ContainerSoftware size={16} />
+                    <ComEllipsis>{formatMessage('uns.containerConfiguration')}</ComEllipsis>
+                  </Flex>
+                }
+              >
+                <ProCodemirror
+                  showExpanded
+                  height={'200px'}
+                  extensions={[
+                    yaml(),
+                    linter((view) => {
+                      const diagnostics: Diagnostic[] = [];
+                      const doc = view.state.doc.toString();
+                      try {
+                        jsYaml.load(doc);
+                      } catch (e: any) {
+                        if (e.mark) {
+                          diagnostics.push({
+                            from: e.mark.position,
+                            to: e.mark.position + 1,
+                            severity: 'error',
+                            message: e.reason,
+                          });
+                        }
+                      }
+                      return diagnostics;
+                    }),
+                    lintGutter(),
+                  ]}
+                  placeholder={placeholder}
+                />
               </Form.Item>
             </div>
           </Form>
@@ -224,47 +276,6 @@ interface ImageComProps {
   image?: UploadFile[];
   registry?: string;
 }
-
-const CodeCom = ({ value, onChange }: { value?: string; onChange?: (v: string) => void }) => {
-  const formatMessage = useTranslate();
-
-  return (
-    <div>
-      <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
-        <ContainerSoftware size={16} />
-        <ComEllipsis>{formatMessage('uns.containerConfiguration')}</ComEllipsis>
-      </Flex>
-      <ProCodemirror
-        showExpanded
-        onChange={onChange}
-        value={value}
-        height={'200px'}
-        extensions={[
-          yaml(),
-          linter((view) => {
-            const diagnostics: Diagnostic[] = [];
-            const doc = view.state.doc.toString();
-            try {
-              jsYaml.load(doc);
-            } catch (e: any) {
-              if (e.mark) {
-                diagnostics.push({
-                  from: e.mark.position,
-                  to: e.mark.position + 1,
-                  severity: 'error',
-                  message: e.reason,
-                });
-              }
-            }
-            return diagnostics;
-          }),
-          lintGutter(),
-        ]}
-        placeholder={placeholder}
-      />
-    </div>
-  );
-};
 
 const ImageCom = ({
   value,
@@ -284,6 +295,7 @@ const ImageCom = ({
 
   return (
     <>
+      <ComRequire />
       <Segmented<string>
         value={v.type}
         onChange={(type) => setV((pre: ImageComProps) => ({ ...pre, type }))}
