@@ -19,7 +19,7 @@ class ModbusBridge {
             while ((newMsg = this.queue.poll()) != null) {
                 node.send([newMsg])
             }
-        }, interval); // 轮询队列里的数据，每次只取一个topic发送
+        }, interval); // 轮询队列里的数据
         node.log(`MODBUS ${interval}ms定时推送任务开启, 节点ID=${node.id}`)
     }
 
