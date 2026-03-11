@@ -1907,5 +1907,16 @@
   "PgPersistentService": "Create Relational Table",
   "TsdbPersistentService": "Create Time-series Table",
   "SourceFlowService": "Create Source Flow",
-  "UnsTopologyService": "Update Topology"
+  "UnsTopologyService": "Update Topology",
+  "uns.deployNow": "Deploy Now",
+  "uns.stripPathPlaceholder": "Strip Path Prefix",
+  "uns.preserveHostPlaceholder": "Preserve Original Host Header",
+  "uns.uploading": "Uploading",
+  "uns.uploadError": "Failed to upload.",
+  "uns.supportScope": "Supported Scope",
+  "uns.overallProject": "Complete project: {text}",
+  "uns.singleFile": "Single file: {text}",
+  "uns.deleteGroupInfo": "Deleting a group will simultaneously delete all {module} under it. This operation cannot be undone. Continue?",
+  "common.flow": "Flow",
+  "common.dashboard": "Dashboard"
 }

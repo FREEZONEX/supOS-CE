@@ -59,7 +59,7 @@ func (d *DatabaseInfo) generatePostgresDSN() string {
 		dsn += d.Username + ":" + d.Password + "@"
 	}
 	dsn += d.Host + ":" + d.Port + "/" + d.Database
-	
+
 	params := []string{}
 	if d.SSLMode != "" {
 		params = append(params, "sslmode="+d.SSLMode)
@@ -70,11 +70,11 @@ func (d *DatabaseInfo) generatePostgresDSN() string {
 	if d.Timezone != "" {
 		params = append(params, "timezone="+d.Timezone)
 	}
-	
+
 	if len(params) > 0 {
 		dsn += "?" + joinParams(params, "&")
 	}
-	
+
 	return dsn
 }
 
@@ -85,7 +85,7 @@ func (d *DatabaseInfo) generateGenericDSN() string {
 		dsn += d.Username + ":" + d.Password + "@"
 	}
 	dsn += d.Host + ":" + d.Port + "/" + d.Database
-	
+
 	params := []string{}
 	if d.Charset != "" {
 		params = append(params, "charset="+d.Charset)
@@ -93,27 +93,27 @@ func (d *DatabaseInfo) generateGenericDSN() string {
 	if d.Timezone != "" {
 		params = append(params, "timezone="+d.Timezone)
 	}
-	
+
 	if len(params) > 0 {
 		dsn += "?" + joinParams(params, "&")
 	}
-	
+
 	return dsn
 }
 
 // ToMap 将DatabaseInfo转换为map[string]string
 func (d *DatabaseInfo) ToMap() map[string]string {
 	return map[string]string{
-		"database":          d.Database,
-		"username":          d.Username,
-		"password":          d.Password,
-		"host":              d.Host,
-		"port":              d.Port,
-		"databaseType":      d.DatabaseType,
-		"sslMode":           d.SSLMode,
-		"charset":           d.Charset,
-		"timezone":          d.Timezone,
-		"connectionString":  d.ConnectionString,
+		"database":         d.Database,
+		"username":         d.Username,
+		"password":         d.Password,
+		"host":             d.Host,
+		"port":             d.Port,
+		"databaseType":     d.DatabaseType,
+		"sslMode":          d.SSLMode,
+		"charset":          d.Charset,
+		"timezone":         d.Timezone,
+		"connectionString": d.ConnectionString,
 	}
 }
 
@@ -126,7 +126,7 @@ func FromMap(data map[string]string) *DatabaseInfo {
 		Host:     data["host"],
 		Port:     data["port"],
 	}
-	
+
 	// 可选字段
 	if dbType, ok := data["databaseType"]; ok {
 		dbInfo.DatabaseType = dbType
@@ -145,7 +145,7 @@ func FromMap(data map[string]string) *DatabaseInfo {
 	} else {
 		dbInfo.ConnectionString = dbInfo.GeneratePostgresConnectionString()
 	}
-	
+
 	return dbInfo
 }
 
@@ -186,15 +186,15 @@ func (d *DatabaseInfo) GetConnectionInfo() map[string]string {
 // MaskPassword 返回一个隐藏密码的副本
 func (d *DatabaseInfo) MaskPassword() *DatabaseInfo {
 	return &DatabaseInfo{
-		Database:        d.Database,
-		Username:        d.Username,
-		Password:        "******",
-		Host:            d.Host,
-		Port:            d.Port,
-		DatabaseType:    d.DatabaseType,
-		SSLMode:         d.SSLMode,
-		Charset:         d.Charset,
-		Timezone:        d.Timezone,
+		Database:         d.Database,
+		Username:         d.Username,
+		Password:         "******",
+		Host:             d.Host,
+		Port:             d.Port,
+		DatabaseType:     d.DatabaseType,
+		SSLMode:          d.SSLMode,
+		Charset:          d.Charset,
+		Timezone:         d.Timezone,
 		ConnectionString: d.ConnectionString,
 	}
 }
@@ -265,7 +265,7 @@ func joinParams(params []string, sep string) string {
 	if len(params) == 1 {
 		return params[0]
 	}
-	
+
 	result := params[0]
 	for i := 1; i < len(params); i++ {
 		result += sep + params[i]

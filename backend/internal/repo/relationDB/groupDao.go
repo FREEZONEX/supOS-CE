@@ -286,7 +286,7 @@ func (m *GroupMapper) SelectByName(db *gorm.DB, name string, typ int16) ([]*Grou
 }
 
 // 根据name查询 Group not id equals
-func (m *GroupMapper) SelectByNameNotId(db *gorm.DB, id int64, name string , typ int16) ([]*GroupModel, error) {
+func (m *GroupMapper) SelectByNameNotId(db *gorm.DB, id int64, name string, typ int16) ([]*GroupModel, error) {
 	var groups []*GroupModel
 	err := db.Where("name = ? and type = ?", name, typ).Where("id != ?", id).Find(&groups).Error
 	if err != nil {
