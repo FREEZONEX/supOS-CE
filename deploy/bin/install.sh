@@ -39,11 +39,30 @@ DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose.yml"
 
 # --- 6. Volume and Image Management ---
 echo "Start creating volumes"
-# Check for a specific sub-directory to reliably detect an existing installation.
-if [ -d "$VOLUMES_PATH/postgresql" ]; then
+# Marker file to track complete installation
+INSTALL_MARKER="$VOLUMES_PATH/.install_complete"
+
+# Check installation state
+if [ -f "$INSTALL_MARKER" ]; then
   info "Existing installation detected. Stopping services and updating volumes..."
   source "$SCRIPT_DIR/stop.sh"
   source "$SCRIPT_DIR/init/update-volumes.sh"
+elif [ -d "$VOLUMES_PATH" ] && [ "$(ls -A "$VOLUMES_PATH" 2>/dev/null)" ]; then
+  warn "Partial installation detected at $VOLUMES_PATH"
+  read -p "Continue installation (c) or Clean and reinstall (r)? [c/r]: " choice
+  case "$choice" in
+    r|R)
+      info "Cleaning partial installation..."
+      bash "$SCRIPT_DIR/clean-all.sh" -f
+      # Regenerate .env.tmp since uninstall.sh deleted it
+      source "$SCRIPT_DIR/util/set-temp-env.sh" "$SCRIPT_DIR/../" "${COMPOSE_PROFILE_ARGS[@]}"
+      source "$SCRIPT_DIR/init/init-volumes.sh"
+      ;;
+    *)
+      info "Resuming installation..."
+      source "$SCRIPT_DIR/init/init-volumes.sh"
+      ;;
+  esac
 else
   info "New installation detected. Initializing volumes..."
   source "$SCRIPT_DIR/init/init-volumes.sh"
@@ -84,6 +103,10 @@ echo
 }
 
 # --- 8. Success ---
+# Create installation marker to indicate successful completion
+touch "$INSTALL_MARKER"
+info "Installation marker created at $INSTALL_MARKER"
+
 echo -e "\n============================================================"
 echo -e "🎉  All services are up and running!"
 echo -e "👉  Open the platform in your browser:\n"
@@ -95,6 +118,6 @@ else
 fi
 
 echo -e "      $PLATFORM_URL\n"
-echo -e "    Default user name: tier0\n"
-echo -e "            password: tier0\n"
+echo -e "    Default username: tier0\n"
+echo -e "    Default password: tier0\n"
 echo -e "============================================================"
