@@ -317,7 +317,7 @@ services:
   ca_certificates: ~
   retries: 5
   created_at: 1755572726
-  port: 1889
+  port: 1888
   updated_at: 1764811192
   enabled: true
   host: eventflow
@@ -697,7 +697,7 @@ routes:
   service: 94797f49-35e2-428f-b46a-84788fa06fa8
   strip_path: true
   paths:
-  - '/eventflow-api/'
+  - '/eventflow-api/ '
   created_at: 1755572773
   updated_at: 1764811192
   response_buffering: true
@@ -1965,7 +1965,7 @@ plugins:
   - http
   - https
   instance_name: ~
-  enabled: ${KONG_AUTH_ENABLED}
+  enabled: true
   consumer: ~
   id: 1845ee75-d704-40e1-a8b0-aa2baaf9d71b
   route: ~

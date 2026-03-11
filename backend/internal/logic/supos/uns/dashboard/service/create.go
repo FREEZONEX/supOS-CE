@@ -23,7 +23,7 @@ func (s *DashboardService) Create(ctx context.Context, req *relationDB.Dashboard
 	if len(dashboards) > 0 {
 		return &types.JsonResult{
 			Code: 500,
-			Msg:  I18nUtils.GetMessage("uns.dashboard.name.duplicate"),
+			Msg:  I18nUtils.GetMessageWithCtx(ctx, "uns.dashboard.name.duplicate"),
 		}, nil
 	}
 

@@ -2,6 +2,7 @@ package common
 
 import (
 	"backend/internal/common/I18nUtils"
+	"context"
 	"strconv"
 )
 
@@ -40,33 +41,33 @@ func NewRunningStatus() *RunningStatus {
 }
 
 // NewRunningStatusWithCode creates a new RunningStatus with code and message
-func NewRunningStatusWithCode(code int, msg string) *RunningStatus {
+func NewRunningStatusWithCode(ctx context.Context, code int, msg string) *RunningStatus {
 	finished := true
 	return &RunningStatus{
 		Code:     code,
-		Msg:      I18nUtils.GetMessage(msg),
+		Msg:      I18nUtils.GetMessageWithCtx(ctx, msg),
 		Finished: &finished,
 	}
 }
 
 // NewRunningStatusWithError creates a new RunningStatus with error information
-func NewRunningStatusWithError(code int, msg string, errTipFile string) *RunningStatus {
+func NewRunningStatusWithError(ctx context.Context, code int, msg string, errTipFile string) *RunningStatus {
 	finished := true
 	return &RunningStatus{
 		Code:       code,
-		Msg:        I18nUtils.GetMessage(msg),
+		Msg:        I18nUtils.GetMessageWithCtx(ctx, msg),
 		ErrTipFile: errTipFile,
 		Finished:   &finished,
 	}
 }
 
 // NewRunningStatusWithProgress creates a new RunningStatus with progress information
-func NewRunningStatusWithProgress(n, i int, task, msg string) *RunningStatus {
+func NewRunningStatusWithProgress(ctx context.Context, n, i int, task, msg string) *RunningStatus {
 	return &RunningStatus{
 		N:    &n,
 		I:    &i,
 		Task: task,
-		Msg:  I18nUtils.GetMessage(msg),
+		Msg:  I18nUtils.GetMessageWithCtx(ctx, msg),
 	}
 }
 

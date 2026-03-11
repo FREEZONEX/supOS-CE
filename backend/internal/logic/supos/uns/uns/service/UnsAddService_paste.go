@@ -46,11 +46,11 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 	if len(idMap) < len(ids) {
 		resp.Code = 400
 		if len(idMap) == 0 {
-			resp.Msg = I18nUtils.GetMessage("uns.folder.or.file.not.found") + ":" + fmt.Sprintf("%+v", ids)
+			resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found") + ":" + fmt.Sprintf("%+v", ids)
 		} else {
 			for _, id := range ids {
 				if !base.MapContainsKey(idMap, id) {
-					resp.Msg = I18nUtils.GetMessage("uns.folder.or.file.not.found") + ":" + strconv.FormatInt(id, 10)
+					resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found") + ":" + strconv.FormatInt(id, 10)
 					break
 				}
 			}
@@ -58,7 +58,12 @@ func (u *UnsAddService) PasteFolderOrFile(ctx context.Context, req *types.PasteR
 		return
 	}
 	src, tar := idMap[req.SourceId], idMap[req.TargetId]
-	srcUns, parentAliasMap := u.getSrcUns(src, req, tar)
+	srcUns, parentAliasMap, msg := u.getSrcUns(ctx, src, req, tar)
+	if len(msg) > 0 {
+		resp.Code = 400
+		resp.Msg = msg
+		return resp, nil
+	}
 	var positioningUns = srcUns //返回给前端的定位UNS
 	countChildren := int64(0)
 	if src.PathType == constants.PathTypeDir {
@@ -180,38 +185,31 @@ func (u *UnsAddService) copyChildren(ctx context.Context,
 	return countChildren, 0, nil
 }
 
-func (u *UnsAddService) getSrcUns(src *dao.UnsNamespace, req *types.PasteRequestVO, tar *dao.UnsNamespace) (*types.CreateTopicDto, map[string]string) {
+func (u *UnsAddService) getSrcUns(ctx context.Context, src *dao.UnsNamespace, req *types.PasteRequestVO, tar *dao.UnsNamespace) (*types.CreateTopicDto, map[string]string, string) {
 	srcUns := UnsConverter.Po2Dto(src)
 	parentAliasMap := make(map[string]string, 64)
 	if nf := req.NewFile; nf != nil {
 		nf.Id = 0
-		nf.Alias = ""
-		nf.ParentAlias = nil
-		nf.ParentId = nil
-		srcUns = nf
-	}
-	{
-		srcUns.Id = 0
-		srcUns.ParentId = nil
-		srcUns.ParentAlias = nil
-		srcUns.PathType = src.PathType
-
-		if req.TargetId != req.SourceId || src.PathType == constants.PathTypeFile || base.P2v(src.DataType) == 0 || !u.sysConfig.EnableAutoCategorization {
-			newAlias := PathUtil.GenerateAliasWithRandom(srcUns.Name)
-			if src.PathType == constants.PathTypeDir {
-				parentAliasMap[src.Alias] = newAlias
-			}
-			srcUns.Alias = newAlias
-			if tar != nil {
-				srcUns.ParentAlias = &tar.Alias
-			} else {
-				srcUns.ParentAlias = nil
+		if alias := nf.Alias; alias != "" {
+			po, _ := u.unsMapper.GetByAlias(dao.GetDb(ctx), alias)
+			if po != nil {
+				return nil, nil, I18nUtils.GetMessageWithCtx(ctx, "uns.alias.has.exist")
 			}
 		} else {
-			srcUns.Alias = src.Alias
-			srcUns.ParentAlias = src.ParentAlias
-			parentAliasMap[src.Alias] = src.Alias
+			nf.Alias = PathUtil.GenerateAliasWithRandom(srcUns.Name)
 		}
+		srcUns = nf
+	} else {
+		srcUns.Alias = PathUtil.GenerateAliasWithRandom(srcUns.Name)
 	}
-	return srcUns, parentAliasMap
+	srcUns.Id = 0
+	srcUns.ParentId = nil
+	srcUns.ParentAlias = nil
+	if src.PathType == constants.PathTypeDir {
+		parentAliasMap[src.Alias] = srcUns.Alias
+	}
+	if tar != nil {
+		srcUns.ParentAlias = &tar.Alias
+	}
+	return srcUns, parentAliasMap, ""
 }

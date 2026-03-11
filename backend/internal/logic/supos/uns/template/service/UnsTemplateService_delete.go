@@ -12,7 +12,7 @@ func (l *UnsTemplateService) Delete(ctx context.Context, req *types.WithID) (rs 
 	db := dao.GetDb(ctx)
 	template, _ := l.unsMapper.SelectById(db, templateId)
 	if template == nil {
-		return &types.BaseResult{Code: 404, Msg: I18nUtils.GetMessage("uns.template.not.exists")}, nil
+		return &types.BaseResult{Code: 404, Msg: I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")}, nil
 	}
 	True := true
 	options := types.RemoveUnsOptions{

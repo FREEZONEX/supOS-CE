@@ -4,6 +4,7 @@ import { isValidElement, type ReactNode } from 'react';
 import TagSelect from '@/pages/uns/components/use-create-modal/components/TagSelect.tsx';
 import ComCheckbox from '../com-checkbox';
 import { getIntl } from '@/stores/i18n-store.ts';
+import ComButtonFilter from '@/components/com-button-filter';
 
 export const render = (type: any, properties: any) => {
   switch (type) {
@@ -32,6 +33,8 @@ export const render = (type: any, properties: any) => {
       );
     case 'Switch':
       return <Switch {...properties} />;
+    case 'Filter':
+      return <ComButtonFilter defaultValue={1} {...properties} />;
     default:
       return null;
   }

@@ -9,6 +9,7 @@ import (
 	"backend/internal/common/utils/FieldFlags"
 	"backend/internal/common/utils/FieldUtils"
 	"backend/internal/common/utils/JsonUtil"
+	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
@@ -66,10 +67,10 @@ func checkInstanceFields(modelFields []*types.FieldDefine, insFields []*types.Fi
 	return ""
 }
 
-func initParamsUns(topicDtos []*types.CreateTopicDto, errTipMap map[string]string) (pathMap map[int16]map[string]*types.CreateTopicDto) {
+func initParamsUns(ctx context.Context, topicDtos []*types.CreateTopicDto, errTipMap map[string]string) (pathMap map[int16]map[string]*types.CreateTopicDto) {
 	pathMap = make(map[int16]map[string]*types.CreateTopicDto, 4)
 	for _, topicDto := range topicDtos {
-		checkTopicDto(errTipMap, pathMap, func(dto *types.CreateTopicDto) {
+		checkTopicDto(ctx, errTipMap, pathMap, func(dto *types.CreateTopicDto) {
 			vMap, has := pathMap[dto.PathType]
 			if !has {
 				var initSize = 16
@@ -164,7 +165,7 @@ func eqStrP(s1, s2 *string) bool {
 	}
 	return *s1 == *s2
 }
-func tryFillIdOrAlias(paramFiles map[string]*types.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, errTipMap map[string]string) {
+func tryFillIdOrAlias(ctx context.Context, paramFiles map[string]*types.CreateTopicDto, existsUns map[string]*dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace, errTipMap map[string]string) {
 	for key, topicDto := range paramFiles {
 		// 处理主对象的ID和Alias
 		id := topicDto.Id
@@ -204,7 +205,7 @@ func tryFillIdOrAlias(paramFiles map[string]*types.CreateTopicDto, existsUns map
 					} else {
 						// 删除当前元素并记录错误
 						delete(paramFiles, key)
-						errTipMap[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.topic.calc.expression.topic.ref.notFound", topicDto.Alias)
+						errTipMap[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.topic.calc.expression.topic.ref.notFound", topicDto.Alias)
 						break // 跳出内层循环，继续处理下一个元素
 					}
 				} else if refID != 0 && refAlias == "" {
@@ -212,7 +213,7 @@ func tryFillIdOrAlias(paramFiles map[string]*types.CreateTopicDto, existsUns map
 						field.Alias = refPo.Alias
 					} else {
 						delete(paramFiles, key)
-						errTipMap[topicDto.GainBatchIndex()] = I18nUtils.GetMessage("uns.topic.calc.expression.topic.ref.notFound", topicDto.Alias)
+						errTipMap[topicDto.GainBatchIndex()] = I18nUtils.GetMessageWithCtx(ctx, "uns.topic.calc.expression.topic.ref.notFound", topicDto.Alias)
 						break
 					}
 				}
@@ -250,7 +251,7 @@ func putTemp(dbFiles map[int64]*dao.UnsNamespace, aliasMap map[string]*dao.UnsNa
 	dbFiles[po.Id] = po
 }
 
-func checkTopicDto(errTipMap map[string]string,
+func checkTopicDto(ctx context.Context, errTipMap map[string]string,
 	pathMap map[int16]map[string]*types.CreateTopicDto,
 	put func(*types.CreateTopicDto),
 	d *types.CreateTopicDto) {
@@ -269,17 +270,24 @@ func checkTopicDto(errTipMap map[string]string,
 	//}
 
 	alias := d.Alias
+	if len(alias) > 63 {
+		errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.alias.length.limit.exceed", 63)
+		return
+	} else if !PathUtil.IsAliasFormatOK(alias) {
+		errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.invalid.alias")
+		return
+	}
 	for _, mp := range pathMap {
 		if v, has := mp[alias]; has {
 			dupUns, _ := json.Marshal(v)
 			curUns, _ := json.Marshal(d)
-			msg := I18nUtils.GetMessage("uns.alias.duplicate") + ": " + string(dupUns) + ", alias=" + alias + ", curUns=" + string(curUns)
+			msg := I18nUtils.GetMessageWithCtx(ctx, "uns.alias.duplicate") + ": " + string(dupUns) + ", alias=" + alias + ", curUns=" + string(curUns)
 			errTipMap[batchIndex] = msg
 			return
 		}
 	}
 	if alias != "" && alias == base.P2v(d.ParentAlias) {
-		errTipMap[batchIndex] = I18nUtils.GetMessage("uns.circularDependency")
+		errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.circularDependency")
 		return
 	}
 	if pathType == constants.PathTypeDir { // 当前是文件夹
@@ -288,12 +296,12 @@ func checkTopicDto(errTipMap map[string]string,
 		dataType := d.DataType
 		if dataType == nil {
 			if d.Id == 0 {
-				msg := I18nUtils.GetMessage("uns.file.dataType.empty")
+				msg := I18nUtils.GetMessageWithCtx(ctx, "uns.file.dataType.empty")
 				errTipMap[batchIndex] = msg
 				return
 			}
 		} else if !constants.IsValidDataType(*dataType) {
-			msg := fmt.Sprint(I18nUtils.GetMessage("uns.file.dataType.invalid"), *dataType)
+			msg := fmt.Sprint(I18nUtils.GetMessageWithCtx(ctx, "uns.file.dataType.invalid"), *dataType)
 			errTipMap[batchIndex] = msg
 			return
 		}
@@ -316,7 +324,7 @@ func checkTopicDto(errTipMap map[string]string,
 		d.ParentAlias = &templateRootAlias
 		put(d)
 	} else {
-		errTipMap[batchIndex] = I18nUtils.GetMessage("uns.import.type.error")
+		errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.import.type.error")
 		return
 	}
 
@@ -423,7 +431,7 @@ func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 
 	return instance
 }
-func getTemplate(topicDto *types.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) (template *dao.UnsNamespace, errMsg string) {
+func getTemplate(ctx context.Context, topicDto *types.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) (template *dao.UnsNamespace, errMsg string) {
 	modelId := topicDto.ModelId
 	modelAlias := topicDto.ModelAlias
 	var folderAlias *string
@@ -431,41 +439,41 @@ func getTemplate(topicDto *types.CreateTopicDto, existsUns func(string) *dao.Uns
 	if modelId != nil && *modelId != 0 {
 		template = dbFiles[*modelId]
 		if template != nil && template.PathType != 1 {
-			errMsg = I18nUtils.GetMessage("uns.alias.has.exist.type",
-				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(template.PathType))),
-				I18nUtils.GetMessage("uns.type.1"),
+			errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.alias.has.exist.type",
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type."+strconv.Itoa(int(template.PathType))),
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type.1"),
 			)
 		}
 	} else if modelAlias != nil {
 		template = existsUns(*modelAlias)
 		if template == nil || base.P2v(template.Status) == LOGIC_REMOVED {
-			errMsg = I18nUtils.GetMessage("uns.template.not.exists")
+			errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 			template = nil
 		} else if template.PathType != 1 {
-			errMsg = I18nUtils.GetMessage("uns.alias.has.exist.type",
-				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(template.PathType))),
-				I18nUtils.GetMessage("uns.type.1"),
+			errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.alias.has.exist.type",
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type."+strconv.Itoa(int(template.PathType))),
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type.1"),
 			)
 		}
 	} else if folderAlias = topicDto.ParentAlias; folderAlias != nil {
 		folder := existsUns(*folderAlias)
 		if folder == nil {
-			errMsg = I18nUtils.GetMessage("uns.folder.not.found") + ":alias=" + *folderAlias
+			errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.not.found") + ":alias=" + *folderAlias
 		} else if pt := topicDto.PathType; folder.PathType != constants.PathTypeDir && (pt == constants.PathTypeFile || pt == constants.PathTypeDir) {
-			errMsg = I18nUtils.GetMessage("uns.alias.has.exist.type",
-				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(folder.PathType))),
-				I18nUtils.GetMessage("uns.type.0"),
+			errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.alias.has.exist.type",
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type."+strconv.Itoa(int(folder.PathType))),
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type.0"),
 			)
 		} else if pt == constants.PathTypeTemplate && folder.PathType != constants.PathTypeTemplate {
-			errMsg = I18nUtils.GetMessage("uns.alias.has.exist.type",
-				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(folder.PathType))),
-				I18nUtils.GetMessage("uns.type.1"),
+			errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.alias.has.exist.type",
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type."+strconv.Itoa(int(folder.PathType))),
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type.1"),
 			)
 		}
 	}
 	return template, errMsg
 }
-func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, batchIndex string, instance *dao.UnsNamespace, template *dao.UnsNamespace) bool {
+func setFieldsErr(ctx context.Context, unsDto *types.CreateTopicDto, errTipMap map[string]string, batchIndex string, instance *dao.UnsNamespace, template *dao.UnsNamespace) bool {
 	insFs := unsDto.Fields
 	jdbcType := types.SrcJdbcType(unsDto.DataSrcID)
 	if len(insFs) == 0 && base.P2v(unsDto.DataType) == constants.JsonbType {
@@ -474,7 +482,7 @@ func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, bat
 	addSystemField := jdbcType != 0 && unsDto.PathType == constants.PathTypeFile && base.P2v(unsDto.DataType) != constants.AlarmRuleType
 
 	if len(insFs) > 0 {
-		tfd, err := FieldUtils.ProcessFieldDefines(jdbcType, insFs, true, addSystemField)
+		tfd, err := FieldUtils.ProcessFieldDefines(ctx, jdbcType, insFs, true, addSystemField)
 		if err != nil {
 			errTipMap[batchIndex] = err.Error()
 			return true
@@ -499,7 +507,7 @@ func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, bat
 				errTipMap[batchIndex] = checkError
 				return true
 			} else if instance.Fields == nil {
-				tfd, err := FieldUtils.ProcessFieldDefines(jdbcType, fields, true, true)
+				tfd, err := FieldUtils.ProcessFieldDefines(ctx, jdbcType, fields, true, true)
 				if err != nil {
 					errTipMap[batchIndex] = err.Error()
 					return true
@@ -511,7 +519,7 @@ func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, bat
 				instance.Fields = insFs
 			}
 		} else if addSystemField {
-			tfd, err := FieldUtils.ProcessFieldDefines(jdbcType, fields, true, true)
+			tfd, err := FieldUtils.ProcessFieldDefines(ctx, jdbcType, fields, true, true)
 			if err != nil {
 				errTipMap[batchIndex] = err.Error()
 				return true
@@ -526,7 +534,7 @@ func setFieldsErr(unsDto *types.CreateTopicDto, errTipMap map[string]string, bat
 	}
 
 	if unsDto.PathType == constants.PathTypeFile && len(instance.Fields) == 0 {
-		errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.empty")
+		errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.field.empty")
 		return true
 	}
 
@@ -544,7 +552,7 @@ func (u *UnsAddService) trySetId(
 	errTipMap map[string]string) (po *dao.UnsNamespace, exists bool) {
 
 	batchIndex := unsDto.GainBatchIndex()
-	template, errMsg := getTemplate(unsDto, existsUns, dbFiles)
+	template, errMsg := getTemplate(ctx, unsDto, existsUns, dbFiles)
 	if errMsg != "" {
 		errTipMap[batchIndex] = errMsg
 		return nil, false
@@ -553,9 +561,9 @@ func (u *UnsAddService) trySetId(
 	dbPo := existsUns(unsDto.Alias)
 	if dbPo != nil {
 		if base.P2v(dbPo.Status) == OK && dbPo.PathType != unsDto.PathType {
-			msg := I18nUtils.GetMessage("uns.alias.has.exist.type",
-				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(dbPo.PathType))),
-				I18nUtils.GetMessage("uns.type."+strconv.Itoa(int(unsDto.PathType))),
+			msg := I18nUtils.GetMessageWithCtx(ctx, "uns.alias.has.exist.type",
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type."+strconv.Itoa(int(dbPo.PathType))),
+				I18nUtils.GetMessageWithCtx(ctx, "uns.type."+strconv.Itoa(int(unsDto.PathType))),
 			)
 			errTipMap[batchIndex] = msg
 			return nil, base.P2v(dbPo.Status) == OK
@@ -579,7 +587,7 @@ func (u *UnsAddService) trySetId(
 	//	unsDto.DataSrcID != 0 && types.SrcJdbcType(unsDto.DataSrcID).TypeCode() != constants.TimeSequenceType {
 	//	for _, fd := range unsDto.Fields {
 	//		if fd.IsSystemField() {
-	//			errTipMap[batchIndex] = I18nUtils.GetMessage("uns.field.keyword", fd.Name) + ",alias=" + unsDto.Alias
+	//			errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.field.keyword", fd.Name) + ",alias=" + unsDto.Alias
 	//			return nil
 	//		}
 	//	}
@@ -587,16 +595,23 @@ func (u *UnsAddService) trySetId(
 
 	newUns := newUnsFile(unsDto)
 	if DB_EXISTS {
+		// 覆盖这俩不允许修改的字段
+		newUns.DataType = dbPo.DataType
+		newUns.ParentDataType = dbPo.ParentDataType
 		tar := *dbPo
 		_ = copier.CopyWithOption(&tar, newUns, copier.Option{IgnoreEmpty: true})
 		if newUns.ParentAlias != nil && *newUns.ParentAlias == "" {
 			tar.ParentAlias = nil
 			tar.ParentId = nil
 		}
-		unsDto = UnsConverter.Po2Dto(&tar)
+		paramFlags := base.P2v(unsDto.WithFlags)
+		UnsConverter.Po2DtoWithoutFlags(&tar, unsDto)
 		newUns = &tar
 		newUns.UpdateAt = ct
-
+		if paramFlags == 0 {
+			unsDto.WithFlags = nil
+			newUns.WithFlags = nil
+		}
 	}
 
 	dataType := int16(0)
@@ -604,7 +619,7 @@ func (u *UnsAddService) trySetId(
 		dataType = *dt
 	}
 	if (!DB_EXISTS && dataType != constants.CitingType) || len(unsDto.Fields) > 0 {
-		if setFieldsErr(unsDto, errTipMap, batchIndex, newUns, template) {
+		if setFieldsErr(ctx, unsDto, errTipMap, batchIndex, newUns, template) {
 			return nil, DB_EXISTS
 		}
 	}
@@ -674,7 +689,7 @@ func (u *UnsAddService) trySetId(
 				}
 				if len(affected) > 0 {
 					for _, f := range affected {
-						tdbFs, er := FieldUtils.ProcessFieldDefines(types.SrcJdbcType(f.DataSrcId), newUns.Fields, true, true)
+						tdbFs, er := FieldUtils.ProcessFieldDefines(ctx, types.SrcJdbcType(f.DataSrcId), newUns.Fields, true, true)
 						if er == nil && tdbFs != nil {
 							if base.P2v(f.DataType) == constants.JsonbType {
 								jsfStr, _ := JsonUtil.ToJson(newUns.Fields)
@@ -701,15 +716,25 @@ func (u *UnsAddService) trySetId(
 				}
 			}
 		}
+		if unsDto.WithFlags != nil {
+			newUns.WithFlags = unsDto.WithFlags
+		} else {
+			dbFlags := base.P2v(dbPo.WithFlags)
+			if dbFlags == 0 {
+				dbFlags = generateFlag(unsDto)
+			} else {
+				dbFlags = updateFlags(unsDto, dbFlags)
+			}
+			newUns.WithFlags = &dbFlags
+		}
 	} else {
 		newUns.Name = strings.TrimSpace(newUns.Name)
 		if len(newUns.Name) == 0 {
-			errTipMap[batchIndex] = I18nUtils.GetMessage("uns.name.empty")
+			errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.name.empty")
 			return nil, DB_EXISTS
 		}
-		if unsDto.WithFlags == nil {
-			flag := generateFlag(unsDto.AddFlow, unsDto.Save2Db, unsDto.AddDashBoard,
-				unsDto.RetainTableWhenDeleteInstance, unsDto.SubscribeEnable, unsDto.AccessLevel)
+		if unsDto.WithFlags == nil || *unsDto.WithFlags == 0 {
+			flag := generateFlag(unsDto)
 			newUns.WithFlags = &flag
 		}
 		//if newUns.ReadWriteMode == "" {
@@ -750,35 +775,28 @@ func normalFields(fs []*types.FieldDefine) []*types.FieldDefine {
 		return !e.IsSystemField()
 	})
 }
-func generateFlag(addFlow, saveToDB, addDashBoard, retainTableWhenDeleteInstance, subscribeEnable *bool, accessLevel string) int32 {
-	flags := int32(0)
-
-	if is(addFlow) {
-		flags |= constants.UnsFlagWithFlow
+func updateFlags(u *types.CreateTopicDto, flags int32) int32 {
+	fm := u.GetFlagsMap()
+	for fl, sw := range fm {
+		if sw != nil {
+			if *sw {
+				flags |= fl
+			} else {
+				flags &= ^fl
+			}
+		}
 	}
-	if is(saveToDB) {
-		flags |= constants.UnsFlagWithSave2DB
-	}
-	if is(addDashBoard) {
-		flags |= constants.UnsFlagWithDashboard
-	}
-	if is(retainTableWhenDeleteInstance) {
-		flags |= constants.UnsFlagRetainTableWhenDelInstance
-	}
-	if accessLevel == constants.AccessLevelReadOnly {
-		flags |= constants.UnsFlagAccessLevelReadOnly
-	}
-	if accessLevel == constants.AccessLevelReadWrite {
-		flags |= constants.UnsFlagAccessLevelReadWrite
-	}
-	if is(subscribeEnable) {
-		flags |= constants.UnsFlagWithSubscribeEnable
-	}
-
 	return flags
 }
-func is(b *bool) bool {
-	return b != nil && *b
+func generateFlag(u *types.CreateTopicDto) int32 {
+	flags := int32(0)
+	fm := u.GetFlagsMap()
+	for fl, sw := range fm {
+		if sw != nil && *sw {
+			flags |= fl
+		}
+	}
+	return flags
 }
 
 type unsDtoTreeNodes struct {
@@ -946,14 +964,15 @@ func (u *UnsAddService) listUnsByAliasAndIds(ctx context.Context, alias []string
 	return
 }
 
-func getEventStatusCallback(statusConsumer func(status *common.RunningStatus)) event.EventStatusAware {
+func getEventStatusCallback(ctx context.Context, statusConsumer func(status *common.RunningStatus)) event.EventStatusAware {
 	if statusConsumer == nil {
 		return nil
 	}
-	return newWrappedEventStatusAware(statusConsumer)
+	return newWrappedEventStatusAware(ctx, statusConsumer)
 }
 
 type wrappedEventStatusAware struct {
+	ctx            context.Context
 	t0             int64
 	statusConsumer func(status *common.RunningStatus)
 }
@@ -961,20 +980,20 @@ type wrappedEventStatusAware struct {
 var _startMsg, _endMsg, _errMsg string
 var once sync.Once
 
-func newWrappedEventStatusAware(statusConsumer func(status *common.RunningStatus)) event.EventStatusAware {
+func newWrappedEventStatusAware(ctx context.Context, statusConsumer func(status *common.RunningStatus)) event.EventStatusAware {
 	once.Do(func() {
-		_startMsg = I18nUtils.GetMessage("uns.create.status.running")
-		_endMsg = I18nUtils.GetMessage("uns.create.status.finished")
-		_errMsg = I18nUtils.GetMessage("uns.create.status.error")
+		_startMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.create.status.running")
+		_endMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.create.status.finished")
+		_errMsg = I18nUtils.GetMessageWithCtx(ctx, "uns.create.status.error")
 	})
-	return &wrappedEventStatusAware{statusConsumer: statusConsumer}
+	return &wrappedEventStatusAware{ctx: ctx, statusConsumer: statusConsumer}
 }
 func (w *wrappedEventStatusAware) BeforeEvent(N int, i int, listenerName string) {
 	progress := 0.0
 	if i > 1 && N > 0 {
 		progress = float64(int((1000.0 * (float64(i) - 1) / float64(N)))) / 10.0
 	}
-	w.statusConsumer(common.NewRunningStatusWithProgress(N, i, listenerName, _startMsg).SetProgress(progress))
+	w.statusConsumer(common.NewRunningStatusWithProgress(w.ctx, N, i, listenerName, _startMsg).SetProgress(progress))
 	w.t0 = time.Now().UnixMilli()
 }
 func (w *wrappedEventStatusAware) AfterEvent(N int, i int, listenerName string, err error) {
@@ -984,6 +1003,6 @@ func (w *wrappedEventStatusAware) AfterEvent(N int, i int, listenerName string, 
 		code = 500
 		msg = _errMsg + err.Error()
 	}
-	w.statusConsumer(common.NewRunningStatusWithProgress(N, i, listenerName, msg).
+	w.statusConsumer(common.NewRunningStatusWithProgress(w.ctx, N, i, listenerName, msg).
 		SetSpendMills(time.Now().UnixMilli() - w.t0).SetCode(code))
 }

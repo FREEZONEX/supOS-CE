@@ -3,11 +3,6 @@ import Layout from '@/layout';
 import Uns from '@/pages/uns';
 import Todo from '@/pages/todo';
 import GrafanaDesign from '@/pages/grafana-design';
-// import AppDisplay from '@/pages/app-management/AppDisplay';
-// import AppSpace from '@/pages/app-management/AppSpace';
-// import AppGUI from '@/pages/app-management/AppGUI';
-// import AppPreview from '@/pages/app-management/AppPreview';
-// import AppIframe from '@/pages/app-management/AppIframe';
 import NotFoundPage from '@/pages/not-found-Page/NotFoundPage';
 import NotPage from '@/pages/not-found-Page';
 import CollectionFlow from '@/pages/collection-flow';
@@ -27,6 +22,7 @@ import Share from '@/pages/share';
 import EventFlow from '@/pages/event-flow';
 import EventFlowPreview from '@/pages/event-flow/FlowPreview.tsx';
 import PluginManagement from '@/pages/plugin-management';
+import OpenData from '@/pages/open-data';
 import qs from 'qs';
 import { useEffect } from 'react';
 import { useBaseStore } from '@/stores/base';
@@ -199,12 +195,25 @@ export const childrenRoutes = [
     Component: DevPage,
     handle: {
       showName: 'devPage',
-      type: 'dev',
+      type: 'all',
     },
   },
   {
     path: '/plugin-management',
     Component: PluginManagement,
+  },
+  // 插件移到主项目 数据开放
+  {
+    path: '/OpenData',
+    Component: OpenData,
+  },
+  // app管理
+  {
+    path: '/AppManagement',
+    Component: PluginManagement,
+    // handle: {
+    //   type: 'dev',
+    // },
   },
   {
     path: '/403',

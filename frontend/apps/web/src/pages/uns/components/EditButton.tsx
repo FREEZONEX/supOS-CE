@@ -494,9 +494,7 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
                             )}
                           </Flex>
                           {/* 删除按钮 */}
-                          {editType === 'file' &&
-                          dataType === 1 &&
-                          [qualityName, timestampName].includes(fieldList[index]?.name) ? (
+                          {fieldList?.[index]?.systemField ? (
                             <div style={{ width: 32 }} />
                           ) : (
                             <Button

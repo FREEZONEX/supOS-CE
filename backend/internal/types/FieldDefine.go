@@ -130,9 +130,9 @@ func (f *FieldDefine) GetDecimal() *int {
 	return f.Decimal
 }
 
-var UnsLastValueFill func(uns *CreateTopicDto)
+var UnsLastValueFill func(uns *UnsDefinition)
 
-func (f *FieldDefine) GetLastValue() interface{} {
+func (f *FieldDefine) GetLastValue() string {
 	if f.LastTime == 0 {
 		f.tryFillLastValue()
 	}
@@ -145,10 +145,15 @@ func (f *FieldDefine) GetLastTime() int64 {
 	return f.LastTime
 }
 func (f *FieldDefine) tryFillLastValue() {
-	if uns, ok := f.Uns.(*CreateTopicDto); ok && UnsLastValueFill != nil {
+	if uns, ok := f.Uns.(*UnsDefinition); ok && UnsLastValueFill != nil {
 		UnsLastValueFill(uns)
+
 		if f.LastTime == 0 {
-			f.LastTime = -1
+			uns.Lock.Lock()
+			if f.LastTime == 0 {
+				f.LastTime = -1
+			}
+			uns.Lock.Unlock()
 		}
 	}
 }

@@ -45,7 +45,7 @@ const SourceSelect = ({ value, onChange }: { value?: any; onChange?: (v: any) =>
               route: option,
             }));
           }}
-          onBlurRequest={false}
+          // onBlurRequest={false}
           isRequest={v?.routeSource}
           fieldNames={{ value: 'name', label: 'name' }}
           api={getKongRoutesApi}

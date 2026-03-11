@@ -3171,6 +3171,7 @@ INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956d
 INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/marimo');
 INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/Notebook');
 INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/MenuConfiguration');
+INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/apps');
 INSERT INTO "public"."resource_uris" VALUES ('77f52ac5-58cf-4d4b-b850-aa0ac0ace1b7', '/collection-gateway-management');
 INSERT INTO "public"."resource_uris" VALUES ('77f52ac5-58cf-4d4b-b850-aa0ac0ace1b7', '/plugin-management');
 INSERT INTO "public"."resource_uris" VALUES ('77f52ac5-58cf-4d4b-b850-aa0ac0ace1b7', '/404');

@@ -62,21 +62,32 @@ func (g *GrafanaEventHandler) OnEventBatchCreateTable300(evt *event.BatchCreateT
 		userName = userCtx.PreferredUsername
 	}
 	go func() {
-		if updates := evt.GetAllUpdateFiles(); len(updates) > 0 {
-			aliasList := base.Map[*types.CreateTopicDto, string](evt.Updates[constants.PathTypeFile], func(e *types.CreateTopicDto) string {
-				return e.Alias
-			})
-			g.log.Infof("删除面板: alias: %+v", aliasList)
-			err := g.dashboardService.RemoveByUnsAliasList(aliasList)
-			if err != nil {
-				g.log.Error("删除面板失败:", err.Error())
+		var upserts [2]map[types.SrcJdbcType][]*types.CreateTopicDto
+		upserts[0], upserts[1] = evt.GetAllCreateFiles(), evt.GetAllUpdateFiles()
+		for _, upsert := range upserts {
+			if len(upsert) == 0 {
+				continue
 			}
-			for dsId, list := range updates {
-				g.Create(context.Background(), dsId, list, evt.FlowName, evt.FromImport, userName)
+			for dsId, list := range upsert {
+				list = base.Filter(list, func(e *types.CreateTopicDto) bool {
+					return base.P2v(e.AddDashBoard) && e.PathType == constants.PathTypeFile
+				})
+				if len(list) == 0 {
+					continue
+				}
+				aliasList := base.Map[*types.CreateTopicDto](list, func(e *types.CreateTopicDto) string {
+					return e.Alias
+				})
+				unsWithDashboards := g.dashboardService.ListUnsExistsDashboards(aliasList)
+				if len(unsWithDashboards) > 0 {
+					list = base.Filter(list, func(e *types.CreateTopicDto) bool {
+						return !unsWithDashboards[e.Alias]
+					})
+				}
+				if len(list) > 0 {
+					g.create(context.Background(), dsId, list, evt.FlowName, evt.FromImport, userName)
+				}
 			}
-		}
-		for dsId, list := range evt.GetAllCreateFiles() {
-			g.Create(context.Background(), dsId, list, evt.FlowName, evt.FromImport, userName)
 		}
 		g.log.Info(">>>>>> GrafanaEventHandler 批量创建事件,已完成,flowName:", evt.FlowName)
 	}()
@@ -86,15 +97,15 @@ func (g *GrafanaEventHandler) OnEventRemoveTopicsEvent300(evt *event.RemoveTopic
 	if len(list) == 0 || !evt.WithDashboard {
 		return
 	}
-	tables := base.FilterAndMap[*types.CreateTopicDto, string](list, func(e *types.CreateTopicDto) (v string, ok bool) {
-		return e.GetTable(), e.PathType == constants.PathTypeFile && !constants.WithRetainTableWhenDeleteInstance(base.P2v(e.WithFlags))
+	aliasList := base.FilterAndMap[*types.CreateTopicDto, string](list, func(e *types.CreateTopicDto) (v string, ok bool) {
+		return e.Alias, e.PathType == constants.PathTypeFile && !constants.WithRetainTableWhenDeleteInstance(base.P2v(e.WithFlags))
 	})
 	go func() {
-		for _, table := range tables {
-			uid := grafanautil.GetDashboardUUIDByAlias(table)
+		for _, alias := range aliasList {
+			uid := grafanautil.GetDashboardUUIDByAlias(alias)
 			err := grafanautil.DeleteDashboard(evt.Context, uid)
 			if err != nil {
-				g.log.Error("删除grafana dashboard 异常", err, table)
+				g.log.Error("删除grafana dashboard 异常", err, alias)
 			}
 		}
 	}()

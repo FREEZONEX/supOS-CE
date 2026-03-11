@@ -32,7 +32,7 @@ const TreeNodeIcon = memo(({ dataNode }: { dataNode: UnsTreeNode }) => {
   let Dom;
   let color;
   const parentDataType = enableAutoCategorization
-    ? dataNode.type === 0
+    ? dataNode.pathType === 0
       ? dataNode.dataType
       : dataNode.parentDataType
     : 0;
@@ -224,7 +224,7 @@ export const UnsTree: FC<{ open: boolean }> = ({ open }) => {
           }}
           renderTitleStyle={(dataNode) => {
             const bgColor =
-              dataNode.type === 0 && dataNode.dataType && enableAutoCategorization
+              dataNode.pathType === 0 && dataNode.dataType && enableAutoCategorization
                 ? dataNode.dataType === 1
                   ? '#FCF4D6'
                   : dataNode.dataType === 2

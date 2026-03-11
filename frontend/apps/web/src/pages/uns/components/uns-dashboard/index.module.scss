@@ -78,3 +78,63 @@
     width: 100%;
   }
 }
+
+.new-app {
+  border: 1px dashed var(--supos-theme-color);
+  border-radius: 3px;
+  color: var(--supos-theme-color);
+  cursor: pointer;
+  min-height: 122px;
+
+  &:hover {
+    background: rgb(var(--supos-theme-color-rgb), 0.1);
+  }
+}
+
+.add-app-modal-divider {
+  cursor: pointer;
+
+  &:hover {
+    &::before {
+      border-block-start-color: var(--supos-theme-color);
+    }
+
+    &::after {
+      border-block-start-color: var(--supos-theme-color);
+    }
+
+    .add-app-modal-divider-center {
+      color: var(--supos-theme-color);
+    }
+  }
+}
+
+.icon-upload {
+  :global {
+    .ant-upload-select {
+      background-color: transparent !important;
+    }
+  }
+}
+
+.image-upload {
+  :global {
+    .com-dragger-upload {
+      .ant-upload-drag {
+        height: 150px;
+        border-radius: 4px;
+        border: 1px dashed #d9d9d9;
+        background: transparent;
+      }
+
+      .ant-upload-list {
+        max-height: 160px;
+        overflow-y: auto;
+
+        .ant-upload-list-item-container {
+          overflow: hidden;
+        }
+      }
+    }
+  }
+}

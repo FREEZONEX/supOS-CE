@@ -60,7 +60,7 @@ func (r *UnsRemoveService) DetectIfRemove(ctx context.Context, req *types.Detect
 		resp.Msg = "DBErr!"
 	} else if po == nil {
 		resp.Code = 400
-		resp.Msg = I18nUtils.GetMessage("uns.folder.or.file.not.found")
+		resp.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.or.file.not.found")
 	}
 	return
 }

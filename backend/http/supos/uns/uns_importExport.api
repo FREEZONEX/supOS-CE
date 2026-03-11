@@ -23,15 +23,38 @@ type (
 	UploadReq  {
 		File string `form:"file,multipart/form-data"`
 	}
-    // 导出请求
-    ExportReq  {
-        CheckSmallFile *bool   `json:"checkSmallFile,optional,omitempty,omitzero"`
-        UserId         string  `json:"userId,optional,omitempty,omitzero"`
-        Language       string   `json:"language,optional,omitempty,omitzero"`
+	SourceFlowExportParam {
+	    GroupIds     []int64 `json:"gids,string,optional,omitempty,omitzero"`
+        FlowIds      []int64 `json:"ids,string,optional,omitempty,omitzero"`
+        ExportType   string  `json:"exportType,optional,omitempty,omitzero"`
+    }
+	EventFlowExportParam {
+	    GroupIds     []int64 `json:"gids,string,optional,omitempty,omitzero"`
+        FlowIds      []int64 `json:"ids,string,optional,omitempty,omitzero"`
+        ExportType   string  `json:"exportType,optional,omitempty,omitzero"`
+    }
+	DashboardExportParam {
+	    GroupIds     []int64 `json:"gids,string,optional,omitempty,omitzero"`
+        DashIds      []string `json:"ids,string,optional,omitempty,omitzero"`
+        ExportType   string  `json:"exportType,optional,omitempty,omitzero"`
+    }
+    UnsExportParam {
         ExportType     string  `json:"exportType,optional,omitempty,omitzero"`
-        FileType       string  `json:"fileType,optional,omitempty,omitzero"`
         Folders        []int64 `json:"folders,string,optional,omitempty,omitzero"`
         Files          []int64 `json:"files,string,optional,omitempty,omitzero"`
+    }
+    // UNS 导出请求
+    ExportReq  {
+        UnsExportParam
+        CheckSmallFile *bool   `json:"checkSmallFile,optional,omitempty,omitzero"`
+    }
+    // 全局导出请求
+    GlobalExportParam  {
+        Name                 string                  `json:"name,optional,omitempty,omitzero"`
+        UnsExportParam       *UnsExportParam         `json:"unsExportParam,optional,omitzero"`
+        SrcFlowExportParam   *SourceFlowExportParam  `json:"sourceFlowExportParam,optional,omitzero"`
+        EventFlowExportParam *EventFlowExportParam   `json:"eventFlowExportParam,optional,omitzero"`
+        DashboardExportParam *DashboardExportParam   `json:"dashboardExportParam,optional,omitzero"`
     }
     ExportPathResult {
        SmallFile bool    `json:"smallFile"`

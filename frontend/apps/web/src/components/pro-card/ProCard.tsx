@@ -25,7 +25,7 @@ const ProCard: FC<ProCardProps> = ({
   description,
   secondaryDescription,
   allowHover = true,
-  actions: _actions,
+  actions: _footActions,
   iconBg = true,
   item,
   actionConfig,
@@ -41,7 +41,7 @@ const ProCard: FC<ProCardProps> = ({
     border && 'pro-card-border',
     allowHover && 'pro-card-hover'
   );
-  const { allowCheck, statusInfo, statusTag, pinOptions } = statusHeader || {};
+  const { allowCheck, statusInfo, statusTag, pinOptions, actions: _headerAction } = statusHeader || {};
   const actionNum = actionConfig?.num ?? 2;
   const {
     customIcon,
@@ -50,7 +50,10 @@ const ProCard: FC<ProCardProps> = ({
     title,
     titleDescription,
     onClick: headerClick,
+    customIconBg,
   } = header || {};
+  const _actions = _footActions || _headerAction;
+  const actionShowType = _footActions ? 'foot' : _headerAction ? 'header' : '';
   const actions = _actions
     ? typeof _actions === 'function'
       ? _actions(item)
@@ -160,6 +163,23 @@ const ProCard: FC<ProCardProps> = ({
                     type={'text'}
                   />
                 )}
+                {actions && actionShowType === 'header' && (
+                  <Dropdown
+                    menu={{
+                      items: actions.map(({ key, label, icon, title, onClick, disabled, extra }) => ({
+                        key,
+                        label,
+                        icon,
+                        title: title ? title : typeof label === 'string' ? label : '',
+                        onClick: (e) => handleClick(e, onClick),
+                        disabled,
+                        extra,
+                      })),
+                    }}
+                  >
+                    <Button type="text" icon={<OverflowMenuVertical />} size="small" />
+                  </Dropdown>
+                )}
               </Flex>
               {allowCheck ? (
                 <Checkbox
@@ -188,7 +208,8 @@ const ProCard: FC<ProCardProps> = ({
                   iconBg
                     ? {
                         borderRadius: 3,
-                        backgroundColor: 'var(--supos-image-card-color)',
+                        // backgroundColor: 'var(--supos-image-card-color)',
+                        backgroundColor: customIconBg ? customIconBg : 'var(--supos-image-card-color)',
                         padding: 6,
                       }
                     : undefined
@@ -265,7 +286,7 @@ const ProCard: FC<ProCardProps> = ({
               {secondaryDescription}
             </div>
           )}
-          {actions && (
+          {actions && actionShowType === 'foot' && (
             <Divider
               style={{
                 margin: '12px 0',
@@ -273,7 +294,7 @@ const ProCard: FC<ProCardProps> = ({
               }}
             />
           )}
-          {actions && (
+          {actions && actionShowType === 'foot' && (
             <Flex align="center" justify="space-between">
               <Flex gap={8} align="center" style={{ flex: 1, overflow: 'hidden' }}>
                 {Array.isArray(actions) &&
@@ -299,7 +320,7 @@ const ProCard: FC<ProCardProps> = ({
                     )
                   )}
               </Flex>
-              {Array.isArray(actions) && actions.length > actionNum && (
+              {actionShowType === 'foot' && Array.isArray(actions) && actions.length > actionNum && (
                 <Dropdown
                   menu={{
                     items: actions.slice(actionNum).map(({ key, label, icon, title, onClick, disabled, extra }) => ({

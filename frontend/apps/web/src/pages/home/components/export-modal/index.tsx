@@ -1,6 +1,6 @@
 import { type FC, useState, useImperativeHandle, useMemo, useEffect } from 'react';
 import { Button, Form, App, Dropdown, Input, TreeSelect, Divider, ConfigProvider, Space, Badge, Modal } from 'antd';
-import { getDashboardList, getTreeData, getUnsLazyTree } from '@/apis/inter-api/uns';
+import { getTreeData, getUnsLazyTree } from '@/apis/inter-api/uns';
 import { useTranslate } from '@/hooks';
 
 import type { RefObject, Dispatch, SetStateAction } from 'react';
@@ -20,6 +20,7 @@ import {
 import { DownOutlined } from '@ant-design/icons';
 import { useBaseStore } from '@/stores/base';
 import { getParamsForArray } from '@/utils/uns.ts';
+import { getDashboardList } from '@/apis/inter-api/dashboard.ts';
 interface ExportModalRef {
   setOpen: Dispatch<SetStateAction<boolean>>;
 }

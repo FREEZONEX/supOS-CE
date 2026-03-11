@@ -10,6 +10,7 @@ import (
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -35,28 +36,29 @@ type FileData struct {
 	Type string `json:"type,omitempty"`
 	Name string `json:"name"`
 	//Namespace         string               `json:"namespace,omitempty"`
-	Alias             string               `json:"alias,omitempty"`
-	DisplayName       string               `json:"displayName,omitempty"`
-	TemplateAlias     string               `json:"templateAlias,omitempty"`
-	Fields            []*types.FieldDefine `json:"fields,omitempty"`
-	DataType          string               `json:"dataType,omitempty"`
-	Refers            string               `json:"refers,omitempty"`
-	Expression        string               `json:"expression,omitempty"`
-	Description       string               `json:"description,omitempty"`
-	Label             string               `json:"label,omitempty"`
-	Frequency         string               `json:"frequency,omitempty"`
-	GenerateDashboard string               `json:"generateDashboard,omitempty"`
-	EnableHistory     string               `json:"enableHistory,omitempty"`
-	MockData          string               `json:"mockData,omitempty"`
-	ParentDataType    string               `json:"topicType,omitempty"`
-	Template          *FileData            `json:"template,omitempty"`
-	Children          []*FileData          `json:"children,omitempty"`
-	Error             string               `json:"error,omitempty"`
-
-	parent   *FileData
-	path     string
-	id       int64
-	parentId int64
+	Alias             string                 `json:"alias,omitempty"`
+	DisplayName       string                 `json:"displayName,omitempty"`
+	TemplateAlias     string                 `json:"templateAlias,omitempty"`
+	Fields            []*types.FieldDefine   `json:"fields,omitempty"`
+	DataType          string                 `json:"dataType,omitempty"`
+	Refers            string                 `json:"refers,omitempty"`
+	Expression        string                 `json:"expression,omitempty"`
+	Description       string                 `json:"description,omitempty"`
+	Label             string                 `json:"label,omitempty"`
+	Frequency         string                 `json:"frequency,omitempty"`
+	GenerateDashboard string                 `json:"generateDashboard,omitempty"`
+	EnableHistory     string                 `json:"enableHistory,omitempty"`
+	MockData          string                 `json:"mockData,omitempty"`
+	WriteData         string                 `json:"writeData,omitempty"` //数据写值:accessLevel==READ_WRITE? TRUE: FALSE
+	ParentDataType    string                 `json:"topicType,omitempty"`
+	Template          *FileData              `json:"template,omitempty"`
+	Children          []*FileData            `json:"children,omitempty"`
+	Error             string                 `json:"error,omitempty"`
+	Extend            map[string]interface{} `json:"extend,omitempty"` // Extended fields
+	parent            *FileData
+	path              string
+	id                int64
+	parentId          int64
 }
 
 func (node *FileData) getPath() string {
@@ -83,7 +85,7 @@ func nodeGetParentId(node *FileData) int64 {
 	return node.parentId
 }
 
-func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
+func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.CreateTopicDto {
 	if i.Name == "" {
 		i.Error = "Empty " + prop
 		return nil
@@ -91,11 +93,33 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 	if prop == Label {
 		return &types.CreateTopicDto{Name: i.Name}
 	}
-
+	if len(i.Fields) > 0 {
+		var fs []*types.FieldDefine
+		for _, field := range i.Fields {
+			if field == nil {
+				if fs == nil {
+					fs = make([]*types.FieldDefine, 0, len(i.Fields))
+				}
+				continue
+			}
+			if field.Type != types.FieldTypeString && field.MaxLen != nil {
+				field.MaxLen = nil
+			}
+		}
+		if fs != nil {
+			for _, field := range i.Fields {
+				if field != nil {
+					fs = append(fs, field)
+				}
+			}
+			i.Fields = fs
+		}
+	}
 	vo := &types.CreateTopicDto{
 		Alias:  i.Alias,
 		Name:   i.Name,
 		Fields: i.Fields,
+		Extend: i.Extend,
 	}
 	switch prop {
 	case Template:
@@ -106,30 +130,30 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 			vo.PathType = constants.PathTypeFile
 			if ok, _ := strconv.ParseBool(os.Getenv("SYS_OS_ENABLE_AUTO_CATEGORIZATION")); ok {
 				if i.ParentDataType == "" {
-					i.Error = I18nUtils.GetMessage("uns.excel.parentDataType.is.blank")
+					i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.excel.parentDataType.is.blank")
 					return nil
 				}
 			}
 		case TYPE_FOLDER:
 			vo.PathType = constants.PathTypeDir
 			if i.Name == "label" || i.Name == "template" {
-				i.Error = I18nUtils.GetMessage("uns.folder.reserved.word")
+				i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.reserved.word")
 				return nil
 			}
 			if len(i.Name) > 63 {
-				i.Error = I18nUtils.GetMessage("uns.folder.length.limit.exceed")
+				i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.length.limit.exceed")
 				return nil
 			}
 		default:
-			i.Error = I18nUtils.GetMessage("uns.import.type.error")
+			i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.import.type.error")
 			return nil
 		}
 	}
 
+	i.parent = parent
 	if vo.Alias == "" {
 		vo.Alias = PathUtil.GenerateFileAlias(i.getPath())
 	}
-	i.parent = parent
 	if parent != nil {
 		if parent.Alias == "" {
 			parent.Alias = PathUtil.GenerateFileAlias(parent.getPath())
@@ -144,7 +168,7 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 		vo.ModelAlias = &i.TemplateAlias
 	}
 	if template := i.Template; template != nil {
-		vo.Template = node2vo(Template, template, nil)
+		vo.Template = node2vo(ctx, Template, template, nil)
 	}
 	if len(i.Description) > 0 {
 		vo.Description = &i.Description
@@ -166,7 +190,7 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 					vo.JsonFields = i.Fields
 				}
 			} else {
-				i.Error = I18nUtils.GetMessage("uns.import.dataType.error")
+				i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.import.dataType.error")
 				return nil
 			}
 		case constants.PathTypeDir:
@@ -190,7 +214,9 @@ func node2vo(prop string, i, parent *FileData) *types.CreateTopicDto {
 	if vo.PathType == constants.PathTypeFile {
 		vo.AddDashBoard = parseBoolP(i.GenerateDashboard)
 		vo.Save2Db = parseBoolP(i.EnableHistory)
-
+		if wd := i.WriteData; wd != "" {
+			vo.AccessLevel = base.SanYuan(base.P2v(parseBoolP(wd)), constants.AccessLevelReadWrite, constants.AccessLevelReadOnly)
+		}
 		if base.P2v(vo.DataType) == constants.JsonbType {
 			vo.AddFlow = base.OptionalFalse
 		} else {
@@ -318,11 +344,12 @@ func uns2DataVo(ctx *exportContext, unsPo types.UnsInfo) *FileData {
 			data.EnableHistory = _BOOL(constants.WithSave2db(fl))
 			data.GenerateDashboard = _BOOL(constants.WithDashBoard(fl))
 			data.MockData = _BOOL(constants.WithFlow(fl))
+			data.WriteData = _BOOL((fl & constants.UnsFlagAccessLevelReadWrite) == constants.UnsFlagAccessLevelReadWrite)
 		}
 	case constants.PathTypeDir:
 		data.Type = TYPE_FOLDER
 	}
-
+	data.Extend = unsPo.GetExtend()
 	return data
 }
 func _BOOL(b bool) string {

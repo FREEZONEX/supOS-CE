@@ -9,6 +9,7 @@ export interface DevInfo {
   VITE_ASSET_PREFIX: string;
   VITE_REMOTE_PREFIX: string;
   VITE_ENABLE_LOCAL_REMOTE: string;
+  VITE_ENABLE_HOST: boolean;
 }
 
 /**
@@ -92,6 +93,7 @@ export const logDevInfo = (info: DevInfo) => {
     VITE_ASSET_PREFIX,
     VITE_REMOTE_PREFIX,
     VITE_ENABLE_LOCAL_REMOTE,
+    VITE_ENABLE_HOST,
   } = info;
   console.log('---------- 开发信息 ----------');
   console.log(colors.gray('接口代理'), API_PROXY_URL, '\n');
@@ -100,6 +102,7 @@ export const logDevInfo = (info: DevInfo) => {
   console.log(colors.gray('host-dev地址'), VITE_ASSET_PREFIX, '\n');
   console.log(colors.gray('remote-dev地址'), VITE_REMOTE_PREFIX, '\n');
   console.log(colors.gray('是否启用本地模块联邦'), VITE_ENABLE_LOCAL_REMOTE, '\n');
+  console.log(colors.gray('代理host开启'), VITE_ENABLE_HOST, '\n');
 
   if (!VITE_ASSET_PREFIX) {
     console.error(colors.red('VITE_ASSET_PREFIX 未配置'));

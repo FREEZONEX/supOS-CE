@@ -21,62 +21,43 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
-func (l *UnsImportExportService) ImportUns(fileName string, fileSize int64, respWriter io.Writer) (w io.Writer, waiter func()) {
+func (l *UnsImportExportService) Import(ctx context.Context, fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
+	logx.WithContext(ctx).Infof("UNS导入ByReader: %s (size=%d)\n", fileName, fileSize)
+	l.ImportStream(ctx, fileName, fileSize, reader, responseWriterStatusConsumer{respWriter: respWriter}.write)
+}
 
-	l.log.Infof("UNS导入: %s (size=%d)\n", fileName, fileSize)
-	//
-	pipeReader, pipeWriter := io.Pipe()
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		//
-		l.doImport(fileName, fileSize, pipeReader, respWriter)
-		wg.Done()
-		_, _ = io.Copy(io.Discard, pipeReader) //防止坏的文件或其他意外让json没有读完导致外面的 w.Write()卡死
-	}()
-	return &noBufferWriter{tar: pipeWriter}, func() {
-		wg.Wait()
+type responseWriterStatusConsumer struct {
+	respWriter io.Writer
+}
+
+func (r responseWriterStatusConsumer) write(status *common.RunningStatus) {
+	tsJson, _ := json.Marshal(status)
+	_, er := r.respWriter.Write(append(tsJson, '\n', '\n'))
+	r.respWriter.(http.Flusher).Flush()
+	if er != nil {
+		logx.Error("导入进度发送失败:", er)
 	}
 }
-func (l *UnsImportExportService) ImportUnsDirect(fileName string, fileSize int64, respWriter io.Writer, reader io.Reader) {
-	l.log.Infof("UNS导入ByReader: %s (size=%d)\n", fileName, fileSize)
-	l.doImport(fileName, fileSize, reader, respWriter)
-}
-
-type noBufferWriter struct {
-	tar io.Writer
-}
-
-func (fr *noBufferWriter) Write(p []byte) (int, error) {
-	return fr.tar.Write(p)
-}
-func (fr *noBufferWriter) ReadFrom(r io.Reader) (n int64, err error) {
-	return io.Copy(struct{ io.Writer }{fr.tar}, r)
-}
-
-func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeReader io.Reader, respWriter io.Writer) {
+func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName string, fileSize int64, reader io.Reader, statusConsumer func(status *common.RunningStatus)) {
 	var errFile *os.File
 	var errBufWriter *bufio.Writer
 	errFileRelativePath := ""
 	var errJsonEncoder *json.Encoder
 
+	log := logx.WithContext(ctx)
 	pushStatus := func(status *common.RunningStatus) {
 		task := status.Task
 		segments := strings.Split(task, ".")
 		if sz := len(segments); sz > 1 {
-			status.Task = I18nUtils.GetMessage(segments[sz-2])
+			status.Task = I18nUtils.GetMessageWithCtx(ctx, segments[sz-2])
 		} else if sz == 1 {
-			status.Task = I18nUtils.GetMessage(status.Task)
+			status.Task = I18nUtils.GetMessageWithCtx(ctx, status.Task)
 		}
-		tsJson, _ := json.Marshal(status)
-		_, er := respWriter.Write(append(tsJson, '\n', '\n'))
-		respWriter.(http.Flusher).Flush()
-		if er != nil {
-			l.log.Error("导入进度发送失败:", er)
-		}
+		statusConsumer(status)
 	}
 	createErrorFile := func() bool {
 		if errFile != nil {
@@ -90,7 +71,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 		_ = os.MkdirAll(filepath.Dir(tarPath), os.ModeDir)
 		errFile, err = os.Create(tarPath)
 		if err != nil {
-			l.log.Error("创建错误提示文件失败", err, tarPath)
+			log.Error("创建错误提示文件失败", err, tarPath)
 		} else {
 			errBufWriter = bufio.NewWriter(errFile)
 			_ = errBufWriter.WriteByte('[')
@@ -106,22 +87,26 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 	prevTask := ""
 
 	countUns, countErr := 0, 0
-	er := jsonstream.DecodeJsonTreeToFlat(pipeReader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
-		if prevReadSize != readSize {
-			if prevReadSize > readSize {
-				progress += 20 * float64(prevReadSize-readSize) / TOTAL_SIZE
-			} else {
-				newProgress := 20 * float64(readSize) / TOTAL_SIZE
-				if newProgress <= progress {
+	er := jsonstream.DecodeJsonTreeToFlat(ctx, reader, l.exportConfig.BatchSize, node2vo, func(readSize int64, propName string, nodes []*types.CreateTopicDto) {
+		if prevReadSize < readSize {
+			newProgress := 20 * float64(readSize) / TOTAL_SIZE
+			if newProgress <= progress {
+				if progress < 80 {
 					if propName == prevTask {
-						progress += 2
+						progress += 1
 					} else {
-						progress += 20
+						if progress < 60 {
+							progress += 10
+						} else {
+							progress += 1
+						}
 						prevTask = propName
 					}
-				} else {
-					progress = newProgress
+				} else if progress < 90 {
+					progress += 0.01
 				}
+			} else if newProgress < 90 {
+				progress = newProgress
 			}
 			status := &common.RunningStatus{Code: 200, Task: propName}
 			status.SetProgress(progress)
@@ -135,13 +120,14 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 			})
 			_, er := l.labelService.CreateBatch(context.Background(), labelNames)
 			if er != nil {
-				l.log.Error("创建标签失败", er)
+				log.Error("创建标签失败", er)
 			}
 		case Template, UNS:
 			if propName == UNS {
 				var insertTemplates []*types.CreateTopicDto
 				for _, n := range nodes {
 					if template := n.Template; template != nil {
+						n.ModelAlias = &template.Alias
 						insertTemplates = append(insertTemplates, template)
 					}
 				}
@@ -150,13 +136,13 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 				}
 			}
 			countUns += len(nodes)
-			errTipMap := l.unsAddService.CreateModelAndInstancesInner(context.Background(), bo.CreateModelInstancesArgs{
+			errTipMap := l.unsAddService.CreateModelAndInstancesInner(ctx, bo.CreateModelInstancesArgs{
 				Topics:     nodes,
 				FromImport: true,
 				StatusConsumer: func(status *common.RunningStatus) {
-					if progress < 80 {
+					if progress < 95 {
 						if status.Code > 0 {
-							if status.N != nil {
+							if status.N != nil && *status.N > 1 {
 								progress += 1 / float64(*status.N)
 							} else {
 								progress += 0.1
@@ -175,19 +161,6 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 				logErrImports(errTipMap, nodes, first, errBufWriter, errJsonEncoder)
 			}
 		}
-		if progress < 95 {
-			if propName == prevTask {
-				if readSize == FILE_SIZE {
-					progress += 1
-				}
-			} else {
-				progress += 20
-			}
-			progressStatus := &common.RunningStatus{Code: 200, Task: propName}
-			progressStatus.SetProgress(progress)
-			pushStatus(progressStatus)
-		}
-		prevTask = propName
 	}, func(errNode *FileData) {
 		first := errFile == nil
 		createErrorFile()
@@ -197,7 +170,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 		_ = errJsonEncoder.Encode(errNode)
 	})
 	if er != nil {
-		l.log.Error("JsonDecodeError", er)
+		log.Error("JsonDecodeError", er)
 		first := errFile == nil
 		createErrorFile()
 		if !first {
@@ -205,7 +178,7 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 		}
 		_ = errJsonEncoder.Encode(er.Error())
 	}
-	status := &common.RunningStatus{Code: 200, Msg: I18nUtils.GetMessage("uns.import.rs.ok"), Task: I18nUtils.GetMessage("uns.create.task.name.final")}
+	status := &common.RunningStatus{Code: 200, Msg: I18nUtils.GetMessageWithCtx(ctx, "uns.import.rs.ok"), Task: I18nUtils.GetMessageWithCtx(ctx, "uns.create.task.name.final")}
 	status.SetProgress(100)
 	status.Finished = base.OptionalTrue
 	if errFile != nil {
@@ -215,13 +188,13 @@ func (l *UnsImportExportService) doImport(fileName string, fileSize int64, pipeR
 		er = errFile.Close()
 		status.Code = 206
 		if countUns == countErr {
-			status.Msg = I18nUtils.GetMessage("global.import.rs.allErr")
+			status.Msg = I18nUtils.GetMessageWithCtx(ctx, "global.import.rs.allErr")
 		} else {
-			status.Msg = I18nUtils.GetMessage("uns.import.rs.hasErr") + fmt.Sprintf(": %d/%d", countErr, countUns)
+			status.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.import.rs.hasErr") + fmt.Sprintf(": %d/%d", countErr, countUns)
 		}
 		status.ErrTipFile = errFileRelativePath
 	} else if countUns == 0 {
-		status.Msg = I18nUtils.GetMessage("uns.noData")
+		status.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.noData")
 	}
 	pushStatus(status)
 }

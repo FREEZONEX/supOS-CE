@@ -1,15 +1,215 @@
 package relationDB
 
 import (
+	"backend/internal/types"
 	"context"
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"gitee.com/unitedrhino/share/stores"
+	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+// GroupedSourceFlowItem 分组和未分组source flow统一返回结构
+type GroupedSourceFlowItem struct {
+	ID          string     `gorm:"column:id" json:"id"`                    // ID
+	Category    string     `gorm:"column:category" json:"category"`        // 分类 group-分组 file-文件
+	GroupType   int64      `gorm:"column:group_type" json:"groupType"`     // 类型：GROUP 表示分组，BIZ 表示未分组的source flow
+	Name        string     `gorm:"column:name" json:"name"`                // 名称
+	Description string     `gorm:"column:description" json:"description"`  // 描述
+	GroupID     *int64     `gorm:"column:group_id" json:"groupId"`         // 分组ID
+	Sort        int32      `gorm:"column:sort" json:"sort"`                // 排序字段
+	MarkTime    *time.Time `gorm:"column:mark_time" json:"markTime"`       // 置顶时间
+	CreateAt    time.Time  `gorm:"column:create_at" json:"createAt"`       // 创建时间
+	Creator     string     `gorm:"column:creator" json:"creator"`          // 创建人
+	FlowName    string     `gorm:"column:flow_name" json:"flowName"`       // flow名称
+	FlowID      string     `gorm:"column:flow_id" json:"flowId"`           // flow ID
+	FlowStatus  string     `gorm:"column:flow_status" json:"flowStatus"`   // flow状态
+	Template    string     `gorm:"column:template" json:"template"`        // 模板类型
+	HasChildren bool       `gorm:"column:has_children" json:"hasChildren"` // 是否有子节点
+}
+
+// GetGroupedSourceFlowList 按分组获取source flow列表
+// GetGroupedFlowList 按分组获取flow列表（内部通用方法）
+func (m *NoderedSourceFlowRepo) GetGroupedFlowList(
+	db *gorm.DB,
+	req *types.GroupPageRequest,
+	template string,
+) ([]*GroupedSourceFlowItem, int64, error) {
+
+	var (
+		items []*GroupedSourceFlowItem
+		total int64
+	)
+
+	whereConditions := make([]string, 0)
+	args := make([]interface{}, 0)
+
+	// ---------- base SQL ----------
+	baseSQL := `
+		SELECT
+		    g.id::varchar AS id,
+			'group' AS category,
+		    g.type AS group_type,
+		    g.name AS name,
+		    g.description AS description,
+		    NULL AS group_id,
+		    g.sort AS sort,
+		    g.mark_time AS mark_time,
+		    g.create_at AS create_at,
+		    g.creator AS creator,
+		    null as flow_name,
+		    null as flow_id,
+		    null as flow_status,
+		    null as template,
+		    EXISTS (
+				SELECT 1
+				FROM supos_node_flows u
+				WHERE u.group_id = g.id
+    		) AS has_children
+		FROM resource_group g
+		WHERE g.type = $1
+		UNION ALL
+		SELECT
+		    u.id::varchar AS id,
+		 	'file' AS category,
+		    $1 AS group_type,
+		    u.flow_name AS name,
+		    u.description AS description,
+		    u.group_id AS group_id,
+		    COALESCE(r.mark,0) AS sort,
+		    r.mark_time AS mark_time,
+		    u.create_time AS create_at,
+		    u.creator AS creator,
+		    u.flow_name AS flow_name,
+		    u.flow_id AS flow_id,
+		    u.flow_status AS flow_status,
+		    u.template AS template,
+		    FALSE AS has_children
+		FROM supos_node_flows u
+		LEFT JOIN supos_node_flow_top_recodes r
+		    ON u.id = r.id
+		WHERE u.template = $2
+	`
+
+	// $1 -> groupType, $2 -> template
+	args = append(args, req.GroupType, template)
+	paramIdx := 3
+
+	// ---------- WHERE conditions ----------
+
+	// groupId
+	if req.GroupId > 0 {
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("group_id = $%d", paramIdx),
+		)
+		args = append(args, req.GroupId)
+		paramIdx++
+	} else {
+		whereConditions = append(whereConditions, "group_id IS NULL")
+	}
+
+	// keyword
+	if req.K != "" {
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf(
+				"(name ILIKE $%d OR description ILIKE $%d)",
+				paramIdx, paramIdx+1,
+			),
+		)
+		like := "%" + req.K + "%"
+		args = append(args, like, like)
+		paramIdx += 2
+	}
+
+	// ---------- final query SQL ----------
+	querySQL := baseSQL
+	if len(whereConditions) > 0 {
+		querySQL = `
+			SELECT * FROM (` + baseSQL + `) t
+			WHERE ` + strings.Join(whereConditions, " AND ")
+	}
+
+	// ---------- COUNT ----------
+	countSQL := "SELECT COUNT(*) FROM (" + querySQL + ") t"
+	if err := db.Raw(countSQL, args...).Scan(&total).Error; err != nil {
+		logx.Errorf("failed to count grouped flow list: %v", err)
+		return nil, 0, err
+	}
+
+	// ---------- sorting ----------
+	var sortSQL string
+	if req.OrderCode != "" {
+		if req.OrderCode == "createAt" {
+			req.OrderCode = "create_at"
+		}
+		// 如果有指定排序字段，排序优先级：sort > OrderCode > mark_time > create_at
+		ascDesc := "DESC"
+		if req.IsAsc {
+			ascDesc = "ASC"
+		}
+		sortSQL = fmt.Sprintf(" ORDER BY sort DESC, %s %s, CASE WHEN sort = 1 THEN mark_time ELSE create_at END DESC", req.OrderCode, ascDesc)
+	} else {
+		// 如果没有指定排序字段，排序优先级：sort > mark_time > create_at
+		sortSQL = " ORDER BY sort DESC, CASE WHEN sort = 1 THEN mark_time ELSE create_at END DESC"
+	}
+
+	// ---------- pagination ----------
+	offset := (req.PageNo - 1) * req.PageSize
+	querySQL += fmt.Sprintf(
+		"%s LIMIT $%d OFFSET $%d",
+		sortSQL, paramIdx, paramIdx+1,
+	)
+	args = append(args, req.PageSize, offset)
+
+	logx.Debugf("group flow sql: %s , args: %+v", querySQL, args)
+
+	// ---------- query ----------
+	if err := db.Raw(querySQL, args...).Scan(&items).Error; err != nil {
+		logx.Errorf("failed to get grouped flow list: %v", err)
+		return nil, 0, err
+	}
+
+	return items, total, nil
+}
+
+// GetGroupedSourceFlowList 按分组获取source flow列表
+func (m *NoderedSourceFlowRepo) GetGroupedSourceFlowList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedSourceFlowItem, int64, error) {
+	// 根据 groupType 判断 template
+	var template string
+	switch req.GroupType {
+	case 1:
+		template = "node-red"
+	case 2:
+		template = "event-flow"
+	default:
+		return nil, 0, fmt.Errorf("invalid group type: %d", req.GroupType)
+	}
+
+	return m.GetGroupedFlowList(db, req, template)
+}
+
+// GetGroupedEventFlowList 按分组获取event flow列表
+func (m *NoderedSourceFlowRepo) GetGroupedEventFlowList(db *gorm.DB, req *types.GroupPageRequest) ([]*GroupedSourceFlowItem, int64, error) {
+	// 根据 groupType 判断 template
+	var template string
+	switch req.GroupType {
+	case 1:
+		template = "node-red"
+	case 2:
+		template = "event-flow"
+	default:
+		return nil, 0, fmt.Errorf("invalid group type: %d", req.GroupType)
+	}
+
+	return m.GetGroupedFlowList(db, req, template)
+}
 
 /*
 这个是参考样例

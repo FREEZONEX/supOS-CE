@@ -36,6 +36,7 @@ export interface ProCardProps {
       renderPinIcon?: (record: any) => boolean;
       auth?: string | string[];
     };
+    actions?: ((item: any) => OperationProps[]) | OperationProps[];
   };
   item?: any;
   onClick?: (item?: any) => void;
@@ -46,6 +47,7 @@ export interface ProCardProps {
     title?: ReactNode;
     titleDescription?: ReactNode;
     onClick?: (item?: any) => void;
+    customIconBg?: string;
   };
   description?: false | string | { content?: string; rows?: number; empty?: string };
   secondaryDescription?: ReactNode;

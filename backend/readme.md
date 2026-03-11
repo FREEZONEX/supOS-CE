@@ -72,41 +72,41 @@ The backend follows a clean architecture pattern with clear separation of concer
 ### Core Capabilities
 
 - **Unified Namespace (UNS) Management**
-  - Hierarchical topic modeling
-  - Real-time data parsing and validation
-  - Tag and label management
-  - Tree-based namespace navigation
+    - Hierarchical topic modeling
+    - Real-time data parsing and validation
+    - Tag and label management
+    - Tree-based namespace navigation
 
 - **Data Integration & Processing**
-  - MQTT message consumption and processing
-  - TimescaleDB integration for time-series data
-  - PostgreSQL for relational data storage
-  - Real-time data streaming and webhook support
+    - MQTT message consumption and processing
+    - TimescaleDB integration for time-series data
+    - PostgreSQL for relational data storage
+    - Real-time data streaming and webhook support
 
 - **Device & Protocol Management**
-  - Multi-protocol device connectivity
-  - Node-RED flow integration
-  - Source flow configuration
-  - Device status monitoring
+    - Multi-protocol device connectivity
+    - Node-RED flow integration
+    - Source flow configuration
+    - Device status monitoring
 
 - **Visualization & Dashboards**
-  - Grafana integration
-  - Custom dashboard builder
-  - Real-time charting capabilities
-  - Template-based visualization
+    - Grafana integration
+    - Custom dashboard builder
+    - Real-time charting capabilities
+    - Template-based visualization
 
 - **Event Processing**
-  - Event flow orchestration
-  - Rule engine with expression evaluation
-  - Alarm management and notifications
-  - Trigger functions
+    - Event flow orchestration
+    - Rule engine with expression evaluation
+    - Alarm management and notifications
+    - Trigger functions
 
 - **System Management**
-  - User authentication (Keycloak OAuth)
-  - Role-based access control
-  - Resource management
-  - I18n support (multi-language)
-  - System configuration
+    - User authentication (Keycloak OAuth)
+    - Role-based access control
+    - Resource management
+    - I18n support (multi-language)
+    - System configuration
 
 ---
 
@@ -136,9 +136,9 @@ Before you begin, ensure you have the following installed:
 - **Go**: 1.24.2 or higher
 - **Protocol Buffers**: `protoc`, `protoc-gen-go`, `protoc-gen-grpc-go`
 - **Databases**:
-  - PostgreSQL 14+
-  - TimescaleDB extension
-  - Redis (optional, for caching)
+    - PostgreSQL 14+
+    - TimescaleDB extension
+    - Redis (optional, for caching)
 - **Message Broker**: MQTT broker (e.g., Mosquitto, EMQX)
 - **goctl**: The go-zero CLI tool (fork from [i-Things/go-zero](https://github.com/i-Things/go-zero))
 
@@ -554,6 +554,8 @@ type UnsNamespaceRepo interface {
 ---
 
 ## Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](../CONTRIBUTING.md) for details.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)

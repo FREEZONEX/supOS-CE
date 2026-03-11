@@ -32,12 +32,65 @@ type AliasRequest struct {
 	Alias string `path:"alias"`
 }
 
+type AppDetail struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageSource string `json:"imageSource"`
+	ImagePath   string `json:"imagePath,omitempty"`
+	ImageUrl    string `json:"imageUrl,omitempty"`
+	IconPath    string `json:"iconPath,omitempty"`
+	MenuUrl     string `json:"menuUrl"`
+	ComposeYaml string `json:"composeYaml"`
+	RouterTrim  bool   `json:"routerTrim"`
+	KeepHost    bool   `json:"keepHost"`
+	InstallTime string `json:"installTime,omitempty"`
+	Status      string `json:"status,optional"`
+}
+
+type AppDetailResponse struct {
+	Code    int       `json:"code"`
+	Message string    `json:"message,optional"`
+	Data    AppDetail `json:"data"`
+}
+
+type AppInfo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageSource string `json:"imageSource"`
+	MenuUrl     string `json:"menuUrl"`
+	Installed   bool   `json:"installed"`
+	InstallTime string `json:"installTime,optional"`
+	Status      string `json:"status,optional"`
+}
+
+type AppKeyInfo struct {
+	ID             string `json:"id"`
+	AppSecretKey   string `json:"appSecretKey"`
+	AppSecretValue string `json:"appSecretValue"`
+	Status         int32  `json:"status"`
+	CreateTime     int64  `json:"createTime"`
+}
+
 type AttachmentDeleteReq struct {
 	ObjectName string `form:"objectName"`
 }
 
 type AttachmentDownloadReq struct {
 	ObjectName string `form:"objectName"`
+}
+
+type AttachmentInfo struct {
+	FileID        string   `json:"fileId"`
+	Filename      string   `json:"filename"`
+	FileSize      int64    `json:"fileSize"`
+	FileType      string   `json:"fileType"`
+	Category      string   `json:"category,optional"`
+	Description   string   `json:"description,optional"`
+	Tags          []string `json:"tags,optional"`
+	MD5           string   `json:"md5"`
+	UploadTime    string   `json:"uploadTime"`
+	Uploader      string   `json:"uploader,optional"`
+	DownloadCount int64    `json:"downloadCount"`
 }
 
 type AttachmentPreviewReq struct {
@@ -146,6 +199,9 @@ type ContainerInfo struct {
 	EnvMap      map[string]interface{} `json:"envMap,optional"`
 }
 
+type CreateAppKeyReq struct {
+}
+
 type CreateFileDto struct {
 	Name             string                 `json:"name"`
 	Alias            string                 `json:"alias,optional"`
@@ -221,7 +277,6 @@ type CreateTopicDto struct {
 	ReferTable                    string                    `json:"referTable,optional,omitzero"`
 	RefFields                     []*FieldDefine            `json:"refFields,optional,omitzero"`
 	ReferModelID                  string                    `json:"referModelId,optional,omitzero"`
-	Cited                         map[int64]bool            `json:"-"`                        // Set of cited IDs
 	Refers                        []*InstanceField          `json:"refers,optional,omitzero"` // Calculation fields
 	Expression                    *string                   `json:"expression,optional,omitzero" validate:"max=255"`
 	CompileExpression             interface{}               `json:"-"`
@@ -260,6 +315,7 @@ type CreateTopicDto struct {
 	RefTopicFields                map[int64]map[string]bool `json:"-"`
 	Status                        int16                     `json:"-"`
 	CountExistsSiblings           int64                     `json:"-"`
+	Timestamps                    [2]int64                  `json:"-"`
 }
 
 type CreateUnsNodeRedDto struct {
@@ -283,13 +339,25 @@ type CreateUnsResult struct {
 type DashboardDto struct {
 	ID          string `json:"id,optional,omitzero"`
 	Name        string `json:"name"`
-	Type        int    `json:"type"` // 1-grafana 2-fuxa
+	Type        int    `json:"type"`                    // 1-grafana 2-fuxa
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 	NeedInit    bool   `json:"needInit,optional"`
 	Description string `json:"description,optional,omitzero"`
 	JsonContent string `json:"jsonContent,optional,omitzero"`
 	Creator     string `json:"creator,optional,omitzero"`
 	UpdateTime  string `json:"updateTime,optional,omitzero"`
 	CreateTime  string `json:"createTime,optional,omitzero"`
+}
+
+type DashboardExportParam struct {
+	GroupIds   []int64  `json:"gids,string,optional,omitempty,omitzero"`
+	DashIds    []string `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string   `json:"exportType,optional,omitempty,omitzero"`
+}
+
+type DashboardGroupPageResp struct {
+	PageResultDTO
+	Data []GroupBizVO `json:"data"`
 }
 
 type DashboardPageResp struct {
@@ -325,12 +393,36 @@ type DbFieldsInfoVoResp struct {
 	Data []FieldDefine `json:"data"`
 }
 
+type DeleteAttachmentRequest struct {
+	FileID string `form:"fileId"`
+}
+
+type DeleteAttachmentResponse struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message,optional"`
+	Data    DeleteResult `json:"data"`
+}
+
+type DeleteIDReq struct {
+	ID int64 `path:"id"`
+}
+
+type DeleteResult struct {
+	FileID  string `json:"fileId"`
+	Success bool   `json:"success"`
+}
+
 type DetailRequest struct {
 	ID string `form:"id"`
 }
 
 type DetectRemoveReq struct {
 	Id int64 `form:"id"`
+}
+
+type DownloadAttachmentRequest struct {
+	FileID   string `form:"fileId"`
+	Filename string `form:"filename,optional"`
 }
 
 type EmailUpdateReq struct {
@@ -353,12 +445,14 @@ type EventFlowCopyReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"`
 }
 
 type EventFlowCreateReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 }
 
 type EventFlowDeleteReq struct {
@@ -368,6 +462,17 @@ type EventFlowDeleteReq struct {
 type EventFlowDeployReq struct {
 	ID    string                   `json:"id"`
 	Flows []map[string]interface{} `json:"flows,optional"`
+}
+
+type EventFlowExportParam struct {
+	GroupIds   []int64 `json:"gids,string,optional,omitempty,omitzero"`
+	FlowIds    []int64 `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+}
+
+type EventFlowGroupPageResp struct {
+	PageResultDTO
+	Data []GroupFlowVO `json:"data"`
 }
 
 type EventFlowInfo struct {
@@ -416,13 +521,8 @@ type ExportPathResult struct {
 }
 
 type ExportReq struct {
-	CheckSmallFile *bool   `json:"checkSmallFile,optional,omitempty,omitzero"`
-	UserId         string  `json:"userId,optional,omitempty,omitzero"`
-	Language       string  `json:"language,optional,omitempty,omitzero"`
-	ExportType     string  `json:"exportType,optional,omitempty,omitzero"`
-	FileType       string  `json:"fileType,optional,omitempty,omitzero"`
-	Folders        []int64 `json:"folders,string,optional,omitempty,omitzero"`
-	Files          []int64 `json:"files,string,optional,omitempty,omitzero"`
+	UnsExportParam
+	CheckSmallFile *bool `json:"checkSmallFile,optional,omitempty,omitzero"`
 }
 
 type ExportResp struct {
@@ -442,14 +542,14 @@ type FieldDefine struct {
 	Index       *string     `json:"index,optional,omitempty"`
 	DisplayName *string     `json:"displayName,optional,omitempty"`
 	Remark      *string     `json:"remark,optional,omitempty"`
-	MaxLen      *int        `json:"maxLen,optional,omitempty"`
+	MaxLen      *int        `json:"maxLen,optional,omitempty,string"`
 	TbValueName *string     `json:"tbValueName,optional,omitempty"`
 	Unit        *string     `json:"unit,optional,omitempty"`
 	UpperLimit  *float64    `json:"upperLimit,optional,omitempty"`
 	LowerLimit  *float64    `json:"lowerLimit,optional,omitempty"`
-	Decimal     *int        `json:"decimal,optional,omitempty"`
+	Decimal     *int        `json:"decimal,optional,omitempty,string"`
 	SystemField *bool       `json:"systemField,optional,omitempty"`
-	LastValue   interface{} `json:"-,optional"`
+	LastValue   string      `json:"-,optional"`
 	LastTime    int64       `json:"-,optional"`
 	Uns         interface{} `json:"-"`
 }
@@ -478,6 +578,14 @@ type FlowMarkReq struct {
 
 type FlowUNMarkReq struct {
 	ID string `form:"id,optional"`
+}
+
+type GetAppRequest struct {
+	Name string `path:"name"`
+}
+
+type GetByPathReq struct {
+	Path string `form:"path"`
 }
 
 type GetByUnsReq struct {
@@ -538,6 +646,14 @@ type GetUnsI18nMessagesResp struct {
 	Messages map[string]string `json:"messages"`
 }
 
+type GlobalExportParam struct {
+	Name                 string                 `json:"name,optional,omitempty,omitzero"`
+	UnsExportParam       *UnsExportParam        `json:"unsExportParam,optional,omitzero"`
+	SrcFlowExportParam   *SourceFlowExportParam `json:"sourceFlowExportParam,optional,omitzero"`
+	EventFlowExportParam *EventFlowExportParam  `json:"eventFlowExportParam,optional,omitzero"`
+	DashboardExportParam *DashboardExportParam  `json:"dashboardExportParam,optional,omitzero"`
+}
+
 type GlobalTopologyData struct {
 	ModelNum             int64             `json:"Folder"`               // Number of models (path_type=0)
 	InstanceNum          int64             `json:"File"`                 // Number of instances (path_type=2)
@@ -549,6 +665,87 @@ type GlobalTopologyData struct {
 	Protocol             map[string]int64  `json:"protocol"`             // Protocol counts: {"mqtt": 200, "opcua": 50}
 	ICMPStates           []interface{}     `json:"icmpStates"`           // ICMP ping states
 	MountStatus          map[string]string `json:"mountStatus"`          // Mount status by alias
+}
+
+type GroupBatchDeleteReq struct {
+	IDs []int64 `json:"ids"`
+}
+
+type GroupBizVO struct {
+	ID          string `json:"id"`
+	Category    string `json:"category,optional"` //分类 group-分组 file-文件
+	GroupType   *int64 `json:"groupType,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	GroupId     *int64 `json:"groupId,optional"`
+	CreateAt    int64  `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
+	HasChildren bool   `json:"hasChildren,optional"`
+}
+
+type GroupByTypeQuery struct {
+	Type int16   `form:"type"` //1-sourceflow 2-eventflow 3-datasource
+	Name *string `form:"name,optional"`
+	PageInfo
+}
+
+type GroupFlowVO struct {
+	ID          string `json:"id"`
+	Category    string `json:"category,optional"` //分类 group-分组 file-文件
+	GroupType   *int64 `json:"groupType,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	GroupId     *int64 `json:"groupId,optional"`
+	CreateAt    int64  `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
+	FlowName    string `json:"flowName,optional"`
+	FlowID      string `json:"flowId,optional"`
+	FlowStatus  string `json:"flowStatus,optional"`
+	Template    string `json:"template,optional"`
+	HasChildren bool   `json:"hasChildren,optional"`
+}
+
+type GroupIDReq struct {
+	ID int64 `path:"id"`
+}
+
+type GroupPageRequest struct {
+	GroupType int64  `form:"groupType,optional"`
+	GroupId   int64  `form:"groupId,optional"`
+	K         string `form:"k,optional"`
+	PageNo    int64  `form:"pageNo,default=1"`
+	PageSize  int64  `form:"pageSize,default=10"`
+	Category  string `form:"category,optional"` //分类 group-分组 file-文件
+	Creator   string `form:"creator,optional"`
+	OrderCode string `form:"orderCode,optional"` // 排序字段
+	IsAsc     bool   `form:"isAsc,optional"`     // 是否升序
+}
+
+type GroupPageResultVO struct {
+	PageNo   int64     `json:"pageNo"`
+	PageSize int64     `json:"pageSize"`
+	Total    int64     `json:"total"`
+	Code     int64     `json:"code"`
+	Data     []GroupVO `json:"data"`
+}
+
+type GroupQuery struct {
+	Type *int16  `form:"type,optional"`
+	Name *string `form:"name,optional"`
+	PageInfo
+}
+
+type GroupVO struct {
+	ID          int64  `json:"id"`
+	Type        *int16 `json:"type,optional"`
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	Sort        int32  `json:"sort,optional"`
+	UpdateAt    string `json:"updateAt,optional"`
+	CreateAt    string `json:"createAt,optional"`
+	Creator     string `json:"creator,optional,omitzero"`
 }
 
 type HistoryValueRequest struct {
@@ -568,6 +765,39 @@ type I18nLanguageVO struct {
 
 type IDList struct {
 	IDs []int64 `json:"ids"`
+}
+
+type InstallAppRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	ImagePath   string `json:"imagePath,optional"`
+	ImageUrl    string `json:"imageUrl,optional"`
+	IconPath    string `json:"iconPath,optional"`
+	MenuUrl     string `json:"menuUrl"`
+	Menu        *Menu  `json:"menu,optional"`
+	ComposeYaml string `json:"composeYaml"`
+	RouterTrim  bool   `json:"routerTrim,optional,default=true"`
+	KeepHost    bool   `json:"keepHost,optional,default=false"`
+}
+
+type InstallAppResponse struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message,optional"`
+	Data    InstallResult `json:"data"`
+}
+
+type InstallResult struct {
+	Name        string `json:"name"`
+	Success     bool   `json:"success"`
+	Message     string `json:"message,optional"`
+	InstallTime string `json:"installTime,optional"`
+}
+
+type InstalledAppsResponse struct {
+	Code    int       `json:"code"`
+	Message string    `json:"message,optional"`
+	Data    []AppInfo `json:"data"`
+	Total   int       `json:"total"`
 }
 
 type InstanceDetail struct {
@@ -671,12 +901,38 @@ type LabelVo struct {
 	SubscribeAt        int64  `json:"subscribeAt,omitzero"`
 }
 
+type ListAppKeyResp struct {
+	BaseResult
+	Data []*AppKeyInfo `json:"data"`
+}
+
 type ListAttachmentReq struct {
 	Alias string `form:"alias"`
 }
 
 type ListAttachmentResp struct {
 	List []UnsAttachmentBo `json:"list"`
+}
+
+type ListAttachmentsRequest struct {
+	Category string `form:"category,optional"`
+	Tag      string `form:"tag,optional"`
+	Page     int    `form:"page,optional,default=1"`
+	PageSize int    `form:"pageSize,optional,default=20"`
+}
+
+type ListAttachmentsResponse struct {
+	Code    int        `json:"code"`
+	Message string     `json:"message,optional"`
+	Data    ListResult `json:"data"`
+	Total   int        `json:"total"`
+}
+
+type ListResult struct {
+	Items      []AttachmentInfo `json:"items"`
+	Page       int              `json:"page"`
+	PageSize   int              `json:"pageSize"`
+	TotalPages int              `json:"totalPages"`
 }
 
 type ListTypesResult struct {
@@ -704,6 +960,16 @@ type MakeSingleLabelReq struct {
 
 type MarkTopRequest struct {
 	ID string `json:"id"`
+}
+
+type Menu struct {
+	Name         string `json:"name,optional"`
+	Description  string `json:"description,optional"`
+	IndexUrl     string `json:"indexUrl"`
+	OpenType     int    `json:"openType,optional,default=0"`
+	StripPath    bool   `json:"stripPath,optional,default=true"`
+	PreserveHost bool   `json:"preserveHost,optional,default=false"`
+	IconUrl      string `json:"iconUrl,optional"`
 }
 
 type MockInstanceTopologyReq struct {
@@ -749,6 +1015,17 @@ type MountDetailVo struct {
 	MountType   *int16 `json:"mountType,omitempty,string"`
 	MountSource string `json:"mountSource,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`
+}
+
+type OperationGroupReq struct {
+	ID     *int64  `json:"id,string"` //组ID
+	BizId  *string `json:"bizId"`     //业务ID
+	Status *bool   `json:"status"`    // true移入，false移出
+}
+
+type OperationGroupTopReq struct {
+	ID     *int64 `json:"id,string"` //组ID
+	Status *bool  `json:"status"`    // true置顶（sort字段设置为1），false取消置顶(sort字段设置为0)
 }
 
 type OperationResult struct {
@@ -958,6 +1235,14 @@ type RouteListResp struct {
 	Data []SimpleRouteVO `json:"data"`
 }
 
+type SaveGroupReq struct {
+	ID          *int64  `json:"id,string,optional"`
+	Type        *int16  `json:"type,optional"`
+	Name        *string `json:"name,optional"`
+	Description *string `json:"description,optional"`
+	Sort        *int32  `json:"sort,optional"`
+}
+
 type SaveMenuReq struct {
 	ServiceName string `form:"serviceName,optional"` // 服务名（可选）
 	Name        string `form:"name"`                 // 名称，唯一标识一个菜单
@@ -986,6 +1271,10 @@ type SaveResourceReq struct {
 	Fixed       bool              `json:"fixed,optional"`
 	Enable      bool              `json:"enable,optional"`
 	Children    []SaveResourceReq `json:"children,optional"`
+}
+
+type SearchAppsRequest struct {
+	Keyword string `form:"keyword,optional"`
 }
 
 type SearchPagedReq struct {
@@ -1042,12 +1331,14 @@ type SourceFlowCopyReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"`
 }
 
 type SourceFlowCreateReq struct {
 	FlowName    string `json:"flowName"`
 	Description string `json:"description,optional"`
 	Template    string `json:"template,optional"`
+	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
 }
 
 type SourceFlowDeleteReq struct {
@@ -1062,6 +1353,17 @@ type SourceFlowDeployReq struct {
 type SourceFlowDeployResult struct {
 	FlowID  string `json:"flowId,optional"`
 	Version string `json:"version,optional"`
+}
+
+type SourceFlowExportParam struct {
+	GroupIds   []int64 `json:"gids,string,optional,omitempty,omitzero"`
+	FlowIds    []int64 `json:"ids,string,optional,omitempty,omitzero"`
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+}
+
+type SourceFlowGroupPageResp struct {
+	PageResultDTO
+	Data []GroupFlowVO `json:"data"`
 }
 
 type SourceFlowInfo struct {
@@ -1268,6 +1570,22 @@ type TreeOuterStructureVo struct {
 	Children []*TreeOuterStructureVo `json:"children"`
 }
 
+type UninstallAppRequest struct {
+	Name string `path:"name"`
+}
+
+type UninstallAppResponse struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message,optional"`
+	Data    UninstallResult `json:"data"`
+}
+
+type UninstallResult struct {
+	Name    string `json:"name"`
+	Success bool   `json:"success"`
+	Message string `json:"message,optional"`
+}
+
 type UnmarkRequest struct {
 	ID string `form:"id"`
 }
@@ -1300,6 +1618,12 @@ type UnsDataResponseVo struct {
 	ErrorFields map[string]string `json:"errorFields,omitempty"`
 }
 
+type UnsExportParam struct {
+	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
+	Folders    []int64 `json:"folders,string,optional,omitempty,omitzero"`
+	Files      []int64 `json:"files,string,optional,omitempty,omitzero"`
+}
+
 type UnsHistoryQueryResult struct {
 }
 
@@ -1326,6 +1650,29 @@ type UnsTreeCondition struct {
 type UnsTreePageResp struct {
 	PageResultDTO
 	Data []*TopicTreeResult `json:"data,omitempty,optional"`
+}
+
+type UpdateAppKeyReq struct {
+	AppSecretKey string `json:"appSecretKey"`
+	Status       int32  `json:"status"`
+}
+
+type UpdateAppRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description,optional"`
+	ImagePath   string `json:"imagePath,optional"`
+	ImageUrl    string `json:"imageUrl,optional"`
+	IconPath    string `json:"iconPath,optional"`
+	MenuUrl     string `json:"menuUrl,optional"`
+	ComposeYaml string `json:"composeYaml,optional"`
+	RouterTrim  *bool  `json:"routerTrim,optional"`
+	KeepHost    *bool  `json:"keepHost,optional"`
+}
+
+type UpdateAppResponse struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message,optional"`
+	Data    UpdateResult `json:"data"`
 }
 
 type UpdateFileDTO struct {
@@ -1360,6 +1707,12 @@ type UpdateNameVo struct {
 type UpdatePersonConfigReq struct {
 	UserID       string `json:"userId"`
 	MainLanguage string `json:"mainLanguage"`
+}
+
+type UpdateResult struct {
+	Name    string `json:"name"`
+	Success bool   `json:"success"`
+	Message string `json:"message,optional"`
 }
 
 type UpdateTemplateBaseInfoReq struct {
@@ -1430,8 +1783,30 @@ type UpdateUnsDto struct {
 	CreateAt                      int64                  `json:"createAt,optional,omitzero"`
 }
 
+type UploadAttachmentRequest struct {
+	Category    string   `form:"category,optional"`
+	Description string   `form:"description,optional"`
+	Tags        []string `form:"tags,optional"`
+}
+
+type UploadAttachmentResponse struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message,optional"`
+	Data    UploadResult `json:"data"`
+}
+
 type UploadReq struct {
 	File string `form:"file,multipart/form-data"`
+}
+
+type UploadResult struct {
+	FileID      string `json:"fileId"`
+	Filename    string `json:"filename"`
+	FileSize    int64  `json:"fileSize"`
+	FileType    string `json:"fileType"`
+	MD5         string `json:"md5"`
+	UploadTime  string `json:"uploadTime"`
+	DownloadUrl string `json:"downloadUrl"`
 }
 
 type UserCreateReq struct {

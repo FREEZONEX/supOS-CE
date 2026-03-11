@@ -35,3 +35,17 @@
     justify-content: center;
   }
 }
+
+.import-upload {
+  .ant-upload-drag {
+    //height: 200px;
+    background: transparent;
+  }
+}
+
+.upload-file {
+  .ant-upload-drag {
+    height: 170px !important;
+    background: var(--supos-charttop-bg-color);
+  }
+}

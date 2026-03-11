@@ -30,6 +30,6 @@ func NewGetInstanceDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *GetInstanceDetailLogic) GetInstanceDetail(req *types.InstanceDetailReq) (resp *types.InstanceDetailResp, err error) {
-	resp, err = spring.GetBean[*service.UnsQueryService]().GetInstanceDetail(l.ctx, req, "")
+	resp, err = spring.GetBean[*service.UnsQueryService]().GetInstanceDetail(l.ctx, req, "", "")
 	return
 }

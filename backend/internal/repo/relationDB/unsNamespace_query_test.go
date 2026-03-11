@@ -29,24 +29,28 @@ func TestJsonErr(t *testing.T) {
 func TestListByLayRecs(t *testing.T) {
 	db := stores.GetCommonConn(t.Context())
 	dao := NewUnsNamespaceRepo()
-	page := &stores.PageInfo{Page: 1, Size: 10, Orders: []stores.OrderBy{{Field: "lay_rec"}}}
-	layRecs := []string{"1960575789291339779", "1965675474571513856"}
-	rs, err := dao.ListByLayRecs(db, layRecs, page)
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	index := 0
-	t.Log(index, len(rs), rs)
-	for len(rs) > 0 {
-		index++
-		page.Page++
-		rs, err = dao.ListByLayRecs(db, layRecs, page)
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Log(index, len(rs), rs)
-	}
+	exists, err := dao.ExistsTimeSeriaNoneTables(db)
+	t.Log("exists:", exists, ", err:", err)
+
+	//page := &stores.PageInfo{Page: 1, Size: 10, Orders: []stores.OrderBy{{Field: "lay_rec"}}}
+	//layRecs := []string{"1960575789291339779", "1965675474571513856"}
+	//rs, err := dao.ListByLayRecs(db, layRecs, page)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//index := 0
+	//t.Log(index, len(rs), rs)
+	//for len(rs) > 0 {
+	//	index++
+	//	page.Page++
+	//	rs, err = dao.ListByLayRecs(db, layRecs, page)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	t.Log(index, len(rs), rs)
+	//}
 
 }
 func TestLabelListAll(t *testing.T) {
@@ -108,7 +112,7 @@ func init() {
 		Database: conf.Database{
 			IsInitTable: true,
 			DBType:      "pgsql",
-			DSN:         "postgres://postgres:postgres@100.100.100.20:31014/postgres?search_path=supos",
+			DSN:         "postgres://postgres:postgres@192.168.236.101:5432/postgres?search_path=supos",
 		},
 	}
 

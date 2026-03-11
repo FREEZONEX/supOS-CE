@@ -1,0 +1,165 @@
+info(
+    title: "Application Management"
+    desc: "Manage installed applications and features"
+    author: "System"
+    version: "v1"
+)
+
+@server(
+    group: supos/app
+    prefix: /inter-api/supos/app
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "List all installed applications"
+    @handler listInstalledApps
+    get /installed () returns (InstalledAppsResponse)
+
+    @doc "Get application details by name"
+    @handler getAppByName
+    get /installed/:name (GetAppRequest) returns (AppDetailResponse)
+
+    @doc "Search installed applications"
+    @handler searchApps
+    get /installed/search (SearchAppsRequest) returns (InstalledAppsResponse)
+
+    @doc "Install a new application"
+    @handler installApp
+    post /install (InstallAppRequest) returns (InstallAppResponse)
+
+    @doc "Uninstall an application"
+    @handler uninstallApp
+    delete /uninstall/:name (UninstallAppRequest) returns (UninstallAppResponse)
+
+    @doc "Update application configuration"
+    @handler updateApp
+    put /update (UpdateAppRequest) returns (UpdateAppResponse)
+}
+
+type (
+    // Request types
+    GetAppRequest {
+        Name string `path:"name"`
+    }
+
+    // Menu 菜单配置
+    Menu {
+        Name         string `json:"name,optional"`
+        Description  string `json:"description,optional"`
+        IndexUrl     string `json:"indexUrl"`
+        OpenType     int    `json:"openType,optional,default=0"`
+        StripPath    bool   `json:"stripPath,optional,default=true"`
+        PreserveHost bool   `json:"preserveHost,optional,default=false"`
+        IconUrl      string `json:"iconUrl,optional"`
+    }
+
+    InstallAppRequest {
+        Name        string           `json:"name"`
+        Description string           `json:"description,optional"`
+        ImagePath   string           `json:"imagePath,optional"`
+        ImageUrl    string           `json:"imageUrl,optional"`
+        IconPath    string           `json:"iconPath,optional"`
+        MenuUrl     string           `json:"menuUrl"`
+        Menu        *Menu `json:"menu,optional"`
+        ComposeYaml string           `json:"composeYaml"`
+        RouterTrim  bool             `json:"routerTrim,optional,default=true"`
+        KeepHost    bool             `json:"keepHost,optional,default=false"`
+    }
+
+    SearchAppsRequest {
+        Keyword string `form:"keyword,optional"`
+    }
+
+    UninstallAppRequest {
+        Name string `path:"name"`
+    }
+
+    UpdateAppRequest {
+        Name        string `json:"name"`
+        Description string `json:"description,optional"`
+        ImagePath   string `json:"imagePath,optional"`
+        ImageUrl    string `json:"imageUrl,optional"`
+        IconPath    string `json:"iconPath,optional"`
+        MenuUrl     string `json:"menuUrl,optional"`
+        ComposeYaml string `json:"composeYaml,optional"`
+        RouterTrim  *bool  `json:"routerTrim,optional"`
+        KeepHost    *bool  `json:"keepHost,optional"`
+    }
+
+    // Response types
+    InstalledAppsResponse {
+        Code    int         `json:"code"`
+        Message string      `json:"message,optional"`
+        Data    []AppInfo   `json:"data"`
+        Total   int         `json:"total"`
+    }
+
+    AppDetailResponse {
+        Code    int         `json:"code"`
+        Message string      `json:"message,optional"`
+        Data    AppDetail   `json:"data"`
+    }
+
+    InstallAppResponse {
+        Code    int         `json:"code"`
+        Message string      `json:"message,optional"`
+        Data    InstallResult `json:"data"`
+    }
+
+    UninstallAppResponse {
+        Code    int         `json:"code"`
+        Message string      `json:"message,optional"`
+        Data    UninstallResult `json:"data"`
+    }
+
+    UpdateAppResponse {
+        Code    int         `json:"code"`
+        Message string      `json:"message,optional"`
+        Data    UpdateResult `json:"data"`
+    }
+
+    // Data types
+    AppInfo {
+        Name        string `json:"name"`
+        Description string `json:"description"`
+        ImageSource string `json:"imageSource"`
+        MenuUrl     string `json:"menuUrl"`
+        Installed   bool   `json:"installed"`
+        InstallTime string `json:"installTime,optional"`
+        Status      string `json:"status,optional"`
+    }
+
+    AppDetail {
+        Name        string `json:"name"`
+        Description string `json:"description"`
+        ImageSource string `json:"imageSource"`
+        ImagePath   string `json:"imagePath,omitempty"`
+        ImageUrl    string `json:"imageUrl,omitempty"`
+        IconPath    string `json:"iconPath,omitempty"`
+        MenuUrl     string `json:"menuUrl"`
+        ComposeYaml string `json:"composeYaml"`
+        RouterTrim  bool   `json:"routerTrim"`
+        KeepHost    bool   `json:"keepHost"`
+        InstallTime string `json:"installTime,omitempty"`
+        Status      string `json:"status,optional"`
+    }
+
+    InstallResult {
+        Name        string `json:"name"`
+        Success     bool   `json:"success"`
+        Message     string `json:"message,optional"`
+        InstallTime string `json:"installTime,optional"`
+    }
+
+    UninstallResult {
+        Name    string `json:"name"`
+        Success bool   `json:"success"`
+        Message string `json:"message,optional"`
+    }
+
+    UpdateResult {
+        Name    string `json:"name"`
+        Success bool   `json:"success"`
+        Message string `json:"message,optional"`
+    }
+)

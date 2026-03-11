@@ -1,10 +1,10 @@
 package system
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/common/serviceApi"
 	"backend/internal/common/utils/apiutil"
 	"backend/internal/common/utils/dbpool"
-	"backend/internal/types"
 	"backend/share/spring"
 	"context"
 	"encoding/json"
@@ -31,7 +31,7 @@ func Devtest(ctx context.Context, params map[string][]string) (resp map[string]i
 		if aliasList := params["uns"]; len(aliasList) > 0 {
 			for _, a := range aliasList {
 				if len(a) > 0 {
-					var uns *types.CreateTopicDto
+					var uns any
 					if unicode.IsDigit(rune(a[0])) {
 						id, er := strconv.ParseInt(a, 10, 64)
 						if er == nil {
@@ -44,6 +44,11 @@ func Devtest(ctx context.Context, params map[string][]string) (resp map[string]i
 						resp[a] = uns
 					}
 				}
+			}
+		}
+		if i18nKeys := params["i18n"]; len(i18nKeys) > 0 {
+			for _, k := range i18nKeys {
+				resp[k] = I18nUtils.GetMessageWithCtx(ctx, k)
 			}
 		}
 	}

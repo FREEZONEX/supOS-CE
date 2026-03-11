@@ -79,6 +79,25 @@ func (p UnsNamespaceRepo) GetByPath(db *gorm.DB, path string) (result *UnsNamesp
 	}
 	return &po, nil
 }
+func (p UnsNamespaceRepo) SelectByAlias(ctx context.Context, alias string) (result *UnsNamespace, err error) {
+	var po UnsNamespace
+	err = p.model(GetDb(ctx)).Where("alias = ? ", alias).Where("status = 1").First(&po).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return &po, nil
+}
+func (p UnsNamespaceRepo) SelectByPath(ctx context.Context, path string) (result *UnsNamespace, err error) {
+	var po UnsNamespace
+	err = p.model(GetDb(ctx)).
+		Where("pathash = hashtext(?)", path).
+		Where("path = ? ", path).
+		Where("status = 1").First(&po).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return &po, nil
+}
 func (p UnsNamespaceRepo) GetAliasByPath(db *gorm.DB, path string) (alias string) {
 	_ = p.model(db).Select([]string{"alias"}).
 		Where("pathash = hashtext(?)", path).
@@ -239,6 +258,15 @@ func (p UnsNamespaceRepo) CountChildrenTree(db *gorm.DB, folderIds []int64) (int
 		return -1, stores.ErrFmt(err)
 	}
 	return count.Int64, nil
+}
+func (p UnsNamespaceRepo) ExistsTimeSeriaNoneTables(db *gorm.DB) (bool, error) {
+	var idLong sql.NullInt64
+	err := p.model(db).Select("id").
+		Where(" path_type =2 and data_type =1 and (table_name is null or table_name='') and status=1 limit 1").Scan(&idLong).Error
+	if err != nil {
+		return false, stores.ErrFmt(err)
+	}
+	return idLong.Int64 > 0, nil
 }
 func (p UnsNamespaceRepo) ListAll(db *gorm.DB, pathTypes []int16, page, pageSize int) (results []*UnsNamespace, err error) {
 	if page < 1 {

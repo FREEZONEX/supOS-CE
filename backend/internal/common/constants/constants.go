@@ -82,7 +82,7 @@ const (
 	CookieMaxAge        = 60 * 60 * 24 * 365
 
 	// Regex Strings
-	AliasReg = `[a-zA-Z_$][a-zA-Z0-9_$]*$`
+	AliasReg = `^[a-zA-Z_$][a-zA-Z0-9_$]*$`
 	TopicReg = `^[\x{4e00}-\x{9fa5}a-zA-Z0-9/_-]+$`
 	NameReg  = `^[\x{4e00}-\x{9fa5}a-zA-Z0-9_-]+$`
 
@@ -188,7 +188,7 @@ func init() {
 	UnsOverdueDelete = getEnvAsInt("UNS_HISTORY_OVER_DUE", 7)
 	TokenMaxAge = getEnvAsInt("TOKEN_MAX_AGE", 3600)
 
-	// Initialize the set of system fields
+	// InitializeEndpointId the set of system fields
 	SystemFields = map[string]struct{}{
 		SystemSeqTag:       {},
 		SysFieldID:         {},

@@ -10,7 +10,7 @@ Database:
 
 log:
   ServiceName: uns
-  Mode: file
+  Mode: console
   Path: logs
   Level: info
   KeepDays: 7
@@ -78,3 +78,5 @@ NodeRed:
 Kong:
   Host: kong
   Port: 8001
+#max file size 100MB
+MaxBytes: 104857600

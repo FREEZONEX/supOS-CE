@@ -36,6 +36,7 @@ type FlowCopyInput struct {
 	FlowName    string
 	Description string
 	Template    string
+	GroupId     *int64
 }
 
 // CopyFlow clones the given flow and returns the created record.
@@ -61,6 +62,7 @@ func CopyFlow(
 		Description: strings.TrimSpace(input.Description),
 		Template:    strings.TrimSpace(input.Template),
 		FlowStatus:  FlowStatusDraft,
+		GroupId:     input.GroupId,
 	}
 
 	sourceJSON, _, err := ResolveNodesJSON(ctx, client, "", src)
@@ -345,14 +347,7 @@ func ExtractAliases(nodes []map[string]any) []string {
 		if node == nil {
 			continue
 		}
-		for _, key := range []string{"selectedAlias", "selectedModelAlias", "alias", "unsAlias"} {
-			if val, ok := node[key]; ok {
-				if alias := strings.TrimSpace(fmt.Sprint(val)); alias != "" {
-					aliasSet[alias] = struct{}{}
-				}
-			}
-		}
-		if val, ok := node["selectedModel"]; ok {
+		if val, ok := node["selectedModelAlias"]; ok {
 			if alias := strings.TrimSpace(fmt.Sprint(val)); alias != "" {
 				aliasSet[alias] = struct{}{}
 			}

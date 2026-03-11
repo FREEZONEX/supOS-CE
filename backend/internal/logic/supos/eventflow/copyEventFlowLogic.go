@@ -39,6 +39,7 @@ func (l *CopyEventFlowLogic) CopyEventFlow(req *types.EventFlowCopyReq) (string,
 		FlowName:    req.FlowName,
 		Description: req.Description,
 		Template:    constants.FlowTypeEVENTFLOW,
+		GroupId:     req.GroupId,
 	}
 	return sourceflow.NewCopySourceFlowLogic(l.ctx, l.svcCtx).
 		CopyFlowWithType(srcReq, constants.FlowTypeEVENTFLOW, l.svcCtx.EventNodeRed)

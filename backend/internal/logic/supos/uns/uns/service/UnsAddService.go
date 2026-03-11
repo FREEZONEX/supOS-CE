@@ -6,6 +6,8 @@ import (
 	sysconfig "backend/internal/common/config"
 	"backend/internal/common/constants"
 	"backend/internal/common/event"
+	"backend/internal/common/serviceApi"
+	"backend/internal/common/utils/FieldUtils"
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/label/service"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
@@ -18,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"sort"
 	"strconv"
 	"strings"
@@ -34,6 +37,7 @@ type UnsAddService struct {
 	unsLabelService *service.UnsLabelService
 	removeService   *UnsRemoveService
 	unsCalcService  UnsCalcService
+	dsMap           map[types.SrcJdbcType]serviceApi.IPersistentService
 }
 
 func init() {
@@ -63,7 +67,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 	}
 	u.log.Debugf("[%d] args: %+v", len(args.Topics), args)
 	topicDtos := args.Topics
-	pathMap := initParamsUns(topicDtos, errTipMap)
+	pathMap := initParamsUns(ctx, topicDtos, errTipMap)
 	if len(pathMap) == 0 {
 		u.log.Info("不存在任何文件夹或文件, 无法继续保存")
 		return errTipMap
@@ -110,7 +114,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 		}
 	}
 	for _, vs := range pathMap {
-		tryFillIdOrAlias(vs, existsUns, dbFiles, errTipMap)
+		tryFillIdOrAlias(ctx, vs, existsUns, dbFiles, errTipMap)
 	}
 	paramFiles, paramFolders := pathMap[constants.PathTypeFile], pathMap[constants.PathTypeDir]
 	addFiles := make(map[int64]*dao.UnsNamespace)
@@ -126,7 +130,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			return base.P2v(t.ParentAlias)
 		})
 		if len(loopFolders) > 0 {
-			msg := I18nUtils.GetMessage("uns.circularDependency")
+			msg := I18nUtils.GetMessageWithCtx(ctx, "uns.circularDependency")
 			for _, folder := range loopFolders {
 				errTipMap[folder.GainBatchIndex()] = msg + ": " + folder.Alias
 			}
@@ -183,6 +187,7 @@ func (u *UnsAddService) CreateModelAndInstancesInner(ctx context.Context, args b
 			labels.SetDto(createTopicDto)
 		}
 		if dbF != nil && base.P2v(dbF.Status) == OK {
+			createTopicDto.UpdateAt = createTime.UnixMilli()
 			dtoUpdateList = append(dtoUpdateList, createTopicDto)
 		} else {
 			if dbF != nil {
@@ -290,6 +295,52 @@ func (u *UnsAddService) itrFiles(
 		}
 	}
 }
+func (u *UnsAddService) OnEventContextRefreshedEvent3(ev *event.ContextRefreshedEvent) {
+	u.dsMap = base.MapArrayToMap(spring.GetBeansOfType[serviceApi.IPersistentService](),
+		func(e serviceApi.IPersistentService) (ok bool, k types.SrcJdbcType, v serviceApi.IPersistentService) {
+			return true, e.GetDataSrcId(), e
+		})
+	// 迁移时序表
+	db := dao.GetDb(context.Background())
+	exists, _ := u.unsMapper.ExistsTimeSeriaNoneTables(db)
+	if exists {
+		u.unsMapper.DoExportBatch(1000, func(writer io.Writer) {
+			err := u.unsMapper.ExportTimeSeriaNoneTables(context.Background(), writer)
+			if err != nil {
+				u.log.Error("unsMapper.ExportTimeSeriaNoneTables error:", err)
+			}
+		}, func(namespaces []*dao.UnsNamespace) {
+			u.log.Infof("准备迁移 %d: %d ~ %d ...", len(namespaces), namespaces[0].Id, namespaces[len(namespaces)-1].Id)
+			filesToMigrate := make(map[types.SrcJdbcType][]types.UnsInfo, 1024)
+			updateTime := time.Now()
+			for _, po := range namespaces {
+				if po.PathType == constants.PathTypeFile {
+					srcId := po.GetSrcJdbcType()
+					filesToMigrate[srcId] = append(filesToMigrate[srcId], po)
+					fd, _ := FieldUtils.ProcessFieldDefines(context.Background(), srcId, po.Fields, true, true)
+					if fd != nil {
+						po.TableName_ = &fd.TableName
+						po.Fields = fd.Fields
+					}
+					po.UpdateAt = updateTime
+				}
+			}
+			for srcId, files := range filesToMigrate {
+
+				persistentService := u.dsMap[srcId]
+				if persistentService != nil {
+					err := persistentService.Save(files)
+					if err != nil {
+						u.log.Error("UNS时序表迁移失败:", err, len(files))
+					}
+				}
+			}
+			err := u.unsMapper.MultiUpdate(db, namespaces)
+			u.log.Info("完成迁移: ", len(namespaces), err)
+		})
+	}
+}
+
 func (u *UnsAddService) saveBatchAndSendEvent(
 	ctx context.Context,
 	createTime time.Time,
@@ -311,13 +362,54 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 	}()
 	labelPos, err := u.unsLabelService.MakeUnsLabels(ctx, unsLabels, createTime)
 	if err == nil {
+		filesToSave := make(map[types.SrcJdbcType][]types.UnsInfo, len(insertList)+len(updateList))
+		putFiles := func(po *dao.UnsNamespace) {
+			if po.PathType == constants.PathTypeFile {
+				srcId := po.GetSrcJdbcType()
+				filesToSave[srcId] = append(filesToSave[srcId], po)
+			}
+		}
+		if len(insertList) > 0 {
+			for _, insert := range insertList {
+				putFiles(insert)
+			}
+		}
+		if len(updateList) > 0 {
+			for _, update := range updateList {
+				putFiles(update)
+			}
+		}
+		if len(filesToSave) > 0 {
+			for srcId, files := range filesToSave {
+				persistentService := u.dsMap[srcId]
+				if persistentService != nil {
+					err = persistentService.Save(files)
+					if err != nil {
+						u.log.Error("SaveUnsErr:", err)
+						return err
+					}
+				}
+			}
+		}
+
 		if len(insertList) > 0 {
 			err = u.unsMapper.MultiInsert(tx, insertList)
 			u.log.Debug("insertUns:", len(insertList), err)
 		}
-		if err == nil && len(updateList) > 0 {
+		if len(updateList) > 0 {
 			err = u.unsMapper.MultiUpdate(tx, updateList)
 			u.log.Debug("updateUns:", len(insertList), err)
+		}
+		if len(deleteFiles) > 0 {
+			unsGroups := base.MapAndGroupBy[*dao.UnsNamespace, types.UnsInfo, types.SrcJdbcType](deleteFiles, func(e *dao.UnsNamespace) (types.SrcJdbcType, types.UnsInfo) {
+				return e.GetSrcJdbcType(), e
+			})
+			for srcId, files := range unsGroups {
+				persistentService := u.dsMap[srcId]
+				if persistentService != nil {
+					err = persistentService.Remove(files)
+				}
+			}
 		}
 	}
 	if err == nil {
@@ -333,7 +425,7 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 				FromImport:       args.FromImport,
 				Creates:          createFiles,
 				Updates:          notifyUpdate,
-				DelegateAware:    getEventStatusCallback(args.StatusConsumer),
+				DelegateAware:    getEventStatusCallback(ctx, args.StatusConsumer),
 			})
 		}
 		if len(deleteFiles) > 0 {
@@ -371,7 +463,7 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 			return result
 		} else if folder == nil {
 			result.Code = 400
-			result.Msg = I18nUtils.GetMessage("uns.folder.not.found") + ":id=" + strconv.Itoa(int(*topicDto.ParentId))
+			result.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.not.found") + ":parent=" + strconv.Itoa(int(*topicDto.ParentId))
 			return result
 		}
 

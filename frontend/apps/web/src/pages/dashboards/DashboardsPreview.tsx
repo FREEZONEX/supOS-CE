@@ -2,7 +2,6 @@ import { type FC, useState, useEffect, useRef } from 'react';
 import { Button, Space, Breadcrumb, Flex } from 'antd';
 import { useNavigate } from 'react-router';
 import type { PageProps } from '@/common-types';
-import { getDashboardDetail } from '@/apis/inter-api/uns';
 import { useActivate } from '@/contexts/tabs-lifecycle-context';
 import { usePrevious } from 'ahooks';
 import { useTranslate } from '@/hooks';
@@ -13,6 +12,7 @@ import { AuthButton } from '@/components/auth';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
 import { ChevronLeft } from '@carbon/icons-react';
+import { getDashboardDetail } from '@/apis/inter-api/dashboard.ts';
 
 const FlowPreview: FC<PageProps> = ({ location }) => {
   const formatMessage = useTranslate();

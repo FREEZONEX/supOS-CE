@@ -91,19 +91,19 @@ const Details: FC<DetailsProps> = ({ instanceInfo, updateTime, websocketData }) 
           </div>
         </div>
       )}
-      {[1, 2].includes(instanceInfo.dataType) && (
-        <div className="detailItem">
-          <div className="detailKey">
-            {formatMessage(
-              instanceInfo?.protocol?.referenceDataSource ? 'uns.referenceDataSource' : 'uns.referenceTemplate'
-            )}
-          </div>
-          <div>
-            {instanceInfo?.protocol?.referenceDataSource ||
-              (instanceInfo.modelName ? `${instanceInfo.modelName}（${instanceInfo.templateAlias}）` : '')}
-          </div>
-        </div>
-      )}
+      {/*{[1, 2].includes(instanceInfo.dataType) && (*/}
+      {/*  <div className="detailItem">*/}
+      {/*    <div className="detailKey">*/}
+      {/*      {formatMessage(*/}
+      {/*        instanceInfo?.protocol?.referenceDataSource ? 'uns.referenceDataSource' : 'uns.referenceTemplate'*/}
+      {/*      )}*/}
+      {/*    </div>*/}
+      {/*    <div>*/}
+      {/*      {instanceInfo?.protocol?.referenceDataSource ||*/}
+      {/*        (instanceInfo.modelName ? `${instanceInfo.modelName}（${instanceInfo.templateAlias}）` : '')}*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
+      {/*)}*/}
       <div className="detailItem">
         <div className="detailKey">{formatMessage('uns.databaseType')}</div>
         <div>{dataTypeMap[instanceInfo.dataType]}</div>

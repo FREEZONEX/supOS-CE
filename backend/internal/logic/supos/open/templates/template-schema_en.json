@@ -1,0 +1,83 @@
+{
+  "name": "Template",
+  "description": "UNS template",
+  "versions": {
+    "v1alpha1": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "subscribe": {
+            "type": "boolean",
+            "description": "Subscribed or not"
+          },
+          "createDate": {
+            "type": "string",
+            "description": "Creation time"
+          },
+          "definition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Field name"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "INTEGER",
+                    "LONG",
+                    "FLOAT",
+                    "DOUBLE",
+                    "BOOLEAN",
+                    "DATETIME",
+                    "STRING"
+                  ],
+                  "description": "Field type"
+                },
+                "maxLen": {
+                  "type": "integer",
+                  "description": "Maximum length"
+                },
+                "remark": {
+                  "type": "string",
+                  "description": "Field description"
+                },
+                "displayName": {
+                  "type": "string",
+                  "description": "Display name"
+                },
+                "systemField": {
+                  "type": "boolean",
+                  "description": "System field or not"
+                }
+              }
+            }
+          },
+          "updateDate": {
+            "type": "string",
+            "description": "Update time"
+          },
+          "subscribeFrequency": {
+            "type": "string",
+            "description": "Integer + subscription frequency: day(d), hour(h), minute(m), second(s)"
+          },
+          "id": {
+            "type": "integer",
+            "description": "Folder ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          }
+        }
+      }
+    }
+  },
+  "$metadata": {
+    "name": "template.uns.supos.com",
+    "creationTimestamp": "2025-07-09T06:21:57Z",
+    "modifiedTimestamp": "2025-07-09T06:31:09Z"
+  }
+}

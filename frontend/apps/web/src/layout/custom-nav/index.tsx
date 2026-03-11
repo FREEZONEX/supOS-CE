@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Flex } from 'antd';
 import { ChevronDown, User, Task } from '@carbon/icons-react';
 import { useNavigate } from 'react-router';
-import logoBlack from '@/assets/custom-nav/logo-black.svg';
-import logoBlackWhite from '@/assets/custom-nav/logo-white.svg';
+import logoLight from '@/assets/custom-nav/logo-light.svg';
+import logoDark from '@/assets/custom-nav/logo-dark.svg';
 import SideNavList from './components/SideNavList';
 import SideMenuList from './components/SideMenuList';
 import menuChange from '@/assets/icons/menu-change.svg';
@@ -56,7 +56,7 @@ const Module = () => {
                 setSearchOpen(true);
               }}
             >
-              <img src={isDark ? logoBlackWhite : logoBlack} />
+              <img src={isDark ? logoDark : logoLight} />
               <span style={{ margin: '0 5px' }} title={currentMenuInfo?.showName}>
                 {currentMenuInfo?.showName}
               </span>

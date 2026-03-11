@@ -140,7 +140,7 @@ const CustomMenuHeader = () => {
             <LogoImg
               isDark={theme === ThemeType.Dark}
               onClick={() => {
-                navigate('/uns');
+                navigate('/uns', { state: { treeMap: true } });
               }}
             />
           </div>

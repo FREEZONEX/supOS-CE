@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"unsafe"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -21,8 +22,25 @@ func (s *sse_writer) Write(p []byte) (n int, err error) {
 	if s.closed {
 		return 0, errorSseClosed
 	}
-	s.msgChan <- string(p)
-	return len(p), nil
+	// 非阻塞写入，如果通道满则丢弃最旧的消息
+	msg := b2s(p)
+	select {
+	case s.msgChan <- msg:
+		return len(p), nil
+	default:
+		// 通道满，尝试移除一个旧消息再写入
+		select {
+		case <-s.msgChan: // 丢弃一个旧消息
+			s.msgChan <- msg // 写入新消息
+		default:
+			// 如果还是满，直接丢弃新消息
+			logx.Error("丢弃sse消息: ", msg)
+		}
+		return len(p), nil
+	}
+}
+func b2s(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
 }
 
 // PushNewMsgHandler 推送最新消息
@@ -41,7 +59,7 @@ func PushNewMsgHandler(w http.ResponseWriter, r *http.Request) {
 func listen(w http.ResponseWriter, r *http.Request, flusher http.Flusher) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
-	sseWriter := &sse_writer{msgChan: make(chan string, 3)}
+	sseWriter := &sse_writer{msgChan: make(chan string, 100)}
 	onClose := unsService.PushNewMsg(sseWriter, r.URL)
 	keepAliveTicker := time.NewTicker(10 * time.Second)
 	defer keepAliveTicker.Stop()

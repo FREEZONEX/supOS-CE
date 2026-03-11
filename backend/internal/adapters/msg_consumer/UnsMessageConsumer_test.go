@@ -1,6 +1,7 @@
 package msg_consumer
 
 import (
+	"backend/internal/common/utils/datetimeutils"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,8 +16,8 @@ import (
 )
 
 func TestNpePanic(t *testing.T) {
-	var vm map[string]interface{}
-	//vm = make(map[string]interface{})
+	var vm map[string]string
+	//vm = make(map[string]string)
 	//vm["a"] = 1
 	CT := "timestamp"
 	if len(vm) == 0 {
@@ -25,26 +26,26 @@ func TestNpePanic(t *testing.T) {
 		curT, hasCt := vm[CT]
 		t.Logf("curT:%v, hasCt:%v", curT, hasCt)
 	}
-	t.Log("ts:", parseTimestamp(vm[CT]))
+	t.Log("ts:", datetimeutils.ParseTimestamp(vm[CT]))
 }
 
 // 模拟Java中的mockBean方法
-func mockBean(p string) map[string]interface{} {
-	return map[string]interface{}{
-		p: true,
+func mockBean(p string) map[string]string {
+	return map[string]string{
+		p: "true",
 	}
 }
 
 // 模拟Java中的mockBean方法（带时间戳）
-func mockBeanWithTimestamp(timestamp int64, p string) map[string]interface{} {
-	return map[string]interface{}{
-		SYS_FIELD_CREATE_TIME: timestamp,
-		p:                     true,
+func mockBeanWithTimestamp(timestamp int64, p string) map[string]string {
+	return map[string]string{
+		SYS_FIELD_CREATE_TIME: strconv.FormatInt(timestamp, 10),
+		p:                     "true",
 	}
 }
 
 // 辅助函数：检查两个map的key是否相同
-func keysEqual(m1, m2 map[string]interface{}) bool {
+func keysEqual(m1, m2 map[string]string) bool {
 	if len(m1) != len(m2) {
 		return false
 	}
@@ -75,7 +76,7 @@ func newHashSet(items ...string) map[string]bool {
 }
 
 // 检查map的keys是否与预期的set匹配
-func keysMatch(m map[string]interface{}, expectedKeys map[string]bool) bool {
+func keysMatch(m map[string]string, expectedKeys map[string]bool) bool {
 	if len(m) != len(expectedKeys) {
 		return false
 	}
@@ -91,20 +92,26 @@ func keysMatch(m map[string]interface{}, expectedKeys map[string]bool) bool {
 
 const SYS_FIELD_CREATE_TIME = "timeStamp"
 
-func mergeBeansWithCT(list []map[string]interface{}, prevBean map[string]any) []map[string]interface{} {
-	return mergeBeansWithTimestamp(context.Background(), list, SYS_FIELD_CREATE_TIME, time.Now().UnixMilli(), prevBean)
+func mergeBeansWithCT(list []map[string]string, prevBean map[string]string) []map[string]string {
+	var prevTime = int64(-1)
+	if len(prevBean) > 0 {
+		prevTime = datetimeutils.ParseTimestamp(prevBean[SYS_FIELD_CREATE_TIME])
+	}
+	return mergeBeansWithTimestamp(context.Background(), list, SYS_FIELD_CREATE_TIME, prevTime, time.Now().UnixMilli(), prevBean)
 }
+
 func TestLogPanic(t *testing.T) {
 	ctx := t.Context()
 	var err error
 	CT := "timestamp"
-	var list []map[string]interface{}
+	var list []map[string]string
 	prevBean := map[string]any{}
 	prevBean[CT] = float64(time.Now().UnixMilli())
 	logx.WithContext(ctx).Errorf("HandleThrow|traceID=%s|error=%#v|stack=%s| CT=%s, list=%+v, prevBean=%+v", utils.TraceIdFromContext(ctx),
 		err, utils.Stack(2, 20), CT, list, prevBean)
 
 }
+
 func TestMergeBeansWithTimestamp2(t *testing.T) {
 	floatTime := 1.766978836e+12
 	ct := int64(floatTime)
@@ -113,11 +120,11 @@ func TestMergeBeansWithTimestamp2(t *testing.T) {
 	prevJson := `{"double2":99.86295347545729, "timeStamp":` + ctStr + `}`
 	curJson := `{"double1":91, "timeStamp":` + ctStr + `}`
 
-	var prevBean map[string]interface{}
-	var curBean map[string]interface{}
+	var prevBean map[string]string
+	var curBean map[string]string
 	json.Unmarshal([]byte(prevJson), &prevBean)
 	json.Unmarshal([]byte(curJson), &curBean)
-	rs := mergeBeansWithCT([]map[string]any{curBean}, prevBean)
+	rs := mergeBeansWithCT([]map[string]string{curBean}, prevBean)
 
 	rsJson, _ := json.Marshal(rs)
 	t.Log("rs:", string(rsJson))
@@ -125,7 +132,7 @@ func TestMergeBeansWithTimestamp2(t *testing.T) {
 func TestMergeBeansWithTimestamp(t *testing.T) {
 	// Test case 1
 	t.Run("case1_different_timestamps", func(t *testing.T) {
-		list := make([]map[string]interface{}, 0)
+		list := make([]map[string]string, 0)
 		t0 := time.Now().UnixNano() / int64(time.Millisecond)
 		list = append(list, mockBeanWithTimestamp(t0, "p1"))
 		list = append(list, mockBeanWithTimestamp(t0+3, "p2"))
@@ -149,7 +156,7 @@ func TestMergeBeansWithTimestamp(t *testing.T) {
 
 	// Test case 2
 	t.Run("case2_no_timestamp_in_list", func(t *testing.T) {
-		list := make([]map[string]interface{}, 0)
+		list := make([]map[string]string, 0)
 		list = append(list, mockBean("p2"))
 
 		lastMsg := mockBean("p1")
@@ -166,10 +173,9 @@ func TestMergeBeansWithTimestamp(t *testing.T) {
 
 		fmt.Printf("case 2: %v\n", list)
 	})
-
 	// Test case 3
 	t.Run("case3_same_timestamp_with_lastMsg", func(t *testing.T) {
-		list := make([]map[string]interface{}, 0)
+		list := make([]map[string]string, 0)
 		t0 := time.Now().UnixNano() / int64(time.Millisecond)
 		list = append(list, mockBeanWithTimestamp(t0, "p2"))
 
@@ -191,7 +197,7 @@ func TestMergeBeansWithTimestamp(t *testing.T) {
 
 	// Test case 4
 	t.Run("case4_multiple_items_same_timestamp", func(t *testing.T) {
-		list := make([]map[string]interface{}, 0)
+		list := make([]map[string]string, 0)
 		t0 := time.Now().UnixNano() / int64(time.Millisecond)
 		list = append(list, mockBeanWithTimestamp(t0, "p1"))
 		list = append(list, mockBeanWithTimestamp(t0, "p2"))
@@ -211,7 +217,7 @@ func TestMergeBeansWithTimestamp(t *testing.T) {
 
 	// Test case 5
 	t.Run("case5_multiple_items_with_lastMsg_same_timestamp", func(t *testing.T) {
-		list := make([]map[string]interface{}, 0)
+		list := make([]map[string]string, 0)
 		t0 := time.Now().UnixNano() / int64(time.Millisecond)
 		list = append(list, mockBeanWithTimestamp(t0, "p2"))
 		list = append(list, mockBeanWithTimestamp(t0, "p3"))
@@ -231,7 +237,7 @@ func TestMergeBeansWithTimestamp(t *testing.T) {
 
 	// Test case 6
 	t.Run("case6_mixed_timestamps", func(t *testing.T) {
-		list := make([]map[string]interface{}, 0)
+		list := make([]map[string]string, 0)
 		t0 := time.Now().UnixNano() / int64(time.Millisecond)
 		list = append(list, mockBeanWithTimestamp(t0, "p1"))
 		list = append(list, mockBeanWithTimestamp(t0, "p2"))
@@ -256,7 +262,7 @@ func TestMergeBeansWithTimestamp(t *testing.T) {
 
 	// Test case 7
 	t.Run("case7_multiple_items_mixed_timestamps", func(t *testing.T) {
-		list := make([]map[string]interface{}, 0)
+		list := make([]map[string]string, 0)
 		t0 := time.Now().UnixNano() / int64(time.Millisecond)
 		list = append(list, mockBeanWithTimestamp(t0, "p1"))
 		list = append(list, mockBeanWithTimestamp(t0, "p2"))

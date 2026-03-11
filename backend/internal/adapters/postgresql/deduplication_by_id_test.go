@@ -31,7 +31,7 @@ func TestQuChong(t *testing.T) {
 			{"@timestamp":"2025-12-31T03:07:24.303Z","caller":"timescaledb/TsdbPersistentService.go:60","content":"persistence fail处理完成，但有错误: 批次操作失败[_opcda_file_22627e78e18847c9be69]: ERROR: ON CONFLICT DO UPDATE command cannot affect row a second time (SQLSTATE 21000)  8","level":"error"}
 
 	*/
-	var uns = &types.CreateTopicDto{Alias: "_opcda_file_22627e78e18847c9be69"}
+	var uns = &types.UnsDefinition{CreateTopicDto: types.CreateTopicDto{Alias: "_opcda_file_22627e78e18847c9be69"}}
 	jsonfs := `[{"name":"timeStamp","type":"DATETIME","unique":true,"systemField":true},{"name":"int1","type":"INTEGER"},{"name":"long","type":"LONG"},{"name":"float","type":"FLOAT"},{"name":"double","type":"DOUBLE"},{"name":"boolean","type":"BOOLEAN"},{"name":"dt","type":"DATETIME"},{"name":"str","type":"STRING","maxLen":512},{"name":"quality","type":"LONG","systemField":true}]`
 	json.Unmarshal([]byte(jsonfs), &uns.Fields)
 	data := []map[string]string{
@@ -54,7 +54,7 @@ func TestQuChong(t *testing.T) {
 	sql, params := getInsertStatement(uns, data)
 	t.Log("sql: ", sql)
 	t.Logf("params: %+v", params)
-	rs := DeduplicationById(uns, data)
+	rs := DeduplicationById(uns.GetPrimaryField(), data)
 	for i, v := range rs {
 		t.Log(i, ": ", v)
 	}
