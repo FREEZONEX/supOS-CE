@@ -39,7 +39,7 @@
 | Browser     | Chrome 89, Edge 89, Firefox 89, Safari 15 | Chrome 89, Edge 89, Firefox 89, Safari 15 |
 
 ## Deployment
-> For detailed guides and advanced examples, see the <a href="https://suposcommunity.vercel.app/">Tier0 Community Docs</a>.
+> For detailed guides and advanced examples, see the <a href="https://tier0edge.tech/">Tier0 Community Docs</a>.
 ### 1.Linux
 #### 1.1 Operating Environment
 - **Operating System**: Currently tested on Ubuntu Server 24.04 with Docker. We welcome feedback on other OS distributions.
