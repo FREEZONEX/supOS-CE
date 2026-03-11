@@ -1,7 +1,6 @@
 package grafana
 
 import (
-	"backend/internal/common/constants"
 	"backend/internal/common/event"
 	"backend/internal/common/serviceApi"
 	"backend/internal/common/utils/grafanautil"
@@ -49,16 +48,15 @@ func (g *GrafanaEventHandler) createIndividualDashboards(ctx context.Context, to
 		if !base.P2v(dto.AddDashBoard) {
 			continue
 		}
-		columns := grafanautil.Fields2Columns(jdbcType, dto.Fields)
 		title := dto.Path
 		schema, table := g.extractSchemaAndTable(dto.Alias, ds.Schema)
 		tagNameCondition := ""
 
-		g.log.Debugf("创建 Grafana 仪表板 - 列：%s, 标题：%s, 模式：%s, 表：%s, 标签条件：%s, fromImport? %v",
-			columns, title, schema, table, tagNameCondition, fromImport)
+		g.log.Debugf("创建 Grafana 仪表板 - 标题：%s, 模式：%s, 表：%s, 标签条件：%s, fromImport? %v",
+			title, schema, table, tagNameCondition, fromImport)
 
 		dashId := grafanautil.GetDashboardUUIDByAlias(dto.Alias)
-		err := grafanautil.CreateDashboard(dashId, ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
+		err := grafanautil.CreateDashboard(dashId, ctx, table, tagNameCondition, jdbcType, schema, title, dto.GetTimestampField())
 		if err != nil {
 			g.log.Infof("创建仪表板失败: %v", err)
 			continue
@@ -94,38 +92,6 @@ func (g *GrafanaEventHandler) extractSchemaAndTable(fullTableName, defaultSchema
 		return fullTableName[:dot], fullTableName[dot+1:]
 	}
 	return defaultSchema, fullTableName
-}
-
-// buildTagNameCondition 构建标签名称条件
-//func (g *GrafanaEventHandler) buildTagNameCondition(dto *types.CreateTopicDto) string {
-//	if dto.GetTbFieldName() == "" {
-//		return ""
-//	}
-//	return fmt.Sprintf(" and %s='%d' ", constants.SystemSeqTag, dto.Id)
-//}
-
-// createCompositeDashboard 创建组合仪表板
-func (g *GrafanaEventHandler) createCompositeDashboard(ctx context.Context, jdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, flowName, username string) {
-	if jdbcType.TypeCode() != constants.TimeSequenceType {
-		return
-	}
-
-	// 获取临时名称
-	tempName := g.getTempName(topics)
-	if tempName == "" {
-		return
-	}
-
-	dashboardName := generateDashboardName(flowName, tempName)
-	uuid, err := grafanautil.CreateTimeSeriesListDashboard(ctx, jdbcType, topics, dashboardName)
-	if err != nil {
-		g.log.Error("创建时序面板失败", err.Error())
-		return
-	}
-	unsAliasList := base.Map[*types.CreateTopicDto, string](topics, func(e *types.CreateTopicDto) string {
-		return e.Alias
-	})
-	spring.PublishEvent(event.NewCreateDashboardEvent(ctx, unsAliasList, uuid, dashboardName, "组合仪表板", username))
 }
 
 // getTempName 获取临时名称

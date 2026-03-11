@@ -23,13 +23,16 @@ const ( // 注意：不能合并到第二个const()块，否则常量值可能�
 )
 const (
 	// System Fields and Flags
-	SystemFieldPrev = "_"
-	SystemSeqTag    = "tag"
-	SystemSeqValue  = "value"
-	SysSaveTime     = SystemFieldPrev + "st"
-	SysFieldID      = SystemFieldPrev + "id"
-	MergeFlag       = "#mg#" // 按时间戳合并消息的标志
-	FirstMsgFlag    = "#1#"  // 启动时首条消息的标志
+	SystemFieldPrev    = "_"
+	SystemSeqTag       = "tag"
+	SysFieldCreateTime = "_timestamp"
+	QosField           = "_quality"
+	JsonbField         = "_json"
+	SystemSeqValue     = "value"
+	SysSaveTime        = SystemFieldPrev + "st"
+	SysFieldID         = "_id"
+	MergeFlag          = "#mg#" // 按时间戳合并消息的标志
+	FirstMsgFlag       = "#1#"  // 启动时首条消息的标志
 
 	// Path Types
 	PathTypeDir      = int16(0) // 目录
@@ -157,15 +160,13 @@ const (
 var (
 	readOnlyMode atomic.Bool // Equivalent to AtomicBoolean
 
-	UseAliasAsTopic    bool // 是否使用别名alias作为 mqtt topic
-	MqttPlugin         string
-	SysFieldCreateTime string
-	QosField           string
-	UnsAddBatchSize    int
-	WSSessionLimit     int // ws会话限制
-	UnsOverdueDelete   int
-	OSVersion          string
-	TokenMaxAge        int // token失效时间（秒）
+	UseAliasAsTopic  bool // 是否使用别名alias作为 mqtt topic
+	MqttPlugin       string
+	UnsAddBatchSize  int
+	WSSessionLimit   int // ws会话限制
+	UnsOverdueDelete int
+	OSVersion        string
+	TokenMaxAge      int // token失效时间（秒）
 
 	// SystemFields is a set of system field names for quick lookups.
 	SystemFields map[string]struct{}
@@ -180,8 +181,8 @@ func init() {
 
 	UseAliasAsTopic = getEnvAsBool("SYS_OS_USE_ALIAS_PATH_AS_TOPIC", false)
 	OSVersion = getEnv("SYS_OS_VERSION", "1.0")
-	SysFieldCreateTime = getEnv("SYS_OS_TIMESTAMP_NAME", "timeStamp")
-	QosField = getEnv("SYS_OS_QUALITY_NAME", "status")
+	//SysFieldCreateTime = getEnv("SYS_OS_TIMESTAMP_NAME", "timeStamp")
+	//QosField = getEnv("SYS_OS_QUALITY_NAME", "status")
 	UnsAddBatchSize = getEnvAsInt("UNS_ADD_BATCH_SIZE", 1000)
 	MqttPlugin = getEnv("MQTT_PLUGIN", "emqx")
 	WSSessionLimit = getEnvAsInt("WS_SESSION_LIMIT", 50)
@@ -190,12 +191,18 @@ func init() {
 
 	// InitializeEndpointId the set of system fields
 	SystemFields = map[string]struct{}{
-		SystemSeqTag:       {},
+		"tag":              {},
 		SysFieldID:         {},
 		SysFieldCreateTime: {}, // Note: Using the runtime value here
 		QosField:           {}, // Note: Using the runtime value here
 		SysSaveTime:        {},
 		"_ct":              {},
+	}
+	oldSystemFields := []string{"SYS_OS_TIMESTAMP_NAME", "SYS_OS_QUALITY_NAME"}
+	for _, oldField := range oldSystemFields {
+		if value := getEnv(oldField, ""); value != "" {
+			SystemFields[value] = struct{}{}
+		}
 	}
 }
 

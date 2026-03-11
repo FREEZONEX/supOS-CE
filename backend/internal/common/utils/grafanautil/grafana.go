@@ -23,8 +23,6 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/zeromicro/go-zero/core/logx"
-
-	"github.com/google/uuid"
 )
 
 //go:embed templates/*
@@ -225,7 +223,7 @@ func CreateDatasourceByBody(ctx context.Context, name, body string, reCreate boo
 }
 
 // CreateDashboard creates a Grafana dashboard.
-func CreateDashboard(uid string, ctx context.Context, table, tagNameCondition string, jdbcType types.SrcJdbcType, schema, title, columns, ct string) error {
+func CreateDashboard(uid string, ctx context.Context, table, tagNameCondition string, jdbcType types.SrcJdbcType, schema, title, ct string) error {
 	var template string
 	var dbParams map[string]any
 
@@ -239,7 +237,6 @@ func CreateDashboard(uid string, ctx context.Context, table, tagNameCondition st
 			"dataSourceUid":  GetDatasourceUUIDByJDBC(jdbcType),
 			"schema":         schema,
 			"tableName":      table,
-			"columns":        columns,
 		}
 	case types.SrcJdbcTypeTdEngine:
 		template = LoadTemplate(ctx, "templates/td-dashboard.json")
@@ -251,7 +248,6 @@ func CreateDashboard(uid string, ctx context.Context, table, tagNameCondition st
 			"schema":           schema,
 			"tableName":        table,
 			"tagNameCondition": tagNameCondition,
-			"columns":          columns,
 		}
 	case types.SrcJdbcTypeTimeScaleDB:
 		template = LoadTemplate(ctx, "templates/ts-dashboard.json")
@@ -263,7 +259,6 @@ func CreateDashboard(uid string, ctx context.Context, table, tagNameCondition st
 			"schema":           schema,
 			"tableName":        table,
 			"tagNameCondition": tagNameCondition,
-			"columns":          columns,
 		}
 	default:
 		return fmt.Errorf("unsupported JDBC type: %d", jdbcType.Id())
@@ -354,98 +349,6 @@ func CreateDashboardByBody(ctx context.Context, uidsTr, datasourceName, body str
 // GetDatasourceUUIDByJDBC generates a datasource UUID from JDBC type.
 func GetDatasourceUUIDByJDBC(jdbcType types.SrcJdbcType) string {
 	return GetDashboardUUIDByAlias(jdbcType.Alias())
-}
-
-// Fields2Columns converts field definitions to column string for Grafana.
-func Fields2Columns(jdbcType types.SrcJdbcType, fields []*types.FieldDefine) string {
-	// TDengine uses `, PostgreSQL and TimescaleDB use "
-	flag := "`"
-	if jdbcType.Id() != types.SrcJdbcTypeTdEngine.Id() {
-		flag = `\"`
-	}
-
-	var fieldNames []string
-	for _, field := range fields {
-		// Filter out BLOB types and specific system fields
-		if field.Type == types.FieldTypeBlob || field.Type == types.FieldTypeLBlob {
-			continue
-		}
-		if field.Name == constants.QosField ||
-			field.Name == constants.SysSaveTime ||
-			field.Name == constants.SystemSeqTag ||
-			field.Name == constants.SysFieldID {
-			continue
-		}
-		fieldNames = append(fieldNames, flag+field.Name+flag)
-	}
-
-	return strings.Join(fieldNames, ", ")
-}
-
-// CreateTimeSeriesListDashboard creates a time series list dashboard with multiple panels.
-func CreateTimeSeriesListDashboard(ctx context.Context, srcJdbcType types.SrcJdbcType, topics []*types.CreateTopicDto, dashboardName string) (string, error) {
-	logger := logx.WithContext(ctx)
-	logger.Infof("调用 创建时序组合Dashboard: %s", dashboardName)
-
-	var panelTemplate string
-	if srcJdbcType.Id() == types.SrcJdbcTypeTimeScaleDB.Id() {
-		panelTemplate = LoadTemplate(ctx, "templates/ts-panel.json")
-	} else {
-		panelTemplate = LoadTemplate(ctx, "templates/td-panel.json")
-	}
-
-	var panelJSONList []any
-	for i, topic := range topics {
-		columns := Fields2Columns(srcJdbcType, topic.Fields)
-		schema := "public"
-		table := topic.Alias
-
-		// Panel's x-axis position
-		gridPosX := i * 8
-		if gridPosX > 16 {
-			gridPosX = (i % 3) * 8
-		}
-
-		panelParam := map[string]any{
-			"id":            i + 1,
-			"title":         topic.Path,
-			"dataSourceUid": GetDatasourceUUIDByJDBC(srcJdbcType),
-			"columns":       columns,
-			"schema":        schema,
-			"tableName":     topic.Id,
-			"gridPosX":      gridPosX,
-		}
-
-		panelTemplate = strings.Replace(panelTemplate, "supos_tag_timeserial", table, 1)
-		panelTemplate = strings.Replace(panelTemplate, "tag_name", constants.SystemSeqTag, 1)
-		panelJSON := FormatTemplateMap(panelTemplate, panelParam)
-		var panel any
-		json.Unmarshal([]byte(panelJSON), &panel)
-		panelJSONList = append(panelJSONList, panel)
-	}
-
-	template := LoadTemplate(ctx, "templates/td-dashboard-list.json")
-	uid := uuid.New().String()[:32] // Fast simple UUID
-
-	dbParams := map[string]any{
-		"uid":    uid,
-		"title":  dashboardName,
-		"panels": panelJSONList,
-	}
-
-	dashboardJSON := FormatTemplateMap(template, dbParams)
-	logger.Debugf("创建时序组合DashboardDashboard 请求: %s", dashboardJSON)
-
-	resp, err := http.Post(GetGrafanaURL()+"/api/dashboards/db", "application/json", bytes.NewBufferString(dashboardJSON))
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	logger.Infof("创建时序组合Dashboard 返回结果: %s", string(body))
-
-	return uid, nil
 }
 
 // GetDashboardByUUID retrieves a dashboard by UUID.

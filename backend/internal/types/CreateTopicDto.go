@@ -240,7 +240,7 @@ func (c *CreateTopicDto) GetTimestampField() string {
 	if len(c.Fields) > 0 {
 		// Find timestamp field (implementation depends on FieldUtils)
 		for _, f := range c.Fields {
-			if f.Name == constants.SysFieldCreateTime || f.Name == "timestamp" {
+			if f.Type == constants.SysFieldCreateTime && f.IsSystemField() {
 				c.TmField = f.Name
 				return c.TmField
 			}

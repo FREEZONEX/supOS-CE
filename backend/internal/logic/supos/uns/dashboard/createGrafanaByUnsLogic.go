@@ -58,21 +58,20 @@ func (l *CreateGrafanaByUnsLogic) CreateGrafanaByUns(alias string) (*types.JsonR
 	}
 	uns := def.CreateTopicDto
 	jdbcType := types.SrcJdbcType(uns.DataSrcID)
-	columns := grafanautil.Fields2Columns(jdbcType, uns.Fields)
 	title := uns.Path
 	schema := "public"
 	table := uns.Alias
 	tagNameCondition := ""
 	// 日志输出（Go中使用log包）
-	l.Logger.Debugf(">>>>> create grafana dashboard columns:%s,title:%s,schema:%s,table:%s,tagNameCondition:%s",
-		columns, title, schema, table, tagNameCondition)
+	l.Logger.Debugf(">>>>> create grafana dashboard title:%s,schema:%s,table:%s,tagNameCondition:%s",
+		title, schema, table, tagNameCondition)
 	dot := strings.Index(table, ".")
 	if dot > 0 {
 		schema = table[:dot]
 		table = table[dot+1:]
 	}
 	dashId := grafanautil.GetDashboardUUIDByAlias(alias)
-	err := grafanautil.CreateDashboard(dashId, l.ctx, table, tagNameCondition, jdbcType, schema, title, columns, constants.SysFieldCreateTime)
+	err := grafanautil.CreateDashboard(dashId, l.ctx, table, tagNameCondition, jdbcType, schema, title, uns.GetTimestampField())
 	if err != nil {
 		return &types.JsonResult{Code: 400, Msg: err.Error()}, nil
 	}

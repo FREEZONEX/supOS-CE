@@ -219,26 +219,43 @@ func ProcessFieldDefines(ctx context.Context, jdbcType types.SrcJdbcType, fields
 	if jdbcType.TypeCode() == constants.TimeSequenceType {
 		// Time-series data
 		fNews = make([]*types.FieldDefine, 0, len(processedFields)+2)
-		fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime, Unique: &_True})
 
+		var ct, tag, qos *types.FieldDefine
 		var nonSysFields []*types.FieldDefine
 		for _, f := range processedFields {
 			if !f.IsSystemField() {
 				nonSysFields = append(nonSysFields, f)
+			} else if f.Type == types.FieldTypeDatetime {
+				ct = f
+				f.Unique = &_True
+			} else if f.Type == types.FieldTypeLong {
+				if f.Name == constants.SysFieldID || f.Name == "tag" || f.IsUnique() {
+					tag = f
+					tag.Unique = &_True
+					tag.TbValueName = &f.Name
+				} else {
+					qos = f
+				}
 			}
 		}
+		if ct == nil {
+			ct = &types.FieldDefine{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime, Unique: &_True}
+		}
+		fNews = append(fNews, ct)
 
 		// Special handling for TimeScaleDB when there is only one non-system field named "value".
 		if jdbcType == types.SrcJdbcTypeTimeScaleDB {
 			tableName = "uns_timeserial"
-			name := constants.SystemSeqTag // Ensure the name is correct
-			tableValueField := &types.FieldDefine{
-				Name:        constants.SystemSeqTag,
-				Type:        types.FieldTypeLong,
-				Unique:      &_True,
-				TbValueName: &name,
+			if tag == nil {
+				name := constants.SysFieldID // Ensure the name is correct
+				tag = &types.FieldDefine{
+					Name:        constants.SysFieldID,
+					Type:        types.FieldTypeLong,
+					Unique:      &_True,
+					TbValueName: &name,
+				}
 			}
-			fNews = append(fNews, tableValueField)
+			fNews = append(fNews, tag)
 			if len(nonSysFields) > 0 {
 				fNews = append(fNews, nonSysFields...)
 			}
@@ -247,25 +264,37 @@ func ProcessFieldDefines(ctx context.Context, jdbcType types.SrcJdbcType, fields
 			tableName = ""
 			fNews = append(fNews, nonSysFields...)
 		}
-
-		fNews = append(fNews, &types.FieldDefine{Name: constants.QosField, Type: types.FieldTypeLong})
+		if qos == nil {
+			qos = &types.FieldDefine{Name: constants.QosField, Type: types.FieldTypeLong}
+		}
+		fNews = append(fNews, qos)
 	} else if jdbcType.TypeCode() == constants.RelationType {
 		// Relational data
 		tableName = ""
 		fNews = make([]*types.FieldDefine, 0, len(processedFields)+2)
 		hasId := false
 
-		fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime})
+		fNews = append(fNews)
+		var ct *types.FieldDefine
+		var nonSysFields []*types.FieldDefine
 
 		for _, f := range processedFields {
 			if !f.IsSystemField() {
-				if !hasId && f.IsUnique() {
+				if f.IsUnique() {
 					hasId = true
 				}
-				fNews = append(fNews, f)
+				nonSysFields = append(nonSysFields, f)
+			} else if f.Type == types.FieldTypeDatetime {
+				ct = f
 			}
 		}
-
+		if ct == nil {
+			ct = &types.FieldDefine{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime}
+		}
+		fNews = append(fNews, ct)
+		if len(nonSysFields) > 0 {
+			fNews = append(fNews, nonSysFields...)
+		}
 		// If no unique field is defined by the user, add a system Id field.
 		if !hasId {
 			fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldID, Type: types.FieldTypeLong, Unique: &_True})

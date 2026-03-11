@@ -1,6 +1,7 @@
 package postgresql
 
 import (
+	"backend/internal/common/constants"
 	"backend/internal/types"
 	"fmt"
 	"strings"
@@ -143,7 +144,7 @@ func GetTypeDefineWithSerial(def *types.FieldDefine, procSerial bool) string {
 	switch typeName {
 	case types.FieldTypeString:
 		nameLower := strings.ToLower(def.GetName())
-		if strings.Contains(nameLower, "json") {
+		if def.GetName() == constants.JsonbField || strings.Contains(nameLower, "json") {
 			typeStr = "jsonb"
 		} else if def.GetMaxLen() != nil {
 			typeStr = fmt.Sprintf("varchar(%d)", *def.GetMaxLen())

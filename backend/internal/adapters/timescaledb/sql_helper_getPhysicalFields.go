@@ -4,11 +4,12 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/types"
 	"context"
+	"strconv"
 	"strings"
 )
 
 // 获取物理表字段（需要数据库连接）
-func getPhysicalTableFields(ctx context.Context, pool queryer) (fields []*types.FieldDefine, ct, qos string, er error) {
+func getPhysicalTableFields(ctx context.Context, pool queryer) (fields []*types.FieldDefine, ct, qos, tag string, er error) {
 	sql := `
 		SELECT column_name, data_type
 		FROM information_schema.columns
@@ -20,16 +21,18 @@ func getPhysicalTableFields(ctx context.Context, pool queryer) (fields []*types.
 	rows, err := pool.Query(ctx, sql)
 	if err != nil {
 		// 表可能不存在
-		return nil, "", "", nil
+		return
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var columnName, dataType string
 		if err := rows.Scan(&columnName, &dataType); err != nil {
-			return fields, "", "", err
+			er = err
+			return
 		}
-		if columnName == constants.SystemSeqTag {
+		if columnName == constants.SysFieldID || columnName == "tag" {
+			tag = columnName
 			continue
 		}
 		// 跳过系统字段
@@ -39,7 +42,7 @@ func getPhysicalTableFields(ctx context.Context, pool queryer) (fields []*types.
 		switch dataType {
 		case "bigint", "int8":
 			fieldType = types.FieldTypeLong
-			if !strings.Contains(columnName, "_") {
+			if !isNormalColumn(columnName) {
 				qos = columnName
 			}
 		case "integer", "int4":
@@ -52,7 +55,7 @@ func getPhysicalTableFields(ctx context.Context, pool queryer) (fields []*types.
 			fieldType = types.FieldTypeBoolean
 		case "timestamp with time zone", "timestamptz":
 			fieldType = types.FieldTypeDatetime
-			if !strings.Contains(columnName, "_") {
+			if !isNormalColumn(columnName) {
 				ct = columnName
 			}
 		case "character varying", "varchar", "text":
@@ -72,5 +75,16 @@ func getPhysicalTableFields(ctx context.Context, pool queryer) (fields []*types.
 		fields = append(fields, field)
 	}
 
-	return fields, ct, qos, nil
+	return
+}
+func isNormalColumn(columnName string) bool {
+	normalColumn := false
+	x := strings.LastIndex(columnName, "_")
+	if x > 0 {
+		_, er := strconv.Atoi(columnName[x+1:])
+		if er == nil {
+			normalColumn = true
+		}
+	}
+	return normalColumn
 }

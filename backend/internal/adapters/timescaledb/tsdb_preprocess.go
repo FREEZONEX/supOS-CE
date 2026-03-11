@@ -74,8 +74,8 @@ func preprocess(unsData []serviceApi.UnsData) processResult {
 		cols = append(cols, k)
 	}
 	sort.Strings(cols[3:])
-	cols[0] = constants.SysFieldCreateTime
-	cols[1] = constants.SystemSeqTag
+	cols[0] = constants.SysFieldID
+	cols[1] = constants.SysFieldCreateTime
 	cols[2] = constants.QosField
 
 	colIndexMap := make(map[string]int, len(cols))
@@ -94,6 +94,7 @@ func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, 
 	rows = make([][]any, 0, dataMap.Size())
 	dataMap.Range(func(key [2]int64, da map[string]string) {
 		uns := unsMap[key[0]]
+		ct := uns.GetTimestampField()
 		qos := uns.GetQualityField()
 		row := make([]any, len(colIndexMap))
 		tagField := uns.GetTbFieldName()
@@ -104,7 +105,7 @@ func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, 
 				name = *index
 			}
 			var value interface{}
-			v := da[fd.Name]
+			v, hasV := da[fd.Name]
 			value = v
 			if len(v) == 0 {
 				if fd.Name == qos {
@@ -113,11 +114,25 @@ func map2rows(colIndexMap map[string]int, dataMap *base.LinkedHashMap[[2]int64, 
 					continue
 				}
 			}
-			i := colIndexMap[name]
-			if i < 0 && fd.Name == qos { // uns定义的质量码字段和目前质量码环境变量名字不同的处理
-				i = colIndexMap[constants.QosField]
+			i, has := colIndexMap[name]
+			if !has {
+				switch fd.Name {
+				case qos:
+					// uns定义的质量码字段和目前质量码名字不同的处理
+					i, has = colIndexMap[constants.QosField]
+				case ct:
+					// uns定义的时间戳字段和目前时间戳名字不同的处理
+					i, has = colIndexMap[constants.SysFieldCreateTime]
+					if !hasV {
+						v, _ = da["timeStamp"] //兼容旧时间戳字段
+						if len(v) == 0 {
+							continue
+						}
+						value = v
+					}
+				}
 			}
-			if i >= 0 {
+			if has && i >= 0 {
 				if fd.Type == types.FieldTypeDatetime {
 					mill, _ := strconv.ParseFloat(v, 64)
 					if mill > 0 {

@@ -477,7 +477,7 @@ func setFieldsErr(ctx context.Context, unsDto *types.CreateTopicDto, errTipMap m
 	insFs := unsDto.Fields
 	jdbcType := types.SrcJdbcType(unsDto.DataSrcID)
 	if len(insFs) == 0 && base.P2v(unsDto.DataType) == constants.JsonbType {
-		insFs = []*types.FieldDefine{{Name: "json", Type: types.FieldTypeString}}
+		insFs = []*types.FieldDefine{{Name: constants.JsonbField, Type: types.FieldTypeString}}
 	}
 	addSystemField := jdbcType != 0 && unsDto.PathType == constants.PathTypeFile && base.P2v(unsDto.DataType) != constants.AlarmRuleType
 
