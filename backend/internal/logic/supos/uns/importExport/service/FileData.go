@@ -19,14 +19,14 @@ import (
 )
 
 const (
-	TYPE_FILE     = "topic"
-	TYPE_FOLDER   = "path"
+	TYPE_FILE     = "TOPIC"
+	TYPE_FOLDER   = "PATH"
 	TYPE_TEMPLATE = "template"
 )
 const (
-	Template = "Template"
-	Label    = "Label"
-	UNS      = "UNS"
+	Template = "templates"
+	Label    = "labels"
+	UNS      = "namespace"
 
 	Folder = "Path"
 	File   = "File"
@@ -54,8 +54,10 @@ type FileData struct {
 	Template          *FileData              `json:"template,omitempty"`
 	Children          []*FileData            `json:"children,omitempty"`
 	Error             string                 `json:"error,omitempty"`
-	Extend            map[string]interface{} `json:"extend,omitempty"` // Extended fields
+	Extend            map[string]interface{} `json:"extendProperties,omitempty"` // Extended fields
+	ExtendOld         map[string]interface{} `json:"extend,omitempty"`           // Extended fields--旧版定义
 	parent            *FileData
+	vo                *types.CreateTopicDto
 	path              string
 	id                int64
 	parentId          int64
@@ -90,7 +92,8 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 		i.Error = "Empty " + prop
 		return nil
 	}
-	if prop == Label {
+	prop = strings.ToLower(prop)
+	if prop == Label || prop == "label" {
 		return &types.CreateTopicDto{Name: i.Name}
 	}
 	if len(i.Fields) > 0 {
@@ -121,12 +124,14 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 		Fields: i.Fields,
 		Extend: i.Extend,
 	}
+	if len(i.ExtendOld) > 0 && len(i.Extend) == 0 {
+		vo.Extend = i.ExtendOld
+	}
 	switch prop {
-	case Template:
+	case Template, "template":
 		vo.PathType = constants.PathTypeTemplate
-	case UNS:
-		switch strings.ToLower(i.Type) {
-		case TYPE_FILE:
+	case UNS, "uns":
+		if strings.EqualFold(i.Type, TYPE_FILE) {
 			vo.PathType = constants.PathTypeFile
 			if ok, _ := strconv.ParseBool(os.Getenv("SYS_OS_ENABLE_AUTO_CATEGORIZATION")); ok {
 				if i.ParentDataType == "" {
@@ -134,7 +139,7 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 					return nil
 				}
 			}
-		case TYPE_FOLDER:
+		} else if strings.EqualFold(i.Type, TYPE_FOLDER) {
 			vo.PathType = constants.PathTypeDir
 			if i.Name == "label" || i.Name == "template" {
 				i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.reserved.word")
@@ -144,7 +149,7 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 				i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.length.limit.exceed")
 				return nil
 			}
-		default:
+		} else {
 			i.Error = I18nUtils.GetMessageWithCtx(ctx, "uns.import.type.error")
 			return nil
 		}
@@ -200,7 +205,25 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 		}
 
 	}
-	if len(i.ParentDataType) > 0 {
+	i.vo = vo
+	if parent != nil && parent.vo != nil && parent.vo.DataType != nil {
+		dirType := parent.vo.DataType
+		switch vo.PathType {
+		case constants.PathTypeDir:
+			vo.DataType = dirType
+		case constants.PathTypeFile:
+			vo.ParentDataType = dirType
+			switch enums.FolderDataType(*dirType) {
+			case enums.STATE:
+				vo.DataType = base.V2p(constants.RelationType)
+			case enums.ACTION:
+				vo.DataType = base.V2p(constants.JsonbType)
+			case enums.METRIC:
+				vo.DataType = base.V2p(constants.TimeSequenceType)
+			default:
+			}
+		}
+	} else if len(i.ParentDataType) > 0 {
 		if pdt, ok := enums.GetFolderDataTypeByName(i.ParentDataType); ok {
 			dirType := base.V2p(int16(pdt))
 			switch vo.PathType {

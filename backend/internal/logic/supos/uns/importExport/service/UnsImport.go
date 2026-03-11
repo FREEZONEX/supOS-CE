@@ -113,8 +113,8 @@ func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName stri
 			pushStatus(status)
 			prevReadSize = readSize
 		}
-		switch propName {
-		case Label:
+		switch strings.ToLower(propName) {
+		case Label, "label":
 			labelNames := base.Map[*types.CreateTopicDto, string](nodes, func(e *types.CreateTopicDto) string {
 				return e.Name
 			})
@@ -122,8 +122,8 @@ func (l *UnsImportExportService) ImportStream(ctx context.Context, fileName stri
 			if er != nil {
 				log.Error("创建标签失败", er)
 			}
-		case Template, UNS:
-			if propName == UNS {
+		case Template, UNS, "template", "uns":
+			if propName == UNS || propName == "uns" {
 				var insertTemplates []*types.CreateTopicDto
 				for _, n := range nodes {
 					if template := n.Template; template != nil {
