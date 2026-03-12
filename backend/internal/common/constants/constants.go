@@ -192,6 +192,7 @@ func init() {
 	// InitializeEndpointId the set of system fields
 	SystemFields = map[string]struct{}{
 		"tag":              {},
+		"timeStamp":        {},
 		SysFieldID:         {},
 		SysFieldCreateTime: {}, // Note: Using the runtime value here
 		QosField:           {}, // Note: Using the runtime value here

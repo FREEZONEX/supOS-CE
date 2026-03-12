@@ -214,10 +214,12 @@ func node2vo(ctx context.Context, prop string, i, parent *FileData) *types.Creat
 		case constants.PathTypeFile:
 			vo.ParentDataType = dirType
 			switch enums.FolderDataType(*dirType) {
-			case enums.STATE:
-				vo.DataType = base.V2p(constants.RelationType)
-			case enums.ACTION:
+			case enums.STATE, enums.ACTION:
 				vo.DataType = base.V2p(constants.JsonbType)
+				if len(vo.Fields) > len(vo.JsonFields) {
+					vo.Fields = nil
+					vo.JsonFields = i.Fields
+				}
 			case enums.METRIC:
 				vo.DataType = base.V2p(constants.TimeSequenceType)
 			default:

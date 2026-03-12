@@ -272,20 +272,16 @@ func ProcessFieldDefines(ctx context.Context, jdbcType types.SrcJdbcType, fields
 		// Relational data
 		tableName = ""
 		fNews = make([]*types.FieldDefine, 0, len(processedFields)+2)
-		hasId := false
-
-		fNews = append(fNews)
-		var ct *types.FieldDefine
+		var ct, id *types.FieldDefine
 		var nonSysFields []*types.FieldDefine
 
 		for _, f := range processedFields {
 			if !f.IsSystemField() {
-				if f.IsUnique() {
-					hasId = true
-				}
 				nonSysFields = append(nonSysFields, f)
 			} else if f.Type == types.FieldTypeDatetime {
 				ct = f
+			} else if f.IsUnique() {
+				id = f
 			}
 		}
 		if ct == nil {
@@ -296,9 +292,10 @@ func ProcessFieldDefines(ctx context.Context, jdbcType types.SrcJdbcType, fields
 			fNews = append(fNews, nonSysFields...)
 		}
 		// If no unique field is defined by the user, add a system Id field.
-		if !hasId {
-			fNews = append(fNews, &types.FieldDefine{Name: constants.SysFieldID, Type: types.FieldTypeLong, Unique: &_True})
+		if id == nil {
+			id = &types.FieldDefine{Name: constants.SysFieldID, Type: types.FieldTypeLong, Unique: &_True}
 		}
+		fNews = append(fNews, id)
 	}
 
 	return &TableFieldDefine{

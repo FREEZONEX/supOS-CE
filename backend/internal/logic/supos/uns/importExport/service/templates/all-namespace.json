@@ -35,8 +35,6 @@
                                 {
                                   "name": "current_job",
                                   "type": "topic",
-                                  "topicType": "STATE",
-                                  "dataType": "RELATION_TYPE",
                                   "generateDashboard": "FALSE",
                                   "enableHistory": "TRUE",
                                   "mockData": "FALSE",
@@ -66,8 +64,6 @@
                                 {
                                   "name": "alarm_status",
                                   "type": "topic",
-                                  "topicType": "STATE",
-                                  "dataType": "JSONB_TYPE",
                                   "generateDashboard": "FALSE",
                                   "enableHistory": "TRUE",
                                   "mockData": "FALSE"
@@ -82,8 +78,6 @@
                                 {
                                   "name": "start_job",
                                   "type": "topic",
-                                  "topicType": "ACTION",
-                                  "dataType": "JSONB_TYPE",
                                   "generateDashboard": "FALSE",
                                   "enableHistory": "FALSE",
                                   "mockData": "FALSE"
@@ -91,8 +85,6 @@
                                 {
                                   "name": "stop_job",
                                   "type": "topic",
-                                  "topicType": "ACTION",
-                                  "dataType": "JSONB_TYPE",
                                   "generateDashboard": "FALSE",
                                   "enableHistory": "FALSE",
                                   "mockData": "FALSE"
@@ -107,8 +99,6 @@
                                 {
                                   "name": "board_cycle_time",
                                   "type": "topic",
-                                  "topicType": "METRIC",
-                                  "dataType": "TIME_SEQUENCE_TYPE",
                                   "generateDashboard": "TRUE",
                                   "enableHistory": "TRUE",
                                   "mockData": "FALSE",
@@ -122,8 +112,6 @@
                                 {
                                   "name": "boards_count",
                                   "type": "topic",
-                                  "topicType": "METRIC",
-                                  "dataType": "TIME_SEQUENCE_TYPE",
                                   "generateDashboard": "TRUE",
                                   "enableHistory": "TRUE",
                                   "mockData": "FALSE",

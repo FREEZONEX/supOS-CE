@@ -431,6 +431,26 @@ func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 
 	return instance
 }
+func keepSystemFields(dbFields, fields []*types.FieldDefine) []*types.FieldDefine {
+	if len(dbFields) > 0 {
+		if len(fields) == 0 {
+			return dbFields
+		}
+		dbSystemFields := make([]*types.FieldDefine, 0, len(dbFields))
+		for _, dbField := range dbFields {
+			if dbField.IsSystemField() {
+				dbSystemFields = append(dbSystemFields, dbField)
+			}
+		}
+		if len(dbSystemFields) > 0 {
+			nmFields := normalFields(fields)
+			if len(nmFields) > 0 {
+				fields = append(dbSystemFields, nmFields...)
+			}
+		}
+	}
+	return fields
+}
 func getTemplate(ctx context.Context, topicDto *types.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) (template *dao.UnsNamespace, errMsg string) {
 	modelId := topicDto.ModelId
 	modelAlias := topicDto.ModelAlias
@@ -454,6 +474,8 @@ func getTemplate(ctx context.Context, topicDto *types.CreateTopicDto, existsUns 
 				I18nUtils.GetMessageWithCtx(ctx, "uns.type."+strconv.Itoa(int(template.PathType))),
 				I18nUtils.GetMessageWithCtx(ctx, "uns.type.1"),
 			)
+		} else if dbTemplate := dbFiles[template.Id]; dbTemplate != nil {
+			template.Fields = keepSystemFields(dbTemplate.Fields, template.Fields)
 		}
 	} else if folderAlias = topicDto.ParentAlias; folderAlias != nil {
 		folder := existsUns(*folderAlias)
@@ -604,6 +626,7 @@ func (u *UnsAddService) trySetId(
 			tar.ParentAlias = nil
 			tar.ParentId = nil
 		}
+		tar.Fields = keepSystemFields(dbPo.Fields, newUns.Fields)
 		paramFlags := base.P2v(unsDto.WithFlags)
 		UnsConverter.Po2DtoWithoutFlags(&tar, unsDto)
 		newUns = &tar
