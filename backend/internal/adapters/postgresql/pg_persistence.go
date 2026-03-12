@@ -97,7 +97,11 @@ func SaveBatch(dbPool *pgxpool.Pool, defaultSchema string, batchSize int, unsDat
 			for _, table := range segment {
 				sql, params := getInsertStatement(table.Uns, table.Data)
 				logx.Debugf("insert sql: %s, values: %+v", sql, params)
-				batch.Queue(sql, params...)
+				//batch.Queue(query string, arguments ...any) 有偶现bug,会把 arguments 变成 [params], 导致参数不匹配错误
+				batch.QueuedQueries = append(batch.QueuedQueries, &pgx.QueuedQuery{
+					SQL:       sql,
+					Arguments: params,
+				})
 			}
 			// 执行批次
 			err = execBatch(conn, batchTask{batch: batch, uns: segment}, defaultSchema, 0)
@@ -151,7 +155,10 @@ func execBatch(conn *pgxpool.Conn, task batchTask, defaultSchema string, retry i
 					retryTask.uns = make([]*serviceApi.UnsData, 0, len(task.uns))
 				}
 				q := task.batch.QueuedQueries[i]
-				retryTask.batch.Queue(q.SQL, q.Arguments)
+				retryTask.batch.QueuedQueries = append(retryTask.batch.QueuedQueries, &pgx.QueuedQuery{
+					SQL:       q.SQL,
+					Arguments: q.Arguments,
+				})
 				retryTask.uns = append(retryTask.uns, seg)
 			} else if pgEr != nil {
 				if pgEr.Code == "42601" || strings.HasPrefix(pgEr.Code, "2") {
