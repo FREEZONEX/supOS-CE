@@ -3,7 +3,6 @@ package service
 import (
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/constants"
-	"backend/internal/common/utils/FieldUtils"
 	"backend/internal/common/utils/PathUtil"
 	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	"backend/internal/logic/supos/uns/uns/bo"
@@ -12,7 +11,6 @@ import (
 	"backend/share/base"
 	"context"
 	"strconv"
-	"strings"
 
 	"gorm.io/gorm"
 )
@@ -190,11 +188,8 @@ func filterFieldsForTimeSequence(fields []*types.FieldDefine) []*types.FieldDefi
 	result := make([]*types.FieldDefine, 0, len(fields))
 
 	for _, fd := range fields {
-		name := fd.GetName()
 		tbValueName := fd.GetTbValueName()
-
-		// 保留不包含系统字段前缀且没有表值名称的字段
-		if !strings.HasPrefix(name, constants.SystemFieldPrev) && tbValueName == nil {
+		if tbValueName == nil {
 			result = append(result, fd)
 			if fd.IsSystemField() {
 				fd.SystemField = base.OptionalTrue
@@ -211,18 +206,14 @@ func filterFieldsForOtherTypes(unsInfo types.UnsInfo, fields []*types.FieldDefin
 		return fields
 	}
 
-	ct := FieldUtils.GetTimestampField(fields)
-	qos := FieldUtils.GetQualityField(fields, jdbcType.TypeCode())
-
 	result := make([]*types.FieldDefine, 0, len(fields))
-
 	for _, fd := range fields {
-		// 跳过时间戳字段、质量字段和系统字段
-		if fd == ct || fd == qos || strings.HasPrefix(fd.GetName(), constants.SystemFieldPrev) {
-			continue
-		}
+		// 跳过系统字段,除了 _json
 		if fd.IsSystemField() {
 			fd.SystemField = base.OptionalTrue
+			if fd.Name != constants.JsonbField {
+				continue
+			}
 		}
 		result = append(result, fd)
 	}
