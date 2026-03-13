@@ -1,8 +1,6 @@
 package handler
 
 import (
-	kongLogic "backend/internal/adapters/kong/logic"
-	kongRoute "backend/internal/adapters/kong/route"
 	imexport "backend/internal/handler/supos/uns/importExport"
 	"backend/internal/handler/supos/uns/system"
 	unsHandler "backend/internal/handler/supos/uns/uns"
@@ -15,9 +13,6 @@ import (
 
 func RegisterExtHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	addProfiles(server)
-	kong := serverCtx.Config.Kong
-	nodeSrc := serverCtx.Config.NodeRed.Source
-	kongRoute.RegisterHandlers(server, kongLogic.GetKongLogic(kong.Host, kong.Port), kongLogic.NewMenuLogic(kong.Host, kong.Port), nodeSrc.Host, nodeSrc.Port)
 
 	server.AddRoutes(rest.WithMiddlewares(
 		[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
