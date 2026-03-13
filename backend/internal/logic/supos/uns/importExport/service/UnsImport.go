@@ -6,6 +6,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/utils/datetimeutils"
 	"backend/internal/common/utils/fileutil"
+	"backend/internal/common/utils/httpUtils"
 	"backend/internal/common/utils/integerutil"
 	"backend/internal/logic/supos/uns/importExport/service/jsonstream"
 	"backend/internal/logic/supos/uns/uns/bo"
@@ -16,7 +17,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -37,7 +37,7 @@ type responseWriterStatusConsumer struct {
 func (r responseWriterStatusConsumer) write(status *common.RunningStatus) {
 	tsJson, _ := json.Marshal(status)
 	_, er := r.respWriter.Write(append(tsJson, '\n', '\n'))
-	r.respWriter.(http.Flusher).Flush()
+	httpUtils.Flush(r.respWriter)
 	if er != nil {
 		logx.Error("导入进度发送失败:", er)
 	}
