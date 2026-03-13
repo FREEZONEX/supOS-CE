@@ -8,6 +8,9 @@ import (
 
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/spring"
+
+	unsservice "backend/internal/logic/supos/uns/uns/service"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,7 +31,21 @@ func NewUnsTreeByDefinitionsLogic(ctx context.Context, svcCtx *svc.ServiceContex
 }
 
 func (l *UnsTreeByDefinitionsLogic) UnsTreeByDefinitions(req *types.UnsTreeCondition) (resp *types.TreePageResult, err error) {
-	// todo: add your logic here and delete this line
+	unsQueryService := spring.GetBean[*unsservice.UnsQueryService]()
+	unsResp, err := unsQueryService.LazyTree(l.ctx, req)
+	if err != nil {
+		return &types.TreePageResult{
+			Code: 500,
+		}, err
+	}
 
+	// Convert UnsTreePageResp to TreePageResult
+	resp = &types.TreePageResult{
+		PageNo:   unsResp.PageNo,
+		PageSize: unsResp.PageSize,
+		Total:    unsResp.Total,
+		Code:     unsResp.Code,
+		Data:     unsResp.Data,
+	}
 	return
 }

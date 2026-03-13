@@ -5,10 +5,12 @@ package open
 
 import (
 	"net/http"
+	"strconv"
 
 	"backend/internal/logic/supos/open"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"gitee.com/unitedrhino/share/errors"
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
@@ -21,8 +23,21 @@ func UpdateLabelHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
+		// 从路径参数中获取 id
+		idStr := r.PathValue("id")
+		if idStr == "" {
+			httpx.ErrorCtx(r.Context(), w, errors.Parameter.WithMsg("id is required"))
+			return
+		}
+
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			httpx.ErrorCtx(r.Context(), w, errors.Parameter.WithMsg("invalid id format"))
+			return
+		}
+
 		l := open.NewUpdateLabelLogic(r.Context(), svcCtx)
-		resp, err := l.UpdateLabel(&req)
+		resp, err := l.UpdateLabel(id, &req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

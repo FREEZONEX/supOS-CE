@@ -6,8 +6,12 @@ package open
 import (
 	"context"
 
+	"backend/internal/common/I18nUtils"
+	"backend/internal/logic/supos/uns/template/service"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/base"
+	"backend/share/spring"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,8 +31,37 @@ func NewUpdateTemplateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Up
 	}
 }
 
-func (l *UpdateTemplateLogic) UpdateTemplate(req *types.UpdateTemplateDto) (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
+func (l *UpdateTemplateLogic) UpdateTemplate(alias string, req *types.UpdateTemplateDto) (resp *types.ResultVO, err error) {
+	// 转换为 UpdateTemplateFieldsAndDescReq
+	updateReq := &types.UpdateTemplateFieldsAndDescReq{
+		Alias:       alias,
+		Fields:      make([]*types.FieldDefine, len(req.Fields)),
+		Description: base.V2p(req.Description),
+	}
 
-	return
+	// 转换 Fields
+	for i, f := range req.Fields {
+		updateReq.Fields[i] = &f
+	}
+
+	// 调用 UnsTemplateService.UpdateFieldsAndDesc
+	result, err := spring.GetBean[*service.UnsTemplateService]().UpdateFieldsAndDesc(l.ctx, updateReq)
+	if err != nil {
+		return &types.ResultVO{
+			Code: 500,
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.template.update.failed") + ": " + err.Error(),
+		}, nil
+	}
+
+	if result.Code != 200 {
+		return &types.ResultVO{
+			Code: result.Code,
+			Msg:  result.Msg,
+		}, nil
+	}
+
+	return &types.ResultVO{
+		Code: 200,
+		Msg:  "ok",
+	}, nil
 }

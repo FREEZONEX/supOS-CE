@@ -6,6 +6,7 @@ package open
 import (
 	"context"
 
+	"backend/internal/common/I18nUtils"
 	"backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -68,7 +69,7 @@ func (l *UpdateFolderLogic) UpdateFolder(alias string, req *types.UpdateOpenApiF
 		l.Errorf("修改文件夹失败: %v", err)
 		return &types.ResultVO{
 			Code: 500,
-			Msg:  "修改文件夹失败: " + err.Error(),
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.folder.update.failed") + ": " + err.Error(),
 		}, nil
 	}
 

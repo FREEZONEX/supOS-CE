@@ -15,11 +15,11 @@ import (
 func GetLabelSchemaHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := open.NewGetLabelSchemaLogic(r.Context(), svcCtx)
-		err := l.GetLabelSchema()
+		resp, err := l.GetLabelSchema()
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.Ok(w)
+			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}
 }

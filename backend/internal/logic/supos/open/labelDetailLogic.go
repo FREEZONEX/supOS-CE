@@ -6,6 +6,8 @@ package open
 import (
 	"context"
 
+	"backend/internal/common/I18nUtils"
+	dao "backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -27,8 +29,31 @@ func NewLabelDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Label
 	}
 }
 
-func (l *LabelDetailLogic) LabelDetail() (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
+func (l *LabelDetailLogic) LabelDetail(id int64) (resp *types.ResultVO, err error) {
+	var labelRepo dao.UnsLabelRepo
+	db := dao.GetDb(l.ctx)
 
-	return
+	label, err := labelRepo.SelectById(db, id)
+	if err != nil {
+		return &types.ResultVO{
+			Code: 500,
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.operation.failed") + ": " + err.Error(),
+		}, nil
+	}
+
+	if label == nil {
+		return &types.ResultVO{
+			Code: 404,
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.label.not.exists"),
+		}, nil
+	}
+
+	return &types.ResultVO{
+		Code: 200,
+		Msg:  "ok",
+		Data: types.LabelVo{
+			ID:        label.ID,
+			LabelName: label.LabelName,
+		},
+	}, nil
 }

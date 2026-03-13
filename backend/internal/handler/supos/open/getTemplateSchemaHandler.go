@@ -15,11 +15,11 @@ import (
 func GetTemplateSchemaHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := open.NewGetTemplateSchemaLogic(r.Context(), svcCtx)
-		err := l.GetTemplateSchema()
+		resp, err := l.GetTemplateSchema()
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {
-			httpx.Ok(w)
+			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
 	}
 }

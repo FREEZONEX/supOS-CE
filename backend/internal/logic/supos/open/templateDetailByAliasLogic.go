@@ -6,8 +6,11 @@ package open
 import (
 	"context"
 
+	"backend/internal/common/I18nUtils"
+	"backend/internal/logic/supos/uns/template/service"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/spring"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,8 +30,26 @@ func NewTemplateDetailByAliasLogic(ctx context.Context, svcCtx *svc.ServiceConte
 	}
 }
 
-func (l *TemplateDetailByAliasLogic) TemplateDetailByAlias() (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
+func (l *TemplateDetailByAliasLogic) TemplateDetailByAlias(alias string) (resp *types.ResultVO, err error) {
+	// 调用 UnsTemplateService.DetailByAlias
+	result, err := spring.GetBean[*service.UnsTemplateService]().DetailByAlias(l.ctx, &types.WithAlias{Alias: alias})
+	if err != nil {
+		return &types.ResultVO{
+			Code: 500,
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.template.query.failed") + ": " + err.Error(),
+		}, nil
+	}
 
-	return
+	if result.Code != 200 {
+		return &types.ResultVO{
+			Code: result.Code,
+			Msg:  result.Msg,
+		}, nil
+	}
+
+	return &types.ResultVO{
+		Code: 200,
+		Msg:  "ok",
+		Data: result.Data,
+	}, nil
 }

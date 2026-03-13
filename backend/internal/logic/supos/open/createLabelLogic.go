@@ -6,8 +6,11 @@ package open
 import (
 	"context"
 
+	"backend/internal/common/I18nUtils"
+	"backend/internal/logic/supos/uns/label/service"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/spring"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,7 +31,32 @@ func NewCreateLabelLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Creat
 }
 
 func (l *CreateLabelLogic) CreateLabel(req *types.CreateLabelDto) (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
+	// 转换为 CreateLabelReq
+	createReq := &types.CreateLabelReq{
+		Name: req.LabelName,
+	}
 
-	return
+	// 调用 UnsLabelService.Create
+	result, err := spring.GetBean[*service.UnsLabelService]().Create(l.ctx, createReq)
+	if err != nil {
+		return &types.ResultVO{
+			Code: 500,
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.label.create.failed") + ": " + err.Error(),
+		}, nil
+	}
+
+	if result.Code != 200 {
+		return &types.ResultVO{
+			Code: result.Code,
+			Msg:  result.Msg,
+		}, nil
+	}
+
+	return &types.ResultVO{
+		Code: 200,
+		Msg:  "ok",
+		Data: map[string]interface{}{
+			"id": result.Data.ID,
+		},
+	}, nil
 }

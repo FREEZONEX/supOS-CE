@@ -6,8 +6,11 @@ package open
 import (
 	"context"
 
+	"backend/internal/common/I18nUtils"
+	"backend/internal/logic/supos/uns/template/service"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"backend/share/spring"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,8 +30,25 @@ func NewDeleteTemplateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *De
 	}
 }
 
-func (l *DeleteTemplateLogic) DeleteTemplate() (resp *types.ResultVO, err error) {
-	// todo: add your logic here and delete this line
+func (l *DeleteTemplateLogic) DeleteTemplate(id int64) (resp *types.ResultVO, err error) {
+	// 调用 UnsTemplateService.Delete
+	result, err := spring.GetBean[*service.UnsTemplateService]().Delete(l.ctx, &types.WithID{ID: id})
+	if err != nil {
+		return &types.ResultVO{
+			Code: 500,
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.template.delete.failed") + ": " + err.Error(),
+		}, nil
+	}
 
-	return
+	if result.Code != 200 {
+		return &types.ResultVO{
+			Code: result.Code,
+			Msg:  result.Msg,
+		}, nil
+	}
+
+	return &types.ResultVO{
+		Code: 200,
+		Msg:  "ok",
+	}, nil
 }

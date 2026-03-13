@@ -6,6 +6,7 @@ package open
 import (
 	"context"
 
+	"backend/internal/common/I18nUtils"
 	"backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -90,7 +91,7 @@ func (l *UpdateFileLogic) UpdateFile(alias string, req *types.UpdateOpenApiFileD
 		l.Errorf("修改文件失败: %v", err)
 		return &types.ResultVO{
 			Code: 500,
-			Msg:  "修改文件失败: " + err.Error(),
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.file.update.failed") + ": " + err.Error(),
 		}, nil
 	}
 
