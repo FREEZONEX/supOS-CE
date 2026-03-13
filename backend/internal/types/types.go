@@ -549,6 +549,7 @@ type FieldDefine struct {
 	LowerLimit  *float64    `json:"lowerLimit,optional,omitempty"`
 	Decimal     *int        `json:"decimal,optional,omitempty,string"`
 	SystemField *bool       `json:"systemField,optional,omitempty"`
+	Inc         *bool       `json:"inc,optional,omitempty"`
 	LastValue   string      `json:"-,optional"`
 	LastTime    int64       `json:"-,optional"`
 	Uns         interface{} `json:"-"`

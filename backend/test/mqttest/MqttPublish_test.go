@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"gitee.com/unitedrhino/share/conf"
-	"github.com/zeromicro/go-zero/core/syncx"
 )
 
 func TestMills(t *testing.T) {
@@ -16,8 +15,6 @@ func TestMills(t *testing.T) {
 	utcTime := time.UnixMilli(int64(mill)).UTC()
 	v := utcTime.Format("2006-01-02 15:04:05.000") + "+00"
 	t.Log(v)
-
-	syncx.AtomicBool()
 
 	var m map[[2]int64]string = make(map[[2]int64]string, 8)
 	m[[2]int64{1, 2}] = "12"
@@ -45,7 +42,7 @@ func TestPublishMqtt(t *testing.T) {
 		msgs = append(msgs, msg)
 	}
 	for _, msg := range msgs {
-		er = cli.Publish("_cunchuzhuangtai_269d188d35fd429e95da", 0, false, []byte(msg))
+		er = cli.Publish("chuanyuexiaowang", 0, false, []byte(msg))
 		t.Log("发送消息:", er, msg)
 		time.Sleep(1 * time.Millisecond)
 	}

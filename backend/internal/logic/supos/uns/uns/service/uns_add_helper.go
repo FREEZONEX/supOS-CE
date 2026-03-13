@@ -614,7 +614,18 @@ func (u *UnsAddService) trySetId(
 	//		}
 	//	}
 	//}
-
+	var incFields []*types.FieldDefine
+	if len(unsDto.JsonFields) > 0 {
+		for _, jsf := range unsDto.JsonFields {
+			if jsf.Type == types.FieldTypeLong {
+				if base.P2v(jsf.Inc) {
+					incFields = append(incFields, jsf)
+				}
+			} else if jsf.Inc != nil {
+				jsf.Inc = nil
+			}
+		}
+	}
 	newUns := newUnsFile(unsDto)
 	if DB_EXISTS {
 		// 覆盖这俩不允许修改的字段
@@ -627,6 +638,9 @@ func (u *UnsAddService) trySetId(
 			tar.ParentId = nil
 		}
 		tar.Fields = keepSystemFields(dbPo.Fields, newUns.Fields)
+		if base.P2v(dbPo.DataType) == constants.JsonbType {
+			tar.Fields = addIncFields(tar.Fields, incFields)
+		}
 		paramFlags := base.P2v(unsDto.WithFlags)
 		UnsConverter.Po2DtoWithoutFlags(&tar, unsDto)
 		newUns = &tar
@@ -635,6 +649,12 @@ func (u *UnsAddService) trySetId(
 			unsDto.WithFlags = nil
 			newUns.WithFlags = nil
 		}
+	} else if len(incFields) > 0 && base.P2v(unsDto.DataType) == constants.JsonbType {
+		fields := newUns.Fields
+		if len(fields) == 0 {
+			fields = []*types.FieldDefine{{Name: constants.JsonbField, Type: types.FieldTypeString}}
+		}
+		newUns.Fields = addIncFields(fields, incFields)
 	}
 
 	dataType := int16(0)
@@ -792,6 +812,31 @@ func (u *UnsAddService) trySetId(
 		newUns.Status = &OK
 	}
 	return newUns, DB_EXISTS
+}
+
+func addIncFields(fields, incFields []*types.FieldDefine) []*types.FieldDefine {
+	if len(fields) == 0 {
+		return fields
+	}
+	fs := make([]*types.FieldDefine, 0, len(fields))
+	nameMap := make(map[string]*types.FieldDefine)
+	for _, f := range fields {
+		if f.Inc == nil {
+			nameMap[f.Name] = f
+			fs = append(fs, f)
+		}
+	}
+	if len(incFields) > 0 {
+		for _, inc := range incFields {
+			if f, has := nameMap[inc.Name]; !has {
+				fs = append(fs, inc)
+			} else {
+				*f = *inc
+			}
+		}
+	}
+
+	return fs
 }
 func normalFields(fs []*types.FieldDefine) []*types.FieldDefine {
 	return base.Filter(fs, func(e *types.FieldDefine) bool {

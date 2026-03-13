@@ -3,6 +3,7 @@ package postgresql
 import (
 	"backend/internal/common/constants"
 	"backend/internal/types"
+	"backend/share/base"
 	"fmt"
 	"strings"
 
@@ -161,7 +162,7 @@ func GetTypeDefineWithSerial(def *types.FieldDefine, procSerial bool) string {
 		}
 
 	case types.FieldTypeLong:
-		if procSerial && def.IsUnique() && def.GetTbValueName() == nil {
+		if base.P2v(def.Inc) || (procSerial && def.IsUnique() && def.GetTbValueName() == nil) {
 			typeStr = "bigserial"
 		}
 	}

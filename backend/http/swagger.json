@@ -2169,6 +2169,9 @@
                       "displayName": {
                         "type": "string"
                       },
+                      "inc": {
+                        "type": "boolean"
+                      },
                       "index": {
                         "type": "string"
                       },
@@ -2530,6 +2533,9 @@
                             },
                             "displayName": {
                               "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
                             },
                             "index": {
                               "type": "string"
@@ -5643,6 +5649,9 @@
                             "displayName": {
                               "type": "string"
                             },
+                            "inc": {
+                              "type": "boolean"
+                            },
                             "index": {
                               "type": "string"
                             },
@@ -5704,6 +5713,9 @@
                             },
                             "displayName": {
                               "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
                             },
                             "index": {
                               "type": "string"
@@ -5801,6 +5813,9 @@
                             },
                             "displayName": {
                               "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
                             },
                             "index": {
                               "type": "string"
@@ -6330,6 +6345,9 @@
                             },
                             "displayName": {
                               "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
                             },
                             "index": {
                               "type": "string"
@@ -7333,6 +7351,9 @@
                       "displayName": {
                         "type": "string"
                       },
+                      "inc": {
+                        "type": "boolean"
+                      },
                       "index": {
                         "type": "string"
                       },
@@ -7394,6 +7415,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -7491,6 +7515,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -7699,6 +7726,9 @@
                       "displayName": {
                         "type": "string"
                       },
+                      "inc": {
+                        "type": "boolean"
+                      },
                       "index": {
                         "type": "string"
                       },
@@ -7801,6 +7831,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -8076,6 +8109,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -8466,6 +8502,9 @@
                             "displayName": {
                               "type": "string"
                             },
+                            "inc": {
+                              "type": "boolean"
+                            },
                             "index": {
                               "type": "string"
                             },
@@ -8527,6 +8566,9 @@
                             },
                             "displayName": {
                               "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
                             },
                             "index": {
                               "type": "string"
@@ -8624,6 +8666,9 @@
                             },
                             "displayName": {
                               "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
                             },
                             "index": {
                               "type": "string"
@@ -9077,6 +9122,9 @@
                           "displayName": {
                             "type": "string"
                           },
+                          "inc": {
+                            "type": "boolean"
+                          },
                           "index": {
                             "type": "string"
                           },
@@ -9132,6 +9180,9 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "inc": {
+                            "type": "boolean"
                           },
                           "index": {
                             "type": "string"
@@ -9387,6 +9438,9 @@
                             "displayName": {
                               "type": "string"
                             },
+                            "inc": {
+                              "type": "boolean"
+                            },
                             "index": {
                               "type": "string"
                             },
@@ -9520,6 +9574,9 @@
                             },
                             "displayName": {
                               "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
                             },
                             "index": {
                               "type": "string"
@@ -10317,6 +10374,9 @@
                           "displayName": {
                             "type": "string"
                           },
+                          "inc": {
+                            "type": "boolean"
+                          },
                           "index": {
                             "type": "string"
                           },
@@ -10464,6 +10524,9 @@
                       "displayName": {
                         "type": "string"
                       },
+                      "inc": {
+                        "type": "boolean"
+                      },
                       "index": {
                         "type": "string"
                       },
@@ -10516,6 +10579,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -10694,6 +10760,9 @@
                       "displayName": {
                         "type": "string"
                       },
+                      "inc": {
+                        "type": "boolean"
+                      },
                       "index": {
                         "type": "string"
                       },
@@ -10755,6 +10824,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -10852,6 +10924,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -11053,6 +11128,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -11397,6 +11475,9 @@
                           "displayName": {
                             "type": "string"
                           },
+                          "inc": {
+                            "type": "boolean"
+                          },
                           "index": {
                             "type": "string"
                           },
@@ -11458,6 +11539,9 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "inc": {
+                            "type": "boolean"
                           },
                           "index": {
                             "type": "string"
@@ -11555,6 +11639,9 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "inc": {
+                            "type": "boolean"
                           },
                           "index": {
                             "type": "string"
@@ -11965,6 +12052,9 @@
                             "displayName": {
                               "type": "string"
                             },
+                            "inc": {
+                              "type": "boolean"
+                            },
                             "index": {
                               "type": "string"
                             },
@@ -12176,6 +12266,9 @@
                           "displayName": {
                             "type": "string"
                           },
+                          "inc": {
+                            "type": "boolean"
+                          },
                           "index": {
                             "type": "string"
                           },
@@ -12336,6 +12429,9 @@
                       },
                       "displayName": {
                         "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
                       },
                       "index": {
                         "type": "string"
@@ -12536,6 +12632,9 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "inc": {
+                            "type": "boolean"
                           },
                           "index": {
                             "type": "string"
@@ -13077,6 +13176,9 @@
                             },
                             "displayName": {
                               "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
                             },
                             "index": {
                               "type": "string"
@@ -14283,18 +14385,7 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
+            "schema": {}
           }
         }
       }
@@ -14381,18 +14472,7 @@
         "responses": {
           "200": {
             "description": "",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "integer"
-                },
-                "data": {},
-                "msg": {
-                  "type": "string"
-                }
-              }
-            }
+            "schema": {}
           }
         }
       }
@@ -14575,7 +14655,7 @@
       }
     }
   },
-  "x-date": "2026-03-03 15:06:45",
+  "x-date": "2026-03-12 15:48:15",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",
