@@ -14333,6 +14333,764 @@
         }
       }
     },
+    "/open-api/uns/batch/alias": {
+      "delete": {
+        "description": "根据别名集合批量删除文件夹和文件，返回删除结果",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "根据别名集合批量删除文件夹和文件",
+        "operationId": "supos/OpenBatchRemoveByAlias",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "aliasList"
+              ],
+              "properties": {
+                "aliasList": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "checkMount": {
+                  "type": "boolean"
+                },
+                "onlyRemoveChild": {
+                  "type": "boolean"
+                },
+                "removeRefer": {
+                  "type": "boolean"
+                },
+                "withDashboard": {
+                  "type": "boolean"
+                },
+                "withFlow": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "refs"
+                  ],
+                  "properties": {
+                    "refs": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/batch/makeLabel": {
+      "post": {
+        "description": "为文件批量打标签",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "批量文件打标签",
+        "operationId": "supos/OpenMakeLabel",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "items"
+              ],
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "fileAlias",
+                      "labelNames"
+                    ],
+                    "properties": {
+                      "fileAlias": {
+                        "type": "string"
+                      },
+                      "labelNames": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/cancelLabel/{alias}": {
+      "put": {
+        "description": "为文件取消指定标签",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "文件取消标签",
+        "operationId": "supos/OpenCancelLabel",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "items"
+              ],
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/condition/tree": {
+      "post": {
+        "description": "根据多条件分页查询UNS树结构",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "多条件分页查询树结构",
+        "operationId": "supos/OpenUnsTreeByDefinitions",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "dataType": {
+                  "type": "integer"
+                },
+                "keyword": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "type": "integer",
+                  "default": 1,
+                  "example": 1
+                },
+                "pageSize": {
+                  "type": "integer",
+                  "default": 10,
+                  "example": 10
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "pathType": {
+                  "type": "integer"
+                },
+                "searchType": {
+                  "type": "integer",
+                  "default": 1,
+                  "example": 1
+                },
+                "subscribeEnable": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "alias",
+                      "parentId",
+                      "parentAlias",
+                      "value",
+                      "lastUpdateTime",
+                      "countChildren",
+                      "pathType",
+                      "dataType",
+                      "parentDataType",
+                      "name",
+                      "displayName",
+                      "path",
+                      "pathName",
+                      "description",
+                      "templateAlias",
+                      "protocol",
+                      "fields",
+                      "children",
+                      "extend",
+                      "hasChildren",
+                      "createAt",
+                      "updateAt",
+                      "mount"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "id",
+                            "alias",
+                            "parentId",
+                            "parentAlias",
+                            "value",
+                            "lastUpdateTime",
+                            "countChildren",
+                            "pathType",
+                            "dataType",
+                            "parentDataType",
+                            "name",
+                            "displayName",
+                            "path",
+                            "pathName",
+                            "description",
+                            "templateAlias",
+                            "protocol",
+                            "fields",
+                            "children",
+                            "extend",
+                            "hasChildren",
+                            "createAt",
+                            "updateAt",
+                            "mount"
+                          ],
+                          "properties": {
+                            "alias": {
+                              "type": "string"
+                            },
+                            "children": {
+                              "type": "array",
+                              "items": {
+                                "type": "object"
+                              }
+                            },
+                            "countChildren": {
+                              "type": "integer"
+                            },
+                            "createAt": {
+                              "type": "integer"
+                            },
+                            "dataType": {
+                              "type": "integer"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "extend": {
+                              "type": "object",
+                              "additionalProperties": {}
+                            },
+                            "fields": {
+                              "type": "array",
+                              "items": {
+                                "type": "object"
+                              }
+                            },
+                            "hasChildren": {
+                              "type": "boolean"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "lastUpdateTime": {
+                              "type": "integer"
+                            },
+                            "mount": {
+                              "type": "object"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "parentAlias": {
+                              "type": "string"
+                            },
+                            "parentDataType": {
+                              "type": "integer"
+                            },
+                            "parentId": {
+                              "type": "string"
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "pathName": {
+                              "type": "string"
+                            },
+                            "pathType": {
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "type": "string"
+                            },
+                            "templateAlias": {
+                              "type": "string"
+                            },
+                            "updateAt": {
+                              "type": "integer"
+                            },
+                            "value": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      },
+                      "countChildren": {
+                        "type": "integer"
+                      },
+                      "createAt": {
+                        "type": "integer"
+                      },
+                      "dataType": {
+                        "type": "integer"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "extend": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "fields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "name",
+                            "type",
+                            "-"
+                          ],
+                          "properties": {
+                            "-": {},
+                            "decimal": {
+                              "type": "integer"
+                            },
+                            "displayName": {
+                              "type": "string"
+                            },
+                            "inc": {
+                              "type": "boolean"
+                            },
+                            "index": {
+                              "type": "string"
+                            },
+                            "lowerLimit": {
+                              "type": "number"
+                            },
+                            "maxLen": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "remark": {
+                              "type": "string"
+                            },
+                            "systemField": {
+                              "type": "boolean"
+                            },
+                            "tbValueName": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "unique": {
+                              "type": "boolean"
+                            },
+                            "unit": {
+                              "type": "string"
+                            },
+                            "upperLimit": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      },
+                      "hasChildren": {
+                        "type": "boolean"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "lastUpdateTime": {
+                        "type": "integer"
+                      },
+                      "mount": {
+                        "type": "object",
+                        "required": [
+                          "mountType",
+                          "mountSource",
+                          "displayName"
+                        ],
+                        "properties": {
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "mountSource": {
+                            "type": "string"
+                          },
+                          "mountType": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "parentAlias": {
+                        "type": "string"
+                      },
+                      "parentDataType": {
+                        "type": "integer"
+                      },
+                      "parentId": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "pathName": {
+                        "type": "string"
+                      },
+                      "pathType": {
+                        "type": "integer"
+                      },
+                      "protocol": {
+                        "type": "string"
+                      },
+                      "templateAlias": {
+                        "type": "string"
+                      },
+                      "updateAt": {
+                        "type": "integer"
+                      },
+                      "value": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/file": {
+      "post": {
+        "description": "创建文件，支持定义字段、引用对象、表达式等",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建文件",
+        "operationId": "supos/OpenCreateFile",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "addFlow": {
+                  "type": "boolean",
+                  "default": false,
+                  "example": false
+                },
+                "alias": {
+                  "type": "string"
+                },
+                "dashBoard": {
+                  "type": "boolean",
+                  "default": false,
+                  "example": false
+                },
+                "dataType": {
+                  "type": "integer"
+                },
+                "definition": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {},
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "description": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "expression": {
+                  "type": "string"
+                },
+                "extendProperties": {
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "frequency": {
+                  "type": "string"
+                },
+                "labelNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "name": {
+                  "type": "string"
+                },
+                "parentAlias": {
+                  "type": "string"
+                },
+                "parentDataType": {
+                  "type": "integer"
+                },
+                "persistence": {
+                  "type": "boolean",
+                  "default": false,
+                  "example": false
+                },
+                "refers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "alias",
+                      "path",
+                      "path",
+                      "field",
+                      "uts"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "field": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "uts": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "templateAlias": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/open-api/uns/file/byPath": {
       "get": {
         "description": "根据路径查询文件详细信息",
@@ -14362,6 +15120,414 @@
                   "type": "integer"
                 },
                 "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/file/current/batchQuery": {
+      "post": {
+        "description": "根据别名数组批量查询文件实时值",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "批量查询文件实时值",
+        "operationId": "supos/OpenBatchQueryFile",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "items"
+              ],
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/file/current/batchQuery/byPath": {
+      "post": {
+        "description": "根据路径数组批量查询文件实时值",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "根据文件路径批量查询文件实时值",
+        "operationId": "supos/OpenBatchQueryFileByPath",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "items"
+              ],
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/file/current/batchUpdate": {
+      "post": {
+        "description": "批量写入文件实时值",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "批量写文件实时值",
+        "operationId": "supos/OpenBatchUpdateFile",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "items"
+              ],
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "alias",
+                      "data"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "notExists",
+                    "errorFields"
+                  ],
+                  "properties": {
+                    "errorFields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "notExists": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/file/detail/{alias}": {
+      "put": {
+        "description": "根据别名修改文件信息",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "修改文件",
+        "operationId": "supos/OpenUpdateFile",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "addFlow": {
+                  "type": "boolean",
+                  "default": false,
+                  "example": false
+                },
+                "dashBoard": {
+                  "type": "boolean",
+                  "default": false,
+                  "example": false
+                },
+                "definition": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {},
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "description": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "expression": {
+                  "type": "string"
+                },
+                "extendProperties": {
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "frequency": {
+                  "type": "string"
+                },
+                "labelNames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "name": {
+                  "type": "string"
+                },
+                "parentAlias": {
+                  "type": "string"
+                },
+                "persistence": {
+                  "type": "boolean",
+                  "default": false,
+                  "example": false
+                },
+                "refers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "alias",
+                      "path",
+                      "path",
+                      "field",
+                      "uts"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "field": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "path": {
+                        "type": "string"
+                      },
+                      "uts": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "templateAlias": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/file/history/batch/query": {
+      "post": {
+        "description": "批量查询文件历史值，支持聚合、补点等高级功能",
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "批量查询文件历史值",
+        "operationId": "supos/OpenBatchQueryFileHistoryValue",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object"
+                },
                 "msg": {
                   "type": "string"
                 }
@@ -14420,6 +15586,132 @@
         }
       }
     },
+    "/open-api/uns/folder": {
+      "post": {
+        "description": "创建文件夹，支持定义字段和扩展属性",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建文件夹",
+        "operationId": "supos/OpenCreateFolder",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "alias": {
+                  "type": "string"
+                },
+                "definition": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {},
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "description": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "extendProperties": {
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "name": {
+                  "type": "string"
+                },
+                "parentAlias": {
+                  "type": "string"
+                },
+                "templateAlias": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/open-api/uns/folder/byPath": {
       "get": {
         "description": "根据路径查询文件夹详细信息",
@@ -14437,6 +15729,126 @@
             "name": "path",
             "in": "query",
             "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/folder/detail/{alias}": {
+      "put": {
+        "description": "根据别名修改文件夹信息",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "修改文件夹",
+        "operationId": "supos/OpenUpdateFolder",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "definition": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {},
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "description": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "extendProperties": {
+                  "type": "object",
+                  "additionalProperties": {}
+                },
+                "name": {
+                  "type": "string"
+                },
+                "parentAlias": {
+                  "type": "string"
+                },
+                "templateAlias": {
+                  "type": "string"
+                }
+              }
+            }
           }
         ],
         "responses": {
@@ -14488,6 +15900,668 @@
         ],
         "summary": "别名查询文件夹详情",
         "operationId": "supos/OpenGetFolderByAlias",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/label": {
+      "get": {
+        "description": "列出所有支持的标签，支持模糊搜索",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "标签列表",
+        "operationId": "supos/OpenAllLabels",
+        "parameters": [
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 20,
+            "name": "pageSize",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "key",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "labelName"
+                    ],
+                    "properties": {
+                      "createTime": {
+                        "type": "integer"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "labelName": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "创建新标签",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建标签",
+        "operationId": "supos/OpenCreateLabel",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "labelName"
+              ],
+              "properties": {
+                "labelName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/label/schema": {
+      "get": {
+        "description": "标签schema 定义结构",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询标签schema 元数据结构",
+        "operationId": "supos/OpenGetLabelSchema",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/open-api/uns/label/{id}": {
+      "get": {
+        "description": "根据ID查询标签详细信息",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "标签详情",
+        "operationId": "supos/OpenLabelDetail",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "根据ID修改标签信息",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "修改标签",
+        "operationId": "supos/OpenUpdateLabel",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "labelName"
+              ],
+              "properties": {
+                "labelName": {
+                  "type": "string"
+                },
+                "subscribeEnable": {
+                  "type": "boolean"
+                },
+                "subscribeFrequency": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "根据ID删除标签",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "删除标签",
+        "operationId": "supos/OpenDeleteLabel",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/template": {
+      "get": {
+        "description": "分页查询模板列表，支持关键字搜索和订阅过滤",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询模板列表",
+        "operationId": "supos/OpenTemplatePageList",
+        "parameters": [
+          {
+            "type": "integer",
+            "default": 1,
+            "description": "当前页数，默认为1",
+            "name": "pageNo",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "default": 20,
+            "description": "每页记录数，默认为20，最大支持1000",
+            "name": "pageSize",
+            "in": "query",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "pageNo",
+                "pageSize"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "pageNo": {
+                  "description": "当前页数，默认为1",
+                  "type": "integer",
+                  "default": 1,
+                  "example": 1
+                },
+                "pageSize": {
+                  "description": "每页记录数，默认为20，最大支持1000",
+                  "type": "integer",
+                  "default": 20,
+                  "example": 20
+                },
+                "subscribeEnable": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name"
+                    ],
+                    "properties": {
+                      "alias": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "创建新模板",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "新增模板",
+        "operationId": "supos/OpenCreateTemplate",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "name",
+                "fields"
+              ],
+              "properties": {
+                "alias": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {},
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/uns/template/schema": {
+      "get": {
+        "description": "模板schema 定义结构",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询模板schema 元数据结构",
+        "operationId": "supos/OpenGetTemplateSchema",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
+    "/open-api/uns/template/{alias}": {
+      "get": {
+        "description": "根据别名查询模板详细信息",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "查询模板详情",
+        "operationId": "supos/OpenTemplateDetailByAlias",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "根据别名修改模板信息",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "修改模板",
+        "operationId": "supos/OpenUpdateTemplate",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type",
+                      "-"
+                    ],
+                    "properties": {
+                      "-": {},
+                      "decimal": {
+                        "type": "integer"
+                      },
+                      "displayName": {
+                        "type": "string"
+                      },
+                      "inc": {
+                        "type": "boolean"
+                      },
+                      "index": {
+                        "type": "string"
+                      },
+                      "lowerLimit": {
+                        "type": "number"
+                      },
+                      "maxLen": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "systemField": {
+                        "type": "boolean"
+                      },
+                      "tbValueName": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "unique": {
+                        "type": "boolean"
+                      },
+                      "unit": {
+                        "type": "string"
+                      },
+                      "upperLimit": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "根据别名删除模板",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "删除模板",
+        "operationId": "supos/OpenDeleteTemplate",
         "responses": {
           "200": {
             "description": "",
@@ -14655,7 +16729,7 @@
       }
     }
   },
-  "x-date": "2026-03-12 15:48:15",
+  "x-date": "2026-03-13 13:32:49",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

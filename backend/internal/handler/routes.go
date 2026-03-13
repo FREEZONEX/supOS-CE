@@ -478,6 +478,36 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: suposopen.AttachmentUploadHandler(serverCtx),
 			},
 			{
+				// 根据别名集合批量删除文件夹和文件
+				Method:  http.MethodDelete,
+				Path:    "/batch/alias",
+				Handler: suposopen.BatchRemoveByAliasHandler(serverCtx),
+			},
+			{
+				// 批量文件打标签
+				Method:  http.MethodPost,
+				Path:    "/batch/makeLabel",
+				Handler: suposopen.MakeLabelHandler(serverCtx),
+			},
+			{
+				// 文件取消标签
+				Method:  http.MethodPut,
+				Path:    "/cancelLabel/:alias",
+				Handler: suposopen.CancelLabelHandler(serverCtx),
+			},
+			{
+				// 多条件分页查询树结构
+				Method:  http.MethodPost,
+				Path:    "/condition/tree",
+				Handler: suposopen.UnsTreeByDefinitionsHandler(serverCtx),
+			},
+			{
+				// 创建文件
+				Method:  http.MethodPost,
+				Path:    "/file",
+				Handler: suposopen.CreateFileHandler(serverCtx),
+			},
+			{
 				// 别名查询文件详情
 				Method:  http.MethodGet,
 				Path:    "/file/:alias",
@@ -490,10 +520,46 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: suposopen.GetFileByPathHandler(serverCtx),
 			},
 			{
+				// 批量查询文件实时值
+				Method:  http.MethodPost,
+				Path:    "/file/current/batchQuery",
+				Handler: suposopen.BatchQueryFileHandler(serverCtx),
+			},
+			{
+				// 根据文件路径批量查询文件实时值
+				Method:  http.MethodPost,
+				Path:    "/file/current/batchQuery/byPath",
+				Handler: suposopen.BatchQueryFileByPathHandler(serverCtx),
+			},
+			{
+				// 批量写文件实时值
+				Method:  http.MethodPost,
+				Path:    "/file/current/batchUpdate",
+				Handler: suposopen.BatchUpdateFileHandler(serverCtx),
+			},
+			{
+				// 修改文件
+				Method:  http.MethodPut,
+				Path:    "/file/detail/:alias",
+				Handler: suposopen.UpdateFileHandler(serverCtx),
+			},
+			{
+				// 批量查询文件历史值
+				Method:  http.MethodPost,
+				Path:    "/file/history/batch/query",
+				Handler: suposopen.BatchQueryFileHistoryValueHandler(serverCtx),
+			},
+			{
 				// 查询文件schema 元数据结构
 				Method:  http.MethodGet,
 				Path:    "/file/schema",
 				Handler: suposopen.GetFileSchemaHandler(serverCtx),
+			},
+			{
+				// 创建文件夹
+				Method:  http.MethodPost,
+				Path:    "/folder",
+				Handler: suposopen.CreateFolderHandler(serverCtx),
 			},
 			{
 				// 别名查询文件夹详情
@@ -508,10 +574,88 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: suposopen.GetFolderByPathHandler(serverCtx),
 			},
 			{
+				// 修改文件夹
+				Method:  http.MethodPut,
+				Path:    "/folder/detail/:alias",
+				Handler: suposopen.UpdateFolderHandler(serverCtx),
+			},
+			{
 				// 查询文件夹schema 元数据结构
 				Method:  http.MethodGet,
 				Path:    "/folder/schema",
 				Handler: suposopen.GetFolderSchemaHandler(serverCtx),
+			},
+			{
+				// 标签列表
+				Method:  http.MethodGet,
+				Path:    "/label",
+				Handler: suposopen.AllLabelsHandler(serverCtx),
+			},
+			{
+				// 创建标签
+				Method:  http.MethodPost,
+				Path:    "/label",
+				Handler: suposopen.CreateLabelHandler(serverCtx),
+			},
+			{
+				// 标签详情
+				Method:  http.MethodGet,
+				Path:    "/label/:id",
+				Handler: suposopen.LabelDetailHandler(serverCtx),
+			},
+			{
+				// 修改标签
+				Method:  http.MethodPut,
+				Path:    "/label/:id",
+				Handler: suposopen.UpdateLabelHandler(serverCtx),
+			},
+			{
+				// 删除标签
+				Method:  http.MethodDelete,
+				Path:    "/label/:id",
+				Handler: suposopen.DeleteLabelHandler(serverCtx),
+			},
+			{
+				// 查询标签schema 元数据结构
+				Method:  http.MethodGet,
+				Path:    "/label/schema",
+				Handler: suposopen.GetLabelSchemaHandler(serverCtx),
+			},
+			{
+				// 查询模板列表
+				Method:  http.MethodGet,
+				Path:    "/template",
+				Handler: suposopen.TemplatePageListHandler(serverCtx),
+			},
+			{
+				// 新增模板
+				Method:  http.MethodPost,
+				Path:    "/template",
+				Handler: suposopen.CreateTemplateHandler(serverCtx),
+			},
+			{
+				// 查询模板详情
+				Method:  http.MethodGet,
+				Path:    "/template/:alias",
+				Handler: suposopen.TemplateDetailByAliasHandler(serverCtx),
+			},
+			{
+				// 修改模板
+				Method:  http.MethodPut,
+				Path:    "/template/:alias",
+				Handler: suposopen.UpdateTemplateHandler(serverCtx),
+			},
+			{
+				// 删除模板
+				Method:  http.MethodDelete,
+				Path:    "/template/:alias",
+				Handler: suposopen.DeleteTemplateHandler(serverCtx),
+			},
+			{
+				// 查询模板schema 元数据结构
+				Method:  http.MethodGet,
+				Path:    "/template/schema",
+				Handler: suposopen.GetTemplateSchemaHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/open-api/uns"),

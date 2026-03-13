@@ -130,6 +130,12 @@ type BatchRemoveUnsDto struct {
 	AliasList []string `json:"aliasList"`
 }
 
+type BatchUpdateFileResult struct {
+	Code int               `json:"code"`
+	Msg  string            `json:"msg"`
+	Data UnsDataResponseVo `json:"data,optional"`
+}
+
 type BatchUpdateResource struct {
 	ID              int64   `json:"id,string,optional"` // 同上
 	Code            *string `json:"code,optional"`
@@ -221,6 +227,10 @@ type CreateFileDto struct {
 	LabelNames       []string               `json:"labelNames,optional"`
 }
 
+type CreateLabelDto struct {
+	LabelName string `json:"labelName" validate:"required,max=63"`
+}
+
 type CreateLabelReq struct {
 	Name string `form:"name"`
 }
@@ -228,6 +238,37 @@ type CreateLabelReq struct {
 type CreateLabelResp struct {
 	BaseResult
 	Data *LabelVo `json:"data"`
+}
+
+type CreateOpenApiFileDto struct {
+	Name             string                 `json:"name" validate:"required,max=63"`
+	Alias            string                 `json:"alias,optional" validate:"max=63"`
+	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
+	ParentAlias      string                 `json:"parentAlias,optional"`
+	DataType         int16                  `json:"dataType,optional" validate:"min=1,max=7"`
+	Description      string                 `json:"description,optional" validate:"max=255"`
+	Definition       []FieldDefine          `json:"definition,optional"`
+	Persistence      bool                   `json:"persistence,optional,default=false"`
+	DashBoard        bool                   `json:"dashBoard,optional,default=false"`
+	AddFlow          bool                   `json:"addFlow,optional,default=false"`
+	Refers           []InstanceField        `json:"refers,optional"`
+	Expression       string                 `json:"expression,optional" validate:"max=255"`
+	Frequency        string                 `json:"frequency,optional"`
+	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+	TemplateAlias    string                 `json:"templateAlias,optional"`
+	LabelNames       []string               `json:"labelNames,optional"`
+	ParentDataType   int16                  `json:"parentDataType,optional"`
+}
+
+type CreateOpenApiFolderDto struct {
+	Name             string                 `json:"name" validate:"required,max=63"`
+	Alias            string                 `json:"alias,optional" validate:"max=63"`
+	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
+	ParentAlias      string                 `json:"parentAlias,optional"`
+	Description      string                 `json:"description,optional" validate:"max=255"`
+	Definition       []FieldDefine          `json:"definition,optional"`
+	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+	TemplateAlias    string                 `json:"templateAlias,optional"`
 }
 
 type CreateTemplateReq struct {
@@ -243,6 +284,13 @@ type CreateTemplateReq struct {
 type CreateTemplateResp struct {
 	BaseResult
 	Id string `json:"data,optional,omitempty"`
+}
+
+type CreateTemplateVo struct {
+	Alias       string        `json:"alias,optional" validate:"max=63"`
+	Name        string        `json:"name" validate:"required,max=63"`
+	Fields      []FieldDefine `json:"fields" validate:"required"`
+	Description string        `json:"description,optional" validate:"max=255"`
 }
 
 type CreateTopicDto struct {
@@ -562,6 +610,15 @@ type FieldDefines struct {
 	CalcField     *FieldDefine            // Calculation field  // Calculation field
 }
 
+type FieldsAndData struct {
+	Table    string          `json:"table"`
+	Column   string          `json:"column"`
+	Function SelectFunction  `json:"function,optional"`
+	HasNext  bool            `json:"hasNext"`
+	Fields   []string        `json:"fields"`
+	Datas    [][]interface{} `json:"datas"`
+}
+
 type FileDownloadReq struct {
 	Path string `form:"path"`
 }
@@ -571,6 +628,10 @@ type FileVo struct {
 	Name     string `json:"name"`
 	Path     string `json:"path"`
 	PathType int16  `json:"pathType"`
+}
+
+type Fill struct {
+	Strategy string `json:"strategy,optional"`
 }
 
 type FlowMarkReq struct {
@@ -685,6 +746,10 @@ type GroupBizVO struct {
 	HasChildren bool   `json:"hasChildren,optional"`
 }
 
+type GroupBy struct {
+	Time string `json:"time,optional"`
+}
+
 type GroupByTypeQuery struct {
 	Type int16   `form:"type"` //1-sourceflow 2-eventflow 3-datasource
 	Name *string `form:"name,optional"`
@@ -750,6 +815,12 @@ type GroupVO struct {
 }
 
 type HistoryValueRequest struct {
+}
+
+type HistoryValueResult struct {
+	Code int                   `json:"code"`
+	Msg  string                `json:"msg"`
+	Data UnsHistoryQueryResult `json:"data,optional"`
 }
 
 type HomePageReq struct {
@@ -886,10 +957,30 @@ type LabelDetailResult struct {
 	Data *LabelVo `json:"data"`
 }
 
+type LabelOpenVo struct {
+	Id         string `json:"id"`
+	LabelName  string `json:"labelName"`
+	CreateTime int64  `json:"createTime,optional"`
+}
+
 type LabelPageReq struct {
 	LabelId  int64 `form:"labelId"`
 	PageNo   int64 `form:"pageNo,optional,default=1"`
 	PageSize int64 `form:"pageSize,optional,default=20"`
+}
+
+type LabelPageResult struct {
+	PageNo   int64         `json:"pageNo"`
+	PageSize int64         `json:"pageSize"`
+	Total    int64         `json:"total"`
+	Code     int64         `json:"code"`
+	Data     []LabelOpenVo `json:"data,optional"`
+}
+
+type LabelQueryDto struct {
+	PageNo   int    `form:"pageNo,optional,default=1"`
+	PageSize int    `form:"pageSize,optional,default=20"`
+	Key      string `form:"key,optional"`
 }
 
 type LabelVo struct {
@@ -947,6 +1038,15 @@ type LogConfigRequest struct {
 
 type LogConfigResponse struct {
 	Level string `json:"rootLevel"`
+}
+
+type MakeLabelDto struct {
+	FileAlias  string   `json:"fileAlias"`
+	LabelNames []string `json:"labelNames"`
+}
+
+type MakeLabelDtoArray struct {
+	Items []MakeLabelDto `json:"items"`
 }
 
 type MakeLabelReq struct {
@@ -1016,6 +1116,15 @@ type MountDetailVo struct {
 	MountType   *int16 `json:"mountType,omitempty,string"`
 	MountSource string `json:"mountSource,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`
+}
+
+type OpenTemplateVo struct {
+	Id          int64         `json:"id"`
+	Name        string        `json:"name"`
+	Alias       string        `json:"alias"`
+	Definition  []FieldDefine `json:"definition,optional"`
+	CreateTime  int64         `json:"createTime,optional"`
+	Description string        `json:"description,optional"`
 }
 
 type OperationGroupReq struct {
@@ -1302,6 +1411,11 @@ type SearchTreeResp struct {
 	Data []*TopicTreeResult `json:"data,omitempty,optional"`
 }
 
+type SelectFunction struct {
+	Name string        `json:"name"`
+	Args []interface{} `json:"args,optional"`
+}
+
 type SendOption struct {
 	TimeoutToFail  int64 `json:"timeoutToFail,optional"`  //超时失败时间
 	RequestTimeout int64 `json:"requestTimeout,optional"` //请求超时,超时后会进行重试
@@ -1420,6 +1534,10 @@ type SourceFlowUpdateReq struct {
 type StreamOptions struct {
 }
 
+type StringArrayRequest struct {
+	Items []string `json:"items"`
+}
+
 type StringResult struct {
 	BaseResult
 	Data string `json:"data,optional,omitempty"`
@@ -1470,6 +1588,14 @@ type TemplateDownloadReq struct {
 type TemplatePageResp struct {
 	PageResultDTO
 	Data []*TemplateSearchResult `json:"data,optional,omitempty"`
+}
+
+type TemplatePageResult struct {
+	PageNo   int64                  `json:"pageNo"`
+	PageSize int64                  `json:"pageSize"`
+	Total    int64                  `json:"total"`
+	Code     int64                  `json:"code"`
+	Data     []TemplateSearchResult `json:"data,optional"`
 }
 
 type TemplateQueryVo struct {
@@ -1569,6 +1695,14 @@ type TreeOuterStructureVo struct {
 	DataPath string                  `json:"dataPath"`
 	Fields   []FieldDefine           `json:"fields"`
 	Children []*TreeOuterStructureVo `json:"children"`
+}
+
+type TreePageResult struct {
+	PageNo   int64              `json:"pageNo"`
+	PageSize int64              `json:"pageSize"`
+	Total    int64              `json:"total"`
+	Code     int64              `json:"code"`
+	Data     []*TopicTreeResult `json:"data,optional"`
 }
 
 type UninstallAppRequest struct {
@@ -1681,6 +1815,16 @@ type UpdateFileDTO struct {
 	Data  map[string]interface{} `json:"data"`
 }
 
+type UpdateFileDTOArray struct {
+	Items []UpdateFileDTO `json:"items"`
+}
+
+type UpdateLabelDto struct {
+	LabelName          string `json:"labelName" validate:"required,max=63"`
+	SubscribeEnable    bool   `json:"subscribeEnable,optional"`
+	SubscribeFrequency string `json:"subscribeFrequency,optional"`
+}
+
 type UpdateLabelReq struct {
 	ID                 int64  `json:"id,string"`
 	LabelName          string `json:"labelName" validate:"required,max=63"`
@@ -1705,6 +1849,33 @@ type UpdateNameVo struct {
 	Name string `json:"name"`
 }
 
+type UpdateOpenApiFileDto struct {
+	Name             string                 `json:"name,optional" validate:"max=63"`
+	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
+	ParentAlias      string                 `json:"parentAlias,optional"`
+	Description      string                 `json:"description,optional" validate:"max=255"`
+	Definition       []FieldDefine          `json:"definition,optional"`
+	Persistence      bool                   `json:"persistence,optional,default=false"`
+	DashBoard        bool                   `json:"dashBoard,optional,default=false"`
+	AddFlow          bool                   `json:"addFlow,optional,default=false"`
+	Refers           []InstanceField        `json:"refers,optional"`
+	Expression       string                 `json:"expression,optional" validate:"max=255"`
+	Frequency        string                 `json:"frequency,optional"`
+	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+	TemplateAlias    string                 `json:"templateAlias,optional"`
+	LabelNames       []string               `json:"labelNames,optional"`
+}
+
+type UpdateOpenApiFolderDto struct {
+	Name             string                 `json:"name,optional" validate:"max=63"`
+	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
+	ParentAlias      string                 `json:"parentAlias,optional"`
+	Description      string                 `json:"description,optional" validate:"max=255"`
+	Definition       []FieldDefine          `json:"definition,optional"`
+	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+	TemplateAlias    string                 `json:"templateAlias,optional"`
+}
+
 type UpdatePersonConfigReq struct {
 	UserID       string `json:"userId"`
 	MainLanguage string `json:"mainLanguage"`
@@ -1720,6 +1891,12 @@ type UpdateTemplateBaseInfoReq struct {
 	ID          int64  `form:"id"`
 	Name        string `form:"name,string,optional"`
 	Description string `form:"description,string,optional,default=NULL"`
+}
+
+type UpdateTemplateDto struct {
+	Name        string        `json:"name,optional" validate:"max=63"`
+	Fields      []FieldDefine `json:"fields,optional"`
+	Description string        `json:"description,optional" validate:"max=255"`
 }
 
 type UpdateTemplateFieldsAndDescReq struct {
