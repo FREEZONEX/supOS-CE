@@ -1,743 +1,727 @@
-# Architecture Deep-Dive: AI/MCP Integration, Authentication & System Design
+# Tier0-Edge 功能实现与架构深度分析报告
 
-> Generated analysis of the supOS Community Edition platform architecture.
-
----
-
-## Table of Contents
-
-1. [CopilotKit Integration](#1-copilotkit-integration)
-2. [MCP (Model Context Protocol) Architecture](#2-mcp-model-context-protocol-architecture)
-3. [Authentication & Authorization Architecture](#3-authentication--authorization-architecture)
-4. [Kong as API Gateway](#4-kong-as-api-gateway)
-5. [Frontend-Backend Communication](#5-frontend-backend-communication)
-6. [Plugin Architecture](#6-plugin-architecture)
-7. [End-to-End Auth Flow](#7-end-to-end-auth-flow)
-8. [Architectural Decisions Summary](#8-architectural-decisions-summary)
+> 分析日期: 2026-03-15  
+> 项目: [FREEZONEX/Tier0-Edge](https://github.com/FREEZONEX/Tier0-Edge)  
+> 版本: v2.0.0 (Go Refactor)
 
 ---
 
-## 1. CopilotKit Integration
+## 目录
 
-### 1.1 Frontend Initialization
-
-**File:** `frontend/apps/web/src/main.tsx` (lines 1-29)
-
-CopilotKit is initialized at the **root level** of the React application, wrapping the entire `<App />` component:
-
-```typescript
-<CopilotKit
-  runtimeUrl="/copilotkit"
-  showDevConsole={false}
->
-  <App />
-</CopilotKit>
-```
-
-**Key observations:**
-- `runtimeUrl="/copilotkit"` routes all AI requests through a relative URL, which Kong proxies to the Express BFF service on port 4000.
-- An alternative direct MCP client agent URL (`/mcpclient/home/api/copilotkit`) is commented out, showing the system evolved from direct-to-agent to proxied architecture.
-- `showDevConsole={false}` disables the CopilotKit debug panel in production.
-- SSE MCP endpoints and named agents (`sample_agent`) are commented out, indicating they explored both SSE-based MCP and LangGraph agent patterns.
-
-### 1.2 CopilotKit Middleware (Express BFF)
-
-**File:** `frontend/apps/services-express/src/middleware/copilotkit.ts` (lines 1-119)
-
-This is the core AI orchestration layer. It configures **four LLM providers** via LangChain adapters:
-
-| Provider | Model Class | Default Model | Config Key |
-|----------|-------------|---------------|------------|
-| **Ollama** (local) | `ChatOllama` | `llama3.2` | `config.ollamaModal` |
-| **OpenAI** | `ChatOpenAI` | `gpt-4o` | `config.openAiModel` |
-| **Anthropic** | `ChatAnthropic` | `claude-3-7-sonnet-thinking` | `config.anthropicAiModel` |
-| **Alibaba Tongyi** | `ChatOpenAI` (OpenAI-compatible) | `gpt-4o` | `config.tongyiModal` |
-
-Each provider is wrapped in a `LangChainAdapter` that binds tools and streams:
-
-```typescript
-const serviceAdapterByOpenai = new LangChainAdapter({
-  chainFn: async ({ messages, tools }) => {
-    return openaiModel.bindTools(tools).stream(messages);
-  },
-});
-```
-
-**Provider selection** is runtime-configurable via `config.llmType` (env var `LLM_TYPE`), defaulting to `'openai'`. The selection map at line 61-66:
-
-```typescript
-const llmType = {
-  ollama: serviceAdapterByllama,
-  openai: serviceAdapterByOpenai,
-  anthropic: serviceAdapterByAnthropic,
-  tongyi: serviceAdapterByTongyi,
-};
-```
-
-### 1.3 Dynamic CopilotRuntime with MCP Integration
-
-Lines 68-90 implement a **singleton pattern with cache invalidation** for the `CopilotRuntime`:
-
-```typescript
-function createOrUpdateCopilotRuntime(): CopilotRuntime {
-  const currentMcpServers = mcpManager?.getMCPClientCache()?.map((m) => ({ endpoint: m.endpoint })) || [];
-  if (!globalCopilotRuntime || JSON.stringify(currentMcpServers) !== JSON.stringify(oldMcpServers)) {
-    oldMcpServers = currentMcpServers;
-    globalCopilotRuntime = new CopilotRuntime(
-      currentMcpServers?.length > 0
-        ? {
-            mcpServers: currentMcpServers,
-            createMCPClient: async (config) => {
-              return await mcpManager.getOrCreateMCPClient(config);
-            },
-          }
-        : {}
-    );
-  }
-  return globalCopilotRuntime;
-}
-```
-
-The runtime is **lazily recreated** when the MCP server list changes (compared by JSON serialization). This enables dynamic MCP server registration without service restarts.
-
-### 1.4 LLM Configuration
-
-**File:** `frontend/apps/services-express/src/config/index.ts` (lines 1-28)
-
-All LLM settings are loaded from environment variables with fallback defaults:
-
-| Env Variable | Purpose | Default |
-|-------------|---------|---------|
-| `LLM_TYPE` | Provider selector | `openai` |
-| `LLM_MODEL` | Model name | varies per provider |
-| `LLM_API_KEY` | API key | placeholder |
-| `LLM_BASEURL` | Base URL (Ollama/Tongyi) | provider-specific |
-| `AGENT_DEPLOYMENT_URL` | LangGraph deployment | `http://localhost:8123` |
-| `LANGSMITH_API_KEY` | LangSmith observability | placeholder |
+1. [整体架构评价](#1-整体架构评价)
+2. [后端架构分析](#2-后端架构分析)
+3. [前端架构分析](#3-前端架构分析)
+4. [UNS 核心数据流分析](#4-uns-核心数据流分析)
+5. [功能完成度分析](#5-功能完成度分析)
+6. [跨模块架构问题](#6-跨模块架构问题)
+7. [改进建议](#7-改进建议)
 
 ---
 
-## 2. MCP (Model Context Protocol) Architecture
+## 1. 整体架构评价
 
-### 2.1 MCP Client Class
+### 1.1 架构亮点
 
-**File:** `frontend/apps/services-express/src/utils/mcp-client.ts` (lines 1-404)
+Tier0-Edge 的整体架构设计有几个值得肯定的点:
 
-The `MCPClient` class implements the `MCPClientInterface` from `@copilotkit/runtime` and supports **three transport types**:
+**UNS 方法论落地**  
+项目真正围绕 Unified Namespace（统一命名空间）方法论构建，EMQX 作为语义消息中间件、TimescaleDB 作为时序存储、PostgreSQL 作为关系存储，形成了清晰的 Source → UNS → Sink 数据管道。这在开源 IIoT 项目中是比较少见的完整实现。
 
-| Transport | Class | Use Case |
-|-----------|-------|----------|
-| **SSE** | `SSEClientTransport` | Default; browser-compatible server-sent events |
-| **stdio** | `StdioClientTransport` | Local process communication (e.g., npx-based servers) |
-| **Streamable HTTP** | `StreamableHTTPClientTransport` | Newer MCP HTTP streaming protocol |
+**接口抽象设计**  
+后端定义了一组干净的服务接口（`IPersistentService`、`IDataSinkService`、`IWebsocketSender`、`IUnsDefinitionService`），使得 PostgreSQL 和 TimescaleDB 可以作为可互换的持久化后端，这是优秀的策略模式应用。
 
-**Key implementation details:**
+**事件驱动的松耦合**  
+自研的 Spring-like 事件总线（`spring/eventBus.go`）通过反射自动发现 `OnEvent*` 方法，支持优先级排序，实现了适配器层的松耦合。27 种事件类型覆盖了命名空间的全生命周期。
 
-- **Tool caching** (line 26): Tools are cached after first retrieval (`toolsCache`), with `clearToolsCache()` for forced refresh.
-- **Enhanced descriptions** (lines 181-199): Tool descriptions are augmented with required parameters and example inputs to help LLMs format correct calls.
-- **Argument normalization** (lines 259-269): Handles common LLM mistakes like double-nested `params` objects: `{ params: { params: { actual_data } } }`.
-- **JSON string detection** (lines 302-313): Automatically parses stringified JSON arguments that LLMs sometimes produce.
-- **Example input derivation** (lines 319-377): Creates example usage from JSON Schema to guide LLMs.
-
-### 2.2 MCP Client Manager
-
-**File:** `frontend/apps/services-express/src/utils/mcp-client-manager.ts` (lines 1-413)
-
-The `MCPClientManager` is a **singleton** (line 411) that manages the lifecycle of all MCP client connections:
-
-**Cache structure:**
-```typescript
-interface MCPClientEntry {
-  client: MCPClient;
-  endpoint: string;
-  lastUsed: number;
-  isConnected: boolean;
-}
-```
-
-**Lifecycle operations:**
-
-| Method | Purpose |
-|--------|---------|
-| `getOrCreateMCPClient(config)` | Cache-first client retrieval with auto-reconnect |
-| `removeMCPClient(endpoint)` | Graceful disconnect + cache eviction |
-| `refreshMCPClient(endpoint)` | Disconnect/reconnect + tool cache clear |
-| `restartMCPClient(endpoint)` | Full destroy + recreate |
-| `stopMCPClient(endpoint)` | Disconnect but keep in cache |
-| `cleanupExpiredClients()` | Remove clients idle > 30 minutes |
-| `getToolsListByEndpoint(endpoint?)` | Get tools for one or all clients |
-
-**Health checking** (lines 68-88): On every cache hit, the manager checks if the client is connected and attempts reconnection if needed, with graceful fallback to eviction if reconnection fails.
-
-**TTL-based cleanup** (line 14): Cache TTL is 30 minutes (`CLIENT_CACHE_TTL = 30 * 60 * 1000`).
-
-### 2.3 Transport URL Protocol
-
-**File:** `frontend/apps/services-express/src/utils/path.ts` (lines 1-167)
-
-MCP endpoints use a **custom URL protocol scheme** for transport type encoding:
-
-| Protocol | Example | Parsed As |
-|----------|---------|-----------|
-| `sse://` | `sse://http://localhost:3001/sse` | SSE transport to given URL |
-| `streamable-http://` | `streamable-http://http://localhost:3001/mcp` | Streamable HTTP transport |
-| `stdio://` | `stdio://npx/@modelcontextprotocol/server-weather?env=API_KEY:xxx` | Local subprocess with env vars |
-
-For `stdio://`, the parser handles scoped npm packages (e.g., `@scope/package`) by detecting `@` prefixes and merging path segments (lines 54-65).
-
-### 2.4 MCP REST API (Management Routes)
-
-**File:** `frontend/apps/services-express/src/routes/copilotkit/mcp.ts` (lines 1-257)
-
-A full CRUD REST API for managing MCP connections at runtime:
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/list` | GET | List all MCP clients with their tools |
-| `/add` | POST | Register one or more MCP servers (batch support) |
-| `/delete` | POST | Remove an MCP client by endpoint |
-| `/refresh` | POST | Refresh (reconnect + clear tool cache) |
-| `/restart` | POST | Full stop + recreate |
-| `/stop` | POST | Pause a client without removing |
-
-The `/add` endpoint (lines 37-114) supports both single and batch registration, with per-item error tracking and summary reporting.
-
-### 2.5 Demo MCP Server
-
-**File:** `frontend/mcp/demo-mcp-server/src/index.ts` (lines 1-31)
-
-Entry point that supports all three transport modes via CLI argument:
-
-```bash
-node index.js stdio      # Standard I/O
-node index.js sse        # Server-Sent Events (default port 3001)
-node index.js streamableHttp  # HTTP streaming
-```
-
-**File:** `frontend/mcp/demo-mcp-server/src/server/index.ts` (lines 1-66)
-
-The demo server registers a single **weather tool** (`get_weather`):
-
-```typescript
-server.registerTool('get_weather', {
-  description: '获取指定城市的天气信息',
-  inputSchema: {
-    city: z.string().describe('城市名称（例如：北京、上海、杭州）'),
-  },
-}, async ({ city }) => {
-  const weatherTool = new WeatherTool();
-  const result = await weatherTool.getWeatherByCity(city);
-  return { content: [{ type: 'text', text: formatWeatherResult(result) }] };
-});
-```
-
-Uses `@modelcontextprotocol/sdk` with Zod schema validation.
-
-### 2.6 MCP Type Definitions
-
-**File:** `frontend/apps/services-express/src/types/mcp.ts` (lines 1-42)
-
-Core types:
-- `TransportType`: `'sse' | 'stdio' | 'streamable-http'`
-- `McpClientOptions`: Server URL, transport type, client name, headers, event callbacks
-- `McpServerConfig`: Name + transport type + transport-specific config (`StdioConfig` or `HttpConfig`)
+**AI/MCP 集成前瞻性**  
+CopilotKit + MCP（Model Context Protocol）的集成方案是超前的，支持 4 种 LLM 提供商（Ollama、OpenAI、Anthropic、阿里通义）、3 种 MCP 传输方式（SSE、stdio、Streamable HTTP），以及运行时动态注册 MCP 服务器。
 
 ---
 
-## 3. Authentication & Authorization Architecture
+### 1.2 核心架构问题总览
 
-### 3.1 Keycloak Client (Go Backend)
+| 问题 | 严重程度 | 影响范围 |
+|------|----------|----------|
+| 双重 DI 系统并存 | 🔴 架构级 | 后端全局 |
+| ~50 个空壳 Logic 文件（功能未实现） | 🔴 功能级 | 后端业务逻辑 |
+| 前端零代码分割、God Store | 🟠 性能级 | 前端全局 |
+| 实时计算/告警/API 管理完全未实现 | 🔴 功能级 | 核心功能 |
+| WebSocket → MQTT 反向通道断开 | 🟠 功能级 | 数据双向流 |
+| 事件总线同步执行、无错误恢复 | 🟠 架构级 | 后端稳定性 |
+| 数据库迁移无版本化 | 🟠 运维级 | 数据完整性 |
 
-**File:** `backend/share/clients/keycloak.go` (lines 1-810)
+---
 
-A comprehensive **Keycloak Admin API client** implementing the full OAuth2/OIDC lifecycle:
+## 2. 后端架构分析
 
-**Configuration** (lines 93-113):
+### 2.1 分层架构
+
+后端采用 go-zero 框架，分层如下:
+
+```
+Handler (HTTP 入口)
+   ↓
+Logic (业务编排)
+   ↓
+Service (业务逻辑，spring 容器管理)
+   ↓
+Repo/Adapter (数据访问 / 外部服务适配)
+```
+
+**问题一: 双重 DI 系统并存**
+
+这是后端最大的架构问题。项目同时使用两套依赖注入机制:
+
+1. **go-zero 标准的 `ServiceContext`** — 通过闭包传递给 Handler 和 Logic
+2. **自研 Spring 容器** (`share/spring/beanFactory.go`) — 通过 `init()` 函数全局注册 Bean
+
 ```go
-type KeycloakConfig struct {
-  Realm        string  // default: "supos"
-  ClientName   string  // default: "supos"
-  ClientID     string  // default: "supos"
-  ClientSecret string  // default: "VaOS2makbDhJJsLlYPt4Wl87bo9VzXiO"
-  IssuerURI    string  // Keycloak base URL
-  RedirectURI  string  // OAuth callback URL
+// 系统 1: go-zero ServiceContext — 手动构建依赖
+// backend/internal/svc/serviceContext.go
+type ServiceContext struct {
+    Config         config.Config
+    Keycloak       *clients.KeycloakClient
+    SourceNodeRed  *noderedclient.Client
+    ...
+}
+
+// 系统 2: Spring 容器 — init() 自动注册
+// backend/internal/logic/supos/uns/uns/service/WebsocketService.go
+func init() {
+    spring.RegisterLazy[*WebsocketService](func() *WebsocketService {
+        return &WebsocketService{
+            unsQueryService: spring.GetBean[*UnsQueryService](),  // 从 Spring 容器获取
+            topologyService: spring.GetBean[*service.UnsTopologyService](),
+        }
+    })
 }
 ```
 
-**Key operations:**
+这导致:
+- Handler 层从 `svcCtx` 获取 Keycloak、NodeRed 等基础设施依赖
+- Service 层从 `spring.GetBean` 获取业务服务依赖  
+- **两个系统互不可见**: ServiceContext 不知道 Spring 容器中注册了什么，反之亦然
+- **依赖关系不可预测**: `init()` 执行顺序依赖 Go 包导入顺序
+- **测试困难**: 无法轻松替换 Spring 容器中的 Bean 进行单元测试
 
-| Method | Lines | Purpose |
-|--------|-------|---------|
-| `Login(username, password)` | 243-256 | Password grant login |
-| `GetKeyCloakTokenByCode(code)` | 258-271 | Authorization code exchange |
-| `RefreshToken(refreshToken)` | 281-293 | Token refresh |
-| `UserInfo(accessToken)` | 273-279 | Get user profile from token |
-| `GetAdminToken()` | 221-241 | Get admin token (cached 10 min) |
-| `GetUserExchangeTokenByID(userID)` | 434-462 | Token exchange (impersonation) |
-| `CreateUser/DeleteUser/UpdateUser` | 304-366 | User CRUD |
-| `CreateRole/DeleteRole/SetUserRoles` | 368-423 | Role management |
-| `CreateResource/CreatePolicy/CreatePermission` | 471-638 | Authorization services (UMA) |
-| `SetLocale(locale)` | 642-689 | Realm i18n configuration |
+**问题二: `GetBean` 在找不到 Bean 时 panic**
 
-**Singleton pattern** (lines 147-150): Uses `sync.Once` for thread-safe initialization.
-
-**Admin token caching** (lines 221-241): Admin tokens are cached with `go-cache` (10-minute TTL, 15-minute cleanup) to avoid repeated auth requests.
-
-**Note:** The client UUID resolution (lines 164-174) is currently hardcoded to `Tier0ClientID = "a7b53e5e-3567-470a-9da1-94cc0c7f18e6"` instead of being dynamically resolved.
-
-### 3.2 Backend Auth Middleware (Go)
-
-**File:** `backend/internal/middleware/checktokenwareMiddleware.go` (lines 1-98)
-
-The `CheckTokenWareMiddleware` validates every request:
-
-**Flow:**
-1. Check `SYS_OS_AUTH_ENABLE` env var -- if `false`/empty, auth is disabled (guest access allowed).
-2. Extract `supos_community_token` from cookies (line 45).
-3. Look up token in `cache.TokenCache` -- a server-side token cache.
-4. If cache hit, refresh the token's TTL (line 72).
-5. Call `authsvc.FetchUserInfo()` with the cached access token to get the full user profile.
-6. Inject the user into the request context via `apiutil.SetUserInContext()`.
-
-**Graceful degradation:** When auth is disabled (`SYS_OS_AUTH_ENABLE=false`), all requests proceed as a "Guest" user (`vo.Guest()`). This pattern repeats at every validation step (lines 47-93).
-
-**File:** `backend/internal/middleware/initctxswareMiddleware.go` (lines 1-19)
-
-A stub middleware (placeholder for future context initialization).
-
-### 3.3 Frontend Auth State Management
-
-**File:** `frontend/apps/web/src/utils/auth.ts` (lines 1-61)
-
-Cookie-based token management using `js-cookie`:
-
-- **Token key:** `supos_community_token` (defined in `constans.ts` line 14)
-- `getToken()`, `setToken()`, `removeToken()` -- standard cookie CRUD
-- `hasPermission(auth)` -- checks button-level permissions against `useBaseStore.buttonList`
-  - Dev mode (`import.meta.env.DEV`) bypasses all permission checks (line 31)
-  - Permissions use format `button:<permission_name>`
-- `filterPermissionToList()` -- filters UI element arrays based on user permissions
-
-**File:** `frontend/apps/web/src/stores/base/index.ts` (lines 1-357)
-
-The `useBaseStore` (Zustand) is the central auth/permissions store:
-
-**Initialization flow** (`updateBaseStore`, lines 147-288):
-1. `Promise.allSettled` fetches routes/resources, user info, and system config in parallel.
-2. Parses user's `resourceList` and `denyResourceList` into button and page permissions.
-3. Deny permissions take priority (`filterObjectArrays(denyOthers, others)`).
-4. Builds menu trees, home trees, and button permission lists.
-5. If `authEnable === false` or user is `superAdmin`, grants all permissions (`button:*`).
-6. Stores everything in Zustand for reactive UI updates.
-
-**File:** `frontend/apps/web/src/apis/keycloak/auth.ts` (lines 1-16)
-
-Direct Keycloak token endpoint access for frontend token exchange:
-
-```typescript
-export const getKeycloakToken = async (data) =>
-  api.post(`/keycloak/home/auth/realms/${realm}/protocol/openid-connect/token`, data, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
+```go
+// backend/share/spring/beanFactory.go:69-74
+func GetBean[Component any]() Component {
+    rs, er := GetBeanOrErr[Component]()
+    if er != nil {
+        panic(er)  // 🔴 任何可选依赖缺失都会导致进程崩溃
+    }
+    return rs
+}
 ```
+
+在生产环境中，一个可选服务的缺失不应该导致整个应用崩溃。且该 panic 没有被任何 recover 中间件捕获（全局 error handler 被注释掉了）。
+
+**问题三: 事件总线是同步阻塞的**
+
+```go
+// backend/share/spring/eventBus.go:86-114
+func PublishEvent(eventObj any) error {
+    // ...
+    for _, handler := range listeners {
+        err := handler.listener(eventObj)  // 同步调用，阻塞当前 goroutine
+        if err != nil {
+            return err  // 第一个错误就中断，后续 listener 不执行
+        }
+    }
+}
+```
+
+- 所有 event listener 串行同步执行
+- 第一个 listener 返回错误就中断后续所有 listener
+- 在高吞吐 MQTT 消息处理路径中，这会成为严重瓶颈
+- 没有超时、重试、错误隔离机制
+
+### 2.2 数据访问层
+
+**优点:**
+- GORM 使用规范，模型定义清晰
+- 物化路径（`lay_rec`）实现树形结构查询效率高
+- `IPersistentService` 接口让 PostgreSQL 和 TimescaleDB 可互换
+
+**问题:**
+- 查询构建器大量使用字符串拼接（`unsNamespace_query_complex.go` 超过 200 行条件构建）
+- 缺少 Repository 模式的完整抽象，部分逻辑层直接操作 GORM `*gorm.DB`
+- 时间戳过滤直接拼接字符串到 SQL，存在注入风险
+
+### 2.3 God Object: `CreateTopicDto`
+
+`types/types.go` 中的 `CreateTopicDto` 承担了过多职责:
+
+```
+CreateTopicDto (70+ 字段)
+├── 创建请求
+├── 更新请求
+├── 批量导入数据
+├── 内部状态追踪 (ParentID, PathId 等)
+├── 事件发布载荷
+└── Node-RED 流配置
+```
+
+应当按职责拆分为 `CreateRequest`、`UpdateRequest`、`ImportRecord`、`InternalState` 等独立结构体。
+
+### 2.4 缓存系统碎片化
+
+项目同时引入了 **5 个缓存库**:
+- `dgraph-io/ristretto`
+- `maypok86/otter`
+- `goburrow/cache`
+- `karlseguin/ccache`
+- `patrickmn/go-cache`
+
+这表明缓存策略在不同开发阶段由不同人引入，没有统一收敛。应当选择一个作为标准（推荐 `otter`，它是最现代的 Go 缓存库）。
 
 ---
 
-## 4. Kong as API Gateway
+## 3. 前端架构分析
 
-### 4.1 Kong Configuration
+### 3.1 Monorepo 结构
 
-**File:** `deploy/mount/kong/kong_config.yml.tpl` (3797 lines)
+```
+frontend/
+├── apps/
+│   ├── web/           # 主 React SPA (20000+ 行页面代码)
+│   ├── services-express/  # BFF for AI/CopilotKit/MCP
+│   └── services-hono/     # 备选 BFF (excluded from workspace)
+├── packages/
+│   ├── scripts/       # 构建脚本
+│   └── typescript-config/  # 共享 TS 配置
+├── plugins/
+│   └── alert/         # 告警插件 (Module Federation)
+└── mcp/
+    └── demo-mcp-server/   # MCP 演示服务
+```
 
-This is a **declarative Kong configuration** (format version 3.0) that defines the entire API gateway topology.
+**优点:**
+- pnpm workspace + Turborepo 的选型合理
+- pnpm catalog 统一版本管理是好实践
+- 依赖图无循环依赖
 
-**Services (26 total):**
+**问题: BFF 职责不清晰**
 
-| Service | Host | Port | Protocol | Purpose |
-|---------|------|------|----------|---------|
-| `frontend` | `frontend` | 3000 | HTTP | Main React SPA |
-| `backend` | `uns` | 8080 | HTTP | Go backend (inter-api), 5min timeouts |
-| `backend-service-api` | `uns` | 8080 | HTTP | Service API layer |
-| `backend-open-api` | `uns` | 8080 | HTTP | Public API layer |
-| `GenerativeUI` | `copilotkit` | 4000 | HTTP | CopilotKit/Express BFF, **10min timeouts** |
-| `mcpclient` | `mcpclient` | 3000 | HTTP | Dedicated MCP client service |
-| `keycloak` | `keycloak` | 8080 | HTTP | Keycloak auth server |
-| `nodered` | `nodered` | 1880 | HTTP | Node-RED flow engine |
-| `EventFlow` | `eventflow` | 1889 | HTTP | Event flow processing |
-| `grafana` | `grafana` | 3000 | HTTP | Dashboards |
-| `gitea` | `gitea` | 3000 | HTTP | Git repository (CI/CD) |
-| `emqx` | `emqx` | 18083 | HTTP | MQTT broker management |
-| `portainer` | `portainer` | 9443 | HTTPS | Container management |
-| `minio` | `minio` | 9001 | HTTP | Object storage |
-| `gateway` | `gateway` | 8070 | HTTP | Internal gateway service |
-| `plugin-frontend` | `plugin` | 3001 | HTTP | Plugin frontend server |
-| `konga` | `konga` | 1337 | HTTP | Kong admin UI |
-| `apm` | `apm` | 8080 | HTTP | Application performance monitoring |
-| `swagger` | `uns` | 8080 | HTTP | API documentation |
-| `marimo` | `marimo` | 8080 | HTTP | Notebook service |
-| `login` | `keycloak` | 8080 | HTTP | Login redirect service |
+Express BFF (`services-express`) 的存在理由不够充分:
+- 主要功能: CopilotKit 代理 + MCP 管理 + Docker 健康检查
+- 这些功能完全可以集成到 Go 后端，减少一个服务节点
+- 当前架构下，一个请求可能经过: Browser → Kong → Express BFF → Go Backend → DB，链路过长
 
-**Routes (~50):** Map URL paths to services. Key routes:
+### 3.2 状态管理
 
-| Route | Path | Service | Notes |
-|-------|------|---------|-------|
-| `frontend` | `/` | frontend | Catch-all for SPA |
-| `backend` | `/inter-api/supos/` | backend | Go backend API |
-| `copilotkit` | `/copilotkit` | GenerativeUI | AI endpoint, `strip_path: false` |
-| `McpClient` | `/mcpclient/home` | mcpclient | MCP management UI |
-| `login` | `/tier0-login` | login (keycloak) | OAuth login redirect |
-| `open-backend-api` | `/open-api/` | backend-open-api | Public API with key-auth |
+**God Store 问题**
 
-### 4.2 Kong Plugins
+`useBaseStore`（357 行）混合了完全不相关的状态:
 
-**Active plugins (7):**
+```typescript
+// frontend/apps/web/src/stores/base/index.ts
+useBaseStore = create<BaseState>((set, get) => ({
+    // 用户信息
+    currentUserInfo, setCurrentUserInfo,
+    // 系统配置
+    systemInfo, setSystemInfo,
+    // 菜单树
+    menuTreeNode, setMenuTreeNode,
+    // 权限
+    pagePermissionMap, buttonPermissionMap,
+    // 容器配置
+    containerMap,
+    // 路由
+    routes,
+    // 初始化
+    fetchBaseInfo,
+    // ... 还有更多
+}))
+```
 
-1. **`supos-auth-checker`** (custom, lines 1932-1970): Global auth enforcement.
-   - Enabled via `${KONG_AUTH_ENABLED}` (templated).
-   - Whitelist regex patterns for public paths (auth endpoints, assets, locale, Keycloak, etc.).
-   - Enables both `enable_deny_check` and `enable_resource_check`.
-   - Login redirect URL includes Keycloak OAuth flow with `client_id=tier0`.
+这导致:
+- 任何一个状态变化都可能触发大量无关组件重新渲染
+- 虽然使用了 `shallow` equality，但状态粒度太粗
+- 难以测试和维护
 
-2. **`key-auth`** (lines 1973-1997): API key authentication on the `open-backend-api` route only.
-   - Keys accepted via header, query, or body (`apikey` parameter).
-   - Associated with the `open-api` consumer.
+**页面级 Store 过大**
 
-3. **`request-transformer`** (lines 1999-2039): On the login service.
-   - Appends OAuth query parameters (`client_id`, `response_type`, `scope`, `redirect_uri`).
+UNS 页面的 `treeStore`（893 行）包含 ~40 个方法和状态字段，应当拆分为:
+- `unsTreeNavStore` — 树的展开/选中/搜索
+- `unsDataStore` — 命名空间数据的 CRUD
+- `unsUIStore` — 对话框/面板显示状态
 
-4. **`response-transformer`** (lines 2041-2077): On the login service.
-   - Sets security headers: `X-Frame-Options: DENY`, `Content-Security-Policy: frame-ancestors 'none'`.
+### 3.3 组件设计
 
-5. **`cors`** (lines 2079-2108): On the open-api route.
-   - Allows all origins (`*`), all standard methods.
+**UNS 模块代码量分析:**
 
-6. **`response-transformer`** (2nd instance, lines 2110-2144): On MinIO/object storage.
-   - Sets `X-Frame-Options: SAMEORIGIN` (allows embedding within same origin).
+| 文件 | 行数 | 问题 |
+|------|------|------|
+| `uns-tree/index.tsx` | 1082 | 树组件过大，混合渲染/状态/交互逻辑 |
+| `use-create-modal/form-content/index.tsx` | 896 | 表单组件过大 |
+| `store/treeStore.tsx` | 893 | Store 过大 |
+| `reverse-modal/source-form/json/index.tsx` | 631 | JSON 编辑器组件 |
+| `EditButton.tsx` | 554 | 编辑按钮组件内嵌完整表单和 API 调用 |
+| `FieldsFormList.tsx` | 522 | 字段列表表单 |
+| `topic-detail/index.tsx` | 517 | 主题详情页 |
 
-7. **`supos-url-transformer`** (custom, lines 2146-2161): On the login route.
-   - Redirects to `/?isLogin=true` after successful auth.
+UNS 模块总计 **20,140 行**，占前端页面代码的 **60%**，说明核心功能复杂度集中但缺乏合理拆分。
 
-### 4.3 Custom Kong Plugins (Lua)
+**问题模式:**
+- 组件超过 500 行，违反单一职责
+- `EditButton.tsx` 一个"按钮"组件包含完整的 Form、校验、API 调用和渲染逻辑
+- 缺少 custom hooks 来提取业务逻辑（如 `useUnsCreate`、`useUnsTree`）
 
-**Auth Checker Plugin:**
+### 3.4 零代码分割
 
-**File:** `backend/internal/adapters/kong/kong-plugins/kong-plugin-auth-checker/handler.lua` (lines 1-179)
+```typescript
+// frontend/apps/web/src/routers/index.tsx
+import UNS from '@/pages/uns';               // 同步导入
+import EventFlowPage from '@/pages/event-flow';  // 同步导入
+import Home from '@/pages/home';              // 同步导入
+// ... 全部 20+ 页面都是同步导入
+```
 
-This is the **core authentication gateway plugin** (priority 1000):
+**所有页面在首次加载时全部打包进初始 bundle**，没有使用 `React.lazy()` 或任何动态导入。对于一个包含 20+ 页面、33,000+ 行页面代码的应用，这意味着:
+- 首屏加载包含大量用户不需要的代码
+- UNS 模块（20,000 行）即使用户只访问首页也会被加载
+- 预计使用 `React.lazy()` 可减少 50%+ 的初始 bundle 大小
 
-1. **Whitelist check:** Matches request path against regex whitelist; whitelisted paths bypass auth.
-2. **Cookie extraction:** Reads `supos_community_token` from cookies.
-3. **Backend validation:** Makes HTTP GET to `http://uns:8080/inter-api/supos/auth/userinfo` with the token cookie.
-4. **Deny policy check** (if `enable_deny_check`): Compares request path against user's `denyResourceList` URIs.
-5. **Resource permission check** (if `enable_resource_check`): Verifies request path is in user's `resourceList`.
-6. On failure: Redirects to `login_url` (401) or `forbidden_url` (403).
+### 3.5 API 层缺少类型安全和缓存
 
-**URL Transformer Plugin:**
+```typescript
+// frontend/apps/web/src/apis/inter-api/uns.ts
+export const addModel = (data: any) => request.post<any>('/inter-api/supos/uns/...', data);
+export const editModel = (data: any) => request.put<any>('/inter-api/supos/uns/...', data);
+```
 
-**File:** `backend/internal/adapters/kong/kong-plugins/kong-plugin-url-transformer/handler.lua` (lines 1-64)
+- 几乎所有 API 函数参数和返回类型都是 `any`
+- 没有 API 响应类型定义
+- 没有使用 React Query / SWR 等数据获取库
+- 没有请求去重和缓存，相同数据可能被重复请求
+- 无乐观更新（Optimistic Update）支持
 
-Post-authentication redirect: If user has a valid `supos_community_token` and the backend validates it, redirects to `conf.home_url` (`/?isLogin=true`).
+### 3.6 Module Federation 插件未完全启用
 
-### 4.4 Kong Adapter (Go Backend)
+```typescript
+// frontend/apps/web/vite.config.ts
+// Module Federation 配置存在但被注释掉
+```
 
-**File:** `backend/internal/adapters/kong/logic/kongLogic.go` (lines 1-489)
-
-A Go client for the **Kong Admin API** using `resty`:
-
-- `QueryRoutes()`: Fetches routes, parses tags for menu metadata (parent names, descriptions, sort order).
-- `CreateService()` / `CreateRoute()`: Programmatic service/route creation.
-- `MarkMenu()`: Persists menu selections to a local properties file.
-- `AddAPIKey()`: Attaches `key-auth` plugin to a route.
-- Menu items are identified by the `"menu"` tag in Kong routes.
-
-**File:** `backend/internal/adapters/kong/route/route.go` (lines 1-52)
-
-Registers Go backend HTTP handlers:
-- `GET /inter-api/supos/kong/routeList` -- Kong route listing
-- `POST /open-api/menu` -- Menu configuration
-- `GET /test/nodered` -- NodeRed proxy
+插件系统（Module Federation）的基础设施已搭建，但在主应用中被注释掉。Alert 插件直接导入宿主的内部组件和 hooks，耦合度过高。
 
 ---
 
-## 5. Frontend-Backend Communication
+## 4. UNS 核心数据流分析
 
-### 5.1 Proxy Configuration
-
-**File:** `frontend/apps/web/config/supos.dev.ts` (lines 1-122)
-
-Development proxy setup using Vite's built-in proxy:
-
-**Proxied paths** (line 27-34):
-```typescript
-export const proxyList = [
-  'inter-api',
-  'gateway',
-  'copilotkit',
-  'chat2db/api',
-  'minio/inter/supos',
-  'files/system/resource',
-];
-```
-
-All paths are proxied to a configurable base URL (default: `http://office.unibutton.com:11488`). The proxy supports:
-- WebSocket upgrades (`ws: true`)
-- CORS header rewriting (`changeOrigin: true`)
-- Optional VPN/HTTPS proxy agent (commented out)
-- Separate `singleList` for paths with a different proxy target
-
-### 5.2 Communication Architecture
-
-The system has a **three-tier** frontend communication model:
+### 4.1 完整数据管道
 
 ```
-Browser  ─── Kong (port 8000/8443) ───┬─── frontend (port 3000) ──── React SPA
-                                       ├─── uns (port 8080) ───────── Go Backend
-                                       ├─── copilotkit (port 4000) ── Express BFF (AI/MCP)
-                                       ├─── keycloak (port 8080) ──── Auth Server
-                                       ├─── nodered (port 1880) ───── Flow Engine
-                                       ├─── eventflow (port 1889) ─── Event Processing
-                                       └─── plugin (port 3001) ────── Plugin Frontend
+设备/协议 → Node-RED (SourceFlow)
+                ↓ MQTT Publish
+          EMQX Broker ($share/uns/#)
+                ↓ QoS 1 共享订阅
+     UnsMessageConsumer.OnMsg()
+                ↓
+    ┌───────────────────────┐
+    │ 1. 主题解析 (缓存 LRU) │  ← UnsDefinitionService (110万条缓存)
+    │ 2. JSON 解析           │
+    │ 3. 字段校验(类型/范围)  │
+    │ 4. 质量码设置           │
+    └───────────────────────┘
+                ↓
+    ┌───────────────────────┐
+    │ WebSocket 推送         │  → 前端实时显示
+    │ (同步，阻塞消息处理)    │
+    └───────────────────────┘
+                ↓
+    ┌───────────────────────┐
+    │ 磁盘队列 (二进制编码)   │  ← 64MB 文件，顺序写入
+    │ QueueDataSinkService  │
+    └───────────────────────┘
+                ↓ 批量消费
+    ┌───────────────────────┐
+    │ IPersistentService    │
+    │ ├── PgPersistent      │  → PostgreSQL (关系型)
+    │ └── TsdbPersistent    │  → TimescaleDB (时序)
+    └───────────────────────┘
 ```
 
-**Express BFF role** (`services-express` on port 4000):
-- Hosts the CopilotKit runtime endpoint (`/copilotkit`)
-- Manages MCP client connections (`/api/copilotkit/mcp/*`)
-- Acts as an AI orchestration layer between the frontend and LLM providers
-- Has **10-minute timeouts** in Kong (vs 1 minute for most other services) due to LLM response times
+### 4.2 数据流问题
 
-**Go Backend role** (`uns` on port 8080):
-- Core business logic (UNS - Unified Namespace)
-- Auth endpoints (`/inter-api/supos/auth/*`)
-- System configuration, user management
-- Kong admin operations
-- File management
-- Open API (key-auth protected)
+**问题一: WebSocket 推送阻塞 MQTT 消息处理**
 
-**Direct service access** (via Kong routing):
-- Keycloak: `/keycloak/home/` -- Auth admin UI
-- Grafana: `/grafana/home/` -- Dashboards
-- Node-RED: `/nodered/home/` -- Flow editor
-- EventFlow: `/eventflow/home/` -- Event processing
-- MinIO: `/minio/home/` -- Object storage
-- Portainer: `/portainer/home/` -- Container management
-- Gitea: `/gitea/home/` -- Git/CI/CD
-- EMQX: `/emqx/home/` -- MQTT broker
-
-### 5.3 Upstream Configuration
-
-Kong uses **named upstreams** with round-robin load balancing. Key target mappings:
-
-| Upstream | Target |
-|----------|--------|
-| `frontend` | `frontend:3000` |
-| `backend` | `uns:8080` |
-| `copilotkit` | `frontend:4000` |
-| `keycloak` | `keycloak:8080` |
-| `nodered` | `nodered:1880` |
-| `plugin` | `frontend:3002` |
-
-Note: The `copilotkit` upstream targets `frontend:4000`, meaning the Express BFF service runs as a sidecar on the same container/host as the frontend, but on port 4000.
-
----
-
-## 6. Plugin Architecture
-
-### 6.1 Module Federation Configuration
-
-**File:** `frontend/plugins/pluginConfig.ts` (lines 1-38)
-
-Shared dependencies for Module Federation:
-
-```typescript
-export const shared = {
-  react: { singleton: true, requiredVersion: '18.3.1' },
-  'react-dom': { singleton: true, requiredVersion: '18.3.1' },
-  'react-router': { singleton: true, requiredVersion: '7.9.4' },
-  antd: { singleton: true, requiredVersion: '5.27.4' },
-  '@ant-design/icons': { singleton: true, requiredVersion: '6.1.0' },
-  ahooks: { singleton: true, requiredVersion: '3.9.5' },
-  '@carbon/icons-react': { singleton: true, requiredVersion: '11.69.0' },
-  'lodash-es': { singleton: true, requiredVersion: '4.17.21' },
-  sass: { singleton: true, requiredVersion: '1.93.2' },
-};
+```go
+// backend/internal/adapters/msg_consumer/UnsMessageConsumer.go:81
+msgList := u.procDataAndSendWs(ctx, def, data, strPayload, nil)  // 包含 WS 推送
+t1 = time.Now()
+u.sendData(ctx, msgList)  // 数据持久化
 ```
 
-All major dependencies are **singletons** to prevent duplicate React instances and ensure consistent UI behavior across host and remote modules.
+`procDataAndSendWs` 内部同步调用 WebSocket 推送:
 
-### 6.2 Plugin Vite Base Configuration
-
-**File:** `frontend/plugins/vite.base.ts` (lines 1-60)
-
-Every plugin uses `@module-federation/vite` for **Vite-based Module Federation**:
-
-```typescript
-federation({
-  name: `supos-ce/${name}`,
-  manifest: true,
-  exposes: {
-    './index': './src/App.tsx',      // Main component
-    './enUS': './src/locale/en-US.json',  // English locale
-    './zhCN': './src/locale/zh-CN.json',  // Chinese locale
-    ...exposes,
-  },
-  remotes: {
-    '@supos_host': `supos-ce/host@${hostOrigin}/mf-manifest.json`,
-  },
-  shared: shared,
+```go
+// 同步推送到所有订阅该主题的 WebSocket 连接
+sessions.Range(func(key, value any) bool {
+    subscription.WriteLock.Lock()
+    subscription.conn.Write(msg)  // 如果某个连接慢，阻塞整个消息处理
+    subscription.WriteLock.Unlock()
+    return true
 })
 ```
 
-**Key design decisions:**
-- **Manifest-based loading** (`manifest: true`): Plugins publish a `mf-manifest.json` for dynamic discovery.
-- **Standard exports**: Every plugin exposes `./index` (App component) and locale files.
-- **Host dependency**: Plugins consume `@supos_host` for shared hooks (`useTranslate`, `usePagination`), components (`ComLayout`, `ProTable`, `AuthButton`), and utilities.
-- **Base path**: Plugins are served from `/plugin/${name}` in production.
-- **Build output**: Each plugin builds to `dist/${name}/`.
+在高频数据场景下（工业传感器可以每秒产生数百条消息），WebSocket 推送的延迟会直接影响消息消费速率。
 
-### 6.3 Alert Plugin Example
+**问题二: WebSocket → MQTT 反向通道未实现**
 
-**File:** `frontend/plugins/alert/` directory (27 files)
+```go
+// backend/internal/logic/supos/uns/uns/service/WebsocketService.go:217
+// TODO: Call topicMessageConsumer.onMessageByAlias(alias, body)
+```
 
-The Alert plugin demonstrates the full plugin pattern:
+前端通过 WebSocket 发送的 `/send?t=alias&body=payload` 命令无法真正写入 MQTT，也就是说 **前端到设备的双向通信是断开的**。
 
-**Package:** `@supos-ce/plugin-alert` (line 3 of `package.json`)
+**问题三: 磁盘队列满时静默丢数据**
 
-**REMOTE_NAME:** `'Alert'` (from `variables.ts`)
+磁盘队列在写满时没有告警机制，也没有回压（backpressure）策略。在 MQTT 消息洪峰时可能导致数据静默丢失。
 
-**Environment config** (`env.ts`, lines 1-36): Dynamic environment detection for dev vs production, with auto-generated config files.
+**问题四: 实时计算完全未实现**
 
-**App Component** (`src/App.tsx`, lines 1-459):
+```go
+// backend/internal/adapters/msg_consumer/UnsRealtimeCalcService.go
+func (c UnsRealtimeCalcService) TryCalculate(...) (...) {
+    if def == nil || len(def.RefUns) == 0 {
+        return
+    }
+    //TODO  实时计算
+    return
+}
+```
 
-- Uses host-provided hooks: `usePagination`, `useTranslate`, `useActivate` (tab lifecycle)
-- Uses host-provided components: `ComLayout`, `ComContent`, `ComDrawer`, `ProTable`, `ProCard`, `AuthButton`, `ComSearch`, `ComSegmented`
-- Uses host-provided utilities: `validInputPattern`
-- Implements `ButtonPermission` for auth-gated actions (edit, show, delete, add)
-- Full CRUD with drawer-based forms, card/table view toggle, pagination
-- i18n via `useTranslate(REMOTE_NAME)` for plugin-scoped translations
+虽然消息处理管道中有实时计算的钩子，但实现体完全是空的。这意味着:
+- 计算型字段（如移动平均、阈值比较）不工作
+- 引用类型字段不工作
+- 聚合类型字段不工作
 
-**Standalone entry** (`src/main.tsx`): Plugins can run independently for development:
+### 4.3 TimescaleDB 集成设计
+
+**优点:**
+- 单一超级表 `uns_timeserial` + 动态列 (`double_1`, `str_1`...) + SQL 视图的方案在 IIoT 场景下是合理的
+- 2 小时分块、50 分区、1 小时压缩、2 年保留策略配置合理
+- 冲突处理使用临时表合并策略
+
+**问题:**
+- 视图与已有表名冲突时的自动迁移逻辑复杂，缺少单元测试
+- 动态列的数量有上限，当字段数超出预定义列数时的处理不明确
+- 缺少数据降采样（downsampling）策略
+
+---
+
+## 5. 功能完成度分析
+
+### 5.1 空壳 Logic 文件统计
+
+通过搜索后端 `internal/logic/` 目录中包含 `// todo: add your logic here` 的文件，发现 **约 50 个 Logic 文件完全未实现**:
+
+| 模块 | 未实现文件数 | 影响 |
+|------|-------------|------|
+| **告警管理** (`alarm/`) | 4/4 | 🔴 告警创建、查询、更新、确认全部不可用 |
+| **Kong API 管理** (`uns/kong/`) | 4/4 | 🔴 API 路由的 CRUD 全部不可用 |
+| **仪表板** (`dashboard/`) | 3/4 | 🟠 仪表板详情和查询大部分不可用 |
+| **文件管理** (`file/`) | 3/3 | 🔴 文件批量查询、更新、Blob 全部不可用 |
+| **全局导入导出** (`global/`) | 5/5 | 🔴 系统级数据导入导出全部不可用 |
+| **应用管理** (`app/`) | 4/4 | 🔴 应用搜索、更新、卸载全部不可用 |
+| **示例** (`example/`) | 7/7 | 🟡 演示功能全部不可用 |
+| **UNS 扩展** (external, batch, parser) | 7/7 | 🟠 外部树、批量查询、解析器不可用 |
+| **挂载/开发工具** (`mount/`, `devtools/`) | 3/3 | 🟡 辅助功能不可用 |
+| **附件/事件流代理** | 2/2 | 🟠 附件删除、事件流代理不可用 |
+
+**已实现且功能完整的核心模块:**
+- ✅ UNS 命名空间 CRUD（创建/查询/更新/删除/树管理）
+- ✅ MQTT 消息消费 → 数据持久化管道
+- ✅ WebSocket 实时数据推送（ID/Topic/Alias 三种订阅模式）
+- ✅ UNS 数据导入导出（Excel/JSON）
+- ✅ SourceFlow / EventFlow 的 Node-RED 集成
+- ✅ Keycloak 身份认证和授权
+- ✅ Kong API 网关配置（声明式）
+- ✅ 拓扑图实时更新
+
+### 5.2 关键未实现功能的影响
+
+**告警管理 — 🔴 关键缺失**
+
+对于 IIoT 平台来说，告警是最核心的功能之一。当前:
+- 前端有告警插件 UI（`plugins/alert/`）
+- 后端 4 个告警 Logic 文件全部为空壳
+- 后端 `UnsQueryService` 中有 `//TODO Alarm` 注释
+- 没有任何告警规则引擎、触发器或通知机制
+
+这意味着 **系统无法在传感器数据异常时发出任何告警**，这对工业场景是致命的。
+
+**实时计算 — 🔴 关键缺失**
+
+`UnsRealtimeCalcService.TryCalculate()` 完全为空。这意味着:
+- 计算字段（如公式 `temperature_celsius = (raw - 32) * 5/9`）不工作
+- 引用字段不工作
+- 聚合字段不工作
+- UNS 数据模型中定义的这些高级类型形同虚设
+
+**WebSocket 写回 — 🟠 重要缺失**
+
+`HandleCmdMsg` 中的 `/send` 命令处理有 TODO，意味着前端无法通过 WebSocket 向设备写入数据。
+
+**引用完整性检查 — 🟠 重要缺失**
+
+```go
+// backend/internal/logic/supos/uns/uns/service/uns_remove_helper.go:179
+//TODO 引用检查
+```
+
+删除命名空间节点时不检查是否被其他节点引用，可能导致悬挂引用和数据不一致。
+
+---
+
+## 6. 跨模块架构问题
+
+### 6.1 前后端数据契约无类型共享
+
+后端使用 `goctl` 生成 `types/types.go`，前端 API 层返回 `Promise<any>`。两端之间没有:
+- 共享的 API Schema（如 OpenAPI/Swagger 生成的类型）
+- 自动化的类型同步机制
+- API 版本管理
+
+虽然后端有 Swagger UI（`/swagger`），但前端没有使用生成的类型。
+
+### 6.2 三层服务调用链
+
+```
+Browser → Kong (auth + proxy) → Go Backend (business logic) → EMQX/PostgreSQL/TimescaleDB
+                               → Express BFF (AI/MCP only)
+```
+
+**问题:**
+- Kong → Go Backend 之间的超时是 300 秒，过长
+- Express BFF 只服务 AI/MCP 功能，但部署为独立服务，增加运维负担
+- Kong 同时转发给 Go Backend 和 Express BFF，路由规则复杂（~50 条规则）
+
+### 6.3 Node-RED 深度耦合
+
+SourceFlow 和 EventFlow 的实现完全依赖 Node-RED:
+- 流的创建/删除通过 HTTP API 操作 Node-RED
+- 流的定义存储在 Node-RED 的文件系统中
+- 导入导出需要直接读写 Node-RED 的流配置
+
+这意味着:
+- Node-RED 是单点故障
+- 无法水平扩展数据采集能力
+- 流的版本控制依赖 Node-RED，而不是 Git 等标准工具
+
+### 6.4 `unsafe` 包使用
+
+```go
+// backend/internal/adapters/msg_consumer/UnsMessageConsumer.go:89-100
+func b2s(b []byte) string {
+    return *(*string)(unsafe.Pointer(&b))
+}
+func s2b(s string) (b []byte) {
+    bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+    sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+    // ...
+}
+```
+
+在消息消费的热路径上使用 `unsafe` 进行零拷贝字符串转换。虽然是性能优化，但:
+- `reflect.SliceHeader` 和 `reflect.StringHeader` 在 Go 1.21+ 中已弃用
+- 如果 `[]byte` 后续被修改，会导致 string 不可变性被破坏
+- 应使用 Go 1.22+ 的 `unsafe.String()` 和 `unsafe.Slice()` 替代
+
+---
+
+## 7. 改进建议
+
+### 7.1 架构层面
+
+**A. 统一 DI 系统**
+
+当前双重 DI 系统（go-zero ServiceContext + Spring 容器）是最需要解决的架构债务。建议:
+
+```
+方案 1: 全部收敛到 Spring 容器
+- 将 ServiceContext 的成员全部注册到 Spring 容器
+- Handler 层通过 spring.GetBean 获取依赖
+- 优势: 一致性好，支持懒加载和事件
+- 风险: 偏离 go-zero 标准用法
+
+方案 2: 全部收敛到 ServiceContext
+- Service 层的依赖在 ServiceContext 中构建，通过参数传递
+- 移除 Spring 容器的 init() 注册模式
+- 优势: 符合 go-zero 惯例，显式依赖
+- 风险: ServiceContext 会变得很大
+
+推荐: 方案 1，因为 Spring 容器的事件总线和懒加载是核心架构
+```
+
+**B. 事件总线改为异步**
+
+```go
+// 当前: 同步阻塞
+func PublishEvent(eventObj any) error {
+    for _, handler := range listeners {
+        handler.listener(eventObj)  // 阻塞
+    }
+}
+
+// 建议: 关键路径异步化
+func PublishEventAsync(eventObj any) {
+    go func() {
+        for _, handler := range listeners {
+            func() {
+                defer recover()  // 错误隔离
+                handler.listener(eventObj)
+            }()
+        }
+    }()
+}
+```
+
+至少在 MQTT 消息处理路径中，WebSocket 推送和其他非关键事件应当异步化。
+
+**C. 解耦 Express BFF**
+
+将 CopilotKit/MCP 功能迁移到 Go 后端（作为独立 HTTP handler），消除 Express BFF 节点:
+- 减少一个服务的部署和维护
+- 减少请求链路长度
+- 减少技术栈复杂度
+
+或者如果确实需要 Node.js 运行时（因为 CopilotKit SDK 是 JS），则考虑将其作为 sidecar 而非独立服务。
+
+### 7.2 功能层面
+
+**优先级 P0: 实现告警系统**
+
+```
+1. 定义告警规则模型（阈值、表达式、持续时间）
+2. 在 MQTT 消息处理管道中集成规则引擎
+3. 实现告警触发 → 通知（WebSocket + 持久化）
+4. 对接已有的前端告警插件 UI
+```
+
+**优先级 P0: 实现实时计算**
+
+```
+1. 完善 UnsRealtimeCalcService.TryCalculate()
+2. 支持基础计算（四则运算、比较、范围）
+3. 支持引用类型字段
+4. 支持滑动窗口聚合
+```
+
+**优先级 P1: WebSocket 双向通道**
+
+```
+1. 实现 HandleCmdMsg 中的 /send 命令
+2. 调用 UnsMessageConsumer.OnMessageByAlias
+3. 通过 MQTT 发布到设备
+```
+
+**优先级 P1: 引用完整性检查**
+
+在删除命名空间节点前，检查被引用关系，拒绝或级联处理。
+
+### 7.3 前端层面
+
+**A. 代码分割 — 最高优先级、最低成本**
+
 ```typescript
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <BrowserRouter>
-      <App title="" />
-    </BrowserRouter>
-  </StrictMode>
-);
+// 当前
+import UNS from '@/pages/uns';
+
+// 改为
+const UNS = React.lazy(() => import('@/pages/uns'));
 ```
 
-### 6.4 Plugin Integration in Kong
+仅此一项改动即可将初始 bundle 减小 50%+。
 
-Plugins are served via the `plugin-frontend` service (host: `plugin`, port: 3001) with route `/plugin/`. The plugin frontend server runs on port 3001 on the `plugin` upstream (target: `frontend:3002`).
+**B. 拆分 God Store**
 
-Additionally, plugin routes like `Alert` (`/Alert`) are mapped to the main frontend service, allowing the host app to render plugin content within its shell.
+```typescript
+// 当前: 1 个 357 行的 baseStore
+// 建议: 拆为 4 个独立 store
 
----
-
-## 7. End-to-End Auth Flow
-
-### 7.1 Initial Login Flow
-
-```
-1. User visits /  (any protected path)
-         │
-2. Kong auth-checker plugin intercepts
-         │
-3. No supos_community_token cookie?
-    ├─ YES → Redirect to Keycloak login:
-    │    /keycloak/home/auth/realms/tier0/protocol/openid-connect/auth
-    │    ?client_id=tier0&redirect_uri=${BASE_URL}/inter-api/supos/auth/token
-    │    &response_type=code&scope=openid
-    │         │
-    │  4. User authenticates with Keycloak
-    │         │
-    │  5. Keycloak redirects to /inter-api/supos/auth/token?code=XXX
-    │         │
-    │  6. Go backend exchanges code for tokens via KeycloakClient.GetKeyCloakTokenByCode()
-    │         │
-    │  7. Backend sets supos_community_token cookie
-    │         │
-    │  8. URL Transformer plugin redirects to /?isLogin=true
-    │
-    └─ NO (cookie exists) →
-         │
-    9. Kong auth-checker calls http://uns:8080/inter-api/supos/auth/userinfo
-       with the cookie
-         │
-   10. Backend CheckTokenWareMiddleware:
-       a. Reads supos_community_token from cookie
-       b. Looks up in TokenCache (server-side)
-       c. Calls authsvc.FetchUserInfo() with stored access_token
-       d. Returns user info + resourceList + denyResourceList
-         │
-   11. Kong auth-checker checks:
-       a. Deny policy: Is path in denyResourceList? → 403
-       b. Resource check: Is path in resourceList? → Allow / 403
-         │
-   12. Request proceeds to upstream service
+const useAuthStore = create<AuthState>(...);      // 用户信息、登录状态
+const useSystemStore = create<SystemState>(...);   // 系统配置、容器信息
+const useMenuStore = create<MenuState>(...);       // 菜单树、路由
+const usePermissionStore = create<PermState>(...); // 权限映射
 ```
 
-### 7.2 Frontend Auth State Load
+**C. 引入 TanStack Query**
+
+替代手动 axios + useEffect 模式:
+- 自动请求去重和缓存
+- 后台刷新（stale-while-revalidate）
+- 乐观更新
+- 类型安全的 API hooks
+
+**D. 大组件拆分**
+
+以 `uns-tree/index.tsx`（1082 行）为例:
+```
+拆分为:
+├── UnsTree.tsx (主容器，~100 行)
+├── useUnsTreeData.ts (数据获取 hook)
+├── useUnsTreeActions.ts (操作 hook: 展开/折叠/选中/拖拽)
+├── UnsTreeNode.tsx (节点渲染)
+├── UnsTreeToolbar.tsx (搜索/过滤工具栏)
+└── UnsTreeContextMenu.tsx (右键菜单)
+```
+
+### 7.4 数据流层面
+
+**A. MQTT 消息消费改进**
 
 ```
-1. App.tsx useEffect → fetchBaseStore(true)
-         │
-2. Promise.allSettled([
-     getRoutesResourceApi(),   // GET /inter-api/supos/resource/routes
-     getUserInfo(),            // GET /inter-api/supos/auth/user
-     getSystemConfig(),        // GET /inter-api/supos/systemConfig
-   ])
-         │
-3. Parse user resources:
-   - resourceList → pages user CAN access
-   - denyResourceList → pages user CANNOT access (deny overrides allow)
-   - buttonGroup → button-level permissions (format: "button:Module.action")
-         │
-4. Build navigation:
-   - menuTree (sidebar navigation)
-   - homeTree (home page cards)
-   - homeTabGroup (home page tabs)
-         │
-5. Store in Zustand (useBaseStore):
-   - currentUserInfo, buttonList, menuGroup, systemInfo
-         │
-6. UI renders based on permissions
+当前:  MQTT msg → 解析 → WS推送(同步) → 磁盘队列 → 持久化
+建议:  MQTT msg → 解析 → Channel → [WS推送(异步), 磁盘队列] → 持久化
+```
+
+使用 Go channel 将消息处理拆分为并行管道，WebSocket 推送不再阻塞持久化。
+
+**B. 磁盘队列增加回压和告警**
+
+- 队列使用量超过 80% 时触发告警
+- 队列满时拒绝新消息而非静默丢弃
+- 提供队列深度的 metrics 接口
+
+**C. 数据降采样**
+
+TimescaleDB 支持 Continuous Aggregates，建议为高频数据配置自动降采样:
+```sql
+CREATE MATERIALIZED VIEW uns_hourly
+WITH (timescaledb.continuous) AS
+SELECT time_bucket('1 hour', time), tag, avg(double_1), max(double_1), min(double_1)
+FROM uns_timeserial
+GROUP BY 1, 2;
 ```
 
 ---
 
-## 8. Architectural Decisions Summary
+## 总结
 
-### AI/MCP Layer
-- **Decision:** Express BFF as AI orchestration layer, not the Go backend.
-  - **Rationale:** Node.js ecosystem has better LangChain/CopilotKit support; streaming-first design; 10-minute timeouts configured in Kong for LLM responses.
-- **Decision:** Dynamic MCP server registration via REST API.
-  - **Rationale:** Users can add/remove MCP servers at runtime without service restarts; supports all three MCP transport types.
-- **Decision:** Custom URL protocol for MCP endpoints (`sse://`, `stdio://`, `streamable-http://`).
-  - **Rationale:** Encodes transport type + connection params in a single string; enables batch management.
+Tier0-Edge 在架构层面有清晰的愿景（UNS 方法论 + 事件驱动 + 接口抽象），技术选型现代且合理。但作为 v2.0.0 版本:
 
-### Authentication
-- **Decision:** Kong custom Lua plugin for auth enforcement (not JWT validation).
-  - **Rationale:** Centralizes auth at the gateway; delegates token validation to the Go backend; supports both cookie-based sessions and API key auth.
-- **Decision:** Cookie-based sessions (`supos_community_token`) rather than JWT in Authorization header.
-  - **Rationale:** Simpler for iframe-embedded services (Grafana, Node-RED, etc.); single cookie works across all proxied services.
-- **Decision:** Server-side token cache with Keycloak token exchange.
-  - **Rationale:** Avoids exposing Keycloak tokens to the browser; backend manages token lifecycle.
+**核心矛盾: 架构设计超前于功能实现**
 
-### Plugin System
-- **Decision:** Vite Module Federation for plugin architecture.
-  - **Rationale:** True runtime module loading; shared dependencies prevent bloat; plugins can develop independently with their own dev servers.
-- **Decision:** Host provides shared component library and hooks.
-  - **Rationale:** Consistent UI across plugins; reduces plugin bundle sizes; centralized auth and i18n.
+项目定义了完整的接口、事件、数据模型，但约 50 个 Logic 文件仍然是空壳。告警、实时计算、API 管理等 IIoT 平台的关键功能完全缺失。
 
-### API Gateway
-- **Decision:** Kong as the single entry point with declarative configuration.
-  - **Rationale:** Consolidates 25+ microservices behind one gateway; tag-based menu system; programmatic route management via Go adapter.
-- **Decision:** Template variables (`${BASE_URL}`, `${KONG_AUTH_ENABLED}`, `${ENABLE_MCP}`) in Kong config.
-  - **Rationale:** Environment-specific deployment configuration; feature flags for optional services.
+| 维度 | 评级 | 总结 |
+|------|------|------|
+| **架构设计** | ⭐⭐⭐⭐ (4/5) | UNS 落地好，接口抽象干净，事件驱动合理 |
+| **核心功能 (UNS CRUD + 数据流)** | ⭐⭐⭐⭐ (4/5) | 消息消费→持久化管道完整，WebSocket 实时推送可用 |
+| **功能完成度** | ⭐⭐ (2/5) | ~50 个空壳文件，告警/实时计算/API 管理缺失 |
+| **前端工程质量** | ⭐⭐ (2/5) | 零代码分割、God Store、无类型安全、无测试 |
+| **后端工程质量** | ⭐⭐⭐ (3/5) | DI 混乱和缓存碎片化是主要债务 |
+| **数据流完整性** | ⭐⭐⭐ (3/5) | 单向管道完整，反向通道断开，缺少回压 |
 
-### Communication Patterns
-- **Decision:** Three API path prefixes: `/inter-api/supos/` (internal), `/service-api/supos/` (service), `/open-api/` (public).
-  - **Rationale:** Clear separation of internal/service/public APIs; different auth policies per prefix.
-- **Decision:** Frontend dev proxy mirrors production Kong routing.
-  - **Rationale:** Development environment closely matches production; same URL patterns work in both environments.
+**建议的投入方向:**
+1. 🔴 先补齐关键功能（告警、实时计算），而非继续添加新模块
+2. 🟠 统一 DI 系统、异步化事件总线，稳固后端架构
+3. 🟠 前端代码分割 + Store 拆分 + TanStack Query，立竿见影提升体验
+4. 🟡 清理 50 个空壳文件 — 要么实现，要么移除，避免给人"功能已完成"的错觉
