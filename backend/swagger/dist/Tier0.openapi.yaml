@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Tier0 UNS Open API
-  description: UNS Open API for managing folders, files, templates, and labels
+  description: UNS Open API for managing folders, files, templates, labels, and users
   version: 1.0.0
 tags:
   - name: 文件夹/文件管理
@@ -12,6 +12,8 @@ tags:
     description: Label management operations
   - name: 批量操作
     description: Batch operations for files and folders
+  - name: 用户管理
+    description: User management operations
 paths:
   /open-api/uns/attachment:
     post:
@@ -880,6 +882,93 @@ paths:
       security:
         - apikey-header-apikey: []
 
+  /open-api/user/pageList:
+    get:
+      summary: 用户列表
+      description: 分页查询用户列表，支持按用户名、显示名称、邮箱、手机号等条件过滤
+      operationId: openUserPageList
+      tags:
+        - 用户管理
+      parameters:
+        - name: pageNo
+          in: query
+          description: 当前页数
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: pageSize
+          in: query
+          description: 每页记录数
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+        - name: username
+          in: query
+          description: 用户名，精准查询
+          schema:
+            type: string
+        - name: displayName
+          in: query
+          description: 显示名称，支持模糊查询
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: 邮箱，支持模糊查询
+          schema:
+            type: string
+        - name: phone
+          in: query
+          description: 手机号，支持模糊查询
+          schema:
+            type: string
+        - name: enabled
+          in: query
+          description: 是否启用
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenUserPageResult'
+      security:
+        - apikey-header-apikey: []
+
+  /open-api/user/{username}:
+    get:
+      summary: 用户详情
+      description: 根据用户名查询用户详情
+      operationId: openUserDetail
+      tags:
+        - 用户管理
+      parameters:
+        - name: username
+          in: path
+          description: 用户名
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResult'
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResult'
+      security:
+        - apikey-header-apikey: []
+
 components:
   schemas:
     ResultVO:
@@ -1548,6 +1637,100 @@ components:
               items:
                 type: string
               description: 删除失败的别名列表
+
+    OpenUserInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 用户ID
+        email:
+          type: string
+          description: 邮箱
+        emailVerified:
+          type: boolean
+          description: 邮箱验证状态
+        firstName:
+          type: string
+          description: 名字
+        preferredUsername:
+          type: string
+          description: 用户名
+        sub:
+          type: string
+          description: 用户唯一标识
+        enabled:
+          type: boolean
+          description: 是否启用
+        roleList:
+          type: array
+          description: 角色列表
+          items:
+            $ref: '#/components/schemas/RoleSummary'
+        firstTimeLogin:
+          type: integer
+          description: 首次登录
+        tipsEnable:
+          type: integer
+          description: 提示启用
+        homePage:
+          type: string
+          description: 主页
+        phone:
+          type: string
+          description: 电话
+        source:
+          type: string
+          description: 来源
+
+    RoleSummary:
+      type: object
+      properties:
+        roleId:
+          type: string
+          description: 角色ID
+        roleName:
+          type: string
+          description: 角色名称
+        roleDescription:
+          type: string
+          description: 角色描述
+        clientRole:
+          type: boolean
+          description: 客户端角色
+
+    OpenUserPageResult:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 错误码，0--正常，其他失败
+        pageNo:
+          type: integer
+          description: 当前页数
+        pageSize:
+          type: integer
+          description: 每页记录数
+        total:
+          type: integer
+          description: 总记录数
+        data:
+          type: array
+          description: 用户列表数据
+          items:
+            $ref: '#/components/schemas/OpenUserInfo'
+
+    UserDetailResult:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 错误码，0--正常，其他失败
+        msg:
+          type: string
+          description: 错误信息
+        data:
+          $ref: '#/components/schemas/OpenUserInfo'
 
   responses: {}
   securitySchemes:
