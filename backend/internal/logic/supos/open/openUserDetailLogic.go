@@ -4,6 +4,7 @@
 package open
 
 import (
+	"backend/internal/common/I18nUtils"
 	"backend/internal/logic/supos/open/openservice"
 	"context"
 
@@ -32,7 +33,7 @@ func (l *UserDetailLogic) UserDetail(username string) (resp *types.UserDetailRes
 	if l.svcCtx.Keycloak == nil {
 		return &types.UserDetailResult{
 			Code: 404,
-			Msg:  "user.not.exist",
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "user.not.exist"),
 		}, nil
 	}
 
@@ -49,7 +50,7 @@ func (l *UserDetailLogic) UserDetail(username string) (resp *types.UserDetailRes
 	if len(result.Users) == 0 {
 		return &types.UserDetailResult{
 			Code: 404,
-			Msg:  "user.not.exist",
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "user.not.exist"),
 		}, nil
 	}
 
