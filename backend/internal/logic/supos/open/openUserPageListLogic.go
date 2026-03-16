@@ -53,7 +53,7 @@ func (l *OpenUserPageListLogic) OpenUserPageList(r *http.Request) (resp *types.O
 	}
 
 	return &types.OpenUserPageResult{
-		Code:     0,
+		Code:     200,
 		PageNo:   req.PageNo,
 		PageSize: req.PageSize,
 		Total:    result.Total,

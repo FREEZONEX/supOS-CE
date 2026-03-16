@@ -55,7 +55,7 @@ func (l *UserDetailLogic) UserDetail(username string) (resp *types.UserDetailRes
 	}
 
 	return &types.UserDetailResult{
-		Code: 0,
+		Code: 200,
 		Msg:  "success",
 		Data: result.Users[0],
 	}, nil
