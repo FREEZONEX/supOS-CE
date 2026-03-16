@@ -1,0 +1,102 @@
+syntax = "v1"
+
+info (
+    title:   "User Open API"
+    desc:    "User Open API for external access"
+    author:  "System Generated"
+    version: "v1"
+)
+
+@server (
+    group:  supos/open
+    prefix: /open-api/user
+)
+service backend {
+    @doc (
+        summary:     "用户列表"
+        description: "分页查询用户列表"
+    )
+    @handler openUserPageList
+    get /pageList (OpenUserPageQuery) returns (OpenUserPageResult)
+
+    @doc (
+        summary:     "用户详情"
+        description: "根据用户名查询用户详情"
+    )
+    @handler openUserDetail
+    get /:username
+}
+
+type (
+    // OpenUserPageQuery 用户分页查询参数
+    OpenUserPageQuery {
+        // PageNo 当前页数
+        PageNo int `form:"pageNo,optional,default=1"`
+        // PageSize 每页记录数
+        PageSize int `form:"pageSize,optional,default=20"`
+        // Username 用户名，精准查询
+        Username string `form:"username,optional"`
+        // DisplayName 显示名称，支持模糊查询
+        DisplayName string `form:"displayName,optional"`
+        // Email 邮箱，支持模糊查询
+        Email string `form:"email,optional"`
+        // Phone 手机号，支持模糊查询
+        Phone string `form:"phone,optional"`
+        // Enabled 是否启用
+        Enabled *bool `form:"enabled,optional"`
+    }
+
+    // OpenUserInfo 用户信息
+    OpenUserInfo {
+        // ID 用户ID
+        ID string `json:"id"`
+        // Email 邮箱
+        Email string `json:"email,optional"`
+        // EmailVerified 邮箱验证状态
+        EmailVerified bool `json:"emailVerified,optional"`
+        // FirstName 名字
+        FirstName string `json:"firstName,optional"`
+        // PreferredUsername 用户名
+        PreferredUsername string `json:"preferredUsername"`
+        // Sub 用户唯一标识
+        Sub string `json:"sub,optional"`
+        // Enabled 是否启用
+        Enabled bool `json:"enabled,optional"`
+        // RoleList 角色列表
+        RoleList []RoleSummary `json:"roleList,optional"`
+        // FirstTimeLogin 首次登录
+        FirstTimeLogin int `json:"firstTimeLogin,optional"`
+        // TipsEnable 提示启用
+        TipsEnable int `json:"tipsEnable,optional"`
+        // HomePage 主页
+        HomePage string `json:"homePage,optional"`
+        // Phone 电话
+        Phone string `json:"phone,optional"`
+        // Source 来源
+        Source string `json:"source,optional"`
+    }
+
+    // OpenUserPageResult 用户列表分页结果
+    OpenUserPageResult {
+        // Code 错误码，0--正常，其他失败
+        Code     int            `json:"code"`
+        // PageNo 当前页数
+        PageNo   int            `json:"pageNo"`
+        // PageSize 每页记录数
+        PageSize int            `json:"pageSize"`
+        // Total 总记录数
+        Total    int            `json:"total"`
+        // Data 用户列表数据
+        Data     []OpenUserInfo `json:"data"`
+    }
+
+    // UserDetailResult 用户详情结果
+    UserDetailResult {
+        // Code 错误码，0--正常，其他失败
+        Code int            `json:"code"`
+        // Msg 错误信息
+        Msg  string         `json:"msg"`
+        // Data 用户数据
+        Data OpenUserInfo   `json:"data,optional"`
+    }
+)

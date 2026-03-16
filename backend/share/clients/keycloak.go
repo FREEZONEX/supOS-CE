@@ -150,7 +150,6 @@ var (
 )
 
 func InitKeycloakClient(config KeycloakConfig) *KeycloakClient {
-	fmt.Println("KeycloakConfig", config)
 	config.RedirectURI = config.GetRedirectURI()
 	if config.ClientID == "" {
 		return &KeycloakClient{} //允许 mock
@@ -348,6 +347,19 @@ func (kc *KeycloakClient) FetchUserByEmail(email string) (*KeycloakUserInfoDto, 
 func (kc *KeycloakClient) DeleteUser(id string) error {
 	apiURL := fmt.Sprintf("%s/users/%s", kc.getAdminAPIURL(), id)
 	return kc.doAdminSimpleRequest(http.MethodDelete, apiURL, nil)
+}
+
+// SearchUsers 搜索用户列表
+func (kc *KeycloakClient) SearchUsers(params map[string]string) ([]KeycloakUserInfoDto, error) {
+	values := url.Values{}
+	for k, v := range params {
+		values.Set(k, v)
+	}
+	var users []KeycloakUserInfoDto
+	if err := kc.doAdminGetRequest(kc.getAdminAPIURL()+"/users", values, &users); err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 func (kc *KeycloakClient) ResetPassword(userID, password string) error {

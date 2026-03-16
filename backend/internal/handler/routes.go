@@ -662,6 +662,24 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 用户详情
+				Method:  http.MethodGet,
+				Path:    "/:username",
+				Handler: suposopen.OpenUserDetailHandler(serverCtx),
+			},
+			{
+				// 用户列表
+				Method:  http.MethodGet,
+				Path:    "/pageList",
+				Handler: suposopen.OpenUserPageListHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/user"),
+	)
+
+	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{

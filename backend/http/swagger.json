@@ -16581,6 +16581,178 @@
         }
       }
     },
+    "/open-api/user/pageList": {
+      "get": {
+        "description": "分页查询用户列表",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "用户列表",
+        "operationId": "supos/OpenOpenUserPageList",
+        "parameters": [
+          {
+            "type": "integer",
+            "default": 1,
+            "name": "pageNo",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "default": 20,
+            "name": "pageSize",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "username",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "displayName",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "email",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "name": "phone",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "boolean",
+            "name": "enabled",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "preferredUsername"
+                    ],
+                    "properties": {
+                      "email": {
+                        "type": "string"
+                      },
+                      "emailVerified": {
+                        "type": "boolean"
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "firstName": {
+                        "type": "string"
+                      },
+                      "firstTimeLogin": {
+                        "type": "integer"
+                      },
+                      "homePage": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "preferredUsername": {
+                        "type": "string"
+                      },
+                      "roleList": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "roleId",
+                            "roleName"
+                          ],
+                          "properties": {
+                            "clientRole": {
+                              "type": "boolean"
+                            },
+                            "roleDescription": {
+                              "type": "string"
+                            },
+                            "roleId": {
+                              "type": "string"
+                            },
+                            "roleName": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "sub": {
+                        "type": "string"
+                      },
+                      "tipsEnable": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "pageNo": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/open-api/user/{username}": {
+      "get": {
+        "description": "根据用户名查询用户详情",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "用户详情",
+        "operationId": "supos/OpenOpenUserDetail",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {}
+          }
+        }
+      }
+    },
     "/service-api/supos/flow/by/aliases": {
       "post": {
         "consumes": [
@@ -16729,7 +16901,7 @@
       }
     }
   },
-  "x-date": "2026-03-13 14:22:52",
+  "x-date": "2026-03-16 10:27:03",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

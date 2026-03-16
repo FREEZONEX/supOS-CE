@@ -1127,6 +1127,40 @@ type OpenTemplateVo struct {
 	Description string        `json:"description,optional"`
 }
 
+type OpenUserInfo struct {
+	ID                string        `json:"id"`
+	Email             string        `json:"email,optional"`
+	EmailVerified     bool          `json:"emailVerified,optional"`
+	FirstName         string        `json:"firstName,optional"`
+	PreferredUsername string        `json:"preferredUsername"`
+	Sub               string        `json:"sub,optional"`
+	Enabled           bool          `json:"enabled,optional"`
+	RoleList          []RoleSummary `json:"roleList,optional"`
+	FirstTimeLogin    int           `json:"firstTimeLogin,optional"`
+	TipsEnable        int           `json:"tipsEnable,optional"`
+	HomePage          string        `json:"homePage,optional"`
+	Phone             string        `json:"phone,optional"`
+	Source            string        `json:"source,optional"`
+}
+
+type OpenUserPageQuery struct {
+	PageNo      int    `form:"pageNo,optional,default=1"`
+	PageSize    int    `form:"pageSize,optional,default=20"`
+	Username    string `form:"username,optional"`
+	DisplayName string `form:"displayName,optional"`
+	Email       string `form:"email,optional"`
+	Phone       string `form:"phone,optional"`
+	Enabled     *bool  `form:"enabled,optional"`
+}
+
+type OpenUserPageResult struct {
+	Code     int            `json:"code"`
+	PageNo   int            `json:"pageNo"`
+	PageSize int            `json:"pageSize"`
+	Total    int            `json:"total"`
+	Data     []OpenUserInfo `json:"data"`
+}
+
 type OperationGroupReq struct {
 	ID     *int64  `json:"id,string"` //组ID
 	BizId  *string `json:"bizId"`     //业务ID
@@ -2001,6 +2035,12 @@ type UserCreateReq struct {
 
 type UserDeleteReq struct {
 	ID string `path:"id"`
+}
+
+type UserDetailResult struct {
+	Code int          `json:"code"`
+	Msg  string       `json:"msg"`
+	Data OpenUserInfo `json:"data,optional"`
 }
 
 type UserInfoVO struct {
