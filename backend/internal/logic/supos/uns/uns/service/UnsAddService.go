@@ -378,7 +378,7 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 			tx.Rollback()
 		}
 	}()
-	labelPos, err := u.unsLabelService.MakeUnsLabels(ctx, unsLabels, createTime)
+	labelPos, err := service.MakeUnsLabels(u.unsLabelService, ctx, unsLabels, createTime)
 	if err == nil {
 		filesToSave := make(map[types.SrcJdbcType][]types.UnsInfo, len(insertList)+len(updateList))
 		putFiles := func(po *dao.UnsNamespace) {

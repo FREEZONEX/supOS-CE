@@ -39,17 +39,8 @@ func (l *TemplateDetailByAliasLogic) TemplateDetailByAlias(alias string) (resp *
 			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.template.query.failed") + ": " + err.Error(),
 		}, nil
 	}
-
-	if result.Code != 200 {
-		return &types.ResultVO{
-			Code: result.Code,
-			Msg:  result.Msg,
-		}, nil
-	}
-
 	return &types.ResultVO{
-		Code: 200,
-		Msg:  "ok",
-		Data: result.Data,
+		Code: result.Code,
+		Msg:  result.Msg,
 	}, nil
 }

@@ -52,16 +52,8 @@ func (l *UpdateTemplateLogic) UpdateTemplate(alias string, req *types.UpdateTemp
 			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.template.update.failed") + ": " + err.Error(),
 		}, nil
 	}
-
-	if result.Code != 200 {
-		return &types.ResultVO{
-			Code: result.Code,
-			Msg:  result.Msg,
-		}, nil
-	}
-
 	return &types.ResultVO{
-		Code: 200,
-		Msg:  "ok",
+		Code: result.Code,
+		Msg:  result.Msg,
 	}, nil
 }

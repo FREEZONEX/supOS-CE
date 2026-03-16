@@ -39,16 +39,8 @@ func (l *DeleteTemplateLogic) DeleteTemplate(id int64) (resp *types.ResultVO, er
 			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.template.delete.failed") + ": " + err.Error(),
 		}, nil
 	}
-
-	if result.Code != 200 {
-		return &types.ResultVO{
-			Code: result.Code,
-			Msg:  result.Msg,
-		}, nil
-	}
-
 	return &types.ResultVO{
-		Code: 200,
-		Msg:  "ok",
+		Code: result.Code,
+		Msg:  result.Msg,
 	}, nil
 }

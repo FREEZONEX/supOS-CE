@@ -62,8 +62,9 @@ func (l *AllLabelsLogic) AllLabels(req *types.LabelQueryDto) (resp *types.LabelP
 	labelVos := make([]types.LabelOpenVo, len(labels))
 	for i, label := range labels {
 		labelVos[i] = types.LabelOpenVo{
-			Id:        strconv.FormatInt(label.ID, 10),
-			LabelName: label.LabelName,
+			Id:         strconv.FormatInt(label.ID, 10),
+			LabelName:  label.LabelName,
+			CreateTime: label.CreateAt.UnixMilli(),
 		}
 	}
 

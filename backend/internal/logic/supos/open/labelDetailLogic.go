@@ -52,8 +52,9 @@ func (l *LabelDetailLogic) LabelDetail(id int64) (resp *types.ResultVO, err erro
 		Code: 200,
 		Msg:  "ok",
 		Data: types.LabelVo{
-			ID:        label.ID,
-			LabelName: label.LabelName,
+			ID:         label.ID,
+			LabelName:  label.LabelName,
+			CreateTime: label.CreateAt.UnixMilli(),
 		},
 	}, nil
 }
