@@ -47,6 +47,7 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
   showMoreBtn = false,
   style,
 }) => {
+  console.log(disabled);
   const formatMessage = useTranslate();
   const form = Form.useFormInstance();
   const dataType = Form.useWatch(dataTypeName, form);
@@ -332,10 +333,14 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
                             name={[name, 'name']}
                             rules={[
                               { required: true, message: formatMessage('uns.pleaseInputKeyName') },
-                              {
-                                pattern: disabled ? /./s : /^[A-Za-z][A-Za-z0-9_]*$/,
-                                message: formatMessage('uns.keyNameFormat'),
-                              },
+                              ...(!fieldList[index]?.systemField
+                                ? [
+                                    {
+                                      pattern: /^[A-Za-z][A-Za-z0-9_]*$/,
+                                      message: formatMessage('uns.keyNameFormat'),
+                                    },
+                                  ]
+                                : []),
                               { validator: validateUnique }, // 添加自定义校验规则
                               {
                                 max: 63,
