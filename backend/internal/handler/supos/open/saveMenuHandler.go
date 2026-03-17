@@ -62,8 +62,8 @@ func SaveMenuHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 		serviceName := r.FormValue("serviceName")
-		if len(serviceName) < 1 || len(serviceName) > 64 || !serviceNamePattern.MatchString(serviceName) {
-			httpx.ErrorCtx(r.Context(), w, errors.BadRequest(r.Context(), "menu.serviceName.invalid"))
+		if len(serviceName) > 64 || (len(serviceName) > 0 && !serviceNamePattern.MatchString(serviceName)) {
+			httpx.ErrorCtx(r.Context(), w, errors.BadRequest(r.Context(), "menu.servicename.invalid"))
 			return
 		}
 		showName, description, baseUrl := r.FormValue("showName"), r.FormValue("description"), r.FormValue("baseUrl")
