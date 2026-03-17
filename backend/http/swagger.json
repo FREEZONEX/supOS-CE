@@ -14198,7 +14198,7 @@
           "https"
         ],
         "summary": "保存菜单",
-        "operationId": "supos/MenuSaveMenuHandler",
+        "operationId": "supos/OpenSaveMenuHandler",
         "parameters": [
           {
             "type": "string",
@@ -16901,7 +16901,7 @@
       }
     }
   },
-  "x-date": "2026-03-16 10:27:03",
+  "x-date": "2026-03-17 09:27:31",
   "x-description": "This is a goctl generated swagger file.",
   "x-github": "https://github.com/zeromicro/go-zero",
   "x-go-zero-doc": "https://go-zero.dev/",

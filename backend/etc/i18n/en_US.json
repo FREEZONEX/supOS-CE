@@ -605,7 +605,7 @@
   "menu.desc.Marimo": "Transform data, train models, and run SQL queries with Python.",
   "menu.servicename.invalid": "Invalid service name. Only combinations of English letters, numbers, underscores and hyphens are allowed. Cannot exceed 64 characters.",
   "menu.name.null": "The menu name cannot be empty.",
-  "menu.name.invalid": "Invalid menu names. Only English letters and underscores are allowed. Cannot exceed 64 characters.",
+  "menu.name.invalid": "Invalid menu names. Only ASCII characters are allowed. Cannot exceed 64 characters.",
   "menu.showname.null": "The menu display name cannot be empty.",
   "menu.showname.length": "The menu display name cannot exceed 64 characters.",
   "menu.showname.exist": "The menu display name already exists.",

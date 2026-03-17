@@ -351,7 +351,7 @@
   "menu.desc.Marimo": "使用 python 转换数据、训练模型并运行 SQL 查询",
   "menu.servicename.invalid": "无效的服务名称，仅支持英文、数字、下划线和横杠组合，最多64个字符",
   "menu.name.null": "菜单名称不能为空",
-  "menu.name.invalid": "无效的菜单名称，仅支持英文、下划线，最多64个字符",
+  "menu.name.invalid": "无效的菜单名称，仅支持ASCII码，最多64个字符",
   "menu.showname.null": "菜单显示名称不能为空",
   "menu.showname.length": "菜单显示名称最多64个字符",
   "menu.showname.exist": "菜单显示名称已存在",

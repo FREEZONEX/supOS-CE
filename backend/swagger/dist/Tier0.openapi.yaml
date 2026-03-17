@@ -14,6 +14,8 @@ tags:
     description: Batch operations for files and folders
   - name: 用户管理
     description: User management operations
+  - name: 菜单管理
+    description: Menu management operations
 paths:
   /open-api/uns/attachment:
     post:
@@ -966,6 +968,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserDetailResult'
+      security:
+        - apikey-header-apikey: []
+
+  /open-api/menu:
+    post:
+      summary: 保存菜单
+      description: 保存菜单信息，支持图标上传
+      operationId: saveMenu
+      tags:
+        - 菜单管理
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                serviceName:
+                  type: string
+                  description: 服务名（可选）
+                name:
+                  type: string
+                  description: 名称，唯一标识一个菜单
+                showName:
+                  type: string
+                  description: 显示名
+                description:
+                  type: string
+                  description: 描述（可选）
+                baseUrl:
+                  type: string
+                  description: baseURL
+                openType:
+                  type: integer
+                  description: 跳转方式：0-iframe打开，1-打开新页面，2-app
+                  enum: [0, 1, 2]
+                file:
+                  type: string
+                  format: binary
+                  description: Icon 文件
+              required:
+                - name
+                - showName
+                - baseUrl
+                - openType
+        required: true
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultVO'
       security:
         - apikey-header-apikey: []
 

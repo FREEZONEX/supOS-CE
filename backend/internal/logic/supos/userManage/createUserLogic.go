@@ -101,7 +101,7 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateReq) (*types.Operation
 		}
 	}()
 
-	userID, err := kc.CreateUser(userPayload)
+	userID, err := kc.CreateUser(l.ctx, userPayload)
 	if err != nil {
 		l.Errorf("failed to create keycloak user %s: %v", username, err)
 		return nil, errors.System.WithMsg(fmt.Sprintf("failed to create user: %v", err))

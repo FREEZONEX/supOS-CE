@@ -50,7 +50,7 @@ service backend {
 
 @server(
 	prefix: /open-api
-	group: supos/menu
+	group: supos/open
 )
 service backend {
 	@doc "保存菜单"

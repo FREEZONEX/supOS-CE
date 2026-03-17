@@ -3,6 +3,7 @@ package clients
 import (
 	berrors "backend/internal/common/errors"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -300,7 +301,7 @@ func (kc *KeycloakClient) Logout(refreshToken string) error {
 	return kc.doFormRequest(http.MethodPost, kc.getAPIURL()+"/logout", form, nil)
 }
 
-func (kc *KeycloakClient) CreateUser(user map[string]any) (string, error) {
+func (kc *KeycloakClient) CreateUser(ctx context.Context, user map[string]any) (string, error) {
 	apiURL := kc.getAdminAPIURL() + "/users"
 	resp, err := kc.doAdminJSONRequest(http.MethodPost, apiURL, user, nil)
 	if err != nil {
@@ -309,7 +310,7 @@ func (kc *KeycloakClient) CreateUser(user map[string]any) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusConflict {
-		return "", berrors.NewBuzError(berrors.UserAlreadyExists, "user already exists")
+		return "", berrors.NewBuzError(ctx, berrors.UserAlreadyExists, "user already exists")
 	}
 	if resp.StatusCode != http.StatusCreated {
 		return "", handleAPIError("create user", resp)

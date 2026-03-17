@@ -17,7 +17,6 @@ import (
 	suposgroup "backend/internal/handler/supos/group"
 	suposi18n "backend/internal/handler/supos/i18n"
 	suposkong "backend/internal/handler/supos/kong"
-	suposmenu "backend/internal/handler/supos/menu"
 	suposmount "backend/internal/handler/supos/mount"
 	suposnodered "backend/internal/handler/supos/nodered"
 	suposopen "backend/internal/handler/supos/open"
@@ -420,18 +419,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 保存菜单
-				Method:  http.MethodPost,
-				Path:    "/menu",
-				Handler: suposmenu.SaveMenuHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/open-api"),
-	)
-
-	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
 			[]rest.Route{
@@ -677,6 +664,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/open-api/user"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 保存菜单
+				Method:  http.MethodPost,
+				Path:    "/menu",
+				Handler: suposopen.SaveMenuHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api"),
 	)
 
 	server.AddRoutes(
