@@ -1,6 +1,7 @@
 package timescaledb
 
 import (
+	"backend/internal/common/constants"
 	"backend/internal/types"
 	"fmt"
 	"strings"
@@ -73,8 +74,8 @@ func (g *SQLGenerator) GenerateViewSQL(
 		CREATE OR REPLACE VIEW "%s" AS
 		SELECT %s
 		FROM %s
-		WHERE "tag" = %d;
-	`, alias, selectClause, unsInfo.GetTable(), id)
+		WHERE "%s" = %d;
+	`, alias, selectClause, unsInfo.GetTable(), constants.SysFieldID, id)
 
 	return sql
 }
@@ -100,8 +101,8 @@ func (g *SQLGenerator) GenerateDataUpdateSQL(
 	sql := fmt.Sprintf(`
 		UPDATE %s
 		SET %s
-		WHERE "tag" = %d;
-	`, unsInfo.GetTable(), setClause, unsInfo.GetId())
+		WHERE "%s" = %d;
+	`, unsInfo.GetTable(), setClause, constants.SysFieldID, unsInfo.GetId())
 
 	return sql
 }
