@@ -459,6 +459,36 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 用户详情
+				Method:  http.MethodGet,
+				Path:    "/:username",
+				Handler: suposopen.OpenUserDetailHandler(serverCtx),
+			},
+			{
+				// 用户列表
+				Method:  http.MethodGet,
+				Path:    "/pageList",
+				Handler: suposopen.OpenUserPageListHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/user"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 保存菜单
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: suposopen.SaveMenuHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/menu"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
 				// 模板实例附件上传
 				Method:  http.MethodPost,
 				Path:    "/attachment",
@@ -646,36 +676,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/open-api/uns"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 用户详情
-				Method:  http.MethodGet,
-				Path:    "/:username",
-				Handler: suposopen.OpenUserDetailHandler(serverCtx),
-			},
-			{
-				// 用户列表
-				Method:  http.MethodGet,
-				Path:    "/pageList",
-				Handler: suposopen.OpenUserPageListHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/open-api/user"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 保存菜单
-				Method:  http.MethodPost,
-				Path:    "/menu",
-				Handler: suposopen.SaveMenuHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/open-api"),
 	)
 
 	server.AddRoutes(

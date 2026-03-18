@@ -25,16 +25,6 @@ type RouteListResp {
 	Data []SimpleRouteVO `json:"data"`
 }
 
-// SaveMenuReq 保存菜单请求
-type SaveMenuReq {
-	ServiceName string `form:"serviceName,optional"`               // 服务名（可选）
-	Name        string `form:"name"`                               // 名称，唯一标识一个菜单
-	ShowName    string `form:"showName"`                           // 显示名
-	Description string `form:"description,optional"`               // 描述（可选）
-	BaseUrl     string `form:"baseUrl"`                            // baseURL
-	OpenType    int    `form:"openType"`                           // 跳转方式：0-iframe打开，1-打开新页面，2-app
-	// Icon 文件通过 multipart/form-data 上传，字段名为 "file"
-}
 
 // ==================== 服务定义 ====================
 
@@ -46,16 +36,6 @@ service backend {
 	@doc "获取简化的路由列表"
 	@handler RouteListHandler
 	get /routeList returns (RouteListResp)
-}
-
-@server(
-	prefix: /open-api
-	group: supos/open
-)
-service backend {
-	@doc "保存菜单"
-	@handler SaveMenuHandler
-	post /menu (SaveMenuReq) returns (ResultVO)
 }
 
 @server(

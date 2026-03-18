@@ -2,8 +2,8 @@ package logic
 
 import (
 	"backend/internal/adapters/kong/dto"
-	"backend/internal/common/constants"
 	"backend/internal/common/errors"
+	"backend/internal/svc"
 	"context"
 	"fmt"
 	"io"
@@ -19,17 +19,19 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-var iconRootPath = filepath.Join(constants.RootPath, "system", "resource", "supos")
+var iconRootPath = "/app/go-edge/system/resource/supos/"
 
 // MenuLogic 封装了菜单和路由相关的核心业务逻辑
 type MenuLogic struct {
 	kongLogic *KongLogic
+	svcCtx    *svc.ServiceContext
 }
 
 // NewMenuLogic 创建 MenuLogic 实例
-func NewMenuLogic(host string, port int) *MenuLogic {
+func NewMenuLogic(svcCtx *svc.ServiceContext) *MenuLogic {
 	return &MenuLogic{
-		kongLogic: GetKongLogic(host, port),
+		svcCtx:    svcCtx,
+		kongLogic: GetKongLogic(svcCtx.Config.Kong.Host, svcCtx.Config.Kong.Port),
 	}
 }
 
@@ -157,8 +159,7 @@ func (l *MenuLogic) CreateMenu(ctx context.Context, menuDto *dto.MenuDto, update
 	// 3. 处理图标文件
 	var iconName string
 	if menuDto.Icon != nil {
-		ext := filepath.Ext(menuDto.Icon.Filename)
-		iconName = menuDto.Name + ext
+		iconName = menuDto.Icon.Filename
 
 		if err := l.saveIconFile(ctx, menuDto.Icon, iconName); err != nil {
 			return err
