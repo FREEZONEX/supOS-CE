@@ -27,9 +27,9 @@ fi
 # Confirmation for deletion
 if [ "$FORCE" = false ]; then
   echo
-  warn "This operation will remove all supOS data."
+  warn "This operation will remove all tier0 data."
   echo
-  read -p "Are you sure to delete supOS data directory \"$VOLUMES_PATH\"? (y/n) " -n 1 -r
+  read -p "Are you sure to delete tier0 data directory \"$VOLUMES_PATH\"? (y/n) " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Deletion cancelled"
@@ -44,7 +44,7 @@ if [[ -z "$VOLUMES_PATH" || "$VOLUMES_PATH" == "/" ]]; then
 fi
 
 echo
-warn "Removing all supOS data..."
+warn "Removing all tier0 data..."
 echo
 
 rm -rf "$VOLUMES_PATH"

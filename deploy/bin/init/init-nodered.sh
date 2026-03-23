@@ -43,7 +43,10 @@ docker exec nodered sh -c "cd /data && npm install  --no-audit --offline node-re
 docker exec nodered sh -c "cd /data && npm install --no-audit --offline node-red-contrib-opcua@0.2.339" \
 || error "node-red install opcua failed!"
 
-docker exec nodered sh -c "cd /data && npm install --no-audit --offline node-red-contrib-opcda-client@0.0.7" \
+#docker exec nodered sh -c "cd /data && npm install --no-audit --offline node-red-contrib-opcda-client@0.0.7" \
+#|| error "node-red install opcda failed!"
+
+docker exec nodered sh -c "cd /data && npm install --no-audit --offline /data/tier0-node-red-contrib-opcda-client-1.0.6.tgz"\
 || error "node-red install opcda failed!"
 
 docker exec nodered sh -c "cd /data && npm install  --no-audit --offline node-red-contrib-buffer-parser@3.2.2" \
