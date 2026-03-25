@@ -87,24 +87,6 @@ services:
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  marimo:
-    image: suposce/marimo:latest
-    container_name: marimo
-    environment:
-      - TSDB_URL=postgresql+psycopg2://postgres:${TSDB_PASSWORD}@tsdb:5432/postgres
-      - PG_URL=postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@postgresql:5432/postgres
-    volumes:
-      - ${VOLUMES_PATH}/marimo/data:/app
-    # command: marimo edit /app/main.py --host 0.0.0.0 --port 8080 --no-token
-    restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-        reservations:
-          memory: 512M
-    networks:
-      - edge_network
   emqx:
     image: emqx/emqx:5.8
     container_name: emqx

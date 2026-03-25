@@ -3122,8 +3122,6 @@ INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f
 INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f7c', '/uns');
 INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f7c', '/Konga');
 INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f7c', '/Namespace');
-INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f7c', '/marimo');
-INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f7c', '/Notebook');
 INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f7c', '/MenuConfiguration');
 INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f7c', '/aboutus');
 INSERT INTO "public"."resource_uris" VALUES ('8852fd44-b67e-4d11-9ab6-f05b9bf32f7c', '/GraphQL');
@@ -3168,8 +3166,6 @@ INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956d
 INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/flow-editor');
 INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/EvenFlowEditor');
 INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/chat2db');
-INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/marimo');
-INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/Notebook');
 INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/MenuConfiguration');
 INSERT INTO "public"."resource_uris" VALUES ('216ea471-fa25-441c-bbd3-3b14ae956db1', '/apps');
 INSERT INTO "public"."resource_uris" VALUES ('77f52ac5-58cf-4d4b-b850-aa0ac0ace1b7', '/collection-gateway-management');
@@ -3216,8 +3212,6 @@ INSERT INTO "public"."resource_uris" VALUES ('77f52ac5-58cf-4d4b-b850-aa0ac0ace1
 INSERT INTO "public"."resource_uris" VALUES ('e8768c3e-2de0-40e9-8edf-fe331c539fdf', '/CICD');
 INSERT INTO "public"."resource_uris" VALUES ('e8768c3e-2de0-40e9-8edf-fe331c539fdf', '/home');
 INSERT INTO "public"."resource_uris" VALUES ('e8768c3e-2de0-40e9-8edf-fe331c539fdf', '/dashboard');
-INSERT INTO "public"."resource_uris" VALUES ('e8768c3e-2de0-40e9-8edf-fe331c539fdf', '/marimo');
-INSERT INTO "public"."resource_uris" VALUES ('e8768c3e-2de0-40e9-8edf-fe331c539fdf', '/Notebook');
 INSERT INTO "public"."resource_uris" VALUES ('e8768c3e-2de0-40e9-8edf-fe331c539fdf', '/MenuConfiguration');
 INSERT INTO "public"."resource_uris" VALUES ('e8768c3e-2de0-40e9-8edf-fe331c539fdf', '/grafana');
 INSERT INTO "public"."resource_uris" VALUES ('e8768c3e-2de0-40e9-8edf-fe331c539fdf', '/McpClient');
