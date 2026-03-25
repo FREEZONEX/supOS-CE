@@ -36,6 +36,7 @@ source "$SCRIPT_DIR/init/init-keycloak-sql.sh" "$SCRIPT_DIR/.."
 source "$SCRIPT_DIR/init/init-kong-property.sh" "$SCRIPT_DIR/.."
 
 DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose.yml"
+source "$SCRIPT_DIR/util/wait-compose-healthy.sh"
 
 # --- 6. Volume and Image Management ---
 echo "Start creating volumes"
@@ -87,7 +88,12 @@ if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" 
     error "Failed to start Docker containers. Please check the logs above."
     exit 1
 fi
-info "Containers started successfully. Waiting for services to become healthy..."
+info "Containers started; waiting until each service is running (and healthy where Docker healthchecks are defined)..."
+if ! wait_compose_healthy 900 5; then
+  error "One or more containers did not become ready in time. Check: docker compose --project-name tier0 ps"
+  exit 1
+fi
+info "Core stack is ready."
 echo
 
 # Run each initialization script individually for clearer error reporting
@@ -102,13 +108,19 @@ echo
     exit 1
 }
 
+info "Verifying container health after initialization..."
+if ! wait_compose_healthy 300 5; then
+  error "Containers are not all healthy after initialization. Check: docker compose --project-name tier0 ps"
+  exit 1
+fi
+
 # --- 8. Success ---
 # Create installation marker to indicate successful completion
 touch "$INSTALL_MARKER"
 info "Installation marker created at $INSTALL_MARKER"
 
 echo -e "\n============================================================"
-echo -e "🎉  All services are up and running!"
+echo -e "🎉  All services are up and running."
 echo -e "👉  Open the platform in your browser:\n"
 
 if [[ "$ENTRANCE_PORT" == "80" || "$ENTRANCE_PORT" == "443" ]]; then
