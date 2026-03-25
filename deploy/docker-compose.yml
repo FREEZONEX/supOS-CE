@@ -115,7 +115,7 @@ services:
     networks:
       - edge_network
   nodered:
-    image: nodered/node-red:4.0.8-22
+    image: nodered/node-red:4.1.8-22
     container_name: nodered
     user: root
     ports:
@@ -140,7 +140,7 @@ services:
     networks:
       - edge_network
   eventflow:
-    image: nodered/node-red:4.0.8-22
+    image: nodered/node-red:4.1.8-22
     container_name: eventflow
     user: root
     ports:
