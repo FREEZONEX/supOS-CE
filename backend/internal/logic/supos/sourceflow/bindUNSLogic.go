@@ -47,6 +47,10 @@ func (l *BindUNSLogic) BindUNS(req *types.SourceFlowBindUnsReq) error {
 	if req.FlowID == 0 || req.UnsAlias == "" {
 		return errors.Parameter.WithMsg("error.sys.parameterError")
 	}
+	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
+	if err := validateSourceFlowUnsBindings(l.ctx, repo, req.FlowID, []string{req.UnsAlias}, constants.FlowTypeNODERED); err != nil {
+		return err
+	}
 	db := stores.GetCommonConn(l.ctx)
 	// 检查 UNS 是否存在
 	var uns relationDB.UnsNamespace

@@ -285,6 +285,7 @@ module.exports = function (RED) {
             if (Array.isArray(row)) {
                 return {
                     tagConfiguration: row[4] !== undefined ? String(row[4]) : "",
+                    alias: row[1] || "",
                     topic: row[0] || "",
                     attributeName: row[2] || "",
                     attributeType: row[3] || ""
@@ -293,12 +294,13 @@ module.exports = function (RED) {
             if (row && typeof row === 'object') {
                 return {
                     tagConfiguration: toSafeString(row.tagConfiguration || row.TagConfiguration || row.selector || row.tag),
+                    alias: toSafeString(row.alias || row.targetAlias),
                     topic: toSafeString(row.topic || row.Topic || row.targetTopic || row.path),
                     attributeName: toSafeString(row.attributeName || row.AttributeName || row.targetField || row.propName),
                     attributeType: toSafeString(row.attributeType || row.targetType || row.propType || row.type)
                 };
             }
-        }).filter(item => item && (item.tagConfiguration || item.topic || item.attributeName));
+        }).filter(item => item && (item.tagConfiguration || item.topic || item.attributeName || item.alias));
     }
 
     function toSafeString(value) {

@@ -65,6 +65,10 @@ service backend {
     @handler bindUNS
     post /flow/bindUns (SourceFlowBindUnsReq) returns ()
 
+    @doc "check whether UNS aliases are already bound by other source flows"
+    @handler checkBindUNS
+    post /flow/checkBindUns (SourceFlowCheckBindUnsReq) returns ()
+
     @doc "分页按分组获取source flow列表"
     @handler GetGroupedSourceFlowList
     get /flow/getGroupedSourceFlowList (GroupPageRequest) returns (SourceFlowGroupPageResp)
@@ -183,6 +187,11 @@ type (
     SourceFlowBindUnsReq {
         FlowID    int64 `form:"flowId"`
         UnsAlias string `form:"unsAlias"`
+    }
+
+    SourceFlowCheckBindUnsReq {
+        ID string `json:"id"`
+        UnsAliases []string `json:"unsAliases"`
     }
 
     SourceFlowGroupPageResp {

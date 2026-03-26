@@ -1326,6 +1326,11 @@ type SourceFlowBindUnsReq struct {
 	UnsAlias string `form:"unsAlias"`
 }
 
+type SourceFlowCheckBindUnsReq struct {
+	ID         string   `json:"id"`
+	UnsAliases []string `json:"unsAliases"`
+}
+
 type SourceFlowCopyReq struct {
 	SourceID    string `json:"sourceId"`
 	FlowName    string `json:"flowName"`

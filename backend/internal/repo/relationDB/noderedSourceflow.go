@@ -222,6 +222,14 @@ type NoderedSourceFlowRepo struct {
 	db *gorm.DB
 }
 
+type FlowAliasBinding struct {
+	Alias    string `gorm:"column:alias"`
+	ParentID int64  `gorm:"column:parent_id"`
+	FlowName string `gorm:"column:flow_name"`
+	FlowID   string `gorm:"column:flow_id"`
+	Template string `gorm:"column:template"`
+}
+
 func NewNoderedSourceFlowRepo(in context.Context) *NoderedSourceFlowRepo {
 	return &NoderedSourceFlowRepo{db: GetDb(in)}
 }
@@ -486,4 +494,42 @@ func (r NoderedSourceFlowRepo) SelectByAliases(ctx context.Context, aliases []st
 		return nil, stores.ErrFmt(err)
 	}
 	return flows, nil
+}
+
+// FindAliasBindings returns existing flow bindings for the given UNS aliases.
+func (r NoderedSourceFlowRepo) FindAliasBindings(ctx context.Context, aliases []string, template string, excludeParentID int64) ([]*FlowAliasBinding, error) {
+	clean := make([]string, 0, len(aliases))
+	seen := make(map[string]struct{}, len(aliases))
+	for _, alias := range aliases {
+		v := strings.TrimSpace(alias)
+		if v == "" {
+			continue
+		}
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		clean = append(clean, v)
+	}
+	if len(clean) == 0 {
+		return []*FlowAliasBinding{}, nil
+	}
+
+	db := r.db.WithContext(ctx).
+		Table("supos_node_flow_models AS m").
+		Select("m.alias, m.parent_id, f.flow_name, f.flow_id, f.template").
+		Joins("JOIN supos_node_flows AS f ON f.id = m.parent_id").
+		Where("m.alias IN ?", clean)
+	if strings.TrimSpace(template) != "" {
+		db = db.Where("f.template = ?", strings.TrimSpace(template))
+	}
+	if excludeParentID > 0 {
+		db = db.Where("m.parent_id <> ?", excludeParentID)
+	}
+
+	var bindings []*FlowAliasBinding
+	if err := db.Order("m.alias ASC, m.parent_id ASC").Find(&bindings).Error; err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	return bindings, nil
 }

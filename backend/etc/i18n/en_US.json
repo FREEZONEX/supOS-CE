@@ -259,6 +259,8 @@
   "nodered.flowName.has.used": "Flow name already used.",
   "nodered.flowId.empty": "Flow ID cannot be empty.",
   "nodered.invalid.parameter": "Invalid parameter.",
+  "nodered.topic.bound.flow": "Topic %s is already bound to a flow.",
+  "nodered.topic.bound.flow.default": "Topic is already bound to a flow.",
   "nodered.upload.invalid.format": "Incorrect file format.",
   "nodered.app.not.exist": "App does not exist.",
   "nodered.app.exist": "App already exists.",

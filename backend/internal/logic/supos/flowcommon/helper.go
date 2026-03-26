@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	"backend/internal/common"
@@ -352,11 +353,49 @@ func ExtractAliases(nodes []map[string]any) []string {
 				aliasSet[alias] = struct{}{}
 			}
 		}
+		for _, alias := range extractMappingAliases(node["mapping"]) {
+			aliasSet[alias] = struct{}{}
+		}
 	}
 	aliases := make([]string, 0, len(aliasSet))
 	for alias := range aliasSet {
 		aliases = append(aliases, alias)
 	}
+	sort.Strings(aliases)
+	return aliases
+}
+
+func extractMappingAliases(value any) []string {
+	items := toAnySlice(value)
+	if len(items) == 0 {
+		return nil
+	}
+	aliasSet := make(map[string]struct{}, len(items))
+	for _, item := range items {
+		switch v := item.(type) {
+		case map[string]any:
+			for _, key := range []string{"alias", "targetAlias"} {
+				raw, ok := v[key]
+				if !ok || raw == nil {
+					continue
+				}
+				if alias := strings.TrimSpace(fmt.Sprint(raw)); alias != "" {
+					aliasSet[alias] = struct{}{}
+				}
+			}
+		case []any:
+			if len(v) > 1 {
+				if alias := strings.TrimSpace(fmt.Sprint(v[1])); alias != "" {
+					aliasSet[alias] = struct{}{}
+				}
+			}
+		}
+	}
+	aliases := make([]string, 0, len(aliasSet))
+	for alias := range aliasSet {
+		aliases = append(aliases, alias)
+	}
+	sort.Strings(aliases)
 	return aliases
 }
 

@@ -585,6 +585,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: supossourceflow.BindUNSHandler(serverCtx),
 				},
 				{
+					// check whether UNS aliases are already bound by other source flows
+					Method:  http.MethodPost,
+					Path:    "/flow/checkBindUns",
+					Handler: supossourceflow.CheckBindUNSHandler(serverCtx),
+				},
+				{
 					// Copy an existing source flow
 					Method:  http.MethodPost,
 					Path:    "/flow/copy",
