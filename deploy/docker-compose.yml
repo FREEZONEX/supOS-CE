@@ -202,13 +202,14 @@ services:
     networks:
       - edge_network
   portainer:
-    image: portainer/portainer-ce:2.23.0
+    image: portainer/portainer-ce:2.33.5
     container_name: portainer
     environment:
       service_logo: portainer.svg
-    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC"
+    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC" --http-enabled --trusted-origins ${ENTRANCE_DOMAIN}
     ports:
       - "8000:8000"
+      - "9000:9000"
       - "9443:9443"
     restart: always
     volumes:

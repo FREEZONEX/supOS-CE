@@ -12,9 +12,22 @@ source $SCRIPT_DIR/../global/log.sh
 source $ENV_FILE
 source $SCRIPT_DIR/../../.env.tmp
 
+PORTAINER_ADMIN_PASSWORD="${PORTAINER_ADMIN_PASSWORD:-adminpassword}"
+
 #info "start to init portainer OAuth ..."
-PORTAINER_JWT=`docker exec nodered curl -skX POST https://portainer:9443/api/auth      -H "Content-Type: application/json"      -d '{"username": "admin", "password": "adminpassword"}' | awk -F'"' '/jwt/ {print $4}'` && echo "Successfully got Portainer JWT"\
-|| if [ "$1" == "--verbose" ]; then warn "Failed to obtain JWT from Portainer"; fi
+set +e
+PORTAINER_JWT=$(docker exec nodered curl -skX POST https://portainer:9443/api/auth \
+  -H "Content-Type: application/json" \
+  -d "{\"username\": \"admin\", \"password\": \"${PORTAINER_ADMIN_PASSWORD}\"}" 2>/dev/null | awk -F'"' '/jwt/ {print $4}')
+set -e
+
+if [ -n "$PORTAINER_JWT" ]; then
+  info "Successfully obtained Portainer JWT"
+else
+  warn "Failed to obtain Portainer JWT (admin login). Portainer OAuth/RedirectURI will not be updated."
+  warn "Set PORTAINER_ADMIN_PASSWORD in .env to the plaintext for Portainer admin (must match docker-compose --admin-password hash; default: adminpassword)."
+  return 0 2>/dev/null || exit 0
+fi
 
 #init endpoint
 docker exec nodered curl -s -X POST http://portainer:9000/api/endpoints \
