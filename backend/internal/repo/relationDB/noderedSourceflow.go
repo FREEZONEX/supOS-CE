@@ -224,6 +224,7 @@ type NoderedSourceFlowRepo struct {
 
 type FlowAliasBinding struct {
 	Alias    string `gorm:"column:alias"`
+	Topic    string `gorm:"column:topic"`
 	ParentID int64  `gorm:"column:parent_id"`
 	FlowName string `gorm:"column:flow_name"`
 	FlowID   string `gorm:"column:flow_id"`
@@ -517,8 +518,9 @@ func (r NoderedSourceFlowRepo) FindAliasBindings(ctx context.Context, aliases []
 
 	db := r.db.WithContext(ctx).
 		Table("supos_node_flow_models AS m").
-		Select("m.alias, m.parent_id, f.flow_name, f.flow_id, f.template").
+		Select("m.alias, COALESCE(u.path, '') AS topic, m.parent_id, f.flow_name, f.flow_id, f.template").
 		Joins("JOIN supos_node_flows AS f ON f.id = m.parent_id").
+		Joins("LEFT JOIN "+TableNameUnsNamespace+" AS u ON u.alias = m.alias").
 		Where("m.alias IN ?", clean)
 	if strings.TrimSpace(template) != "" {
 		db = db.Where("f.template = ?", strings.TrimSpace(template))
@@ -528,7 +530,7 @@ func (r NoderedSourceFlowRepo) FindAliasBindings(ctx context.Context, aliases []
 	}
 
 	var bindings []*FlowAliasBinding
-	if err := db.Order("m.alias ASC, m.parent_id ASC").Find(&bindings).Error; err != nil {
+	if err := db.Order("topic ASC, m.parent_id ASC").Find(&bindings).Error; err != nil {
 		return nil, stores.ErrFmt(err)
 	}
 	return bindings, nil

@@ -96,11 +96,14 @@ func buildUnsBindingConflictMsg(ctx context.Context, bindings []*relationDB.Flow
 		if binding == nil {
 			continue
 		}
-		alias := strings.TrimSpace(binding.Alias)
-		if alias == "" {
-			continue
+		topic := strings.TrimSpace(binding.Topic)
+		flowName := strings.TrimSpace(binding.FlowName)
+		if topic != "" && flowName != "" {
+			return I18nUtils.GetMessageWithCtx(ctx, "nodered.topic.bound.flow", topic, flowName)
 		}
-		return I18nUtils.GetMessageWithCtx(ctx, "nodered.topic.bound.flow", alias)
+		if topic != "" {
+			return I18nUtils.GetMessageWithCtx(ctx, "nodered.topic.bound.flow.topicOnly", topic)
+		}
 	}
 	return I18nUtils.GetMessageWithCtx(ctx, "nodered.topic.bound.flow.default")
 }
