@@ -609,6 +609,7 @@
         return rows.map(row => {
             return {
                 tagConfiguration: row[4] !== undefined ? (row[4] + '') : '',
+                alias: row[1] || '',
                 topic: row[0] || '',
                 attributeName: row[2] || '',
                 attributeType: row[3] || ''
@@ -1128,10 +1129,61 @@
     }
 
     let detachDoneGuard = null;
+    let allowDoneBypass = false;
     const clearDoneGuard = () => {
         if (detachDoneGuard) {
             detachDoneGuard();
         }
+    };
+    const getCookieValue = (name) => {
+        const encodedName = `${name}=`;
+        const cookieParts = (document.cookie || '').split(';');
+        for (let i = 0; i < cookieParts.length; i += 1) {
+            const item = cookieParts[i].trim();
+            if (item.indexOf(encodedName) === 0) {
+                return decodeURIComponent(item.substring(encodedName.length));
+            }
+        }
+        return '';
+    };
+    const getCurrentFlowEntityId = () => {
+        const params = new URLSearchParams(window.location.search || '');
+        return (params.get('sup_flow_id') || getCookieValue('sup_flow_id') || '').trim();
+    };
+    const collectBoundAliases = (node, models) => {
+        const aliasSet = new Set();
+        (models || []).forEach(item => {
+            if (Array.isArray(item)) {
+                const alias = (item[1] || '').toString().trim();
+                if (alias) {
+                    aliasSet.add(alias);
+                }
+                return;
+            }
+            if (item && typeof item === 'object') {
+                const alias = (item.alias || item.targetAlias || '').toString().trim();
+                if (alias) {
+                    aliasSet.add(alias);
+                }
+            }
+        });
+        const selectedAlias = (node.selectedModelAlias || '').toString().trim();
+        if (selectedAlias) {
+            aliasSet.add(selectedAlias);
+        }
+        return Array.from(aliasSet);
+    };
+    const validateFlowUnsBindings = (flowEntityId, unsAliases) => {
+        return $.ajax({
+            url: '/inter-api/supos/flow/checkBindUns',
+            type: 'POST',
+            data: JSON.stringify({
+                id: flowEntityId,
+                unsAliases: unsAliases
+            }),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json'
+        });
     };
     const bindDoneGuard = (node) => {
         const okButton = document.getElementById("node-dialog-ok");
@@ -1139,7 +1191,18 @@
             return;
         }
         clearDoneGuard();
+        let validating = false;
         const handler = (evt) => {
+            if (allowDoneBypass) {
+                allowDoneBypass = false;
+                return true;
+            }
+            evt.preventDefault();
+            evt.stopImmediatePropagation();
+            evt.stopPropagation();
+            if (validating) {
+                return false;
+            }
             const models = templateModels[node.id] || [];
             const prevProtocol = node.protocol;
             const selectedProtocol = $('#node-select-protocol').val();
@@ -1153,18 +1216,37 @@
                 node.protocol = prevProtocol;
             }
             if (msg) {
-                evt.preventDefault();
-                evt.stopImmediatePropagation();
-                evt.stopPropagation();
                 RED.notify(msg, "error");
                 return false;
             }
-            return true;
+            const unsAliases = collectBoundAliases(node, models);
+            const flowEntityId = getCurrentFlowEntityId();
+            if (!flowEntityId || unsAliases.length === 0) {
+                allowDoneBypass = true;
+                okButton.click();
+                return false;
+            }
+            validating = true;
+            validateFlowUnsBindings(flowEntityId, unsAliases).done((res) => {
+                if (res && (res.code === 200 || res.code === 0)) {
+                    allowDoneBypass = true;
+                    okButton.click();
+                    return;
+                }
+                RED.notify((res && res.msg) || node._('supmodel.network_error'), "error");
+            }).fail((xhr) => {
+                const msg = (xhr && xhr.responseJSON && xhr.responseJSON.msg) || (xhr && xhr.responseText) || node._('supmodel.network_error');
+                RED.notify(msg, "error");
+            }).always(() => {
+                validating = false;
+            });
+            return false;
         };
         okButton.addEventListener('click', handler, true);
         detachDoneGuard = () => {
             okButton.removeEventListener('click', handler, true);
             detachDoneGuard = null;
+            allowDoneBypass = false;
         };
     };
 
