@@ -114,7 +114,9 @@ func (p *TsdbPersistentService) OnEventRemoveTopicsEvent9(evt *event.RemoveTopic
 // Save 保存 UNS
 func (p *TsdbPersistentService) Save(topics []types.UnsInfo) error {
 	if len(topics) == 0 {
-		return nil
+		ctx := context.Background()
+		_, ct, qos, tag, err := getPhysicalTableFields(ctx, p.dbPool)
+		return p.fixPhysicalTableTs(err, ct, qos, tag)
 	}
 	topics = base.Filter(topics, func(e types.UnsInfo) bool {
 		return base.P2v(e.GetDataType()) != constants.AlarmRuleType
@@ -127,8 +129,10 @@ func (p *TsdbPersistentService) Save(topics []types.UnsInfo) error {
 	if err != nil {
 		return err
 	}
-	physicsTableFields, ct, qos, err := getPhysicalTableFields(ctx, p.dbPool)
+	physicsTableFields, ct, qos, tag, err := getPhysicalTableFields(ctx, p.dbPool)
+	err = p.fixPhysicalTableTs(err, ct, qos, tag)
 	if err != nil {
+		p.log.Error("物理表字段修复失败:", err)
 		return err
 	}
 	// 创建 SQL 生成器
@@ -272,6 +276,27 @@ func (p *TsdbPersistentService) Save(topics []types.UnsInfo) error {
 	}
 	// 4. 创建视图, 当同名的表已存在时 需要处理冲突
 	return postgresql.BatchExecSQL(p.log, p.dbPool, s.CreateViewSQL, retryCreateView)
+}
+
+func (p *TsdbPersistentService) fixPhysicalTableTs(err error, ct string, qos, tag string) error {
+	if err != nil || len(ct) == 0 || len(qos) == 0 {
+		return err
+	}
+	sqls := []string{}
+	format := `ALTER TABLE public.uns_timeserial RENAME COLUMN "%s" TO "%s";`
+	if ct != constants.SysFieldCreateTime {
+		sqls = append(sqls, fmt.Sprintf(format, ct, constants.SysFieldCreateTime))
+	}
+	if qos != constants.QosField {
+		sqls = append(sqls, fmt.Sprintf(format, qos, constants.QosField))
+	}
+	if tag != constants.SysFieldID && tag != "" {
+		sqls = append(sqls, fmt.Sprintf(format, tag, constants.SysFieldID))
+	}
+	if len(sqls) > 0 {
+		err = postgresql.BatchExecSQL(p.log, p.dbPool, sqls, nil)
+	}
+	return err
 }
 
 func (p *TsdbPersistentService) Remove(topics []types.UnsInfo) error {

@@ -4,12 +4,13 @@
 package open
 
 import (
+	"backend/internal/common/utils/apiutil"
+	"backend/internal/common/utils/langutil"
+	"backend/internal/svc"
 	"context"
 	"embed"
 	"encoding/json"
-	"os"
-
-	"backend/internal/svc"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -33,11 +34,14 @@ func NewGetFolderSchemaLogic(ctx context.Context, svcCtx *svc.ServiceContext) *G
 }
 
 func (l *GetFolderSchemaLogic) GetFolderSchema() (resp map[string]interface{}, err error) {
-	// 根据语言环境变量选择对应的schema文件
-	lang := os.Getenv("SYS_OS_LANG")
+	// 获取用户语言，优先使用用户配置的语言，为空则使用系统语言
+	lang := langutil.SystemLocale()
+	if user := apiutil.GetUserFromContext(l.ctx); user != nil && user.MainLanguage != "" {
+		lang = user.MainLanguage
+	}
 	var filename string
 
-	if lang == "en-US" {
+	if strings.Contains(lang, "en") {
 		filename = "folder-schema_en.json"
 	} else {
 		filename = "folder-schema.json"

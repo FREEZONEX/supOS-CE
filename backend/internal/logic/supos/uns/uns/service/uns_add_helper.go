@@ -431,6 +431,26 @@ func newUnsFile(unsDto *types.CreateTopicDto) *dao.UnsNamespace {
 
 	return instance
 }
+func keepSystemFields(dbFields, fields []*types.FieldDefine) []*types.FieldDefine {
+	if len(dbFields) > 0 {
+		if len(fields) == 0 {
+			return dbFields
+		}
+		dbSystemFields := make([]*types.FieldDefine, 0, len(dbFields))
+		for _, dbField := range dbFields {
+			if dbField.IsSystemField() {
+				dbSystemFields = append(dbSystemFields, dbField)
+			}
+		}
+		if len(dbSystemFields) > 0 {
+			nmFields := normalFields(fields)
+			if len(nmFields) > 0 {
+				fields = append(dbSystemFields, nmFields...)
+			}
+		}
+	}
+	return fields
+}
 func getTemplate(ctx context.Context, topicDto *types.CreateTopicDto, existsUns func(string) *dao.UnsNamespace, dbFiles map[int64]*dao.UnsNamespace) (template *dao.UnsNamespace, errMsg string) {
 	modelId := topicDto.ModelId
 	modelAlias := topicDto.ModelAlias
@@ -454,6 +474,8 @@ func getTemplate(ctx context.Context, topicDto *types.CreateTopicDto, existsUns 
 				I18nUtils.GetMessageWithCtx(ctx, "uns.type."+strconv.Itoa(int(template.PathType))),
 				I18nUtils.GetMessageWithCtx(ctx, "uns.type.1"),
 			)
+		} else if dbTemplate := dbFiles[template.Id]; dbTemplate != nil {
+			template.Fields = keepSystemFields(dbTemplate.Fields, template.Fields)
 		}
 	} else if folderAlias = topicDto.ParentAlias; folderAlias != nil {
 		folder := existsUns(*folderAlias)
@@ -477,7 +499,7 @@ func setFieldsErr(ctx context.Context, unsDto *types.CreateTopicDto, errTipMap m
 	insFs := unsDto.Fields
 	jdbcType := types.SrcJdbcType(unsDto.DataSrcID)
 	if len(insFs) == 0 && base.P2v(unsDto.DataType) == constants.JsonbType {
-		insFs = []*types.FieldDefine{{Name: "json", Type: types.FieldTypeString}}
+		insFs = []*types.FieldDefine{{Name: constants.JsonbField, Type: types.FieldTypeString}}
 	}
 	addSystemField := jdbcType != 0 && unsDto.PathType == constants.PathTypeFile && base.P2v(unsDto.DataType) != constants.AlarmRuleType
 
@@ -592,7 +614,18 @@ func (u *UnsAddService) trySetId(
 	//		}
 	//	}
 	//}
-
+	var incFields []*types.FieldDefine
+	if len(unsDto.JsonFields) > 0 {
+		for _, jsf := range unsDto.JsonFields {
+			if jsf.Type == types.FieldTypeLong {
+				if base.P2v(jsf.Inc) {
+					incFields = append(incFields, jsf)
+				}
+			} else if jsf.Inc != nil {
+				jsf.Inc = nil
+			}
+		}
+	}
 	newUns := newUnsFile(unsDto)
 	if DB_EXISTS {
 		// 覆盖这俩不允许修改的字段
@@ -604,6 +637,10 @@ func (u *UnsAddService) trySetId(
 			tar.ParentAlias = nil
 			tar.ParentId = nil
 		}
+		tar.Fields = keepSystemFields(dbPo.Fields, newUns.Fields)
+		if base.P2v(dbPo.DataType) == constants.JsonbType {
+			tar.Fields = addIncFields(tar.Fields, incFields)
+		}
 		paramFlags := base.P2v(unsDto.WithFlags)
 		UnsConverter.Po2DtoWithoutFlags(&tar, unsDto)
 		newUns = &tar
@@ -612,6 +649,12 @@ func (u *UnsAddService) trySetId(
 			unsDto.WithFlags = nil
 			newUns.WithFlags = nil
 		}
+	} else if len(incFields) > 0 && base.P2v(unsDto.DataType) == constants.JsonbType {
+		fields := newUns.Fields
+		if len(fields) == 0 {
+			fields = []*types.FieldDefine{{Name: constants.JsonbField, Type: types.FieldTypeString}}
+		}
+		newUns.Fields = addIncFields(fields, incFields)
 	}
 
 	dataType := int16(0)
@@ -769,6 +812,31 @@ func (u *UnsAddService) trySetId(
 		newUns.Status = &OK
 	}
 	return newUns, DB_EXISTS
+}
+
+func addIncFields(fields, incFields []*types.FieldDefine) []*types.FieldDefine {
+	if len(fields) == 0 {
+		return fields
+	}
+	fs := make([]*types.FieldDefine, 0, len(fields))
+	nameMap := make(map[string]*types.FieldDefine)
+	for _, f := range fields {
+		if f.Inc == nil {
+			nameMap[f.Name] = f
+			fs = append(fs, f)
+		}
+	}
+	if len(incFields) > 0 {
+		for _, inc := range incFields {
+			if f, has := nameMap[inc.Name]; !has {
+				fs = append(fs, inc)
+			} else {
+				*f = *inc
+			}
+		}
+	}
+
+	return fs
 }
 func normalFields(fs []*types.FieldDefine) []*types.FieldDefine {
 	return base.Filter(fs, func(e *types.FieldDefine) bool {

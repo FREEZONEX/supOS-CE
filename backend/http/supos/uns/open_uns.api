@@ -1,0 +1,584 @@
+info(
+    title: "UNS Open API"
+    desc: "UNS Open API"
+    author: "System Generated"
+    version: "v1"
+)
+
+@server(
+    group: supos/open
+    prefix: /open-api/uns
+)
+service backend {
+
+    @doc(
+        summary: "模板实例附件上传"
+        injectFormdataParam: "files"
+    )
+    @handler attachmentUpload
+    post /attachment (AttachmentUploadReq) returns (AttachmentUploadResp)
+
+    @doc(
+        summary: "查询文件夹schema 元数据结构"
+        description: "文件夹schema 定义结构"
+    )
+    @handler getFolderSchema
+    get /folder/schema returns ()
+
+    @doc(
+        summary: "查询文件schema 元数据结构"
+        description: "文件schema 定义结构"
+    )
+    @handler getFileSchema
+    get /file/schema returns ()
+
+    @doc(
+        summary: "别名查询文件夹详情"
+        description: "根据文件夹别名查询文件夹详细信息"
+    )
+    @handler getFolderByAlias
+    get /folder/:alias returns (ResultVO)
+
+    @doc(
+        summary: "别名查询文件详情"
+        description: "根据文件别名查询文件详细信息"
+    )
+    @handler getFileByAlias
+    get /file/:alias returns (ResultVO)
+
+    @doc(
+        summary: "路径查询文件夹详情"
+        description: "根据路径查询文件夹详细信息"
+    )
+    @handler getFolderByPath
+    get /folder/byPath (GetByPathReq) returns (ResultVO)
+
+    @doc(
+        summary: "路径查询文件详情"
+        description: "根据路径查询文件详细信息"
+    )
+    @handler getFileByPath
+    get /file/byPath (GetByPathReq) returns (ResultVO)
+
+    @doc(
+        summary: "创建文件夹"
+        description: "创建文件夹，支持定义字段和扩展属性"
+    )
+    @handler createFolder
+    post /folder (CreateOpenApiFolderDto) returns (ResultVO)
+
+    @doc(
+        summary: "创建文件"
+        description: "创建文件，支持定义字段、引用对象、表达式等"
+    )
+    @handler createFile
+    post /file (CreateOpenApiFileDto) returns (ResultVO)
+
+    @doc(
+        summary: "修改文件夹"
+        description: "根据别名修改文件夹信息"
+    )
+    @handler updateFolder
+    put /folder/detail/:alias (UpdateOpenApiFolderDto) returns (ResultVO)
+
+    @doc(
+        summary: "修改文件"
+        description: "根据别名修改文件信息"
+    )
+    @handler updateFile
+    put /file/detail/:alias (UpdateOpenApiFileDto) returns (ResultVO)
+
+    @doc(
+        summary: "查询模板schema 元数据结构"
+        description: "模板schema 定义结构"
+    )
+    @handler getTemplateSchema
+    get /template/schema returns ()
+
+    @doc(
+        summary: "查询标签schema 元数据结构"
+        description: "标签schema 定义结构"
+    )
+    @handler getLabelSchema
+    get /label/schema returns ()
+
+    @doc(
+        summary: "根据别名集合批量删除文件夹和文件"
+        description: "根据别名集合批量删除文件夹和文件，返回删除结果"
+    )
+    @handler batchRemoveByAlias
+    delete /batch/alias (BatchRemoveUnsDto) returns (RemoveResult)
+
+    @doc(
+        summary: "批量查询文件实时值"
+        description: "根据别名数组批量查询文件实时值"
+    )
+    @handler batchQueryFile
+    post /file/current/batchQuery (StringArrayRequest) returns (ResultVO)
+
+    @doc(
+        summary: "根据文件路径批量查询文件实时值"
+        description: "根据路径数组批量查询文件实时值"
+    )
+    @handler batchQueryFileByPath
+    post /file/current/batchQuery/byPath (StringArrayRequest) returns (ResultVO)
+
+    @doc(
+        summary: "批量写文件实时值"
+        description: "批量写入文件实时值"
+    )
+    @handler batchUpdateFile
+    post /file/current/batchUpdate (UpdateFileDTOArray) returns (BatchUpdateFileResult)
+
+    @doc(
+        summary: "多条件分页查询树结构"
+        description: "根据多条件分页查询UNS树结构"
+    )
+    @handler unsTreeByDefinitions
+    post /condition/tree (UnsTreeCondition) returns (TreePageResult)
+
+    @doc(
+        summary: "批量查询文件历史值"
+        description: "批量查询文件历史值，支持聚合、补点等高级功能"
+    )
+    @handler batchQueryFileHistoryValue
+    post /file/history/batch/query (HistoryValueRequest) returns (HistoryValueResult)
+
+    @doc(
+        summary: "查询模板列表"
+        description: "分页查询模板列表，支持关键字搜索和订阅过滤"
+    )
+    @handler templatePageList
+    get /template (TemplateQueryVo) returns (TemplatePageResult)
+
+    @doc(
+        summary: "查询模板详情"
+        description: "根据别名查询模板详细信息"
+    )
+    @handler templateDetailByAlias
+    get /template/:alias returns (ResultVO)
+
+    @doc(
+        summary: "新增模板"
+        description: "创建新模板"
+    )
+    @handler createTemplate
+    post /template (CreateTemplateVo) returns (ResultVO)
+
+    @doc(
+        summary: "修改模板"
+        description: "根据别名修改模板信息"
+    )
+    @handler updateTemplate
+    put /template/:alias (UpdateTemplateDto) returns (ResultVO)
+
+    @doc(
+        summary: "删除模板"
+        description: "根据别名删除模板"
+    )
+    @handler deleteTemplate
+    delete /template/:alias returns (ResultVO)
+
+    @doc(
+        summary: "标签列表"
+        description: "列出所有支持的标签，支持模糊搜索"
+    )
+    @handler allLabels
+    get /label (LabelQueryDto) returns (LabelPageResult)
+
+    @doc(
+        summary: "标签详情"
+        description: "根据ID查询标签详细信息"
+    )
+    @handler labelDetail
+    get /label/:id returns (ResultVO)
+
+    @doc(
+        summary: "创建标签"
+        description: "创建新标签"
+    )
+    @handler createLabel
+    post /label (CreateLabelDto) returns (ResultVO)
+
+    @doc(
+        summary: "修改标签"
+        description: "根据ID修改标签信息"
+    )
+    @handler updateLabel
+    put /label/:id (UpdateLabelDto) returns (ResultVO)
+
+    @doc(
+        summary: "删除标签"
+        description: "根据ID删除标签"
+    )
+    @handler deleteLabel
+    delete /label/:id returns (ResultVO)
+
+    @doc(
+        summary: "批量文件打标签"
+        description: "为文件批量打标签"
+    )
+    @handler makeLabel
+    post /batch/makeLabel (MakeLabelDtoArray) returns (ResultVO)
+
+    @doc(
+        summary: "文件取消标签"
+        description: "为文件取消指定标签"
+    )
+    @handler cancelLabel
+    put /cancelLabel/:alias (StringArrayRequest) returns (ResultVO)
+
+}
+
+type (
+    GetByPathReq {
+        path string `form:"path"`
+    }
+
+    // StringArrayRequest 字符串数组请求
+    StringArrayRequest {
+        // Items 字符串数组
+        Items []string `json:"items"`
+    }
+
+    // UpdateFileDTOArray 更新文件数据请求数组
+    UpdateFileDTOArray {
+        // Items 更新文件数据请求列表
+        Items []UpdateFileDTO `json:"items"`
+    }
+
+    // MakeLabelDtoArray 批量打标签请求数组
+    MakeLabelDtoArray {
+        // Items 批量打标签请求列表
+        Items []MakeLabelDto `json:"items"`
+    }
+
+    // CreateFolderDto 创建文件夹请求
+    CreateOpenApiFolderDto {
+        // Name *文件名称，和文件夹显示名一致。支持修改。
+        Name string `json:"name" validate:"required,max=63"`
+
+        // Alias 文件别名。最大长度63字符，允许字符包括英文、数字、下划线。为空则系统自动生成
+        Alias string `json:"alias,optional" validate:"max=63"`
+
+        // DisplayName *文件显示名。支持修改和重名。最大长度128字符
+        DisplayName string `json:"displayName,optional" validate:"max=128"`
+
+        // ParentAlias 所属父文件夹别名
+        ParentAlias string `json:"parentAlias,optional"`
+
+        // Description 描述
+        Description string `json:"description,optional" validate:"max=255"`
+
+        // Definition 字段定义
+        Definition []FieldDefine `json:"definition,optional"`
+
+        // ExtendProperties 扩展属性 最大支持3个
+        ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+
+        // TemplateAlias 关联的模板别名
+        TemplateAlias string `json:"templateAlias,optional"`
+    }
+
+    // CreateOpenApiFileDto 创建文件请求
+    CreateOpenApiFileDto {
+        // Name *文件名称，和文件夹显示名一致。支持修改。
+        Name string `json:"name" validate:"required,max=63"`
+
+        // Alias 文件别名。最大长度63字符，允许字符包括英文、数字、下划线。为空则系统自动生成
+        Alias string `json:"alias,optional" validate:"max=63"`
+
+        // DisplayName *文件显示名。支持修改和重名。最大长度128字符
+        DisplayName string `json:"displayName,optional" validate:"max=128"`
+
+        // ParentAlias 所属父文件夹别名
+        ParentAlias string `json:"parentAlias,optional"`
+
+        // DataType 1-时序，2-关系，3-实时计算，4-历史计算，6-聚合，7-时序引用。为1/3时supOS系统默认创建"value"，"timeStamp"，"status"三个键
+        DataType int16 `json:"dataType,optional" validate:"min=1,max=7"`
+
+        // Description 描述
+        Description string `json:"description,optional" validate:"max=255"`
+
+        // Definition 字段定义
+        Definition []FieldDefine `json:"definition,optional"`
+
+        // Persistence 是否持久化 默认false
+        Persistence bool `json:"persistence,optional,default=false"`
+
+        // DashBoard 是否生成仪表盘 默认false
+        DashBoard bool `json:"dashBoard,optional,default=false"`
+
+        // AddFlow 是否模拟数据 默认false
+        AddFlow bool `json:"addFlow,optional,default=false"`
+
+        // Refers 引用对象 当dataType为计算、聚合、引用时必填
+        Refers []InstanceField `json:"refers,optional"`
+
+        // Expression 当dataType=3时可指定表达式，a1表示refers中第一个，a2表示第二个，以此类推
+        Expression string `json:"expression,optional" validate:"max=255"`
+
+        // Frequency 聚合计算频率：当聚合类型时(dataType=6)的计算时间间隔，单位支持：秒:s 分钟:m 小时：h
+        Frequency string `json:"frequency,optional"`
+
+        // ExtendProperties 扩展属性 最大支持3个
+        ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+
+        // TemplateAlias 关联的模板别名
+        TemplateAlias string `json:"templateAlias,optional"`
+
+        // LabelNames 标签名称数组，支持创建文件时打标签
+        LabelNames []string `json:"labelNames,optional"`
+
+        // ParentDataType 父级文件夹类型
+        ParentDataType int16 `json:"parentDataType,optional"`
+    }
+
+    // UpdateFolderDto 更新文件夹请求
+    UpdateOpenApiFolderDto {
+        // Name *文件名称，和文件夹显示名一致。支持修改。
+        Name string `json:"name,optional" validate:"max=63"`
+
+        // DisplayName *文件显示名。支持修改和重名。最大长度128字符
+        DisplayName string `json:"displayName,optional" validate:"max=128"`
+
+        // ParentAlias 所属父文件夹别名
+        ParentAlias string `json:"parentAlias,optional"`
+
+        // Description 描述
+        Description string `json:"description,optional" validate:"max=255"`
+
+        // Definition 字段定义
+        Definition []FieldDefine `json:"definition,optional"`
+        // ExtendProperties 扩展属性 最大支持3个
+        ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+
+        // TemplateAlias 关联的模板别名
+        TemplateAlias string `json:"templateAlias,optional"`
+    }
+
+    // UpdateFileDto 更新文件请求
+    UpdateOpenApiFileDto {
+        // Name *文件名称，和文件夹显示名一致。支持修改。
+        Name string `json:"name,optional" validate:"max=63"`
+
+        // DisplayName *文件显示名。支持修改和重名。最大长度128字符
+        DisplayName string `json:"displayName,optional" validate:"max=128"`
+
+        // ParentAlias 所属父文件夹别名
+        ParentAlias string `json:"parentAlias,optional"`
+
+        // Description 描述
+        Description string `json:"description,optional" validate:"max=255"`
+
+        // Definition 字段定义
+        Definition []FieldDefine `json:"definition,optional"`
+
+        // Persistence 是否持久化 默认false
+        Persistence bool `json:"persistence,optional,default=false"`
+
+        // DashBoard 是否生成仪表盘 默认false
+        DashBoard bool `json:"dashBoard,optional,default=false"`
+
+        // AddFlow 是否模拟数据 默认false
+        AddFlow bool `json:"addFlow,optional,default=false"`
+
+        // Refers 引用对象 当dataType为计算、聚合、引用时必填
+        Refers []InstanceField `json:"refers,optional"`
+
+        // Expression 当dataType=3时可指定表达式，a1表示refers中第一个，a2表示第二个，以此类推
+        Expression string `json:"expression,optional" validate:"max=255"`
+
+        // Frequency 聚合计算频率：当聚合类型时(dataType=6)的计算时间间隔，单位支持：秒:s 分钟:m 小时：h
+        Frequency string `json:"frequency,optional"`
+
+        // ExtendProperties 扩展属性 最大支持3个
+        ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
+
+        // TemplateAlias 关联的模板别名
+        TemplateAlias string `json:"templateAlias,optional"`
+
+        // LabelNames 标签名称数组，支持创建文件时打标签
+        LabelNames []string `json:"labelNames,optional"`
+    }
+
+    // BatchUpdateFileResult 批量更新文件结果
+    BatchUpdateFileResult {
+        // Code 错误码，0--正常，其他失败
+        Code int `json:"code"`
+        // Msg 错误信息
+        Msg string `json:"msg"`
+        // Data 更新响应数据
+        Data UnsDataResponseVo `json:"data,optional"`
+    }
+
+    // TreePageResult 树结构分页结果
+    TreePageResult {
+        // PageNo 当前页数
+        PageNo int64 `json:"pageNo"`
+        // PageSize 每页记录数
+        PageSize int64 `json:"pageSize"`
+        // Total 总记录数
+        Total int64 `json:"total"`
+        // Code 错误码，0--正常，其他失败
+        Code int64 `json:"code"`
+        // Data 树节点数据
+        Data []*TopicTreeResult `json:"data,optional"`
+    }
+
+    // Fill 补点策略
+    Fill {
+        // Strategy 补点策略，支持：none、previous、line
+        Strategy string `json:"strategy,optional"`
+    }
+
+    // GroupBy 聚合窗口配置
+    GroupBy {
+        // Time 窗口配置字符串，如 5s,1s
+        Time string `json:"time,optional"`
+    }
+
+    // FieldsAndData 字段和数据
+    FieldsAndData {
+        // Table 表名 (uns文件的别名)
+        Table string `json:"table"`
+        // Column 字段名
+        Column string `json:"column"`
+        // Function select的函数，可能为null(查询原始值)
+        Function SelectFunction `json:"function,optional"`
+        // HasNext 是否有下一页
+        HasNext bool `json:"hasNext"`
+        // Fields 字段列表
+        Fields []string `json:"fields"`
+        // Datas 数据列表
+        Datas [][]interface{} `json:"datas"`
+    }
+
+    // SelectFunction 选择函数
+    SelectFunction {
+        // Name 函数名
+        Name string `json:"name"`
+        // Args 参数
+        Args []interface{} `json:"args,optional"`
+    }
+
+    // HistoryValueResult 历史值查询结果
+    HistoryValueResult {
+        // Code 错误码，0--正常，其他失败
+        Code int `json:"code"`
+        // Msg 错误信息
+        Msg string `json:"msg"`
+        // Data 历史值查询数据
+        Data UnsHistoryQueryResult `json:"data,optional"`
+    }
+
+    // TemplatePageResult 模板分页结果
+    TemplatePageResult {
+        // PageNo 当前页数
+        PageNo int64 `json:"pageNo"`
+        // PageSize 每页记录数
+        PageSize int64 `json:"pageSize"`
+        // Total 总记录数
+        Total int64 `json:"total"`
+        // Code 错误码，0--正常，其他失败
+        Code int64 `json:"code"`
+        // Data 模板列表
+        Data []TemplateSearchResult `json:"data,optional"`
+    }
+
+    // CreateTemplateVo 创建模板请求
+    CreateTemplateVo {
+        // Alias 别名，唯一，最长63，可用字符：a-zA-Z0-9_
+        Alias string `json:"alias,optional" validate:"max=63"`
+        // Name 模板名称
+        Name string `json:"name" validate:"required,max=63"`
+        // Fields 字段定义
+        Fields []FieldDefine `json:"fields" validate:"required"`
+        // Description 模板描述
+        Description string `json:"description,optional" validate:"max=255"`
+    }
+
+    // UpdateTemplateDto 更新模板请求
+    UpdateTemplateDto {
+        // Name 模板名称
+        Name string `json:"name,optional" validate:"max=63"`
+        // Fields 字段定义
+        Fields []FieldDefine `json:"fields,optional"`
+        // Description 模板描述
+        Description string `json:"description,optional" validate:"max=255"`
+    }
+
+    // OpenTemplateVo 模板详情
+    OpenTemplateVo {
+        // Id 模板ID
+        Id int64 `json:"id"`
+        // Name 模板名称
+        Name string `json:"name"`
+        // Alias 别名
+        Alias string `json:"alias"`
+        // Definition 字段定义
+        Definition []FieldDefine `json:"definition,optional"`
+        // CreateTime 创建时间--单位：毫秒
+        CreateTime int64 `json:"createTime,optional"`
+        // Description 模板描述
+        Description string `json:"description,optional"`
+    }
+
+    // LabelQueryDto 标签查询请求
+    LabelQueryDto {
+        // PageNo 当前页数，默认为1
+        PageNo int `form:"pageNo,optional,default=1"`
+        // PageSize 每页记录数，默认为20
+        PageSize int `form:"pageSize,optional,default=20"`
+        // Key 标签名称查询，支持模糊匹配
+        Key string `form:"key,optional"`
+    }
+
+    // LabelOpenVo 标签详情
+    LabelOpenVo {
+        // Id 标签ID
+        Id string `json:"id"`
+        // LabelName 标签名称
+        LabelName string `json:"labelName"`
+        // CreateTime 创建时间--单位：毫秒
+        CreateTime int64 `json:"createTime,optional"`
+    }
+
+    // LabelPageResult 标签分页结果
+    LabelPageResult {
+        // PageNo 当前页数
+        PageNo int64 `json:"pageNo"`
+        // PageSize 每页记录数
+        PageSize int64 `json:"pageSize"`
+        // Total 总记录数
+        Total int64 `json:"total"`
+        // Code 错误码，0--正常，其他失败
+        Code int64 `json:"code"`
+        // Data 标签列表
+        Data []LabelOpenVo `json:"data,optional"`
+    }
+
+    // CreateLabelDto 创建标签请求
+    CreateLabelDto {
+        // LabelName 标签名称
+        LabelName string `json:"labelName" validate:"required,max=63"`
+    }
+
+    // UpdateLabelDto 更新标签请求
+    UpdateLabelDto {
+        // LabelName 标签名称
+        LabelName string `json:"labelName" validate:"required,max=63"`
+        // SubscribeEnable 是否订阅
+        SubscribeEnable bool `json:"subscribeEnable,optional"`
+        // SubscribeFrequency 订阅频率
+        SubscribeFrequency string `json:"subscribeFrequency,optional"`
+    }
+
+    // MakeLabelDto 批量打标签请求
+    MakeLabelDto {
+        // FileAlias 文件别名
+        FileAlias string `json:"fileAlias"`
+        // LabelNames 标签名称数组，如标签名称不存在，系统会自动创建
+        LabelNames []string `json:"labelNames"`
+    }
+)

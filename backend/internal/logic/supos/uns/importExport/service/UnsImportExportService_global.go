@@ -5,6 +5,7 @@ import (
 	"backend/internal/common"
 	"backend/internal/common/I18nUtils"
 	"backend/internal/common/utils/datetimeutils"
+	"backend/internal/common/utils/httpUtils"
 	"backend/internal/types"
 	"backend/share/base"
 	"backend/share/spring"
@@ -142,7 +143,7 @@ func (l *UnsImportExportService) ImportGlobal(ctx context.Context, zipFileName s
 				}
 				tsJson, _ := json.Marshal(status)
 				_, Er := respWriter.Write(append(tsJson, '\n', '\n'))
-				respWriter.(http.Flusher).Flush()
+				httpUtils.Flush(respWriter)
 				if Er != nil {
 					log.Error("导入进度发送失败:", Er, fileName)
 				}

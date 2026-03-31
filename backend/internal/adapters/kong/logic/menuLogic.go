@@ -2,8 +2,9 @@ package logic
 
 import (
 	"backend/internal/adapters/kong/dto"
-	"backend/internal/common/constants"
 	"backend/internal/common/errors"
+	"backend/internal/svc"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -18,36 +19,38 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-var iconRootPath = filepath.Join(constants.RootPath, "system", "resource", "supos")
+var iconRootPath = "/app/go-edge/system/resource/supos/"
 
 // MenuLogic 封装了菜单和路由相关的核心业务逻辑
 type MenuLogic struct {
 	kongLogic *KongLogic
+	svcCtx    *svc.ServiceContext
 }
 
 // NewMenuLogic 创建 MenuLogic 实例
-func NewMenuLogic(host string, port int) *MenuLogic {
+func NewMenuLogic(svcCtx *svc.ServiceContext) *MenuLogic {
 	return &MenuLogic{
-		kongLogic: GetKongLogic(host, port),
+		svcCtx:    svcCtx,
+		kongLogic: GetKongLogic(svcCtx.Config.Kong.Host, svcCtx.Config.Kong.Port),
 	}
 }
 
 // CreateRouteWithNoService 创建路由（不带服务）
-func (l *MenuLogic) CreateRouteWithNoService(menuDto *dto.MenuDto, needApiKey, updateService bool) error {
+func (l *MenuLogic) CreateRouteWithNoService(ctx context.Context, menuDto *dto.MenuDto, needApiKey, updateService bool) error {
 	// 1. 获取或创建服务（不提供 protocol, host, port 信息）
-	serviceID, _, err := l.fetchOrCreateService(menuDto.ServiceName, updateService, "", "", 0)
+	serviceID, _, err := l.fetchOrCreateService(ctx, menuDto.ServiceName, updateService, "", "", 0)
 	if err != nil {
 		return err
 	}
 	// 2. 创建或更新路由
-	return l.createOrUpdateRoute(serviceID, menuDto.Name, menuDto.BaseURL, menuDto.Tags, needApiKey)
+	return l.createOrUpdateRoute(ctx, serviceID, menuDto.Name, menuDto.BaseURL, menuDto.Tags, needApiKey)
 }
 
 // createOrUpdateRoute 是创建或更新路由的通用逻辑
-func (l *MenuLogic) createOrUpdateRoute(serviceID, routeName, path string, tags []string, needApiKey bool) error {
+func (l *MenuLogic) createOrUpdateRoute(ctx context.Context, serviceID, routeName, path string, tags []string, needApiKey bool) error {
 	existRoute, err := l.kongLogic.FetchRoute(routeName)
 	if err != nil {
-		return errors.NewBuzError(500, "menu.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.save.failed")
 	}
 
 	routeReq := &KongRouteRequest{
@@ -68,17 +71,17 @@ func (l *MenuLogic) createOrUpdateRoute(serviceID, routeName, path string, tags 
 
 	if err != nil {
 		logx.Errorf("failed to save route: %v", err)
-		return errors.NewBuzError(500, "menu.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.save.failed")
 	}
 	return nil
 }
 
 // CreateRoute 创建路由（带服务），对应 public void createRoute(...)
-func (l *MenuLogic) CreateRoute(menuDto *dto.MenuDto, needApiKey, updateService bool) error {
+func (l *MenuLogic) CreateRoute(ctx context.Context, menuDto *dto.MenuDto, needApiKey, updateService bool) error {
 	// 1. 解析和校验 BaseUrl
 	parsedURL, err := url.Parse(menuDto.BaseURL)
 	if err != nil {
-		return errors.NewBuzError(500, "menu.baseurl.invalid")
+		return errors.NewBuzError(ctx, 500, "menu.baseurl.invalid")
 	}
 	host := parsedURL.Hostname()
 	protocol := parsedURL.Scheme
@@ -103,26 +106,26 @@ func (l *MenuLogic) CreateRoute(menuDto *dto.MenuDto, needApiKey, updateService 
 	}
 	// 校验 host
 	if _, err := net.LookupHost(host); err != nil {
-		return errors.NewBuzError(500, "menu creation error: UnknownHost")
+		return errors.NewBuzError(ctx, 500, "menu creation error: UnknownHost")
 	}
 
 	// 2. 获取或创建服务
 	portInt := cast.ToInt(port)
-	serviceID, _, err := l.fetchOrCreateService(menuDto.ServiceName, updateService, protocol, host, portInt)
+	serviceID, _, err := l.fetchOrCreateService(ctx, menuDto.ServiceName, updateService, protocol, host, portInt)
 	if err != nil {
 		return err
 	}
 
 	// 3. 创建或更新路由
-	return l.createOrUpdateRoute(serviceID, menuDto.Name, path, menuDto.Tags, needApiKey)
+	return l.createOrUpdateRoute(ctx, serviceID, menuDto.Name, path, menuDto.Tags, needApiKey)
 }
 
 // CreateMenu 创建菜单
-func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
+func (l *MenuLogic) CreateMenu(ctx context.Context, menuDto *dto.MenuDto, updateService bool) error {
 	// 1. 解析和校验 BaseUrl
 	parsedURL, err := url.Parse(menuDto.BaseURL)
 	if err != nil {
-		return errors.NewBuzError(500, "menu.baseurl.invalid")
+		return errors.NewBuzError(ctx, 500, "menu.baseurl.invalid")
 	}
 	host := parsedURL.Hostname()
 	protocol := parsedURL.Scheme
@@ -143,12 +146,12 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 	// 校验 host 是否可达
 	if _, err := net.LookupHost(host); err != nil {
 		logx.Errorf("menu creation error, unknown host: %v", err)
-		return errors.NewBuzError(500, "menu creation error: UnknownHost")
+		return errors.NewBuzError(ctx, 500, "menu creation error: UnknownHost")
 	}
 
 	// 2. 获取或创建服务
 	portInt := cast.ToInt(portStr)
-	serviceID, serviceName, err := l.fetchOrCreateService(menuDto.ServiceName, updateService, protocol, host, portInt)
+	serviceID, serviceName, err := l.fetchOrCreateService(ctx, menuDto.ServiceName, updateService, protocol, host, portInt)
 	if err != nil {
 		return err
 	}
@@ -156,10 +159,9 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 	// 3. 处理图标文件
 	var iconName string
 	if menuDto.Icon != nil {
-		ext := filepath.Ext(menuDto.Icon.Filename)
-		iconName = menuDto.Name + ext
+		iconName = menuDto.Icon.Filename
 
-		if err := l.saveIconFile(menuDto.Icon, iconName); err != nil {
+		if err := l.saveIconFile(ctx, menuDto.Icon, iconName); err != nil {
 			return err
 		}
 	}
@@ -170,7 +172,7 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 	// 5. 检查显示名是否已存在
 	existShowNames, err := l.kongLogic.SearchRoute([]string{fmt.Sprintf("showName:%s", menuDto.ShowName), "menu"})
 	if err != nil {
-		return errors.NewBuzError(500, "menu.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.save.failed")
 	}
 	for _, existShowName := range existShowNames {
 		if existShowName.Name == menuDto.Name {
@@ -187,7 +189,7 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 	// 7. 创建或更新路由
 	existRoute, err := l.kongLogic.FetchRoute(menuDto.Name)
 	if err != nil {
-		return errors.NewBuzError(500, "menu.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.save.failed")
 	}
 
 	routeReq := &KongRouteRequest{
@@ -212,7 +214,7 @@ func (l *MenuLogic) CreateMenu(menuDto *dto.MenuDto, updateService bool) error {
 
 	if err != nil {
 		logx.Errorf("failed to save route: %v", err)
-		return errors.NewBuzError(500, "menu.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.save.failed")
 	}
 
 	return nil
@@ -232,29 +234,29 @@ func (l *MenuLogic) DeleteMenu(name string) error {
 
 // private helper functions
 
-func (l *MenuLogic) saveIconFile(fileHeader *multipart.FileHeader, iconName string) error {
+func (l *MenuLogic) saveIconFile(ctx context.Context, fileHeader *multipart.FileHeader, iconName string) error {
 	src, err := fileHeader.Open()
 	if err != nil {
-		return errors.NewBuzError(500, "menu.icon.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.icon.save.failed")
 	}
 	defer src.Close()
 
 	// 确保目录存在
 	if err := os.MkdirAll(iconRootPath, 0755); err != nil {
 		logx.Errorf("failed to create icon directory: %v", err)
-		return errors.NewBuzError(500, "menu.icon.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.icon.save.failed")
 	}
 
 	dst, err := os.Create(filepath.Join(iconRootPath, iconName))
 	if err != nil {
 		logx.Errorf("failed to create icon file: %v", err)
-		return errors.NewBuzError(500, "menu.icon.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.icon.save.failed")
 	}
 	defer dst.Close()
 
 	if _, err = io.Copy(dst, src); err != nil {
 		logx.Errorf("failed to write icon file: %v", err)
-		return errors.NewBuzError(500, "menu.icon.save.failed")
+		return errors.NewBuzError(ctx, 500, "menu.icon.save.failed")
 	}
 	return nil
 }
@@ -281,13 +283,13 @@ func (l *MenuLogic) buildMenuTags(menuDto *dto.MenuDto, iconName string) []strin
 }
 
 // fetchOrCreateService 根据 baseURL 获取或创建服务
-func (l *MenuLogic) fetchOrCreateService(serviceName string, updateService bool, protocol, host string, port int) (string, string, error) {
+func (l *MenuLogic) fetchOrCreateService(ctx context.Context, serviceName string, updateService bool, protocol, host string, port int) (string, string, error) {
 	var serviceID string
 
 	if serviceName != "" {
 		service, err := l.kongLogic.QueryServiceJsonById(serviceName)
 		if err != nil {
-			return "", "", errors.NewBuzError(500, "menu.save.failed")
+			return "", "", errors.NewBuzError(ctx, 500, "menu.save.failed")
 		}
 
 		if service == nil {
@@ -299,7 +301,7 @@ func (l *MenuLogic) fetchOrCreateService(serviceName string, updateService bool,
 				Enabled:  true,
 			})
 			if err != nil {
-				return "", "", errors.NewBuzError(500, "menu.save.failed")
+				return "", "", errors.NewBuzError(ctx, 500, "menu.save.failed")
 			}
 			serviceID = newService.ID
 		} else {
@@ -321,7 +323,7 @@ func (l *MenuLogic) fetchOrCreateService(serviceName string, updateService bool,
 		serviceName = fmt.Sprintf("%s-%s-%d", protocol, host, port)
 		service, err := l.kongLogic.QueryServiceJsonById(serviceName)
 		if err != nil {
-			return "", "", errors.NewBuzError(500, "menu.save.failed")
+			return "", "", errors.NewBuzError(ctx, 500, "menu.save.failed")
 		}
 
 		if service == nil {
@@ -333,7 +335,7 @@ func (l *MenuLogic) fetchOrCreateService(serviceName string, updateService bool,
 				Enabled:  true,
 			})
 			if err != nil {
-				return "", "", errors.NewBuzError(500, "menu.save.failed")
+				return "", "", errors.NewBuzError(ctx, 500, "menu.save.failed")
 			}
 			serviceID = newService.ID
 		} else {

@@ -43,9 +43,9 @@ func TestPreprocess_EmptyData(t *testing.T) {
 	}
 }
 func procFields(fs []*types.FieldDefine) []*types.FieldDefine {
-	name := constants.SystemSeqTag // Ensure the name is correct
+	name := constants.SysFieldID // Ensure the name is correct
 	tableValueField := &types.FieldDefine{
-		Name:        constants.SystemSeqTag,
+		Name:        constants.SysFieldID,
 		Type:        types.FieldTypeLong,
 		Unique:      base.OptionalTrue,
 		TbValueName: &name,
@@ -107,7 +107,7 @@ func TestPreprocess_SingleUnsNoConflict(t *testing.T) {
 	// 验证列名
 	expectedColumnsStart := []string{
 		constants.SysFieldCreateTime,
-		constants.SystemSeqTag,
+		constants.SysFieldID,
 		constants.QosField,
 	}
 
@@ -276,7 +276,7 @@ func TestPreprocess_MultipleUns(t *testing.T) {
 	// 验证列名包含两个Uns的所有字段
 	expectedColumns := []string{
 		constants.SysFieldCreateTime,
-		constants.SystemSeqTag,
+		constants.SysFieldID,
 		constants.QosField,
 		"double_1",
 	}
@@ -386,7 +386,7 @@ func TestPreprocess_FieldIndexMapping(t *testing.T) {
 	// 验证列名使用了索引名
 	expectedColumns := []string{
 		constants.SysFieldCreateTime,
-		constants.SystemSeqTag,
+		constants.SysFieldID,
 		constants.QosField,
 		"field2", // 没有index，使用原名
 		"idx1",   // 使用索引名
@@ -554,7 +554,7 @@ func TestPreprocess_Integration(t *testing.T) {
 	// 验证列名排序
 	expectedColumns := []string{
 		constants.SysFieldCreateTime,
-		constants.SystemSeqTag,
+		constants.SysFieldID,
 		constants.QosField,
 		"battery",
 		"pressure",

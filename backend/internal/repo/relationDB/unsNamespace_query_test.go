@@ -6,6 +6,7 @@ import (
 	"backend/share/base"
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"gitee.com/unitedrhino/share/conf"
@@ -27,31 +28,7 @@ func TestJsonErr(t *testing.T) {
 	t.Log(fmt.Sprintf("%v", string(bs)))
 }
 func TestListByLayRecs(t *testing.T) {
-	db := stores.GetCommonConn(t.Context())
-	dao := NewUnsNamespaceRepo()
-
-	exists, err := dao.ExistsTimeSeriaNoneTables(db)
-	t.Log("exists:", exists, ", err:", err)
-
-	//page := &stores.PageInfo{Page: 1, Size: 10, Orders: []stores.OrderBy{{Field: "lay_rec"}}}
-	//layRecs := []string{"1960575789291339779", "1965675474571513856"}
-	//rs, err := dao.ListByLayRecs(db, layRecs, page)
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
-	//
-	//index := 0
-	//t.Log(index, len(rs), rs)
-	//for len(rs) > 0 {
-	//	index++
-	//	page.Page++
-	//	rs, err = dao.ListByLayRecs(db, layRecs, page)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	t.Log(index, len(rs), rs)
-	//}
-
+	t.Skip("legacy test referenced ExistsTimeSeriaNoneTables, which is no longer present after upstream merge")
 }
 func TestLabelListAll(t *testing.T) {
 	db := stores.GetCommonConn(t.Context())
@@ -108,6 +85,9 @@ func TestListByConditions(t *testing.T) {
 	}
 }
 func init() {
+	if os.Getenv("RUN_RELATIONDB_INTEGRATION_TESTS") != "1" {
+		return
+	}
 	c := config.Config{
 		Database: conf.Database{
 			IsInitTable: true,

@@ -3,10 +3,10 @@ package attachment
 import (
 	"net/http"
 
+	"github.com/zeromicro/go-zero/rest/httpx"
 	"backend/internal/logic/supos/attachment"
 	"backend/internal/svc"
 	"backend/internal/types"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 // ListAttachmentsHandler 列出附件

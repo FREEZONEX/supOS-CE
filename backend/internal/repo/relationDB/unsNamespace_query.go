@@ -259,14 +259,13 @@ func (p UnsNamespaceRepo) CountChildrenTree(db *gorm.DB, folderIds []int64) (int
 	}
 	return count.Int64, nil
 }
-func (p UnsNamespaceRepo) ExistsTimeSeriaNoneTables(db *gorm.DB) (bool, error) {
-	var idLong sql.NullInt64
-	err := p.model(db).Select("id").
-		Where(" path_type =2 and data_type =1 and (table_name is null or table_name='') and status=1 limit 1").Scan(&idLong).Error
+func (p UnsNamespaceRepo) FirstMetricUns(db *gorm.DB) (*UnsNamespace, error) {
+	var po UnsNamespace
+	err := p.model(db).Where("path_type =2 and data_type =1 and status=1").First(&po).Error
 	if err != nil {
-		return false, stores.ErrFmt(err)
+		return nil, stores.ErrFmt(err)
 	}
-	return idLong.Int64 > 0, nil
+	return &po, nil
 }
 func (p UnsNamespaceRepo) ListAll(db *gorm.DB, pathTypes []int16, page, pageSize int) (results []*UnsNamespace, err error) {
 	if page < 1 {

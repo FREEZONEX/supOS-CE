@@ -30,8 +30,8 @@ func NewSaveMenuLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SaveMenu
 }
 
 func (l *SaveMenuLogic) SaveMenu(menuDto *dto.MenuDto) (resp *types.ResultVO, err error) {
-	menuLogic := logic.NewMenuLogic(l.svcCtx.Config.Kong.Host, l.svcCtx.Config.Kong.Port)
-	err = menuLogic.CreateRoute(menuDto, false, false)
+	menuLogic := logic.NewMenuLogic(l.svcCtx)
+	err = menuLogic.CreateRoute(l.ctx, menuDto, false, false)
 	if err != nil {
 		return nil, err
 	}

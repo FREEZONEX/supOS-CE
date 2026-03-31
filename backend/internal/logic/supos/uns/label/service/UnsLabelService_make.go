@@ -3,15 +3,18 @@ package service
 import (
 	"backend/internal/common"
 	"backend/internal/common/I18nUtils"
+	"backend/internal/common/event"
+	"backend/internal/logic/supos/uns/uns/UnsConverter"
 	"backend/internal/logic/supos/uns/uns/bo"
 	dao "backend/internal/repo/relationDB"
 	"backend/internal/types"
 	"backend/share/base"
+	"backend/share/spring"
 	"context"
 	"time"
 )
 
-func (l *UnsLabelService) MakeUnsLabels(ctx context.Context, unsLabels []bo.UnsLabels, createTime time.Time) (rs []*dao.UnsLabel, er error) {
+func MakeUnsLabels[UL bo.UnsLabels](l *UnsLabelService, ctx context.Context, unsLabels []UL, createTime time.Time) (rs []*dao.UnsLabel, er error) {
 	if len(unsLabels) == 0 {
 		return nil, nil
 	}
@@ -184,4 +187,58 @@ func (l *UnsLabelService) MakeSingleLabel(ctx context.Context, req *types.MakeSi
 	}
 	resp.Code, resp.Msg = 200, "OK"
 	return
+}
+
+type StringArrayResult struct {
+	types.BaseResult
+	Data []string `json:"data,optional,omitempty"`
+}
+
+func (l *UnsLabelService) BatchMakeLabels(ctx context.Context, req []types.MakeLabelDto) (resp *StringArrayResult, err error) {
+	resp = &StringArrayResult{}
+	resp.Code, resp.Msg = 200, "OK"
+	poLabelsList := make([]*bo.UnsPoLabels, 0, len(req))
+	fileLabels := make(map[string][]string, len(req))
+	for _, item := range req {
+		fileLabels[item.FileAlias] = item.LabelNames
+	}
+	var unsMapper dao.UnsNamespaceRepo
+	db := dao.GetDb(ctx)
+	for _, aliasList := range base.Partition(base.MapKeys(fileLabels), 1000) {
+		unsList, _ := unsMapper.ListByAlias(db, aliasList)
+		if len(unsList) > 0 {
+			for _, po := range unsList {
+				poLabels := bo.NewUnsPoLabels(po, true, fileLabels[po.Alias])
+				delete(fileLabels, po.Alias)
+				poLabelsList = append(poLabelsList, poLabels)
+			}
+		}
+	}
+	updateTime := time.Now()
+	_, err = MakeUnsLabels(l, ctx, poLabelsList, updateTime)
+	if err != nil {
+		resp.Code = 500
+		resp.Msg = err.Error()
+		return resp, nil
+	}
+	if len(fileLabels) > 0 {
+		resp.Code, resp.Msg = 500, I18nUtils.GetMessageWithCtx(ctx, "uns.label.mark.error")
+		resp.Data = base.MapKeys(fileLabels)
+	}
+	if len(poLabelsList) > 0 {
+		files := make([]*dao.UnsNamespace, 0, len(poLabelsList))
+		for _, unsPoLabels := range poLabelsList {
+			unsPoLabels.UnsPo.UpdateAt = updateTime
+			files = append(files, unsPoLabels.UnsPo)
+		}
+		err = unsMapper.MultiUpdate(db, files)
+		if err == nil {
+			err = spring.PublishEvent(&event.UpdateInstanceEvent{ApplicationEvent: event.ApplicationEvent{Context: ctx}, Topics: UnsConverter.Po2ApiDtos(files)})
+		}
+		if err != nil {
+			resp.Code = 500
+			resp.Msg = err.Error()
+		}
+	}
+	return resp, nil
 }

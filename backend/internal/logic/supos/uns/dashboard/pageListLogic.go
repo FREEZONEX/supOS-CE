@@ -46,7 +46,7 @@ func (l *PageListLogic) PageList(req *types.PageListRequest, userID string) (*dt
 	// 排序字段校验
 	if orderCode != "" {
 		if orderCode != "name" && orderCode != "createTime" {
-			return nil, errors.NewBuzError(400, "illegal sort param")
+			return nil, errors.NewBuzError(l.ctx, 400, "illegal sort param")
 		}
 		// 驼峰转下划线
 		orderCode = camelToSnake(orderCode)

@@ -3,6 +3,7 @@ package clients
 import (
 	berrors "backend/internal/common/errors"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -150,7 +151,6 @@ var (
 )
 
 func InitKeycloakClient(config KeycloakConfig) *KeycloakClient {
-	fmt.Println("KeycloakConfig", config)
 	config.RedirectURI = config.GetRedirectURI()
 	if config.ClientID == "" {
 		return &KeycloakClient{} //允许 mock
@@ -301,7 +301,7 @@ func (kc *KeycloakClient) Logout(refreshToken string) error {
 	return kc.doFormRequest(http.MethodPost, kc.getAPIURL()+"/logout", form, nil)
 }
 
-func (kc *KeycloakClient) CreateUser(user map[string]any) (string, error) {
+func (kc *KeycloakClient) CreateUser(ctx context.Context, user map[string]any) (string, error) {
 	apiURL := kc.getAdminAPIURL() + "/users"
 	resp, err := kc.doAdminJSONRequest(http.MethodPost, apiURL, user, nil)
 	if err != nil {
@@ -310,7 +310,7 @@ func (kc *KeycloakClient) CreateUser(user map[string]any) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusConflict {
-		return "", berrors.NewBuzError(berrors.UserAlreadyExists, "user already exists")
+		return "", berrors.NewBuzError(ctx, berrors.UserAlreadyExists, "user already exists")
 	}
 	if resp.StatusCode != http.StatusCreated {
 		return "", handleAPIError("create user", resp)
@@ -348,6 +348,19 @@ func (kc *KeycloakClient) FetchUserByEmail(email string) (*KeycloakUserInfoDto, 
 func (kc *KeycloakClient) DeleteUser(id string) error {
 	apiURL := fmt.Sprintf("%s/users/%s", kc.getAdminAPIURL(), id)
 	return kc.doAdminSimpleRequest(http.MethodDelete, apiURL, nil)
+}
+
+// SearchUsers 搜索用户列表
+func (kc *KeycloakClient) SearchUsers(params map[string]string) ([]KeycloakUserInfoDto, error) {
+	values := url.Values{}
+	for k, v := range params {
+		values.Set(k, v)
+	}
+	var users []KeycloakUserInfoDto
+	if err := kc.doAdminGetRequest(kc.getAdminAPIURL()+"/users", values, &users); err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 func (kc *KeycloakClient) ResetPassword(userID, password string) error {

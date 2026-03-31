@@ -9,14 +9,14 @@ import (
 )
 
 func Test_processWsMsg(t *testing.T) {
-	def := &types.CreateTopicDto{Alias: "ac", DataSrcID: 2, Fields: []*types.FieldDefine{
+	def := &types.UnsDefinition{CreateTopicDto: types.CreateTopicDto{Alias: "ac", DataSrcID: 2, Fields: []*types.FieldDefine{
 		{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime},
 		{Name: "json", Type: types.FieldTypeString},
-	}}
+	}}}
 	msg := serviceApi.WebsocketMessage{
 		Def: def,
-		Data: map[string]any{
-			constants.SysFieldCreateTime: time.Now(),
+		Data: map[string]string{
+			constants.SysFieldCreateTime: time.Now().Format(time.RFC3339Nano),
 			"json":                       `{"debug":1}`,
 		},
 	}

@@ -75,8 +75,8 @@ func buildSystemConfig(logger logx.Logger) (*sysconfig.SystemConfig, error) {
 	cfg.MQTTWebsocketTSLPort = intEnv("SYS_OS_MQTT_WEBSOCKET_TSL_PORT", cfg.MQTTWebsocketTSLPort)
 	cfg.MultipleTopic = boolEnv("SYS_OS_MULTIPLE_TOPIC", cfg.MultipleTopic)
 	cfg.UseAliasPathAsTopic = boolEnv("SYS_OS_USE_ALIAS_PATH_AS_TOPIC", constants.UseAliasAsTopic)
-	cfg.QualityName = firstNonEmpty(os.Getenv("SYS_OS_QUALITY_NAME"), firstNonEmpty(cfg.QualityName, constants.QosField))
-	cfg.TimestampName = firstNonEmpty(os.Getenv("SYS_OS_TIMESTAMP_NAME"), firstNonEmpty(cfg.TimestampName, constants.SysFieldCreateTime))
+	cfg.QualityName = constants.QosField
+	cfg.TimestampName = constants.SysFieldCreateTime
 	cfg.LazyTree = boolEnv("SYS_OS_LAZY_TREE", cfg.LazyTree)
 	cfg.LDAPEnable = boolEnv("SYS_OS_LDAP_ENABLE", cfg.LDAPEnable)
 	cfg.EnableAutoCategorization = boolEnv("SYS_OS_ENABLE_AUTO_CATEGORIZATION", cfg.EnableAutoCategorization)

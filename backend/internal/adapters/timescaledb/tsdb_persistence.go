@@ -77,7 +77,7 @@ func column2uns(cols []string, reference *types.UnsDefinition) *types.UnsDefinit
 	for _, col := range cols {
 		fd := &types.FieldDefine{
 			Name:   col,
-			Unique: base.V2p(col == constants.SysFieldCreateTime || col == constants.SystemSeqTag),
+			Unique: base.V2p(col == constants.SysFieldCreateTime || col == constants.SysFieldID),
 		}
 		if def, has := reference.GetFieldDefines().FieldsMap[col]; has {
 			fd.Type = def.Type
@@ -162,7 +162,7 @@ func fixTable(conn *pgxpool.Conn, uns *types.UnsDefinition) error {
 		for field, Type := range tableInfo.FieldTypes {
 			_, exists := curFieldTypes[field]
 			if !exists {
-				if Type == types.FieldTypeLong && field != constants.SystemSeqTag && !strings.Contains(field, "_") {
+				if Type == types.FieldTypeLong && field != constants.SysFieldID && !strings.Contains(field, "_") {
 					renameColSQL = "ALTER TABLE " + uns.TableName + ` RENAME COLUMN "` + field + `" TO "` + constants.QosField + `"`
 
 					delete(curFieldTypes, constants.QosField)
