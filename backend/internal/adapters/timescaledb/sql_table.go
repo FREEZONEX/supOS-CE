@@ -14,7 +14,7 @@ func (g *SQLGenerator) GenerateCreateTableSQL(
 
 	// 基础字段
 	columns := []string{
-		fmt.Sprintf(`"%s" int8 NOT NULL`, constants.SystemSeqTag),
+		fmt.Sprintf(`"%s" int8 NOT NULL`, constants.SysFieldID),
 		fmt.Sprintf(`"%s" timestamptz(3) NOT NULL DEFAULT now()`, constants.SysFieldCreateTime),
 		fmt.Sprintf(`"%s" int8 DEFAULT 0`, constants.QosField),
 	}
@@ -47,22 +47,22 @@ func (g *SQLGenerator) GenerateCreateTableSQL(
 			%s,
 			PRIMARY KEY ("%s", "%s")
 		);
-	`, columnsSQL, constants.SystemSeqTag, constants.SysFieldCreateTime)
+	`, columnsSQL, constants.SysFieldID, constants.SysFieldCreateTime)
 
 	return []string{sql,
-		`SELECT create_hypertable (
+		fmt.Sprintf(`SELECT create_hypertable (
     'uns_timeserial', 
     'timeStamp',
-    partitioning_column => 'tag',
+    partitioning_column => '%s',
     number_partitions => 50,  
     chunk_time_interval => INTERVAL '2 hour'
-    );`,
+    );`, constants.SysFieldID),
 
-		`ALTER TABLE uns_timeserial SET (
+		fmt.Sprintf(`ALTER TABLE uns_timeserial SET (
     timescaledb.compress,                    
-    timescaledb.compress_segmentby = 'tag', 
-    timescaledb.compress_orderby = '"timeStamp" DESC'
-);`,
+    timescaledb.compress_segmentby = '%s', 
+    timescaledb.compress_orderby = '"%s" DESC'
+);`, constants.SysFieldID, constants.SysFieldCreateTime),
 
 		`SELECT add_retention_policy('uns_timeserial', INTERVAL '2 year'); `,
 

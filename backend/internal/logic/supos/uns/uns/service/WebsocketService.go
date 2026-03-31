@@ -476,7 +476,7 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 			hasDm := len(dm) > 0
 			for _, f := range fs {
 				name := f.Name
-				if (isRelation && name == constants.SysFieldCreateTime) || name == constants.SystemSeqTag || name == constants.SysFieldID {
+				if (isRelation && name == constants.SysFieldCreateTime) || name == "tag" || name == constants.SysFieldID {
 					continue
 				}
 				var v string

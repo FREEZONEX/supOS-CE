@@ -11,9 +11,9 @@ fi
 
 if [[ "$platform" == MINGW64* ]]; then
     # On Windows, correct the path if it's empty or set to the Linux default.
-    if [ -z "$VOLUMES_PATH" ] || [ "$VOLUMES_PATH" == "/volumes/tier0/data" ]; then
+    if [ -z "$VOLUMES_PATH" ] || [ "$VOLUMES_PATH" == "/volumes/supos/data" ]; then
         info "Path is unset or is Linux default. Setting the correct path for Windows."
-        default_path="$HOME/volumes/tier0/data"
+        default_path="$HOME/volumes/supos/data"
         info "Default storage path for Windows is set to: $default_path"
         sed -i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$default_path|" "$ENV_FILE"
         source "$ENV_FILE" # Reload .env for the current session
@@ -24,7 +24,7 @@ else
     # On Linux/macOS, only set the default path if it's empty.
     if [ -z "$VOLUMES_PATH" ]; then
         info "VOLUMES_PATH is unset. Setting the default path for Linux."
-        default_path="/volumes/tier0/data"
+        default_path="/volumes/supos/data"
         info "Default storage path for Linux is set to: $default_path"
         sed -i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$default_path|" "$ENV_FILE"
         source "$ENV_FILE" # Reload .env for the current session

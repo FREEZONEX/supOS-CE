@@ -302,8 +302,16 @@ func (u *UnsAddService) OnEventContextRefreshedEvent3(ev *event.ContextRefreshed
 		})
 	// 迁移时序表
 	db := dao.GetDb(context.Background())
-	exists, _ := u.unsMapper.ExistsTimeSeriaNoneTables(db)
-	if exists {
+	metricUns, _ := u.unsMapper.FirstMetricUns(db)
+	getQosFiled := func(po *dao.UnsNamespace) string {
+		for _, f := range po.Fields {
+			if f.Type == types.FieldTypeLong && f.IsSystemField() && !base.P2v(f.Unique) {
+				return f.Name
+			}
+		}
+		return ""
+	}
+	if metricUns != nil && base.P2v(metricUns.TableName_) == "" {
 		u.unsMapper.DoExportBatch(1000, func(writer io.Writer) {
 			err := u.unsMapper.ExportTimeSeriaNoneTables(context.Background(), writer)
 			if err != nil {
@@ -338,7 +346,17 @@ func (u *UnsAddService) OnEventContextRefreshedEvent3(ev *event.ContextRefreshed
 			err := u.unsMapper.MultiUpdate(db, namespaces)
 			u.log.Info("完成迁移: ", len(namespaces), err)
 		})
+	} else if metricUns == nil || (metricUns.GetTimestampField() != constants.SysFieldCreateTime || getQosFiled(metricUns) != constants.QosField) {
+		u.log.Info("开始修复时序表ts字段")
+		persistentService := u.dsMap[types.SrcJdbcTypeTimeScaleDB]
+		if persistentService != nil {
+			err := persistentService.Save(nil)
+			if err != nil {
+				u.log.Error("UNS时序表ts字段修改失败:", err)
+			}
+		}
 	}
+
 }
 
 func (u *UnsAddService) saveBatchAndSendEvent(
@@ -360,7 +378,7 @@ func (u *UnsAddService) saveBatchAndSendEvent(
 			tx.Rollback()
 		}
 	}()
-	labelPos, err := u.unsLabelService.MakeUnsLabels(ctx, unsLabels, createTime)
+	labelPos, err := service.MakeUnsLabels(u.unsLabelService, ctx, unsLabels, createTime)
 	if err == nil {
 		filesToSave := make(map[types.SrcJdbcType][]types.UnsInfo, len(insertList)+len(updateList))
 		putFiles := func(po *dao.UnsNamespace) {

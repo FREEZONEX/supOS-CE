@@ -77,6 +77,7 @@ services:
       - ${VOLUMES_PATH}/edge/attachment/:/app/go-edge/attachment/
       - ${VOLUMES_PATH}/edge/apps/:/app/data/apps/
       - /etc/docker/certs:/certs
+
     ports:
       - "18998:8080"
     networks:
@@ -87,14 +88,32 @@ services:
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
+  marimo:
+    image: suposce/marimo:latest
+    container_name: marimo
+    environment:
+      - TSDB_URL=postgresql+psycopg2://postgres:postgres@tsdb:5432/postgres
+      - PG_URL=postgresql+psycopg2://postgres:postgres@postgresql:5432/postgres
+    volumes:
+      - ${VOLUMES_PATH}/marimo/data:/app
+    # command: marimo edit /app/main.py --host 0.0.0.0 --port 8080 --no-token
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 512M
+    networks:
+      - edge_network
   emqx:
     image: emqx/emqx:5.8
     container_name: emqx
     ports:
-      - "1883:1883" # MQTT端口
-      - "8883:8883" # MQTT加密端口
-      - "8083:8083" # WebSocket端口
-      - "8084:8084" # WebSocket加密端口
+      - "1883:1883"   # MQTT端口
+      - "8883:8883"   # MQTT加密端口
+      - "8083:8083"   # WebSocket端口
+      - "8084:8084"   # WebSocket加密端口
       - "18083:18083" # EMQX Dashboard端口
     environment:
       - EMQX_NAME=emqx
@@ -119,7 +138,7 @@ services:
     container_name: nodered
     user: root
     ports:
-      - "1880:1880" # Node-RED web UI端口
+      - "1880:1880"  # Node-RED web UI端口
     environment:
       - service_logo=nodered-original.svg
       - service_description=aboutus.nodeRedDescription
@@ -133,7 +152,7 @@ services:
       - NODE_HTTP_API_PREFIX=/nodered-api
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${VOLUMES_PATH}/node-red:/data # 使用当前目录的 data 目录
+      - ${VOLUMES_PATH}/node-red:/data  # 使用当前目录的 data 目录
     depends_on:
       - emqx
     restart: always
@@ -144,7 +163,7 @@ services:
     container_name: eventflow
     user: root
     ports:
-      - "1889:1889" # Node-RED web UI端口
+      - "1889:1889"  # Node-RED web UI端口
     environment:
       - service_logo=nodered-original.svg
       - service_description=aboutus.nodeRedDescription
@@ -158,7 +177,7 @@ services:
       - NODE_HTTP_API_PREFIX=/eventflow-api
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${VOLUMES_PATH}/eventflow:/data # 使用当前目录的 data 目录
+      - ${VOLUMES_PATH}/eventflow:/data  # 使用当前目录的 data 目录
     restart: always
     networks:
       - edge_network
@@ -169,7 +188,7 @@ services:
     container_name: grafana
     user: root
     ports:
-      - "3000:3000" # Grafana web UI端口
+      - "3000:3000"  # Grafana web UI端口
     volumes:
       - ${VOLUMES_PATH}/grafana/data:/var/lib/grafana
       # - ${VOLUMES_PATH}/grafana/data/plugins:/var/lib/grafana/plugins  # 使用当前目录的 data 目录
@@ -194,11 +213,11 @@ services:
       GF_DATABASE_HOST: postgresql:5432
       GF_DATABASE_NAME: grafana
       GF_DATABASE_USER: postgres
-      GF_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      GF_DATABASE_PASSWORD: postgres
     restart: always
     depends_on:
       postgresql:
-        condition: service_healthy # 依赖 PostgreSQL 的健康状态
+        condition: service_healthy  # 依赖 PostgreSQL 的健康状态
     networks:
       - edge_network
   portainer:
@@ -206,10 +225,9 @@ services:
     container_name: portainer
     environment:
       service_logo: portainer.svg
-    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC" --http-enabled --trusted-origins ${ENTRANCE_DOMAIN}
+    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC"
     ports:
       - "8000:8000"
-      - "9000:9000"
       - "9443:9443"
     restart: always
     volumes:
@@ -221,23 +239,23 @@ services:
     image: timescale/timescaledb:2.20.0-pg17
     container_name: postgresql
     environment:
-      TZ: UTC # 设置容器时区
+      TZ: UTC  # 设置容器时区
       service_logo: postgresql-original.svg
       service_description: aboutus.postgresqlDescription
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
       - ${VOLUMES_PATH}/postgresql/conf/postgresql.conf:/etc/postgresql/custom.conf
       - /etc/localtime:/etc/localtime:ro
       - ${VOLUMES_PATH}/postgresql/pgdata:/var/lib/postgresql/data # 持久化数据
-      - ${VOLUMES_PATH}/postgresql/init-scripts:/docker-entrypoint-initdb.d # 加载初始化脚本
+      - ${VOLUMES_PATH}/postgresql/init-scripts:/docker-entrypoint-initdb.d  # 加载初始化脚本
     command:
       - postgres
       - -c
       - config_file=/etc/postgresql/custom.conf
     healthcheck:
-      test: [ "CMD-SHELL", "psql -U postgres -d keycloak -c '\\dt public.initialization_complete' | grep -q 'initialization_complete'" ]
+      test: ["CMD-SHELL", "psql -U postgres -d keycloak -c '\\dt public.initialization_complete' | grep -q 'initialization_complete'"]
       interval: 15s
       timeout: 15s
       retries: 60
@@ -247,7 +265,7 @@ services:
     networks:
       - edge_network
   keycloak:
-    image: keycloak/keycloak:26.0 # 使用 Keycloak 的最新镜像
+    image: keycloak/keycloak:26.0
     container_name: keycloak
     ports:
       - "8081:8080"
@@ -276,12 +294,12 @@ services:
       KC_HOSTNAME: "${ENTRANCE_DOMAIN}"              # 指定主机名
       KC_FRONTEND_URL: "${BASE_URL}"  # 设置前端 URL
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: tier0
-      KC_COOKIE_SECURE: false # 禁用安全 cookie
+      KC_BOOTSTRAP_ADMIN_PASSWORD: supos
+      KC_COOKIE_SECURE: false                          # 禁用安全 cookie
       KC_DB: postgres
       KC_DB_URL: "jdbc:postgresql://postgresql:5432/keycloak"
       KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_DB_PASSWORD: postgres
       KC_DB_POOL_INITIAL_SIZE: 2
       KC_DB_POOL_MIN_SIZE: 2
       KC_DB_POOL_MAX_SIZE: 4
@@ -291,22 +309,23 @@ services:
       JAVA_OPTS_APPEND: -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${VOLUMES_PATH}/keycloak/data:/opt/keycloak/data # 将 Keycloak 的数据目录挂载到本地
+      - ${VOLUMES_PATH}/keycloak/data:/opt/keycloak/data  # 将 Keycloak 的数据目录挂载到本地
       - ${VOLUMES_PATH}/keycloak/theme/keycloak.v2:/opt/keycloak/themes/wenhao
       - ${VOLUMES_PATH}/keycloak/ca/ca.crt:/opt/keycloak/ca.crt
       - ${VOLUMES_PATH}/keycloak/ca/init-ldaps-cert.sh:/opt/keycloak/init-ldaps-cert.sh
     depends_on:
       postgresql:
-        condition: service_healthy # 依赖 PostgreSQL 的健康状态
+        condition: service_healthy  # 依赖 PostgreSQL 的健康状态
     command: start-dev --hostname ${BASE_URL}/keycloak/home/auth  --proxy-headers forwarded
     healthcheck:
       test: >
-        /bin/bash -c " exec 3<>/dev/tcp/localhost/8080"
+        /bin/bash -c "
+        exec 3<>/dev/tcp/localhost/8080"
       interval: 10s
       timeout: 5s
       retries: 60
-      start_period: 120s # 新增：给予2分钟的启动宽限期
-      start_interval: 10s # 新增：宽限期内的检查间隔
+      start_period: 120s    # 新增：给予2分钟的启动宽限期
+      start_interval: 10s   # 新增：宽限期内的检查间隔
     restart: always
     networks:
       - edge_network
@@ -314,22 +333,22 @@ services:
     image: timescale/timescaledb:2.20.0-pg17
     container_name: tsdb
     environment:
-      TZ: UTC # 设置容器时区
+      TZ: UTC  # 设置容器时区
       service_logo: postgresql-original.svg
       service_description: aboutus.postgresqlDescription
-      POSTGRES_PASSWORD: ${TSDB_PASSWORD}
+      POSTGRES_PASSWORD: postgres
     ports:
       - "2345:5432"
     volumes:
       - ${VOLUMES_PATH}/tsdb/conf/postgresql.conf:/etc/postgresql/custom.conf
       - ${VOLUMES_PATH}/tsdb/data:/var/lib/postgresql/data # 持久化数据
-      - ${VOLUMES_PATH}/tsdb/init-scripts:/docker-entrypoint-initdb.d # 加载初始化脚本
+      - ${VOLUMES_PATH}/tsdb/init-scripts:/docker-entrypoint-initdb.d  # 加载初始化脚本
     command:
       - postgres
       - -c
       - config_file=/etc/postgresql/custom.conf
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -345,14 +364,14 @@ services:
       KONG_WORKER_STATE_UPDATE_FREQUENCY: 30
       KONG_DB_CACHE_TTL: 600
       KONG_NGINX_WORKER_PROCESSES: 2
-      KONG_LUA_GC_PAUSE: 100 # 提高暂停率，降低 GC 触发频率
-      KONG_LUA_GC_STEPMUL: 200 # 增加单次回收强度
+      KONG_LUA_GC_PAUSE: 100            # 提高暂停率，降低 GC 触发频率
+      KONG_LUA_GC_STEPMUL: 200          # 增加单次回收强度
       service_logo: konga-original.svg
       service_description: aboutus.kongaDescription
       service_redirect_url: /konga/home/
       KONG_DATABASE: postgres
       KONG_PG_HOST: postgresql
-      KONG_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      KONG_PG_PASSWORD: postgres
       KONG_PG_USER: postgres
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_SSL_CERT: /etc/kong/ssl/fullchain.cer
@@ -386,7 +405,7 @@ services:
       sh -c "kong migrations bootstrap &&
              kong config db_import /etc/kong/kong_config.yml &&
              kong start"
-    restart: always # 确保 Kong 自动重启
+    restart: always  # 确保 Kong 自动重启
     networks:
       - edge_network
   konga:
@@ -401,13 +420,13 @@ services:
       # DB_PASSWORD: konga           # MySQL 用户密码
       # DB_DATABASE: konga          # MySQL 数据库名
       # NODE_ENV: production           # 设置 NODE_ENV 为生产环境
-      NO_AUTH: "true" # 禁用认证
+      NO_AUTH: "true"             # 禁用认证
       KONGA_SEED_KONG_NODE_DATA_SOURCE_FILE: /node.data
     ports:
-      - "1337:1337" # 映射 Konga 的端口到主机
+      - "1337:1337"  # 映射 Konga 的端口到主机
     volumes:
       - ${VOLUMES_PATH}/konga/db/:/app/kongadata/
-      - ${VOLUMES_PATH}/konga/node.data:/node.data # 持久化数据库数据
+      - ${VOLUMES_PATH}/konga/node.data:/node.data  # 持久化数据库数据
     restart: always
     networks:
       - edge_network
@@ -430,10 +449,10 @@ services:
       - MINIO_IDENTITY_OPENID_ROLE_POLICY=public-delete-policy
       - MINIO_IDENTITY_OPENID_REDIRECT_URI=${BASE_URL}/minio/home/oauth_callback
     ports:
-      - "9000:9000" # Web UI 端口
-      - "9001:9001" # Admin API 端口 (如果需要访问管理接口)
+      - "9000:9000"  # Web UI 端口
+      - "9001:9001"  # Admin API 端口 (如果需要访问管理接口)
     volumes:
-      - ${VOLUMES_PATH}/minio/data:/data # 数据存储位置
+      - ${VOLUMES_PATH}/minio/data:/data  # 数据存储位置
     command: server /data --console-address ":9001"
     depends_on:
       keycloak:

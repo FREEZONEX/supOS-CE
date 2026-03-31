@@ -22,18 +22,18 @@ import (
 func SaveMenuHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(32 << 20); err != nil { // 32MB max memory
-			httpx.ErrorCtx(r.Context(), w, errors.NewBuzError(500, "request.parse.failed"))
+			httpx.ErrorCtx(r.Context(), w, errors.NewBuzError(r.Context(), 500, "request.parse.failed"))
 			return
 		}
 
 		openType, err := strconv.Atoi(r.FormValue("openType"))
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, errors.NewBuzError(500, "menu.opentype.invalid"))
+			httpx.ErrorCtx(r.Context(), w, errors.NewBuzError(r.Context(), 500, "menu.opentype.invalid"))
 			return
 		}
 
-		if err := validator.ValidateOpenType(openType); err != nil {
-			httpx.ErrorCtx(r.Context(), w, errors.NewBuzError(500, err.Error()))
+		if err := validator.ValidateOpenType(r.Context(), openType); err != nil {
+			httpx.ErrorCtx(r.Context(), w, errors.NewBuzError(r.Context(), 500, err.Error()))
 			return
 		}
 
@@ -43,7 +43,7 @@ func SaveMenuHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			defer file.Close()
 			icon = header
 		} else if err != http.ErrMissingFile {
-			httpx.ErrorCtx(r.Context(), w, errors.NewBuzError(500, "menu.icon.read.failed"))
+			httpx.ErrorCtx(r.Context(), w, errors.NewBuzError(r.Context(), 500, "menu.icon.read.failed"))
 			return
 		}
 

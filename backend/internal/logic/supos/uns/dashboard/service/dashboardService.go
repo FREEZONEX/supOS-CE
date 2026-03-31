@@ -107,7 +107,7 @@ func (s *DashboardService) InitDashboardsOnStartup(ctx context.Context) {
 // OnEventRemoveTopics 当 UNS Topic 被删除时的处理逻辑
 func (s *DashboardService) OnEventRemoveTopics(event *event.RemoveTopicsEvent) error {
 	if event == nil {
-		return errors.NewBuzError(400, "global.event.nil")
+		return errors.NewBuzError(context.Background(), 400, "global.event.nil")
 	}
 	aliasList := base.Map(event.Topics, func(e *types.CreateTopicDto) string {
 		return e.GetAlias()
@@ -184,7 +184,7 @@ func (s *DashboardService) CreateDashboards(ctx context.Context, dashboardVos []
 // OnEventCreateDashboard 通过事件创建 Dashboard
 func (s *DashboardService) OnEventCreateDashboard(event *event.CreateDashboardEvent) error {
 	if event == nil {
-		return errors.NewBuzError(400, "global.event.nil")
+		return errors.NewBuzError(context.Background(), 400, "global.event.nil")
 	}
 	dashboardVos := event.Dashboards
 	s.logger.Debugf("creating dashboard by event: %+v", dashboardVos)

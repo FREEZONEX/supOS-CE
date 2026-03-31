@@ -95,9 +95,9 @@ func (u *UnsNamespace) GetTimestampField() string {
 	if len(u.Fields) > 0 {
 		// Find timestamp field (implementation depends on FieldUtils)
 		for _, f := range u.Fields {
-			if f.Name == constants.SysFieldCreateTime || f.Name == "timestamp" {
+			if f.Type == types.FieldTypeDatetime && f.IsSystemField() {
 				u.tmField = f.Name
-				return u.tmField
+				return f.Name
 			}
 		}
 	}

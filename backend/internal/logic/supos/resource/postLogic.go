@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"backend/internal/common"
 	"context"
 	"time"
 
@@ -61,6 +62,7 @@ func (l *PostLogic) saveResource(tx *gorm.DB, dto *types.SaveResourceReq) (int64
 		}
 		flag := true
 		res := &relationDB.SuposResource{
+			ID:              common.NextId(),
 			ParentID:        parentID,
 			Type:            dto.Type,
 			Source:          source,

@@ -6,6 +6,7 @@ package open
 import (
 	"context"
 
+	"backend/internal/common/I18nUtils"
 	uns "backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -39,7 +40,7 @@ func (l *GetFolderByAliasLogic) GetFolderByAlias(req *types.AliasPathReq) (resp 
 		l.Errorf("获取文件夹详情失败: %v", err)
 		return &types.ResultVO{
 			Code: 500,
-			Msg:  "获取文件夹详情失败",
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.operation.failed"),
 			Data: nil,
 		}, err
 	}
@@ -48,7 +49,7 @@ func (l *GetFolderByAliasLogic) GetFolderByAlias(req *types.AliasPathReq) (resp 
 	if modelDefinition.Data == nil {
 		return &types.ResultVO{
 			Code: 404,
-			Msg:  "文件夹不存在",
+			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.folder.not.found"),
 			Data: nil,
 		}, nil
 	}
@@ -59,7 +60,7 @@ func (l *GetFolderByAliasLogic) GetFolderByAlias(req *types.AliasPathReq) (resp 
 	// 返回成功结果
 	return &types.ResultVO{
 		Code: 200,
-		Msg:  "成功",
+		Msg:  "ok",
 		Data: convertedDetail,
 	}, nil
 }

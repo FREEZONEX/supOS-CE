@@ -231,6 +231,13 @@ func (c *CreateTopicDto) GetPrimaryField() []string {
 	return c.PrimaryField
 }
 
+func (c *CreateTopicDto) GetFieldDefines() *FieldDefines {
+	if c.FieldDefines == nil && len(c.Fields) > 0 {
+		c.SetFields(c.Fields)
+	}
+	return c.FieldDefines
+}
+
 // GetTimestampField returns the timestamp field name
 func (c *CreateTopicDto) GetTimestampField() string {
 	if c.TmField != "" {
@@ -240,13 +247,25 @@ func (c *CreateTopicDto) GetTimestampField() string {
 	if len(c.Fields) > 0 {
 		// Find timestamp field (implementation depends on FieldUtils)
 		for _, f := range c.Fields {
-			if f.Name == constants.SysFieldCreateTime || f.Name == "timestamp" {
+			if f.Type == FieldTypeDatetime && f.IsSystemField() {
 				c.TmField = f.Name
 				return c.TmField
 			}
 		}
 	}
 
+	return ""
+}
+
+func (c *CreateTopicDto) GetQualityField() string {
+	if len(c.Fields) == 0 {
+		return ""
+	}
+	for _, f := range c.Fields {
+		if f.Type == FieldTypeLong && f.IsSystemField() && !base.P2v(f.Unique) {
+			return f.Name
+		}
+	}
 	return ""
 }
 

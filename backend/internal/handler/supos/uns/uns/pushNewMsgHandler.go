@@ -1,6 +1,7 @@
 package uns
 
 import (
+	"backend/internal/common/utils/httpUtils"
 	unsService "backend/internal/logic/supos/uns/uns"
 	"context"
 	"fmt"
@@ -49,7 +50,7 @@ func PushNewMsgHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-transform")
 	w.Header().Set("X-Accel-Buffering", "no") // 禁用Nginx缓冲
 
-	flusher := w.(http.Flusher)
+	flusher := httpUtils.HttpFlusher(w)
 	_, _ = fmt.Fprint(w, "data: Connected\n\n")
 	flusher.Flush()
 

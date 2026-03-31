@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"backend/internal/adapters/kong/logic"
+	"backend/internal/common"
 	"backend/internal/repo/relationDB"
 	"backend/share/app/model"
 	"context"
@@ -83,7 +83,7 @@ func SaveMenu(menu *model.MenuModel, appDomain string, appPort int) error {
 	}
 
 	// 3. 将菜单数据保存到数据库表supos_resource
-	if err := saveMenuToDatabase(menu, appDomain); err != nil {
+	if err := SaveMenuToDatabase(menu, appDomain); err != nil {
 		log.Printf("[app]: 保存菜单到数据库失败: %v", err)
 		// 注意：这里不返回错误，因为Kong路由已经注册成功
 		// 数据库保存失败不影响路由功能
@@ -147,8 +147,8 @@ func parseIndexUrl(indexUrl string) (string, int, error) {
 	return host, port, nil
 }
 
-// saveMenuToDatabase 将菜单数据保存到数据库表supos_resource
-func saveMenuToDatabase(menu *model.MenuModel, appDomain string) error {
+// SaveMenuToDatabase 将菜单数据保存到数据库表supos_resource
+func SaveMenuToDatabase(menu *model.MenuModel, appDomain string) error {
 	log.Printf("[app]: 开始保存菜单到数据库: %s", menu.Name)
 
 	// 创建上下文
@@ -189,15 +189,15 @@ func saveMenuToDatabase(menu *model.MenuModel, appDomain string) error {
 		URL:             stringPtr(menu.IndexUrl), // 相对路由
 		DescriptionCode: stringPtr(menu.Description),
 		URLType:         intPtr(2),
-		Type:            2,              // 假设1表示菜单类型
-		OpenType:        intPtr(0),      // 默认打开类型
-		Sort:            intPtr(0),      // 默认排序
-		Enable:          boolPtr(true),  // 启用
-		EditEnable:      boolPtr(true),  // 可编辑
-		HomeEnable:      boolPtr(true),  // 非首页
-		Fixed:           boolPtr(false), // 非固定
+		Type:            2,                     // 假设1表示菜单类型
+		OpenType:        intPtr(menu.OpenType), // 默认打开类型
+		Sort:            intPtr(0),             // 默认排序
+		Enable:          boolPtr(true),         // 启用
+		EditEnable:      boolPtr(true),         // 可编辑
+		HomeEnable:      boolPtr(true),         // 非首页
+		Fixed:           boolPtr(false),        // 非固定
 		Icon:            stringPtr(menu.IconUrl),
-		RouteSource:     intPtr(1),
+		RouteSource:     intPtr(2),
 		CreateAt:        time.Now(),
 		UpdateAt:        time.Now(),
 	}
@@ -216,6 +216,7 @@ func saveMenuToDatabase(menu *model.MenuModel, appDomain string) error {
 		}
 		log.Printf("[app]: 菜单更新到数据库成功: %s", menu.Name)
 	} else {
+		menuResource.ID = common.NextId() //没有id绝对不行
 		// 创建新记录
 		err = db.Create(menuResource).Error
 		if err != nil {
@@ -228,7 +229,7 @@ func saveMenuToDatabase(menu *model.MenuModel, appDomain string) error {
 	return nil
 }
 
-func deleteMenu(appName string) {
+/*func deleteMenu(appName string) {
 	// 创建 MenuLogic 实例
 	menuLogic := logic.NewMenuLogic("kong", 8001)
 
@@ -239,7 +240,7 @@ func deleteMenu(appName string) {
 	} else {
 		log.Println("菜单删除成功")
 	}
-}
+}*/
 
 // Helper functions for pointer creation
 func intPtr(i int) *int {

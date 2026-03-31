@@ -68,12 +68,12 @@ services:
   read_timeout: 60000
 - name: portainer
   path: ~
-  protocol: http
+  protocol: https
   tags: []
   ca_certificates: ~
   retries: 5
   created_at: 1729740912
-  port: 9000
+  port: 9443
   updated_at: 1764811192
   enabled: true
   host: portainer
@@ -317,7 +317,7 @@ services:
   ca_certificates: ~
   retries: 5
   created_at: 1755572726
-  port: 1889
+  port: 1888
   updated_at: 1764811192
   enabled: true
   host: eventflow
@@ -697,7 +697,7 @@ routes:
   service: 94797f49-35e2-428f-b46a-84788fa06fa8
   strip_path: true
   paths:
-  - '/eventflow-api/'
+  - '/eventflow-api/ '
   created_at: 1755572773
   updated_at: 1764811192
   response_buffering: true
@@ -1930,77 +1930,6 @@ routes:
   - https
 plugins:
 - tags: ~
-  name: response-transformer
-  created_at: 1774595100
-  updated_at: 1774595100
-  config:
-    remove:
-      headers:
-      - X-Frame-Options
-      - Content-Security-Policy
-      json: []
-    rename:
-      headers: []
-    replace:
-      headers: []
-      json: []
-      json_types: []
-    add:
-      headers: []
-      json: []
-      json_types: []
-    append:
-      headers: []
-      json: []
-      json_types: []
-  protocols:
-  - http
-  - https
-  instance_name: ~
-  enabled: true
-  consumer: ~
-  id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-  route: fb690c3a-e09e-4fcf-aad1-5d357c1938ec
-  service: ~
-- tags: ~
-  name: request-transformer
-  created_at: 1774595200
-  updated_at: 1774595200
-  config:
-    http_method: ~
-    remove:
-      headers: []
-      querystring: []
-      body: []
-    rename:
-      headers: []
-      querystring: []
-      body: []
-    replace:
-      headers:
-      - "Origin:${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}"
-      - "Referer:${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}/"
-      querystring: []
-      body: []
-      uri: ~
-    add:
-      headers: []
-      querystring: []
-      body: []
-    append:
-      headers: []
-      querystring: []
-      body: []
-  protocols:
-  - http
-  - https
-  instance_name: ~
-  enabled: true
-  consumer: ~
-  id: b2c3d4e5-f6a7-8901-bcde-f12345678901
-  route: fb690c3a-e09e-4fcf-aad1-5d357c1938ec
-  service: ~
-- tags: ~
   name: supos-auth-checker
   created_at: 1733799127
   updated_at: 1764811192
@@ -2036,7 +1965,7 @@ plugins:
   - http
   - https
   instance_name: ~
-  enabled: ${KONG_AUTH_ENABLED}
+  enabled: true
   consumer: ~
   id: 1845ee75-d704-40e1-a8b0-aa2baaf9d71b
   route: ~
@@ -3770,7 +3699,7 @@ targets:
   weight: 100
   id: 78410225-c503-4d2c-885d-c38a72244aa0
   updated_at: 1764640500.8
-  target: portainer:9000
+  target: portainer:9443
 - tags: ~
   upstream: 14bdf793-231d-439e-8d67-3e47a3e7da05
   created_at: 1741754798.218

@@ -198,7 +198,15 @@ func (u *UnsMessageConsumer) getWsSender() serviceApi.IWebsocketSender {
 }
 func procData(ctx context.Context, def *types.UnsDefinition, data []map[string]string) (list []map[string]string, errMsg string) {
 	if base.P2v(def.DataType) == constants.JsonbType {
-		jsonbFiled := "json"
+		getJsonField := func(df *types.UnsDefinition) string {
+			for _, f := range df.Fields {
+				if f.Type == types.FieldTypeString && !f.IsSystemField() {
+					return f.Name
+				}
+			}
+			return ""
+		}
+		jsonbFiled := getJsonField(def)
 		vm := data[0]
 		if val, has := vm[jsonbFiled]; !has {
 			bs, _ := json.Marshal(data)
@@ -237,7 +245,7 @@ func setLastData(ctx context.Context, list []map[string]string, def *types.UnsDe
 					prevBean = make(map[string]string, 8)
 				}
 				prevBean[f.Name] = lv
-				if f.Name == CT {
+				if f.Name == CT || f.Name == "timeStamp" {
 					prevTime = datetimeutils.ParseTimestamp(lv)
 				}
 			}
@@ -288,7 +296,13 @@ func mergeBeansWithTimestamp(ctx context.Context, list []map[string]string, CT s
 		if len(vm) == 0 {
 			continue
 		}
-		if curT, hasCt := vm[CT]; !hasCt {
+		curT, hasCt := vm[CT]
+		oldT := false
+		if !hasCt {
+			oldT = true
+			curT, hasCt = vm["timeStamp"]
+		}
+		if !hasCt {
 			vm[CT] = now
 			mergeList = append(mergeList, vm)
 		} else {
@@ -298,6 +312,10 @@ func mergeBeansWithTimestamp(ctx context.Context, list []map[string]string, CT s
 				vm[CT] = now
 				mergeList = append(mergeList, vm)
 				continue
+			}
+			if oldT {
+				delete(vm, "timeStamp") //兼容旧时间戳字段
+				vm[CT] = strconv.FormatInt(ct, 10)
 			}
 			if sz := len(mergeList); ct == prevTime {
 				if sz > 0 {

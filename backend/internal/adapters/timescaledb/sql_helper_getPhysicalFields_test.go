@@ -10,11 +10,11 @@ func TestGetTableInfo(t *testing.T) {
 	if db == nil {
 		t.Fatal("NoDB")
 	}
-	fs, ct, qos, err := getPhysicalTableFields(t.Context(), db.dbPool)
+	fs, ct, qos, tag, err := getPhysicalTableFields(t.Context(), db.dbPool)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("ct=%s, qos=%s", ct, qos)
+	t.Logf("ct=%s, qos=%s, tag=%s", ct, qos, tag)
 	jsobs, _ := json.MarshalIndent(fs, "", " ")
 	t.Logf("fs: %+v\n", string(jsobs))
 }

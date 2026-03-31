@@ -62,9 +62,9 @@ func createField(name, fieldType string) *types.FieldDefine {
 	}
 }
 func procFields(fs []*types.FieldDefine) []*types.FieldDefine {
-	name := constants.SystemSeqTag // Ensure the name is correct
+	name := constants.SysFieldID // Ensure the name is correct
 	tableValueField := &types.FieldDefine{
-		Name:        constants.SystemSeqTag,
+		Name:        constants.SysFieldID,
 		Type:        types.FieldTypeLong,
 		Unique:      base.OptionalTrue,
 		TbValueName: &name,

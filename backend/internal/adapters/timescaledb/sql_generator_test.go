@@ -23,7 +23,7 @@ func TestSQLGenerator_GenerateSyncSQLs(t *testing.T) {
 				TableName: "uns_timeserial",
 				Fields: []*types.FieldDefine{
 					{Name: constants.SysFieldCreateTime, Type: types.FieldTypeDatetime, Unique: base.OptionalTrue},
-					{Name: constants.SystemSeqTag, Type: types.FieldTypeLong, Unique: base.OptionalTrue},
+					{Name: constants.SysFieldID, Type: types.FieldTypeLong, Unique: base.OptionalTrue},
 					{Name: "temp", Type: types.FieldTypeInteger},
 					{Name: "qst", Type: types.FieldTypeLong},
 					{Name: constants.QosField, Type: types.FieldTypeLong},

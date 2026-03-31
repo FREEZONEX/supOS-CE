@@ -1,7 +1,6 @@
 package types
 
 import (
-	"backend/internal/common/constants"
 	"backend/share/base"
 	"strings"
 	"sync"
@@ -21,7 +20,7 @@ func (c *UnsDefinition) GetTimestampField() string {
 		// Find timestamp field (implementation depends on FieldUtils)
 		if c.TmField == "" {
 			for _, f := range c.Fields {
-				if f.Name == constants.SysFieldCreateTime || f.Name == "timestamp" {
+				if f.Type == FieldTypeDatetime && f.IsSystemField() {
 					c.TmField = f.Name
 					break
 				}

@@ -132,9 +132,11 @@ func TestFillLastRecord(t *testing.T) {
 			Name: "quality",
 			Type: types.FieldTypeLong,
 		}}
-	uns := &types.CreateTopicDto{
-		Alias:  "opcua_demo_file_1003",
-		Fields: fields,
+	uns := &types.UnsDefinition{
+		CreateTopicDto: types.CreateTopicDto{
+			Alias:  "opcua_demo_file_1003",
+			Fields: fields,
+		},
 	}
 	common.InitSnowflake(123)
 	pgQuery := func(ctx context.Context) (pgx.Rows, error) {

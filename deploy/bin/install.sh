@@ -36,34 +36,14 @@ source "$SCRIPT_DIR/init/init-keycloak-sql.sh" "$SCRIPT_DIR/.."
 source "$SCRIPT_DIR/init/init-kong-property.sh" "$SCRIPT_DIR/.."
 
 DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose.yml"
-source "$SCRIPT_DIR/util/wait-compose-healthy.sh"
 
 # --- 6. Volume and Image Management ---
 echo "Start creating volumes"
-# Marker file to track complete installation
-INSTALL_MARKER="$VOLUMES_PATH/.install_complete"
-
-# Check installation state
-if [ -f "$INSTALL_MARKER" ]; then
+# Check for a specific sub-directory to reliably detect an existing installation.
+if [ -d "$VOLUMES_PATH/postgresql" ]; then
   info "Existing installation detected. Stopping services and updating volumes..."
   source "$SCRIPT_DIR/stop.sh"
   source "$SCRIPT_DIR/init/update-volumes.sh"
-elif [ -d "$VOLUMES_PATH" ] && [ "$(ls -A "$VOLUMES_PATH" 2>/dev/null)" ]; then
-  warn "Partial installation detected at $VOLUMES_PATH"
-  read -p "Continue installation (c) or Clean and reinstall (r)? [c/r]: " choice
-  case "$choice" in
-    r|R)
-      info "Cleaning partial installation..."
-      bash "$SCRIPT_DIR/clean-all.sh" -f
-      # Regenerate .env.tmp since uninstall.sh deleted it
-      source "$SCRIPT_DIR/util/set-temp-env.sh" "$SCRIPT_DIR/../" "${COMPOSE_PROFILE_ARGS[@]}"
-      source "$SCRIPT_DIR/init/init-volumes.sh"
-      ;;
-    *)
-      info "Resuming installation..."
-      source "$SCRIPT_DIR/init/init-volumes.sh"
-      ;;
-  esac
 else
   info "New installation detected. Initializing volumes..."
   source "$SCRIPT_DIR/init/init-volumes.sh"
@@ -88,12 +68,7 @@ if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" 
     error "Failed to start Docker containers. Please check the logs above."
     exit 1
 fi
-info "Containers started; waiting until each service is running (and healthy where Docker healthchecks are defined)..."
-if ! wait_compose_healthy 900 5; then
-  error "One or more containers did not become ready in time. Check: docker compose --project-name tier0 ps"
-  exit 1
-fi
-info "Core stack is ready."
+info "Containers started successfully. Waiting for services to become healthy..."
 echo
 
 # Run each initialization script individually for clearer error reporting
@@ -108,19 +83,9 @@ echo
     exit 1
 }
 
-info "Verifying container health after initialization..."
-if ! wait_compose_healthy 300 5; then
-  error "Containers are not all healthy after initialization. Check: docker compose --project-name tier0 ps"
-  exit 1
-fi
-
 # --- 8. Success ---
-# Create installation marker to indicate successful completion
-touch "$INSTALL_MARKER"
-info "Installation marker created at $INSTALL_MARKER"
-
 echo -e "\n============================================================"
-echo -e "🎉  All services are up and running."
+echo -e "🎉  All services are up and running!"
 echo -e "👉  Open the platform in your browser:\n"
 
 if [[ "$ENTRANCE_PORT" == "80" || "$ENTRANCE_PORT" == "443" ]]; then
@@ -130,6 +95,6 @@ else
 fi
 
 echo -e "      $PLATFORM_URL\n"
-echo -e "    Default username: tier0\n"
-echo -e "    Default password: tier0\n"
+echo -e "    Default user name: tier0\n"
+echo -e "            password: tier0\n"
 echo -e "============================================================"
