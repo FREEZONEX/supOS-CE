@@ -2,14 +2,17 @@ package userManage
 
 import (
 	"context"
-	"fmt"
 	"strings"
+	"time"
 
 	"backend/internal/common/constants"
+	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type CreateUserLogic struct {
@@ -39,89 +42,71 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateReq) (*types.Operation
 		return nil, errors.Parameter.WithMsg("user.password.empty")
 	}
 
-	kc, err := l.keycloakClient()
+	db, err := l.db()
 	if err != nil {
 		return nil, err
 	}
 
-	existing, err := kc.FetchUser(username)
-	if err != nil {
-		l.Errorf("failed to query user by username %s: %v", username, err)
-		return nil, errors.System.WithMsg("failed to check username")
-	}
-	if existing != nil {
+	if existing, err := l.getIAMUserByUsername(db, username); err != nil {
+		return nil, err
+	} else if existing != nil {
 		return nil, errors.Parameter.WithMsg("user.username.already.exists")
 	}
 
 	email := strings.TrimSpace(req.Email)
 	if email != "" {
-		existing, err := kc.FetchUserByEmail(email)
-		if err != nil {
-			l.Errorf("failed to query user by email %s: %v", email, err)
-			return nil, errors.System.WithMsg("failed to check email")
-		}
-		if existing != nil {
+		if existing, err := l.getIAMUserByEmail(db, email); err != nil {
+			return nil, err
+		} else if existing != nil {
 			return nil, errors.Parameter.WithMsg("user.email.already.exists")
 		}
 	}
 
-	enabled := true
-	if req.Enabled != nil {
-		enabled = *req.Enabled
-	}
-
-	attributes := map[string]any{
-		"firstTimeLogin": []string{"1"},
-		"tipsEnable":     []string{"1"},
-		"homePage":       []string{constants.DefaultHomepage},
-	}
-	if phone := strings.TrimSpace(req.Phone); phone != "" {
-		attributes["phone"] = []string{phone}
-	}
-	if source := strings.TrimSpace(req.Source); source != "" {
-		attributes["source"] = []string{source}
-	}
-
-	userPayload := map[string]any{
-		"username":   username,
-		"enabled":    enabled,
-		"email":      email,
-		"firstName":  strings.TrimSpace(req.FirstName),
-		"attributes": attributes,
-	}
-
-	var createdUserID string
-	var cleanup bool
-	defer func() {
-		if !cleanup || createdUserID == "" {
-			return
-		}
-		if err := kc.DeleteUser(createdUserID); err != nil {
-			l.Errorf("failed to cleanup user %s: %v", createdUserID, err)
-		}
-	}()
-
-	userID, err := kc.CreateUser(l.ctx, userPayload)
+	roleIDs, err := l.resolveRoleIDs(db, req.RoleList)
 	if err != nil {
-		l.Errorf("failed to create keycloak user %s: %v", username, err)
-		return nil, errors.System.WithMsg(fmt.Sprintf("failed to create user: %v", err))
+		return nil, err
 	}
-	createdUserID = userID
-	cleanup = true
-
-	if err := kc.ResetPassword(userID, password); err != nil {
-		l.Errorf("failed to reset password for user %s: %v", username, err)
-		return nil, errors.System.WithMsg("failed to set user password")
-	}
-
-	if len(req.RoleList) > 0 {
-		if err := l.applyUserRoles(userID, req.RoleList, true); err != nil {
-			l.Errorf("failed to assign roles for user %s: %v", username, err)
-			return nil, err
+	if len(roleIDs) == 0 {
+		defaultRoleID, roleErr := l.getDefaultUserRoleID(db)
+		if roleErr != nil {
+			return nil, roleErr
 		}
+		roleIDs = []string{defaultRoleID}
 	}
 
-	cleanup = false
+	userID := strings.TrimSpace(req.ID)
+	if userID == "" {
+		userID = uuid.NewString()
+	}
+	now := time.Now()
+	user := relationDB.IamUser{
+		ID:             userID,
+		Username:       username,
+		DisplayName:    firstNonEmpty(req.FirstName, username),
+		Email:          email,
+		Enabled:        boolValue(req.Enabled, true),
+		Source:         strings.TrimSpace(req.Source),
+		Phone:          strings.TrimSpace(req.Phone),
+		HomePage:       constants.DefaultHomepage,
+		FirstTimeLogin: 1,
+		TipsEnable:     1,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if txErr := tx.Create(&user).Error; txErr != nil {
+			l.Errorf("create user failed: %v", txErr)
+			return errors.System.WithMsg("failed to create user")
+		}
+		if passwordErr := l.upsertUserPassword(tx, userID, password); passwordErr != nil {
+			return passwordErr
+		}
+		return l.replaceUserRoles(tx, userID, roleIDs)
+	}); err != nil {
+		return nil, err
+	}
+
 	l.invalidateUserCache(userID)
 	return l.success(), nil
 }

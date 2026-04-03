@@ -30,14 +30,6 @@ func NewUserDetailLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserDe
 }
 
 func (l *UserDetailLogic) UserDetail(username string) (resp *types.UserDetailResult, err error) {
-	if l.svcCtx.Keycloak == nil {
-		return &types.UserDetailResult{
-			Code: 404,
-			Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "user.not.exist"),
-		}, nil
-	}
-
-	// 使用 UserOpenapiService 通过用户名获取用户信息
 	userOpenapiService := openservice.NewUserOpenapiService(l.ctx, l.svcCtx)
 	result, err := userOpenapiService.UserManageList(openservice.UserPageQueryDto{
 		ExactUsername: username,

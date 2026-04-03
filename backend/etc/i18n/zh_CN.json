@@ -378,7 +378,7 @@
   "uns.create.task.name.file": "File导入",
   "user.role.supAdmin": "超级管理员",
   "user.role.admin": "管理员",
-  "user.role.normalUser": "一般用户",
+  "user.role.normalUser": "用户",
   "user.create.already.exists": "用户已存在",
   "user.create.failed": "创建用户失败",
   "user.set.password.failed": "设置密码失败",

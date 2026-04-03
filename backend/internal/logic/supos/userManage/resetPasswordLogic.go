@@ -8,6 +8,7 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gorm.io/gorm"
 )
 
 type ResetPasswordLogic struct {
@@ -26,16 +27,24 @@ func (l *ResetPasswordLogic) ResetPassword(req *types.AdminResetPwdReq) (*types.
 		return nil, errors.Parameter.WithMsg("userId and password are required")
 	}
 
-	kc, err := l.keycloakClient()
+	db, err := l.db()
 	if err != nil {
 		return nil, err
 	}
-
-	if err := kc.ResetPassword(strings.TrimSpace(req.UserID), strings.TrimSpace(req.Password)); err != nil {
-		l.Errorf("failed to reset password for user %s: %v", req.UserID, err)
-		return nil, errors.System.WithMsg("failed to reset password")
+	user, err := l.getIAMUser(db, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.Parameter.WithMsg("user.not.exist")
 	}
 
-	l.invalidateUserCache(strings.TrimSpace(req.UserID))
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		return l.upsertUserPassword(tx, user.ID, req.Password)
+	}); err != nil {
+		return nil, err
+	}
+
+	l.invalidateUserCache(user.ID)
 	return l.success(), nil
 }

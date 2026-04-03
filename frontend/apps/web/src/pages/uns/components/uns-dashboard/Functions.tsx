@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Flex, Segmented } from 'antd';
 import ComEllipsis from '@/components/com-ellipsis';
 import useTranslate from '@/hooks/useTranslate.ts';
@@ -16,9 +16,6 @@ const Functions = () => {
   useActivate(() => {
     fetchBaseStore?.();
   });
-  useEffect(() => {
-    fetchBaseStore?.();
-  }, []);
   const formatMessage = useTranslate();
   const { homeTree } = useBaseStore((state) => ({
     homeTree: state.homeTree?.map((m) => {

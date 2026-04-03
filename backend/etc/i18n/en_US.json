@@ -622,7 +622,7 @@
   "menu.save.failed": "Failed.",
   "user.role.supAdmin": "Super Admin",
   "user.role.admin": "Admin",
-  "user.role.normalUser": "Normal User",
+  "user.role.normalUser": "User",
   "user.create.already.exists": "User already exists.",
   "user.create.failed": "Failed to create user.",
   "user.set.password.failed": "Failed to set password.",

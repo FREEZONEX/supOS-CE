@@ -1,6 +1,6 @@
 #!/bin/bash
 
-activeServices="emqx,nodered,keycloak,kong,postgresql,portainer,tsdb,eventflow"
+activeServices="emqx,nodered,kong,postgresql,portainer,tsdb,eventflow"
 profileCommand=""
 OUTPUT_FILE=$SCRIPT_DIR/global/active-services.txt
 
@@ -71,9 +71,7 @@ chooseProfile2() {
         if [[ $choicegrafana =~ ^[Yy] ]]; then profileCommand+="--profile grafana "; activeServices+=",grafana"; fi
         read -p "Step 2: Do you want to install MinIO? [y/n]: " choiceminio; choiceminio=${choiceminio:-Y}
         if [[ $choiceminio =~ ^[Yy] ]]; then profileCommand+="--profile minio "; activeServices+=",minio"; fi
-        read -p "Step 3: Do you want to install Gitea? [y/N]: " choiceGitea; choiceGitea=${choiceGitea:-N}
-        if [[ $choiceGitea =~ ^[Yy] ]]; then profileCommand+="--profile gitea "; activeServices+=",gitea"; fi
-        read -p "Step 4: Do you want to install Konga? [y/n]: " choicekonga; choicekonga=${choicekonga:-Y}
+        read -p "Step 3: Do you want to install Konga? [y/n]: " choicekonga; choicekonga=${choicekonga:-Y}
         if [[ $choicekonga =~ ^[Yy] ]]; then profileCommand+="--profile konga "; activeServices+=",konga"; fi
     fi
 

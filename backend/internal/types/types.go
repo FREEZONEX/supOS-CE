@@ -1671,6 +1671,45 @@ type TipsEnableReq struct {
 	TipsEnable int `form:"tipsEnable"`
 }
 
+type LoginReq struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type OAuthAuthorizeReq struct {
+	ResponseType string `form:"response_type"`
+	ClientID     string `form:"client_id"`
+	RedirectURI  string `form:"redirect_uri"`
+	Scope        string `form:"scope"`
+	State        string `form:"state"`
+}
+
+type OAuthTokenReq struct {
+	GrantType    string `form:"grant_type"`
+	Code         string `form:"code"`
+	RedirectURI  string `form:"redirect_uri"`
+	ClientID     string `form:"client_id"`
+	ClientSecret string `form:"client_secret"`
+}
+
+type OAuthLogoutReq struct {
+	Token string `form:"token"`
+}
+
+type OAuthTokenResp struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int64  `json:"expires_in"`
+	Scope       string `json:"scope,omitempty"`
+}
+
+type OAuthUserInfoResp struct {
+	Sub               string `json:"sub"`
+	PreferredUsername string `json:"preferred_username"`
+	Email             string `json:"email,omitempty"`
+	Name              string `json:"name,omitempty"`
+}
+
 type TokenCallbackReq struct {
 	Code string `form:"code"`
 }
@@ -2058,7 +2097,6 @@ type UserInfoVO struct {
 	HomePage          string         `json:"homePage,optional"`
 	RoleList          []RoleInfo     `json:"roleList,optional"`
 	ResourceList      []ResourceInfo `json:"resourceList,optional"`
-	DenyResourceList  []ResourceInfo `json:"denyResourceList,optional"`
 	SuperAdmin        bool           `json:"superAdmin,optional"`
 }
 

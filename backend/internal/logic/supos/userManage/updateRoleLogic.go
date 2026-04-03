@@ -2,15 +2,15 @@ package userManage
 
 import (
 	"context"
-	"fmt"
 	"strings"
+	"time"
 
-	authdto "backend/internal/common/dto/auth"
-	"backend/internal/common/enums"
+	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gorm.io/gorm"
 )
 
 type UpdateRoleLogic struct {
@@ -32,115 +32,56 @@ func (l *UpdateRoleLogic) UpdateRole(req *types.RoleSaveReq) (*types.RoleDetail,
 		return nil, errors.Parameter.WithMsg("role.name.empty")
 	}
 
-	kc, err := l.keycloakClient()
+	db, err := l.db()
 	if err != nil {
 		return nil, err
 	}
 
-	role, err := kc.FetchRoleByID(strings.TrimSpace(req.ID))
+	role, err := l.getRoleByID(db, req.ID)
 	if err != nil {
-		l.Errorf("failed to fetch role by id %s: %v", req.ID, err)
-		return nil, errors.System.WithMsg("failed to load role")
+		return nil, err
 	}
 	if role == nil {
 		return nil, errors.Parameter.WithMsg("role.no.exist")
 	}
+	if l.protectedRole(role) {
+		return nil, errors.Parameter.WithMsg("role.super.update")
+	}
 
-	if parsed, ok := enums.RoleParse(role.ID); ok {
-		if parsed.ID == enums.RoleSuperAdmin.ID || parsed.ID == enums.RoleNormalUser.ID {
-			return nil, errors.Parameter.WithMsg("role.super.update")
+	newName := strings.TrimSpace(req.Name)
+	if !strings.EqualFold(role.RoleName, newName) {
+		if existing, err := l.getRoleByName(db, newName); err != nil {
+			return nil, err
+		} else if existing != nil && existing.ID != role.ID {
+			return nil, errors.Parameter.WithMsg("role.name.exist")
 		}
 	}
 
-	roleName := role.Name
-	denyRoleName := fmt.Sprintf("deny-%s", roleName)
-	denyRole, err := kc.FetchRole(denyRoleName)
-	if err != nil {
-		l.Errorf("failed to fetch deny role %s: %v", denyRoleName, err)
-		return nil, errors.System.WithMsg("failed to load deny role")
-	}
-
-	allowURIs := dedupeStrings(append(stringSlice(req.AllowResourceList), enums.DefaultAllowURIs...))
-	denyURIs := dedupeStrings(stringSlice(req.DenyResourceList))
-
-	if err := l.updateResource(fmt.Sprintf("%s-resource", roleName), allowURIs); err != nil {
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		updates := map[string]any{
+			"role_name":   newName,
+			"role_key":    normalizeRoleKey(newName),
+			"description": newName,
+			"updated_at":  time.Now(),
+		}
+		if txErr := tx.Model(&relationDB.IamRole{}).Where("id = ?", role.ID).Updates(updates).Error; txErr != nil {
+			l.Errorf("update role failed: %v", txErr)
+			return errors.System.WithMsg("failed to update role")
+		}
+		return l.replaceRoleResources(tx, role.ID, req.AllowResourceList, req.DenyResourceList)
+	}); err != nil {
 		return nil, err
 	}
-	if denyRole != nil {
-		if err := l.updateResource(fmt.Sprintf("%s-resource", denyRoleName), denyURIs); err != nil {
-			return nil, err
-		}
-	}
 
-	repo, err := l.authRepo()
+	resourceList, denyResourceList, err := l.getRolePermissionLists(db, role.ID)
 	if err != nil {
-		l.Errorf("init keycloak repo failed: %v", err)
-		return nil, errors.System.WithMsg("failed to access keycloak repository")
+		return nil, err
 	}
-
-	var allowResourceList []*authdto.ResourceDto
-	if repo != nil {
-		allowResourceList, err = repo.GetRoleAllowResources(l.ctx, role.ID)
-		if err != nil {
-			l.Errorf("load allow resources for role %s failed: %v", role.ID, err)
-			return nil, errors.System.WithMsg("failed to load role resources")
-		}
-	}
-	if allowResourceList == nil {
-		allowResourceList = dtoFromURIs(allowURIs)
-	}
-
-	var denyResourceList []*authdto.ResourceDto
-	if repo != nil && denyRole != nil {
-		denyResourceList, err = repo.GetRoleDenyResources(l.ctx, denyRole.ID)
-		if err != nil {
-			l.Errorf("load deny resources for role %s failed: %v", denyRole.ID, err)
-			return nil, errors.System.WithMsg("failed to load role resources")
-		}
-	}
-	if denyResourceList == nil {
-		denyResourceList = dtoFromURIs(denyURIs)
-	}
-
-	displayName, desc := normalizeRoleDisplay(l.ctx, role.ID, role.Name, role.Description)
-	detail := &types.RoleDetail{
+	display, _ := normalizeRoleDisplay(l.ctx, normalizeRoleKey(newName), newName, newName)
+	return &types.RoleDetail{
 		RoleID:           role.ID,
-		RoleName:         strings.TrimSpace(displayName),
-		ResourceList:     toRoleResourceList(allowResourceList),
-		DenyResourceList: toRoleResourceList(denyResourceList),
-	}
-	if detail.RoleName == "" {
-		detail.RoleName = strings.TrimSpace(desc)
-	}
-
-	return detail, nil
-}
-
-func (l *UpdateRoleLogic) updateResource(resourceName string, uris []string) error {
-	kc, err := l.keycloakClient()
-	if err != nil {
-		return err
-	}
-	resource, err := kc.FetchResource(resourceName)
-	if err != nil {
-		l.Errorf("failed to fetch resource %s: %v", resourceName, err)
-		return errors.System.WithMsg("failed to load role resource")
-	}
-	if resource == nil {
-		l.Errorf("resource %s not found when updating role", resourceName)
-		return errors.Parameter.WithMsg("role.resource.not.exist")
-	}
-
-	payload := map[string]any{
-		"name":        resource.Name,
-		"displayName": resource.DisplayName,
-		"type":        resource.Type,
-		"uris":        uris,
-	}
-
-	if err := kc.UpdateResource(resource.ID, payload); err != nil {
-		l.Errorf("failed to update resource %s: %v", resourceName, err)
-		return errors.System.WithMsg("failed to update role resource")
-	}
-	return nil
+		RoleName:         firstNonEmpty(display, newName, role.RoleKey),
+		ResourceList:     resourceList,
+		DenyResourceList: denyResourceList,
+	}, nil
 }

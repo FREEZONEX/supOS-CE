@@ -51,16 +51,6 @@ export function multiGroupByCondition<T>(data: T[], criteria: Criteria<T>): Reco
   return groups;
 }
 
-// 拒绝优先
-export function filterArrays(arr1: string[] = [], arr2: string[] = []) {
-  return arr2?.filter?.((item) => !arr1?.includes?.(item));
-}
-
-// 拒绝优先
-export function filterObjectArrays(arr1: any[] = [], arr2: any[] = []) {
-  return arr2.filter((item2) => !arr1.some((item1) => item1.uri === item2.uri));
-}
-
 // 判断按钮权限函数
 export function matchUriWithPattern(uri: string, pattern: string) {
   // 转换模式（如 button:uns.*）为正则表达式

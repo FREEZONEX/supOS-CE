@@ -2,14 +2,16 @@ package userManage
 
 import (
 	"context"
-	"fmt"
 	"strings"
+	"time"
 
-	"backend/internal/common/enums"
+	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type DeleteRoleLogic struct {
@@ -28,64 +30,80 @@ func (l *DeleteRoleLogic) DeleteRole(req *types.RoleIDPathReq) (*types.Operation
 		return nil, errors.Parameter.WithMsg("role.id.empty")
 	}
 
-	kc, err := l.keycloakClient()
+	db, err := l.db()
 	if err != nil {
 		return nil, err
 	}
 
-	role, err := kc.FetchRoleByID(strings.TrimSpace(req.ID))
+	role, err := l.getRoleByID(db, req.ID)
 	if err != nil {
-		l.Errorf("failed to fetch role by id %s: %v", req.ID, err)
-		return nil, errors.System.WithMsg("failed to load role")
+		return nil, err
 	}
 	if role == nil {
 		return l.success(), nil
 	}
+	if l.protectedRole(role) {
+		return nil, errors.Parameter.WithMsg("role.super.delete")
+	}
 
-	if parsed, ok := enums.RoleParse(role.ID); ok {
-		if parsed.ID == enums.RoleSuperAdmin.ID || parsed.ID == enums.RoleNormalUser.ID {
-			return nil, errors.Parameter.WithMsg("role.super.delete")
+	affectedUsers := make([]string, 0)
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if txErr := tx.Model(&relationDB.IamUserRole{}).
+			Where("role_id = ?", role.ID).
+			Distinct("user_id").
+			Pluck("user_id", &affectedUsers).Error; txErr != nil {
+			l.Errorf("load affected users failed: %v", txErr)
+			return errors.System.WithMsg("failed to delete role")
 		}
+		if txErr := tx.Where("role_id = ?", role.ID).Delete(&relationDB.IamUserRole{}).Error; txErr != nil {
+			l.Errorf("delete user-role mappings failed: %v", txErr)
+			return errors.System.WithMsg("failed to delete role")
+		}
+		if txErr := tx.Where("role_id = ?", role.ID).Delete(&relationDB.IamRoleResource{}).Error; txErr != nil {
+			l.Errorf("delete role resources failed: %v", txErr)
+			return errors.System.WithMsg("failed to delete role")
+		}
+		if txErr := tx.Where("id = ?", role.ID).Delete(&relationDB.IamRole{}).Error; txErr != nil {
+			l.Errorf("delete role failed: %v", txErr)
+			return errors.System.WithMsg("failed to delete role")
+		}
+
+		if len(affectedUsers) == 0 {
+			return nil
+		}
+		defaultRoleID, roleErr := l.getDefaultUserRoleID(tx)
+		if roleErr != nil {
+			return roleErr
+		}
+		now := time.Now()
+		operatorID := l.operatorID()
+		for _, userID := range affectedUsers {
+			var remaining int64
+			if txErr := tx.Model(&relationDB.IamUserRole{}).Where("user_id = ?", userID).Count(&remaining).Error; txErr != nil {
+				l.Errorf("count remaining roles failed: %v", txErr)
+				return errors.System.WithMsg("failed to delete role")
+			}
+			if remaining > 0 {
+				continue
+			}
+			item := relationDB.IamUserRole{
+				UserID:    userID,
+				RoleID:    defaultRoleID,
+				CreatedAt: now,
+				CreatedBy: operatorID,
+			}
+			if txErr := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&item).Error; txErr != nil {
+				l.Errorf("assign default role failed: %v", txErr)
+				return errors.System.WithMsg("failed to delete role")
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 
-	roleName := role.Name
-	denyRoleName := fmt.Sprintf("deny-%s", roleName)
-
-	if err := kc.DeletePermission(fmt.Sprintf("%s-permission", roleName)); err != nil {
-		l.Errorf("failed to delete permission %s: %v", roleName, err)
-		return nil, errors.System.WithMsg("failed to delete role permission")
+	for _, userID := range affectedUsers {
+		l.invalidateUserCache(userID)
 	}
-	if err := kc.DeletePermission(fmt.Sprintf("%s-permission", denyRoleName)); err != nil {
-		l.Errorf("failed to delete deny permission %s: %v", denyRoleName, err)
-		return nil, errors.System.WithMsg("failed to delete deny role permission")
-	}
-
-	if err := kc.DeletePolicy(fmt.Sprintf("%s-policy", roleName)); err != nil {
-		l.Errorf("failed to delete policy %s: %v", roleName, err)
-		return nil, errors.System.WithMsg("failed to delete role policy")
-	}
-	if err := kc.DeletePolicy(fmt.Sprintf("%s-policy", denyRoleName)); err != nil {
-		l.Errorf("failed to delete deny policy %s: %v", denyRoleName, err)
-		return nil, errors.System.WithMsg("failed to delete deny role policy")
-	}
-
-	if err := kc.DeleteResource(fmt.Sprintf("%s-resource", roleName)); err != nil {
-		l.Errorf("failed to delete resource %s: %v", roleName, err)
-		return nil, errors.System.WithMsg("failed to delete role resource")
-	}
-	if err := kc.DeleteResource(fmt.Sprintf("%s-resource", denyRoleName)); err != nil {
-		l.Errorf("failed to delete deny resource %s: %v", denyRoleName, err)
-		return nil, errors.System.WithMsg("failed to delete deny role resource")
-	}
-
-	if err := kc.DeleteRole(roleName); err != nil {
-		l.Errorf("failed to delete role %s: %v", roleName, err)
-		return nil, errors.System.WithMsg("failed to delete role")
-	}
-	if err := kc.DeleteRole(denyRoleName); err != nil {
-		l.Errorf("failed to delete deny role %s: %v", denyRoleName, err)
-		return nil, errors.System.WithMsg("failed to delete deny role")
-	}
-
 	return l.success(), nil
 }

@@ -19,10 +19,8 @@ type Config struct {
 	TimescaledbUrl string       `json:"sink.timescaledb,env=SINK_TSDB_URL,optional,default=postgres://postgres:postgres@tsdb:5432/postgres"`
 	DevLink        conf.EventConf
 	CacheRedis     cache.ClusterConf
-	KeycloakDSN    string                 `json:",optional,env=KEYCLOAK_DSN,default=postgresql://postgresql:5432/keycloak" `
-	OAuthKeyCloak  clients.KeycloakConfig `json:",optional" `
-	NodeRed        nodered.NodeRedConfig  `json:",optional" `
-	Kong           clients.KongConfig     `json:",optional" mapstructure:"Kong"`
+	NodeRed        nodered.NodeRedConfig `json:",optional" `
+	Kong           clients.KongConfig    `json:",optional" mapstructure:"Kong"`
 }
 
 // ExportConfig UNS 导入导出配置

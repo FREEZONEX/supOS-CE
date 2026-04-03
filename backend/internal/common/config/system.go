@@ -5,7 +5,7 @@ type SystemConfig struct {
 	AppTitle     string `mapstructure:"app_title"`     // 应用标题
 	Version      string `mapstructure:"version"`       // 系统版本
 	Lang         string `mapstructure:"lang"`          // 语言 (en-US, zh-CN)
-	AuthEnable   bool   `mapstructure:"auth_enable"`   // 是否开启keycloak校验
+	AuthEnable   bool   `mapstructure:"auth_enable"`   // 是否开启登录鉴权
 	LLMType      string `mapstructure:"llm_type"`      // 大语言模型类型
 	PlatformType string `mapstructure:"platform_type"` // 基础平台类型
 	EntranceURL  string `mapstructure:"entrance_url"`  // 系统入口地址
@@ -34,7 +34,7 @@ type SystemConfig struct {
 func NewSystemConfig() *SystemConfig {
 	return &SystemConfig{
 		Lang:                     "zh-CN",
-		AuthEnable:               false,
+		AuthEnable:               true,
 		LLMType:                  "ollama",
 		MQTTTCPPort:              1883,
 		MQTTWebsocketTSLPort:     8084,

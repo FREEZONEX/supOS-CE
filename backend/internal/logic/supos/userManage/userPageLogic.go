@@ -2,11 +2,10 @@ package userManage
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"backend/internal/common/constants"
-	"backend/internal/common/enums"
+	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
 
@@ -30,14 +29,9 @@ func (l *UserPageLogic) UserPage(req *types.UserManagePageReq) (*types.UserManag
 		return nil, errors.Parameter.WithMsg("request body is empty")
 	}
 
-	db, err := l.keycloakDB()
+	db, err := l.db()
 	if err != nil {
 		return nil, err
-	}
-
-	realm := strings.TrimSpace(l.realm())
-	if realm == "" {
-		return nil, errors.System.WithMsg("realm not configured")
 	}
 
 	pageNo := req.PageNo
@@ -50,39 +44,34 @@ func (l *UserPageLogic) UserPage(req *types.UserManagePageReq) (*types.UserManag
 	}
 	offset := (pageNo - 1) * pageSize
 
+	query := db.Table("supos_user AS u")
 	roleName := strings.TrimSpace(req.RoleName)
 	if roleName != "" {
-		if roleName == enums.RoleSuperAdmin.Comment || roleName == enums.RoleSuperAdmin.Name {
-			roleName = enums.RoleSuperAdmin.Name
+		query = query.Joins("JOIN supos_user_role AS ur ON ur.user_id = u.id").
+			Joins("JOIN supos_role AS r ON r.id = ur.role_id AND r.status = 1")
+		if builtinKey := normalizeBuiltinRoleKey(roleName); builtinKey != "" {
+			query = query.Where("LOWER(r.role_key) = LOWER(?)", builtinKey)
+		} else {
+			query = query.Where("LOWER(r.role_name) = LOWER(?) OR LOWER(r.role_key) = LOWER(?)", roleName, roleName)
 		}
 	}
 
-	base := db.Table("user_entity AS u").
-		Joins("JOIN user_role_mapping AS urm ON urm.user_id = u.id").
-		Joins("JOIN keycloak_role AS r ON r.id = urm.role_id").
-		Where("u.realm_id = (SELECT id FROM realm WHERE name = ?)", realm).
-		Where("u.service_account_client_link IS NULL")
-
 	if v := strings.TrimSpace(req.PreferredUsername); v != "" {
-		base = base.Where("u.username LIKE ?", "%"+v+"%")
+		query = query.Where("u.username ILIKE ?", "%"+v+"%")
 	}
 	if v := strings.TrimSpace(req.FirstName); v != "" {
-		base = base.Where("u.first_name LIKE ?", "%"+v+"%")
+		query = query.Where("u.display_name ILIKE ?", "%"+v+"%")
 	}
 	if v := strings.TrimSpace(req.Email); v != "" {
-		base = base.Where("u.email = ?", v)
-	}
-	if roleName != "" {
-		base = base.Where("r.name = ?", roleName)
+		query = query.Where("LOWER(u.email) = LOWER(?)", v)
 	}
 	if req.Enabled != nil {
-		base = base.Where("u.enabled = ?", *req.Enabled)
+		query = query.Where("u.enabled = ?", *req.Enabled)
 	}
 
 	var total int64
-	countQuery := base.Session(&gorm.Session{}).Distinct("u.id")
-	if err := countQuery.Count(&total).Error; err != nil {
-		l.Errorf("failed to count users: %v", err)
+	if err := query.Session(&gorm.Session{}).Distinct("u.id").Count(&total).Error; err != nil {
+		l.Errorf("count users failed: %v", err)
 		return nil, errors.System.WithMsg("failed to query users")
 	}
 	if total == 0 {
@@ -94,27 +83,21 @@ func (l *UserPageLogic) UserPage(req *types.UserManagePageReq) (*types.UserManag
 		}, nil
 	}
 
-	var rows []userEntityRow
-	dataQuery := base.
-		Select(`u.id, u.username AS preferred_username, u.first_name, u.email, u.enabled, u.email_verified`).
-		Group("u.id").
-		Order("u.created_timestamp ASC").
+	var rows []relationDB.IamUser
+	if err := query.Session(&gorm.Session{}).
+		Select("u.*").
+		Distinct("u.id, u.username, u.display_name, u.email, u.enabled, u.source, u.phone, u.home_page, u.first_time_login, u.tips_enable, u.main_language, u.created_at, u.updated_at").
+		Order("u.created_at ASC").
 		Limit(int(pageSize)).
-		Offset(int(offset))
-
-	if err := dataQuery.Scan(&rows).Error; err != nil {
-		l.Errorf("failed to load user list: %v", err)
+		Offset(int(offset)).
+		Scan(&rows).Error; err != nil {
+		l.Errorf("load users failed: %v", err)
 		return nil, errors.System.WithMsg("failed to query users")
 	}
 
 	userIDs := make([]string, 0, len(rows))
 	for _, row := range rows {
 		userIDs = append(userIDs, row.ID)
-	}
-
-	attrMap, err := l.loadAttributesForUsers(db, userIDs)
-	if err != nil {
-		return nil, err
 	}
 
 	roleMap, err := l.loadRolesForUsers(db, userIDs)
@@ -126,43 +109,22 @@ func (l *UserPageLogic) UserPage(req *types.UserManagePageReq) (*types.UserManag
 	for _, row := range rows {
 		item := types.UserManageItem{
 			ID:                row.ID,
-			PreferredUsername: row.PreferredUsername,
-			FirstName:         row.FirstName,
-			Email:             row.Email,
-			Enabled:           row.Enabled,
-			EmailVerified:     row.EmailVerified,
+			Email:             strings.TrimSpace(row.Email),
+			EmailVerified:     false,
+			FirstName:         firstNonEmpty(row.DisplayName, row.Username),
+			PreferredUsername: row.Username,
 			Sub:               row.ID,
-			FirstTimeLogin:    1,
-			TipsEnable:        1,
-			HomePage:          constants.DefaultHomepage,
+			Enabled:           row.Enabled,
+			FirstTimeLogin:    row.FirstTimeLogin,
+			TipsEnable:        row.TipsEnable,
+			HomePage:          firstNonEmpty(row.HomePage, constants.DefaultHomepage),
+			Phone:             strings.TrimSpace(row.Phone),
+			Source:            strings.TrimSpace(row.Source),
+			RoleList:          roleMap[row.ID],
 		}
-
-		if attrs := attrMap[row.ID]; len(attrs) > 0 {
-			if v := strings.TrimSpace(attrs["phone"]); v != "" {
-				item.Phone = v
-			}
-			if v := strings.TrimSpace(attrs["homePage"]); v != "" {
-				item.HomePage = v
-			}
-			if v := strings.TrimSpace(attrs["source"]); v != "" {
-				item.Source = v
-			}
-			if v := strings.TrimSpace(attrs["firstTimeLogin"]); v != "" {
-				if iv, err := strconv.Atoi(v); err == nil {
-					item.FirstTimeLogin = iv
-				}
-			}
-			if v := strings.TrimSpace(attrs["tipsEnable"]); v != "" {
-				if iv, err := strconv.Atoi(v); err == nil {
-					item.TipsEnable = iv
-				}
-			}
+		if item.HomePage == "" {
+			item.HomePage = constants.DefaultHomepage
 		}
-
-		if summaries := roleMap[row.ID]; len(summaries) > 0 {
-			item.RoleList = summaries
-		}
-
 		items = append(items, item)
 	}
 
@@ -173,13 +135,4 @@ func (l *UserPageLogic) UserPage(req *types.UserManagePageReq) (*types.UserManag
 		Total:    total,
 		Data:     items,
 	}, nil
-}
-
-type userEntityRow struct {
-	ID                string `gorm:"column:id"`
-	PreferredUsername string `gorm:"column:preferred_username"`
-	FirstName         string `gorm:"column:first_name"`
-	Email             string `gorm:"column:email"`
-	Enabled           bool   `gorm:"column:enabled"`
-	EmailVerified     bool   `gorm:"column:email_verified"`
 }

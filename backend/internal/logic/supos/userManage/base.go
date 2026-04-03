@@ -2,24 +2,25 @@ package userManage
 
 import (
 	"context"
-	"fmt"
-	"slices"
+	"sort"
 	"strings"
+	"time"
 
 	"backend/internal/common/I18nUtils"
 	cache "backend/internal/common/cache"
-	authdto "backend/internal/common/dto/auth"
 	"backend/internal/common/enums"
 	"backend/internal/common/utils/apiutil"
 	"backend/internal/common/vo"
-	keycloakrepo "backend/internal/repo/keycloak"
+	authlogic "backend/internal/logic/supos/auth"
+	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
-	"backend/share/clients"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type baseUserManageLogic struct {
@@ -36,26 +37,12 @@ func newBaseUserManageLogic(ctx context.Context, svcCtx *svc.ServiceContext) bas
 	}
 }
 
-func (l baseUserManageLogic) keycloakClient() (*clients.KeycloakClient, error) {
-	if l.svcCtx == nil || l.svcCtx.Keycloak == nil {
-		return nil, errors.System.WithMsg("keycloak client not configured")
-	}
-	return l.svcCtx.Keycloak, nil
-}
-
-func (l baseUserManageLogic) keycloakDB() (*gorm.DB, error) {
-	db := keycloakrepo.GetConn(l.ctx)
+func (l baseUserManageLogic) db() (*gorm.DB, error) {
+	db := stores.GetCommonConn(l.ctx)
 	if db == nil {
-		if keycloakrepo.Enabled() {
-			return nil, errors.System.WithMsg("keycloak database connection not initialized")
-		}
-		return nil, errors.System.WithMsg("keycloak database not configured")
+		return nil, errors.System.WithMsg("common database connection not initialized")
 	}
-	return db, nil
-}
-
-func (l baseUserManageLogic) authRepo() (*keycloakrepo.AuthRepo, error) {
-	return keycloakrepo.NewAuthRepo(l.ctx)
+	return db.WithContext(l.ctx), nil
 }
 
 func (l baseUserManageLogic) currentUser() *vo.UserInfoVo {
@@ -65,15 +52,15 @@ func (l baseUserManageLogic) currentUser() *vo.UserInfoVo {
 	return nil
 }
 
-func (l baseUserManageLogic) realm() string {
-	if l.svcCtx == nil {
-		return ""
-	}
-	return l.svcCtx.Config.OAuthKeyCloak.Realm
-}
-
 func (l baseUserManageLogic) success() *types.OperationResult {
 	return &types.OperationResult{Success: true}
+}
+
+func (l baseUserManageLogic) operatorID() string {
+	if user := l.currentUser(); user != nil {
+		return strings.TrimSpace(user.Sub)
+	}
+	return ""
 }
 
 func (l baseUserManageLogic) invalidateUserCache(userID string) {
@@ -90,87 +77,139 @@ func (l baseUserManageLogic) updateUserCache(user *vo.UserInfoVo) {
 	cache.UserInfoCache.Set(user.Sub, user)
 }
 
-type kcUserEntity struct {
-	ID        string `gorm:"column:id"`
-	Username  string `gorm:"column:username"`
-	FirstName string `gorm:"column:first_name"`
-	Email     string `gorm:"column:email"`
-	Enabled   bool   `gorm:"column:enabled"`
-}
-
-type kcAttributeRow struct {
-	UserID string `gorm:"column:user_id"`
-	Name   string `gorm:"column:name"`
-	Value  string `gorm:"column:value"`
-}
-
-type kcRoleRow struct {
-	UserID      string `gorm:"column:user_id"`
-	RoleID      string `gorm:"column:role_id"`
-	RoleName    string `gorm:"column:role_name"`
-	Description string `gorm:"column:role_description"`
-	ClientRole  bool   `gorm:"column:client_role"`
-}
-
-func (l baseUserManageLogic) getUserEntity(userID string) (*kcUserEntity, error) {
+func (l baseUserManageLogic) getIAMUser(db *gorm.DB, userID string) (*relationDB.IamUser, error) {
 	if strings.TrimSpace(userID) == "" {
-		return nil, errors.Parameter.WithMsg("userId is empty")
+		return nil, errors.Parameter.WithMsg("userId is required")
 	}
-	db, err := l.keycloakDB()
-	if err != nil {
-		return nil, err
-	}
-	var entity kcUserEntity
-	if err := db.Table("user_entity").
-		Select("id, username, first_name, email, enabled").
-		Where("id = ?", userID).
-		Take(&entity).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		l.Errorf("load user entity failed: %v", err)
-		return nil, errors.System.WithMsg("failed to load user info")
-	}
-	return &entity, nil
-}
-
-func (l baseUserManageLogic) loadAttributesForUsers(db *gorm.DB, userIDs []string) (map[string]map[string]string, error) {
-	if len(userIDs) == 0 {
+	var user relationDB.IamUser
+	err := db.Where("id = ?", strings.TrimSpace(userID)).Take(&user).Error
+	if err == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
-	var rows []kcAttributeRow
-	if err := db.Table("user_attribute").
-		Select("user_id, name, value").
-		Where("user_id IN ?", userIDs).
-		Find(&rows).Error; err != nil {
-		l.Errorf("load user attributes failed: %v", err)
-		return nil, errors.System.WithMsg("failed to load user attributes")
+	if err != nil {
+		l.Errorf("load iam user failed: %v", err)
+		return nil, errors.System.WithMsg("failed to load user")
 	}
-	result := make(map[string]map[string]string)
-	for _, row := range rows {
-		if row.UserID == "" || row.Name == "" {
-			continue
-		}
-		m, ok := result[row.UserID]
-		if !ok {
-			m = make(map[string]string)
-			result[row.UserID] = m
-		}
-		m[row.Name] = row.Value
+	return &user, nil
+}
+
+func (l baseUserManageLogic) getIAMUserByUsername(db *gorm.DB, username string) (*relationDB.IamUser, error) {
+	username = strings.TrimSpace(username)
+	if username == "" {
+		return nil, nil
 	}
-	return result, nil
+	var user relationDB.IamUser
+	err := db.Where("LOWER(username) = LOWER(?)", username).Take(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		l.Errorf("query user by username failed: %v", err)
+		return nil, errors.System.WithMsg("failed to query user")
+	}
+	return &user, nil
+}
+
+func (l baseUserManageLogic) getIAMUserByEmail(db *gorm.DB, email string) (*relationDB.IamUser, error) {
+	email = strings.TrimSpace(email)
+	if email == "" {
+		return nil, nil
+	}
+	var user relationDB.IamUser
+	err := db.Where("LOWER(email) = LOWER(?)", email).Take(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		l.Errorf("query user by email failed: %v", err)
+		return nil, errors.System.WithMsg("failed to query user")
+	}
+	return &user, nil
+}
+
+func (l baseUserManageLogic) getRoleByID(db *gorm.DB, roleID string) (*relationDB.IamRole, error) {
+	if strings.TrimSpace(roleID) == "" {
+		return nil, errors.Parameter.WithMsg("role.id.empty")
+	}
+	var role relationDB.IamRole
+	err := db.Where("id = ?", strings.TrimSpace(roleID)).Take(&role).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		l.Errorf("load role by id failed: %v", err)
+		return nil, errors.System.WithMsg("failed to load role")
+	}
+	return &role, nil
+}
+
+func (l baseUserManageLogic) getRoleByName(db *gorm.DB, roleName string) (*relationDB.IamRole, error) {
+	roleName = strings.TrimSpace(roleName)
+	if roleName == "" {
+		return nil, nil
+	}
+	if builtinKey := normalizeBuiltinRoleKey(roleName); builtinKey != "" {
+		var role relationDB.IamRole
+		err := db.Where("LOWER(role_key) = LOWER(?)", builtinKey).Take(&role).Error
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		if err != nil {
+			l.Errorf("load builtin role failed: %v", err)
+			return nil, errors.System.WithMsg("failed to load role")
+		}
+		return &role, nil
+	}
+	var role relationDB.IamRole
+	err := db.Where("LOWER(role_name) = LOWER(?) OR LOWER(role_key) = LOWER(?)", roleName, roleName).Take(&role).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		l.Errorf("load role by name failed: %v", err)
+		return nil, errors.System.WithMsg("failed to load role")
+	}
+	return &role, nil
+}
+
+func (l baseUserManageLogic) listRoles(db *gorm.DB) ([]relationDB.IamRole, error) {
+	var roles []relationDB.IamRole
+	err := db.Where("status = 1").Order("builtin DESC, role_name ASC").Find(&roles).Error
+	if err != nil {
+		l.Errorf("load role list failed: %v", err)
+		return nil, errors.System.WithMsg("failed to load roles")
+	}
+	return roles, nil
+}
+
+func (l baseUserManageLogic) countActiveRoles(db *gorm.DB) (int64, error) {
+	var total int64
+	if err := db.Model(&relationDB.IamRole{}).Where("status = 1").Count(&total).Error; err != nil {
+		l.Errorf("count roles failed: %v", err)
+		return 0, errors.System.WithMsg("failed to count roles")
+	}
+	return total, nil
 }
 
 func (l baseUserManageLogic) loadRolesForUsers(db *gorm.DB, userIDs []string) (map[string][]types.RoleSummary, error) {
 	if len(userIDs) == 0 {
-		return nil, nil
+		return map[string][]types.RoleSummary{}, nil
 	}
-	var rows []kcRoleRow
-	if err := db.Table("user_role_mapping AS urm").
-		Select("urm.user_id, r.id AS role_id, r.name AS role_name, r.description AS role_description, r.client_role").
-		Joins("JOIN keycloak_role AS r ON r.id = urm.role_id").
-		Where("urm.user_id IN ?", userIDs).
-		Find(&rows).Error; err != nil {
+	type roleJoinRow struct {
+		UserID      string `gorm:"column:user_id"`
+		RoleID      string `gorm:"column:role_id"`
+		RoleKey     string `gorm:"column:role_key"`
+		RoleName    string `gorm:"column:role_name"`
+		Description string `gorm:"column:description"`
+	}
+	var rows []roleJoinRow
+	if err := db.Table("supos_user_role AS ur").
+		Select("ur.user_id, r.id AS role_id, r.role_key, r.role_name, r.description").
+		Joins("JOIN supos_role AS r ON r.id = ur.role_id").
+		Where("ur.user_id IN ?", userIDs).
+		Where("r.status = 1").
+		Order("r.builtin DESC, r.role_name ASC").
+		Scan(&rows).Error; err != nil {
 		l.Errorf("load user roles failed: %v", err)
 		return nil, errors.System.WithMsg("failed to load user roles")
 	}
@@ -179,114 +218,354 @@ func (l baseUserManageLogic) loadRolesForUsers(db *gorm.DB, userIDs []string) (m
 		if row.UserID == "" || row.RoleID == "" {
 			continue
 		}
-		if !row.ClientRole || enums.IsIgnoredRoleID(row.RoleID) || enums.IsIgnoredRoleName(row.RoleName) || strings.HasPrefix(row.RoleName, "deny-") {
-			continue
-		}
-		display, desc := normalizeRoleDisplay(l.ctx, row.RoleID, row.RoleName, row.Description)
+		display, desc := normalizeRoleDisplay(l.ctx, row.RoleKey, row.RoleName, row.Description)
 		summary := types.RoleSummary{
 			RoleID:          row.RoleID,
-			RoleName:        strings.TrimSpace(display),
+			RoleName:        firstNonEmpty(display, row.RoleName, row.RoleKey),
 			RoleDescription: strings.TrimSpace(desc),
-			ClientRole:      row.ClientRole,
-		}
-		if summary.RoleName == "" {
-			summary.RoleName = strings.TrimSpace(row.RoleName)
+			ClientRole:      true,
 		}
 		result[row.UserID] = append(result[row.UserID], summary)
 	}
 	return result, nil
 }
 
-func convertAttributesPayload(attrs map[string]string) map[string]any {
-	if len(attrs) == 0 {
-		return map[string]any{}
-	}
-	payload := make(map[string]any, len(attrs))
-	for key, val := range attrs {
-		if strings.TrimSpace(key) == "" {
-			continue
-		}
-		payload[key] = []string{val}
-	}
-	return payload
+func (l baseUserManageLogic) getRoleResourceList(db *gorm.DB, roleID string) ([]types.RoleResource, error) {
+	allow, _, err := l.getRolePermissionLists(db, roleID)
+	return allow, err
 }
 
-func toRoleResourceList(resources []*authdto.ResourceDto) []types.RoleResource {
-	if len(resources) == 0 {
+func (l baseUserManageLogic) getRolePermissionLists(db *gorm.DB, roleID string) ([]types.RoleResource, []types.RoleResource, error) {
+	allRows, err := l.loadAssignableResources(db)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	assignedRows, err := l.loadRoleResources(db, roleID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	allow, deny := buildRolePermissionLists(allRows, assignedRows)
+	return allow, deny, nil
+}
+
+func (l baseUserManageLogic) loadAssignableResources(db *gorm.DB) ([]relationDB.SuposResource, error) {
+	var rows []relationDB.SuposResource
+	err := db.Table("supos_resource AS sr").
+		Select("sr.*").
+		Where("sr.type IN ?", []int{2, 3, 5}).
+		Where("COALESCE(sr.enable, true) = true").
+		Order("sr.sort ASC, sr.id ASC").
+		Scan(&rows).Error
+	if err != nil {
+		l.Errorf("load assignable resources failed: %v", err)
+		return nil, errors.System.WithMsg("failed to load resources")
+	}
+	return rows, nil
+}
+
+func (l baseUserManageLogic) loadRoleResources(db *gorm.DB, roleID string) ([]relationDB.SuposResource, error) {
+	var rows []relationDB.SuposResource
+	err := db.Table("supos_resource AS sr").
+		Select("sr.*").
+		Joins("JOIN supos_role_resource AS rr ON rr.resource_id = sr.id").
+		Where("rr.role_id = ?", strings.TrimSpace(roleID)).
+		Where("COALESCE(sr.enable, true) = true").
+		Order("sr.sort ASC, sr.id ASC").
+		Scan(&rows).Error
+	if err != nil {
+		l.Errorf("load role resources failed: %v", err)
+		return nil, errors.System.WithMsg("failed to load role resources")
+	}
+	return rows, nil
+}
+
+func (l baseUserManageLogic) mapRoleResourcesToIDs(
+	db *gorm.DB,
+	allowResources []types.RoleResource,
+	denyResources []types.RoleResource,
+) ([]int64, error) {
+	rows, err := l.loadAssignableResources(db)
+	if err != nil {
+		return nil, err
+	}
+	return mapRoleResourcesToIDsFromRows(rows, allowResources, denyResources), nil
+}
+
+func (l baseUserManageLogic) replaceRoleResources(
+	tx *gorm.DB,
+	roleID string,
+	allowResources []types.RoleResource,
+	denyResources []types.RoleResource,
+) error {
+	resourceIDs, err := l.mapRoleResourcesToIDs(tx, allowResources, denyResources)
+	if err != nil {
+		return err
+	}
+	if err := tx.Where("role_id = ?", strings.TrimSpace(roleID)).Delete(&relationDB.IamRoleResource{}).Error; err != nil {
+		l.Errorf("delete old role resources failed: %v", err)
+		return errors.System.WithMsg("failed to save role resources")
+	}
+	if len(resourceIDs) == 0 {
 		return nil
 	}
-	result := make([]types.RoleResource, 0, len(resources))
-	for _, res := range resources {
-		if res == nil {
-			continue
-		}
-		result = append(result, types.RoleResource{
-			PolicyID:   res.PolicyID,
-			ResourceID: res.ResourceID,
-			URI:        res.URI,
-			Methods:    slices.Clone(res.Methods),
+	now := time.Now()
+	items := make([]relationDB.IamRoleResource, 0, len(resourceIDs))
+	operatorID := l.operatorID()
+	for _, resourceID := range resourceIDs {
+		items = append(items, relationDB.IamRoleResource{
+			RoleID:     strings.TrimSpace(roleID),
+			ResourceID: resourceID,
+			CreatedAt:  now,
+			CreatedBy:  operatorID,
 		})
 	}
-	return result
+	if err := tx.Create(&items).Error; err != nil {
+		l.Errorf("create role resources failed: %v", err)
+		return errors.System.WithMsg("failed to save role resources")
+	}
+	return nil
 }
 
-func normalizeRoleDisplay(ctx context.Context, roleID, roleName, description string) (display, desc string) {
-	if enumRole, ok := enums.RoleParse(roleID); ok {
-		return enumsDisplay(ctx, enumRole), description
+func (l baseUserManageLogic) resolveRoleIDs(db *gorm.DB, roles []types.RoleSummary) ([]string, error) {
+	if len(roles) == 0 {
+		return nil, nil
 	}
-	if strings.TrimSpace(description) != "" {
-		return description, description
-	}
-	return roleName, description
-}
-
-func enumsDisplay(ctx context.Context, role enums.RoleEnum) string {
-	return I18nUtils.GetMessageWithCtx(ctx, role.I18nCode)
-}
-
-func stringSlice(values []types.RoleResource) []string {
-	if len(values) == 0 {
-		return nil
-	}
-	set := make(map[string]struct{}, len(values))
-	for _, v := range values {
-		uri := strings.TrimSpace(v.URI)
-		if uri == "" {
+	seen := make(map[string]struct{}, len(roles))
+	result := make([]string, 0, len(roles))
+	for _, role := range roles {
+		var (
+			roleModel *relationDB.IamRole
+			err       error
+		)
+		if strings.TrimSpace(role.RoleID) != "" {
+			roleModel, err = l.getRoleByID(db, role.RoleID)
+		} else {
+			roleModel, err = l.getRoleByName(db, role.RoleName)
+		}
+		if err != nil {
+			return nil, err
+		}
+		if roleModel == nil || roleModel.Status != 1 {
+			return nil, errors.Parameter.WithMsg("role.no.exist")
+		}
+		if _, ok := seen[roleModel.ID]; ok {
 			continue
 		}
-		set[uri] = struct{}{}
+		seen[roleModel.ID] = struct{}{}
+		result = append(result, roleModel.ID)
 	}
-	result := make([]string, 0, len(set))
-	for uri := range set {
-		result = append(result, uri)
+	return result, nil
+}
+
+func (l baseUserManageLogic) getDefaultUserRoleID(db *gorm.DB) (string, error) {
+	role, err := l.getRoleByName(db, "user")
+	if err != nil {
+		return "", err
 	}
-	slices.Sort(result)
-	return result
+	if role != nil {
+		return role.ID, nil
+	}
+	return enums.RoleNormalUser.ID, nil
+}
+
+func (l baseUserManageLogic) replaceUserRoles(tx *gorm.DB, userID string, roleIDs []string) error {
+	if err := tx.Where("user_id = ?", strings.TrimSpace(userID)).Delete(&relationDB.IamUserRole{}).Error; err != nil {
+		l.Errorf("delete user roles failed: %v", err)
+		return errors.System.WithMsg("failed to update user roles")
+	}
+	if len(roleIDs) == 0 {
+		return nil
+	}
+	now := time.Now()
+	operatorID := l.operatorID()
+	items := make([]relationDB.IamUserRole, 0, len(roleIDs))
+	for _, roleID := range dedupeStrings(roleIDs) {
+		items = append(items, relationDB.IamUserRole{
+			UserID:    strings.TrimSpace(userID),
+			RoleID:    roleID,
+			CreatedAt: now,
+			CreatedBy: operatorID,
+		})
+	}
+	if err := tx.Create(&items).Error; err != nil {
+		l.Errorf("create user roles failed: %v", err)
+		return errors.System.WithMsg("failed to update user roles")
+	}
+	return nil
+}
+
+func (l baseUserManageLogic) addUserRoles(tx *gorm.DB, userID string, roleIDs []string) error {
+	if len(roleIDs) == 0 {
+		return nil
+	}
+	now := time.Now()
+	operatorID := l.operatorID()
+	items := make([]relationDB.IamUserRole, 0, len(roleIDs))
+	for _, roleID := range dedupeStrings(roleIDs) {
+		items = append(items, relationDB.IamUserRole{
+			UserID:    strings.TrimSpace(userID),
+			RoleID:    roleID,
+			CreatedAt: now,
+			CreatedBy: operatorID,
+		})
+	}
+	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&items).Error; err != nil {
+		l.Errorf("add user roles failed: %v", err)
+		return errors.System.WithMsg("failed to update user roles")
+	}
+	return nil
+}
+
+func (l baseUserManageLogic) removeUserRoles(tx *gorm.DB, userID string, roleIDs []string) error {
+	if len(roleIDs) == 0 {
+		return nil
+	}
+	if err := tx.Where("user_id = ? AND role_id IN ?", strings.TrimSpace(userID), dedupeStrings(roleIDs)).
+		Delete(&relationDB.IamUserRole{}).Error; err != nil {
+		l.Errorf("remove user roles failed: %v", err)
+		return errors.System.WithMsg("failed to update user roles")
+	}
+	return nil
+}
+
+func (l baseUserManageLogic) upsertUserPassword(tx *gorm.DB, userID, password string) error {
+	hash, err := authlogic.HashPassword(strings.TrimSpace(password))
+	if err != nil {
+		l.Errorf("hash password failed: %v", err)
+		return errors.System.WithMsg("failed to save password")
+	}
+	now := time.Now()
+	if err := tx.Model(&relationDB.IamUser{}).
+		Where("id = ?", strings.TrimSpace(userID)).
+		Updates(map[string]any{
+			"password":   hash,
+			"updated_at": now,
+		}).Error; err != nil {
+		l.Errorf("save user password failed: %v", err)
+		return errors.System.WithMsg("failed to save password")
+	}
+	return nil
+}
+
+func (l baseUserManageLogic) revokeUserSessions(tx *gorm.DB, userID string) error {
+	now := time.Now()
+	if err := tx.Model(&relationDB.IamSession{}).
+		Where("user_id = ? AND revoked_at IS NULL", strings.TrimSpace(userID)).
+		Update("revoked_at", now).Error; err != nil {
+		l.Errorf("revoke user sessions failed: %v", err)
+		return errors.System.WithMsg("failed to revoke user sessions")
+	}
+	return nil
+}
+
+func (l baseUserManageLogic) protectedRole(role *relationDB.IamRole) bool {
+	if role == nil {
+		return false
+	}
+	if role.Builtin {
+		return true
+	}
+	switch normalizeBuiltinRoleKey(firstNonEmpty(role.RoleKey, role.RoleName)) {
+	case "admin", "user":
+		return true
+	default:
+		return false
+	}
+}
+
+func normalizeBuiltinRoleKey(name string) string {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "admin", "super-admin", strings.ToLower(enums.RoleAdmin.Comment), strings.ToLower(enums.RoleSuperAdmin.Comment):
+		return "admin"
+	case "user", "normal-user", strings.ToLower(enums.RoleNormalUser.Comment):
+		return "user"
+	default:
+		return ""
+	}
+}
+
+func normalizeRoleKey(name string) string {
+	if builtin := normalizeBuiltinRoleKey(name); builtin != "" {
+		return builtin
+	}
+	return strings.ToLower(strings.TrimSpace(name))
+}
+
+func normalizeRoleDisplay(ctx context.Context, roleKey, roleName, description string) (display, desc string) {
+	switch normalizeBuiltinRoleKey(firstNonEmpty(roleKey, roleName)) {
+	case "admin":
+		return I18nUtils.GetMessageWithCtx(ctx, enums.RoleAdmin.I18nCode), description
+	case "user":
+		return I18nUtils.GetMessageWithCtx(ctx, enums.RoleNormalUser.I18nCode), description
+	default:
+		if strings.TrimSpace(roleName) != "" {
+			return strings.TrimSpace(roleName), description
+		}
+		return strings.TrimSpace(roleKey), description
+	}
+}
+
+func buildPagePermission(resource relationDB.SuposResource) string {
+	if resource.URLType != nil && *resource.URLType == 1 && resource.URL != nil && strings.TrimSpace(*resource.URL) != "" {
+		return strings.TrimSpace(*resource.URL)
+	}
+	if strings.TrimSpace(resource.Code) == "" {
+		return ""
+	}
+	return "/" + strings.TrimSpace(resource.Code)
+}
+
+func normalizePermissionURI(uri string) string {
+	uri = strings.TrimSpace(uri)
+	if uri == "" {
+		return ""
+	}
+	if idx := strings.Index(uri, "$"); idx >= 0 {
+		return strings.TrimSpace(uri[:idx])
+	}
+	return uri
+}
+
+func defaultMethods() []string {
+	return []string{"get", "post", "put", "delete", "patch", "head", "options"}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func dedupeStrings(items []string) []string {
 	if len(items) == 0 {
 		return nil
 	}
-	set := make(map[string]struct{}, len(items))
+	seen := make(map[string]struct{}, len(items))
+	result := make([]string, 0, len(items))
 	for _, item := range items {
 		key := strings.TrimSpace(item)
 		if key == "" {
 			continue
 		}
-		set[key] = struct{}{}
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, key)
 	}
-	result := make([]string, 0, len(set))
-	for item := range set {
-		result = append(result, item)
-	}
-	slices.Sort(result)
+	sort.Strings(result)
 	return result
 }
 
-func boolValue(val *bool) bool {
+func boolValue(val *bool, def bool) bool {
 	if val == nil {
-		return false
+		return def
 	}
 	return *val
 }
@@ -296,88 +575,4 @@ func intValue(val *int, def int) int {
 		return def
 	}
 	return *val
-}
-
-type RolesReq struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-func (l baseUserManageLogic) applyUserRoles(userID string, roles []types.RoleSummary, add bool) error {
-	if userID == "" || len(roles) == 0 {
-		return nil
-	}
-	kc, err := l.keycloakClient()
-	if err != nil {
-		return err
-	}
-	roleMap := make(map[string]clients.KeycloakRoleInfoDto)
-	for _, summary := range roles {
-		roleInfo, err := l.resolveRole(kc, summary)
-		if err != nil {
-			return err
-		}
-		if roleInfo == nil {
-			continue
-		}
-		roleMap[roleInfo.ID] = *roleInfo
-		if roleInfo.ID != enums.RoleSuperAdmin.ID {
-			denyName := fmt.Sprintf("deny-%s", roleInfo.Name)
-			denyRole, err := kc.FetchRole(denyName)
-			if err != nil {
-				l.Errorf("failed to fetch deny role %s: %v", denyName, err)
-				return errors.System.WithMsg("failed to load deny role")
-			}
-			if denyRole != nil {
-				roleMap[denyRole.ID] = *denyRole
-			}
-		}
-	}
-	if len(roleMap) == 0 {
-		return nil
-	}
-	values := make([]clients.KeycloakRoleInfoDto, 0, len(roleMap))
-	for _, info := range roleMap {
-		values = append(values, info)
-	}
-	action := "assign"
-	if !add {
-		action = "remove"
-	}
-	if err := kc.SetUserRoles(userID, values, add); err != nil {
-		l.Errorf("failed to %s roles for user %s: %v", action, userID, err)
-		return errors.System.WithMsg("failed to update user roles")
-	}
-	return nil
-}
-
-func (l baseUserManageLogic) resolveRole(kc *clients.KeycloakClient, summary types.RoleSummary) (*clients.KeycloakRoleInfoDto, error) {
-	if kc == nil {
-		return nil, errors.System.WithMsg("keycloak client not configured")
-	}
-	if id := strings.TrimSpace(summary.RoleID); id != "" {
-		role, err := kc.FetchRoleByID(id)
-		if err != nil {
-			l.Errorf("failed to fetch role by id %s: %v", id, err)
-			return nil, errors.System.WithMsg("failed to load role")
-		}
-		return role, nil
-	}
-	name := strings.TrimSpace(summary.RoleName)
-	if name == "" {
-		return nil, nil
-	}
-	role, err := kc.FetchRole(name)
-	if err != nil {
-		l.Errorf("failed to fetch role by name %s: %v", name, err)
-		return nil, errors.System.WithMsg("failed to load role")
-	}
-	if role == nil && (name == enums.RoleSuperAdmin.Comment || name == enums.RoleSuperAdmin.Name) {
-		role, err = kc.FetchRoleByID(enums.RoleSuperAdmin.ID)
-		if err != nil {
-			l.Errorf("failed to fetch super admin role: %v", err)
-			return nil, errors.System.WithMsg("failed to load role")
-		}
-	}
-	return role, nil
 }

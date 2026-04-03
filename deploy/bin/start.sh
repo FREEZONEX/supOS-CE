@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# exit error
 set -e
 
-docker ps -a -q --filter "network=tier0_edge_network" | xargs --no-run-if-empty docker start \
-&& echo "started" || echo "failed"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+
+source "$SCRIPT_DIR/global/compose-context.sh"
+prepare_compose_context
+
+"${compose_args[@]}" start

@@ -24,7 +24,6 @@ sink:
   postgresql: postgres://postgres:postgres@100.100.100.22:34099/postgres
   timescaledb: postgres://postgres:postgres@100.100.100.20:31014/postgres
 
-#KeycloakDSN: postgres://postgres:postgres@100.100.100.20:31014/keycloak
 CacheRedis:
   - Host: localhost:6379
     Pass:
@@ -55,17 +54,6 @@ OssConf:
   PrivateBucketName:
   TemporaryBucketName:
   StorePath: /uns
-OAuthKeyCloak:
-  Realm: supos
-  ClientName: supos
-  ClientID: NULL
-  ClientSecret: VaOS2makbDhJJsLlYPt4Wl87bo9VzXiO
-  AuthorizationGrantType: authorization_code
-  RedirectURI: http://office.unibutton.com:11488/inter-api/supos/auth/token
-  SuposHome: http://office.unibutton.com:11488/home
-  IssuerURI: http://office.unibutton.com:11488/keycloak/home/auth
-  # 刷新token的时间 单位：秒 token小于这个时间会调用refreshToken接口刷新
-  RefreshTokenTime: "60"
 NodeRed:
   Source:
     Host: nodered

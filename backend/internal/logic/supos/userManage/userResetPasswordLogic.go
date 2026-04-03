@@ -4,10 +4,12 @@ import (
 	"context"
 	"strings"
 
+	authlogic "backend/internal/logic/supos/auth"
 	"backend/internal/svc"
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gorm.io/gorm"
 )
 
 type UserResetPasswordLogic struct {
@@ -27,20 +29,29 @@ func (l *UserResetPasswordLogic) UserResetPassword(req *types.UserResetPwdReq) (
 		return nil, errors.Parameter.WithMsg("userId, username and passwords are required")
 	}
 
-	kc, err := l.keycloakClient()
+	db, err := l.db()
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := kc.Login(strings.TrimSpace(req.Username), strings.TrimSpace(req.Password)); err != nil {
+	user, err := l.getIAMUser(db, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil || !strings.EqualFold(user.Username, req.Username) {
+		return nil, errors.Parameter.WithMsg("user.not.exist")
+	}
+
+	if strings.TrimSpace(user.Password) == "" || !authlogic.VerifyPassword(user.Password, req.Password) {
 		return nil, errors.Parameter.WithMsg("user.login.password.error")
 	}
 
-	if err := kc.ResetPassword(strings.TrimSpace(req.UserID), strings.TrimSpace(req.NewPassword)); err != nil {
-		l.Errorf("failed to reset password for user %s: %v", req.UserID, err)
-		return nil, errors.System.WithMsg("failed to reset password")
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		return l.upsertUserPassword(tx, user.ID, req.NewPassword)
+	}); err != nil {
+		return nil, err
 	}
 
-	l.invalidateUserCache(strings.TrimSpace(req.UserID))
+	l.invalidateUserCache(user.ID)
 	return l.success(), nil
 }

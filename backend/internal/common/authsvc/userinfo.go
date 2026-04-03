@@ -47,6 +47,7 @@ func FetchUserInfo(ctx context.Context, kc *clients.KeycloakClient, accessToken 
 			logx.WithContext(ctx).Errorf("init keycloak repo failed: %v", err)
 		} else if repo != nil {
 			if user, err := repo.BuildUserInfo(ctx, realm, sub, defaultHome); err == nil && user != nil {
+				populateButtonList(user)
 				if err := updateFirstLogin(ctx, kc, user); err != nil {
 					logx.WithContext(ctx).Errorf("update first login attributes failed: %v", err)
 				}
@@ -67,6 +68,7 @@ func FetchUserInfo(ctx context.Context, kc *clients.KeycloakClient, accessToken 
 	if err := updateFirstLogin(ctx, kc, user); err != nil {
 		logx.WithContext(ctx).Errorf("update first login attributes failed: %v", err)
 	}
+	populateButtonList(user)
 	if user != nil && cache.UserInfoCache != nil {
 		cache.UserInfoCache.Set(sub, user)
 	}
@@ -210,6 +212,30 @@ func attributeString(attrs map[string]any, key string) string {
 
 func trimString(val string) string {
 	return strings.TrimSpace(val)
+}
+
+func populateButtonList(user *vo.UserInfoVo) {
+	if user == nil || len(user.ResourceList) == 0 {
+		return
+	}
+	buttonSet := make(map[string]struct{})
+	for _, resource := range user.ResourceList {
+		if resource == nil {
+			continue
+		}
+		uri := strings.TrimSpace(resource.URI)
+		if !strings.HasPrefix(uri, "button:") {
+			continue
+		}
+		buttonSet[uri] = struct{}{}
+	}
+	if len(buttonSet) == 0 {
+		return
+	}
+	user.ButtonList = make([]string, 0, len(buttonSet))
+	for uri := range buttonSet {
+		user.ButtonList = append(user.ButtonList, uri)
+	}
 }
 
 func updateFirstLogin(ctx context.Context, kc *clients.KeycloakClient, user *vo.UserInfoVo) error {

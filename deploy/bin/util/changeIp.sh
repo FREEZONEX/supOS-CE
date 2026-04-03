@@ -1,14 +1,15 @@
 #!/bin/bash
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
-ENV_FILE="$SCRIPT_DIR/../../.env.default"
-if [ -f "$SCRIPT_DIR/../../.env" ]; then
-  ENV_FILE="$SCRIPT_DIR/../../.env"
+CHANGE_IP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+ENV_FILE="$CHANGE_IP_DIR/../../.env.default"
+if [ -f "$CHANGE_IP_DIR/../../.env" ]; then
+  ENV_FILE="$CHANGE_IP_DIR/../../.env"
 fi
 # 设置.env环境变量
-source $ENV_FILE
-source $SCRIPT_DIR/../global/log.sh
+source "$ENV_FILE"
+source "$CHANGE_IP_DIR/../global/log.sh"
+source "$CHANGE_IP_DIR/wait-compose-healthy.sh"
 
 BASE_URL=""
 if [ "$ENTRANCE_PROTOCOL" == "http" ]; then
@@ -24,29 +25,25 @@ if [ "$ENTRANCE_PROTOCOL" == "https" ]; then
   fi
 fi
 
-KONG_SQL_1="UPDATE \"public\".\"plugins\" SET \"config\" = '{\"login_url\": \"$BASE_URL/keycloak/home/auth/realms/tier0/protocol/openid-connect/auth?client_id=tier0&redirect_uri=$BASE_URL/inter-api/supos/auth/token&response_type=code&scope=openid\", \"forbidden_url\": \"/403\", \"whitelist_paths\": [\"^/inter-api/supos/auth.*$\", \"^/inter-api/supos/systemConfig.*$\", \"^/inter-api/supos/theme/getConfig.*$\", \"^/$\", \"^/assets.*$\", \"^/locale.*$\", \"^/logo.*$\", \"^/gitea.*git.*$\", \"^/tier0-login.*$\", \"^/403$\", \"^/open-api/.*$\", \"^/keycloak.*$\", \"^/nodered.*$\", \"^/files.*$\", \"^/freeLogin.*$\", \"^/inter-api/supos/dev/logs.*$\", \"^/inter-api/supos/license.*$\", \"^/inter-api/supos/cascade.*$\"], \"enable_deny_check\": true, \"enable_resource_check\": true}', \"updated_at\" = NOW() WHERE \"name\" = 'supos-auth-checker';"
-KONG_SQL_2="UPDATE \"public\".\"plugins\" SET \"config\" = '{\"add\": {\"body\": [], \"headers\": [], \"querystring\": []}, \"append\": {\"body\": [], \"headers\": [], \"querystring\": [\"client_id:tier0\", \"response_type:code\", \"scope:openid\", \"redirect_uri:$BASE_URL/inter-api/supos/auth/token\"]}, \"remove\": {\"body\": [], \"headers\": [], \"querystring\": []}, \"rename\": {\"body\": [], \"headers\": [], \"querystring\": []}, \"replace\": {\"uri\": null, \"body\": [], \"headers\": [], \"querystring\": []}, \"http_method\": null}' WHERE \"name\" = 'request-transformer';"
-KEYCLOAK_SQL="UPDATE \"public\".\"client\" SET \"base_url\" = '$BASE_URL/home', \"management_url\" = '$BASE_URL', \"root_url\" = '$BASE_URL'  WHERE \"id\" = 'a7b53e5e-3567-470a-9da1-94cc0c7f18e6';"
-
-docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d kong -c "$KONG_SQL_1" >/dev/null
-docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d kong -c "$KONG_SQL_2" >/dev/null
-docker exec -i -e PGPASSWORD=postgres postgresql  psql -U postgres -d keycloak -c "$KEYCLOAK_SQL" >/dev/null
-
-command=$(sed -n '2p' $VOLUMES_PATH/edge/system/active-services.txt)
-source $SCRIPT_DIR/set-temp-env.sh "$SCRIPT_DIR/../.." "$command"
-source $SCRIPT_DIR/../init/init-kong-property.sh "$SCRIPT_DIR/../../" && cp $SCRIPT_DIR/../../mount/kong/kong_config.yml $VOLUMES_PATH/kong/
-source $SCRIPT_DIR/../init/init-portainer.sh
+command=$(sed -n '2p' "$VOLUMES_PATH/edge/system/active-services.txt")
+read -r -a COMPOSE_PROFILE_ARGS <<< "$command"
+source "$CHANGE_IP_DIR/set-temp-env.sh" "$CHANGE_IP_DIR/../.." "$command"
+# The entrance address is baked into Kong's declarative config and Portainer's
+# OAuth redirect URI, so changing IP requires re-rendering Kong and re-running
+# the IAM/Portainer bootstrap steps after restart.
+source "$CHANGE_IP_DIR/../init/init-kong-property.sh" "$CHANGE_IP_DIR/../../" && cp "$CHANGE_IP_DIR/../../mount/kong/kong_config.yml" "$VOLUMES_PATH/kong/"
 
 info "IP修改成功, 正在重启服务..."
 
-docker restart keycloak >/dev/null
+docker rm -f uns > /dev/null 2>&1 || true
+docker rm -f kong > /dev/null 2>&1 || true
 
-docker rm -f uns
-docker rm -f kong
-
-DOCKER_COMPOSE_FILE=$SCRIPT_DIR/../../docker-compose.yml
-docker compose --env-file $ENV_FILE --env-file $SCRIPT_DIR/../../.env.tmp -p tier0 -f $DOCKER_COMPOSE_FILE up -d uns kong
-
-sleep 15s
+DOCKER_COMPOSE_FILE="$CHANGE_IP_DIR/../../docker-compose.yml"
+# Only uns and kong need to restart here: uns owns the IAM/OAuth APIs and kong
+# owns the externally visible routes that embed the entrance address.
+docker compose --env-file "$ENV_FILE" --env-file "$CHANGE_IP_DIR/../../.env.tmp" --project-name tier0 "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d --remove-orphans uns kong
+wait_compose_healthy 600 5
+source "$CHANGE_IP_DIR/../init/init-iam-sql.sh"
+source "$CHANGE_IP_DIR/../init/init-portainer.sh"
 
 info "重启完成, 新的访问地址：$BASE_URL"

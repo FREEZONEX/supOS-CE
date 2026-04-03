@@ -140,11 +140,7 @@ service.interceptors.response.use(
     } else {
       if (config?.[CustomAxiosConfigEnum.NoMessage] !== true) {
         // HttpCode.Fail 的情况，这里提示，上层接失败处理
-        if (response?.data?.includes?.('keycloak')) {
-          console.warn('回退到登录页');
-        } else {
-          message.error(res.msg ?? getIntl('common.serverBusy', {}, 'Server is busy, please try again later'));
-        }
+        message.error(res.msg ?? getIntl('common.serverBusy', {}, 'Server is busy, please try again later'));
       }
     }
     // 如果 是业务上的错误，reject {code,msg,data} 给业务层自己处理

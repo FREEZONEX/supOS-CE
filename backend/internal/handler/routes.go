@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	iamoauth "backend/internal/handler/iam/oauth"
 	suposapp "backend/internal/handler/supos/app"
 	suposappkey "backend/internal/handler/supos/appkey"
 	suposattachment "backend/internal/handler/supos/attachment"
@@ -157,16 +158,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// login with platform username and password
+				Method:  http.MethodPost,
+				Path:    "/login",
+				Handler: suposauth.LoginHandler(serverCtx),
+			},
+			{
 				// logout current user
 				Method:  http.MethodDelete,
 				Path:    "/logout",
 				Handler: suposauth.LogoutHandler(serverCtx),
-			},
-			{
-				// exchange oauth code for platform token
-				Method:  http.MethodGet,
-				Path:    "/token",
-				Handler: suposauth.TokenHandler(serverCtx),
 			},
 			{
 				// fetch user info by cached token
@@ -175,13 +176,39 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: suposauth.UserHandler(serverCtx),
 			},
 			{
-				// fetch raw keycloak userinfo
+				// fetch user info for kong and frontend
 				Method:  http.MethodGet,
 				Path:    "/userinfo",
 				Handler: suposauth.UserinfoHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/inter-api/supos/auth"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/authorize",
+				Handler: iamoauth.AuthorizeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/token",
+				Handler: iamoauth.TokenHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/userinfo",
+				Handler: iamoauth.UserInfoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/logout",
+				Handler: iamoauth.LogoutHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/inter-api/iam/oauth2"),
 	)
 
 	server.AddRoutes(

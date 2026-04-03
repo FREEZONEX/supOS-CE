@@ -24,6 +24,24 @@ local function is_whitelisted_path(path, whitelist_paths)
   return false
 end
 
+local function build_login_redirect_url(login_url)
+  if not login_url or login_url == "" then
+    return login_url
+  end
+
+  local request_uri = ngx.var.request_uri or ngx.var.uri or "/"
+  if request_uri == "" then
+    request_uri = "/"
+  end
+
+  local separator = "?"
+  if string.find(login_url, "?", 1, true) then
+    separator = "&"
+  end
+
+  return login_url .. separator .. "redirectUri=" .. ngx.escape_uri(request_uri)
+end
+
 local function unauthorized(redirect_url)
   if not redirect_url or redirect_url == "" then
     return ngx.exit(ngx.HTTP_UNAUTHORIZED)
@@ -32,7 +50,7 @@ local function unauthorized(redirect_url)
     ngx.header["Set-Cookie"] = {
       "supos_community_token=; Path=/; Max-Age=0;"
     }
-    return ngx.redirect(redirect_url, ngx.HTTP_MOVED_TEMPORARILY)
+    return ngx.redirect(build_login_redirect_url(redirect_url), ngx.HTTP_MOVED_TEMPORARILY)
   end
 end
 
@@ -176,4 +194,3 @@ function plugin:access(conf)
 end
 
 return plugin
-

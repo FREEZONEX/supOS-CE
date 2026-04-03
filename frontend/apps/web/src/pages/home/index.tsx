@@ -68,10 +68,6 @@ const Index = () => {
   // const [exportRecords, setExportRecords] = useState([]);
 
   useEffect(() => {
-    fetchBaseStore?.();
-    // getRecords?.();
-  }, []);
-  useEffect(() => {
     getExamples();
   }, [lang]);
   const primaryColor = useThemeStore((state) => state.primaryColor);

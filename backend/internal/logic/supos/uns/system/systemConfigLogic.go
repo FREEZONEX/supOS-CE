@@ -5,10 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	I18nUtils "backend/internal/common/I18nUtils"
 	sysconfig "backend/internal/common/config"
@@ -59,6 +61,15 @@ const (
 	activeServicesFile    = "active-services.txt"
 	defaultComposePattern = "docker-compose"
 )
+
+type fallbackContainerService struct {
+	Name        string
+	Host        string
+	Port        int
+	Version     string
+	Description string
+	EnvMap      map[string]any
+}
 
 func buildSystemConfig(logger logx.Logger) (*sysconfig.SystemConfig, error) {
 	cfg := sysconfig.NewSystemConfig()
@@ -165,13 +176,28 @@ type composeService struct {
 
 func buildContainerMap() (map[string]*sysconfig.ContainerInfo, error) {
 	composeData, err := loadComposeFile()
+	if err == nil && len(composeData) > 0 {
+		containerMap, buildErr := buildContainerMapFromCompose(composeData)
+		if buildErr == nil && len(containerMap) > 0 {
+			return containerMap, nil
+		}
+		if buildErr != nil {
+			err = buildErr
+		}
+	}
+
+	fallback := buildFallbackContainerMap()
+	if len(fallback) > 0 {
+		return fallback, nil
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("load compose file: %w", err)
 	}
-	if len(composeData) == 0 {
-		return map[string]*sysconfig.ContainerInfo{}, nil
-	}
+	return map[string]*sysconfig.ContainerInfo{}, nil
+}
 
+func buildContainerMapFromCompose(composeData []byte) (map[string]*sysconfig.ContainerInfo, error) {
 	var compose composeFile
 	if err := yaml.Unmarshal(composeData, &compose); err != nil {
 		return nil, fmt.Errorf("unmarshal compose yaml: %w", err)
@@ -219,6 +245,131 @@ func buildContainerMap() (map[string]*sysconfig.ContainerInfo, error) {
 	}
 
 	return result, nil
+}
+
+func buildFallbackContainerMap() map[string]*sysconfig.ContainerInfo {
+	services := []fallbackContainerService{
+		{
+			Name:        "emqx",
+			Host:        "emqx",
+			Port:        18083,
+			Version:     "5.8",
+			Description: "aboutus.emqxDescription",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name:        "emqx-original.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.emqxDescription",
+				enums.ContainerEnvServiceRedirectURL.Name: "/emqx/home/",
+				enums.ContainerEnvServiceAccount.Name:     "admin",
+				enums.ContainerEnvServicePassword.Name:    "public",
+			},
+		},
+		{
+			Name:        "nodered",
+			Host:        "nodered",
+			Port:        1880,
+			Version:     "4.1.8-22",
+			Description: "aboutus.nodeRedDescription",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name:        "nodered-original.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.nodeRedDescription",
+			},
+		},
+		{
+			Name:        "eventflow",
+			Host:        "eventflow",
+			Port:        1889,
+			Version:     "4.1.8-22",
+			Description: "aboutus.nodeRedDescription",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name:        "nodered-original.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.nodeRedDescription",
+			},
+		},
+		{
+			Name:        "grafana",
+			Host:        "grafana",
+			Port:        3000,
+			Version:     "11.5.6",
+			Description: "aboutus.grafanaDescription",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name:        "grafana-original.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.grafanaDescription",
+				enums.ContainerEnvServiceRedirectURL.Name: "/grafana/home/dashboards/",
+			},
+		},
+		{
+			Name:        "portainer",
+			Host:        "portainer",
+			Port:        9443,
+			Version:     "2.33.5",
+			Description: "",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name: "portainer.svg",
+			},
+		},
+		{
+			Name:        "postgresql",
+			Host:        "postgresql",
+			Port:        5432,
+			Version:     "2.20.0-pg17",
+			Description: "aboutus.postgresqlDescription",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name:        "postgresql-original.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.postgresqlDescription",
+			},
+		},
+		{
+			Name:        "tsdb",
+			Host:        "tsdb",
+			Port:        5432,
+			Version:     "2.20.0-pg17",
+			Description: "aboutus.postgresqlDescription",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name:        "postgresql-original.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.postgresqlDescription",
+			},
+		},
+		{
+			Name:        "kong",
+			Host:        "kong",
+			Port:        8001,
+			Version:     "3.9.0",
+			Description: "aboutus.kongaDescription",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name:        "konga-original.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.kongaDescription",
+				enums.ContainerEnvServiceRedirectURL.Name: "/konga/home/",
+			},
+		},
+		{
+			Name:        "minio",
+			Host:        "minio",
+			Port:        9001,
+			Version:     "RELEASE.2024-12-18T13-15-44Z",
+			Description: "aboutus.minioDescription",
+			EnvMap: map[string]any{
+				enums.ContainerEnvServiceLogo.Name:        "minio-original.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.minioDescription",
+				enums.ContainerEnvServiceRedirectURL.Name: "/minio/home/",
+			},
+		},
+	}
+
+	result := make(map[string]*sysconfig.ContainerInfo)
+	for _, service := range services {
+		if !isServiceReachable(service.Host, service.Port) {
+			continue
+		}
+		envMap := cloneEnvMap(service.EnvMap)
+		envMap[enums.ContainerEnvServiceIsShow.Name] = true
+		result[service.Name] = &sysconfig.ContainerInfo{
+			Name:        service.Name,
+			Version:     service.Version,
+			Description: service.Description,
+			EnvMap:      envMap,
+		}
+	}
+	return result
 }
 
 func loadComposeFile() ([]byte, error) {
@@ -403,6 +554,19 @@ func cloneEnvMap(src map[string]any) map[string]any {
 		clone[k] = v
 	}
 	return clone
+}
+
+func isServiceReachable(host string, port int) bool {
+	host = strings.TrimSpace(host)
+	if host == "" || port <= 0 {
+		return false
+	}
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), 300*time.Millisecond)
+	if err != nil {
+		return false
+	}
+	_ = conn.Close()
+	return true
 }
 
 func extractVersion(image string) string {

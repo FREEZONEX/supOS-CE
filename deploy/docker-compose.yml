@@ -4,7 +4,10 @@ networks:
 
 services:
   frontend:
-    image: tier0/tier0-frontend:1.0.1-R8
+    image: tier0-frontend-local:latest
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile-CN
     container_name: frontend
     ports:
       - "3010:3000"
@@ -32,22 +35,16 @@ services:
       - edge_network
     restart: always
   uns:
-    image: tier0/tier0-backend:1.0.1-R8
+    image: tier0-backend-local:latest
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
     container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}
       - LLM_API_KEY=${LLM_API_KEY}
       - LLM_TYPE=${LLM_TYPE}
       - REACT_APP_OS_LANG=${LANGUAGE}
-      - OAUTH_REDIRECT_URI=${BASE_URL}/inter-api/supos/auth/token
-      - OAUTH_SUPOS_HOME=${BASE_URL}/uns
-      - OAUTH_REALM=${OAUTH_REALM}
-      - OAUTH_CLIENT_NAME=${OAUTH_CLIENT_NAME}
-      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
-      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
-      - OAUTH_GRANT_TYPE=${OAUTH_GRANT_TYPE}
-      - OAUTH_ISSUER_URI=${OAUTH_ISSUER_URI}
-      - OAUTH_REFRESH_TOKEN_TIME=${OAUTH_REFRESH_TOKEN_TIME}
       - SYS_OS_APP_TITLE=${OS_NAME}
       - SYS_OS_LOGIN_PATH=${OS_LOGIN_PATH}
       - SYS_OS_LANG=${LANGUAGE}
@@ -72,6 +69,11 @@ services:
       - SYS_OS_TIMESTAMP_NAME=timeStamp
       - SYS_OS_LAZY_TREE=${LAZY_TREE}
       - UNS_ADD_BATCH_SIZE=1000
+      - IAM_PORTAINER_CLIENT_ID=${IAM_PORTAINER_CLIENT_ID:-portainer}
+      - IAM_PORTAINER_CLIENT_SECRET=${IAM_PORTAINER_CLIENT_SECRET:-Tier0PortainerSecret@1304}
+      - IAM_BOOTSTRAP_USERNAME=${IAM_BOOTSTRAP_USERNAME:-tier0}
+      - IAM_BOOTSTRAP_PASSWORD=${IAM_BOOTSTRAP_PASSWORD:-tier0}
+      - IAM_BOOTSTRAP_EMAIL=${IAM_BOOTSTRAP_EMAIL-}
     volumes:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
       - ${VOLUMES_PATH}/edge/attachment/:/app/go-edge/attachment/
@@ -112,7 +114,7 @@ services:
     ports:
       - "1883:1883"   # MQTT端口
       - "8883:8883"   # MQTT加密端口
-      - "8083:8083"   # WebSocket端口
+      - "${OS_MQTT_WEBSOCKET_PORT:-8083}:8083"   # WebSocket端口
       - "8084:8084"   # WebSocket加密端口
       - "18083:18083" # EMQX Dashboard端口
     environment:
@@ -188,7 +190,7 @@ services:
     container_name: grafana
     user: root
     ports:
-      - "3000:3000"  # Grafana web UI端口
+      - "${GRAFANA_PORT:-3000}:3000"  # Grafana web UI端口
     volumes:
       - ${VOLUMES_PATH}/grafana/data:/var/lib/grafana
       # - ${VOLUMES_PATH}/grafana/data/plugins:/var/lib/grafana/plugins  # 使用当前目录的 data 目录
@@ -225,7 +227,7 @@ services:
     container_name: portainer
     environment:
       service_logo: portainer.svg
-    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC"
+    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC" --trusted-origins ${ENTRANCE_DOMAIN}
     ports:
       - "8000:8000"
       - "9443:9443"
@@ -255,77 +257,12 @@ services:
       - -c
       - config_file=/etc/postgresql/custom.conf
     healthcheck:
-      test: ["CMD-SHELL", "psql -U postgres -d keycloak -c '\\dt public.initialization_complete' | grep -q 'initialization_complete'"]
+      test: ["CMD-SHELL", "psql -U postgres -d postgres -c '\\dt supos.supos_resource' | grep -q 'supos_resource'"]
       interval: 15s
       timeout: 15s
       retries: 60
       start_period: 120s
       start_interval: 10s
-    restart: always
-    networks:
-      - edge_network
-  keycloak:
-    image: keycloak/keycloak:26.0
-    container_name: keycloak
-    ports:
-      - "8081:8080"
-    user: root
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 512M
-    environment:
-      service_logo: keycloak-original.svg
-      JAVA_OPTS: >-
-        -Xms512m
-        -Xmx1g
-        -XX:MaxMetaspaceSize=256m
-        -XX:MetaspaceSize=256m
-        -Xss512k
-        -XX:+UseG1GC
-      service_description: aboutus.keycloakDescription
-      service_redirect_url: /keycloak/home/
-      service_account: admin
-      service_password: tier0
-      KC_SSL_REQUIRED: none  # 不要求 SSL
-      KC_PROXY: passthrough                       # 设置代理模式
-      KC_HOSTNAME: "${ENTRANCE_DOMAIN}"              # 指定主机名
-      KC_FRONTEND_URL: "${BASE_URL}"  # 设置前端 URL
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: supos
-      KC_COOKIE_SECURE: false                          # 禁用安全 cookie
-      KC_DB: postgres
-      KC_DB_URL: "jdbc:postgresql://postgresql:5432/keycloak"
-      KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: postgres
-      KC_DB_POOL_INITIAL_SIZE: 2
-      KC_DB_POOL_MIN_SIZE: 2
-      KC_DB_POOL_MAX_SIZE: 4
-      KC_DB_POOL_MAX_LIFETIME: 1800
-      KC_HEALTH_ENABLED: true
-      KC_FEATURES: token-exchange
-      JAVA_OPTS_APPEND: -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${VOLUMES_PATH}/keycloak/data:/opt/keycloak/data  # 将 Keycloak 的数据目录挂载到本地
-      - ${VOLUMES_PATH}/keycloak/theme/keycloak.v2:/opt/keycloak/themes/wenhao
-      - ${VOLUMES_PATH}/keycloak/ca/ca.crt:/opt/keycloak/ca.crt
-      - ${VOLUMES_PATH}/keycloak/ca/init-ldaps-cert.sh:/opt/keycloak/init-ldaps-cert.sh
-    depends_on:
-      postgresql:
-        condition: service_healthy  # 依赖 PostgreSQL 的健康状态
-    command: start-dev --hostname ${BASE_URL}/keycloak/home/auth  --proxy-headers forwarded
-    healthcheck:
-      test: >
-        /bin/bash -c "
-        exec 3<>/dev/tcp/localhost/8080"
-      interval: 10s
-      timeout: 5s
-      retries: 60
-      start_period: 120s    # 新增：给予2分钟的启动宽限期
-      start_interval: 10s   # 新增：宽限期内的检查间隔
     restart: always
     networks:
       - edge_network
@@ -399,12 +336,8 @@ services:
     depends_on:
       - emqx
       - uns
-      - keycloak
       - postgresql
-    command: >
-      sh -c "kong migrations bootstrap &&
-             kong config db_import /etc/kong/kong_config.yml &&
-             kong start"
+    command: ["/bin/sh", "/usr/local/bin/start.sh"]
     restart: always  # 确保 Kong 自动重启
     networks:
       - edge_network
@@ -442,21 +375,12 @@ services:
       - MINIO_ACCESS_KEY=admin
       - MINIO_SECRET_KEY=adminpassword
       - MINIO_BROWSER_REDIRECT_URL=${BASE_URL}/minio/home
-      - MINIO_IDENTITY_OPENID_CONFIG_URL=${OAUTH_ISSUER_URI}/realms/supos/.well-known/openid-configuration
-      - MINIO_IDENTITY_OPENID_CLIENT_ID=${OAUTH_CLIENT_ID}
-      - MINIO_IDENTITY_OPENID_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
-      - MINIO_IDENTITY_OPENID_SCOPES=openid
-      - MINIO_IDENTITY_OPENID_ROLE_POLICY=public-delete-policy
-      - MINIO_IDENTITY_OPENID_REDIRECT_URI=${BASE_URL}/minio/home/oauth_callback
     ports:
       - "9000:9000"  # Web UI 端口
       - "9001:9001"  # Admin API 端口 (如果需要访问管理接口)
     volumes:
       - ${VOLUMES_PATH}/minio/data:/data  # 数据存储位置
     command: server /data --console-address ":9001"
-    depends_on:
-      keycloak:
-        condition: service_healthy
     restart: always
     networks:
       - edge_network

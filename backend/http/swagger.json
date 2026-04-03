@@ -1176,7 +1176,7 @@
         "schemes": [
           "https"
         ],
-        "summary": "fetch raw keycloak userinfo",
+        "summary": "fetch current userinfo",
         "operationId": "supos/AuthUserinfo",
         "responses": {
           "200": {
