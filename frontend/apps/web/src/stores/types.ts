@@ -39,10 +39,8 @@ export interface UserInfoProps {
   superAdmin?: boolean;
   // 用户有的权限
   buttonGroup?: any[];
-  // 用户拒绝优先的权限
-  denyButtonGroup?: any[];
   /**
-   * @description 按钮权限 button:xxx 用户实际存在的按钮权限（通过组合拒绝优先权限过滤出来）
+   * @description 按钮权限 button:xxx 用户实际存在的按钮权限
    * */
   buttonList?: DataItem[];
   // 手机号

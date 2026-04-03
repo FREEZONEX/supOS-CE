@@ -21,9 +21,7 @@ import { getRoutesResourceApi } from '@/apis/inter-api/resource.ts';
 import {
   buildResourceTrees,
   type Criteria,
-  filterArrays,
   filterContainerList,
-  filterObjectArrays,
   filterRouteByUserResource,
   guideConfig,
   handleButtonPermissions,
@@ -73,7 +71,7 @@ export const getLangList = async () => {
 /**
  * @description: 系统基础store 路由、用户信息、系统信息、当前菜单信息等
  *
- * currentUserInfo: 用户相关信息，包含：用户角色，用户存在的操作权限buttonList,拒绝优先操作资源组denyButtonGroup，操作资源组buttonGroup 等；
+ * currentUserInfo: 用户相关信息，包含：用户角色，用户存在的操作权限buttonList、操作资源组buttonGroup 等；
  * 导航路由信息-根据权限显示：menuTree, menuGroup
  * home页路由信息-根据权限显示：homeTree, homeGroup
  * home页Tab: homeTabGroup（暂未控制权限）
@@ -158,14 +156,14 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       await getLangList();
 
       // 通过用户的资源池  拿到 - 菜单资源 和 操作资源
-      const { buttonGroup, others } = multiGroupByCondition(info?.resourceList, criteria);
-      // 拿到 拒绝优先的 菜单资源、 操作资源
-      const { buttonGroup: denyButtonGroup, others: denyOthers } = multiGroupByCondition(
-        info?.denyResourceList,
-        criteria
-      );
+      const { buttonGroup: legacyButtonGroup, others } = multiGroupByCondition(info?.resourceList, criteria);
+      const buttonPermissionList =
+        Array.isArray(info?.buttonList) && info.buttonList.length > 0
+          ? info.buttonList
+          : legacyButtonGroup?.map((i: any) => i.uri) || [];
+      const buttonGroup = buttonPermissionList.map((uri: string) => ({ uri }));
       // 整合出用户路由资源组
-      const userRoutesResourceList = filterObjectArrays(denyOthers, others);
+      const userRoutesResourceList = others || [];
       // 过滤后的路由组,含home\home_tab\menu及目录 去除操作权限
       const allRoutes = filterRouteByUserResource(
         mapResource(resource?.filter((r: ResourceProps) => r.type !== 3)),
@@ -180,10 +178,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const _buttonList =
         systemInfo?.authEnable === false || info?.superAdmin === true
           ? handleButtonPermissions(['button:*'], allButtonGroup) || []
-          : filterArrays(
-              handleButtonPermissions(denyButtonGroup?.map((i: any) => i.uri) || [], allButtonGroup) || [],
-              handleButtonPermissions(buttonGroup?.map((i: any) => i.uri) || [], allButtonGroup) || []
-            ) || [];
+          : handleButtonPermissions(buttonGroup?.map((i: any) => i.uri) || [], allButtonGroup) || [];
       // 储存用户信息
       storageOpt.set('personInfo', {
         username: info?.preferredUsername,
@@ -197,7 +192,6 @@ const updateBaseStore = async (isFirst: boolean = false) => {
         buttonList: buttonGroup?.map((i: any) => i.uri) || [],
         pageList: userRoutesResourceList || [],
         superAdmin: info?.superAdmin,
-        denyButtonGroup,
         buttonGroup,
       };
       useBaseStore.setState({
@@ -262,16 +256,8 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const _buttonList =
         baseState?.systemInfo?.authEnable === false || baseState?.currentUserInfo?.superAdmin === true
           ? handleButtonPermissions(['button:*'], allButtonGroup) || []
-          : filterArrays(
-              handleButtonPermissions(
-                baseState?.currentUserInfo?.denyButtonGroup?.map((i: any) => i.uri) || [],
-                allButtonGroup
-              ) || [],
-              handleButtonPermissions(
-                baseState?.currentUserInfo?.buttonGroup?.map((i: any) => i.uri) || [],
-                allButtonGroup
-              ) || []
-            ) || [];
+          : handleButtonPermissions(baseState?.currentUserInfo?.buttonGroup?.map((i: any) => i.uri) || [], allButtonGroup) ||
+            [];
       useBaseStore.setState({
         homeTree,
         homeTabGroup,

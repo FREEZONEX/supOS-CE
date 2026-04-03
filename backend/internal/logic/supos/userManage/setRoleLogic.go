@@ -8,6 +8,7 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gorm.io/gorm"
 )
 
 type SetRoleLogic struct {
@@ -26,15 +27,32 @@ func (l *SetRoleLogic) SetRole(req *types.UserSetRoleReq) (*types.OperationResul
 		return nil, errors.Parameter.WithMsg("userId is required")
 	}
 
-	add := true
-	if req.Type == 2 {
-		add = false
+	db, err := l.db()
+	if err != nil {
+		return nil, err
+	}
+	user, err := l.getIAMUser(db, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.Parameter.WithMsg("user.not.exist")
 	}
 
-	if err := l.applyUserRoles(strings.TrimSpace(req.UserID), req.RoleList, add); err != nil {
+	roleIDs, err := l.resolveRoleIDs(db, req.RoleList)
+	if err != nil {
 		return nil, err
 	}
 
-	l.invalidateUserCache(strings.TrimSpace(req.UserID))
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if req.Type == 2 {
+			return l.removeUserRoles(tx, user.ID, roleIDs)
+		}
+		return l.addUserRoles(tx, user.ID, roleIDs)
+	}); err != nil {
+		return nil, err
+	}
+
+	l.invalidateUserCache(user.ID)
 	return l.success(), nil
 }

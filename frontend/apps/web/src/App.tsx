@@ -8,7 +8,7 @@ import 'shepherd.js/dist/css/shepherd.css';
 import './App.css';
 import { userLogin } from '@/apis/chat2db';
 import { UnsTreeMapProvider } from '@/UnsTreeMapContext';
-import { MENU_TARGET_PATH, OMC_MODEL, STORAGE_PATH } from '@/common-types/constans.ts';
+import { LOGIN_URL, MENU_TARGET_PATH, OMC_MODEL, STORAGE_PATH } from '@/common-types/constans.ts';
 import LanguageProvider from './LanguageProvider.tsx';
 import { queryChat2dbCurUser } from '@/utils/chat2db.ts';
 import { checkImageExists, isInIframe } from '@/utils/url-util.ts';
@@ -32,6 +32,8 @@ function App() {
 
   useEffect(() => {
     const isOmc = isInIframe([], 'webview');
+    const currentPath = window.location.pathname;
+    const skipBootstrap = currentPath === LOGIN_URL || currentPath === '/freeLogin';
     if (isOmc) {
       Cookies.set(OMC_MODEL, '1', {
         expires: 365,
@@ -39,8 +41,14 @@ function App() {
     } else {
       Cookies.remove(OMC_MODEL, { path: '/' });
     }
-    // 初始化
-    fetchBaseStore(true);
+    if (skipBootstrap) {
+      useBaseStore.setState({
+        loading: false,
+      });
+    } else {
+      // 初始化
+      fetchBaseStore(true);
+    }
     return () => {
       cleanupI18nSubscriptions();
     };

@@ -10,15 +10,15 @@ info(
 )
 
 service backend {
-    @doc "exchange oauth code for platform token"
-    @handler token
-    get /token (TokenCallbackReq) returns ()
+    @doc "login with username and password"
+    @handler login
+    post /login (LoginReq) returns (UserInfoVO)
 
     @doc "fetch user info by cached token"
     @handler user
     get /user () returns (UserInfoVO)
 
-    @doc "fetch raw keycloak userinfo"
+    @doc "fetch user info for kong and frontend"
     @handler userinfo
     get /userinfo () returns (UserInfoVO)
 
@@ -28,8 +28,9 @@ service backend {
 }
 
 type (
-    TokenCallbackReq {
-        Code string `form:"code"`
+    LoginReq {
+        Username string `json:"username"`
+        Password string `json:"password"`
     }
 
     RoleInfo {
@@ -56,7 +57,7 @@ type (
         HomePage         string         `json:"homePage,optional"`
         RoleList         []RoleInfo     `json:"roleList,optional"`
         ResourceList     []ResourceInfo `json:"resourceList,optional"`
-        DenyResourceList []ResourceInfo `json:"denyResourceList,optional"`
+        ButtonList       []string       `json:"buttonList,optional"`
         superAdmin       bool           `json:"superAdmin,optional"`
     }
 

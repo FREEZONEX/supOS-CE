@@ -3,6 +3,7 @@ package vo
 import (
 	"backend/internal/types"
 	"fmt"
+	"strings"
 	"time"
 
 	"backend/internal/common/constants"
@@ -160,7 +161,7 @@ type UserInfoVo struct {
 	Enabled           bool                   `json:"enabled,omitzero"`          // 是否启用
 	RoleList          []*authdto.RoleDto     `json:"roleList,omitzero"`         // 角色列表
 	ResourceList      []*authdto.ResourceDto `json:"resourceList,omitzero"`     // 资源列表
-	DenyResourceList  []*authdto.ResourceDto `json:"denyResourceList,omitzero"` // 拒绝策略资源列表
+	ButtonList        []string               `json:"buttonList,omitzero"`       // 按钮权限码
 	MainLanguage      string                 `json:"mainLanguage,omitzero"`     // 主语言
 	SuperAdmin        bool                   `json:"superAdmin,optional"`       // 是否为超级管理员
 }
@@ -180,7 +181,10 @@ func (u *UserInfoVo) IsSuperAdmin() bool {
 		return false
 	}
 	for _, role := range u.RoleList {
-		if role.RoleID == enums.RoleSuperAdmin.ID {
+		if role.RoleID == enums.RoleSuperAdmin.ID || role.RoleID == enums.RoleAdmin.ID {
+			return true
+		}
+		if strings.EqualFold(role.RoleName, "super-admin") || strings.EqualFold(role.RoleName, "admin") {
 			return true
 		}
 	}

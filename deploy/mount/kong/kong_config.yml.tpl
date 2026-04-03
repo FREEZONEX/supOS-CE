@@ -210,6 +210,24 @@ services:
   id: 5f70fd49-e3d7-4ba8-b152-62eca6ec4455
   client_certificate: ~
   read_timeout: 300000
+- name: iam-oauth-backend
+  path: /inter-api/iam/oauth2/
+  protocol: http
+  tags: []
+  ca_certificates: ~
+  retries: 5
+  created_at: 1764825800
+  port: 8080
+  updated_at: 1764825800
+  enabled: true
+  host: uns
+  tls_verify: ~
+  write_timeout: 300000
+  connect_timeout: 300000
+  tls_verify_depth: ~
+  id: 9e1c3e03-3f8f-44f9-b64c-1c0fa0f0a9b8
+  client_certificate: ~
+  read_timeout: 300000
 - name: minio
   path: /
   protocol: http
@@ -364,24 +382,6 @@ services:
   id: b096bcf5-2984-4acc-9bd5-a570a7653fcd
   client_certificate: ~
   read_timeout: 60000
-- name: keycloak
-  path: /
-  protocol: http
-  tags: []
-  ca_certificates: ~
-  retries: 5
-  created_at: 1729740513
-  port: 8080
-  updated_at: 1764811192
-  enabled: true
-  host: keycloak
-  tls_verify: ~
-  write_timeout: 60000
-  connect_timeout: 60000
-  tls_verify_depth: ~
-  id: b2a70de2-d5db-4755-b8ba-b205d8fbb680
-  client_certificate: ~
-  read_timeout: 60000
 - name: nodered
   path: ~
   protocol: http
@@ -437,16 +437,16 @@ services:
   client_certificate: ~
   read_timeout: 60000
 - name: login
-  path: /realms/tier0/protocol/openid-connect/auth
+  path: ~
   protocol: http
   tags: []
   ca_certificates: ~
   retries: 5
   created_at: 1732105495
-  port: 8080
+  port: 3000
   updated_at: 1764811192
   enabled: true
-  host: keycloak
+  host: frontend
   tls_verify: ~
   write_timeout: 60000
   connect_timeout: 60000
@@ -783,6 +783,30 @@ routes:
   request_buffering: true
   snis: ~
   id: 3794799e-0c23-4065-a88d-7a08c46fbaf4
+  tags: ~
+  protocols:
+  - http
+  - https
+- name: iam-oauth-backend
+  sources: ~
+  preserve_host: true
+  destinations: ~
+  headers: ~
+  methods: ~
+  https_redirect_status_code: 426
+  service: 9e1c3e03-3f8f-44f9-b64c-1c0fa0f0a9b8
+  strip_path: true
+  paths:
+  - /inter-api/iam/oauth2/
+  created_at: 1764825800
+  updated_at: 1764825800
+  response_buffering: true
+  path_handling: v1
+  regex_priority: 0
+  hosts: ~
+  request_buffering: true
+  snis: ~
+  id: 8f44d72a-215e-4f56-a037-d31f2145d2ff
   tags: ~
   protocols:
   - http
@@ -1367,30 +1391,6 @@ routes:
   protocols:
   - http
   - https
-- name: keycloak-auth
-  sources: ~
-  preserve_host: false
-  destinations: ~
-  headers: ~
-  methods: ~
-  https_redirect_status_code: 426
-  service: b2a70de2-d5db-4755-b8ba-b205d8fbb680
-  strip_path: true
-  paths:
-  - /keycloak/home/auth/
-  created_at: 1731473911
-  updated_at: 1764811192
-  response_buffering: true
-  path_handling: v1
-  regex_priority: 0
-  hosts: ~
-  request_buffering: true
-  snis: ~
-  id: b610973a-764e-4cef-910e-0794f334e4bd
-  tags: ~
-  protocols:
-  - http
-  - https
 - name: EventFlow
   sources: ~
   preserve_host: false
@@ -1588,34 +1588,6 @@ routes:
   snis: ~
   id: caeab40c-0c09-4465-b54a-2609391a19e8
   tags: ~
-  protocols:
-  - http
-  - https
-- name: Authentication
-  sources: ~
-  preserve_host: false
-  destinations: ~
-  headers: ~
-  methods: ~
-  https_redirect_status_code: 426
-  service: b2a70de2-d5db-4755-b8ba-b205d8fbb680
-  strip_path: true
-  paths:
-  - /keycloak/home/
-  created_at: 1729740574
-  updated_at: 1764811192
-  response_buffering: true
-  path_handling: v1
-  regex_priority: 0
-  hosts: ~
-  request_buffering: true
-  snis: ~
-  id: d0cea78f-1e0d-4b90-98ea-980a455bf5f5
-  tags:
-  - description:menu.desc.keycloak
-  - menu
-  - sort:2
-  - parentName:menu.tag.system
   protocols:
   - http
   - https
@@ -1935,11 +1907,12 @@ plugins:
   updated_at: 1764811192
   config:
     enable_deny_check: true
-    login_url: ${BASE_URL}/keycloak/home/auth/realms/tier0/protocol/openid-connect/auth?client_id=tier0&redirect_uri=${BASE_URL}/inter-api/supos/auth/token&response_type=code&scope=openid
+    login_url: ${BASE_URL}/tier0-login
     forbidden_url: /403
     enable_resource_check: true
     whitelist_paths:
     - ^/inter-api/supos/auth.*$
+    - ^/inter-api/iam/oauth2.*$
     - ^/inter-api/supos/systemConfig.*$
     - ^/inter-api/supos/theme/getConfig.*$
     - ^/$
@@ -1950,7 +1923,6 @@ plugins:
     - ^/tier0-login.*$
     - ^/403$
     - ^/open-api/.*$
-    - ^/keycloak.*$
     - ^/nodered.*$
     - ^/files.*$
     - ^/freeLogin.*$
@@ -2002,10 +1974,10 @@ plugins:
   config:
     append:
       querystring:
-      - client_id:tier0
+      - client_id:${IAM_PORTAINER_CLIENT_ID}
       - response_type:code
       - scope:openid
-      - redirect_uri:${BASE_URL}/inter-api/supos/auth/token
+      - redirect_uri:${BASE_URL}/portainer/home/
       body: []
       headers: []
     remove:
@@ -2141,6 +2113,44 @@ plugins:
   consumer: ~
   id: b5722a76-60b9-483d-90ac-e5de173264e2
   route: a6d04fe9-a464-493c-8f3a-4750fdd93a32
+  service: ~
+- tags: ~
+  name: response-transformer
+  created_at: 1764811193
+  updated_at: 1764811193
+  config:
+    append:
+      json_types: []
+      json: []
+      headers: []
+    remove:
+      json: []
+      headers:
+      - X-Frame-Options
+      - Content-Security-Policy
+    add:
+      json_types: []
+      json: []
+      headers:
+      - X-Frame-Options:SAMEORIGIN
+      - Content-Security-Policy:frame-ancestors 'self'
+    replace:
+      json_types: []
+      json: []
+      headers: []
+    rename:
+      json: []
+      headers: []
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
+  instance_name: ~
+  enabled: true
+  consumer: ~
+  id: 5ad40d8b-15ef-4fa2-b4de-06c9f52cc8d0
+  route: fb690c3a-e09e-4fcf-aad1-5d357c1938ec
   service: ~
 - tags: ~
   name: supos-url-transformer
@@ -2343,88 +2353,6 @@ upstreams:
   hash_on_cookie: ~
   hash_on_uri_capture: ~
   id: 14bdf793-231d-439e-8d67-3e47a3e7da05
-  healthchecks:
-    threshold: 0
-    active:
-      concurrency: 10
-      http_path: /
-      https_sni: ~
-      https_verify_certificate: true
-      healthy:
-        http_statuses:
-        - 200
-        - 302
-        successes: 0
-        interval: 0
-      unhealthy:
-        tcp_failures: 0
-        timeouts: 0
-        http_failures: 0
-        http_statuses:
-        - 429
-        - 404
-        - 500
-        - 501
-        - 502
-        - 503
-        - 504
-        - 505
-        interval: 0
-      type: http
-      headers: ~
-      timeout: 1
-    passive:
-      unhealthy:
-        tcp_failures: 0
-        timeouts: 0
-        http_failures: 0
-        http_statuses:
-        - 429
-        - 500
-        - 503
-      type: http
-      healthy:
-        http_statuses:
-        - 200
-        - 201
-        - 202
-        - 203
-        - 204
-        - 205
-        - 206
-        - 207
-        - 208
-        - 226
-        - 300
-        - 301
-        - 302
-        - 303
-        - 304
-        - 305
-        - 306
-        - 307
-        - 308
-        successes: 0
-  hash_on: none
-- name: keycloak
-  algorithm: round-robin
-  hash_on_cookie_path: /
-  client_certificate: ~
-  hash_fallback: none
-  hash_fallback_header: ~
-  slots: 1000
-  hash_fallback_uri_capture: ~
-  tags: ~
-  created_at: 1729739799
-  updated_at: 1764811193
-  use_srv_name: false
-  hash_fallback_query_arg: ~
-  hash_on_header: ~
-  host_header: ~
-  hash_on_query_arg: ~
-  hash_on_cookie: ~
-  hash_on_uri_capture: ~
-  id: 14ee49e7-f9bf-4234-a48f-7b7df7dda0ea
   healthchecks:
     threshold: 0
     active:
@@ -3714,13 +3642,6 @@ targets:
   id: 8d09a927-4def-479d-8ed9-0473be2a281a
   updated_at: 1764640500.78
   target: hasura:8080
-- tags: ~
-  upstream: 14ee49e7-f9bf-4234-a48f-7b7df7dda0ea
-  created_at: 1729832116.752
-  weight: 100
-  id: a4cdac00-4421-4a49-b2ba-b2f720f4998d
-  updated_at: 1764640500.791
-  target: keycloak:8080
 - tags: ~
   upstream: 420478e2-bdc8-49ec-ba0e-cc4cfd41afc8
   created_at: 1729739894.022

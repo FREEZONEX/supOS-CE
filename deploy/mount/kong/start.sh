@@ -1,6 +1,14 @@
-#!/bin/bash
-# kong config  db_export  /tmp/kong_config.yml  && docker cp kong:/tmp/kong_config.yml .
+#!/bin/sh
+set -e
 
-kong migrations bootstrap && kong config db_import /etc/kong/kong_config.yml
+if kong migrations bootstrap; then
+  kong migrations up
+  kong migrations finish
+  kong config db_import /etc/kong/kong_config.yml
+else
+  kong migrations up || true
+  kong migrations finish || true
+  kong config db_import /etc/kong/kong_config.yml || true
+fi
 
-kong start
+exec kong start

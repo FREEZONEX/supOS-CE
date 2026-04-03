@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"strings"
 
 	"gitee.com/unitedrhino/share/i18ns"
 )
@@ -46,7 +47,7 @@ func GetUserFromContext(ctx context.Context) *vo.UserInfoVo {
 
 	// If auth is disabled, mock a guest user
 	authEnable := os.Getenv("SYS_OS_AUTH_ENABLE")
-	if authEnable == "false" || authEnable == "" {
+	if strings.EqualFold(authEnable, "false") {
 		return vo.Guest()
 	}
 

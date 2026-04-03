@@ -11,6 +11,11 @@ if [ -f "$SCRIPT_DIR/../.env" ]; then
 fi
 
 # --- Part 1: IP Selection ---
+non_interactive=false
+if [ ! -t 0 ]; then
+  non_interactive=true
+fi
+
 if [[ "$platform" == MINGW64* ]]; then
     # IP selection logic for Windows
     sed -i -e "s/^OS_PLATFORM_TYPE=.*/OS_PLATFORM_TYPE=windows/" "$ENV_FILE"
@@ -34,7 +39,10 @@ if [[ "$platform" == MINGW64* ]]; then
     fi
     # --- [END BUG FIX] ---
 
-    if [[ -n "$current_entrance_domain" ]]; then
+    if [[ "$non_interactive" == true ]]; then
+        selected_ip="$current_entrance_domain"
+        echo "Non-interactive mode detected. Keeping current ENTRANCE_DOMAIN: $selected_ip"
+    elif [[ -n "$current_entrance_domain" ]]; then
         while true; do
             read -p "Choose IP address for ENTRANCE_DOMAIN (Press Enter for default: [$current_entrance_domain]): " selected_ip
             selected_ip=$(echo "$selected_ip" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'); selected_ip=${selected_ip:-$current_entrance_domain}
@@ -57,17 +65,22 @@ else
     for i in "${!ips[@]}"; do echo "$((i+1))). ${ips[$i]}"; done
     echo "$((${#ips[@]}+1))). Custom IP address (enter manually)"
 
-    while true; do
-      read -p "Select option (0-$((${#ips[@]}+1))), or press Enter to keep current: " choice
-      if [[ -z "$choice" ]] || [[ "$choice" == "0" ]]; then
-          [[ -n "$current_entrance_domain" ]] || { echo "Current ENTRANCE_DOMAIN is empty. Please select a valid option."; continue; }
-          selected_ip="$current_entrance_domain"; echo "Keeping current ENTRANCE_DOMAIN: $selected_ip"; break
-      elif [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#ips[@]}" ]; then
-        selected_ip=${ips[$((choice-1))]}; [[ -n "$selected_ip" ]] || { echo "Selected IP is empty. Please choose another option."; continue; }; echo "Selected IP: $selected_ip"; break
-      elif [[ "$choice" == "$((${#ips[@]}+1))" ]]; then
-        while true; do read -p "Enter custom IP address or domain: " custom_ip; custom_ip=$(echo "$custom_ip" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'); [[ -n "$custom_ip" ]] && { selected_ip="$custom_ip"; echo "Selected custom IP: $selected_ip"; break; } || echo "Input cannot be empty."; done; break
-      else echo "Invalid input. Please enter a valid option number (0-$((${#ips[@]}+1))) or press Enter."; fi
-    done
+    if [[ "$non_interactive" == true ]]; then
+      selected_ip="$current_entrance_domain"
+      echo "Non-interactive mode detected. Keeping current ENTRANCE_DOMAIN: $selected_ip"
+    else
+      while true; do
+        read -p "Select option (0-$((${#ips[@]}+1))), or press Enter to keep current: " choice
+        if [[ -z "$choice" ]] || [[ "$choice" == "0" ]]; then
+            [[ -n "$current_entrance_domain" ]] || { echo "Current ENTRANCE_DOMAIN is empty. Please select a valid option."; continue; }
+            selected_ip="$current_entrance_domain"; echo "Keeping current ENTRANCE_DOMAIN: $selected_ip"; break
+        elif [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#ips[@]}" ]; then
+          selected_ip=${ips[$((choice-1))]}; [[ -n "$selected_ip" ]] || { echo "Selected IP is empty. Please choose another option."; continue; }; echo "Selected IP: $selected_ip"; break
+        elif [[ "$choice" == "$((${#ips[@]}+1))" ]]; then
+          while true; do read -p "Enter custom IP address or domain: " custom_ip; custom_ip=$(echo "$custom_ip" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'); [[ -n "$custom_ip" ]] && { selected_ip="$custom_ip"; echo "Selected custom IP: $selected_ip"; break; } || echo "Input cannot be empty."; done; break
+        else echo "Invalid input. Please enter a valid option number (0-$((${#ips[@]}+1))) or press Enter."; fi
+      done
+    fi
 fi
 
 if [ "$selected_ip" != "$current_entrance_domain" ]; then
@@ -85,13 +98,7 @@ trimmed_ip=$(echo "$selected_ip" | xargs) # Trim potential whitespace
 
 if [[ "$trimmed_ip" == "127.0.0.1" || "$trimmed_ip" == "localhost" ]]; then
   echo
-  read -rp "⚠️ WARNING: You are using a loopback address. Oauth funciton will NOT work. Proceed without login? (y/N): " confirm_ip
-  if [[ ! "$confirm_ip" =~ ^[yY]$ ]]; then
-    error "Aborted by user."
-    exit 1
-  fi
-  sed -i -E -e 's/^OS_AUTH_ENABLE=.*/OS_AUTH_ENABLE=false/' "$ENV_FILE"
-  warn "Authentication disabled due to loopback address."
+  warn "Loopback address detected. Local IAM login remains available, but external SSO-style integrations may not work."
 else
   info "IP address is valid."
 fi

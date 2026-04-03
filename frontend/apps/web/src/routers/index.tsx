@@ -16,6 +16,7 @@ import AccountManagement from '@/pages/account-management';
 import AboutUs from '@/pages/aboutus';
 import AdvancedUse from '@/pages/advanced-use';
 import DevPage from '@/pages/dev-page';
+import LoginPage from '@/pages/login';
 import NoPermission from '@/pages/not-found-Page/NoPermission';
 import { LOGIN_URL, OMC_MODEL } from '@/common-types/constans';
 import Share from '@/pages/share';
@@ -34,6 +35,22 @@ import Cookies from 'js-cookie';
 
 // 根路径重定向到外部login页
 
+const defaultPostLoginPath = '/uns';
+
+const normalizeRedirectUri = (redirectUri?: string | string[] | null) => {
+  if (typeof redirectUri !== 'string') {
+    return '';
+  }
+  const next = redirectUri.trim();
+  if (!next || !next.startsWith('/')) {
+    return '';
+  }
+  if (next === '/' || next === '/?isLogin=true' || next === LOGIN_URL) {
+    return '';
+  }
+  return next;
+};
+
 const RootRedirect = () => {
   const { currentUserInfo, systemInfo } = useBaseStore((state) => ({
     currentUserInfo: state.currentUserInfo,
@@ -42,17 +59,17 @@ const RootRedirect = () => {
   const params = qs.parse(window.location.search, { ignoreQueryPrefix: true });
   useEffect(() => {
     if (params?.isLogin) {
-      window.location.href = currentUserInfo?.homePage || '/uns';
+      window.location.replace(normalizeRedirectUri(currentUserInfo?.homePage) || defaultPostLoginPath);
     } else {
       if (Cookies.get(OMC_MODEL)) {
         console.warn('omc——cookie失效');
-        window.location.href = '/403';
+        window.location.replace('/403');
       } else {
         console.log('登录cookie不存在，要跳转到登录页');
-        window.location.href = systemInfo?.loginPath || LOGIN_URL;
+        window.location.replace(systemInfo?.loginPath || LOGIN_URL);
       }
     }
-  }, [params?.isLogin]);
+  }, [currentUserInfo?.homePage, params?.isLogin, systemInfo?.loginPath]);
   return null;
 };
 
@@ -63,15 +80,11 @@ const FreeLoginLoader = () => {
       setToken(params.token as string, {
         expires: 365,
       });
-      if (params?.redirectUri) {
-        window.location.href = (params?.redirectUri as string) || '/?isLogin=true';
-      } else {
-        window.location.href = '/?isLogin=true';
-      }
+      window.location.replace(normalizeRedirectUri(params?.redirectUri as string | undefined) || defaultPostLoginPath);
     } else {
-      window.location.href = '/403';
+      window.location.replace('/403');
     }
-  }, [params?.token]);
+  }, [params?.redirectUri, params?.token]);
   return null;
 };
 
@@ -266,6 +279,10 @@ const routes = [
     //   }
     //   return null;
     // },
+  },
+  {
+    path: LOGIN_URL,
+    Component: LoginPage,
   },
   {
     path: '/share',

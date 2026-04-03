@@ -94,14 +94,7 @@ func (r *AuthRepo) BuildUserInfo(ctx context.Context, realm string, userID strin
 
 	user.RoleList = filterVisibleRoles(roles)
 
-	denyRoleIDs := collectRoleIDsByPrefix(roles, "deny")
 	allowRoleIDs := collectAllowedRoleIDs(roles)
-
-	denyResources, err := r.getResourcesByRoleIDs(ctx, denyRoleIDs)
-	if err != nil {
-		logx.WithContext(ctx).Errorf("load deny resources failed: %v", err)
-		denyResources = nil
-	}
 
 	allowResources, err := r.getResourcesByRoleIDs(ctx, allowRoleIDs)
 	if err != nil {
@@ -109,7 +102,6 @@ func (r *AuthRepo) BuildUserInfo(ctx context.Context, realm string, userID strin
 		allowResources = nil
 	}
 
-	user.DenyResourceList = sanitizeResources(denyResources)
 	user.ResourceList = finalizeAllowResources(allowResources)
 
 	lang, langErr := resolveUserMainLanguage(ctx, userID)

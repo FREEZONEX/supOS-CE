@@ -2,17 +2,15 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
-	"backend/internal/common/authsvc"
-	cache "backend/internal/common/cache"
 	"backend/internal/common/constants"
 	"backend/internal/common/utils/apiutil"
 	"backend/internal/common/vo"
-	"backend/share/clients"
+	iamrepo "backend/internal/repo/iam"
 
 	"gitee.com/unitedrhino/share/errors"
 	"gitee.com/unitedrhino/share/result"
@@ -20,18 +18,12 @@ import (
 )
 
 type CheckTokenWareMiddleware struct {
-	keycloak    *clients.KeycloakClient
 	defaultHome string
-	realm       string
 }
 
-func NewCheckTokenWareMiddleware(kc *clients.KeycloakClient, defaultHome, realm string) *CheckTokenWareMiddleware {
-	flag := os.Getenv("SYS_OS_AUTH_ENABLE")
-	fmt.Println("SYS_OS_AUTH_ENABLE:", flag)
+func NewCheckTokenWareMiddleware(defaultHome string) *CheckTokenWareMiddleware {
 	return &CheckTokenWareMiddleware{
-		keycloak:    kc,
 		defaultHome: defaultHome,
-		realm:       realm,
 	}
 }
 
@@ -39,7 +31,7 @@ func (m *CheckTokenWareMiddleware) Handle(next http.HandlerFunc) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		authDisabled := func() bool {
 			flag := os.Getenv("SYS_OS_AUTH_ENABLE")
-			return flag == "" || strings.EqualFold(flag, "false")
+			return strings.EqualFold(flag, "false")
 		}()
 		ctx := context.WithValue(r.Context(), "lang", r.Header.Get("Accept-Language"))
 		cookieToken, err := apiutil.GetCookie(r, constants.AccessTokenKey)
@@ -53,46 +45,32 @@ func (m *CheckTokenWareMiddleware) Handle(next http.HandlerFunc) http.HandlerFun
 			return
 		}
 
-		if cache.TokenCache == nil {
-			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "token cache not initialized"))
+		repo, repoErr := iamrepo.NewAuthRepo(ctx)
+		if repoErr != nil || repo == nil {
+			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "session store unavailable"))
 			return
 		}
 
-		entry, ok := cache.TokenCache.Get(cookieToken)
-		if !ok || entry == nil || entry.Token == nil || entry.Token.AccessToken == "" {
-			if authDisabled {
-				r = r.WithContext(apiutil.SetUserInContext(ctx, vo.Guest()))
+		session, sessionErr := repo.GetSession(cookieToken)
+		if sessionErr == nil && session != nil && session.RevokedAt == nil && session.ExpiredAt.After(time.Now()) {
+			user, userErr := repo.BuildUserInfo(ctx, session.UserID, m.defaultHome)
+			if userErr == nil && user != nil {
+				now := time.Now()
+				_ = repo.TouchSession(cookieToken, now, now.Add(time.Duration(constants.TokenMaxAge)*time.Second))
+				r = r.WithContext(apiutil.SetUserInContext(ctx, user))
 				next(w, r)
 				return
 			}
-			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "token expired"))
-			return
 		}
 
-		cache.TokenCache.Refresh(cookieToken)
-
-		user, _, fetchErr := authsvc.FetchUserInfo(ctx, m.keycloak, entry.Token.AccessToken, true, m.defaultHome, m.realm)
-		if fetchErr != nil {
-			if authDisabled {
-				r = r.WithContext(apiutil.SetUserInContext(ctx, vo.Guest()))
-				next(w, r)
-				return
-			}
-			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, fetchErr.Error()))
+		if session != nil {
+			_ = repo.RevokeSession(cookieToken, time.Now())
+		}
+		if authDisabled {
+			r = r.WithContext(apiutil.SetUserInContext(ctx, vo.Guest()))
+			next(w, r)
 			return
 		}
-
-		if user == nil {
-			if authDisabled {
-				r = r.WithContext(apiutil.SetUserInContext(ctx, vo.Guest()))
-				next(w, r)
-				return
-			}
-			httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "user not found"))
-			return
-		}
-
-		r = r.WithContext(apiutil.SetUserInContext(ctx, user))
-		next(w, r)
+		httpx.WriteJson(w, http.StatusUnauthorized, result.Error(errors.NotLogin.Code, "token expired"))
 	}
 }

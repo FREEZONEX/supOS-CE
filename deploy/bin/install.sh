@@ -31,9 +31,13 @@ source "$SCRIPT_DIR/deb/install-docker.sh"
 source "$SCRIPT_DIR/util/select-service-profile.sh"
 
 # --- 5. Pre-run Initialization ---
+# Render temporary env overrides from the selected compose profiles first so
+# Kong and the init scripts all see the same service matrix.
 source "$SCRIPT_DIR/util/set-temp-env.sh" "$SCRIPT_DIR/../" "${COMPOSE_PROFILE_ARGS[@]}"
-source "$SCRIPT_DIR/init/init-keycloak-sql.sh" "$SCRIPT_DIR/.."
+# Kong is configured declaratively. Re-render it before each install so login
+# redirects and enabled routes match the current entrance address and profiles.
 source "$SCRIPT_DIR/init/init-kong-property.sh" "$SCRIPT_DIR/.."
+source "$SCRIPT_DIR/util/wait-compose-healthy.sh"
 
 DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose.yml"
 
@@ -64,12 +68,20 @@ fi
 
 # --- 7. Main Execution: Start services and run post-init scripts ---
 info "Starting Docker containers in detached mode..."
-if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" --project-name tier0 "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d; then
+if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" --project-name tier0 "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d --build --remove-orphans; then
     error "Failed to start Docker containers. Please check the logs above."
     exit 1
 fi
 info "Containers started successfully. Waiting for services to become healthy..."
 echo
+if ! wait_compose_healthy 900 5; then
+    error "Containers did not become healthy in time."
+    exit 1
+fi
+
+# Backend migration creates the IAM OAuth tables, so seed the built-in
+# Portainer OAuth client only after the stack is healthy.
+source "$SCRIPT_DIR/init/init-iam-sql.sh"
 
 # Run each initialization script individually for clearer error reporting
 {
@@ -77,6 +89,8 @@ echo
     source "$SCRIPT_DIR/init/init-eventflow.sh"  && \
     source "$SCRIPT_DIR/init/hide-nodered.sh"  && \
     source "$SCRIPT_DIR/init/init-minio.sh" "$1" > /dev/null 2>&1 && \
+    # Portainer is initialized last because it depends on Kong, IAM OAuth, and
+    # the final externally reachable BASE_URL.
     source "$SCRIPT_DIR/init/init-portainer.sh"
 } || {
     error "One of the post-startup initialization scripts failed. Please check the logs above."
@@ -94,7 +108,14 @@ else
   PLATFORM_URL="${BASE_URL}/uns"
 fi
 
+IAM_BOOTSTRAP_USERNAME="${IAM_BOOTSTRAP_USERNAME:-tier0}"
+IAM_BOOTSTRAP_PASSWORD="${IAM_BOOTSTRAP_PASSWORD:-tier0}"
+IAM_BOOTSTRAP_EMAIL="${IAM_BOOTSTRAP_EMAIL-}"
+
 echo -e "      $PLATFORM_URL\n"
-echo -e "    Default user name: tier0\n"
-echo -e "            password: tier0\n"
+echo -e "    Default user name: ${IAM_BOOTSTRAP_USERNAME}\n"
+echo -e "            password: ${IAM_BOOTSTRAP_PASSWORD}\n"
+if [[ -n "${IAM_BOOTSTRAP_EMAIL}" ]]; then
+  echo -e "               email: ${IAM_BOOTSTRAP_EMAIL}\n"
+fi
 echo -e "============================================================"

@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	cache "backend/internal/common/cache"
-	"backend/internal/common/constants"
 	"backend/internal/common/vo"
 	"backend/internal/svc"
 
@@ -29,34 +27,21 @@ func (l *UserInfoLogic) UserInfo(sessionKey string) (*vo.UserInfoVo, *http.Cooki
 		return nil, nil, errors.NotLogin.WithMsg("cookie missing")
 	}
 
-	entry, ok := l.getTokenEntry(sessionKey)
-	if !ok || entry == nil || entry.Token == nil {
-		l.removeSession(sessionKey)
-		return nil, nil, errors.NotLogin.WithMsg("token not found")
-	}
-
-	userInfo, sub, err := l.fetchUserInfo(entry.Token.AccessToken, true)
-	if err != nil {
-		l.Errorf("fetch user info failed: %v", err)
-	}
-	if userInfo == nil {
-		l.removeSession(sessionKey)
-		if sub != "" && cache.UserInfoCache != nil {
-			cache.UserInfoCache.Delete(sub)
+	if session, err := l.getIAMSession(sessionKey); err == nil && session != nil {
+		if !l.isIAMSessionActive(session) {
+			l.removeSession(sessionKey)
+			return nil, nil, errors.NotLogin.WithMsg("token expired")
 		}
-		return nil, nil, errors.NotLogin.WithMsg("not found user info")
+		userInfo, infoErr := l.buildIAMUserInfo(session.UserID)
+		if infoErr == nil && userInfo != nil {
+			if touchErr := l.touchIAMSession(sessionKey); touchErr != nil {
+				l.Errorf("touch iam session failed: %v", touchErr)
+			}
+			return userInfo, buildSessionCookie(sessionKey), nil
+		}
+		l.Errorf("build iam user info failed: %v", infoErr)
 	}
 
-	if cache.TokenCache != nil {
-		cache.TokenCache.Refresh(sessionKey)
-	}
-	cookie := &http.Cookie{
-		Name:     constants.AccessTokenKey,
-		Value:    sessionKey,
-		Path:     "/",
-		MaxAge:   constants.CookieMaxAge,
-		HttpOnly: false,
-		Secure:   false,
-	}
-	return userInfo, cookie, nil
+	l.removeSession(sessionKey)
+	return nil, nil, errors.NotLogin.WithMsg("token not found")
 }

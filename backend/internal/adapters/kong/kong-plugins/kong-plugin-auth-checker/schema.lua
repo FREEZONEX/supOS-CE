@@ -11,10 +11,10 @@ return {
               elements = { type = "string" },
               default = {
                   "^/inter-api/supos/auth.*$",
+                  "^/inter-api/iam/oauth2.*$",
                   "^/inter-api/supos/systemConfig.*$",
                   "^/$",
                   "^/assets.*$",
-                  "^/keycloak.*$",
                   "^/locale.*$",
                   "^/gitea.*git.*$",
                   "^/logo.*$",
@@ -32,4 +32,3 @@ return {
     },
   },
 }
-
