@@ -2115,6 +2115,46 @@ plugins:
   route: a6d04fe9-a464-493c-8f3a-4750fdd93a32
   service: ~
 - tags: ~
+  name: request-transformer
+  created_at: 1775541610
+  updated_at: 1775541610
+  config:
+    append:
+      body: []
+      querystring: []
+      headers: []
+    remove:
+      body: []
+      querystring: []
+      headers: []
+    add:
+      body: []
+      querystring: []
+      headers: []
+    replace:
+      uri: ~
+      querystring: []
+      headers:
+      - Origin:${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}
+      - Referer:${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}/portainer/home/
+      body: []
+    rename:
+      body: []
+      querystring: []
+      headers: []
+    http_method: ~
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
+  instance_name: ~
+  enabled: true
+  consumer: ~
+  id: 476cc68a-e2be-4cf1-831b-334b61f97ae4
+  route: fb690c3a-e09e-4fcf-aad1-5d357c1938ec
+  service: ~
+- tags: ~
   name: response-transformer
   created_at: 1764811193
   updated_at: 1764811193

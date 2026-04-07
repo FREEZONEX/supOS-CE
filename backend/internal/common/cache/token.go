@@ -4,12 +4,12 @@ import (
 	"time"
 
 	"backend/internal/common/constants"
-	"backend/share/clients"
+	authdto "backend/internal/common/dto/auth"
 )
 
-// TokenCacheEntry keeps the raw token payload fetched from Keycloak alongside useful metadata.
+// TokenCacheEntry keeps the raw token payload alongside useful metadata.
 type TokenCacheEntry struct {
-	Token    *clients.AccessTokenDto
+	Token    *authdto.AccessTokenDto
 	Raw      map[string]any
 	CachedAt time.Time
 }
