@@ -1,4 +1,5 @@
-# Tier0: An Open-Source IIoT Platform
+# TIER0: The Unified Namespace Software
+
 
 [![Static Badge](https://img.shields.io/badge/Try%20Tier0-Live%20Demo-blue?style=flat&logo=rocket&logoColor=red)](https://tier0.app/trial)
 [![Docs](https://img.shields.io/badge/docs-available-brightgreen?style=flat&logo=readthedocs)](https://tier0edge.vercel.app/)
