@@ -113,7 +113,7 @@ IAM_BOOTSTRAP_PASSWORD="${IAM_BOOTSTRAP_PASSWORD:-tier0}"
 IAM_BOOTSTRAP_EMAIL="${IAM_BOOTSTRAP_EMAIL-}"
 
 echo -e "      $PLATFORM_URL\n"
-echo -e "    Default user name: ${IAM_BOOTSTRAP_USERNAME}\n"
+echo -e "    Default username: ${IAM_BOOTSTRAP_USERNAME}\n"
 echo -e "            password: ${IAM_BOOTSTRAP_PASSWORD}\n"
 if [[ -n "${IAM_BOOTSTRAP_EMAIL}" ]]; then
   echo -e "               email: ${IAM_BOOTSTRAP_EMAIL}\n"

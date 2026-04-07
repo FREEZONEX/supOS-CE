@@ -55,3 +55,8 @@ fi
 
 echo "BASE_URL=$REDIRECT_BASE_URL" >> $ROOT_DIR/.env.tmp
 echo "ENABLE_PORTAINER=menu" >> $ROOT_DIR/.env.tmp
+
+echo "UNS_DB_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgresql:5432/postgres?search_path=supos" >> $ROOT_DIR/.env.tmp
+echo "SINK_PG_URL=postgres://postgres:${POSTGRES_PASSWORD}@tsdb:5432/postgres" >> $ROOT_DIR/.env.tmp
+echo "SINK_TSDB_URL=postgres://postgres:${TSDB_PASSWORD}@tsdb:5432/postgres" >> $ROOT_DIR/.env.tmp
+echo "OS_LLM_TYPE=${LLM_TYPE}" >> $ROOT_DIR/.env.tmp

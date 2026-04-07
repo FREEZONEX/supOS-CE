@@ -4,10 +4,7 @@ networks:
 
 services:
   frontend:
-    image: tier0-frontend-local:latest
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile-CN
+    image: tier0/tier0-frontend:1.0.2-R1
     container_name: frontend
     ports:
       - "3010:3000"
@@ -35,10 +32,7 @@ services:
       - edge_network
     restart: always
   uns:
-    image: tier0-backend-local:latest
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+    image: tier0/tier0-backend:1.0.2-R1
     container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}
@@ -79,7 +73,6 @@ services:
       - ${VOLUMES_PATH}/edge/attachment/:/app/go-edge/attachment/
       - ${VOLUMES_PATH}/edge/apps/:/app/data/apps/
       - /etc/docker/certs:/certs
-
     ports:
       - "18998:8080"
     networks:
@@ -90,24 +83,6 @@ services:
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  marimo:
-    image: suposce/marimo:latest
-    container_name: marimo
-    environment:
-      - TSDB_URL=postgresql+psycopg2://postgres:postgres@tsdb:5432/postgres
-      - PG_URL=postgresql+psycopg2://postgres:postgres@postgresql:5432/postgres
-    volumes:
-      - ${VOLUMES_PATH}/marimo/data:/app
-    # command: marimo edit /app/main.py --host 0.0.0.0 --port 8080 --no-token
-    restart: always
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-        reservations:
-          memory: 512M
-    networks:
-      - edge_network
   emqx:
     image: emqx/emqx:5.8
     container_name: emqx
@@ -227,7 +202,7 @@ services:
     container_name: portainer
     environment:
       service_logo: portainer.svg
-    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC" --trusted-origins ${ENTRANCE_DOMAIN}
+    command: --admin-password="$$2y$$05$$ZTAqF7Tn.hil8X.ifVmQTuKiJQoZDiKDW3t1lRR2/VPR06QoHv4AC" --http-enabled --base-url /portainer/home --trusted-origins ${ENTRANCE_DOMAIN}
     ports:
       - "8000:8000"
       - "9443:9443"

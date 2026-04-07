@@ -2153,6 +2153,37 @@ plugins:
   route: fb690c3a-e09e-4fcf-aad1-5d357c1938ec
   service: ~
 - tags: ~
+  name: pre-function
+  created_at: 1764811193
+  updated_at: 1764811193
+  config:
+    access:
+    - |
+      local origin = kong.request.get_header("Origin")
+      if origin then
+        kong.service.request.set_header("Origin", origin:gsub("(https?://[^:/]+):%d+", "%1"))
+      end
+      local referer = kong.request.get_header("Referer")
+      if referer then
+        kong.service.request.set_header("Referer", referer:gsub("(https?://[^:/]+):%d+", "%1"))
+      end
+    certificate: []
+    rewrite: []
+    header_filter: []
+    body_filter: []
+    log: []
+  protocols:
+  - grpc
+  - grpcs
+  - http
+  - https
+  instance_name: portainer-csrf-origin-fix
+  enabled: true
+  consumer: ~
+  id: d1a2b3c4-e5f6-7890-abcd-ef1234567890
+  route: fb690c3a-e09e-4fcf-aad1-5d357c1938ec
+  service: ~
+- tags: ~
   name: supos-url-transformer
   created_at: 1734014838
   updated_at: 1764811192
