@@ -84,16 +84,32 @@ fi
 source "$SCRIPT_DIR/init/init-iam-sql.sh"
 
 # Run each initialization script individually for clearer error reporting
-{
-    source "$SCRIPT_DIR/init/init-nodered.sh"  && \
-    source "$SCRIPT_DIR/init/init-eventflow.sh"  && \
-    source "$SCRIPT_DIR/init/hide-nodered.sh"  && \
-    source "$SCRIPT_DIR/init/init-minio.sh" "$1" > /dev/null 2>&1 && \
-    # Portainer is initialized last because it depends on Kong, IAM OAuth, and
-    # the final externally reachable BASE_URL.
-    source "$SCRIPT_DIR/init/init-portainer.sh"
-} || {
-    error "One of the post-startup initialization scripts failed. Please check the logs above."
+source "$SCRIPT_DIR/init/init-nodered.sh" || {
+    error "Failed to initialize Node-RED."
+    exit 1
+}
+
+source "$SCRIPT_DIR/init/init-eventflow.sh" || {
+    error "Failed to initialize EventFlow."
+    exit 1
+}
+
+source "$SCRIPT_DIR/init/hide-nodered.sh" || {
+    error "Failed to hide Node-RED entrypoints."
+    exit 1
+}
+
+# MinIO is optional. Its init script must not block Portainer/IAM bootstrap
+# when the minio profile is disabled.
+source "$SCRIPT_DIR/init/init-minio.sh" "$1" > /dev/null 2>&1 || {
+    error "Failed to initialize MinIO."
+    exit 1
+}
+
+# Portainer is initialized last because it depends on Kong, IAM OAuth, and
+# the final externally reachable BASE_URL.
+source "$SCRIPT_DIR/init/init-portainer.sh" || {
+    error "Failed to initialize Portainer OAuth."
     exit 1
 }
 

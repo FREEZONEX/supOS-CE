@@ -38,6 +38,17 @@ find_portainer_user_id() {
   | head -n 1
 }
 
+find_portainer_user_role() {
+  local user_id="$1"
+  if [ -z "$user_id" ]; then
+    return 0
+  fi
+  docker exec nodered curl -sk "https://portainer:9443/api/users/${user_id}" \
+    -H "Authorization: Bearer $PORTAINER_JWT" \
+  | sed -n 's/.*"Role":\([0-9]\+\).*/\1/p' \
+  | head -n 1
+}
+
 PORTAINER_JWT=""
 PORTAINER_USER_PAYLOAD="{\"Username\":\"$(json_escape "$IAM_BOOTSTRAP_USERNAME")\",\"Role\":1}"
 if [ -n "$IAM_BOOTSTRAP_EMAIL" ]; then
@@ -94,6 +105,12 @@ if [ -n "$PORTAINER_BOOTSTRAP_USER_ID" ]; then
   || { if [ "$1" == "--verbose" ]; then warn "Failed to promote Portainer user '$IAM_BOOTSTRAP_USERNAME' to administrator"; fi; }
 else
   if [ "$1" == "--verbose" ]; then warn "Portainer user '$IAM_BOOTSTRAP_USERNAME' was not found after create attempt"; fi
+fi
+
+PORTAINER_BOOTSTRAP_USER_ROLE="$(find_portainer_user_role "$PORTAINER_BOOTSTRAP_USER_ID")"
+if [ "$PORTAINER_BOOTSTRAP_USER_ROLE" != "1" ]; then
+  error "Portainer user '$IAM_BOOTSTRAP_USERNAME' is not an administrator after bootstrap (role=${PORTAINER_BOOTSTRAP_USER_ROLE:-unknown})."
+  return 1 2>/dev/null || exit 1
 fi
 
 docker exec nodered curl -skX PUT "https://portainer:9443/api/settings" \
