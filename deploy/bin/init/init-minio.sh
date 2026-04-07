@@ -3,6 +3,12 @@
 # exit error
 set -e
 
+# MinIO is optional. When its compose profile is disabled, skip the bootstrap
+# work so later init steps (for example Portainer) still run.
+if ! docker ps --format '{{.Names}}' | grep -qx 'minio'; then
+  exit 0
+fi
+
 echo ">> start to init minio"
 docker exec minio bash -c "mc alias set myminio http://minio:9000 admin adminpassword" \
 ||  if [ "$1" == "--verbose" ]; then error "failed to mc alias"; fi
