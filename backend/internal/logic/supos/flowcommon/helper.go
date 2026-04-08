@@ -175,15 +175,6 @@ func DeployFlow(
 		return "", errors.System.WithMsg("error.sys.systemError").AddDetailf("node-red update flow failed: code=%d err=%v body=%s", code, errs, string(body))
 	}
 
-	syncSupmodelMappings(ctx, client, flowNodes)
-
-	if len(flowNodes) > 0 {
-		aliases := aliasExtractor(flowNodes)
-		if err := repo.ReplaceModels(ctx, entityID, aliases); err != nil {
-			return "", err
-		}
-	}
-
 	rec.FlowID = flowID
 	rec.FlowStatus = FlowStatusRunning
 	rec.FlowData = ""
@@ -298,34 +289,6 @@ func toInterfaceSlice(nodes []map[string]any) []any {
 	return out
 }
 
-func syncSupmodelMappings(ctx context.Context, client *noderedclient.Client, nodes []map[string]any) {
-	for _, node := range nodes {
-		if node == nil {
-			continue
-		}
-		if strings.TrimSpace(fmt.Sprint(node["type"])) != "supmodel" {
-			continue
-		}
-		nodeID := strings.TrimSpace(fmt.Sprint(node["id"]))
-		if nodeID == "" {
-			continue
-		}
-		mapping := toAnySlice(node["mapping"])
-		if len(mapping) == 0 {
-			continue
-		}
-		req := map[string]any{
-			"nodeId":  nodeID,
-			"mapping": mapping,
-		}
-		var out map[string]any
-		code, body, errs := client.DoJSON(ctx, "POST", "/nodered-api/upload/tags", req, &out)
-		if len(errs) > 0 || (code != 200 && code != 201) {
-			logx.WithContext(ctx).Errorf("syncSupmodelMappings sync supmodel mapping failed: id=%s code=%d err=%v body=%s", nodeID, code, errs, string(body))
-		}
-	}
-}
-
 func toAnySlice(value any) []any {
 	switch v := value.(type) {
 	case []any:
@@ -351,43 +314,6 @@ func ExtractAliases(nodes []map[string]any) []string {
 		if val, ok := node["selectedModelAlias"]; ok {
 			if alias := strings.TrimSpace(fmt.Sprint(val)); alias != "" {
 				aliasSet[alias] = struct{}{}
-			}
-		}
-		for _, alias := range extractMappingAliases(node["mapping"]) {
-			aliasSet[alias] = struct{}{}
-		}
-	}
-	aliases := make([]string, 0, len(aliasSet))
-	for alias := range aliasSet {
-		aliases = append(aliases, alias)
-	}
-	sort.Strings(aliases)
-	return aliases
-}
-
-func extractMappingAliases(value any) []string {
-	items := toAnySlice(value)
-	if len(items) == 0 {
-		return nil
-	}
-	aliasSet := make(map[string]struct{}, len(items))
-	for _, item := range items {
-		switch v := item.(type) {
-		case map[string]any:
-			for _, key := range []string{"alias", "targetAlias"} {
-				raw, ok := v[key]
-				if !ok || raw == nil {
-					continue
-				}
-				if alias := strings.TrimSpace(fmt.Sprint(raw)); alias != "" {
-					aliasSet[alias] = struct{}{}
-				}
-			}
-		case []any:
-			if len(v) > 1 {
-				if alias := strings.TrimSpace(fmt.Sprint(v[1])); alias != "" {
-					aliasSet[alias] = struct{}{}
-				}
 			}
 		}
 	}

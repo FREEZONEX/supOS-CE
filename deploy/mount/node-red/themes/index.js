@@ -48,8 +48,8 @@
     window.removeEventListener('message', messageHandler);
     RED.events.off('flows:change', flowsChange)
   };
-  // 在页面卸载时清理
-  window.addEventListener('unload', cleanup);
+  // pagehide 可用于 iframe 场景，避免 Permissions Policy 拦截 unload
+  window.addEventListener('pagehide', cleanup, { once: true });
 })();
 
 // load后的一些操作

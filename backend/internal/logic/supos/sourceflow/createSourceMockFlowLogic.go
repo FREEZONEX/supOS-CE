@@ -89,6 +89,9 @@ func (l *CreateSourceMockFlowLogic) CreateSourceMockFlow(req *types.SourceFlowMo
 	if err := repo.Insert(l.ctx, rec); err != nil {
 		return nil, err
 	}
+	if err := repo.ReplaceModels(l.ctx, rec.ID, []string{alias}); err != nil {
+		return nil, err
+	}
 	if _, err := flowcommon.DeployFlow(l.ctx, repo, rec.ID, rendered, l.svcCtx.SourceNodeRed, flowcommon.ExtractAliases); err != nil {
 		return nil, err
 	}
