@@ -34,6 +34,13 @@ portainer_api() {
     -H "Authorization: Bearer $PORTAINER_JWT" "$@" 2>/dev/null
 }
 
+portainer_setting_field() {
+  local field="$1"
+  local settings_json
+  settings_json="$(portainer_api GET /api/settings)"
+  printf '%s' "$settings_json" | sed -n "s/.*\"${field}\":\"\\([^\"]*\\)\".*/\\1/p" | head -n 1
+}
+
 find_portainer_user_id() {
   local username="$1"
   portainer_api GET /api/users \
@@ -95,8 +102,7 @@ docker exec nodered curl -s -X POST http://portainer:9000/api/endpoints \
   -F "ContainerEngine=docker" > /dev/null 2>&1 \
 || if [ "$1" == "--verbose" ]; then warn "Failed to create Portainer local endpoint (it may already exist)"; fi
 
-docker exec nodered curl -skX PUT "https://portainer:9443/api/settings" \
-  -H "Authorization: Bearer $PORTAINER_JWT" \
+portainer_api PUT /api/settings \
   -H "Content-Type: application/json" \
   -d "{
     \"authenticationMethod\": 3,
@@ -117,6 +123,18 @@ docker exec nodered curl -skX PUT "https://portainer:9443/api/settings" \
   }" > /dev/null 2>&1 \
 && info "Configured Portainer OAuth against platform IAM" \
 || warn "Failed to configure Portainer OAuth"
+
+CURRENT_AUTHORIZATION_URI="$(portainer_setting_field AuthorizationURI)"
+CURRENT_REDIRECT_URI="$(portainer_setting_field RedirectURI)"
+
+if [ "$CURRENT_AUTHORIZATION_URI" != "$PORTAINER_AUTHORIZATION_URI" ] || [ "$CURRENT_REDIRECT_URI" != "$PORTAINER_REDIRECT_URI" ]; then
+  error "Portainer OAuth settings mismatch after update."
+  error "Expected AuthorizationURI=$PORTAINER_AUTHORIZATION_URI, actual=$CURRENT_AUTHORIZATION_URI"
+  error "Expected RedirectURI=$PORTAINER_REDIRECT_URI, actual=$CURRENT_REDIRECT_URI"
+  return 1 2>/dev/null || exit 1
+fi
+
+info "Verified Portainer OAuth settings: RedirectURI=$CURRENT_REDIRECT_URI"
 
 ensure_admin_user "$IAM_BOOTSTRAP_USERNAME" "$IAM_BOOTSTRAP_EMAIL"
 

@@ -99,6 +99,13 @@ source "$SCRIPT_DIR/init/hide-nodered.sh" || {
     exit 1
 }
 
+# Portainer is initialized last because it depends on Kong, IAM OAuth, and
+# the final externally reachable BASE_URL.
+source "$SCRIPT_DIR/init/init-portainer.sh" || {
+    error "Failed to initialize Portainer OAuth."
+    exit 1
+}
+
 # MinIO is optional. Its init script must not block Portainer/IAM bootstrap
 # when the minio profile is disabled.
 source "$SCRIPT_DIR/init/init-minio.sh" "$1" > /dev/null 2>&1 || {
@@ -106,12 +113,6 @@ source "$SCRIPT_DIR/init/init-minio.sh" "$1" > /dev/null 2>&1 || {
     exit 1
 }
 
-# Portainer is initialized last because it depends on Kong, IAM OAuth, and
-# the final externally reachable BASE_URL.
-source "$SCRIPT_DIR/init/init-portainer.sh" || {
-    error "Failed to initialize Portainer OAuth."
-    exit 1
-}
 
 # --- 8. Success ---
 echo -e "\n============================================================"

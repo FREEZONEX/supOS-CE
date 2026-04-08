@@ -1,6 +1,7 @@
 package timescaledb
 
 import (
+	"backend/internal/common/constants"
 	"backend/internal/types"
 	"fmt"
 	"sort"
@@ -98,7 +99,8 @@ func (g *SQLGenerator) getFieldMappings(unsInfo types.UnsInfo, viewColumns []Vie
 			}
 			if src2colmap[sourceCol] {
 				vm.expression = fmt.Sprintf(
-					`CASE WHEN "timeStamp" < to_timestamp(%d) THEN NULL ELSE "%s" END AS "%s"`, nowUnixTimestamp, sourceCol, fieldName)
+					`CASE WHEN "%s" < to_timestamp(%d) THEN NULL ELSE "%s" END AS "%s"`,
+					constants.SysFieldCreateTime, nowUnixTimestamp, sourceCol, fieldName)
 			}
 			newMappings = append(newMappings, vm)
 

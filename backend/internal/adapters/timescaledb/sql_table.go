@@ -52,11 +52,11 @@ func (g *SQLGenerator) GenerateCreateTableSQL(
 	return []string{sql,
 		fmt.Sprintf(`SELECT create_hypertable (
     'uns_timeserial', 
-    'timeStamp',
+    '%s',
     partitioning_column => '%s',
     number_partitions => 50,  
     chunk_time_interval => INTERVAL '2 hour'
-    );`, constants.SysFieldID),
+    );`, constants.SysFieldCreateTime, constants.SysFieldID),
 
 		fmt.Sprintf(`ALTER TABLE uns_timeserial SET (
     timescaledb.compress,                    
