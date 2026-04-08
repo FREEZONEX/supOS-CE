@@ -37,11 +37,12 @@ info "IP修改成功, 正在重启服务..."
 
 docker rm -f uns > /dev/null 2>&1 || true
 docker rm -f kong > /dev/null 2>&1 || true
+docker rm -f portainer > /dev/null 2>&1 || true
 
 DOCKER_COMPOSE_FILE="$CHANGE_IP_DIR/../../docker-compose.yml"
-# Only uns and kong need to restart here: uns owns the IAM/OAuth APIs and kong
-# owns the externally visible routes that embed the entrance address.
-docker compose --env-file "$ENV_FILE" --env-file "$CHANGE_IP_DIR/../../.env.tmp" --project-name tier0 "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d --remove-orphans uns kong
+# Portainer also needs to restart here so its runtime settings and OAuth flow
+# pick up the regenerated entrance address.
+docker compose --env-file "$ENV_FILE" --env-file "$CHANGE_IP_DIR/../../.env.tmp" --project-name tier0 "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d --remove-orphans uns kong portainer
 wait_compose_healthy 600 5
 source "$CHANGE_IP_DIR/../init/init-iam-sql.sh"
 source "$CHANGE_IP_DIR/../init/init-portainer.sh"
