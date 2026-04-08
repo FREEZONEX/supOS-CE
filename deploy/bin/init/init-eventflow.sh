@@ -2,6 +2,9 @@
 
 set -e
 
+INIT_EVENTFLOW_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+source "$INIT_EVENTFLOW_DIR/../global/log.sh"
+
 times=5
 
 info "start to init eventflow modules ..."
@@ -68,10 +71,5 @@ docker exec eventflow sh -c "cd /data && npm install  --no-audit --offline facto
 docker exec eventflow sh -c "cd /data && npm install --no-audit --offline node-red-contrib-postgresql@0.14.2" \
 || error "node-red install postgresq failed!"
 
-#docker exec eventflow sh -c "cd /data && npm install --offline --prefix /data /data/offline_modules/node-supmodel-${MQTT_PLUG:-emqx}" \
-#|| error "node-red install supmodel failed!"
 
-
-# overide js file
-docker exec eventflow sh -c 'cp /data/override/*.js /usr/src/node-red/node_modules/@node-red/editor-client/public/red/' >/dev/null
 docker restart eventflow >/dev/null

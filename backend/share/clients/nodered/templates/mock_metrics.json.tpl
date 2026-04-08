@@ -40,7 +40,7 @@
         "y": 160,
         "wires": [
             [
-                "$id_model_selector"
+                "$id_mqtt"
             ]
         ]
     },
@@ -58,28 +58,9 @@
         "correl": "",
         "expiry": "",
         "broker": "85bb67b2dbefe3ba",
-        "x": 990,
-        "y": 160,
-        "wires": []
-    },
-    {
-        "id": "$id_model_selector",
-        "type": "supmodel",
-        "z": "",
-        "name": "",
-        "protocol": "mock",
-        "selectedModel": "$uns_path",
-        "selectedModelAlias": "",
-        "modelShowName": "",
-        "tableValid": true,
         "x": 750,
         "y": 160,
-        "wires": [
-            [
-                "$id_mqtt"
-            ],
-            []
-        ]
+        "wires": []
     },
     {
         "id": "85bb67b2dbefe3ba",
