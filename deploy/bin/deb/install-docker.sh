@@ -1,5 +1,15 @@
 #!/bin/bash
 
+INSTALL_DOCKER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+DEPLOY_BIN="$(cd "$INSTALL_DOCKER_DIR/.." && pwd)"
+ENV_FILE="$DEPLOY_BIN/../.env.default"
+if [ -f "$DEPLOY_BIN/../.env" ]; then
+    ENV_FILE="$DEPLOY_BIN/../.env"
+fi
+
+sed -i 's/\r$//' "$ENV_FILE" 2>/dev/null || true
+source "$ENV_FILE"
+source "$DEPLOY_BIN/global/log.sh"
 
 check_versions() {
     # 检查 docker 是否安装以及版本
@@ -69,11 +79,11 @@ install_docker_offline() {
     if [ "$VERSION_ID" == "24.04" ]; then
         # 安装离线包
         echo "Installing Docker using offline ubuntu24 .deb packages..."
-        sudo dpkg -i $SCRIPT_DIR/../debs/docker/ubuntu24/*.deb
+        sudo dpkg -i "$DEPLOY_BIN/../debs/docker/ubuntu24/"*.deb
    elif [ "$VERSION_ID" == "20.04" ]; then
        # 安装离线包
        echo "Installing Docker using offline ubuntu20 .deb packages..."
-       sudo dpkg -i $SCRIPT_DIR/../debs/docker/ubuntu20/*.deb
+       sudo dpkg -i "$DEPLOY_BIN/../debs/docker/ubuntu20/"*.deb
     else
         error "This product only runs on Ubuntu 20.04.2 LTS or 24.04 LTS."
         exit 1
@@ -85,7 +95,7 @@ replace_daemon_json() {
     DAEMON_JSON_FILE="/etc/docker/daemon.json"
     if [ ! -f "$DAEMON_JSON_FILE" ]; then
         mkdir -p /etc/docker
-        cp $SCRIPT_DIR/deb/config/daemon.json $DAEMON_JSON_FILE
+        cp "$INSTALL_DOCKER_DIR/config/daemon.json" "$DAEMON_JSON_FILE"
     fi
 }
 
@@ -95,7 +105,7 @@ open_docker_api() {
         DOCKER_SERVICE_FILE="/lib/systemd/system/docker.service"
     fi
     # 生成docker证书
-    bash $SCRIPT_DIR/deb/gen-certs.sh $ENTRANCE_DOMAIN
+    bash "$INSTALL_DOCKER_DIR/gen-certs.sh" "$ENTRANCE_DOMAIN"
     sudo sed -i '/^ExecStart=/c\ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376 -H unix://var/run/docker.sock --containerd=/run/containerd/containerd.sock' "$DOCKER_SERVICE_FILE"
     sudo systemctl daemon-reload && sudo systemctl restart docker
 

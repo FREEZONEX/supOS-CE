@@ -15,6 +15,27 @@ sed -i 's/\r$//' "$ENV_FILE" # Clean .env file
 source "$ENV_FILE"          # Load initial environment variables
 source "$SCRIPT_DIR/global/log.sh"
 source "$SCRIPT_DIR/global/choose-profile-command.sh"
+
+SKIP_VOLUME_SYNC=false
+for arg in "$@"; do
+  case "$arg" in
+    --skip-volumes-sync|--skip-volumes)
+      SKIP_VOLUME_SYNC=true
+      ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: bash install.sh [--skip-volumes-sync]
+
+  --skip-volumes-sync, --skip-volumes
+      Skip copying and updating files under VOLUMES_PATH. Use this only when
+      the volume directory has already been initialized.
+EOF
+      exit 0
+      ;;
+  esac
+done
+export SKIP_VOLUME_SYNC
+
 platform=$(uname -s)
 info "Starting installation on platform: $platform"
 echo
@@ -24,7 +45,7 @@ source "$SCRIPT_DIR/util/handle-volumes-path.sh"
 source "$SCRIPT_DIR/util/select-ip-address.sh"
 
 # --- 3. Dependency Installation ---
-source "$SCRIPT_DIR/deb/install-docker.sh"
+bash "$SCRIPT_DIR/deb/install-docker.sh"
 
 # --- 4. Service Profile Selection ---
 # This script will set the 'command' variable for docker-compose
@@ -36,34 +57,16 @@ source "$SCRIPT_DIR/util/select-service-profile.sh"
 source "$SCRIPT_DIR/util/set-temp-env.sh" "$SCRIPT_DIR/../" "${COMPOSE_PROFILE_ARGS[@]}"
 # Kong is configured declaratively. Re-render it before each install so login
 # redirects and enabled routes match the current entrance address and profiles.
-source "$SCRIPT_DIR/init/init-kong-property.sh" "$SCRIPT_DIR/.."
+bash "$SCRIPT_DIR/init/init-kong-property.sh" "$SCRIPT_DIR/.."
 source "$SCRIPT_DIR/util/wait-compose-healthy.sh"
 
 DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose.yml"
 
 # --- 6. Volume and Image Management ---
-echo "Start creating volumes"
-# Check for a specific sub-directory to reliably detect an existing installation.
-if [ -d "$VOLUMES_PATH/postgresql" ]; then
-  info "Existing installation detected. Stopping services and updating volumes..."
-  source "$SCRIPT_DIR/stop.sh"
-  source "$SCRIPT_DIR/init/update-volumes.sh"
-else
-  info "New installation detected. Initializing volumes..."
-  source "$SCRIPT_DIR/init/init-volumes.sh"
-fi
-
-# After volumes are created, copy the service config file to its final destination.
-SOURCE_CONFIG_FILE="$SCRIPT_DIR/global/active-services.txt"
-FINAL_CONFIG_FILE="$VOLUMES_PATH/edge/system/active-services.txt"
-if [ -f "$SOURCE_CONFIG_FILE" ]; then
-    info "Activating selected service profile..."
-    mkdir -p "$(dirname "$FINAL_CONFIG_FILE")"
-    cp "$SOURCE_CONFIG_FILE" "$FINAL_CONFIG_FILE"
-fi
+source "$SCRIPT_DIR/util/handle-volumes.sh"
 
 if [ -d "$SCRIPT_DIR/../images/" ] && [ "$(ls -A "$SCRIPT_DIR/../images/")" ]; then
-  source "$SCRIPT_DIR/util/load-images.sh"
+  bash "$SCRIPT_DIR/util/load-images.sh"
 fi
 
 # --- 7. Main Execution: Start services and run post-init scripts ---
@@ -81,34 +84,34 @@ fi
 
 # Backend migration creates the IAM OAuth tables, so seed the built-in
 # Portainer OAuth client only after the stack is healthy.
-source "$SCRIPT_DIR/init/init-iam-sql.sh"
+bash "$SCRIPT_DIR/init/init-iam-sql.sh"
 
 # Run each initialization script individually for clearer error reporting
-source "$SCRIPT_DIR/init/init-nodered.sh" || {
+bash "$SCRIPT_DIR/init/init-nodered.sh" || {
     error "Failed to initialize Node-RED."
     exit 1
 }
 
-source "$SCRIPT_DIR/init/init-eventflow.sh" || {
+bash "$SCRIPT_DIR/init/init-eventflow.sh" || {
     error "Failed to initialize EventFlow."
     exit 1
 }
 
-source "$SCRIPT_DIR/init/hide-nodered.sh" || {
+bash "$SCRIPT_DIR/init/hide-nodered.sh" || {
     error "Failed to hide Node-RED entrypoints."
     exit 1
 }
 
 # Portainer is initialized last because it depends on Kong, IAM OAuth, and
 # the final externally reachable BASE_URL.
-source "$SCRIPT_DIR/init/init-portainer.sh" || {
+bash "$SCRIPT_DIR/init/init-portainer.sh" || {
     error "Failed to initialize Portainer OAuth."
     exit 1
 }
 
-# MinIO is optional. Its init script must not block Portainer/IAM bootstrap
-# when the minio profile is disabled.
-source "$SCRIPT_DIR/init/init-minio.sh" "$1" > /dev/null 2>&1 || {
+# MinIO is optional. Run its init script in a subshell so its internal exits
+# never terminate this installer when the minio profile is disabled.
+bash "$SCRIPT_DIR/init/init-minio.sh" "$1" || {
     error "Failed to initialize MinIO."
     exit 1
 }

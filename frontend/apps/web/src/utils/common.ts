@@ -15,6 +15,40 @@ export const isJsonString = (value: any): boolean => {
 
 type CopyCallback = (success: boolean) => void;
 
+const fallbackCopyToClipboard = (text: string): boolean => {
+  const textarea = document.createElement('textarea');
+  const activeElement = document.activeElement as HTMLElement | null;
+  const selection = document.getSelection();
+  const originalRange = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+
+  textarea.value = text;
+  textarea.setAttribute('readonly', 'readonly');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '-9999px';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+
+  try {
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, text.length);
+    return document.execCommand('copy');
+  } catch (err) {
+    console.log(err);
+    return false;
+  } finally {
+    document.body.removeChild(textarea);
+    if (selection) {
+      selection.removeAllRanges();
+      if (originalRange) {
+        selection.addRange(originalRange);
+      }
+    }
+    activeElement?.focus?.();
+  }
+};
+
 // 使用 const 定义一个函数，并同时指定参数和返回值的类型
 export const copyToClipboard: (text: string, callback?: CopyCallback) => void = (
   text: string,
@@ -26,33 +60,22 @@ export const copyToClipboard: (text: string, callback?: CopyCallback) => void = 
     }
   };
 
-  if (navigator.clipboard && window.isSecureContext) {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function' && window.isSecureContext) {
     // 使用 Clipboard API
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        handleResult(true); // 成功时处理结果
-      })
-      .catch(() => {
-        handleResult(false); // 失败时处理结果
-      });
-  } else {
-    // 回退到旧的方式：创建一个临时的 textarea 元素
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    // 将其隐藏并添加到 DOM 中
-    textarea.style.position = 'fixed';
-    document.body.appendChild(textarea);
-    // 选择文本并执行复制命令
-    try {
-      const successful = document.execCommand('copy');
-      handleResult(successful); // 根据成功或失败处理结果
-    } catch (err) {
-      console.log(err);
-      handleResult(false); // 出错时处理结果
+    const writeResult = navigator.clipboard.writeText(text);
+    if (writeResult && typeof writeResult.then === 'function') {
+      writeResult
+        .then(() => {
+          handleResult(true); // 成功时处理结果
+        })
+        .catch(() => {
+          handleResult(fallbackCopyToClipboard(text)); // 失败时回退到旧方式
+        });
+    } else {
+      handleResult(fallbackCopyToClipboard(text));
     }
-    // 移除临时的 textarea 元素
-    document.body.removeChild(textarea);
+  } else {
+    handleResult(fallbackCopyToClipboard(text));
   }
 };
 

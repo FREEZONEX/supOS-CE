@@ -27,7 +27,7 @@ mkdir -p "$VOLUMES_PATH/node-red/override"
 rm -rf "$VOLUMES_PATH/node-red/.npm" && cp -r "$DEPLOY_ROOT/mount/node-red/.npm" "$VOLUMES_PATH/node-red/"
 cp -r "$DEPLOY_ROOT/mount/node-red/offline_modules/"* "$VOLUMES_PATH/node-red/offline_modules/"
 cp -r "$DEPLOY_ROOT/mount/node-red/themes/"* "$VOLUMES_PATH/node-red/themes/"
-cp -r "$DEPLOY_ROOT/mount/node-red/override/"* "$VOLUMES_PATH/node-red/override/"
+#cp -r "$DEPLOY_ROOT/mount/node-red/override/"* "$VOLUMES_PATH/node-red/override/"
 cp -r "$DEPLOY_ROOT/mount/node-red/template" "$VOLUMES_PATH/node-red/"
 
 mkdir -p "$VOLUMES_PATH/eventflow/" && cp -r "$DEPLOY_ROOT/mount/eventflow/"* "$VOLUMES_PATH/eventflow/"

@@ -2,6 +2,9 @@
 
 set -e
 
+HIDE_NODERED_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+source "$HIDE_NODERED_DIR/../global/log.sh"
+
 times=5
 
 info "start to init protocol nodes...."

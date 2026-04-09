@@ -2,6 +2,9 @@
 
 set -e
 
+INIT_NODERED_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+source "$INIT_NODERED_DIR/../global/log.sh"
+
 times=5
 
 info "start to init nodered modules ..."
@@ -43,7 +46,7 @@ docker exec nodered sh -c "cd /data && npm install  --no-audit --offline node-re
 docker exec nodered sh -c "cd /data && npm install --no-audit --offline node-red-contrib-opcua@0.2.339" \
 || error "node-red install opcua failed!"
 
-docker exec nodered sh -c "cd /data && npm install /data/tier0-node-red-contrib-opcda-client-1.0.8.tgz" \
+docker exec nodered sh -c "cd /data && npm install --no-audit --offline ./tier0-node-red-contrib-opcda-client-1.0.8.tgz" \
 || error "node-red install opcda failed!"
 
 #docker exec nodered sh -c "cd /data && npm install --no-audit --offline node-red-contrib-opcda-client@0.0.7" \
@@ -67,14 +70,6 @@ docker exec nodered sh -c "cd /data && npm install --unsafe-perm /data/offline_m
 
 docker exec nodered sh -c "cd /data && npm install --no-audit --offline node-red-contrib-postgresql@0.14.2" \
 || error "node-red install postgresq failed!"
-
-docker exec nodered sh -c "cd /data && npm install --offline --prefix /data /data/offline_modules/node-supmodel-${MQTT_PLUG:-emqx}" \
-|| error "node-red install supmodel failed!"
-
-
-# overide js file
-docker exec nodered sh -c 'cp /data/override/*.js /usr/src/node-red/node_modules/@node-red/editor-client/public/red/' >/dev/null
-
 
 
 docker restart nodered >/dev/null
