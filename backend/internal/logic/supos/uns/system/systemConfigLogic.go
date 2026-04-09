@@ -334,11 +334,11 @@ func buildFallbackContainerMap() map[string]*sysconfig.ContainerInfo {
 			Host:        "kong",
 			Port:        8001,
 			Version:     "3.9.0",
-			Description: "aboutus.kongaDescription",
+			Description: "aboutus.kongDescription",
 			EnvMap: map[string]any{
-				enums.ContainerEnvServiceLogo.Name:        "konga-original.svg",
-				enums.ContainerEnvServiceDescription.Name: "aboutus.kongaDescription",
-				enums.ContainerEnvServiceRedirectURL.Name: "/konga/home/",
+				enums.ContainerEnvServiceLogo.Name:        "RoutingManagement.svg",
+				enums.ContainerEnvServiceDescription.Name: "aboutus.kongDescription",
+				enums.ContainerEnvServiceRedirectURL.Name: "/routing-management",
 			},
 		},
 		{

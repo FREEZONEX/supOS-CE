@@ -18,7 +18,6 @@ var DefaultAllowURIs = []string{
 	"/403",
 	"/copilotkit",
 	"/portainer/home",
-	"/konga/home",
 	"/marimo/home",
 	"/grafana/home",
 	"/eventflow/home",

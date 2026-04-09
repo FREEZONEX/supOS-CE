@@ -29,7 +29,7 @@ const (
 	StatusDisabled int32 = 0 // 禁用
 )
 
-type KongaSecretKeyVo struct {
+type KongSecretKeyVo struct {
 	ID string `json:"id"`
 }
 
@@ -47,7 +47,7 @@ func init() {
 }
 
 func (s *AppKeyService) Init(c config.Config) error {
-	// 初始化Konga配置，这里可以从配置文件读取
+	// 初始化 Kong Admin 配置，这里可以从配置文件读取
 	s.host = c.Kong.Host
 	s.port = strconv.Itoa(c.Kong.Port)
 	s.path = "consumers/59d1ef15-24a5-4373-b957-e8192c15ff6e/key-auth"
@@ -99,8 +99,8 @@ func (s *AppKeyService) CreateSecretKey(ctx context.Context) (bool, error) {
 
 	key := uuid.NewString()
 
-	// 调用Konga API创建密钥
-	kongaKey, err := s.createKongaKey(key)
+	// 调用 Kong Admin API 创建密钥
+	kongKey, err := s.createKongKey(key)
 	if err != nil {
 		return false, err
 	}
@@ -109,7 +109,7 @@ func (s *AppKeyService) CreateSecretKey(ctx context.Context) (bool, error) {
 	appKey := &dao.AppKeyModel{
 		ID:             common.NextId(),
 		AppSecretKey:   key,
-		AppSecretValue: kongaKey.ID,
+		AppSecretValue: kongKey.ID,
 		Status:         StatusEnabled,
 		CreateTime:     time.Now(),
 	}
@@ -138,15 +138,15 @@ func (s *AppKeyService) UpdateSecretKey(ctx context.Context, req *types.UpdateAp
 	// 开始事务
 	err = db.Transaction(func(tx *gorm.DB) error {
 		if req.Status == StatusEnabled {
-			// 启用密钥，调用Konga API生成新的secretValue
-			kongaKey, err := s.createKongaKey(appKey.AppSecretKey)
+			// 启用密钥，调用 Kong Admin API 生成新的 secretValue
+			kongKey, err := s.createKongKey(appKey.AppSecretKey)
 			if err != nil {
 				return err
 			}
-			appKey.AppSecretValue = kongaKey.ID
+			appKey.AppSecretValue = kongKey.ID
 		} else {
-			// 禁用密钥，删除Konga中的记录
-			err := s.deleteKongaKey(appKey.AppSecretValue)
+			// 禁用密钥，删除 Kong 中的记录
+			err := s.deleteKongKey(appKey.AppSecretValue)
 			if err != nil {
 				return err
 			}
@@ -208,72 +208,72 @@ func (s *AppKeyService) DeleteSecretKey(ctx context.Context, id int64) error {
 	return nil
 }
 
-// 构建Konga API URL
-func (s *AppKeyService) buildKongaUrl(suffix string) string {
+// 构建 Kong Admin API URL
+func (s *AppKeyService) buildKongAdminURL(suffix string) string {
 	return fmt.Sprintf("http://%s:%s/%s%s", s.host, s.port, s.path, suffix)
 }
 
-// 创建Konga密钥
-func (s *AppKeyService) createKongaKey(key string) (*KongaSecretKeyVo, error) {
-	url := s.buildKongaUrl("")
+// 创建 Kong 密钥
+func (s *AppKeyService) createKongKey(key string) (*KongSecretKeyVo, error) {
+	url := s.buildKongAdminURL("")
 	body := map[string]string{
 		"key": key,
 	}
-	logx.Infof("buildKongaUrl :%v", url)
+	logx.Infof("buildKongAdminURL :%v", url)
 	resp, err := resty.New().R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(body).
 		Post(url)
 
 	if err != nil {
-		logx.Errorf("Failed to create key in Konga: %v", err)
+		logx.Errorf("Failed to create key in Kong Admin: %v", err)
 		return nil, errors.NewCodeError(500, "创建密钥失败")
 	}
 
 	if resp.StatusCode()/100 != 2 {
-		logx.Errorf("Failed to create key in Konga: status code %d, body: %s", resp.StatusCode(), resp.Body())
+		logx.Errorf("Failed to create key in Kong Admin: status code %d, body: %s", resp.StatusCode(), resp.Body())
 		return nil, errors.NewCodeError(500, "创建密钥失败")
 	}
 
-	var kongaKey KongaSecretKeyVo
-	err = json.Unmarshal(resp.Body(), &kongaKey)
+	var kongKey KongSecretKeyVo
+	err = json.Unmarshal(resp.Body(), &kongKey)
 	if err != nil {
-		logx.Errorf("Failed to parse Konga response: %v, body: %s", err, resp.Body())
+		logx.Errorf("Failed to parse Kong Admin response: %v, body: %s", err, resp.Body())
 		return nil, errors.NewCodeError(500, "解析响应失败")
 	}
 
-	return &kongaKey, nil
+	return &kongKey, nil
 }
 
-// 删除Konga密钥
-func (s *AppKeyService) deleteKongaKey(keyId string) error {
-	url := s.buildKongaUrl(fmt.Sprintf("/%s", keyId))
+// 删除 Kong 密钥
+func (s *AppKeyService) deleteKongKey(keyId string) error {
+	url := s.buildKongAdminURL(fmt.Sprintf("/%s", keyId))
 
 	resp, err := resty.New().R().
 		Delete(url)
 
 	if err != nil {
-		logx.Errorf("Failed to delete key from Konga: %v", err)
+		logx.Errorf("Failed to delete key from Kong Admin: %v", err)
 		return errors.NewCodeError(500, "删除密钥失败")
 	}
 
 	if resp.StatusCode() != 204 && resp.StatusCode() != 404 {
-		logx.Errorf("Failed to delete key from Konga: status code %d, body: %s", resp.StatusCode(), resp.Body())
+		logx.Errorf("Failed to delete key from Kong Admin: status code %d, body: %s", resp.StatusCode(), resp.Body())
 		return errors.NewCodeError(500, "删除密钥失败")
 	}
 
 	return nil
 }
 
-// 获取Konga密钥
-func (s *AppKeyService) getKongaKey(keyId string) (*KongaSecretKeyVo, error) {
-	url := s.buildKongaUrl(fmt.Sprintf("/%s", keyId))
+// 获取 Kong 密钥
+func (s *AppKeyService) getKongKey(keyId string) (*KongSecretKeyVo, error) {
+	url := s.buildKongAdminURL(fmt.Sprintf("/%s", keyId))
 
 	resp, err := resty.New().R().
 		Get(url)
 
 	if err != nil {
-		logx.Errorf("Failed to get key from Konga: %v", err)
+		logx.Errorf("Failed to get key from Kong Admin: %v", err)
 		return nil, errors.NewCodeError(500, "获取密钥失败")
 	}
 
@@ -282,16 +282,16 @@ func (s *AppKeyService) getKongaKey(keyId string) (*KongaSecretKeyVo, error) {
 	}
 
 	if resp.StatusCode()/100 != 2 {
-		logx.Errorf("Failed to get key from Konga: status code %d, body: %s", resp.StatusCode(), resp.Body())
+		logx.Errorf("Failed to get key from Kong Admin: status code %d, body: %s", resp.StatusCode(), resp.Body())
 		return nil, errors.NewCodeError(500, "获取密钥失败")
 	}
 
-	var kongaKey KongaSecretKeyVo
-	err = json.Unmarshal(resp.Body(), &kongaKey)
+	var kongKey KongSecretKeyVo
+	err = json.Unmarshal(resp.Body(), &kongKey)
 	if err != nil {
-		logx.Errorf("Failed to parse Konga response: %v, body: %s", err, resp.Body())
+		logx.Errorf("Failed to parse Kong Admin response: %v, body: %s", err, resp.Body())
 		return nil, errors.NewCodeError(500, "解析响应失败")
 	}
 
-	return &kongaKey, nil
+	return &kongKey, nil
 }

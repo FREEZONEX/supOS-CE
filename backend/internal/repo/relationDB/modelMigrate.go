@@ -255,11 +255,11 @@ func seedSuposDefaultResources(db *gorm.DB) {
 			Code:            "RoutingManagement",
 			NameCode:        stringPtr("RoutingManagement"),
 			RouteSource:     intPtr(2),
-			URL:             stringPtr("/konga/home/"),
-			URLType:         intPtr(2),
+			URL:             stringPtr("/routing-management"),
+			URLType:         intPtr(1),
 			OpenType:        intPtr(0),
 			Icon:            stringPtr("RoutingManagement.svg"),
-			DescriptionCode: stringPtr("menu.desc.konga"),
+			DescriptionCode: stringPtr("menu.desc.routingManagement"),
 			Sort:            intPtr(1),
 			EditEnable:      boolPtr(false),
 			HomeEnable:      boolPtr(true),
@@ -385,6 +385,221 @@ func seedSuposDefaultResources(db *gorm.DB) {
 	}).Create(&resources).Error; err != nil {
 		log.Println("seed supos default resources WARN:", err)
 	}
+
+	routingID, err := ensureSuposResource(db, SuposResource{
+		ID:              61,
+		ParentID:        int64Ptr(60),
+		Type:            2,
+		Source:          stringPtr("platform"),
+		Code:            "RoutingManagement",
+		NameCode:        stringPtr("RoutingManagement"),
+		RouteSource:     intPtr(2),
+		URL:             stringPtr("/routing-management"),
+		URLType:         intPtr(1),
+		OpenType:        intPtr(0),
+		Icon:            stringPtr("RoutingManagement.svg"),
+		DescriptionCode: stringPtr("menu.desc.routingManagement"),
+		Sort:            intPtr(1),
+		EditEnable:      boolPtr(false),
+		HomeEnable:      boolPtr(true),
+		Fixed:           boolPtr(true),
+		Enable:          boolPtr(true),
+		UpdateAt:        now,
+		CreateAt:        now,
+	}, []string{"RoutingManagement"}, []string{"/routing-management"})
+	if err != nil {
+		log.Println("ensure RoutingManagement resource WARN:", err)
+		routingID = 61
+	}
+
+	if err := deleteSuposResources(db, []string{"Konga"}, []string{"/konga/home/"}); err != nil {
+		log.Println("delete legacy routing resource WARN:", err)
+	}
+
+	kongAdminID, err := ensureSuposResource(db, SuposResource{
+		ID:              621,
+		ParentID:        int64Ptr(routingID),
+		Type:            5,
+		Source:          stringPtr("platform"),
+		Code:            "route.kongAdmin",
+		NameCode:        stringPtr("route.kongAdmin"),
+		RouteSource:     intPtr(2),
+		URL:             stringPtr("/kong-admin"),
+		URLType:         intPtr(1),
+		OpenType:        intPtr(0),
+		Icon:            stringPtr(""),
+		DescriptionCode: stringPtr("Kong Admin API"),
+		Sort:            intPtr(1),
+		EditEnable:      boolPtr(false),
+		HomeEnable:      boolPtr(false),
+		Fixed:           boolPtr(false),
+		Enable:          boolPtr(true),
+		UpdateAt:        now,
+		CreateAt:        now,
+	}, []string{"route.kongAdmin"}, []string{"/kong-admin"})
+	if err != nil {
+		log.Println("ensure kong-admin resource WARN:", err)
+	}
+
+	if err := grantResourceToRolesWithResource(db, routingID, kongAdminID); err != nil {
+		log.Println("grant kong-admin resource WARN:", err)
+	}
+}
+
+func ensureSuposResource(
+	db *gorm.DB,
+	desired SuposResource,
+	matchCodes []string,
+	matchURLs []string,
+) (int64, error) {
+	if db == nil {
+		return 0, nil
+	}
+
+	var existing SuposResource
+	query := db.Model(&SuposResource{})
+
+	if desired.ID != 0 {
+		query = query.Where("id = ?", desired.ID)
+	}
+	if len(matchCodes) > 0 {
+		if desired.ID != 0 {
+			query = query.Or("code IN ?", matchCodes)
+		} else {
+			query = query.Where("code IN ?", matchCodes)
+		}
+	}
+	if len(matchURLs) > 0 {
+		if desired.ID != 0 || len(matchCodes) > 0 {
+			query = query.Or("url IN ?", matchURLs)
+		} else {
+			query = query.Where("url IN ?", matchURLs)
+		}
+	}
+
+	err := query.Order("id ASC").Take(&existing).Error
+	switch {
+	case err == nil:
+		updates := map[string]any{
+			"parent_id":        desired.ParentID,
+			"type":             desired.Type,
+			"source":           desired.Source,
+			"code":             desired.Code,
+			"name_code":        desired.NameCode,
+			"route_source":     desired.RouteSource,
+			"url":              desired.URL,
+			"url_type":         desired.URLType,
+			"open_type":        desired.OpenType,
+			"icon":             desired.Icon,
+			"description_code": desired.DescriptionCode,
+			"sort":             desired.Sort,
+			"edit_enable":      desired.EditEnable,
+			"home_enable":      desired.HomeEnable,
+			"fixed":            desired.Fixed,
+			"enable":           desired.Enable,
+			"update_at":        desired.UpdateAt,
+		}
+		if updateErr := db.Model(&SuposResource{}).Where("id = ?", existing.ID).Updates(updates).Error; updateErr != nil {
+			return 0, updateErr
+		}
+		return existing.ID, nil
+	case err != gorm.ErrRecordNotFound:
+		return 0, err
+	}
+
+	if createErr := db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"parent_id", "type", "source", "code", "name_code", "route_source", "url",
+			"url_type", "open_type", "icon", "description_code", "sort", "edit_enable",
+			"home_enable", "fixed", "enable", "update_at",
+		}),
+	}).Create(&desired).Error; createErr != nil {
+		return 0, createErr
+	}
+	return desired.ID, nil
+}
+
+func deleteSuposResources(db *gorm.DB, matchCodes []string, matchURLs []string) error {
+	if db == nil {
+		return nil
+	}
+
+	query := db.Model(&SuposResource{})
+	hasCondition := false
+	if len(matchCodes) > 0 {
+		query = query.Where("code IN ?", matchCodes)
+		hasCondition = true
+	}
+	if len(matchURLs) > 0 {
+		if hasCondition {
+			query = query.Or("url IN ?", matchURLs)
+		} else {
+			query = query.Where("url IN ?", matchURLs)
+			hasCondition = true
+		}
+	}
+	if !hasCondition {
+		return nil
+	}
+
+	var resourceIDs []int64
+	if err := query.Pluck("id", &resourceIDs).Error; err != nil {
+		return err
+	}
+	if len(resourceIDs) == 0 {
+		return nil
+	}
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("resource_id IN ?", resourceIDs).Delete(&IamRoleResource{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("id IN ?", resourceIDs).Delete(&SuposResource{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func grantResourceToRolesWithResource(db *gorm.DB, sourceResourceID, targetResourceID int64) error {
+	if db == nil || sourceResourceID == 0 || targetResourceID == 0 || sourceResourceID == targetResourceID {
+		return nil
+	}
+
+	var roleIDs []string
+	if err := db.Model(&IamRoleResource{}).
+		Where("resource_id = ?", sourceResourceID).
+		Pluck("role_id", &roleIDs).Error; err != nil {
+		return err
+	}
+	if len(roleIDs) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+	assignments := make([]IamRoleResource, 0, len(roleIDs))
+	seen := make(map[string]struct{}, len(roleIDs))
+	for _, roleID := range roleIDs {
+		roleID = strings.TrimSpace(roleID)
+		if roleID == "" {
+			continue
+		}
+		if _, ok := seen[roleID]; ok {
+			continue
+		}
+		seen[roleID] = struct{}{}
+		assignments = append(assignments, IamRoleResource{
+			RoleID:     roleID,
+			ResourceID: targetResourceID,
+			CreatedAt:  now,
+			CreatedBy:  "system",
+		})
+	}
+	if len(assignments) == 0 {
+		return nil
+	}
+	return db.Clauses(clause.OnConflict{DoNothing: true}).Create(&assignments).Error
 }
 
 func seedSuperAdminRoleResources(db *gorm.DB) {
