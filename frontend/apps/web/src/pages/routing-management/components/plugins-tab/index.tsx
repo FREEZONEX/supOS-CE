@@ -16,9 +16,11 @@ import {
 } from '@/apis/inter-api/kong';
 import useKongTable from '../../hooks/useKongTable';
 import useKongModal from '../../hooks/useKongModal';
+import useTranslate from '@/hooks/useTranslate';
 
 const PluginsTab: FC = () => {
   const { modal } = App.useApp();
+  const formatMessage = useTranslate();
   const { data, loading, refresh } = useKongTable({ fetchApi: getPlugins });
   const [search, setSearch] = useState('');
   const [detailRecord, setDetailRecord] = useState<any>(null);
@@ -64,28 +66,55 @@ const PluginsTab: FC = () => {
   const renderForm = useCallback(
     (_form: any, editing: any) => (
       <>
-        <Form.Item name="name" label="Plugin" rules={[{ required: true, message: 'Plugin name is required' }]}>
+        <Form.Item
+          name="name"
+          label={formatMessage('kong.labelPlugin')}
+          rules={[{ required: true, message: formatMessage('kong.rulePluginRequired') }]}
+        >
           <Select
             showSearch
-            placeholder="Select a plugin"
+            placeholder={formatMessage('kong.phSelectPlugin')}
             disabled={!!editing?.id}
             options={availablePlugins.map((p) => ({ label: p, value: p }))}
             optionFilterProp="label"
           />
         </Form.Item>
-        <Form.Item name="service_id" label="Service (optional)">
-          <Select showSearch allowClear placeholder="Global if empty" options={serviceOpts} optionFilterProp="label" />
+        <Form.Item name="service_id" label={formatMessage('kong.labelService')}>
+          <Select
+            showSearch
+            allowClear
+            placeholder={formatMessage('kong.phGlobalIfEmpty')}
+            options={serviceOpts}
+            optionFilterProp="label"
+          />
         </Form.Item>
-        <Form.Item name="route_id" label="Route (optional)">
-          <Select showSearch allowClear placeholder="Global if empty" options={routeOpts} optionFilterProp="label" />
+        <Form.Item name="route_id" label={formatMessage('kong.labelRoute')}>
+          <Select
+            showSearch
+            allowClear
+            placeholder={formatMessage('kong.phGlobalIfEmpty')}
+            options={routeOpts}
+            optionFilterProp="label"
+          />
         </Form.Item>
-        <Form.Item name="consumer_id" label="Consumer (optional)">
-          <Select showSearch allowClear placeholder="Global if empty" options={consumerOpts} optionFilterProp="label" />
+        <Form.Item name="consumer_id" label={formatMessage('kong.labelConsumer')}>
+          <Select
+            showSearch
+            allowClear
+            placeholder={formatMessage('kong.phGlobalIfEmpty')}
+            options={consumerOpts}
+            optionFilterProp="label"
+          />
         </Form.Item>
-        <Form.Item name="enabled" label="Enabled" valuePropName="checked" initialValue={true}>
+        <Form.Item
+          name="enabled"
+          label={formatMessage('kong.labelEnabled')}
+          valuePropName="checked"
+          initialValue={true}
+        >
           <Switch />
         </Form.Item>
-        <Form.Item name="config" label="Config (JSON)">
+        <Form.Item name="config" label={formatMessage('kong.labelConfigJSON')}>
           <ProCodemirror
             extensions={[json()]}
             height="160px"
@@ -95,11 +124,11 @@ const PluginsTab: FC = () => {
         </Form.Item>
       </>
     ),
-    [availablePlugins, serviceOpts, routeOpts, consumerOpts]
+    [availablePlugins, serviceOpts, routeOpts, consumerOpts, formatMessage]
   );
 
   const { ModalDom, open } = useKongModal({
-    title: 'Plugin',
+    title: formatMessage('kong.plugins'),
     createApi: createPlugin,
     updateApi: updatePlugin,
     onSuccess: refresh,
@@ -125,7 +154,7 @@ const PluginsTab: FC = () => {
   const handleDelete = useCallback(
     (record: any) => {
       modal.confirm({
-        title: `Delete plugin "${record.name}" (${record.id.slice(0, 8)}...)?`,
+        title: formatMessage('kong.deletePlugin', { name: record.name, id: record.id.slice(0, 8) }),
         okButtonProps: { danger: true },
         onOk: async () => {
           await deletePlugin(record.id);
@@ -133,7 +162,7 @@ const PluginsTab: FC = () => {
         },
       });
     },
-    [modal, refresh]
+    [modal, refresh, formatMessage]
   );
 
   const filteredData = useMemo(() => {
@@ -144,7 +173,7 @@ const PluginsTab: FC = () => {
 
   const columns = [
     {
-      title: 'Plugin',
+      title: formatMessage('kong.colPlugin'),
       dataIndex: 'name',
       width: 180,
       ellipsis: true,
@@ -153,17 +182,17 @@ const PluginsTab: FC = () => {
       ),
     },
     {
-      title: 'Scope',
+      title: formatMessage('kong.colScope'),
       width: 160,
       render: (_: any, record: any) => {
-        if (record.service?.id) return <Tag color="blue">Service</Tag>;
-        if (record.route?.id) return <Tag color="cyan">Route</Tag>;
-        if (record.consumer?.id) return <Tag color="purple">Consumer</Tag>;
-        return <Tag>Global</Tag>;
+        if (record.service?.id) return <Tag color="blue">{formatMessage('kong.scopeService')}</Tag>;
+        if (record.route?.id) return <Tag color="cyan">{formatMessage('kong.scopeRoute')}</Tag>;
+        if (record.consumer?.id) return <Tag color="purple">{formatMessage('kong.scopeConsumer')}</Tag>;
+        return <Tag>{formatMessage('kong.valGlobal')}</Tag>;
       },
     },
     {
-      title: 'Applied To',
+      title: formatMessage('kong.colAppliedTo'),
       width: 220,
       ellipsis: true,
       render: (_: any, record: any) => {
@@ -183,13 +212,15 @@ const PluginsTab: FC = () => {
       },
     },
     {
-      title: 'Enabled',
+      title: formatMessage('kong.colEnabled'),
       dataIndex: 'enabled',
       width: 90,
-      render: (v: boolean) => <Tag color={v ? 'green' : 'red'}>{v ? 'Yes' : 'No'}</Tag>,
+      render: (v: boolean) => (
+        <Tag color={v ? 'green' : 'red'}>{v ? formatMessage('kong.valYes') : formatMessage('kong.valNo')}</Tag>
+      ),
     },
     {
-      title: 'Created',
+      title: formatMessage('kong.colCreated'),
       dataIndex: 'created_at',
       width: 180,
       sorter: (a: any, b: any) => (a.created_at ?? 0) - (b.created_at ?? 0),
@@ -202,15 +233,15 @@ const PluginsTab: FC = () => {
       <div className="toolbar">
         <div className="toolbar-left">
           <Button type="primary" icon={<Add size={16} />} onClick={() => open()}>
-            Add Plugin
+            {formatMessage('kong.addPlugin')}
           </Button>
           <Button icon={<Renew size={16} />} onClick={refresh}>
-            Refresh
+            {formatMessage('common.refresh')}
           </Button>
         </div>
         <div className="toolbar-right">
           <Input.Search
-            placeholder="Search by plugin name"
+            placeholder={formatMessage('kong.searchPlugin')}
             allowClear
             style={{ width: 280 }}
             onSearch={setSearch}
@@ -233,7 +264,7 @@ const PluginsTab: FC = () => {
                 key: 'edit',
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-                    Edit <Edit size={14} />
+                    {formatMessage('common.edit')} <Edit size={14} />
                   </span>
                 ),
                 onClick: () => handleEdit(record),
@@ -242,7 +273,7 @@ const PluginsTab: FC = () => {
                 key: 'delete',
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-                    Delete <TrashCan size={14} />
+                    {formatMessage('common.delete')} <TrashCan size={14} />
                   </span>
                 ),
                 onClick: () => handleDelete(record),
@@ -252,23 +283,36 @@ const PluginsTab: FC = () => {
         />
       </div>
       {ModalDom}
-      <Drawer title="Plugin Detail" open={!!detailRecord} onClose={() => setDetailRecord(null)} width={640}>
+      <Drawer
+        title={formatMessage('kong.pluginDetail')}
+        open={!!detailRecord}
+        onClose={() => setDetailRecord(null)}
+        width={640}
+      >
         {detailRecord && (
           <>
             <Descriptions column={1} bordered size="small" className="detail-descriptions">
-              <Descriptions.Item label="ID">{detailRecord.id}</Descriptions.Item>
-              <Descriptions.Item label="Plugin">{detailRecord.name}</Descriptions.Item>
-              <Descriptions.Item label="Enabled">
-                <Tag color={detailRecord.enabled ? 'green' : 'red'}>{detailRecord.enabled ? 'Yes' : 'No'}</Tag>
+              <Descriptions.Item label={formatMessage('kong.colID')}>{detailRecord.id}</Descriptions.Item>
+              <Descriptions.Item label={formatMessage('kong.colPlugin')}>{detailRecord.name}</Descriptions.Item>
+              <Descriptions.Item label={formatMessage('kong.colEnabled')}>
+                <Tag color={detailRecord.enabled ? 'green' : 'red'}>
+                  {detailRecord.enabled ? formatMessage('kong.valYes') : formatMessage('kong.valNo')}
+                </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Service">{detailRecord.service?.id || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Route">{detailRecord.route?.id || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Consumer">{detailRecord.consumer?.id || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Created">
+              <Descriptions.Item label={formatMessage('kong.scopeService')}>
+                {detailRecord.service?.id || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={formatMessage('kong.scopeRoute')}>
+                {detailRecord.route?.id || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={formatMessage('kong.scopeConsumer')}>
+                {detailRecord.consumer?.id || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={formatMessage('kong.colCreated')}>
                 {new Date(detailRecord.created_at * 1000).toLocaleString()}
               </Descriptions.Item>
             </Descriptions>
-            <h4 style={{ marginTop: 16, marginBottom: 8 }}>Config</h4>
+            <h4 style={{ marginTop: 16, marginBottom: 8 }}>{formatMessage('kong.configSection')}</h4>
             <ProCodemirror
               value={JSON.stringify(detailRecord.config, null, 2)}
               extensions={[json()]}

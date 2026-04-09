@@ -5,9 +5,11 @@ import ProTable from '@/components/pro-table';
 import { getCertificates, createCertificate, updateCertificate, deleteCertificate } from '@/apis/inter-api/kong';
 import useKongTable from '../../hooks/useKongTable';
 import useKongModal from '../../hooks/useKongModal';
+import useTranslate from '@/hooks/useTranslate';
 
 const CertificatesTab: FC = () => {
   const { modal } = App.useApp();
+  const formatMessage = useTranslate();
   const { data, loading, refresh } = useKongTable({ fetchApi: getCertificates });
   const [search, setSearch] = useState('');
   const [detailRecord, setDetailRecord] = useState<any>(null);
@@ -36,8 +38,8 @@ const CertificatesTab: FC = () => {
       <>
         <Form.Item
           name="cert"
-          label="Certificate (PEM)"
-          rules={[{ required: true, message: 'Certificate is required' }]}
+          label={formatMessage('kong.labelCertificatePEM')}
+          rules={[{ required: true, message: formatMessage('kong.ruleCertRequired') }]}
         >
           <Input.TextArea
             rows={6}
@@ -46,27 +48,27 @@ const CertificatesTab: FC = () => {
         </Form.Item>
         <Form.Item
           name="key"
-          label="Private Key (PEM)"
-          rules={[{ required: true, message: 'Private key is required' }]}
+          label={formatMessage('kong.labelPrivateKeyPEM')}
+          rules={[{ required: true, message: formatMessage('kong.ruleKeyRequired') }]}
         >
           <Input.TextArea
             rows={6}
             placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
           />
         </Form.Item>
-        <Form.Item name="snis" label="SNIs">
-          <Input placeholder="example.com, *.example.com (comma separated)" />
+        <Form.Item name="snis" label={formatMessage('kong.labelSNIs')}>
+          <Input placeholder={formatMessage('kong.phSNIs')} />
         </Form.Item>
-        <Form.Item name="tags" label="Tags">
-          <Input placeholder="tag1, tag2 (comma separated)" />
+        <Form.Item name="tags" label={formatMessage('kong.labelTags')}>
+          <Input placeholder={formatMessage('kong.phTags')} />
         </Form.Item>
       </>
     ),
-    []
+    [formatMessage]
   );
 
   const { ModalDom, open } = useKongModal({
-    title: 'Certificate',
+    title: formatMessage('kong.certificates'),
     createApi: createCertificate,
     updateApi: updateCertificate,
     onSuccess: refresh,
@@ -90,7 +92,7 @@ const CertificatesTab: FC = () => {
   const handleDelete = useCallback(
     (record: any) => {
       modal.confirm({
-        title: `Delete certificate ${record.id.slice(0, 8)}...?`,
+        title: formatMessage('kong.deleteCertificate', { id: record.id.slice(0, 8) }),
         okButtonProps: { danger: true },
         onOk: async () => {
           await deleteCertificate(record.id);
@@ -98,7 +100,7 @@ const CertificatesTab: FC = () => {
         },
       });
     },
-    [modal, refresh]
+    [modal, refresh, formatMessage]
   );
 
   const filteredData = useMemo(() => {
@@ -117,7 +119,7 @@ const CertificatesTab: FC = () => {
 
   const columns = [
     {
-      title: 'ID',
+      title: formatMessage('kong.colID'),
       dataIndex: 'id',
       width: 280,
       ellipsis: true,
@@ -126,7 +128,7 @@ const CertificatesTab: FC = () => {
       ),
     },
     {
-      title: 'SNIs',
+      title: formatMessage('kong.colSNIs'),
       dataIndex: 'snis',
       width: 260,
       render: (v: any[]) => {
@@ -142,7 +144,7 @@ const CertificatesTab: FC = () => {
       },
     },
     {
-      title: 'Tags',
+      title: formatMessage('kong.colTags'),
       dataIndex: 'tags',
       width: 180,
       render: (v: string[]) =>
@@ -157,7 +159,7 @@ const CertificatesTab: FC = () => {
         ),
     },
     {
-      title: 'Created',
+      title: formatMessage('kong.colCreated'),
       dataIndex: 'created_at',
       width: 180,
       sorter: (a: any, b: any) => (a.created_at ?? 0) - (b.created_at ?? 0),
@@ -170,15 +172,15 @@ const CertificatesTab: FC = () => {
       <div className="toolbar">
         <div className="toolbar-left">
           <Button type="primary" icon={<Add size={16} />} onClick={() => open()}>
-            Add Certificate
+            {formatMessage('kong.addCertificate')}
           </Button>
           <Button icon={<Renew size={16} />} onClick={refresh}>
-            Refresh
+            {formatMessage('common.refresh')}
           </Button>
         </div>
         <div className="toolbar-right">
           <Input.Search
-            placeholder="Search by SNI / tag"
+            placeholder={formatMessage('kong.searchCertificate')}
             allowClear
             style={{ width: 280 }}
             onSearch={setSearch}
@@ -201,7 +203,7 @@ const CertificatesTab: FC = () => {
                 key: 'edit',
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-                    Edit <Edit size={14} />
+                    {formatMessage('common.edit')} <Edit size={14} />
                   </span>
                 ),
                 onClick: () => handleEdit(record),
@@ -210,7 +212,7 @@ const CertificatesTab: FC = () => {
                 key: 'delete',
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-                    Delete <TrashCan size={14} />
+                    {formatMessage('common.delete')} <TrashCan size={14} />
                   </span>
                 ),
                 onClick: () => handleDelete(record),
@@ -220,22 +222,29 @@ const CertificatesTab: FC = () => {
         />
       </div>
       {ModalDom}
-      <Drawer title="Certificate Detail" open={!!detailRecord} onClose={() => setDetailRecord(null)} width={640}>
+      <Drawer
+        title={formatMessage('kong.certificateDetail')}
+        open={!!detailRecord}
+        onClose={() => setDetailRecord(null)}
+        width={640}
+      >
         {detailRecord && (
           <>
             <Descriptions column={1} bordered size="small" className="detail-descriptions">
-              <Descriptions.Item label="ID">{detailRecord.id}</Descriptions.Item>
-              <Descriptions.Item label="SNIs">
+              <Descriptions.Item label={formatMessage('kong.colID')}>{detailRecord.id}</Descriptions.Item>
+              <Descriptions.Item label={formatMessage('kong.colSNIs')}>
                 {detailRecord.snis?.map((s: any) => (typeof s === 'string' ? s : s.name))?.join(', ') || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Tags">{detailRecord.tags?.join(', ') || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Created">
+              <Descriptions.Item label={formatMessage('kong.colTags')}>
+                {detailRecord.tags?.join(', ') || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={formatMessage('kong.colCreated')}>
                 {new Date(detailRecord.created_at * 1000).toLocaleString()}
               </Descriptions.Item>
             </Descriptions>
-            <h4 style={{ marginTop: 16, marginBottom: 8 }}>Certificate</h4>
+            <h4 style={{ marginTop: 16, marginBottom: 8 }}>{formatMessage('kong.colCertificate')}</h4>
             <div className="json-preview">{detailRecord.cert}</div>
-            <h4 style={{ marginTop: 16, marginBottom: 8 }}>Private Key</h4>
+            <h4 style={{ marginTop: 16, marginBottom: 8 }}>{formatMessage('kong.colPrivateKey')}</h4>
             <div className="json-preview">{detailRecord.key}</div>
           </>
         )}

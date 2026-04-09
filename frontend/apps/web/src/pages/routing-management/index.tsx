@@ -10,19 +10,21 @@ import RoutesTab from './components/routes-tab';
 import ConsumersTab from './components/consumers-tab';
 import PluginsTab from './components/plugins-tab';
 import CertificatesTab from './components/certificates-tab';
+import useTranslate from '@/hooks/useTranslate';
 import styles from './index.module.scss';
 
-const menuItems = [
-  { key: 'services', icon: <DataStructured size={16} />, label: 'Services' },
-  { key: 'routes', icon: <DirectionFork size={16} />, label: 'Routes' },
-  { key: 'consumers', icon: <UserMultiple size={16} />, label: 'Consumers' },
-  { key: 'plugins', icon: <PlugFilled size={16} />, label: 'Plugins' },
-  { key: 'certificates', icon: <Certificate size={16} />, label: 'Certificates' },
-];
-
 const RoutingManagement: FC<PageProps> = ({ title }) => {
+  const formatMessage = useTranslate();
   const [activeKey, setActiveKey] = useState('services');
   const [pendingRouteDetail, setPendingRouteDetail] = useState<any>(null);
+
+  const menuItems = [
+    { key: 'services', icon: <DataStructured size={16} />, label: formatMessage('kong.services') },
+    { key: 'routes', icon: <DirectionFork size={16} />, label: formatMessage('kong.routes') },
+    { key: 'consumers', icon: <UserMultiple size={16} />, label: formatMessage('kong.consumers') },
+    { key: 'plugins', icon: <PlugFilled size={16} />, label: formatMessage('kong.plugins') },
+    { key: 'certificates', icon: <Certificate size={16} />, label: formatMessage('kong.certificates') },
+  ];
 
   const handleViewRoute = useCallback((route: any) => {
     setPendingRouteDetail(route);
@@ -36,7 +38,7 @@ const RoutingManagement: FC<PageProps> = ({ title }) => {
 
   return (
     <ComLayout>
-      <ComContent hasBack={false} title={title || 'Routing Management'}>
+      <ComContent hasBack={false} title={title || formatMessage('kong.routingManagement')}>
         <ComLayout className={styles['routing-inner']}>
           <ComLeft defaultWidth={360} resize style={{ padding: '8px 0' }}>
             <Menu

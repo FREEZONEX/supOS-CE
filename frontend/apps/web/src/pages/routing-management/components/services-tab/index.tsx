@@ -29,6 +29,7 @@ import {
 } from '@/apis/inter-api/kong';
 import useKongTable from '../../hooks/useKongTable';
 import useKongModal from '../../hooks/useKongModal';
+import useTranslate from '@/hooks/useTranslate';
 
 const SVC_PROTOCOLS = ['http', 'https', 'grpc', 'grpcs', 'tcp', 'tls', 'udp'];
 const ROUTE_PROTOCOLS = ['http', 'https', 'grpc', 'grpcs', 'tcp', 'tls', 'udp'];
@@ -40,6 +41,7 @@ interface ServicesTabProps {
 
 const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
   const { modal, message } = App.useApp();
+  const formatMessage = useTranslate();
   const { data, loading, refresh } = useKongTable({ fetchApi: getServices });
   const [search, setSearch] = useState('');
   const [detailRecord, setDetailRecord] = useState<any>(null);
@@ -88,22 +90,22 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
       }
       if (editingRoute) {
         await updateRoute(editingRoute.id, payload);
-        message.success('Route updated');
+        message.success(formatMessage('kong.routeUpdated'));
       } else {
         payload.service = { id: detailRecord.id };
         await createRoute(payload);
-        message.success('Route created');
+        message.success(formatMessage('kong.routeCreated'));
       }
       setAddRouteOpen(false);
       setEditingRoute(null);
       addRouteForm.resetFields();
       refreshRoutes(detailRecord.id);
     } catch (e: any) {
-      if (!e?.errorFields) message.error(e?.message || 'Failed to save route');
+      if (!e?.errorFields) message.error(e?.message || formatMessage('kong.routeSaveFailed'));
     } finally {
       setSavingRoute(false);
     }
-  }, [detailRecord, addRouteForm, refreshRoutes, message, editingRoute]);
+  }, [detailRecord, addRouteForm, refreshRoutes, message, editingRoute, formatMessage]);
 
   const handleEditRoute = useCallback(
     (route: any) => {
@@ -121,7 +123,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
   const handleDeleteRoute = useCallback(
     (route: any) => {
       modal.confirm({
-        title: `Delete route "${route.name ?? route.id}"?`,
+        title: formatMessage('kong.deleteRoute', { name: route.name ?? route.id }),
         okButtonProps: { danger: true },
         onOk: async () => {
           await deleteRoute(route.id);
@@ -129,65 +131,89 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
         },
       });
     },
-    [modal, detailRecord, refreshRoutes]
+    [modal, detailRecord, refreshRoutes, formatMessage]
   );
 
   const renderForm = useCallback(
     (_form: any, editing: any) => (
       <>
-        <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Service name is required' }]}>
-          <Input placeholder="my-service" />
+        <Form.Item
+          name="name"
+          label={formatMessage('kong.labelName')}
+          rules={[{ required: true, message: formatMessage('kong.ruleServiceNameRequired') }]}
+        >
+          <Input placeholder={formatMessage('kong.phServiceName')} />
         </Form.Item>
         <Flex gap={12}>
-          <Form.Item name="protocol" label="Protocol" initialValue="http" style={{ flex: 1 }}>
+          <Form.Item
+            name="protocol"
+            label={formatMessage('kong.labelProtocol')}
+            initialValue="http"
+            style={{ flex: 1 }}
+          >
             <Select options={SVC_PROTOCOLS.map((p) => ({ label: p, value: p }))} />
           </Form.Item>
           <Form.Item
             name="host"
-            label="Host"
-            rules={[{ required: true, message: 'Host is required' }]}
+            label={formatMessage('kong.labelHost')}
+            rules={[{ required: true, message: formatMessage('kong.ruleHostRequired') }]}
             style={{ flex: 2 }}
           >
-            <Input placeholder="example.com" />
+            <Input placeholder={formatMessage('kong.phHost')} />
           </Form.Item>
-          <Form.Item name="port" label="Port" initialValue={80} style={{ flex: 1 }}>
+          <Form.Item name="port" label={formatMessage('kong.labelPort')} initialValue={80} style={{ flex: 1 }}>
             <InputNumber min={1} max={65535} style={{ width: '100%' }} />
           </Form.Item>
         </Flex>
-        <Form.Item name="path" label="Path">
-          <Input placeholder="/" />
+        <Form.Item name="path" label={formatMessage('kong.labelPath')}>
+          <Input placeholder={formatMessage('kong.phPath')} />
         </Form.Item>
         <Flex gap={12}>
-          <Form.Item name="retries" label="Retries" initialValue={5} style={{ flex: 1 }}>
+          <Form.Item name="retries" label={formatMessage('kong.labelRetries')} initialValue={5} style={{ flex: 1 }}>
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="connect_timeout" label="Connect Timeout (ms)" initialValue={60000} style={{ flex: 1 }}>
+          <Form.Item
+            name="connect_timeout"
+            label={formatMessage('kong.labelConnectTimeout')}
+            initialValue={60000}
+            style={{ flex: 1 }}
+          >
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="write_timeout" label="Write Timeout (ms)" initialValue={60000} style={{ flex: 1 }}>
+          <Form.Item
+            name="write_timeout"
+            label={formatMessage('kong.labelWriteTimeout')}
+            initialValue={60000}
+            style={{ flex: 1 }}
+          >
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="read_timeout" label="Read Timeout (ms)" initialValue={60000} style={{ flex: 1 }}>
+          <Form.Item
+            name="read_timeout"
+            label={formatMessage('kong.labelReadTimeout')}
+            initialValue={60000}
+            style={{ flex: 1 }}
+          >
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
         </Flex>
         {editing?.id && (
-          <Form.Item name="enabled" label="Enabled" initialValue={true}>
+          <Form.Item name="enabled" label={formatMessage('kong.labelEnabled')} initialValue={true}>
             <Select
               options={[
-                { label: 'Enabled', value: true },
-                { label: 'Disabled', value: false },
+                { label: formatMessage('kong.valEnabled'), value: true },
+                { label: formatMessage('kong.valDisabled'), value: false },
               ]}
             />
           </Form.Item>
         )}
       </>
     ),
-    []
+    [formatMessage]
   );
 
   const { ModalDom, open } = useKongModal({
-    title: 'Service',
+    title: formatMessage('kong.services'),
     createApi: createService,
     updateApi: updateService,
     onSuccess: refresh,
@@ -198,8 +224,8 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
   const handleDelete = useCallback(
     (record: any) => {
       modal.confirm({
-        title: `Delete service "${record.name ?? record.id}"?`,
-        content: 'This will also remove associated routes and plugins.',
+        title: formatMessage('kong.deleteService', { name: record.name ?? record.id }),
+        content: formatMessage('kong.deleteServiceContent'),
         okButtonProps: { danger: true },
         onOk: async () => {
           await deleteService(record.id);
@@ -207,7 +233,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
         },
       });
     },
-    [modal, refresh]
+    [modal, refresh, formatMessage]
   );
 
   const filteredData = useMemo(() => {
@@ -222,7 +248,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
   const routeColumns = useMemo(
     () => [
       {
-        title: 'Name',
+        title: formatMessage('kong.colName'),
         dataIndex: 'name',
         ellipsis: true,
         render: (v: string, record: any) => (
@@ -237,7 +263,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
         ),
       },
       {
-        title: 'Protocols',
+        title: formatMessage('kong.colProtocols'),
         dataIndex: 'protocols',
         width: 130,
         render: (v: string[]) => (
@@ -249,7 +275,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
         ),
       },
       {
-        title: 'Methods',
+        title: formatMessage('kong.colMethods'),
         dataIndex: 'methods',
         width: 200,
         render: (v: string[]) => (
@@ -263,7 +289,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
         ),
       },
       {
-        title: 'Paths',
+        title: formatMessage('kong.colPaths'),
         dataIndex: 'paths',
         ellipsis: true,
         render: (v: string[]) => v?.join(', ') || '-',
@@ -285,12 +311,12 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
         ),
       },
     ],
-    [onViewRoute, handleEditRoute, handleDeleteRoute]
+    [onViewRoute, handleEditRoute, handleDeleteRoute, formatMessage]
   );
 
   const columns = [
     {
-      title: 'Name',
+      title: formatMessage('kong.colName'),
       dataIndex: 'name',
       width: 200,
       ellipsis: true,
@@ -299,37 +325,39 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
       ),
     },
     {
-      title: 'Protocol',
+      title: formatMessage('kong.colProtocol'),
       dataIndex: 'protocol',
       width: 100,
       render: (v: string) => <Tag>{v}</Tag>,
     },
     {
-      title: 'Host',
+      title: formatMessage('kong.colHost'),
       dataIndex: 'host',
       width: 200,
       ellipsis: true,
     },
     {
-      title: 'Port',
+      title: formatMessage('kong.colPort'),
       dataIndex: 'port',
       width: 80,
     },
     {
-      title: 'Path',
+      title: formatMessage('kong.colPath'),
       dataIndex: 'path',
       width: 150,
       ellipsis: true,
       render: (v: string) => v || '-',
     },
     {
-      title: 'Enabled',
+      title: formatMessage('kong.colEnabled'),
       dataIndex: 'enabled',
       width: 90,
-      render: (v: boolean) => <Tag color={v ? 'green' : 'red'}>{v ? 'Yes' : 'No'}</Tag>,
+      render: (v: boolean) => (
+        <Tag color={v ? 'green' : 'red'}>{v ? formatMessage('kong.valYes') : formatMessage('kong.valNo')}</Tag>
+      ),
     },
     {
-      title: 'Created',
+      title: formatMessage('kong.colCreated'),
       dataIndex: 'created_at',
       width: 180,
       sorter: (a: any, b: any) => (a.created_at ?? 0) - (b.created_at ?? 0),
@@ -341,26 +369,34 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
     () => [
       {
         key: 'detail',
-        label: 'Details',
+        label: formatMessage('kong.details'),
         children: detailRecord && (
           <Descriptions column={1} bordered size="small" className="detail-descriptions">
-            <Descriptions.Item label="ID">{detailRecord.id}</Descriptions.Item>
-            <Descriptions.Item label="Name">{detailRecord.name || '-'}</Descriptions.Item>
-            <Descriptions.Item label="Protocol">{detailRecord.protocol}</Descriptions.Item>
-            <Descriptions.Item label="Host">{detailRecord.host}</Descriptions.Item>
-            <Descriptions.Item label="Port">{detailRecord.port}</Descriptions.Item>
-            <Descriptions.Item label="Path">{detailRecord.path || '-'}</Descriptions.Item>
-            <Descriptions.Item label="Retries">{detailRecord.retries}</Descriptions.Item>
-            <Descriptions.Item label="Connect Timeout">{detailRecord.connect_timeout}ms</Descriptions.Item>
-            <Descriptions.Item label="Write Timeout">{detailRecord.write_timeout}ms</Descriptions.Item>
-            <Descriptions.Item label="Read Timeout">{detailRecord.read_timeout}ms</Descriptions.Item>
-            <Descriptions.Item label="Enabled">
-              <Tag color={detailRecord.enabled ? 'green' : 'red'}>{detailRecord.enabled ? 'Yes' : 'No'}</Tag>
+            <Descriptions.Item label={formatMessage('kong.colID')}>{detailRecord.id}</Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colName')}>{detailRecord.name || '-'}</Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colProtocol')}>{detailRecord.protocol}</Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colHost')}>{detailRecord.host}</Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colPort')}>{detailRecord.port}</Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colPath')}>{detailRecord.path || '-'}</Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.labelRetries')}>{detailRecord.retries}</Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.labelConnectTimeout')}>
+              {detailRecord.connect_timeout}ms
             </Descriptions.Item>
-            <Descriptions.Item label="Created">
+            <Descriptions.Item label={formatMessage('kong.labelWriteTimeout')}>
+              {detailRecord.write_timeout}ms
+            </Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.labelReadTimeout')}>
+              {detailRecord.read_timeout}ms
+            </Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colEnabled')}>
+              <Tag color={detailRecord.enabled ? 'green' : 'red'}>
+                {detailRecord.enabled ? formatMessage('kong.valYes') : formatMessage('kong.valNo')}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colCreated')}>
               {new Date(detailRecord.created_at * 1000).toLocaleString()}
             </Descriptions.Item>
-            <Descriptions.Item label="Updated">
+            <Descriptions.Item label={formatMessage('kong.colUpdated')}>
               {new Date(detailRecord.updated_at * 1000).toLocaleString()}
             </Descriptions.Item>
           </Descriptions>
@@ -368,7 +404,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
       },
       {
         key: 'routes',
-        label: `Routes${serviceRoutes.length ? ` (${serviceRoutes.length})` : ''}`,
+        label: `${formatMessage('kong.routes')}${serviceRoutes.length ? ` (${serviceRoutes.length})` : ''}`,
         children: (
           <>
             <Flex justify="flex-end" style={{ marginBottom: 12 }}>
@@ -382,7 +418,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
                   setAddRouteOpen(true);
                 }}
               >
-                Add Route
+                {formatMessage('kong.addRoute')}
               </Button>
             </Flex>
             <Table
@@ -392,13 +428,13 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
               columns={routeColumns}
               pagination={false}
               scroll={{ x: 'max-content' }}
-              locale={{ emptyText: 'No routes associated with this service' }}
+              locale={{ emptyText: formatMessage('kong.noRoutes') }}
             />
           </>
         ),
       },
     ],
-    [detailRecord, serviceRoutes, routeColumns, addRouteForm]
+    [detailRecord, serviceRoutes, routeColumns, addRouteForm, formatMessage]
   );
 
   return (
@@ -406,15 +442,15 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
       <div className="toolbar">
         <div className="toolbar-left">
           <Button type="primary" icon={<Add size={16} />} onClick={() => open()}>
-            Add Service
+            {formatMessage('kong.addService')}
           </Button>
           <Button icon={<Renew size={16} />} onClick={refresh}>
-            Refresh
+            {formatMessage('common.refresh')}
           </Button>
         </div>
         <div className="toolbar-right">
           <Input.Search
-            placeholder="Search by name / host"
+            placeholder={formatMessage('kong.searchService')}
             allowClear
             style={{ width: 280 }}
             onSearch={setSearch}
@@ -437,7 +473,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
                 key: 'edit',
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-                    Edit <Edit size={14} />
+                    {formatMessage('common.edit')} <Edit size={14} />
                   </span>
                 ),
                 onClick: () => open(record),
@@ -446,7 +482,7 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
                 key: 'delete',
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-                    Delete <TrashCan size={14} />
+                    {formatMessage('common.delete')} <TrashCan size={14} />
                   </span>
                 ),
                 onClick: () => handleDelete(record),
@@ -456,11 +492,16 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
         />
       </div>
       {ModalDom}
-      <Drawer title="Service Detail" open={!!detailRecord} onClose={() => setDetailRecord(null)} width={860}>
+      <Drawer
+        title={formatMessage('kong.serviceDetail')}
+        open={!!detailRecord}
+        onClose={() => setDetailRecord(null)}
+        width={860}
+      >
         <Tabs items={drawerTabs} />
       </Drawer>
       <Modal
-        title={editingRoute ? 'Edit Route' : 'Add Route'}
+        title={editingRoute ? formatMessage('kong.editRoute') : formatMessage('kong.addRoute')}
         open={addRouteOpen}
         onCancel={() => {
           setAddRouteOpen(false);
@@ -472,35 +513,49 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
         width={560}
       >
         <Form form={addRouteForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="name" label="Name">
-            <Input placeholder="my-route (optional)" />
+          <Form.Item name="name" label={formatMessage('kong.labelName')}>
+            <Input placeholder={formatMessage('kong.phRouteNameOptional')} />
           </Form.Item>
-          <Form.Item name="protocols" label="Protocols" initialValue={['http', 'https']}>
+          <Form.Item name="protocols" label={formatMessage('kong.labelProtocols')} initialValue={['http', 'https']}>
             <Select mode="multiple" options={ROUTE_PROTOCOLS.map((p) => ({ label: p, value: p }))} />
           </Form.Item>
-          <Form.Item name="methods" label="Methods">
+          <Form.Item name="methods" label={formatMessage('kong.labelMethods')}>
             <Select mode="multiple" options={ROUTE_METHODS.map((m) => ({ label: m, value: m }))} />
           </Form.Item>
-          <Form.Item name="paths" label="Paths" rules={[{ required: true, message: 'At least one path is required' }]}>
-            <Input placeholder="/api/v1, /api/v2 (comma separated)" />
+          <Form.Item
+            name="paths"
+            label={formatMessage('kong.labelPaths')}
+            rules={[{ required: true, message: formatMessage('kong.rulePathRequired') }]}
+          >
+            <Input placeholder={formatMessage('kong.phPaths')} />
           </Form.Item>
-          <Form.Item name="hosts" label="Hosts">
-            <Input placeholder="example.com (comma separated, optional)" />
+          <Form.Item name="hosts" label={formatMessage('kong.labelHosts')}>
+            <Input placeholder={formatMessage('kong.phHostsOptional')} />
           </Form.Item>
           <Flex gap={12}>
-            <Form.Item name="strip_path" label="Strip Path" initialValue={true} style={{ flex: 1 }}>
+            <Form.Item
+              name="strip_path"
+              label={formatMessage('kong.labelStripPath')}
+              initialValue={true}
+              style={{ flex: 1 }}
+            >
               <Select
                 options={[
-                  { label: 'Yes', value: true },
-                  { label: 'No', value: false },
+                  { label: formatMessage('kong.valYes'), value: true },
+                  { label: formatMessage('kong.valNo'), value: false },
                 ]}
               />
             </Form.Item>
-            <Form.Item name="preserve_host" label="Preserve Host" initialValue={false} style={{ flex: 1 }}>
+            <Form.Item
+              name="preserve_host"
+              label={formatMessage('kong.labelPreserveHost')}
+              initialValue={false}
+              style={{ flex: 1 }}
+            >
               <Select
                 options={[
-                  { label: 'Yes', value: true },
-                  { label: 'No', value: false },
+                  { label: formatMessage('kong.valYes'), value: true },
+                  { label: formatMessage('kong.valNo'), value: false },
                 ]}
               />
             </Form.Item>

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Modal, Form, message } from 'antd';
+import { getIntl } from '@/stores/i18n-store.ts';
 
 interface UseKongModalParams {
   title: string;
@@ -55,7 +56,7 @@ const useKongModal = ({
       } else {
         await createApi(payload);
       }
-      message.success(isEdit ? 'Updated successfully' : 'Created successfully');
+      message.success(isEdit ? getIntl('kong.updateSuccess') : getIntl('kong.createSuccess'));
       close();
       onSuccess();
     } catch (err: any) {
@@ -69,7 +70,7 @@ const useKongModal = ({
 
   const ModalDom = (
     <Modal
-      title={editingRecord ? `Edit ${title}` : `Add ${title}`}
+      title={editingRecord ? `${getIntl('common.edit')} ${title}` : `${getIntl('common.new')} ${title}`}
       open={visible}
       onOk={handleOk}
       onCancel={close}

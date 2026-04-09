@@ -41,30 +41,32 @@ import {
 } from '@/apis/inter-api/kong';
 import useKongTable from '../../hooks/useKongTable';
 import useKongModal from '../../hooks/useKongModal';
-
-const CRED_TYPES = [
-  { key: 'basic-auth', label: 'BASIC' },
-  { key: 'key-auth', label: 'API KEYS' },
-  { key: 'hmac-auth', label: 'HMAC' },
-  { key: 'oauth2', label: 'OAUTH2' },
-  { key: 'jwt', label: 'JWT' },
-];
-
-const CRED_LABELS: Record<string, string> = {
-  'basic-auth': 'Basic Auth',
-  'key-auth': 'API Keys',
-  'hmac-auth': 'HMAC Auth',
-  oauth2: 'OAuth 2.0',
-  jwt: 'JWT',
-};
+import useTranslate from '@/hooks/useTranslate';
 
 const JWT_ALGORITHMS = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'];
 
 const ConsumersTab: FC = () => {
   const { modal, message } = App.useApp();
+  const formatMessage = useTranslate();
   const { data, loading, refresh } = useKongTable({ fetchApi: getConsumers });
   const [search, setSearch] = useState('');
   const [detailRecord, setDetailRecord] = useState<any>(null);
+
+  const CRED_TYPES = [
+    { key: 'basic-auth', label: formatMessage('kong.credTypeBasic') },
+    { key: 'key-auth', label: formatMessage('kong.credTypeApiKeys') },
+    { key: 'hmac-auth', label: formatMessage('kong.credTypeHmac') },
+    { key: 'oauth2', label: formatMessage('kong.credTypeOAuth2') },
+    { key: 'jwt', label: formatMessage('kong.credTypeJwt') },
+  ];
+
+  const CRED_LABELS: Record<string, string> = {
+    'basic-auth': formatMessage('kong.credLabelBasic'),
+    'key-auth': formatMessage('kong.credLabelApiKeys'),
+    'hmac-auth': formatMessage('kong.credLabelHmac'),
+    oauth2: formatMessage('kong.credLabelOAuth2'),
+    jwt: formatMessage('kong.credLabelJwt'),
+  };
 
   const [credType, setCredType] = useState('basic-auth');
   const [credentials, setCredentials] = useState<any[]>([]);
@@ -129,7 +131,7 @@ const ConsumersTab: FC = () => {
     (credId: string) => {
       if (!detailRecord?.id) return;
       modal.confirm({
-        title: 'Delete this credential?',
+        title: formatMessage('kong.deleteCredential'),
         okButtonProps: { danger: true },
         onOk: async () => {
           switch (credType) {
@@ -153,7 +155,7 @@ const ConsumersTab: FC = () => {
         },
       });
     },
-    [modal, detailRecord, credType, fetchCredentials]
+    [modal, detailRecord, credType, fetchCredentials, formatMessage]
   );
 
   const handleCreateCred = useCallback(async () => {
@@ -195,18 +197,18 @@ const ConsumersTab: FC = () => {
           await createConsumerJwt(detailRecord.id, payload);
           break;
       }
-      message.success('Credential created successfully');
+      message.success(formatMessage('kong.credentialCreated'));
       setCredModalOpen(false);
       credForm.resetFields();
       fetchCredentials(detailRecord.id, credType);
     } catch (e: any) {
       if (!e?.errorFields) {
-        message.error(e?.message || 'Failed to create credential');
+        message.error(e?.message || formatMessage('kong.credentialFailed'));
       }
     } finally {
       setSavingCred(false);
     }
-  }, [credForm, credType, detailRecord, fetchCredentials, message]);
+  }, [credForm, credType, detailRecord, fetchCredentials, message, formatMessage]);
 
   const credColumns = useMemo(() => {
     const actionsCol = {
@@ -217,7 +219,7 @@ const ConsumersTab: FC = () => {
       ),
     };
     const idCol = {
-      title: 'ID',
+      title: formatMessage('kong.colID'),
       dataIndex: 'id',
       width: 110,
       ellipsis: true,
@@ -226,12 +228,12 @@ const ConsumersTab: FC = () => {
 
     switch (credType) {
       case 'basic-auth':
-        return [idCol, { title: 'Username', dataIndex: 'username', ellipsis: true }, actionsCol];
+        return [idCol, { title: formatMessage('kong.colUsername'), dataIndex: 'username', ellipsis: true }, actionsCol];
       case 'key-auth':
         return [
           idCol,
           {
-            title: 'Key',
+            title: formatMessage('kong.colKey'),
             dataIndex: 'key',
             ellipsis: true,
             render: (v: string) => <Typography.Text copyable>{v}</Typography.Text>,
@@ -241,17 +243,17 @@ const ConsumersTab: FC = () => {
       case 'hmac-auth':
         return [
           idCol,
-          { title: 'Username', dataIndex: 'username', ellipsis: true },
-          { title: 'Secret', dataIndex: 'secret', ellipsis: true },
+          { title: formatMessage('kong.colUsername'), dataIndex: 'username', ellipsis: true },
+          { title: formatMessage('kong.colSecret'), dataIndex: 'secret', ellipsis: true },
           actionsCol,
         ];
       case 'oauth2':
         return [
           idCol,
-          { title: 'Name', dataIndex: 'name', ellipsis: true },
-          { title: 'Client ID', dataIndex: 'client_id', ellipsis: true },
+          { title: formatMessage('kong.colName'), dataIndex: 'name', ellipsis: true },
+          { title: formatMessage('kong.colClientID'), dataIndex: 'client_id', ellipsis: true },
           {
-            title: 'Redirect URIs',
+            title: formatMessage('kong.colRedirectURIs'),
             dataIndex: 'redirect_uris',
             ellipsis: true,
             render: (v: string[]) => v?.join(', ') || '-',
@@ -262,85 +264,101 @@ const ConsumersTab: FC = () => {
         return [
           idCol,
           {
-            title: 'Key',
+            title: formatMessage('kong.colKey'),
             dataIndex: 'key',
             ellipsis: true,
             render: (v: string) => <Typography.Text copyable>{v}</Typography.Text>,
           },
-          { title: 'Algorithm', dataIndex: 'algorithm', width: 100 },
+          { title: formatMessage('kong.colAlgorithm'), dataIndex: 'algorithm', width: 100 },
           actionsCol,
         ];
       default:
         return [];
     }
-  }, [credType, handleDeleteCred]);
+  }, [credType, handleDeleteCred, formatMessage]);
 
   const renderCredForm = useCallback(() => {
     switch (credType) {
       case 'basic-auth':
         return (
           <>
-            <Form.Item name="username" label="Username" rules={[{ required: true }]}>
+            <Form.Item name="username" label={formatMessage('kong.labelUsername')} rules={[{ required: true }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="password" label="Password" rules={[{ required: true }]}>
+            <Form.Item name="password" label={formatMessage('kong.labelPassword')} rules={[{ required: true }]}>
               <Input.Password />
             </Form.Item>
           </>
         );
       case 'key-auth':
         return (
-          <Form.Item name="key" label="Key" extra="Leave empty to auto-generate">
-            <Input placeholder="Auto-generated if empty" />
+          <Form.Item name="key" label={formatMessage('kong.labelKey')} extra={formatMessage('kong.phAutoGenerate')}>
+            <Input placeholder={formatMessage('kong.phAutoGenerateInput')} />
           </Form.Item>
         );
       case 'hmac-auth':
         return (
           <>
-            <Form.Item name="username" label="Username" rules={[{ required: true }]}>
+            <Form.Item name="username" label={formatMessage('kong.labelUsername')} rules={[{ required: true }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="secret" label="Secret" extra="Leave empty to auto-generate">
-              <Input placeholder="Auto-generated if empty" />
+            <Form.Item
+              name="secret"
+              label={formatMessage('kong.labelSecret')}
+              extra={formatMessage('kong.phAutoGenerate')}
+            >
+              <Input placeholder={formatMessage('kong.phAutoGenerateInput')} />
             </Form.Item>
           </>
         );
       case 'oauth2':
         return (
           <>
-            <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+            <Form.Item name="name" label={formatMessage('kong.colName')} rules={[{ required: true }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="client_id" label="Client ID" extra="Leave empty to auto-generate">
+            <Form.Item
+              name="client_id"
+              label={formatMessage('kong.labelClientID')}
+              extra={formatMessage('kong.phAutoGenerate')}
+            >
               <Input />
             </Form.Item>
-            <Form.Item name="client_secret" label="Client Secret" extra="Leave empty to auto-generate">
+            <Form.Item
+              name="client_secret"
+              label={formatMessage('kong.labelClientSecret')}
+              extra={formatMessage('kong.phAutoGenerate')}
+            >
               <Input />
             </Form.Item>
-            <Form.Item name="redirect_uris" label="Redirect URIs">
-              <Input placeholder="https://example.com/callback (comma separated)" />
+            <Form.Item name="redirect_uris" label={formatMessage('kong.labelRedirectURIs')}>
+              <Input placeholder={formatMessage('kong.phOAuth2Redirect')} />
             </Form.Item>
           </>
         );
       case 'jwt':
         return (
           <>
-            <Form.Item name="algorithm" label="Algorithm" initialValue="HS256">
+            <Form.Item name="algorithm" label={formatMessage('kong.labelAlgorithm')} initialValue="HS256">
               <Select
                 options={JWT_ALGORITHMS.map((a) => ({ label: a, value: a }))}
                 onChange={(v) => setJwtAlgorithm(v)}
               />
             </Form.Item>
-            <Form.Item name="key" label="Key" extra="Leave empty to auto-generate">
+            <Form.Item name="key" label={formatMessage('kong.labelKey')} extra={formatMessage('kong.phAutoGenerate')}>
               <Input />
             </Form.Item>
             {jwtAlgorithm.startsWith('HS') && (
-              <Form.Item name="secret" label="Secret" extra="Leave empty to auto-generate">
+              <Form.Item
+                name="secret"
+                label={formatMessage('kong.labelSecret')}
+                extra={formatMessage('kong.phAutoGenerate')}
+              >
                 <Input />
               </Form.Item>
             )}
             {(jwtAlgorithm.startsWith('RS') || jwtAlgorithm.startsWith('ES')) && (
-              <Form.Item name="rsa_public_key" label="Public Key">
+              <Form.Item name="rsa_public_key" label={formatMessage('kong.labelPublicKey')}>
                 <Input.TextArea rows={4} />
               </Form.Item>
             )}
@@ -349,23 +367,27 @@ const ConsumersTab: FC = () => {
       default:
         return null;
     }
-  }, [credType, jwtAlgorithm]);
+  }, [credType, jwtAlgorithm, formatMessage]);
 
   const renderForm = useCallback(
     () => (
       <>
-        <Form.Item name="username" label="Username" rules={[{ required: true, message: 'Username is required' }]}>
-          <Input placeholder="my-consumer" />
+        <Form.Item
+          name="username"
+          label={formatMessage('kong.labelUsername')}
+          rules={[{ required: true, message: formatMessage('kong.ruleUsernameRequired') }]}
+        >
+          <Input placeholder={formatMessage('kong.phConsumerName')} />
         </Form.Item>
-        <Form.Item name="custom_id" label="Custom ID">
-          <Input placeholder="custom-id-123" />
+        <Form.Item name="custom_id" label={formatMessage('kong.labelCustomID')}>
+          <Input placeholder={formatMessage('kong.phCustomID')} />
         </Form.Item>
-        <Form.Item name="tags" label="Tags">
-          <Input placeholder="tag1, tag2 (comma separated)" />
+        <Form.Item name="tags" label={formatMessage('kong.labelTags')}>
+          <Input placeholder={formatMessage('kong.phTags')} />
         </Form.Item>
       </>
     ),
-    []
+    [formatMessage]
   );
 
   const transformValues = useCallback((values: any) => {
@@ -381,7 +403,7 @@ const ConsumersTab: FC = () => {
   }, []);
 
   const { ModalDom, open } = useKongModal({
-    title: 'Consumer',
+    title: formatMessage('kong.consumers'),
     createApi: createConsumer,
     updateApi: updateConsumer,
     onSuccess: refresh,
@@ -399,7 +421,7 @@ const ConsumersTab: FC = () => {
   const handleDelete = useCallback(
     (record: any) => {
       modal.confirm({
-        title: `Delete consumer "${record.username ?? record.id}"?`,
+        title: formatMessage('kong.deleteConsumer', { name: record.username ?? record.id }),
         okButtonProps: { danger: true },
         onOk: async () => {
           await deleteConsumer(record.id);
@@ -407,7 +429,7 @@ const ConsumersTab: FC = () => {
         },
       });
     },
-    [modal, refresh]
+    [modal, refresh, formatMessage]
   );
 
   const filteredData = useMemo(() => {
@@ -423,7 +445,7 @@ const ConsumersTab: FC = () => {
 
   const columns = [
     {
-      title: 'Username',
+      title: formatMessage('kong.colUsername'),
       dataIndex: 'username',
       width: 200,
       ellipsis: true,
@@ -432,14 +454,14 @@ const ConsumersTab: FC = () => {
       ),
     },
     {
-      title: 'Custom ID',
+      title: formatMessage('kong.colCustomID'),
       dataIndex: 'custom_id',
       width: 200,
       ellipsis: true,
       render: (v: string) => v || '-',
     },
     {
-      title: 'Tags',
+      title: formatMessage('kong.colTags'),
       dataIndex: 'tags',
       width: 200,
       render: (v: string[]) =>
@@ -454,7 +476,7 @@ const ConsumersTab: FC = () => {
         ),
     },
     {
-      title: 'Created',
+      title: formatMessage('kong.colCreated'),
       dataIndex: 'created_at',
       width: 180,
       sorter: (a: any, b: any) => (a.created_at ?? 0) - (b.created_at ?? 0),
@@ -466,14 +488,20 @@ const ConsumersTab: FC = () => {
     () => [
       {
         key: 'details',
-        label: 'Details',
+        label: formatMessage('kong.details'),
         children: detailRecord && (
           <Descriptions column={1} bordered size="small" className="detail-descriptions">
-            <Descriptions.Item label="ID">{detailRecord.id}</Descriptions.Item>
-            <Descriptions.Item label="Username">{detailRecord.username || '-'}</Descriptions.Item>
-            <Descriptions.Item label="Custom ID">{detailRecord.custom_id || '-'}</Descriptions.Item>
-            <Descriptions.Item label="Tags">{detailRecord.tags?.join(', ') || '-'}</Descriptions.Item>
-            <Descriptions.Item label="Created">
+            <Descriptions.Item label={formatMessage('kong.colID')}>{detailRecord.id}</Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colUsername')}>
+              {detailRecord.username || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colCustomID')}>
+              {detailRecord.custom_id || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colTags')}>
+              {detailRecord.tags?.join(', ') || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={formatMessage('kong.colCreated')}>
               {detailRecord.created_at ? new Date(detailRecord.created_at * 1000).toLocaleString() : '-'}
             </Descriptions.Item>
           </Descriptions>
@@ -481,7 +509,7 @@ const ConsumersTab: FC = () => {
       },
       {
         key: 'credentials',
-        label: 'Credentials',
+        label: formatMessage('kong.credentials'),
         children: (
           <Flex style={{ minHeight: 320 }}>
             <Menu
@@ -507,7 +535,7 @@ const ConsumersTab: FC = () => {
                     setCredModalOpen(true);
                   }}
                 >
-                  Create Credentials
+                  {formatMessage('kong.createCredentials')}
                 </Button>
               </Flex>
               {credLoading ? (
@@ -516,7 +544,7 @@ const ConsumersTab: FC = () => {
                 </Flex>
               ) : credentials.length === 0 ? (
                 <Typography.Text type="secondary">
-                  You have not created any {CRED_LABELS[credType]} credentials for this consumer yet
+                  {formatMessage('kong.noCredentials', { label: CRED_LABELS[credType] })}
                 </Typography.Text>
               ) : (
                 <Table
@@ -533,7 +561,18 @@ const ConsumersTab: FC = () => {
         ),
       },
     ],
-    [detailRecord, credType, handleCredTypeChange, credForm, credLoading, credentials, credColumns]
+    [
+      detailRecord,
+      credType,
+      handleCredTypeChange,
+      credForm,
+      credLoading,
+      credentials,
+      credColumns,
+      formatMessage,
+      CRED_TYPES,
+      CRED_LABELS,
+    ]
   );
 
   return (
@@ -541,15 +580,15 @@ const ConsumersTab: FC = () => {
       <div className="toolbar">
         <div className="toolbar-left">
           <Button type="primary" icon={<Add size={16} />} onClick={() => open()}>
-            Add Consumer
+            {formatMessage('kong.addConsumer')}
           </Button>
           <Button icon={<Renew size={16} />} onClick={refresh}>
-            Refresh
+            {formatMessage('common.refresh')}
           </Button>
         </div>
         <div className="toolbar-right">
           <Input.Search
-            placeholder="Search by username"
+            placeholder={formatMessage('kong.searchConsumer')}
             allowClear
             style={{ width: 280 }}
             onSearch={setSearch}
@@ -572,7 +611,7 @@ const ConsumersTab: FC = () => {
                 key: 'edit',
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-                    Edit <Edit size={14} />
+                    {formatMessage('common.edit')} <Edit size={14} />
                   </span>
                 ),
                 onClick: () => handleEdit(record),
@@ -581,7 +620,7 @@ const ConsumersTab: FC = () => {
                 key: 'delete',
                 label: (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-                    Delete <TrashCan size={14} />
+                    {formatMessage('common.delete')} <TrashCan size={14} />
                   </span>
                 ),
                 onClick: () => handleDelete(record),
@@ -591,11 +630,16 @@ const ConsumersTab: FC = () => {
         />
       </div>
       {ModalDom}
-      <Drawer title="Consumer Detail" open={!!detailRecord} onClose={handleCloseDetail} width={1000}>
+      <Drawer
+        title={formatMessage('kong.consumerDetail')}
+        open={!!detailRecord}
+        onClose={handleCloseDetail}
+        width={1000}
+      >
         <Tabs items={drawerTabs} />
       </Drawer>
       <Modal
-        title={`Create ${CRED_LABELS[credType]} Credential`}
+        title={formatMessage('kong.createCredentialTitle', { label: CRED_LABELS[credType] })}
         open={credModalOpen}
         onCancel={() => {
           setCredModalOpen(false);
