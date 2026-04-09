@@ -1,0 +1,98 @@
+:global {
+  .routing-sidebar-menu {
+    border-inline-end: none !important;
+
+    .ant-menu-item,
+    li.ant-menu-item {
+      margin: 2px 8px !important;
+      border-radius: 6px !important;
+      height: 40px !important;
+      line-height: 40px !important;
+      padding-inline: 16px !important;
+      width: calc(100% - 16px) !important;
+    }
+  }
+}
+
+.routing-inner {
+  :global {
+    .routing-sidebar-menu {
+      border-inline-end: none !important;
+
+      .ant-menu-item,
+      li.ant-menu-item {
+        margin: 2px 8px !important;
+        border-radius: 6px !important;
+        height: 40px !important;
+        line-height: 40px !important;
+        padding-inline: 16px !important;
+        width: calc(100% - 16px) !important;
+      }
+    }
+
+    .routing-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-area {
+      flex: 1;
+      padding: 0 20px 12px;
+      overflow: auto;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .json-preview {
+      max-height: 300px;
+      overflow: auto;
+      padding: 8px 12px;
+      background: var(--supos-bg-color, #f5f5f5);
+      border-radius: 6px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .detail-descriptions {
+      .ant-descriptions-item-label {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+    }
+
+    .form-tip {
+      font-size: 12px;
+      color: var(--supos-text-color-secondary, #999);
+      margin-top: 2px;
+    }
+  }
+}

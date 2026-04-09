@@ -24,6 +24,7 @@ import EventFlow from '@/pages/event-flow';
 import EventFlowPreview from '@/pages/event-flow/FlowPreview.tsx';
 import PluginManagement from '@/pages/plugin-management';
 import OpenData from '@/pages/open-data';
+import RoutingManagement from '@/pages/routing-management';
 import qs from 'qs';
 import { useEffect } from 'react';
 import { useBaseStore } from '@/stores/base';
@@ -219,6 +220,10 @@ export const childrenRoutes = [
   {
     path: '/OpenData',
     Component: OpenData,
+  },
+  {
+    path: '/routing-management',
+    Component: RoutingManagement,
   },
   // app管理
   {

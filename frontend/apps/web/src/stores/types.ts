@@ -129,7 +129,7 @@ export interface ResourceProps {
    * 最终路由为 `/files/system/resource/supos/${encodeURI(selectNode.icon)}`
    * */
   icon?: string;
-  // konga的name既唯一键 用来作为前端路由
+  // name/code historically acts as the unique key used by frontend routing
   code: string;
   // 国际化name
   showName?: string;

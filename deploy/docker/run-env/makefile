@@ -10,7 +10,6 @@ up:
 	@echo "  - Kong Proxy: http://localhost:8000"
 	@echo "  - Kong Admin API: http://localhost:8001"
 	@echo "  - Kong Manager: http://localhost:8002"
-	@echo "  - Konga UI: http://localhost:1337"
 
 # 停止所有服务
 down:
@@ -29,9 +28,6 @@ logs:
 # 查看特定服务日志
 logs-kong:
 	docker-compose logs -f kong
-
-logs-konga:
-	docker-compose logs -f konga
 
 logs-postgres:
 	docker-compose logs -f postgres
@@ -80,7 +76,6 @@ help:
 	@echo "  make restart         - 重启所有服务"
 	@echo "  make logs            - 查看所有服务日志"
 	@echo "  make logs-kong       - 查看 Kong 日志"
-	@echo "  make logs-konga      - 查看 Konga 日志"
 	@echo "  make logs-postgres   - 查看 PostgreSQL 日志"
 	@echo "  make logs-emqx       - 查看 EMQX 日志"
 	@echo "  make ps              - 查看服务状态"

@@ -314,6 +314,7 @@ func appendDefaultResources(resources []*authdto.ResourceDto) []*authdto.Resourc
 		}
 		uriMap[resource.URI] = resource
 	}
+	appendDerivedResources(uriMap)
 	for _, uri := range enums.DefaultAllowURIs {
 		if _, ok := uriMap[uri]; ok {
 			continue
@@ -331,6 +332,24 @@ func appendDefaultResources(resources []*authdto.ResourceDto) []*authdto.Resourc
 		return strings.Compare(a.URI, b.URI)
 	})
 	return result
+}
+
+func appendDerivedResources(uriMap map[string]*authdto.ResourceDto) {
+	routingManagement := uriMap["/routing-management"]
+	if routingManagement == nil {
+		return
+	}
+	if _, ok := uriMap["/kong-admin"]; ok {
+		return
+	}
+	methods := append([]string(nil), routingManagement.Methods...)
+	if len(methods) == 0 {
+		methods = defaultMethods()
+	}
+	uriMap["/kong-admin"] = &authdto.ResourceDto{
+		URI:     "/kong-admin",
+		Methods: methods,
+	}
 }
 
 func uniqueStrings(values []string) []string {

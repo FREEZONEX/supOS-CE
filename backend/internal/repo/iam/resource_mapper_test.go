@@ -1,6 +1,7 @@
 package iam
 
 import (
+	authdto "backend/internal/common/dto/auth"
 	"backend/internal/repo/relationDB"
 	"testing"
 )
@@ -36,5 +37,40 @@ func TestNormalizeRoleInputsDefault(t *testing.T) {
 	}
 	if roles[0].Role.RoleName != "user" {
 		t.Fatalf("normalizeRoleInputs(nil) role name = %q, want user", roles[0].Role.RoleName)
+	}
+}
+
+func TestAppendDefaultResourcesAddsKongAdminForRoutingManagement(t *testing.T) {
+	resources := appendDefaultResources([]*authdto.ResourceDto{
+		{
+			URI:     "/routing-management",
+			Methods: []string{"get", "post"},
+		},
+	})
+
+	var routingManagement *authdto.ResourceDto
+	var kongAdmin *authdto.ResourceDto
+	for _, resource := range resources {
+		switch resource.URI {
+		case "/routing-management":
+			routingManagement = resource
+		case "/kong-admin":
+			kongAdmin = resource
+		}
+	}
+
+	if routingManagement == nil {
+		t.Fatalf("missing /routing-management in %#v", resources)
+	}
+	if kongAdmin == nil {
+		t.Fatalf("missing derived /kong-admin in %#v", resources)
+	}
+	if len(kongAdmin.Methods) != len(routingManagement.Methods) {
+		t.Fatalf("/kong-admin methods = %#v, want %#v", kongAdmin.Methods, routingManagement.Methods)
+	}
+	for i := range routingManagement.Methods {
+		if kongAdmin.Methods[i] != routingManagement.Methods[i] {
+			t.Fatalf("/kong-admin methods = %#v, want %#v", kongAdmin.Methods, routingManagement.Methods)
+		}
 	}
 }

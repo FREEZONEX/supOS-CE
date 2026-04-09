@@ -84,22 +84,22 @@ services:
   id: 2cd97a86-3853-4001-9f0d-7769dc40d508
   client_certificate: ~
   read_timeout: 60000
-- name: konga
-  path: /
+- name: kong-admin
+  path: ~
   protocol: http
   tags: []
   ca_certificates: ~
   retries: 5
-  created_at: 1729736772
-  port: 1337
-  updated_at: 1764811192
+  created_at: 1764825801
+  port: 8001
+  updated_at: 1764825801
   enabled: true
-  host: konga
+  host: kong
   tls_verify: ~
   write_timeout: 60000
   connect_timeout: 60000
   tls_verify_depth: ~
-  id: 2df2f7c3-792a-4a30-b30c-6011e2f3f916
+  id: 8cc61ad7-e2bd-452a-95ea-f8b722a7bc4b
   client_certificate: ~
   read_timeout: 60000
 - name: plugin-frontend
@@ -1085,31 +1085,28 @@ routes:
   protocols:
   - http
   - https
-- name: RoutingManagement
+- name: kong-admin
   sources: ~
   preserve_host: false
   destinations: ~
   headers: ~
   methods: ~
   https_redirect_status_code: 426
-  service: 2df2f7c3-792a-4a30-b30c-6011e2f3f916
+  service: 8cc61ad7-e2bd-452a-95ea-f8b722a7bc4b
   strip_path: true
   paths:
-  - /konga/home/
-  created_at: 1729736896
-  updated_at: 1764811192
+  - /kong-admin
+  - /kong-admin/
+  created_at: 1764825801
+  updated_at: 1764825801
   response_buffering: true
   path_handling: v1
   regex_priority: 0
   hosts: ~
   request_buffering: true
   snis: ~
-  id: 79d5e57d-340c-4d18-93ee-a6a8f4a0f212
-  tags:
-  - description:menu.desc.konga
-  - sort:1
-  - parentName:menu.tag.system
-  - menu
+  id: cec75f37-6359-4c28-a940-fd9377eb91b5
+  tags: ~
   protocols:
   - http
   - https
@@ -2569,88 +2566,6 @@ upstreams:
         - 308
         successes: 0
   hash_on: none
-- name: konga
-  algorithm: round-robin
-  hash_on_cookie_path: /
-  client_certificate: ~
-  hash_fallback: none
-  hash_fallback_header: ~
-  slots: 1000
-  hash_fallback_uri_capture: ~
-  tags: ~
-  created_at: 1729737217
-  updated_at: 1764811193
-  use_srv_name: false
-  hash_fallback_query_arg: ~
-  hash_on_header: ~
-  host_header: ~
-  hash_on_query_arg: ~
-  hash_on_cookie: ~
-  hash_on_uri_capture: ~
-  id: 2a0fa8a9-98a4-4456-9d2c-faba35b54882
-  healthchecks:
-    threshold: 0
-    active:
-      concurrency: 10
-      http_path: /
-      https_sni: ~
-      https_verify_certificate: true
-      healthy:
-        http_statuses:
-        - 200
-        - 302
-        successes: 0
-        interval: 0
-      unhealthy:
-        tcp_failures: 0
-        timeouts: 0
-        http_failures: 0
-        http_statuses:
-        - 429
-        - 404
-        - 500
-        - 501
-        - 502
-        - 503
-        - 504
-        - 505
-        interval: 0
-      type: http
-      headers: ~
-      timeout: 1
-    passive:
-      unhealthy:
-        tcp_failures: 0
-        timeouts: 0
-        http_failures: 0
-        http_statuses:
-        - 429
-        - 500
-        - 503
-      type: http
-      healthy:
-        http_statuses:
-        - 200
-        - 201
-        - 202
-        - 203
-        - 204
-        - 205
-        - 206
-        - 207
-        - 208
-        - 226
-        - 300
-        - 301
-        - 302
-        - 303
-        - 304
-        - 305
-        - 306
-        - 307
-        - 308
-        successes: 0
-  hash_on: none
 - name: grafana
   algorithm: round-robin
   hash_on_cookie_path: /
@@ -3671,13 +3586,6 @@ targets:
   id: 2f312fcf-baa6-4de0-84aa-0779713ae279
   updated_at: 1764640500.805
   target: minio:9001
-- tags: ~
-  upstream: 2a0fa8a9-98a4-4456-9d2c-faba35b54882
-  created_at: 1729737239.883
-  weight: 100
-  id: 38ae0eeb-fa36-40a1-8c72-aaa43e7b9ceb
-  updated_at: 1764640500.823
-  target: konga:1337
 - tags: ~
   upstream: fa9fc31a-7d71-43bd-a453-c21704b71ac6
   created_at: 1729739844.316

@@ -278,9 +278,9 @@ services:
       KONG_NGINX_WORKER_PROCESSES: 2
       KONG_LUA_GC_PAUSE: 100            # 提高暂停率，降低 GC 触发频率
       KONG_LUA_GC_STEPMUL: 200          # 增加单次回收强度
-      service_logo: konga-original.svg
-      service_description: aboutus.kongaDescription
-      service_redirect_url: /konga/home/
+      service_logo: RoutingManagement.svg
+      service_description: aboutus.kongDescription
+      service_redirect_url: /routing-management
       KONG_DATABASE: postgres
       KONG_PG_HOST: postgresql
       KONG_PG_PASSWORD: postgres
@@ -314,28 +314,6 @@ services:
       - postgresql
     command: ["/bin/sh", "/usr/local/bin/start.sh"]
     restart: always  # 确保 Kong 自动重启
-    networks:
-      - edge_network
-  konga:
-    image: suposce/konga:1.0.0
-    container_name: konga
-    profiles:
-      - konga
-    environment:
-      # DB_ADAPTER: mysql           # 使用 MySQL 作为数据库
-      # DB_HOST: konga_mysql_database # MySQL 容器的主机名
-      # DB_USER: konga               # MySQL 用户
-      # DB_PASSWORD: konga           # MySQL 用户密码
-      # DB_DATABASE: konga          # MySQL 数据库名
-      # NODE_ENV: production           # 设置 NODE_ENV 为生产环境
-      NO_AUTH: "true"             # 禁用认证
-      KONGA_SEED_KONG_NODE_DATA_SOURCE_FILE: /node.data
-    ports:
-      - "1337:1337"  # 映射 Konga 的端口到主机
-    volumes:
-      - ${VOLUMES_PATH}/konga/db/:/app/kongadata/
-      - ${VOLUMES_PATH}/konga/node.data:/node.data  # 持久化数据库数据
-    restart: always
     networks:
       - edge_network
   minio:

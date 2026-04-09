@@ -31,6 +31,7 @@ export const proxyList = [
   'chat2db/api',
   'minio/inter/supos',
   'files/system/resource',
+  'kong-admin',
 ];
 
 export const getProxy = (

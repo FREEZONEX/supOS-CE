@@ -10,10 +10,11 @@ import { Button } from 'antd';
 interface ProCodemirrorProps extends ReactCodeMirrorProps {
   wrapperStyle?: CSSProperties;
   showExpanded?: boolean;
+  showHint?: boolean;
 }
 
 const ProCodemirror = (props: ProCodemirrorProps) => {
-  const { wrapperStyle, showExpanded, ...restProps } = props;
+  const { wrapperStyle, showExpanded, showHint = true, ...restProps } = props;
   const formatMessage = useTranslate();
   const { copy } = useClipboard();
   const editorRef = useRef<ReactCodeMirrorRef>(null);
@@ -51,17 +52,19 @@ const ProCodemirror = (props: ProCodemirrorProps) => {
             }}
           />
         ) : (
-          <span
-            style={{
-              marginRight: 14,
-              fontSize: '12px',
-              pointerEvents: 'none',
-              zIndex: 10,
-              color: '#c6c6c6',
-            }}
-          >
-            {formatMessage('uns.ctrlPQuickApplyExample')}
-          </span>
+          showHint && (
+            <span
+              style={{
+                marginRight: 14,
+                fontSize: '12px',
+                pointerEvents: 'none',
+                zIndex: 10,
+                color: '#c6c6c6',
+              }}
+            >
+              {formatMessage('uns.ctrlPQuickApplyExample')}
+            </span>
+          )
         )}
       </div>
       <CodeMirror

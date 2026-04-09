@@ -95,29 +95,6 @@ services:
       timeout: 10s
       retries: 10
 
-  konga:
-    image: pantsel/konga:latest
-    container_name: konga
-    hostname: konga
-    restart: always
-    environment:
-      NODE_ENV: production
-      DB_ADAPTER: postgres
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: password
-      DB_DATABASE: konga
-    ports:
-      - "1337:1337"   # Konga web UI
-    depends_on:
-      - postgres
-      - kong
-    volumes:
-      - ../conf/konga:/app/kongadata
-    logging:
-      options:
-        max-size: "10m"
         max-file: "3"
     networks:
       - supos_edge
