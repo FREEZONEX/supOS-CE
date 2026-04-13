@@ -1875,6 +1875,7 @@ plugins:
   created_at: 1733799127
   updated_at: 1764811192
   config:
+    auth_enabled: ${KONG_AUTH_ENABLED}
     enable_deny_check: true
     login_url: ${BASE_URL}/tier0-login
     forbidden_url: /403

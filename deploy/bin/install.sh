@@ -98,22 +98,13 @@ bash "$SCRIPT_DIR/init/init-eventflow.sh" || {
 }
 
 bash "$SCRIPT_DIR/init/hide-nodered.sh" || {
-    error "Failed to hide Node-RED entrypoints."
-    exit 1
+    warn "Failed to hide Node-RED entrypoints. Continuing installation..."
 }
 
 # Portainer is initialized last because it depends on Kong, IAM OAuth, and
 # the final externally reachable BASE_URL.
 bash "$SCRIPT_DIR/init/init-portainer.sh" || {
-    error "Failed to initialize Portainer OAuth."
-    exit 1
-}
-
-# MinIO is optional. Run its init script in a subshell so its internal exits
-# never terminate this installer when the minio profile is disabled.
-bash "$SCRIPT_DIR/init/init-minio.sh" "$1" || {
-    error "Failed to initialize MinIO."
-    exit 1
+    warn "Failed to initialize Portainer OAuth."
 }
 
 
@@ -122,10 +113,15 @@ echo -e "\n============================================================"
 echo -e "🎉  All services are up and running!"
 echo -e "👉  Open the platform in your browser:\n"
 
-if [[ "$ENTRANCE_PORT" == "80" || "$ENTRANCE_PORT" == "443" ]]; then
+if [[ "$ENTRANCE_PROTOCOL" == "https" ]]; then
+  _PORT="$ENTRANCE_SSL_PORT"
+else
+  _PORT="$ENTRANCE_PORT"
+fi
+if [[ "$_PORT" == "80" || "$_PORT" == "443" ]]; then
   PLATFORM_URL="${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}/uns"
 else
-  PLATFORM_URL="${BASE_URL}/uns"
+  PLATFORM_URL="${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}:${_PORT}/uns"
 fi
 
 IAM_BOOTSTRAP_USERNAME="${IAM_BOOTSTRAP_USERNAME:-tier0}"

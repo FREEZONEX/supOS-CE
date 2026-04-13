@@ -85,6 +85,10 @@ end
 
 -- 处理请求的访问逻辑
 function plugin:access(conf)
+  if not conf.auth_enabled then
+    return
+  end
+
   local current_path = ngx.var.uri  -- 获取当前请求路径
   local current_method = string.lower(ngx.req.get_method()) -- 获取当前请求方法
   --ngx.log(ngx.ERR, ">>>>>>>>>>>>当前请求方法：", current_method, " 当前请求路径：", current_path)
