@@ -13,7 +13,6 @@ import Localization from '@/pages/localization';
 import MenuConfiguration from '@/pages/menu-configuration';
 import Home from '@/pages/home';
 import AccountManagement from '@/pages/account-management';
-import AboutUs from '@/pages/aboutus';
 import AdvancedUse from '@/pages/advanced-use';
 import DevPage from '@/pages/dev-page';
 import LoginPage from '@/pages/login';
@@ -187,10 +186,6 @@ export const childrenRoutes = [
   {
     path: '/account-management',
     Component: AccountManagement,
-  },
-  {
-    path: '/aboutus',
-    Component: AboutUs,
   },
   {
     path: '/Localization',

@@ -31,7 +31,7 @@ const IconImage: FC<IconImageProps> = ({ theme, iconName, ...props }) => {
     } else {
       setImageSrc(fallbackImageUrl);
     }
-  }, [theme]);
+  }, [theme, iconName]);
 
   return <AntImage src={imageSrc} preview={false} fallback={defaultIconUrl} {...props} />;
 };

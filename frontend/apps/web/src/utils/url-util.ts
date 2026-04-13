@@ -34,6 +34,23 @@ export function getBaseFileName(path: string) {
   return fileName ? fileName.replace('.html', '') : '';
 }
 
+const CHARTREUSE_UNSUPPORTED_ICONS = new Set([
+  'Apps',
+  'AppBuilder',
+  'DevTools',
+  'Home',
+  'Homepage',
+  'Settings',
+  'UNS',
+  'menu.tag.apps',
+  'menu.tag.appspace',
+  'menu.tag.connections',
+  'menu.tag.devtools',
+  'menu.tag.settings',
+  'menu.tag.system',
+  'menu.tag.uns',
+]);
+
 // 设置参数
 export const getSearchParamsString = (obj: any) => {
   if (!obj) return '';
@@ -78,8 +95,6 @@ export const getImageSrcByTheme = (theme: string, iconName?: string) => {
     };
   }
   const baseUrl = `${getBaseUrl()}${STORAGE_PATH}${MENU_TARGET_PATH}/`;
-  const themeSuffix = theme.includes('chartreuse') ? '-chartreuse' : ''; // 根据主题添加后缀
-
   // 检查iconName是否已经包含有效的文件后缀
   // 常见的图片扩展名列表
   const validExtensions = ['.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico'];
@@ -106,8 +121,10 @@ export const getImageSrcByTheme = (theme: string, iconName?: string) => {
     iconNameWithoutExt = iconName;
   }
 
+  const supportsChartreuse =
+    theme.includes('chartreuse') && !CHARTREUSE_UNSUPPORTED_ICONS.has(iconNameWithoutExt);
   // 拼接带主题后缀的文件名
-  const themeImageUrl = `${baseUrl}${iconNameWithoutExt}${themeSuffix}${extension}`;
+  const themeImageUrl = `${baseUrl}${iconNameWithoutExt}${supportsChartreuse ? '-chartreuse' : ''}${extension}`;
   // 默认文件名
   const defaultImageUrl = `${baseUrl}${iconNameWithoutExt}${extension}`;
   return { themeImageUrl, defaultImageUrl, fallbackImageUrl };

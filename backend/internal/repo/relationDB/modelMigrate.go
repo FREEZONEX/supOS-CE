@@ -311,27 +311,6 @@ func seedSuposDefaultResources(db *gorm.DB) {
 			CreateAt:        now,
 		},
 		{
-			ID:              66,
-			ParentID:        int64Ptr(60),
-			Type:            2,
-			Source:          stringPtr("platform"),
-			Code:            "AboutUs",
-			NameCode:        stringPtr("AboutUs"),
-			RouteSource:     intPtr(2),
-			URL:             stringPtr("/aboutus"),
-			URLType:         intPtr(1),
-			OpenType:        intPtr(0),
-			Icon:            stringPtr("AboutUs.svg"),
-			DescriptionCode: stringPtr("menu.desc.aboutus"),
-			Sort:            intPtr(6),
-			EditEnable:      boolPtr(false),
-			HomeEnable:      boolPtr(true),
-			Fixed:           boolPtr(true),
-			Enable:          boolPtr(true),
-			UpdateAt:        now,
-			CreateAt:        now,
-		},
-		{
 			ID:              67,
 			ParentID:        int64Ptr(50),
 			Type:            2,
@@ -414,6 +393,9 @@ func seedSuposDefaultResources(db *gorm.DB) {
 
 	if err := deleteSuposResources(db, []string{"Konga"}, []string{"/konga/home/"}); err != nil {
 		log.Println("delete legacy routing resource WARN:", err)
+	}
+	if err := deleteSuposResources(db, []string{"AboutUs"}, []string{"/aboutus"}); err != nil {
+		log.Println("delete legacy about us resource WARN:", err)
 	}
 
 	kongAdminID, err := ensureSuposResource(db, SuposResource{

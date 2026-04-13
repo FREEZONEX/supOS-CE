@@ -1845,34 +1845,6 @@ routes:
   protocols:
   - http
   - https
-- name: AboutUs
-  sources: ~
-  preserve_host: false
-  destinations: ~
-  headers: ~
-  methods: ~
-  https_redirect_status_code: 426
-  service: 8e081976-8223-4494-9b4c-0aa5a441bdd5
-  strip_path: true
-  paths:
-  - /aboutus
-  created_at: 1733822464
-  updated_at: 1764811192
-  response_buffering: true
-  path_handling: v1
-  regex_priority: 0
-  hosts: ~
-  request_buffering: true
-  snis: ~
-  id: fb8efe62-0030-4540-a521-a3b4215b4f59
-  tags:
-  - menu
-  - description:menu.desc.aboutus
-  - parentName:menu.tag.system
-  - sort:8
-  protocols:
-  - http
-  - https
 - name: OpenData
   sources: ~
   preserve_host: false
