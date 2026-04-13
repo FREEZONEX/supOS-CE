@@ -14,6 +14,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/serviceApi"
 	"backend/internal/common/utils/finddatautil"
+	logiccommon "backend/internal/logic/supos/uns/common"
 	"backend/internal/svc"
 	"backend/internal/types"
 	"backend/share/base"
@@ -38,7 +39,6 @@ func NewBatchUpdateFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *B
 }
 
 var defService serviceApi.IUnsDefinitionService
-var msgConsumer serviceApi.TopicMessageConsumer
 var _initOnce sync.Once
 
 func (l *BatchUpdateFileLogic) BatchUpdateFile(req *types.UpdateFileDTOArray) (resp *types.BatchUpdateFileResult, err error) {
@@ -60,7 +60,6 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(req *types.UpdateFileDTOArray) (r
 	if defService == nil {
 		_initOnce.Do(func() {
 			defService = spring.GetBean[serviceApi.IUnsDefinitionService]()
-			msgConsumer = spring.GetBean[serviceApi.TopicMessageConsumer]()
 		})
 	}
 
@@ -143,9 +142,11 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(req *types.UpdateFileDTOArray) (r
 			errorFields[alias+"."+fieldName] = I18nUtils.GetMessageWithCtx(ctx, "uns.field.value.out.of.size")
 		}
 
-		// 发送消息到 UNS
+		// 通过 MQTT 发送消息，由现有订阅链路统一回流处理
 		jsonBs, _ := json.Marshal(newBody)
-		msgConsumer.OnMessageByAlias(l.ctx, alias, string(jsonBs))
+		if err = logiccommon.PublishUnsMessage(l.svcCtx, def.GetTopic(), jsonBs); err != nil {
+			errorFields[alias] = err.Error()
+		}
 	}
 
 	// 处理结果

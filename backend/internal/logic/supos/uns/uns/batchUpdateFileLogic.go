@@ -8,6 +8,7 @@ import (
 	"backend/internal/common/constants"
 	"backend/internal/common/serviceApi"
 	"backend/internal/common/utils/finddatautil"
+	logiccommon "backend/internal/logic/supos/uns/common"
 	"backend/share/base"
 	"backend/share/spring"
 	"context"
@@ -38,7 +39,6 @@ func NewBatchUpdateFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *B
 }
 
 var defService serviceApi.IUnsDefinitionService
-var msgConsumer serviceApi.TopicMessageConsumer
 var _initOnce sync.Once
 
 func (l *BatchUpdateFileLogic) BatchUpdateFile(list []types.UpdateFileDTO) (resp *types.UnsDataResponse, err error) {
@@ -54,7 +54,6 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(list []types.UpdateFileDTO) (resp
 	if defService == nil {
 		_initOnce.Do(func() {
 			defService = spring.GetBean[serviceApi.IUnsDefinitionService]()
-			msgConsumer = spring.GetBean[serviceApi.TopicMessageConsumer]()
 		})
 	}
 	aliasList := base.Map(list, func(e types.UpdateFileDTO) string {
@@ -117,7 +116,9 @@ func (l *BatchUpdateFileLogic) BatchUpdateFile(list []types.UpdateFileDTO) (resp
 			errorFields[alias+"."+fieldName] = I18nUtils.GetMessageWithCtx(ctx, "uns.field.value.out.of.size")
 		}
 		jsonBs, _ := json.Marshal(newBody)
-		msgConsumer.OnMessageByAlias(l.ctx, alias, string(jsonBs))
+		if err = logiccommon.PublishUnsMessage(l.svcCtx, def.GetTopic(), jsonBs); err != nil {
+			errorFields[alias] = err.Error()
+		}
 	}
 	if len(notExists)+len(errorFields) > 0 {
 		resp.Code, resp.Msg = 206, ""
