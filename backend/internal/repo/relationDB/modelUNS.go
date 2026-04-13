@@ -41,7 +41,7 @@ type UnsNamespace struct {
 	Fields           Fields           `gorm:"column:fields;type:json;" json:"fields"`
 	CreateAt         time.Time        `gorm:"column:create_at;default:now()" json:"create_at"`
 	Status           *int16           `gorm:"column:status;default:1" json:"status"`
-	Description      *string          `gorm:"column:description" json:"description"`
+	Description      *string          `gorm:"column:description;size:512" json:"description"`
 	UpdateAt         time.Time        `gorm:"column:update_at" json:"update_at"`
 	Protocol         *string          `gorm:"column:protocol" json:"protocol"`
 	DataPath         *string          `gorm:"column:data_path" json:"data_path"`

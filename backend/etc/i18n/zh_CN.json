@@ -169,7 +169,7 @@
   "uns.alias.length.limit.exceed": "别名超长，不能超过%v个字符",
   "uns.alias.format.invalid": "无效的别名格式，仅支持字母、数字、下划线（_），不能以数字开头",
   "uns.display.name.length.limit.exceed": "显示名称超过最大长度限制：128",
-  "uns.description.length.limit.exceed": "描述超过最大长度限制：255",
+  "uns.description.length.limit.exceed": "描述超过最大长度限制：512",
   "uns.extend.size.limit.exceed": "扩展属性超过最大支持数限制：3个",
   "uns.field.has.system.field": "禁止输入系统默认属性",
   "uns.field.unit.length.limit.exceed": "属性的单位长度限制5",

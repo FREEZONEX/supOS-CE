@@ -38,7 +38,7 @@ func NewSystemConfig() *SystemConfig {
 		LLMType:                  "ollama",
 		MQTTTCPPort:              1883,
 		MQTTWebsocketTSLPort:     8084,
-		LoginPath:                "/tier0-login",
+		LoginPath:                DefaultLoginPath,
 		PlatformType:             "linux",
 		QualityName:              "status",
 		TimestampName:            "timeStamp",

@@ -180,10 +180,10 @@ const useTemplateModal = ({ successCallBack, changeCurrentPath, scrollTreeNode, 
             name="description"
             rules={[
               {
-                max: 255,
+                max: 512,
                 message: formatMessage('uns.labelMaxLength', {
                   label: formatMessage('uns.templateDescription'),
-                  length: 255,
+                  length: 512,
                 }),
               },
             ]}

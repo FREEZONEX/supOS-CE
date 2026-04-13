@@ -22,23 +22,6 @@ if [[ "$platform" == MINGW64* ]]; then
     current_entrance_domain=$(grep '^ENTRANCE_DOMAIN=' "$ENV_FILE" | cut -d '=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     sed -i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$ENV_FILE"
 
-    # --- [BUG FIX] ---
-    # The original logic repeatedly added slashes. This new logic is robust.
-    # It removes all leading slashes and then prepends exactly two.
-    current_os_login_path=$(grep '^OS_LOGIN_PATH=' "$ENV_FILE" | cut -d '=' -f2-)
-    if [[ "$current_os_login_path" =~ ^/ ]]; then
-        # Remove all leading slashes, then add two back.
-        path_without_slashes=$(echo "$current_os_login_path" | sed 's|^/*||')
-        modified_os_login_path="//${path_without_slashes}"
-
-        # Only write to the file if a change was actually made.
-        if [ "$current_os_login_path" != "$modified_os_login_path" ]; then
-            info "Correcting OS_LOGIN_PATH for Windows compatibility."
-            sed -i "s|^OS_LOGIN_PATH=.*|OS_LOGIN_PATH=$modified_os_login_path|" "$ENV_FILE"
-        fi
-    fi
-    # --- [END BUG FIX] ---
-
     if [[ "$non_interactive" == true ]]; then
         selected_ip="$current_entrance_domain"
         echo "Non-interactive mode detected. Keeping current ENTRANCE_DOMAIN: $selected_ip"

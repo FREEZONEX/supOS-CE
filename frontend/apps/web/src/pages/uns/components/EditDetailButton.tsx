@@ -238,7 +238,7 @@ const EditDetailButton = ({ auth, type = 'file', modelInfo, getModel }: any) => 
             type: 'TextArea',
             label: type === 'file' ? formatMessage('uns.fileDescription') : formatMessage('uns.folderDescription'),
             name: 'description',
-            rules: [{ max: 255 }],
+            rules: [{ max: 512 }],
           },
           {
             component: (

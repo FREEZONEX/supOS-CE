@@ -21,6 +21,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jinzhu/copier"
 )
@@ -233,6 +234,11 @@ var _ZERO = int16(0)
 var LOGIC_REMOVED = int16(0)
 var OK = int16(1)
 
+const (
+	maxDescriptionLen = 512
+	maxExpressionLen  = 255
+)
+
 // 临时处理PO
 func putTemp(dbFiles map[int64]*dao.UnsNamespace, aliasMap map[string]*dao.UnsNamespace, po *dao.UnsNamespace) {
 	if base.P2v(po.Status) == LOGIC_REMOVED {
@@ -268,6 +274,14 @@ func checkTopicDto(ctx context.Context, errTipMap map[string]string,
 	//	errTipMap[batchIndex] = er.String()
 	//	return
 	//}
+	if d.Description != nil && utf8.RuneCountInString(*d.Description) > maxDescriptionLen {
+		errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.description.length.limit.exceed")
+		return
+	}
+	if d.Expression != nil && utf8.RuneCountInString(*d.Expression) > maxExpressionLen {
+		errTipMap[batchIndex] = I18nUtils.GetMessageWithCtx(ctx, "uns.import.length.limit", "expression", maxExpressionLen)
+		return
+	}
 
 	alias := d.Alias
 	if len(alias) > 63 {

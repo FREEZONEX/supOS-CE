@@ -11,7 +11,7 @@ CREATE TABLE if not exists uns_namespace (
 	"fields" json NULL,
 	"create_at" timestamptz DEFAULT now() NULL,
 	"status" smallint DEFAULT 1 NULL,
-	"description" varchar(255),
+	"description" varchar(512),
 	"update_at" timestamptz NULL,
 	"protocol" varchar(2000) NULL,
 	"data_path" varchar(128) NULL,
@@ -27,6 +27,7 @@ CREATE TABLE if not exists uns_namespace (
 	 "protocol_type" varchar(64) NULL,
 	 "extend" jsonb DEFAULT '{}'
 );
+ALTER TABLE uns_namespace ALTER COLUMN "description" TYPE varchar(512);
 ALTER TABLE uns_namespace ALTER COLUMN fields TYPE json USING fields::json;
 ALTER TABLE uns_namespace ALTER COLUMN refers TYPE json USING refers::json;
 ALTER TABLE uns_namespace ALTER COLUMN extend TYPE jsonb USING extend::jsonb;

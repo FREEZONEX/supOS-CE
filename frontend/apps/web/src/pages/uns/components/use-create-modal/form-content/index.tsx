@@ -503,10 +503,10 @@ const FormContent: FC<FormContentProps> = ({
             label: formatMessage(isCreateFolder ? 'uns.folderDescription' : 'uns.fileDescription'),
             rules: [
               {
-                max: 255,
+                max: 512,
                 message: formatMessage('uns.labelMaxLength', {
                   label: formatMessage(isCreateFolder ? 'uns.folderDescription' : 'uns.fileDescription'),
-                  length: 255,
+                  length: 512,
                 }),
               },
             ],

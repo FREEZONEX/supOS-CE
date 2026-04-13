@@ -382,12 +382,12 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                   label={formatMessage(`uns.${selectedInfo?.pathType === 2 ? 'fileDescription' : 'folderDescription'}`)}
                   rules={[
                     {
-                      max: 255,
+                      max: 512,
                       message: formatMessage('uns.labelMaxLength', {
                         label: formatMessage(
                           `uns.${selectedInfo?.pathType === 2 ? 'fileDescription' : 'folderDescription'}`
                         ),
-                        length: 255,
+                        length: 512,
                       }),
                     },
                   ]}

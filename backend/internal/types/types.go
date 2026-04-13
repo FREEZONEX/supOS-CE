@@ -246,7 +246,7 @@ type CreateOpenApiFileDto struct {
 	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
 	ParentAlias      string                 `json:"parentAlias,optional"`
 	DataType         int16                  `json:"dataType,optional" validate:"min=1,max=7"`
-	Description      string                 `json:"description,optional" validate:"max=255"`
+	Description      string                 `json:"description,optional" validate:"max=512"`
 	Definition       []FieldDefine          `json:"definition,optional"`
 	Persistence      bool                   `json:"persistence,optional,default=false"`
 	DashBoard        bool                   `json:"dashBoard,optional,default=false"`
@@ -265,7 +265,7 @@ type CreateOpenApiFolderDto struct {
 	Alias            string                 `json:"alias,optional" validate:"max=63"`
 	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
 	ParentAlias      string                 `json:"parentAlias,optional"`
-	Description      string                 `json:"description,optional" validate:"max=255"`
+	Description      string                 `json:"description,optional" validate:"max=512"`
 	Definition       []FieldDefine          `json:"definition,optional"`
 	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
 	TemplateAlias    string                 `json:"templateAlias,optional"`
@@ -278,7 +278,7 @@ type CreateTemplateReq struct {
 	Name        string         `json:"name" validate:"required,max=63"`
 	Alias       string         `json:"alias,optional" validate:"omitempty,max=63,alias"`
 	Fields      []*FieldDefine `json:"fields" validate:"required,min=1"`
-	Description string         `json:"description,optional" validate:"omitempty,max=255"`
+	Description string         `json:"description,optional" validate:"omitempty,max=512"`
 }
 
 type CreateTemplateResp struct {
@@ -290,7 +290,7 @@ type CreateTemplateVo struct {
 	Alias       string        `json:"alias,optional" validate:"max=63"`
 	Name        string        `json:"name" validate:"required,max=63"`
 	Fields      []FieldDefine `json:"fields" validate:"required"`
-	Description string        `json:"description,optional" validate:"max=255"`
+	Description string        `json:"description,optional" validate:"max=512"`
 }
 
 type CreateTopicDto struct {
@@ -303,7 +303,7 @@ type CreateTopicDto struct {
 	PathType                      int16                     `json:"pathType" validate:"required,min=0,max=2"`
 	Path                          string                    `json:"path,optional,omitzero"`
 	Alias                         string                    `json:"alias" validate:"required"`
-	Description                   *string                   `json:"description,optional,omitzero" validate:"max=255"`
+	Description                   *string                   `json:"description,optional,omitzero" validate:"max=512"`
 	ModelId                       *int64                    `json:"modelId,string,optional,omitempty"`
 	ModelAlias                    *string                   `json:"modelAlias,optional,omitempty"`
 	Template                      *CreateTopicDto           `json:"-"`
@@ -1931,7 +1931,7 @@ type UpdateOpenApiFileDto struct {
 	Name             string                 `json:"name,optional" validate:"max=63"`
 	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
 	ParentAlias      string                 `json:"parentAlias,optional"`
-	Description      string                 `json:"description,optional" validate:"max=255"`
+	Description      string                 `json:"description,optional" validate:"max=512"`
 	Definition       []FieldDefine          `json:"definition,optional"`
 	Persistence      bool                   `json:"persistence,optional,default=false"`
 	DashBoard        bool                   `json:"dashBoard,optional,default=false"`
@@ -1948,7 +1948,7 @@ type UpdateOpenApiFolderDto struct {
 	Name             string                 `json:"name,optional" validate:"max=63"`
 	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
 	ParentAlias      string                 `json:"parentAlias,optional"`
-	Description      string                 `json:"description,optional" validate:"max=255"`
+	Description      string                 `json:"description,optional" validate:"max=512"`
 	Definition       []FieldDefine          `json:"definition,optional"`
 	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
 	TemplateAlias    string                 `json:"templateAlias,optional"`
@@ -1974,14 +1974,14 @@ type UpdateTemplateBaseInfoReq struct {
 type UpdateTemplateDto struct {
 	Name        string        `json:"name,optional" validate:"max=63"`
 	Fields      []FieldDefine `json:"fields,optional"`
-	Description string        `json:"description,optional" validate:"max=255"`
+	Description string        `json:"description,optional" validate:"max=512"`
 }
 
 type UpdateTemplateFieldsAndDescReq struct {
 	Alias       string         `json:"alias" validate:"omitempty,max=63,alias"`
 	Fields      []*FieldDefine `json:"fields,optional" validate:"min=1"`
 	JsonFields  []*FieldDefine `json:"jsonFields,optional,omitempty"`
-	Description *string        `json:"modelDescription,optional" validate:"omitempty,max=255"`
+	Description *string        `json:"modelDescription,optional" validate:"omitempty,max=512"`
 }
 
 type UpdateTemplateSubscribeReq struct {
@@ -1997,7 +1997,7 @@ type UpdateUnsDto struct {
 	PathType                      int16                  `json:"pathType,optional" validate:"min=0,max=2"`
 	Path                          string                 `json:"path,optional,omitzero"`
 	Alias                         string                 `json:"alias,optional"`
-	Description                   *string                `json:"description,optional,omitzero" validate:"max=255"`
+	Description                   *string                `json:"description,optional,omitzero" validate:"max=512"`
 	ModelId                       *int64                 `json:"modelId,string,optional,omitempty"`
 	ModelAlias                    *string                `json:"modelAlias,optional,omitempty"`
 	ParentAlias                   *string                `json:"parentAlias,optional,omitempty"`
