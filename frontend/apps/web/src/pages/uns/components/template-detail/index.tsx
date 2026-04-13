@@ -130,11 +130,11 @@ const TemplateDetail: FC<TemplateDetailProps> = ({ currentNode: { id }, handleDe
                           ),
                           onChange: (val) => {
                             if (item === val || (!item && !val)) return;
-                            if (val.length > 255) {
+                            if (val.length > 512) {
                               message.warning(
                                 formatMessage('uns.labelMaxLength', {
                                   label: formatMessage('uns.description'),
-                                  length: 255,
+                                  length: 512,
                                 })
                               );
                               return;
@@ -144,7 +144,7 @@ const TemplateDetail: FC<TemplateDetailProps> = ({ currentNode: { id }, handleDe
                               getModel(id as string);
                             });
                           },
-                          // maxLength: 255,
+                          // maxLength: 512,
                         }
                       : false
                   }

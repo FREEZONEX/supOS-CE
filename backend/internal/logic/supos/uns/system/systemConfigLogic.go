@@ -81,7 +81,7 @@ func buildSystemConfig(logger logx.Logger) (*sysconfig.SystemConfig, error) {
 	cfg.LLMType = firstNonEmpty(os.Getenv("SYS_OS_LLM_TYPE"), cfg.LLMType)
 	cfg.PlatformType = firstNonEmpty(os.Getenv("SYS_OS_PLATFORM_TYPE"), cfg.PlatformType)
 	cfg.EntranceURL = strings.TrimSpace(os.Getenv("SYS_OS_ENTRANCE_URL"))
-	cfg.LoginPath = firstNonEmpty(os.Getenv("SYS_OS_LOGIN_PATH"), cfg.LoginPath)
+	cfg.LoginPath = sysconfig.NormalizeLoginPath(firstNonEmpty(os.Getenv("SYS_OS_LOGIN_PATH"), cfg.LoginPath))
 	cfg.MQTTTCPPort = intEnv("SYS_OS_MQTT_TCP_PORT", cfg.MQTTTCPPort)
 	cfg.MQTTWebsocketTSLPort = intEnv("SYS_OS_MQTT_WEBSOCKET_TSL_PORT", cfg.MQTTWebsocketTSLPort)
 	cfg.MultipleTopic = boolEnv("SYS_OS_MULTIPLE_TOPIC", cfg.MultipleTopic)

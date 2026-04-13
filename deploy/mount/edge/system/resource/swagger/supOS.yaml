@@ -892,7 +892,7 @@ paths:
                   maxLength: 63
                 description:
                   type: string
-                  description: 描述 长度255
+                  description: 描述 长度512
                   maxLength: 255
                 definition:
                   type: array
@@ -1041,7 +1041,7 @@ paths:
                       - type
                 description:
                   type: string
-                  description: 描述 最长255
+                  description: 描述 最长512
                   maxLength: 255
                 persistence:
                   type: boolean
@@ -1170,7 +1170,7 @@ paths:
                       - type
                 description:
                   type: string
-                  description: 模型描述 最长255
+                  description: 模型描述 最长512
                   maxLength: 255
                 name:
                   type: string
@@ -1723,7 +1723,7 @@ paths:
                   minLength: 1
                 description:
                   type: string
-                  description: 模板描述 最长255
+                  description: 模板描述 最长512
                 definition:
                   type: array
                   description: 字段定义
@@ -1930,7 +1930,7 @@ paths:
                       - type
                 description:
                   type: string
-                  description: 模板描述 最长255
+                  description: 模板描述 最长512
                   maxLength: 255
               required:
                 - definition

@@ -779,7 +779,7 @@ paths:
                   maxLength: 63
                 description:
                   type: string
-                  description: Description length 255
+                  description: Description length 512
                   maxLength: 255
                 definition:
                   type: array
@@ -928,7 +928,7 @@ paths:
                       - type
                 description:
                   type: string
-                  description: Description Maximum length 255
+                  description: Description Maximum length 512
                   maxLength: 255
                 persistence:
                   type: boolean
@@ -1057,7 +1057,7 @@ paths:
                       - type
                 description:
                   type: string
-                  description: Model description Maximum length 255
+                  description: Model description Maximum length 512
                   maxLength: 255
                 name:
                   type: string
@@ -1559,7 +1559,7 @@ paths:
                   minLength: 1
                 description:
                   type: string
-                  description: Template description, maximum 255 characters
+                  description: Template description, maximum 512 characters
                 definition:
                   type: array
                   description: Field definition
@@ -1766,7 +1766,7 @@ paths:
                       - type
                 description:
                   type: string
-                  description: Template description, maximum 255 characters
+                  description: Template description, maximum 512 characters
                   maxLength: 255
               required:
                 - definition

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	sysconfig "backend/internal/common/config"
 	"backend/internal/common/constants"
 	"backend/internal/repo/relationDB"
 )
@@ -17,7 +18,6 @@ import (
 const (
 	authorizationCodeTTL = 5 * time.Minute
 	defaultOAuthScope    = "openid"
-	defaultLoginPath     = "/tier0-login"
 )
 
 type OAuthError struct {
@@ -45,13 +45,15 @@ func newOAuthError(status int, code, description string) *OAuthError {
 }
 
 func loginRedirectURL(requestURI string) string {
-	loginPath := strings.TrimSpace(os.Getenv("SYS_OS_LOGIN_PATH"))
-	if loginPath == "" {
-		loginPath = defaultLoginPath
+	loginPath := sysconfig.NormalizeLoginPath(os.Getenv("SYS_OS_LOGIN_PATH"))
+	target, err := url.Parse(loginPath)
+	if err != nil {
+		target = &url.URL{Path: sysconfig.DefaultLoginPath}
 	}
-	values := url.Values{}
-	values.Set("redirectUri", requestURI)
-	return loginPath + "?" + values.Encode()
+	query := target.Query()
+	query.Set("redirectUri", requestURI)
+	target.RawQuery = query.Encode()
+	return target.String()
 }
 
 func appendAuthorizeCode(redirectURI, code, state string) (string, error) {

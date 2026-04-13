@@ -419,7 +419,7 @@
   "uns.alias.length.limit.exceed": "Alias cannot exceed %v characters.",
   "uns.alias.format.invalid": "Invalid alias format. Only letters, numbers, and underscores (_) are supported. Cannot start with a number.",
   "uns.display.name.length.limit.exceed": "The display name length cannot exceed 128.",
-  "uns.description.length.limit.exceed": "The description length cannot exceed 255.",
+  "uns.description.length.limit.exceed": "The description length cannot exceed 512.",
   "uns.extend.size.limit.exceed": "The number of extended attribute cannot exceed 3.",
   "uns.field.has.system.field": "Cannot enter system default attributes.",
   "uns.field.unit.length.limit.exceed": "The unit length of the attribute cannot exceed 5.",

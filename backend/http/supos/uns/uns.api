@@ -25,7 +25,7 @@ type (
         PathType    int16   `json:"pathType" validate:"required,min=0,max=2"`
         Path        string  `json:"path,optional,omitzero"`
         Alias       string  `json:"alias" validate:"required"`
-        Description *string  `json:"description,optional,omitzero" validate:"max=255"`
+        Description *string  `json:"description,optional,omitzero" validate:"max=512"`
 
         // Model/Template fields
         ModelId    *int64 `json:"modelId,string,optional,omitempty"`
@@ -433,7 +433,7 @@ type (
         PathType    int16   `json:"pathType,optional" validate:"min=0,max=2"`
         Path        string  `json:"path,optional,omitzero"`
         Alias       string  `json:"alias,optional"`
-        Description *string `json:"description,optional,omitzero" validate:"max=255"`
+        Description *string `json:"description,optional,omitzero" validate:"max=512"`
 
         // Model/Template fields
         ModelId    *int64 `json:"modelId,string,optional,omitempty"`

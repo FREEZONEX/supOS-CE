@@ -52,7 +52,7 @@ func TestCopyTime2Long(t *testing.T) {
 	type User struct {
 		Id          int64     `json:"id,omitzero"`
 		Name        string    `gorm:"column:name;not null" json:"name"`
-		Description *string   `json:"description,optional,omitzero" validate:"max=255"`
+		Description *string   `json:"description,optional,omitzero" validate:"max=512"`
 		CreateAt    time.Time `json:"createAt,omitzero"`
 	}
 	type UserVo struct {

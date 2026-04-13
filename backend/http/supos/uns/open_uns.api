@@ -268,7 +268,7 @@ type (
         ParentAlias string `json:"parentAlias,optional"`
 
         // Description 描述
-        Description string `json:"description,optional" validate:"max=255"`
+        Description string `json:"description,optional" validate:"max=512"`
 
         // Definition 字段定义
         Definition []FieldDefine `json:"definition,optional"`
@@ -298,7 +298,7 @@ type (
         DataType int16 `json:"dataType,optional" validate:"min=1,max=7"`
 
         // Description 描述
-        Description string `json:"description,optional" validate:"max=255"`
+        Description string `json:"description,optional" validate:"max=512"`
 
         // Definition 字段定义
         Definition []FieldDefine `json:"definition,optional"`
@@ -346,7 +346,7 @@ type (
         ParentAlias string `json:"parentAlias,optional"`
 
         // Description 描述
-        Description string `json:"description,optional" validate:"max=255"`
+        Description string `json:"description,optional" validate:"max=512"`
 
         // Definition 字段定义
         Definition []FieldDefine `json:"definition,optional"`
@@ -369,7 +369,7 @@ type (
         ParentAlias string `json:"parentAlias,optional"`
 
         // Description 描述
-        Description string `json:"description,optional" validate:"max=255"`
+        Description string `json:"description,optional" validate:"max=512"`
 
         // Definition 字段定义
         Definition []FieldDefine `json:"definition,optional"`
@@ -495,7 +495,7 @@ type (
         // Fields 字段定义
         Fields []FieldDefine `json:"fields" validate:"required"`
         // Description 模板描述
-        Description string `json:"description,optional" validate:"max=255"`
+        Description string `json:"description,optional" validate:"max=512"`
     }
 
     // UpdateTemplateDto 更新模板请求
@@ -505,7 +505,7 @@ type (
         // Fields 字段定义
         Fields []FieldDefine `json:"fields,optional"`
         // Description 模板描述
-        Description string `json:"description,optional" validate:"max=255"`
+        Description string `json:"description,optional" validate:"max=512"`
     }
 
     // OpenTemplateVo 模板详情

@@ -127,7 +127,7 @@ type (
         // 字段定义
         Fields []*FieldDefine `json:"fields" validate:"required,min=1"`
         // 模板描述
-        Description string `json:"description,optional" validate:"omitempty,max=255"`
+        Description string `json:"description,optional" validate:"omitempty,max=512"`
     }
    CreateTemplateResp {
      BaseResult
@@ -161,7 +161,7 @@ type (
         // jsonb 预定义字段，存在protocol
         JsonFields []*FieldDefine `json:"jsonFields,optional,omitempty"`
         // 模板描述
-        Description *string `json:"modelDescription,optional" validate:"omitempty,max=255"`
+        Description *string `json:"modelDescription,optional" validate:"omitempty,max=512"`
    }
    //分页获取模板下的文件列表--请求
    PageListUnsByTemplateReq {
