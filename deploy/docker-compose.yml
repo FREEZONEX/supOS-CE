@@ -32,7 +32,7 @@ services:
       - edge_network
     restart: always
   uns:
-    image: tier0/tier0-backend:1.0.3-R1
+    image: tier0/tier0-backend:1.0.4-R1
     container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}
