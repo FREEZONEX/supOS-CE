@@ -1,6 +1,6 @@
 import { type FC, useState, useCallback } from 'react';
 import { Menu } from 'antd';
-import { DataStructured, DirectionFork, UserMultiple, PlugFilled, Certificate } from '@carbon/icons-react';
+import { DataStructured, DirectionFork, UserMultiple, PlugFilled } from '@carbon/icons-react';
 import type { PageProps } from '@/common-types';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
@@ -9,7 +9,7 @@ import ServicesTab from './components/services-tab';
 import RoutesTab from './components/routes-tab';
 import ConsumersTab from './components/consumers-tab';
 import PluginsTab from './components/plugins-tab';
-import CertificatesTab from './components/certificates-tab';
+// import CertificatesTab from './components/certificates-tab';
 import useTranslate from '@/hooks/useTranslate';
 import styles from './index.module.scss';
 
@@ -23,7 +23,8 @@ const RoutingManagement: FC<PageProps> = ({ title }) => {
     { key: 'routes', icon: <DirectionFork size={16} />, label: formatMessage('kong.routes') },
     { key: 'consumers', icon: <UserMultiple size={16} />, label: formatMessage('kong.consumers') },
     { key: 'plugins', icon: <PlugFilled size={16} />, label: formatMessage('kong.plugins') },
-    { key: 'certificates', icon: <Certificate size={16} />, label: formatMessage('kong.certificates') },
+    // 先不展示证书管理，后续如果有需求再加回来
+    // { key: 'certificates', icon: <Certificate size={16} />, label: formatMessage('kong.certificates') },
   ];
 
   const handleViewRoute = useCallback((route: any) => {
@@ -57,7 +58,7 @@ const RoutingManagement: FC<PageProps> = ({ title }) => {
               )}
               {activeKey === 'consumers' && <ConsumersTab key="consumers" />}
               {activeKey === 'plugins' && <PluginsTab key="plugins" />}
-              {activeKey === 'certificates' && <CertificatesTab key="certificates" />}
+              {/* {activeKey === 'certificates' && <CertificatesTab key="certificates" />} */}
             </div>
           </ComContent>
         </ComLayout>
