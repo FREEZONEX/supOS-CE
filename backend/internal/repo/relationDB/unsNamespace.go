@@ -141,6 +141,22 @@ func (p UnsNamespaceRepo) FindOneByAlias(db *gorm.DB, alias string) (*UnsNamespa
 	}
 	return &result, nil
 }
+
+func (p UnsNamespaceRepo) FindOneByAliasOrNil(db *gorm.DB, alias string) (*UnsNamespace, error) {
+	if alias == "" {
+		return nil, nil
+	}
+	var result UnsNamespace
+	err := p.model(db).Where("alias = ?", alias).Where("status=1").First(&result).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, stores.ErrFmt(err)
+	}
+	return &result, nil
+}
+
 func EscapeLike(s string) string {
 	return escapeLikePattern(escapeSQL(s))
 }

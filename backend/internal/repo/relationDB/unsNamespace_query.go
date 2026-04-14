@@ -234,6 +234,25 @@ func (p UnsNamespaceRepo) CountByParentAliasAndNames(db *gorm.DB, parentAliasAnd
 	}
 	return
 }
+
+func (p UnsNamespaceRepo) FindOneByParentIDAndName(db *gorm.DB, parentID *int64, name string) (result *UnsNamespace, err error) {
+	var po UnsNamespace
+	query := p.model(db).Where("name = ?", name).Where("status = 1")
+	if parentID != nil && *parentID != 0 {
+		query = query.Where("parent_id = ?", *parentID)
+	} else {
+		query = query.Where("parent_id IS NULL")
+	}
+	err = query.First(&po).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, stores.ErrFmt(err)
+	}
+	return &po, nil
+}
+
 func (p UnsNamespaceRepo) CountAll(db *gorm.DB) (int64, error) {
 	var count sql.NullInt64
 	err := p.model(db).Select("count(*)").Where("status = 1 and id>10 and (data_type is null OR data_type<>5 )").Scan(&count).Error
