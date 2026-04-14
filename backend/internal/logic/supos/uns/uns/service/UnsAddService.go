@@ -472,27 +472,46 @@ func pathTypeGroupBy(e *types.CreateTopicDto) int16 {
 func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types.CreateTopicDto) *types.CreateUnsResp {
 	result := &types.CreateUnsResp{BaseResult: types.BaseResult{Code: 200, Msg: "ok"}}
 	db := dao.GetDb(ctx)
-	// 处理父文件夹ID
-	if topicDto.ParentId != nil && *topicDto.ParentId != 0 && topicDto.ParentAlias == nil {
-		folder, err := u.unsMapper.SelectById(db, *topicDto.ParentId)
-		if err != nil {
+	topicDto.Name = strings.TrimSpace(topicDto.Name)
+	isAbsolutePath := isAbsoluteCreatePathName(topicDto.Name)
+	var parentFolder *dao.UnsNamespace
+	if isAbsolutePath {
+		topicDto.ParentId = nil
+		topicDto.ParentAlias = nil
+	} else {
+		if parent, msg, err := u.resolveCreateParent(ctx, db, topicDto); err != nil {
 			result.Code = 500
 			result.Msg = err.Error()
 			return result
-		} else if folder == nil {
+		} else if msg != "" {
 			result.Code = 400
-			result.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.folder.not.found") + ":parent=" + strconv.Itoa(int(*topicDto.ParentId))
+			result.Msg = msg
 			return result
+		} else {
+			parentFolder = parent
 		}
-
-		//if folder.MountType != nil && MountSourceType.IsCollectorMountSource(*folder.MountType) {
-		//	return &JsonResult[string]{Code: 400, Message: I18nUtils.GetMessage("uns.mount.folder.operate")}
-		//}
-		topicDto.ParentAlias = &folder.Alias
 	}
-	unsList := make([]*types.CreateTopicDto, 0, 2)
+
+	if msg := validateCreateParent(ctx, topicDto, parentFolder); msg != "" {
+		result.Code = 400
+		result.Msg = msg
+		return result
+	}
+
+	expandedTopics, msg, err := u.expandCreatePathTopics(ctx, db, topicDto, parentFolder)
+	if err != nil {
+		result.Code = 500
+		result.Msg = err.Error()
+		return result
+	}
+	if msg != "" {
+		result.Code = 400
+		result.Msg = msg
+		return result
+	}
+	unsList := make([]*types.CreateTopicDto, 0, len(expandedTopics)+1)
 	// 是文件夹 并且需要创建模板
-	if topicDto.PathType == constants.PathTypeDir && base.P2v(topicDto.CreateTemplate) {
+	if topicDto.PathType == constants.PathTypeDir && topicDto.Id == 0 && base.P2v(topicDto.CreateTemplate) {
 		var templateAlias = "T" + PathUtil.GenerateAliasWithRandom(topicDto.Name)
 		templateVo := &types.CreateTopicDto{
 			PathType: constants.PathTypeTemplate,
@@ -504,8 +523,7 @@ func (u *UnsAddService) CreateModelInstance(ctx context.Context, topicDto *types
 		topicDto.ModelAlias = &templateVo.Alias
 	}
 
-	topicDto.Index = 0
-	unsList = append(unsList, topicDto)
+	unsList = append(unsList, expandedTopics...)
 
 	args := bo.CreateModelInstancesArgs{
 		Topics:              unsList,

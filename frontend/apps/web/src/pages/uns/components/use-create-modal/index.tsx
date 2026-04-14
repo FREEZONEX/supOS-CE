@@ -9,6 +9,12 @@ import dayjs from 'dayjs';
 import { pinyin } from 'pinyin-pro';
 import FormContent from './form-content';
 import FormStep from './form-step';
+import {
+  buildNamespacePreview,
+  deriveParentDataTypeFromName,
+  getDefaultDataTypeByParent,
+  getLeafSegment,
+} from './path-utils';
 import './index.scss';
 
 import type { UnsTreeNode, InitTreeDataFnType, FieldItem } from '@/pages/uns/types';
@@ -61,8 +67,11 @@ const useOptionModal = ({
 
   const name = Form.useWatch('name', form) || form.getFieldValue('name');
   const modelId = Form.useWatch('modelId', form) || form.getFieldValue('modelId');
+  const dataType = Form.useWatch('dataType', form) || form.getFieldValue('dataType');
+  const parentDataType = Form.useWatch('parentDataType', form) || form.getFieldValue('parentDataType');
 
   const isCreateFolder = addModalType.includes('Folder');
+  const isCreateFile = addModalType === 'addFile';
 
   const onClose = () => {
     setOpen(false);
@@ -349,7 +358,7 @@ const useOptionModal = ({
         }
       }
     },
-    [setSourcePath, setSourceId, setOpen, setAddModalType, form]
+    [setSourcePath, setSourceId, setOpen, setAddModalType, form, enableAutoCategorization]
   );
 
   useEffect(() => {
@@ -358,19 +367,46 @@ const useOptionModal = ({
     setUuid(uuidv4().replace(/-/g, '').slice(0, 20));
   }, [open]);
 
-  const nameChange = (val?: string) => {
-    form.setFieldsValue({
-      alias: `_${pinyin(val || '', { toneType: 'none', v: true })
-        ?.replace(/\s+/g, '')
-        ?.replace(/-/g, '_')
-        .slice(0, 38)}_${uuid}`,
-      topic: `${sourcePath || ''}${val || ''}`,
-    });
-  };
+  const nameChange = useCallback(
+    (val?: string) => {
+      const leafName = getLeafSegment(val);
+      form.setFieldsValue({
+        alias: `_${pinyin(leafName || '', { toneType: 'none', v: true })
+          ?.replace(/\s+/g, '')
+          ?.replace(/-/g, '_')
+          .slice(0, 38)}_${uuid}`,
+        topic: buildNamespacePreview(sourcePath, val),
+      });
+    },
+    [form, sourcePath, uuid]
+  );
 
   useEffect(() => {
     nameChange(name);
-  }, [name, uuid]);
+  }, [name, nameChange]);
+
+  useEffect(() => {
+    if (!open || !isCreateFile || !enableAutoCategorization) return;
+    const parentDataType = deriveParentDataTypeFromName(name);
+    if (!parentDataType) return;
+    const nextDataType = getDefaultDataTypeByParent(parentDataType);
+    if (
+      form.getFieldValue('parentDataType') !== parentDataType ||
+      (nextDataType && form.getFieldValue('dataType') !== nextDataType)
+    ) {
+      form.setFieldsValue({
+        parentDataType,
+        ...(nextDataType ? { dataType: nextDataType } : {}),
+      });
+    }
+  }, [open, isCreateFile, enableAutoCategorization, name, form]);
+
+  useEffect(() => {
+    if (!open || addModalType !== 'addFile' || !name) return;
+    Promise.resolve()
+      .then(() => form.validateFields(['name']))
+      .catch(() => undefined);
+  }, [open, addModalType, name, dataType, parentDataType, form]);
 
   useEffect(() => {
     if (modelId && modelId !== 'custom') {
@@ -383,7 +419,7 @@ const useOptionModal = ({
         });
       });
     }
-  }, [modelId]);
+  }, [modelId, form]);
 
   const titleMap: { [key: string]: string } = {
     addFolder: formatMessage('uns.newFolder'),

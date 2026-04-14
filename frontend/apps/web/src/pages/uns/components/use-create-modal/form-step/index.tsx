@@ -12,6 +12,7 @@ import type { TreeStoreActions } from '../../../store/types';
 import { getTargetNode } from '@/utils/uns';
 import ComPopupGuide from '@/components/com-popup-guide';
 import { useTreeStore } from '@/pages/uns/store/treeStore';
+import { deriveParentDataTypeFromName, isMultiSegmentName } from '../path-utils';
 
 export interface FormStepProps {
   step: number;
@@ -60,6 +61,7 @@ const FormStep: FC<FormStepProps> = ({
   const jsonList = useFormValue('jsonList', form);
 
   const isFormTopic = addModalType.includes('topic');
+  const isStandardCreateFile = addModalType === 'addFile';
 
   const extendToObj = (extend: { key: string; value: string }[]) => {
     if (!extend) return undefined;
@@ -119,12 +121,14 @@ const FormStep: FC<FormStepProps> = ({
           parentDataType,
           pasteNode,
         } = cloneDeep(form.getFieldsValue(true));
+        const derivedParentDataType = isStandardCreateFile ? deriveParentDataTypeFromName(name) : undefined;
+        const isAbsoluteNamespacePath = !isFormTopic && isMultiSegmentName(name);
         // 表单验证通过后的操作
         const data: { [key: string]: any } = isCreateFolder
           ? {
               name,
               displayName,
-              parentId: sourceId || undefined,
+              parentId: isAbsoluteNamespacePath ? undefined : sourceId || undefined,
               alias,
               description,
               fields,
@@ -134,7 +138,7 @@ const FormStep: FC<FormStepProps> = ({
           : {
               name,
               displayName,
-              parentId: sourceId || undefined,
+              parentId: isAbsoluteNamespacePath ? undefined : sourceId || undefined,
               alias,
               dataType,
               description,
@@ -144,7 +148,7 @@ const FormStep: FC<FormStepProps> = ({
               labelNames: tags?.map(({ label, value }: { label: string; value: string }) => label || value) || [],
               fields: [1, 2, 3, 8].includes(dataType) ? fields : undefined,
               addDashBoard,
-              parentDataType,
+              parentDataType: derivedParentDataType || parentDataType,
             };
 
         if (isCreateFolder && modelId === 'custom' && fields?.length > 0) {
@@ -308,19 +312,20 @@ const FormStep: FC<FormStepProps> = ({
         }
 
         setLoading(true);
+        const requestSourceId = isAbsoluteNamespacePath ? '' : sourceId;
         const handleCallback = (data: { id: string; parentId: string }, queryType: string) => {
           const { id, parentId } = data;
           const hasParentNode = getTargetNode(treeData || [], parentId);
 
-          const _parentId = hasParentNode ? parentId : sourceId ? sourceId : ROOT_NODE_ID;
-          const _childId = hasParentNode || parentId === sourceId || !lazyTree ? id : parentId;
+          const _parentId = hasParentNode ? parentId : requestSourceId ? requestSourceId : ROOT_NODE_ID;
+          const _childId = hasParentNode || parentId === requestSourceId || !lazyTree ? id : parentId;
 
           successCallBack(
             {
               queryType,
               key: _parentId,
               newNodeKey: _childId,
-              reset: !(sourceId || parentId),
+              reset: isAbsoluteNamespacePath || !(requestSourceId || parentId),
               nodeDetail: pasteNode,
             },
             (_, selectInfo, opt) => {

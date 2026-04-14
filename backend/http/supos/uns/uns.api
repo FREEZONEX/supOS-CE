@@ -20,7 +20,9 @@ type (
         Batch       int     `json:"-"`
         Index       int     `json:"-"`
         FlagNo      string  `json:"-"`
-        Name        string  `json:"name" validate:"required,max=63"`
+        // Relative name or namespace path under the selected parent.
+        // Supports "/" separators. Each segment must be within 63 characters.
+        Name        string  `json:"name" validate:"required"`
         DisplayName *string `json:"displayName,optional,omitempty" validate:"max=128"`
         PathType    int16   `json:"pathType" validate:"required,min=0,max=2"`
         Path        string  `json:"path,optional,omitzero"`
