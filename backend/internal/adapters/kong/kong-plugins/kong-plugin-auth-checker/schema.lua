@@ -1,7 +1,7 @@
 local typedefs = require "kong.db.schema.typedefs"
 
 return {
-  name = "auth-checker",
+  name = "supos-auth-checker",
   fields = {
     { config = {
         type = "record",

@@ -1,7 +1,7 @@
 local typedefs = require "kong.db.schema.typedefs"
 
 return {
-    name = "url-redirect",
+    name = "supos-url-transformer",
     fields = {
         { config = {
             type = "record",

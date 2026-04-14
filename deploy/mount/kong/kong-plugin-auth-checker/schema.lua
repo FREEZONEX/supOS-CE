@@ -1,12 +1,13 @@
 local typedefs = require "kong.db.schema.typedefs"
 
 return {
-  name = "auth-checker",
+  name = "supos-auth-checker",
   fields = {
     -- 配置项: auth_url, 指定 /auth 请求的 URL
     { config = {
         type = "record",
         fields = {
+          { auth_enabled = { type = "boolean", default = true } },
           { whitelist_paths = {  -- 需要放行的路径列表
               type = "array",
               elements = { type = "string" },
