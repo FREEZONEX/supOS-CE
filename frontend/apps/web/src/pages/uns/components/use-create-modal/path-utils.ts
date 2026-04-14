@@ -86,6 +86,11 @@ export const validateNamespaceName = (
         return { key: 'uns.prohibitKeywords' };
       }
     }
+    if (options.isCreateFolder && index < segments.length - 1) {
+      if (CATEGORY_SEGMENT_TO_PARENT_DATA_TYPE[segment]) {
+        return { key: 'uns.namespaceCategoryFolderChildForbidden' };
+      }
+    }
   }
 
   if (options.isCreateFolder && !isMultiSegmentName(name) && (options.parentDataType || 0) > 0) {
@@ -93,6 +98,11 @@ export const validateNamespaceName = (
   }
 
   if (!options.isCreateFolder && segments.length > 1) {
+    for (const segment of segments.slice(0, -2)) {
+      if (CATEGORY_SEGMENT_TO_PARENT_DATA_TYPE[segment]) {
+        return { key: 'uns.namespaceCategoryFolderChildForbidden' };
+      }
+    }
     const parentDataType = deriveParentDataTypeFromName(name);
     if (!parentDataType) {
       return { key: 'uns.namespaceCategoryRequired' };

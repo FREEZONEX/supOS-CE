@@ -219,6 +219,11 @@ func validateCreatePathSegments(ctx context.Context, name string, pathType int16
 				return nil, I18nUtils.GetMessageWithCtx(ctx, "uns.prohibitKeywords")
 			}
 		}
+		if pathType == constants.PathTypeDir && i < len(segments)-1 {
+			if _, ok := deriveCategoryDataType(segment); ok {
+				return nil, I18nUtils.GetMessageWithCtx(ctx, "uns.category.folder.child.forbidden")
+			}
+		}
 	}
 	return segments, ""
 }
@@ -232,6 +237,11 @@ func validateMultiSegmentFilePath(
 	categoryDataType, ok := deriveCategoryDataType(segments[len(segments)-2])
 	if !ok {
 		return nil, I18nUtils.GetMessageWithCtx(ctx, "uns.path.category.required")
+	}
+	for _, segment := range segments[:len(segments)-2] {
+		if _, ok := deriveCategoryDataType(segment); ok {
+			return nil, I18nUtils.GetMessageWithCtx(ctx, "uns.category.folder.child.forbidden")
+		}
 	}
 	if parentDataType != nil && *parentDataType != *categoryDataType {
 		return nil, I18nUtils.GetMessageWithCtx(ctx, "uns.category.type.not.eq")

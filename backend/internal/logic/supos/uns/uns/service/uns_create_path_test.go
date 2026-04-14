@@ -34,6 +34,7 @@ func TestValidateCreatePathSegments(t *testing.T) {
 		{name: strings.Repeat("a", 64) + "/Metric/temp", pathType: constants.PathTypeFile, wantErr: true},
 		{name: "device/folder/path", pathType: constants.PathTypeDir, wantErr: false},
 		{name: "device/label/path", pathType: constants.PathTypeDir, wantErr: true},
+		{name: "device/State/path", pathType: constants.PathTypeDir, wantErr: true},
 	}
 
 	for _, tt := range cases {
@@ -159,5 +160,15 @@ func TestValidateMultiSegmentFilePath(t *testing.T) {
 	)
 	if msg == "" {
 		t.Fatal("expected parentDataType mismatch error")
+	}
+
+	_, msg = validateMultiSegmentFilePath(
+		ctx,
+		[]string{"v1-01", "Plant_Name", "State", "aaa", "State", "aaa1"},
+		nil,
+		&jsonbType,
+	)
+	if msg == "" {
+		t.Fatal("expected nested category folder error")
 	}
 }
