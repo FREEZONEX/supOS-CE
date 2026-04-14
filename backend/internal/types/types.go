@@ -298,7 +298,7 @@ type CreateTopicDto struct {
 	Batch                         int                       `json:"-"`
 	Index                         int                       `json:"-"`
 	FlagNo                        string                    `json:"-"`
-	Name                          string                    `json:"name" validate:"required,max=63"`
+	Name                          string                    `json:"name" validate:"required"`
 	DisplayName                   *string                   `json:"displayName,optional,omitempty" validate:"max=128"`
 	PathType                      int16                     `json:"pathType" validate:"required,min=0,max=2"`
 	Path                          string                    `json:"path,optional,omitzero"`

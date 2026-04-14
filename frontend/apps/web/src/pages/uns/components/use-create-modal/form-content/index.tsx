@@ -4,6 +4,7 @@ import { getTypes, getAllTemplate } from '@/apis/inter-api/uns';
 import { useTranslate, useFormValue } from '@/hooks';
 import FormItems, { type FormItemType } from './FormItems';
 import { uniqBy } from 'lodash-es';
+import { deriveParentDataTypeFromName, isMultiSegmentName, validateNamespaceName } from '../path-utils';
 
 import type { FieldItem } from '@/pages/uns/types';
 import { useBaseStore } from '@/stores/base';
@@ -52,6 +53,7 @@ const FormContent: FC<FormContentProps> = ({
 
   const topic = useFormValue('topic', form);
   const path = useFormValue('path', form);
+  const name = useFormValue('name', form);
   const calculationType = useFormValue('calculationType', form);
   const dataType = useFormValue('dataType', form);
   const modelId = useFormValue('modelId', form);
@@ -61,6 +63,10 @@ const FormContent: FC<FormContentProps> = ({
 
   const isCreateFolder = addModalType.includes('Folder');
   const isFormTopic = addModalType.includes('topic');
+  const isStandardCreate = addModalType === 'addFolder' || addModalType === 'addFile';
+  const derivedParentDataType = deriveParentDataTypeFromName(name);
+  const lockParentDataType =
+    enableAutoCategorization && addModalType === 'addFile' && isMultiSegmentName(name) && !!derivedParentDataType;
 
   useEffect(() => {
     if (!open) return;
@@ -83,7 +89,7 @@ const FormContent: FC<FormContentProps> = ({
         setTemplateList([{ label: formatMessage('common.custom'), value: 'custom' }]);
       }
     });
-  }, [open]);
+  }, [open, formatMessage]);
 
   const selectAll = (options: any[] = []) => {
     const currentReferTopics = form.getFieldValue('referIds') || [];
@@ -184,20 +190,38 @@ const FormContent: FC<FormContentProps> = ({
             label: formatMessage('common.name'),
             rules: [
               { required: true, message: formatMessage('uns.pleaseInputName') },
-              { pattern: /^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/, message: formatMessage('uns.nameFormat') },
-              {
-                max: 63,
-                message: formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 }),
-              },
               {
                 validator: (_: any, value: string) => {
-                  if (isCreateFolder && ['label', 'template'].includes(value)) {
-                    return Promise.reject(new Error(formatMessage('uns.prohibitKeywords')));
-                  } else {
+                  if (!value) return Promise.resolve();
+                  if (isStandardCreate) {
+                    const error = validateNamespaceName(value, {
+                      isCreateFolder,
+                      dataType,
+                      parentDataType: topicType,
+                    });
+                    if (error) {
+                      return Promise.reject(
+                        new Error(formatMessage(error.key, error.values ? { ...error.values } : undefined))
+                      );
+                    }
                     return Promise.resolve();
                   }
+                  if (!/^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/.test(value)) {
+                    return Promise.reject(new Error(formatMessage('uns.nameFormat')));
+                  }
+                  if (value.length > 63) {
+                    return Promise.reject(
+                      new Error(
+                        formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 })
+                      )
+                    );
+                  }
+                  if (isCreateFolder && ['label', 'template'].includes(value)) {
+                    return Promise.reject(new Error(formatMessage('uns.prohibitKeywords')));
+                  }
+                  return Promise.resolve();
                 },
-              }, // 添加自定义校验规则
+              },
             ],
           },
         });
@@ -248,7 +272,7 @@ const FormContent: FC<FormContentProps> = ({
                     { label: formatMessage('uns.action'), value: 2 },
                     { label: formatMessage('uns.metric'), value: 3 },
                   ],
-              disabled: topicType > 0,
+              disabled: topicType > 0 || lockParentDataType,
               onChange: (e: any) => {
                 const resetObj = {
                   refers: [{}],
