@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Form, Input } from 'antd';
+import { useTranslate } from '@/hooks';
 import { loginApi } from '@/apis/inter-api/auth';
 import { getToken } from '@/utils/auth';
 import { LOGIN_URL } from '@/common-types/constans.ts';
@@ -27,6 +28,7 @@ const normalizeRedirectUri = (redirectUri?: string | null) => {
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
+  const formatMessage = useTranslate();
   const redirectUri = normalizeRedirectUri(new URLSearchParams(window.location.search).get('redirectUri'));
 
   useEffect(() => {
@@ -60,7 +62,7 @@ const LoginPage = () => {
         <section className="tier0-login__content">
           <main className="tier0-login__card" id="main">
             <h1 className="tier0-login__title" id="kc-page-title">
-              Sign in to your account
+              {formatMessage('login.title')}
             </h1>
             <Form<LoginFormValues>
               layout="vertical"
@@ -69,14 +71,22 @@ const LoginPage = () => {
               autoComplete="off"
               className="tier0-login__form"
             >
-              <Form.Item label="Username" name="username" rules={[{ required: true, message: 'Please enter your username' }]}>
+              <Form.Item
+                label={formatMessage('login.username')}
+                name="username"
+                rules={[{ required: true, message: formatMessage('login.usernameRequired') }]}
+              >
                 <Input size="large" autoComplete="username" />
               </Form.Item>
-              <Form.Item label="Password" name="password" rules={[{ required: true, message: 'Please enter your password' }]}>
+              <Form.Item
+                label={formatMessage('login.password')}
+                name="password"
+                rules={[{ required: true, message: formatMessage('login.passwordRequired') }]}
+              >
                 <Input.Password size="large" autoComplete="current-password" />
               </Form.Item>
               <Button type="primary" htmlType="submit" size="large" block loading={loading}>
-                Sign In
+                {formatMessage('login.signIn')}
               </Button>
             </Form>
           </main>

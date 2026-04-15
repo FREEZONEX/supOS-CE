@@ -1306,5 +1306,11 @@
   "kong.credLabelHmac": "HMAC 认证",
   "kong.credLabelOAuth2": "OAuth 2.0",
   "kong.credLabelJwt": "JWT",
-  "kong.configSection": "配置"
+  "kong.configSection": "配置",
+  "login.title": "登录账号",
+  "login.username": "用户名",
+  "login.password": "密码",
+  "login.signIn": "登录",
+  "login.usernameRequired": "请输入用户名",
+  "login.passwordRequired": "请输入密码"
 }

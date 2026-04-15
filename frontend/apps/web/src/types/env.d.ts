@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   /** app的title */
   readonly VITE_APP_TITLE: string;
   readonly REACT_APP_LOCAL_LANG: string;
+  readonly REACT_APP_OS_LANG: string;
   //加入更多环境变量...
 }
 

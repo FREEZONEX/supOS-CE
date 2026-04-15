@@ -41,7 +41,7 @@ const useChangeMenuName = () => {
         });
       }
     }
-  }, [pathname, menuGroup]);
+  }, [pathname, menuGroup, formatMessage]);
 };
 
 export default useChangeMenuName;

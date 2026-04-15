@@ -8,16 +8,24 @@ import 'shepherd.js/dist/css/shepherd.css';
 import './App.css';
 import { userLogin } from '@/apis/chat2db';
 import { UnsTreeMapProvider } from '@/UnsTreeMapContext';
-import { LOGIN_URL, MENU_TARGET_PATH, OMC_MODEL, STORAGE_PATH } from '@/common-types/constans.ts';
+import {
+  APP_TITLE,
+  LOGIN_URL,
+  MENU_TARGET_PATH,
+  OMC_MODEL,
+  STORAGE_PATH,
+  SUPOS_LANG,
+} from '@/common-types/constans.ts';
 import LanguageProvider from './LanguageProvider.tsx';
 import { queryChat2dbCurUser } from '@/utils/chat2db.ts';
 import { checkImageExists, isInIframe } from '@/utils/url-util.ts';
 import { fetchBaseStore, useBaseStore } from '@/stores/base';
 import { setThemeBySystem, ThemeType, useThemeStore } from '@/stores/theme-store.ts';
-import { cleanupI18nSubscriptions } from './stores/i18n-store.ts';
+import { cleanupI18nSubscriptions, defaultLanguage, initI18n } from './stores/i18n-store.ts';
 import Cookies from 'js-cookie';
 import { useI18nStore } from '@/stores/i18n-store';
 import { CookiesProvider } from 'react-cookie';
+import { storageOpt } from '@/utils/storage.ts';
 
 function App() {
   const { systemInfo, loading, routesStatus, currentUserInfo, menuGroup } = useBaseStore((state) => ({
@@ -34,6 +42,7 @@ function App() {
     const isOmc = isInIframe([], 'webview');
     const currentPath = window.location.pathname;
     const skipBootstrap = currentPath === LOGIN_URL || currentPath === '/freeLogin';
+    const preferredEnvLang = import.meta.env.REACT_APP_LOCAL_LANG || import.meta.env.REACT_APP_OS_LANG;
     if (isOmc) {
       Cookies.set(OMC_MODEL, '1', {
         expires: 365,
@@ -42,9 +51,26 @@ function App() {
       Cookies.remove(OMC_MODEL, { path: '/' });
     }
     if (skipBootstrap) {
-      useBaseStore.setState({
-        loading: false,
-      });
+      const initPublicPage = async () => {
+        const fallbackLang = preferredEnvLang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
+        try {
+          useBaseStore.setState({
+            systemInfo: {
+              ...useBaseStore.getState().systemInfo,
+              appTitle: APP_TITLE,
+            },
+          });
+          await initI18n(fallbackLang, {}, { skipRemoteMessages: true });
+        } catch (error) {
+          console.log(error);
+          await initI18n(fallbackLang, {}, { skipRemoteMessages: true });
+        } finally {
+          useBaseStore.setState({
+            loading: false,
+          });
+        }
+      };
+      initPublicPage();
     } else {
       // 初始化
       fetchBaseStore(true);
@@ -115,7 +141,7 @@ function App() {
 
   const routeDom = useMemo(() => {
     return getRoutesDom({ menuGroup, systemInfo, currentUserInfo });
-  }, [menuGroup, systemInfo, currentUserInfo]);
+  }, [menuGroup, systemInfo, currentUserInfo, lang]);
 
   if (loading) {
     return <div>Loading...</div>;

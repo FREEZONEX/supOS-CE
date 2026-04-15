@@ -66,7 +66,7 @@ export function useMatchRoute(): MatchRouteType | undefined {
       parentPath: (lastRoute?.handle as any)?.parentPath,
       location,
     });
-  }, [location, menuGroup, systemInfo, currentUserInfo]);
+  }, [location, menuGroup, systemInfo, currentUserInfo, formatMessage, children]);
 
   return matchRoute;
 }

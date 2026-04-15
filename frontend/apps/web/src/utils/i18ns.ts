@@ -1,6 +1,7 @@
 import localZhCN from '@/locale/zh-CN.json';
 import localEnUS from '@/locale/en-US.json';
 import { getSystemI18Api } from '@/apis/inter-api/uns.ts';
+import { LOGIN_URL } from '@/common-types/constans.ts';
 
 type I18n = 'zh-CN' | 'en-US';
 export type I18nData = { [x: string]: string };
@@ -91,19 +92,25 @@ export const loadAntdLocale = async (locale: string) => {
 };
 
 // 动态加载语言包并转换为react-intl期望的格式
-export const loadMessages = async (lang: I18n) => {
+export const loadMessages = async (lang: I18n, options?: { skipRemoteMessages?: boolean }) => {
   try {
     // 加载本地语言包
     const localMessages = localSources[lang];
 
     // 尝试从 服务器加载语言包
     let backEndMessages = {};
-    try {
-      const content = await getSystemI18Api(lang);
-      backEndMessages = content?.messages || {};
-      // backEndMessages = content;
-    } catch (e) {
-      console.log(e);
+    const skipRemoteMessages =
+      options?.skipRemoteMessages ||
+      window.location.pathname === LOGIN_URL ||
+      window.location.pathname === '/freeLogin';
+    if (!skipRemoteMessages) {
+      try {
+        const content = await getSystemI18Api(lang);
+        backEndMessages = content?.messages || {};
+        // backEndMessages = content;
+      } catch (e) {
+        console.log(e);
+      }
     }
     // 合并语言包，以后端服务器存储的为准
     const messages = { ...localMessages, ...backEndMessages };
