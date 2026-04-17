@@ -4,6 +4,7 @@ set -e
 
 INIT_NODERED_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 source "$INIT_NODERED_DIR/../global/log.sh"
+source "$INIT_NODERED_DIR/apply-nodered-debug-patch.sh"
 
 times=5
 
@@ -71,5 +72,6 @@ docker exec nodered sh -c "cd /data && npm install --unsafe-perm /data/offline_m
 docker exec nodered sh -c "cd /data && npm install --no-audit --offline node-red-contrib-postgresql@0.14.2" \
 || error "node-red install postgresq failed!"
 
+apply_nodered_debug_patch nodered || error "node-red apply debug patch failed!"
 
 docker restart nodered >/dev/null

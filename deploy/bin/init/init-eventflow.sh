@@ -4,6 +4,7 @@ set -e
 
 INIT_EVENTFLOW_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 source "$INIT_EVENTFLOW_DIR/../global/log.sh"
+source "$INIT_EVENTFLOW_DIR/apply-nodered-debug-patch.sh"
 
 times=5
 
@@ -71,5 +72,6 @@ docker exec eventflow sh -c "cd /data && npm install  --no-audit --offline facto
 docker exec eventflow sh -c "cd /data && npm install --no-audit --offline node-red-contrib-postgresql@0.14.2" \
 || error "node-red install postgresq failed!"
 
+apply_nodered_debug_patch eventflow || error "eventflow apply debug patch failed!"
 
 docker restart eventflow >/dev/null
