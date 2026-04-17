@@ -231,9 +231,9 @@ const UserPopover: FC<PopoverProps> = ({ children, ...restProps }) => {
                           ?.map((m: any) => ({ name: `/${m?.plugInfoYml?.route?.name}`, backendName: m?.name })) || [],
                         v
                       );
-                      // 更新路由，名称和描述是后端国际化
-                      fetchSystemInfo(true);
-                      return initI18n(v, pluginLang);
+                      // 先切换前端国际化，再刷新依赖后端国际化的菜单/路由名称
+                      await initI18n(v, pluginLang);
+                      return fetchSystemInfo(true);
                     });
                   }
                 }}

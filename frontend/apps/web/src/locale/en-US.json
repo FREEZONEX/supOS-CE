@@ -1306,5 +1306,11 @@
   "kong.credLabelHmac": "HMAC Auth",
   "kong.credLabelOAuth2": "OAuth 2.0",
   "kong.credLabelJwt": "JWT",
-  "kong.configSection": "Config"
+  "kong.configSection": "Config",
+  "login.title": "Sign in to your account",
+  "login.username": "Username",
+  "login.password": "Password",
+  "login.signIn": "Sign In",
+  "login.usernameRequired": "Please enter your username",
+  "login.passwordRequired": "Please enter your password"
 }

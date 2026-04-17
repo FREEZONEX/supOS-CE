@@ -49,6 +49,10 @@ export type TI18nStore = {
   langList: LanguageProps[];
 };
 
+type InitI18nOptions = {
+  skipRemoteMessages?: boolean;
+};
+
 export const useI18nStore: UseBoundStoreWithEqualityFn<StoreApi<TI18nStore>> = createWithEqualityFn(
   subscribeWithSelector(() => {
     const lang = storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
@@ -71,10 +75,10 @@ export const useI18nStore: UseBoundStoreWithEqualityFn<StoreApi<TI18nStore>> = c
 );
 
 // 初始化国际化
-export const initI18n = async (lang: string = defaultLanguage, pluginLang: any = {}) => {
+export const initI18n = async (lang: string = defaultLanguage, pluginLang: any = {}, options?: InitI18nOptions) => {
   loadDayjsLocale(lang === I18nEnum.ZhCN ? 'zh-cn' : 'en');
   const antMessages = await loadAntdLocale(lang);
-  return await loadMessages(lang as I18nEnum).then((res: I18nData) => {
+  return await loadMessages(lang as I18nEnum, options).then((res: I18nData) => {
     const finallyMsg = { ...res, ...pluginLang };
     storageOpt.set(SUPOS_LANG_MESSAGE, finallyMsg);
     // node-red的语言

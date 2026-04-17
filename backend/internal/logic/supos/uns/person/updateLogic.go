@@ -11,7 +11,9 @@ import (
 	"backend/internal/types"
 
 	"gitee.com/unitedrhino/share/errors"
+	"gitee.com/unitedrhino/share/stores"
 	"github.com/zeromicro/go-zero/core/logx"
+	"gorm.io/gorm"
 )
 
 type UpdateLogic struct {
@@ -57,22 +59,40 @@ func (l *UpdateLogic) Update(req *types.UpdatePersonConfigReq) error {
 	}
 
 	now := time.Now()
-	if cfg == nil {
-		cfg = &relationDB.UnsPersonConfig{
-			UserID:       targetUserID,
-			MainLanguage: lang,
-			CreateAt:     now,
-			UpdateAt:     now,
+	db := stores.GetCommonConn(l.ctx)
+	if db == nil {
+		return errors.System.WithMsg("common database connection not initialized")
+	}
+
+	if err := db.WithContext(l.ctx).Transaction(func(tx *gorm.DB) error {
+		if cfg == nil {
+			cfg = &relationDB.UnsPersonConfig{
+				UserID:       targetUserID,
+				MainLanguage: lang,
+				CreateAt:     now,
+				UpdateAt:     now,
+			}
+			if err := tx.Create(cfg).Error; err != nil {
+				return stores.ErrFmt(err)
+			}
+		} else {
+			cfg.MainLanguage = lang
+			cfg.UpdateAt = now
+			if err := tx.Model(&relationDB.UnsPersonConfig{}).Where("id = ?", cfg.ID).Save(cfg).Error; err != nil {
+				return stores.ErrFmt(err)
+			}
 		}
-		if err := repo.Insert(l.ctx, cfg); err != nil {
-			return err
+
+		if err := tx.Model(&relationDB.IamUser{}).Where("id = ?", targetUserID).Updates(map[string]any{
+			"main_language": lang,
+			"updated_at":    now,
+		}).Error; err != nil {
+			return stores.ErrFmt(err)
 		}
-	} else {
-		cfg.MainLanguage = lang
-		cfg.UpdateAt = now
-		if err := repo.Update(l.ctx, cfg); err != nil {
-			return err
-		}
+
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	user.MainLanguage = lang

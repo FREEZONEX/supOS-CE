@@ -256,8 +256,10 @@ const updateBaseStore = async (isFirst: boolean = false) => {
       const _buttonList =
         baseState?.systemInfo?.authEnable === false || baseState?.currentUserInfo?.superAdmin === true
           ? handleButtonPermissions(['button:*'], allButtonGroup) || []
-          : handleButtonPermissions(baseState?.currentUserInfo?.buttonGroup?.map((i: any) => i.uri) || [], allButtonGroup) ||
-            [];
+          : handleButtonPermissions(
+              baseState?.currentUserInfo?.buttonGroup?.map((i: any) => i.uri) || [],
+              allButtonGroup
+            ) || [];
       useBaseStore.setState({
         homeTree,
         homeTabGroup,
@@ -305,23 +307,31 @@ export const setPluginList = (pluginList: any[]) => {
   });
 };
 
+const getPreferredEnvLanguage = () => import.meta.env.REACT_APP_LOCAL_LANG || import.meta.env.REACT_APP_OS_LANG;
+
 const fetchUserLanguage = async (info: { userId?: string; lang?: string }) => {
   const { lang, userId } = info;
   try {
     if (!userId) {
-      return import.meta.env.REACT_APP_LOCAL_LANG || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
+      return getPreferredEnvLanguage() || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
     } else {
       const response = await getPersonConfigApi(userId);
-      return import.meta.env.REACT_APP_LOCAL_LANG || response.mainLanguage;
+      return (
+        response.mainLanguage ||
+        getPreferredEnvLanguage() ||
+        lang ||
+        storageOpt.getOrigin(SUPOS_LANG) ||
+        defaultLanguage
+      );
     }
   } catch (error) {
     console.error('配置请求失败', error);
-    return import.meta.env.REACT_APP_LOCAL_LANG || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
+    return getPreferredEnvLanguage() || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
   }
 };
 
 export const fetchSystemInfo = async (fetchRoute?: boolean): Promise<any> => {
-  await getSystemConfig().then((systemInfo) => {
+  return await getSystemConfig().then((systemInfo) => {
     const containerList = filterContainerList(systemInfo?.containerMap || {});
     useBaseStore.setState({
       systemInfo: {
@@ -337,7 +347,7 @@ export const fetchSystemInfo = async (fetchRoute?: boolean): Promise<any> => {
           ?.map((m) => m.name) ?? [],
     });
     if (fetchRoute) {
-      fetchBaseStore?.();
+      return fetchBaseStore?.();
     }
   });
 };
