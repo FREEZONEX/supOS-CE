@@ -15,7 +15,7 @@ write_volumes_path() {
     source "$ENV_FILE"
 }
 
-if [[ "$platform" == MINGW64* ]]; then
+if [[ "$platform" == MINGW* || "$platform" == MSYS* ]]; then
     # On Git Bash for Windows, replace Linux/WSL-style paths with a Git Bash
     # drive path so mkdir/cp/chmod all operate on the Windows host filesystem.
     if [ -z "$VOLUMES_PATH" ] || [ "$VOLUMES_PATH" == "/volumes/tier0/data" ]; then
@@ -27,6 +27,15 @@ if [[ "$platform" == MINGW64* ]]; then
         fi
         info "Default storage path for Windows is set to: $default_path"
         write_volumes_path "$default_path"
+    elif [[ "$VOLUMES_PATH" =~ ^/home/[^/]+(/.*)?$ ]]; then
+        remainder_path="${BASH_REMATCH[1]}"
+        if [ -n "$remainder_path" ]; then
+            normalized_path="$HOME$remainder_path"
+        else
+            normalized_path="$HOME/volumes/tier0/data"
+        fi
+        info "Normalizing Git Bash home-style VOLUMES_PATH for Windows: $VOLUMES_PATH -> $normalized_path"
+        write_volumes_path "$normalized_path"
     elif [[ "$VOLUMES_PATH" =~ ^/mnt/([A-Za-z])/(.*)$ ]]; then
         drive_letter="${BASH_REMATCH[1],,}"
         remainder_path="${BASH_REMATCH[2]}"

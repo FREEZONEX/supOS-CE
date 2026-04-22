@@ -462,6 +462,20 @@ type (
         Args []interface{} `json:"args,optional"`
     }
 
+    // HistoryValueRequest 历史值查询请求
+    HistoryValueRequest {
+        // AliasList 文件别名列表
+        AliasList []string `json:"aliasList"`
+        // TimeStart 开始时间，毫秒时间戳
+        TimeStart int64 `json:"timeStart"`
+        // TimeEnd 结束时间，毫秒时间戳
+        TimeEnd int64 `json:"timeEnd"`
+        // Limit 单个文件最大返回条数，默认1000
+        Limit int `json:"limit,optional"`
+        // Order 排序方式，支持 ASC 或 DESC
+        Order string `json:"order,optional"`
+    }
+
     // HistoryValueResult 历史值查询结果
     HistoryValueResult {
         // Code 错误码，0--正常，其他失败
@@ -469,7 +483,31 @@ type (
         // Msg 错误信息
         Msg string `json:"msg"`
         // Data 历史值查询数据
-        Data UnsHistoryQueryResult `json:"data,optional"`
+        Data UnsHistoryQueryData `json:"data,optional"`
+    }
+
+    UnsHistoryQueryData {
+        Results []UnsHistoryFileResult `json:"results,optional"`
+        NotExists []string `json:"notExists,optional"`
+        ErrorFields map[string]string `json:"errorFields,optional"`
+    }
+
+    UnsHistoryFileResult {
+        Alias string `json:"alias"`
+        Table string `json:"table,optional"`
+        Fields []UnsHistoryField `json:"fields,optional"`
+        List []UnsHistoryValuePoint `json:"list,optional"`
+    }
+
+    UnsHistoryField {
+        Name string `json:"name"`
+        Type string `json:"type"`
+        Unit string `json:"unit,optional"`
+    }
+
+    UnsHistoryValuePoint {
+        Timestamp int64 `json:"timestamp"`
+        Payload string `json:"payload"`
     }
 
     // TemplatePageResult 模板分页结果

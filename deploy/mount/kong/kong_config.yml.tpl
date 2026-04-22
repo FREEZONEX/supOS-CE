@@ -2104,8 +2104,8 @@ plugins:
       uri: ~
       querystring: []
       headers:
-      - Origin:${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}
-      - Referer:${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}/portainer/home/
+      - Origin:${BASE_URL}
+      - Referer:${BASE_URL}/portainer/home/
       body: []
     rename:
       body: []

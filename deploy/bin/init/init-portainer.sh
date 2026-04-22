@@ -34,11 +34,11 @@ portainer_api() {
     -H "Authorization: Bearer $PORTAINER_JWT" "$@" 2>/dev/null
 }
 
-portainer_setting_field() {
+portainer_oauth_setting_field() {
   local field="$1"
   local settings_json
   settings_json="$(portainer_api GET /api/settings)"
-  printf '%s' "$settings_json" | sed -n "s/.*\"${field}\":\"\\([^\"]*\\)\".*/\\1/p" | head -n 1
+  printf '%s' "$settings_json" | sed -n "s/.*\"OAuthSettings\":{[^}]*\"${field}\":\"\\([^\"]*\\)\".*/\\1/p" | head -n 1
 }
 
 find_portainer_user_id() {
@@ -105,8 +105,8 @@ docker exec nodered curl -s -X POST http://portainer:9000/api/endpoints \
 portainer_api PUT /api/settings \
   -H "Content-Type: application/json" \
   -d "{
-    \"authenticationMethod\": 3,
-    \"oauthSettings\": {
+    \"AuthenticationMethod\": 3,
+    \"OAuthSettings\": {
       \"AccessTokenURI\": \"${PORTAINER_ACCESS_TOKEN_URI}\",
       \"AuthStyle\": 0,
       \"AuthorizationURI\": \"${PORTAINER_AUTHORIZATION_URI}\",
@@ -119,13 +119,13 @@ portainer_api PUT /api/settings \
       \"UserIdentifier\":\"preferred_username\",
       \"Scopes\":\"openid\"
     },
-    \"userSessionTimeout\": \"1h\"
+    \"UserSessionTimeout\": \"1h\"
   }" > /dev/null 2>&1 \
 && info "Configured Portainer OAuth against platform IAM" \
 || warn "Failed to configure Portainer OAuth"
 
-CURRENT_AUTHORIZATION_URI="$(portainer_setting_field AuthorizationURI)"
-CURRENT_REDIRECT_URI="$(portainer_setting_field RedirectURI)"
+CURRENT_AUTHORIZATION_URI="$(portainer_oauth_setting_field AuthorizationURI)"
+CURRENT_REDIRECT_URI="$(portainer_oauth_setting_field RedirectURI)"
 
 if [ "$CURRENT_AUTHORIZATION_URI" != "$PORTAINER_AUTHORIZATION_URI" ] || [ "$CURRENT_REDIRECT_URI" != "$PORTAINER_REDIRECT_URI" ]; then
   error "Portainer OAuth settings mismatch after update."

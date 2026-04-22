@@ -31,7 +31,7 @@ const KEEP_MODBUS = new Set(["Modbus-Read","Modbus-Client","Modbus-Server"]);
 const KEEP_OPCUA  = new Set(["OpcUa-Item","OpcUa-Client","OpcUa-Server","OpcUa-Endpoint"]);
 
 const waitMs = 3000;
-const maxWait = 20000;
+const maxWait = 60000;
 
 function exists(pkg, j) { return j[pkg] && j[pkg].nodes; }
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }

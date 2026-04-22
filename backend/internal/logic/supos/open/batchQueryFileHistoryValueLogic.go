@@ -7,8 +7,10 @@ import (
 	"context"
 
 	"backend/internal/common/I18nUtils"
+	"backend/internal/logic/supos/uns/uns/service"
 	"backend/internal/svc"
 	"backend/internal/types"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -29,11 +31,41 @@ func NewBatchQueryFileHistoryValueLogic(ctx context.Context, svcCtx *svc.Service
 }
 
 func (l *BatchQueryFileHistoryValueLogic) BatchQueryFileHistoryValue(req *types.HistoryValueRequest) (resp *types.HistoryValueResult, err error) {
-	// TODO: 实现批量查询文件历史数据的逻辑
-	// 这需要查询时序数据库或历史数据存储
-	// 目前返回未实现的提示
-	return &types.HistoryValueResult{
-		Code: 501,
-		Msg:  I18nUtils.GetMessageWithCtx(l.ctx, "uns.file.history.query.not.implemented"),
-	}, nil
+	resp = &types.HistoryValueResult{
+		Code: 200,
+		Msg:  "ok",
+	}
+	if req == nil || !hasOpenHistoryAliases(req.AliasList) {
+		resp.Code = 400
+		resp.Msg = I18nUtils.GetMessageWithCtx(l.ctx, "uns.file.history.query.alias.required")
+		return resp, nil
+	}
+	if req.TimeStart <= 0 || req.TimeEnd <= 0 || req.TimeEnd < req.TimeStart {
+		resp.Code = 400
+		resp.Msg = I18nUtils.GetMessageWithCtx(l.ctx, "uns.file.history.query.time.invalid")
+		return resp, nil
+	}
+
+	data, err := service.NewHistoryQueryService().Query(l.ctx, req)
+	if err != nil {
+		resp.Code = 500
+		resp.Msg = err.Error()
+		return resp, nil
+	}
+	if data != nil {
+		resp.Data = *data
+		if len(data.NotExists) > 0 || len(data.ErrorFields) > 0 {
+			resp.Code = 206
+		}
+	}
+	return resp, nil
+}
+
+func hasOpenHistoryAliases(aliasList []string) bool {
+	for _, alias := range aliasList {
+		if strings.TrimSpace(alias) != "" {
+			return true
+		}
+	}
+	return false
 }

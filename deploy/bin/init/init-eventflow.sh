@@ -26,22 +26,22 @@ done
 #docker exec eventflow sh -c "cd /data && npm install --no-audit --offline @supcon-international/node-red-dev-copilot@1.7.5" \
 #|| error "node-red install node-red-dev-copilot failed!"
 docker exec nodered sh -c "cd /data && npm install --no-audit --offline @supcon-international/node-red-mcp-server@1.3.4" \
-|| error "node-red install node-red-mcp-server failed!"
+|| { error "node-red install node-red-mcp-server failed!"; exit 1; }
 
 docker exec eventflow sh -c "npm install --no-audit --offline @flowfuse/node-red-dashboard@1.26.0" \
-|| error "node-red install node-red-dashboard failed!"
+|| { error "node-red install node-red-dashboard failed!"; exit 1; }
 
 docker exec eventflow sh -c "cd /data && npm install --no-audit --offline factory-agent-actions@1.1.0" \
-|| error "node-red install factory-agent-actions failed!"
+|| { error "node-red install factory-agent-actions failed!"; exit 1; }
 
 docker exec eventflow sh -c "cd /data && npm install --no-audit --offline factory-agent-deepseek@1.1.1" \
-|| error "node-red install factory-agent-deepseek failed!"
+|| { error "node-red install factory-agent-deepseek failed!"; exit 1; }
 
 docker exec eventflow sh -c "cd /data && npm install --no-audit --offline factory-agent-gemini@1.0.6" \
-|| error "node-red install factory-agent-gemini failed!"
+|| { error "node-red install factory-agent-gemini failed!"; exit 1; }
 
 docker exec eventflow sh -c "cd /data && npm install  --no-audit --offline factory-agent-states@1.1.8" \
-|| error "node-red install factory-agent-states failed!"
+|| { error "node-red install factory-agent-states failed!"; exit 1; }
 
 #
 #docker exec eventflow sh -c "cd /data && npm install  --no-audit --offline node-red-contrib-modbus@5.43.0" \
@@ -70,7 +70,7 @@ docker exec eventflow sh -c "cd /data && npm install  --no-audit --offline facto
 #docker exec eventflow sh -c "cd /data && npm install --unsafe-perm /data/offline_modules/modules/formidable-3.5.4.tgz"
 
 docker exec eventflow sh -c "cd /data && npm install --no-audit --offline node-red-contrib-postgresql@0.14.2" \
-|| error "node-red install postgresq failed!"
+|| { error "node-red install postgresq failed!"; exit 1; }
 
 apply_nodered_debug_patch eventflow || error "eventflow apply debug patch failed!"
 

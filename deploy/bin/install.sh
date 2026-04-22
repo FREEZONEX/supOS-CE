@@ -82,6 +82,18 @@ if ! wait_compose_healthy 900 5; then
     exit 1
 fi
 
+sync_kong_output="$(bash "$SCRIPT_DIR/util/sync-kong-runtime-url.sh")"
+printf '%s\n' "$sync_kong_output"
+if printf '%s\n' "$sync_kong_output" | grep -q '^SYNC_KONG_RUNTIME_URL_CHANGED=1$'; then
+    KONG_RUNTIME_RESTART_WAIT_SECONDS="${KONG_RUNTIME_RESTART_WAIT_SECONDS:-20}"
+    info "Kong runtime URL settings changed. Restarting Kong to apply the updated database config..."
+    docker restart kong >/dev/null
+    if ! wait_compose_healthy "$KONG_RUNTIME_RESTART_WAIT_SECONDS" 5; then
+        error "Kong did not become healthy after applying runtime URL changes."
+        exit 1
+    fi
+fi
+
 # Backend migration creates the IAM OAuth tables, so seed the built-in
 # Portainer OAuth client only after the stack is healthy.
 bash "$SCRIPT_DIR/init/init-iam-sql.sh"

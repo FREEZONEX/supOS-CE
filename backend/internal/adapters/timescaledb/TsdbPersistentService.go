@@ -85,6 +85,9 @@ func (p *TsdbPersistentService) FillLastRecord(uns *types.UnsDefinition) {
 	}
 	postgresql.FillLastRecord(p.log, uns, query)
 }
+func (p *TsdbPersistentService) QueryHistory(ctx context.Context, uns types.UnsInfo, req *types.HistoryValueRequest) (*types.UnsHistoryFileResult, error) {
+	return postgresql.QueryHistoryWithTable(ctx, p.dbPool, uns.GetAlias(), uns, req)
+}
 
 //	func (p *TsdbPersistentService) OnEventBatchCreateTableEvent9(evt *event.BatchCreateTableEvent) error {
 //		creates := evt.GetCreateFiles(dsId)
