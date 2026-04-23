@@ -75,13 +75,15 @@ if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" 
     error "Failed to start Docker containers. Please check the logs above."
     exit 1
 fi
-info "Containers started successfully. Waiting for services to become healthy..."
+info "Containers started successfully. Waiting for core services to become healthy..."
 echo
-if ! wait_compose_healthy 900 5; then
+if ! WAIT_COMPOSE_HEALTH_ALLOW_RUNNING_SERVICES="nodered eventflow" wait_compose_healthy 300 5; then
     error "Containers did not become healthy in time."
     exit 1
 fi
+info "All required containers are healthy."
 
+info "Synchronizing Kong runtime URL settings..."
 sync_kong_output="$(bash "$SCRIPT_DIR/util/sync-kong-runtime-url.sh")"
 printf '%s\n' "$sync_kong_output"
 if printf '%s\n' "$sync_kong_output" | grep -q '^SYNC_KONG_RUNTIME_URL_CHANGED=1$'; then
@@ -96,19 +98,23 @@ fi
 
 # Backend migration creates the IAM OAuth tables, so seed the built-in
 # Portainer OAuth client only after the stack is healthy.
+info "Seeding IAM OAuth client..."
 bash "$SCRIPT_DIR/init/init-iam-sql.sh"
 
 # Run each initialization script individually for clearer error reporting
+info "Initializing Node-RED modules..."
 bash "$SCRIPT_DIR/init/init-nodered.sh" || {
     error "Failed to initialize Node-RED."
     exit 1
 }
 
+info "Initializing EventFlow modules..."
 bash "$SCRIPT_DIR/init/init-eventflow.sh" || {
     error "Failed to initialize EventFlow."
     exit 1
 }
 
+info "Hiding Node-RED entrypoints..."
 bash "$SCRIPT_DIR/init/hide-nodered.sh" || {
     error "Failed to hide Node-RED entrypoints."
     exit 1
@@ -116,6 +122,7 @@ bash "$SCRIPT_DIR/init/hide-nodered.sh" || {
 
 # Portainer is initialized last because it depends on Kong, IAM OAuth, and
 # the final externally reachable BASE_URL.
+info "Initializing Portainer OAuth..."
 bash "$SCRIPT_DIR/init/init-portainer.sh" || {
     error "Failed to initialize Portainer OAuth."
     exit 1

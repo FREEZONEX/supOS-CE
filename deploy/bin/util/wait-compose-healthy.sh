@@ -15,6 +15,8 @@ wait_compose_healthy() {
   local max_wait="${1:-900}"
   local interval="${2:-5}"
   local env_tmp="${_WAIT_COMPOSE_DEPLOY_ROOT}/.env.tmp"
+  local log_interval="${WAIT_COMPOSE_HEALTH_LOG_INTERVAL_SECONDS:-10}"
+  local allow_running_services=" ${WAIT_COMPOSE_HEALTH_ALLOW_RUNNING_SERVICES//,/ } "
 
   if [[ ! -f "$env_tmp" ]] && [[ -f "$_WAIT_COMPOSE_SET_TEMP_ENV" ]]; then
     warn "wait_compose_healthy: missing $env_tmp; recreating via set-temp-env.sh"
@@ -22,7 +24,7 @@ wait_compose_healthy() {
     source "$_WAIT_COMPOSE_SET_TEMP_ENV" "${_WAIT_COMPOSE_DEPLOY_ROOT}" "${COMPOSE_PROFILE_ARGS[*]}"
   fi
   local elapsed=0
-  local last_info=-30
+  local last_info=$((-log_interval))
   local compose=(
     docker compose
     --env-file "$ENV_FILE"
@@ -61,14 +63,21 @@ wait_compose_healthy() {
       fi
 
       local status health
+      local allow_running=0
       status="$(docker inspect -f '{{.State.Status}}' "$cid" 2>/dev/null || echo unknown)"
       health="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$cid" 2>/dev/null || echo unknown)"
+      if [[ "$allow_running_services" == *" $svc "* ]]; then
+        allow_running=1
+      fi
 
       if [[ "$status" != "running" ]]; then
         failed+=("$svc:$status")
         continue
       fi
       if [[ "$health" != "none" && "$health" != "healthy" ]]; then
+        if (( allow_running == 1 )); then
+          continue
+        fi
         failed+=("$svc:health=$health")
       fi
     done <<< "$svc_list"
@@ -77,7 +86,7 @@ wait_compose_healthy() {
       return 0
     fi
 
-    if (( elapsed - last_info >= 30 )); then
+    if (( elapsed - last_info >= log_interval )); then
       last_info=$elapsed
       info "Waiting for containers (${elapsed}s / ${max_wait}s): ${failed[*]}"
     fi
