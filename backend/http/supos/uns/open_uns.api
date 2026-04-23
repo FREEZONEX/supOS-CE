@@ -304,13 +304,13 @@ type (
         Definition []FieldDefine `json:"definition,optional"`
 
         // Persistence 是否持久化 默认false
-        Persistence bool `json:"persistence,optional,default=false"`
+        Persistence bool `json:"persistence,optional"`
 
         // DashBoard 是否生成仪表盘 默认false
-        DashBoard bool `json:"dashBoard,optional,default=false"`
+        DashBoard bool `json:"dashBoard,optional"`
 
         // AddFlow 是否模拟数据 默认false
-        AddFlow bool `json:"addFlow,optional,default=false"`
+        AddFlow bool `json:"addFlow,optional"`
 
         // Refers 引用对象 当dataType为计算、聚合、引用时必填
         Refers []InstanceField `json:"refers,optional"`
@@ -375,13 +375,13 @@ type (
         Definition []FieldDefine `json:"definition,optional"`
 
         // Persistence 是否持久化 默认false
-        Persistence bool `json:"persistence,optional,default=false"`
+        Persistence bool `json:"persistence,optional"`
 
         // DashBoard 是否生成仪表盘 默认false
-        DashBoard bool `json:"dashBoard,optional,default=false"`
+        DashBoard bool `json:"dashBoard,optional"`
 
         // AddFlow 是否模拟数据 默认false
-        AddFlow bool `json:"addFlow,optional,default=false"`
+        AddFlow bool `json:"addFlow,optional"`
 
         // Refers 引用对象 当dataType为计算、聚合、引用时必填
         Refers []InstanceField `json:"refers,optional"`
@@ -462,20 +462,6 @@ type (
         Args []interface{} `json:"args,optional"`
     }
 
-    // HistoryValueRequest 历史值查询请求
-    HistoryValueRequest {
-        // AliasList 文件别名列表
-        AliasList []string `json:"aliasList"`
-        // TimeStart 开始时间，毫秒时间戳
-        TimeStart int64 `json:"timeStart"`
-        // TimeEnd 结束时间，毫秒时间戳
-        TimeEnd int64 `json:"timeEnd"`
-        // Limit 单个文件最大返回条数，默认1000
-        Limit int `json:"limit,optional"`
-        // Order 排序方式，支持 ASC 或 DESC
-        Order string `json:"order,optional"`
-    }
-
     // HistoryValueResult 历史值查询结果
     HistoryValueResult {
         // Code 错误码，0--正常，其他失败
@@ -484,30 +470,6 @@ type (
         Msg string `json:"msg"`
         // Data 历史值查询数据
         Data UnsHistoryQueryData `json:"data,optional"`
-    }
-
-    UnsHistoryQueryData {
-        Results []UnsHistoryFileResult `json:"results,optional"`
-        NotExists []string `json:"notExists,optional"`
-        ErrorFields map[string]string `json:"errorFields,optional"`
-    }
-
-    UnsHistoryFileResult {
-        Alias string `json:"alias"`
-        Table string `json:"table,optional"`
-        Fields []UnsHistoryField `json:"fields,optional"`
-        List []UnsHistoryValuePoint `json:"list,optional"`
-    }
-
-    UnsHistoryField {
-        Name string `json:"name"`
-        Type string `json:"type"`
-        Unit string `json:"unit,optional"`
-    }
-
-    UnsHistoryValuePoint {
-        Timestamp int64 `json:"timestamp"`
-        Payload string `json:"payload"`
     }
 
     // TemplatePageResult 模板分页结果

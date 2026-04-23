@@ -63,6 +63,20 @@ const CustomMenuHeader = () => {
   useEffect(() => {
     if (hasNoticePlugin) getNoticeStatus();
   }, [hasNoticePlugin]);
+  const menuSelectedKey = (() => {
+    if (!currentMenuInfo?.code) {
+      return undefined;
+    }
+    if (menuTree?.some((item) => item.code === currentMenuInfo.code)) {
+      return currentMenuInfo.code;
+    }
+    if (currentMenuInfo.parentCode && menuTree?.some((item) => item.code === currentMenuInfo.parentCode)) {
+      return currentMenuInfo.parentCode;
+    }
+    const currentKeys = [currentMenuInfo.code, currentMenuInfo.parentCode].filter(Boolean);
+    const matchedRoot = menuTree?.find((item) => item.children?.some((child) => currentKeys.includes(child.code)));
+    return matchedRoot?.code || currentMenuInfo.code;
+  })();
   const items = menuTree?.map?.((parent) => {
     if (parent.children?.length && parent.type !== 2) {
       return {
@@ -169,7 +183,7 @@ const CustomMenuHeader = () => {
                 <Menu
                   mode="horizontal"
                   items={items}
-                  selectedKeys={currentMenuInfo?.code ? [currentMenuInfo?.code] : []}
+                  selectedKeys={menuSelectedKey ? [menuSelectedKey] : []}
                 />
               </div>
             </Splitter.Panel>

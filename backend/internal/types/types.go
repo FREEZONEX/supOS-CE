@@ -2009,10 +2009,11 @@ type UpdateTemplateDto struct {
 }
 
 type UpdateTemplateFieldsAndDescReq struct {
-	Alias       string         `json:"alias" validate:"omitempty,max=63,alias"`
-	Fields      []*FieldDefine `json:"fields,optional" validate:"min=1"`
-	JsonFields  []*FieldDefine `json:"jsonFields,optional,omitempty"`
-	Description *string        `json:"modelDescription,optional" validate:"omitempty,max=512"`
+	Alias            string         `json:"alias" validate:"omitempty,max=63,alias"`
+	Fields           []*FieldDefine `json:"fields,optional" validate:"min=1"`
+	JsonFields       []*FieldDefine `json:"jsonFields,optional,omitempty"`
+	Description      *string        `json:"description,optional" validate:"omitempty,max=512"`
+	ModelDescription *string        `json:"modelDescription,optional" validate:"omitempty,max=512"`
 }
 
 type UpdateTemplateSubscribeReq struct {

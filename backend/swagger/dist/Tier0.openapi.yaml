@@ -14,6 +14,8 @@ tags:
     description: Batch operations for files and folders
   - name: 用户管理
     description: User management operations
+  - name: 流程管理
+    description: Source flow management operations
   - name: 菜单管理
     description: Menu management operations
 paths:
@@ -968,6 +970,292 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserDetailResult'
+      security:
+        - apikey-header-apikey: []
+
+  /open-api/flow:
+    get:
+      summary: 查询 Flow 列表
+      description: 分页查询 source flow 列表
+      operationId: openListSourceFlows
+      tags:
+        - 流程管理
+      parameters:
+        - name: k
+          in: query
+          description: 关键字，支持按 flow 名称和描述模糊搜索
+          schema:
+            type: string
+        - name: orderCode
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+        - name: isAsc
+          in: query
+          description: 是否升序
+          schema:
+            type: string
+        - name: pageNo
+          in: query
+          description: 当前页数
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页记录数
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 错误码，200--正常，其他失败
+                  pageNo:
+                    type: integer
+                    format: int64
+                    description: 当前页数
+                  pageSize:
+                    type: integer
+                    format: int64
+                    description: 每页记录数
+                  total:
+                    type: integer
+                    format: int64
+                    description: 总记录数
+                  data:
+                    type: array
+                    description: flow 列表
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Flow 主键 ID
+                        flowName:
+                          type: string
+                          description: Flow 名称
+                        flowId:
+                          type: string
+                          description: Node-RED Flow ID
+                        description:
+                          type: string
+                          description: Flow 描述
+                        flowStatus:
+                          type: string
+                          description: Flow 状态
+                        template:
+                          type: string
+                          description: Flow 模板类型
+                        mark:
+                          type: integer
+                          description: 是否置顶
+                        creator:
+                          type: string
+                          description: 创建人
+                        createTime:
+                          type: integer
+                          description: 创建时间毫秒时间戳
+      security:
+        - apikey-header-apikey: []
+
+    post:
+      summary: 创建 Flow
+      description: 创建新的 source flow
+      operationId: openCreateSourceFlow
+      tags:
+        - 流程管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - flowName
+              properties:
+                flowName:
+                  type: string
+                  description: Flow 名称
+                description:
+                  type: string
+                  description: Flow 描述
+                template:
+                  type: string
+                  description: 模板类型
+                groupId:
+                  type: integer
+                  format: int64
+                  description: 分组 ID
+        required: true
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 状态码
+                  msg:
+                    type: string
+                    description: 响应消息
+                  data:
+                    type: string
+                    description: 新建 flow 的主键 ID
+      security:
+        - apikey-header-apikey: []
+
+    put:
+      summary: 更新 Flow
+      description: 更新 source flow 基本信息
+      operationId: openUpdateSourceFlow
+      tags:
+        - 流程管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - flowName
+              properties:
+                id:
+                  type: string
+                  description: Flow 主键 ID
+                flowName:
+                  type: string
+                  description: Flow 名称
+                description:
+                  type: string
+                  description: Flow 描述
+        required: true
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+      security:
+        - apikey-header-apikey: []
+
+    delete:
+      summary: 删除 Flow
+      description: 按 ID 删除 source flow
+      operationId: openDeleteSourceFlow
+      tags:
+        - 流程管理
+      parameters:
+        - name: id
+          in: query
+          description: Flow 主键 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultVO'
+      security:
+        - apikey-header-apikey: []
+
+  /open-api/flow/deploy:
+    post:
+      summary: 部署 Flow
+      description: 按 ID 部署 source flow，可选覆盖 flows JSON
+      operationId: openDeploySourceFlow
+      tags:
+        - 流程管理
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: string
+                  description: Flow 主键 ID
+                flows:
+                  type: array
+                  description: 可选的临时覆盖 flow JSON
+                  items:
+                    type: object
+        required: true
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 状态码
+                  msg:
+                    type: string
+                    description: 响应消息
+                  data:
+                    type: object
+                    properties:
+                      flowId:
+                        type: string
+                        description: 部署后的 Node-RED Flow ID
+                      version:
+                        type: string
+                        description: 预留版本字段
+      security:
+        - apikey-header-apikey: []
+
+  /open-api/flow/flowData:
+    get:
+      summary: 查询 Flow Data
+      description: 按 ID 获取 source flow 的 flowjson
+      operationId: openGetSourceFlowData
+      tags:
+        - 流程管理
+      parameters:
+        - name: id
+          in: query
+          description: Flow 主键 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: 错误码，200--正常，其他失败
+                  flows:
+                    type: array
+                    description: flowjson 节点列表
+                    items:
+                      type: object
+                  rev:
+                    type: string
+                    description: 当前 Node-RED flows revision
       security:
         - apikey-header-apikey: []
 

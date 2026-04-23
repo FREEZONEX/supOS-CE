@@ -71,6 +71,9 @@ func (l *CopySourceFlowLogic) CopyFlowWithType(req *types.SourceFlowCopyReq, flo
 		Template:    template,
 		GroupId:     req.GroupId,
 	}
+	if userVo := resolveUser(l.ctx); userVo != nil {
+		input.Creator = userVo.PreferredUsername
+	}
 	record, err := flowcommon.CopyFlow(l.ctx, l.svcCtx, repo, srcID, input, client)
 	if err != nil {
 		return "", err

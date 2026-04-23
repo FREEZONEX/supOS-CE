@@ -7,6 +7,7 @@ import (
 	"backend/internal/types"
 	"backend/share/base"
 	"context"
+	"strings"
 )
 
 func (l *UnsTemplateService) UpdateBaseInfo(ctx context.Context, req *types.UpdateTemplateBaseInfoReq) (rs *types.BaseResult, err error) {
@@ -17,14 +18,7 @@ func (l *UnsTemplateService) UpdateBaseInfo(ctx context.Context, req *types.Upda
 		rs.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 		return
 	}
-	unsDto := &types.CreateTopicDto{
-		PathType: constants.PathTypeTemplate,
-		Id:       req.ID,
-		Name:     req.Name,
-	}
-	if req.Description != "NULL" {
-		unsDto.Description = base.V2p(req.Description)
-	}
+	unsDto := buildTemplateBaseInfoUpdateDto(uns, req)
 	idRs := l.unsAddService.CreateModelInstance(ctx, unsDto)
 	if idRs != nil {
 		rs.Code, rs.Msg = idRs.Code, idRs.Msg
@@ -39,14 +33,7 @@ func (l *UnsTemplateService) UpdateFieldsAndDesc(ctx context.Context, req *types
 		rs.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 		return
 	}
-	unsDto := &types.CreateTopicDto{
-		PathType:    uns.PathType,
-		Id:          uns.Id,
-		Alias:       req.Alias,
-		Fields:      req.Fields,
-		JsonFields:  req.JsonFields,
-		Description: req.Description,
-	}
+	unsDto := buildTemplateFieldsAndDescUpdateDto(uns, req)
 	idRs := l.unsAddService.CreateModelInstance(ctx, unsDto)
 	if idRs != nil {
 		rs.Code, rs.Msg = idRs.Code, idRs.Msg
@@ -61,17 +48,67 @@ func (l *UnsTemplateService) UpdateSubscribe(ctx context.Context, req *types.Upd
 		rs.Msg = I18nUtils.GetMessageWithCtx(ctx, "uns.template.not.exists")
 		return
 	}
-	unsDto := &types.CreateTopicDto{
-		PathType:  constants.PathTypeTemplate,
-		Id:        req.ID,
-		Frequency: req.SubscribeFrequency,
-	}
-	if req.SubscribeEnable != "" {
-		unsDto.SubscribeEnable = base.V2p(req.SubscribeEnable == "true")
-	}
+	unsDto := buildTemplateSubscribeUpdateDto(uns, req)
 	idRs := l.unsAddService.CreateModelInstance(ctx, unsDto)
 	if idRs != nil {
 		rs.Code, rs.Msg = idRs.Code, idRs.Msg
 	}
 	return
+}
+
+func buildTemplateBaseInfoUpdateDto(uns *dao.UnsNamespace, req *types.UpdateTemplateBaseInfoReq) *types.CreateTopicDto {
+	name := ""
+	if req != nil {
+		name = strings.TrimSpace(req.Name)
+	}
+	if name == "" && uns != nil {
+		name = uns.Name
+	}
+	dto := &types.CreateTopicDto{
+		PathType: constants.PathTypeTemplate,
+		Id:       req.ID,
+		Alias:    uns.Alias,
+		Name:     name,
+	}
+	if req != nil && req.Description != "NULL" {
+		dto.Description = base.V2p(req.Description)
+	}
+	return dto
+}
+
+func buildTemplateFieldsAndDescUpdateDto(uns *dao.UnsNamespace, req *types.UpdateTemplateFieldsAndDescReq) *types.CreateTopicDto {
+	alias := ""
+	if req != nil {
+		alias = strings.TrimSpace(req.Alias)
+	}
+	if alias == "" && uns != nil {
+		alias = uns.Alias
+	}
+	name := ""
+	if uns != nil {
+		name = uns.Name
+	}
+	return &types.CreateTopicDto{
+		PathType:    uns.PathType,
+		Id:          uns.Id,
+		Alias:       alias,
+		Name:        name,
+		Fields:      req.Fields,
+		JsonFields:  req.JsonFields,
+		Description: req.ResolveDescription(),
+	}
+}
+
+func buildTemplateSubscribeUpdateDto(uns *dao.UnsNamespace, req *types.UpdateTemplateSubscribeReq) *types.CreateTopicDto {
+	dto := &types.CreateTopicDto{
+		PathType:  constants.PathTypeTemplate,
+		Id:        req.ID,
+		Alias:     uns.Alias,
+		Name:      uns.Name,
+		Frequency: req.SubscribeFrequency,
+	}
+	if req.SubscribeEnable != "" {
+		dto.SubscribeEnable = base.V2p(req.SubscribeEnable == "true")
+	}
+	return dto
 }
