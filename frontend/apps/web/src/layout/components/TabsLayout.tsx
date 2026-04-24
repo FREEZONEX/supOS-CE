@@ -14,7 +14,7 @@ const TabsLayout: FC<{
   menuType: MenuTypeProps;
   tabsContextRef: any;
 }> = ({ menuType, tabsContextRef }) => {
-  const { activeTabRoutePath, tabs, onCloseTab, onCloseOtherTab, onRefreshTab, setTabs } = useTabs();
+  const { activeTabRoutePath, tabs, onCloseTab, onCloseOtherTab, onRefreshTab, onRemoveTab, setTabs } = useTabs();
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const navigate = useLocationNavigate();
 
@@ -72,9 +72,10 @@ const TabsLayout: FC<{
     () => ({
       onCloseTab,
       onCloseOtherTab,
+      onRemoveTab,
       onRefreshTab,
     }),
-    [onCloseTab, onCloseOtherTab, onRefreshTab]
+    [onCloseTab, onCloseOtherTab, onRemoveTab, onRefreshTab]
   );
 
   useImperativeHandle(tabsContextRef, () => {
