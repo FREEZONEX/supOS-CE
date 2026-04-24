@@ -1,10 +1,13 @@
 import { Button, Result } from 'antd';
 import { useTranslate } from '@/hooks';
 import useNavigateForIframe from '@/hooks/useNavigateForIframe';
+import { useBaseStore } from '@/stores/base';
 
 const NotFoundPage = () => {
   const formatMessage = useTranslate();
-  const { security, onClick } = useNavigateForIframe({ path: '/uns' });
+  const homePage = useBaseStore((state) => state.currentUserInfo?.homePage) || '/uns';
+  const { security, onClick } = useNavigateForIframe({ path: homePage });
+
   return (
     <Result
       status="403"
