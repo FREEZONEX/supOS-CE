@@ -14,7 +14,7 @@
 **/.turbo
 **/.vite
 .vscode
-AGENTS.md
+# AGENTS.md
 backend/.env
 **/*.local
 **/.__mf__temp
