@@ -6,7 +6,7 @@ import { useBaseStore } from '@/stores/base';
 const NotFoundPage = () => {
   const formatMessage = useTranslate();
   const homePage = useBaseStore((state) => state.currentUserInfo?.homePage) || '/uns';
-  const { security, onClick } = useNavigateForIframe({ path: homePage });
+  const { security, onClick } = useNavigateForIframe({ path: homePage, replaceCurrent: true });
 
   return (
     <Result

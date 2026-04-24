@@ -1,9 +1,12 @@
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
+import { useTabsContext } from '@/contexts/tabs-context.ts';
 import { canModifyParentHref } from '@/utils/common';
 
-const useNavigateForIframe = ({ path }: { path: string }) => {
+const useNavigateForIframe = ({ path, replaceCurrent = false }: { path: string; replaceCurrent?: boolean }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { onCloseTab } = useTabsContext();
   const [security, setSecurity] = useState<boolean | -1>(true);
   useEffect(() => {
     const result = canModifyParentHref();
@@ -15,9 +18,23 @@ const useNavigateForIframe = ({ path }: { path: string }) => {
       return;
     }
     if (!security) {
-      navigate(path);
+      const currentPath = location.pathname;
+      if (replaceCurrent) {
+        navigate(path, { replace: true });
+      } else {
+        navigate(path);
+      }
+      if (replaceCurrent && currentPath !== path) {
+        setTimeout(() => {
+          onCloseTab?.(currentPath);
+        }, 0);
+      }
     } else {
-      window.parent.location.href = path;
+      if (replaceCurrent) {
+        window.parent.location.replace(path);
+      } else {
+        window.parent.location.href = path;
+      }
     }
   };
 
