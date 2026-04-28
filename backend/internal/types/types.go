@@ -815,12 +815,17 @@ type GroupVO struct {
 }
 
 type HistoryValueRequest struct {
+	AliasList []string `json:"aliasList"`
+	TimeStart int64    `json:"timeStart"`
+	TimeEnd   int64    `json:"timeEnd"`
+	Limit     int      `json:"limit,optional"`
+	Order     string   `json:"order,optional"`
 }
 
 type HistoryValueResult struct {
-	Code int                   `json:"code"`
-	Msg  string                `json:"msg"`
-	Data UnsHistoryQueryResult `json:"data,optional"`
+	Code int                 `json:"code"`
+	Msg  string              `json:"msg"`
+	Data UnsHistoryQueryData `json:"data,optional"`
 }
 
 type HomePageReq struct {
@@ -1838,6 +1843,32 @@ type UnsExportParam struct {
 }
 
 type UnsHistoryQueryResult struct {
+	BaseResult
+	Data *UnsHistoryQueryData `json:"data,omitzero"`
+}
+
+type UnsHistoryQueryData struct {
+	Results     []*UnsHistoryFileResult `json:"results,omitempty"`
+	NotExists   []string                `json:"notExists,omitempty"`
+	ErrorFields map[string]string       `json:"errorFields,omitempty"`
+}
+
+type UnsHistoryFileResult struct {
+	Alias  string                  `json:"alias"`
+	Table  string                  `json:"table,omitempty"`
+	Fields []*UnsHistoryField      `json:"fields,omitempty"`
+	List   []*UnsHistoryValuePoint `json:"list,omitempty"`
+}
+
+type UnsHistoryField struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Unit string `json:"unit,omitempty"`
+}
+
+type UnsHistoryValuePoint struct {
+	Timestamp int64  `json:"timestamp"`
+	Payload   string `json:"payload"`
 }
 
 type UnsLabelListReq struct {
@@ -1978,10 +2009,11 @@ type UpdateTemplateDto struct {
 }
 
 type UpdateTemplateFieldsAndDescReq struct {
-	Alias       string         `json:"alias" validate:"omitempty,max=63,alias"`
-	Fields      []*FieldDefine `json:"fields,optional" validate:"min=1"`
-	JsonFields  []*FieldDefine `json:"jsonFields,optional,omitempty"`
-	Description *string        `json:"modelDescription,optional" validate:"omitempty,max=512"`
+	Alias            string         `json:"alias" validate:"omitempty,max=63,alias"`
+	Fields           []*FieldDefine `json:"fields,optional" validate:"min=1"`
+	JsonFields       []*FieldDefine `json:"jsonFields,optional,omitempty"`
+	Description      *string        `json:"description,optional" validate:"omitempty,max=512"`
+	ModelDescription *string        `json:"modelDescription,optional" validate:"omitempty,max=512"`
 }
 
 type UpdateTemplateSubscribeReq struct {

@@ -31,7 +31,9 @@ source "$CHANGE_IP_DIR/set-temp-env.sh" "$CHANGE_IP_DIR/../.." "$command"
 # The entrance address is baked into Kong's declarative config and Portainer's
 # OAuth redirect URI, so changing IP requires re-rendering Kong and re-running
 # the IAM/Portainer bootstrap steps after restart.
-source "$CHANGE_IP_DIR/../init/init-kong-property.sh" "$CHANGE_IP_DIR/../../" && cp "$CHANGE_IP_DIR/../../mount/kong/kong_config.yml" "$VOLUMES_PATH/kong/"
+source "$CHANGE_IP_DIR/../init/init-kong-property.sh" "$CHANGE_IP_DIR/../../" && cp "$CHANGE_IP_DIR/../../mount/kong/kong_config.yml" "$CHANGE_IP_DIR/../../mount/kong/start.sh" "$VOLUMES_PATH/kong/"
+sync_kong_output="$(bash "$CHANGE_IP_DIR/sync-kong-runtime-url.sh")"
+printf '%s\n' "$sync_kong_output"
 
 info "IP修改成功, 正在重启服务..."
 

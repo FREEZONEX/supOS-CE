@@ -559,8 +559,37 @@ type (
 	BatchQueryFileReq {
 		AliasList []string `json:"aliasList"`
 	}
-	HistoryValueRequest  {}
-	UnsHistoryQueryResult  {}
+	HistoryValueRequest {
+		AliasList []string `json:"aliasList"`
+		TimeStart int64 `json:"timeStart"`
+		TimeEnd int64 `json:"timeEnd"`
+		Limit int `json:"limit,optional"`
+		Order string `json:"order,optional"`
+	}
+	UnsHistoryQueryResult {
+		BaseResult
+		Data *UnsHistoryQueryData `json:"data,omitzero"`
+	}
+	UnsHistoryQueryData {
+		Results []UnsHistoryFileResult `json:"results,optional"`
+		NotExists []string `json:"notExists,optional"`
+		ErrorFields map[string]string `json:"errorFields,optional"`
+	}
+	UnsHistoryFileResult {
+		Alias string `json:"alias"`
+		Table string `json:"table,optional"`
+		Fields []UnsHistoryField `json:"fields,optional"`
+		List []UnsHistoryValuePoint `json:"list,optional"`
+	}
+	UnsHistoryField {
+		Name string `json:"name"`
+		Type string `json:"type"`
+		Unit string `json:"unit,optional"`
+	}
+	UnsHistoryValuePoint {
+		Timestamp int64 `json:"timestamp"`
+		Payload string `json:"payload"`
+	}
 	UpdateFileDTO {
 		Alias string                 `json:"alias"`
 		Data  map[string]interface{} `json:"data"`

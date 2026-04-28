@@ -38,6 +38,7 @@ type FlowCopyInput struct {
 	Description string
 	Template    string
 	GroupId     *int64
+	Creator     string
 }
 
 // CopyFlow clones the given flow and returns the created record.
@@ -64,6 +65,7 @@ func CopyFlow(
 		Template:    strings.TrimSpace(input.Template),
 		FlowStatus:  FlowStatusDraft,
 		GroupId:     input.GroupId,
+		Creator:     strings.TrimSpace(input.Creator),
 	}
 
 	sourceJSON, _, err := ResolveNodesJSON(ctx, client, "", src)

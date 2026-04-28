@@ -86,6 +86,9 @@ func (p *PgPersistentService) FillLastRecord(uns *types.UnsDefinition) {
 		return p.dbPool.Query(ctx, fmt.Sprintf(`select * from "%s" ORDER BY "%s" DESC LIMIT 1`, uns.Alias, uns.GetTimestampField()))
 	})
 }
+func (p *PgPersistentService) QueryHistory(ctx context.Context, uns types.UnsInfo, req *types.HistoryValueRequest) (*types.UnsHistoryFileResult, error) {
+	return QueryHistoryWithTable(ctx, p.dbPool, uns.GetTable(), uns, req)
+}
 func (p *PgPersistentService) Save(creates []types.UnsInfo) error {
 	return onCreate(p.log, p.dbPool, p.currentSchema, dsId, creates)
 }

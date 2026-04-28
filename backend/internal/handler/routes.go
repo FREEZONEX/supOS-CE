@@ -516,6 +516,48 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 创建 Flow
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: suposopen.OpenCreateSourceFlowHandler(serverCtx),
+			},
+			{
+				// 查询 Flow 列表
+				Method:  http.MethodGet,
+				Path:    "/",
+				Handler: suposopen.OpenListSourceFlowsHandler(serverCtx),
+			},
+			{
+				// 查询 Flow Data
+				Method:  http.MethodGet,
+				Path:    "/flowData",
+				Handler: suposopen.OpenGetSourceFlowDataHandler(serverCtx),
+			},
+			{
+				// 更新 Flow
+				Method:  http.MethodPut,
+				Path:    "/",
+				Handler: suposopen.OpenUpdateSourceFlowHandler(serverCtx),
+			},
+			{
+				// 部署 Flow
+				Method:  http.MethodPost,
+				Path:    "/deploy",
+				Handler: suposopen.OpenDeploySourceFlowHandler(serverCtx),
+			},
+			{
+				// 删除 Flow
+				Method:  http.MethodDelete,
+				Path:    "/",
+				Handler: suposopen.OpenDeleteSourceFlowHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/flow"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
 				// 模板实例附件上传
 				Method:  http.MethodPost,
 				Path:    "/attachment",

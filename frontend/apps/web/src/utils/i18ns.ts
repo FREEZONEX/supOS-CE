@@ -11,6 +11,8 @@ const localSources: { [x: string]: any } = {
   'en-US': localEnUS,
 };
 
+const publicI18nPaths = new Set(['/', '/403', '/404', '/freeLogin', '/share', LOGIN_URL, '/license-activation']);
+
 // antd 所有语言包
 const antSources: Record<string, () => Promise<any>> = {
   ar_EG: () => import('antd/es/locale/ar_EG'),
@@ -99,10 +101,7 @@ export const loadMessages = async (lang: I18n, options?: { skipRemoteMessages?: 
 
     // 尝试从 服务器加载语言包
     let backEndMessages = {};
-    const skipRemoteMessages =
-      options?.skipRemoteMessages ||
-      window.location.pathname === LOGIN_URL ||
-      window.location.pathname === '/freeLogin';
+    const skipRemoteMessages = options?.skipRemoteMessages || publicI18nPaths.has(window.location.pathname);
     if (!skipRemoteMessages) {
       try {
         const content = await getSystemI18Api(lang);

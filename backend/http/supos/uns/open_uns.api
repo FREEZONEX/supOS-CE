@@ -304,13 +304,13 @@ type (
         Definition []FieldDefine `json:"definition,optional"`
 
         // Persistence 是否持久化 默认false
-        Persistence bool `json:"persistence,optional,default=false"`
+        Persistence bool `json:"persistence,optional"`
 
         // DashBoard 是否生成仪表盘 默认false
-        DashBoard bool `json:"dashBoard,optional,default=false"`
+        DashBoard bool `json:"dashBoard,optional"`
 
         // AddFlow 是否模拟数据 默认false
-        AddFlow bool `json:"addFlow,optional,default=false"`
+        AddFlow bool `json:"addFlow,optional"`
 
         // Refers 引用对象 当dataType为计算、聚合、引用时必填
         Refers []InstanceField `json:"refers,optional"`
@@ -375,13 +375,13 @@ type (
         Definition []FieldDefine `json:"definition,optional"`
 
         // Persistence 是否持久化 默认false
-        Persistence bool `json:"persistence,optional,default=false"`
+        Persistence bool `json:"persistence,optional"`
 
         // DashBoard 是否生成仪表盘 默认false
-        DashBoard bool `json:"dashBoard,optional,default=false"`
+        DashBoard bool `json:"dashBoard,optional"`
 
         // AddFlow 是否模拟数据 默认false
-        AddFlow bool `json:"addFlow,optional,default=false"`
+        AddFlow bool `json:"addFlow,optional"`
 
         // Refers 引用对象 当dataType为计算、聚合、引用时必填
         Refers []InstanceField `json:"refers,optional"`
@@ -469,7 +469,7 @@ type (
         // Msg 错误信息
         Msg string `json:"msg"`
         // Data 历史值查询数据
-        Data UnsHistoryQueryResult `json:"data,optional"`
+        Data UnsHistoryQueryData `json:"data,optional"`
     }
 
     // TemplatePageResult 模板分页结果

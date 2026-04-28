@@ -4,43 +4,74 @@ set -e
 
 INIT_EVENTFLOW_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 source "$INIT_EVENTFLOW_DIR/../global/log.sh"
-
-times=5
+source "$INIT_EVENTFLOW_DIR/apply-nodered-debug-patch.sh"
 
 info "start to init eventflow modules ..."
 
-
-while (( times > 0 )); do
-    # 检查端口是否开启
-    if lsof -i :1889 > /dev/null 2>&1; then
-        break  # 端口开启后退出循环
-    else
-        (( times-- ))
-        sleep 5  # 等待5秒后重试
+ensure_container_running() {
+    local container="$1"
+    local status=""
+    status="$(docker inspect -f '{{.State.Status}}' "$container" 2>/dev/null || echo missing)"
+    if [ "$status" != "running" ]; then
+        warn "$container is not running yet (status=$status). Continuing package initialization."
     fi
-done
+    return 0
+}
 
+ensure_container_running eventflow
+modules_changed=0
+
+read_installed_package_version() {
+    local container="$1"
+    local package="$2"
+    docker exec "$container" sh -c "node -e \"try { process.stdout.write(require('/data/node_modules/${package}/package.json').version) } catch (e) { process.exit(1) }\"" 2>/dev/null
+}
+
+ensure_registry_package() {
+    local container="$1"
+    local package="$2"
+    local version="$3"
+    local label="${4:-$package}"
+    local current_version
+    current_version="$(read_installed_package_version "$container" "$package" || true)"
+    if [ "$current_version" = "$version" ]; then
+        info "$container package ${label}@${version} already installed, skipping."
+        return 0
+    fi
+    info "Installing $container package ${label}@${version}..."
+    if ! docker exec "$container" sh -c "cd /data && npm install --no-audit --offline ${package}@${version}"; then
+        error "node-red install ${label} failed!"
+        return 1
+    fi
+    modules_changed=1
+}
+
+ensure_optional_registry_package() {
+    local container="$1"
+    local package="$2"
+    local version="$3"
+    local label="${4:-$package}"
+    local current_version
+    current_version="$(read_installed_package_version "$container" "$package" || true)"
+    if [ "$current_version" = "$version" ]; then
+        info "$container package ${label}@${version} already installed, skipping."
+        return 0
+    fi
+    warn "Skipping optional $container package ${label}@${version}; it is not installed and offline cache may be incomplete."
+    return 0
+}
 
 # --verbose
 #docker exec eventflow sh -c "cd /data && npm install --no-audit --offline @supcon-international/node-red-dev-copilot@1.7.5" \
 #|| error "node-red install node-red-dev-copilot failed!"
-docker exec nodered sh -c "cd /data && npm install --no-audit --offline @supcon-international/node-red-mcp-server@1.3.4" \
-|| error "node-red install node-red-mcp-server failed!"
+ensure_registry_package nodered "@supcon-international/node-red-mcp-server" "1.3.4" "node-red-mcp-server"
 
-docker exec eventflow sh -c "npm install --no-audit --offline @flowfuse/node-red-dashboard@1.26.0" \
-|| error "node-red install node-red-dashboard failed!"
+ensure_optional_registry_package eventflow "@flowfuse/node-red-dashboard" "1.26.0" "node-red-dashboard"
 
-docker exec eventflow sh -c "cd /data && npm install --no-audit --offline factory-agent-actions@1.1.0" \
-|| error "node-red install factory-agent-actions failed!"
-
-docker exec eventflow sh -c "cd /data && npm install --no-audit --offline factory-agent-deepseek@1.1.1" \
-|| error "node-red install factory-agent-deepseek failed!"
-
-docker exec eventflow sh -c "cd /data && npm install --no-audit --offline factory-agent-gemini@1.0.6" \
-|| error "node-red install factory-agent-gemini failed!"
-
-docker exec eventflow sh -c "cd /data && npm install  --no-audit --offline factory-agent-states@1.1.8" \
-|| error "node-red install factory-agent-states failed!"
+ensure_registry_package eventflow "factory-agent-actions" "1.1.0"
+ensure_registry_package eventflow "factory-agent-deepseek" "1.1.1"
+ensure_registry_package eventflow "factory-agent-gemini" "1.0.6"
+ensure_registry_package eventflow "factory-agent-states" "1.1.8"
 
 #
 #docker exec eventflow sh -c "cd /data && npm install  --no-audit --offline node-red-contrib-modbus@5.43.0" \
@@ -68,8 +99,13 @@ docker exec eventflow sh -c "cd /data && npm install  --no-audit --offline facto
 #docker exec eventflow sh -c "cd /data && npm install --unsafe-perm /data/offline_modules/modules/node-xlsx-0.24.0.tgz"
 #docker exec eventflow sh -c "cd /data && npm install --unsafe-perm /data/offline_modules/modules/formidable-3.5.4.tgz"
 
-docker exec eventflow sh -c "cd /data && npm install --no-audit --offline node-red-contrib-postgresql@0.14.2" \
-|| error "node-red install postgresq failed!"
+ensure_registry_package eventflow "node-red-contrib-postgresql" "0.14.2" "postgresql"
 
+apply_nodered_debug_patch eventflow || error "eventflow apply debug patch failed!"
 
-docker restart eventflow >/dev/null
+if [ "$modules_changed" -eq 1 ]; then
+    info "EventFlow packages changed. Restarting eventflow..."
+    docker restart eventflow >/dev/null
+else
+    info "EventFlow packages already up to date. Skipping eventflow restart."
+fi

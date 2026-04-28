@@ -19,3 +19,4 @@ README_zh.md
 *.tmp
 *.temp
 images/*.tar
+bin/global/active-services.txt

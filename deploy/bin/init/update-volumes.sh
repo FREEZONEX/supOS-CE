@@ -19,15 +19,31 @@ find "$DEPLOY_ROOT/mount/grafana/data/plugins/" -type f -name "*.tar.gz" -exec t
 cp -r "$DEPLOY_ROOT/mount/grafana/data/plugins/"* "$VOLUMES_PATH/grafana/data/plugins/"
 cp -r "$DEPLOY_ROOT/mount/kong/"* "$VOLUMES_PATH/kong/"
 cp "$DEPLOY_ROOT/mount/emqx/config/"* "$VOLUMES_PATH/emqx/config/"
+mkdir -p "$VOLUMES_PATH/certs"
+mkdir -p "$VOLUMES_PATH/certs/tls"
+if [ ! -f "$VOLUMES_PATH/certs/tls/cert.pem" ]; then
+    if [ -f "$VOLUMES_PATH/kong/certificationfile/fullchain.cer" ]; then
+        cp "$VOLUMES_PATH/kong/certificationfile/fullchain.cer" "$VOLUMES_PATH/certs/tls/cert.pem"
+    elif [ -f "$DEPLOY_ROOT/mount/certs/tls/cert.pem" ]; then
+        cp "$DEPLOY_ROOT/mount/certs/tls/cert.pem" "$VOLUMES_PATH/certs/tls/cert.pem"
+    fi
+fi
+if [ ! -f "$VOLUMES_PATH/certs/tls/key.pem" ]; then
+    if [ -f "$VOLUMES_PATH/kong/certificationfile/private.key" ]; then
+        cp "$VOLUMES_PATH/kong/certificationfile/private.key" "$VOLUMES_PATH/certs/tls/key.pem"
+    elif [ -f "$DEPLOY_ROOT/mount/certs/tls/key.pem" ]; then
+        cp "$DEPLOY_ROOT/mount/certs/tls/key.pem" "$VOLUMES_PATH/certs/tls/key.pem"
+    fi
+fi
 
 mkdir -p "$VOLUMES_PATH/node-red"
 mkdir -p "$VOLUMES_PATH/node-red/offline_modules"
 mkdir -p "$VOLUMES_PATH/node-red/themes"
 mkdir -p "$VOLUMES_PATH/node-red/override"
 rm -rf "$VOLUMES_PATH/node-red/.npm" && cp -r "$DEPLOY_ROOT/mount/node-red/.npm" "$VOLUMES_PATH/node-red/"
+find "$DEPLOY_ROOT/mount/node-red" -maxdepth 1 -type f -exec cp {} "$VOLUMES_PATH/node-red/" \;
 cp -r "$DEPLOY_ROOT/mount/node-red/offline_modules/"* "$VOLUMES_PATH/node-red/offline_modules/"
 cp -r "$DEPLOY_ROOT/mount/node-red/themes/"* "$VOLUMES_PATH/node-red/themes/"
-#cp -r "$DEPLOY_ROOT/mount/node-red/override/"* "$VOLUMES_PATH/node-red/override/"
 cp -r "$DEPLOY_ROOT/mount/node-red/template" "$VOLUMES_PATH/node-red/"
 
 mkdir -p "$VOLUMES_PATH/eventflow/" && cp -r "$DEPLOY_ROOT/mount/eventflow/"* "$VOLUMES_PATH/eventflow/"
