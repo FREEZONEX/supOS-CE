@@ -111,6 +111,17 @@ export function useTabs() {
     setKeepAliveTabs([...keepAliveTabs]);
   });
 
+  const onRemoveTab = useMemoizedFn((routePath: string = activeTabRoutePath || '') => {
+    if (!keepAliveTabs?.length) {
+      return;
+    }
+    const index = (keepAliveTabs || []).findIndex((o) => o.routePath === routePath);
+    if (index === -1) return;
+
+    keepAliveTabs.splice(index, 1);
+    setKeepAliveTabs([...keepAliveTabs]);
+  });
+
   // 刷新tab
   const onRefreshTab = useMemoizedFn((routePath: string = activeTabRoutePath || '') => {
     setKeepAliveTabs((prev) => {
@@ -163,6 +174,7 @@ export function useTabs() {
     setTabs: setKeepAliveTabs,
     activeTabRoutePath,
     onCloseTab,
+    onRemoveTab,
     onRefreshTab,
     onCloseOtherTab,
   };

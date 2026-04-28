@@ -4,12 +4,14 @@ export interface TabsContextProps {
   onRefreshTab: (routePath?: string) => void;
   onCloseTab: (routePath?: string) => void;
   onCloseOtherTab: (routePath?: string) => void;
+  onRemoveTab: (routePath?: string) => void;
 }
 
 const defaultValue = {
   onRefreshTab: () => {},
   onCloseTab: () => {},
   onCloseOtherTab: () => {},
+  onRemoveTab: () => {},
 };
 
 export const TabsContext = createContext<{ current?: TabsContextProps }>({
@@ -22,5 +24,6 @@ export const useTabsContext = () => {
     onRefreshTab: a?.current?.onRefreshTab,
     onCloseTab: a?.current?.onCloseTab,
     onCloseOtherTab: a?.current?.onCloseOtherTab,
+    onRemoveTab: a?.current?.onRemoveTab,
   };
 };
