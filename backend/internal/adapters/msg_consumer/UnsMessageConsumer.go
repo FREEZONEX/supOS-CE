@@ -16,6 +16,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 	"unsafe"
@@ -30,6 +31,7 @@ type UnsMessageConsumer struct {
 	defService  serviceApi.IUnsDefinitionService
 	wsSender    serviceApi.IWebsocketSender
 	calcService UnsRealtimeCalcService
+	mqttOnce    sync.Once
 }
 
 func init() {
@@ -113,6 +115,7 @@ func (u *UnsMessageConsumer) OnMessageByAlias(ctx context.Context, alias, payloa
 		u.sendErrMsg(def, payload, err.Error())
 		return
 	}
+	ctx = context.WithValue(ctx, "payload", payload)
 	msgList := u.procDataAndSendWs(ctx, def, data, payload, nil)
 	u.sendData(ctx, msgList)
 }
@@ -167,7 +170,8 @@ func (u *UnsMessageConsumer) OnMessageByAliasOnUpdate(ctx context.Context, alias
 			u.log.Debugf("Unknown alias[%s]\n", alias)
 			continue
 		}
-		msgs = u.procDataAndSendWs(ctx, def, data, "", msgs)
+		msgCtx := context.WithValue(ctx, "payload", payload)
+		msgs = u.procDataAndSendWs(msgCtx, def, data, "", msgs)
 	}
 	u.sendData(ctx, msgs)
 }
@@ -198,19 +202,10 @@ func (u *UnsMessageConsumer) getWsSender() serviceApi.IWebsocketSender {
 }
 func procData(ctx context.Context, def *types.UnsDefinition, data []map[string]string) (list []map[string]string, errMsg string) {
 	if base.P2v(def.DataType) == constants.JsonbType {
-		getJsonField := func(df *types.UnsDefinition) string {
-			for _, f := range df.Fields {
-				if f.Type == types.FieldTypeString && !f.IsSystemField() {
-					return f.Name
-				}
-			}
-			return ""
-		}
-		jsonbFiled := getJsonField(def)
+		jsonbFiled := getJsonbField(def)
 		vm := data[0]
 		if val, has := vm[jsonbFiled]; !has {
-			bs, _ := json.Marshal(data)
-			vm = map[string]string{jsonbFiled: b2s(bs)}
+			vm = map[string]string{jsonbFiled: getRawJsonPayload(ctx, data)}
 		} else if vs := strings.TrimSpace(val); len(vs) == 0 || (vs[0] != '{' && vs[0] != '[') {
 			return nil, I18nUtils.GetMessageWithCtx(ctx, "uns.invalid.json")
 		}
@@ -224,6 +219,32 @@ func procData(ctx context.Context, def *types.UnsDefinition, data []map[string]s
 	}
 	list = setLastData(ctx, data, def)
 	return
+}
+
+func getJsonbField(def *types.UnsDefinition) string {
+	for _, f := range def.Fields {
+		if f.Name == constants.JsonbField {
+			return f.Name
+		}
+	}
+	for _, f := range def.Fields {
+		if f.Type == types.FieldTypeString && !f.IsSystemField() {
+			return f.Name
+		}
+	}
+	return constants.JsonbField
+}
+
+func getRawJsonPayload(ctx context.Context, data []map[string]string) string {
+	if payload, ok := ctx.Value("payload").(string); ok && strings.TrimSpace(payload) != "" {
+		return payload
+	}
+	if len(data) == 1 {
+		bs, _ := json.Marshal(data[0])
+		return string(bs)
+	}
+	bs, _ := json.Marshal(data)
+	return string(bs)
 }
 
 func setLastData(ctx context.Context, list []map[string]string, def *types.UnsDefinition) []map[string]string {
@@ -353,24 +374,26 @@ func mergeBeansWithTimestamp(ctx context.Context, list []map[string]string, CT s
 func (u *UnsMessageConsumer) OnEventContextRefreshedEvent10(ev *event.ContextRefreshedEvent) {
 	u.defService = spring.GetBean[*UnsDefinitionService]()
 	if sv := ev.SvcContext; sv != nil && len(sv.Config.DevLink.Mqtt.Brokers) > 0 && sv.Config.DevLink.Mode == "mqtt" {
-		go func() {
-			cli, er := subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)
-			if er != nil {
-				u.log.Errorf("NewMqttClient(%v) failed", er)
-				for i := int64(5); ; i <<= 1 {
-					if i < 0 {
-						i = 60
-					}
-					time.Sleep(time.Duration(i) * time.Second)
-					cli, er = subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)
-					if cli != nil && er == nil {
-						break
+		u.mqttOnce.Do(func() {
+			go func() {
+				cli, er := subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)
+				if er != nil {
+					u.log.Errorf("NewMqttClient(%v) failed", er)
+					for i := int64(5); ; i <<= 1 {
+						if i < 0 {
+							i = 60
+						}
+						time.Sleep(time.Duration(i) * time.Second)
+						cli, er = subDev.NewMqttClient(&sv.Config.DevLink.Mqtt, u)
+						if cli != nil && er == nil {
+							break
+						}
 					}
 				}
-			}
-			if cli != nil {
-				_ = cli.SubscribeAll()
-			}
-		}()
+				if cli != nil {
+					_ = cli.SubscribeAll()
+				}
+			}()
+		})
 	}
 }
