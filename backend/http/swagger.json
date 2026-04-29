@@ -4015,6 +4015,103 @@
         "title": "MountDetailVo",
         "type": "object"
       },
+      "OAuthAuthorizeReq": {
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string"
+          },
+          "response_type": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "response_type",
+          "client_id",
+          "redirect_uri"
+        ],
+        "title": "OAuthAuthorizeReq",
+        "type": "object"
+      },
+      "OAuthTokenReq": {
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "client_secret": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "grant_type": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "redirect_uri",
+          "client_id"
+        ],
+        "title": "OAuthTokenReq",
+        "type": "object"
+      },
+      "OAuthTokenResp": {
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "expires_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "token_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "expires_in"
+        ],
+        "title": "OAuthTokenResp",
+        "type": "object"
+      },
+      "OAuthUserInfoResp": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "preferred_username": {
+            "type": "string"
+          },
+          "sub": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sub"
+        ],
+        "title": "OAuthUserInfoResp",
+        "type": "object"
+      },
       "OpenSourceFlowCreateReq": {
         "properties": {
           "description": {
@@ -7248,6 +7345,10 @@
             "maxLength": 63,
             "type": "string"
           },
+          "description": {
+            "maxLength": 512,
+            "type": "string"
+          },
           "fields": {
             "items": {
               "$ref": "#/components/schemas/FieldDefine"
@@ -8038,6 +8139,235 @@
         "tags": [
           "supos/nodered",
           "suposNodered"
+        ]
+      }
+    },
+    "/inter-api/iam/oauth2/authorize": {
+      "get": {
+        "operationId": "getInter-apiIamOauth2Authorize",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "response_type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redirect_uri",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "default": "200",
+                      "title": "返回code",
+                      "type": "integer"
+                    },
+                    "msg": {
+                      "title": "返回的消息",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response."
+          }
+        },
+        "summary": "oauth authorize endpoint",
+        "tags": [
+          "iam/oauth",
+          "iamOauth"
+        ]
+      }
+    },
+    "/inter-api/iam/oauth2/logout": {
+      "post": {
+        "operationId": "postInter-apiIamOauth2Logout",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "default": "200",
+                      "title": "返回code",
+                      "type": "integer"
+                    },
+                    "msg": {
+                      "title": "返回的消息",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response."
+          }
+        },
+        "summary": "oauth logout endpoint",
+        "tags": [
+          "iam/oauth",
+          "iamOauth"
+        ]
+      }
+    },
+    "/inter-api/iam/oauth2/token": {
+      "post": {
+        "operationId": "postInter-apiIamOauth2Token",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "grant_type",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redirect_uri",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_secret",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthTokenReq"
+              }
+            }
+          },
+          "required": true,
+          "x-originalParamName": "body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "default": "200",
+                      "title": "返回code",
+                      "type": "integer"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OAuthTokenResp"
+                    },
+                    "msg": {
+                      "title": "返回的消息",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response."
+          }
+        },
+        "summary": "oauth token endpoint",
+        "tags": [
+          "iam/oauth",
+          "iamOauth"
+        ]
+      }
+    },
+    "/inter-api/iam/oauth2/userinfo": {
+      "get": {
+        "operationId": "getInter-apiIamOauth2Userinfo",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "default": "200",
+                      "title": "返回code",
+                      "type": "integer"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OAuthUserInfoResp"
+                    },
+                    "msg": {
+                      "title": "返回的消息",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response."
+          }
+        },
+        "summary": "oauth user info endpoint",
+        "tags": [
+          "iam/oauth",
+          "iamOauth"
         ]
       }
     },

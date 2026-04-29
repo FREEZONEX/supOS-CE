@@ -1,0 +1,60 @@
+syntax = "v1"
+
+info(
+    title: "iam oauth"
+    version: "v1"
+)
+
+@server(
+    group: iam/oauth
+    prefix: /inter-api/iam/oauth2
+)
+service backend {
+    @doc "oauth authorize endpoint"
+    @handler authorize
+    get /authorize (OAuthAuthorizeReq) returns ()
+
+    @doc "oauth token endpoint"
+    @handler token
+    post /token (OAuthTokenReq) returns (OAuthTokenResp)
+
+    @doc "oauth user info endpoint"
+    @handler userInfo
+    get /userinfo () returns (OAuthUserInfoResp)
+
+    @doc "oauth logout endpoint"
+    @handler logout
+    post /logout () returns ()
+}
+
+type (
+    OAuthAuthorizeReq {
+        ResponseType string `form:"response_type"`
+        ClientID     string `form:"client_id"`
+        RedirectURI  string `form:"redirect_uri"`
+        Scope        string `form:"scope,optional"`
+        State        string `form:"state,optional"`
+    }
+
+    OAuthTokenReq {
+        GrantType    string `form:"grant_type,optional"`
+        Code         string `form:"code"`
+        RedirectURI  string `form:"redirect_uri"`
+        ClientID     string `form:"client_id"`
+        ClientSecret string `form:"client_secret,optional"`
+    }
+
+    OAuthTokenResp {
+        AccessToken string `json:"access_token"`
+        TokenType   string `json:"token_type"`
+        ExpiresIn   int64  `json:"expires_in"`
+        Scope       string `json:"scope,optional"`
+    }
+
+    OAuthUserInfoResp {
+        Sub               string `json:"sub"`
+        PreferredUsername string `json:"preferred_username,optional"`
+        Email             string `json:"email,optional"`
+        Name              string `json:"name,optional"`
+    }
+)

@@ -276,7 +276,8 @@ func ProcessFieldDefines(ctx context.Context, jdbcType types.SrcJdbcType, fields
 		var nonSysFields []*types.FieldDefine
 
 		for _, f := range processedFields {
-			if !f.IsSystemField() {
+			// JSONB uses a reserved-looking column name, but it is the payload storage column.
+			if !f.IsSystemField() || f.Name == constants.JsonbField {
 				nonSysFields = append(nonSysFields, f)
 			} else if f.Type == types.FieldTypeDatetime {
 				ct = f

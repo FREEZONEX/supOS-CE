@@ -83,7 +83,7 @@ func QueryHistoryWithTable(ctx context.Context, dbPool *pgxpool.Pool, queryTable
 		Alias:  uns.GetAlias(),
 		Table:  queryTable,
 		Fields: buildHistoryFields(selectedFields),
-		List:   make([]*types.UnsHistoryValuePoint, 0),
+		List:   make([]types.UnsHistoryValuePoint, 0),
 	}
 
 	for rows.Next() {
@@ -113,7 +113,7 @@ func QueryHistoryWithTable(ctx context.Context, dbPool *pgxpool.Pool, queryTable
 			return nil, err
 		}
 
-		result.List = append(result.List, &types.UnsHistoryValuePoint{
+		result.List = append(result.List, types.UnsHistoryValuePoint{
 			Timestamp: timestamp.UnixMilli(),
 			Payload:   string(payloadBytes),
 		})
@@ -191,13 +191,13 @@ func buildHistorySelectColumns(uns types.UnsInfo, availableColumns map[string]st
 	return columns, selectedFields
 }
 
-func buildHistoryFields(fieldDefines []*types.FieldDefine) []*types.UnsHistoryField {
-	fields := make([]*types.UnsHistoryField, 0, len(fieldDefines))
+func buildHistoryFields(fieldDefines []*types.FieldDefine) []types.UnsHistoryField {
+	fields := make([]types.UnsHistoryField, 0, len(fieldDefines))
 	for _, field := range fieldDefines {
 		if field == nil {
 			continue
 		}
-		item := &types.UnsHistoryField{
+		item := types.UnsHistoryField{
 			Name: field.Name,
 			Type: field.Type,
 		}

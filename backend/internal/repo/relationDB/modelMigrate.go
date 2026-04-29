@@ -60,6 +60,7 @@ func Migrate(c conf.Database) error {
 	addPrimaryKeyForFlowUnsLink(db)
 	var unsDao UnsNamespaceRepo
 	unsDao.migrate(db)
+	repairJsonbUnsFields(db)
 	if !db.Migrator().HasTable(&UnsNamespace{}) {
 		//需要初始化表
 		NeedInitColumn = true
@@ -85,6 +86,66 @@ func Migrate(c conf.Database) error {
 
 	return err
 }
+
+func repairJsonbUnsFields(db *gorm.DB) {
+	if db == nil {
+		return
+	}
+	sql := `
+DO $$
+DECLARE
+    rec RECORD;
+    fields_json JSONB;
+    changed BOOLEAN;
+BEGIN
+    FOR rec IN
+        SELECT id, alias, fields
+        FROM uns_namespace
+        WHERE path_type = 2 AND data_type = 8
+    LOOP
+        fields_json := COALESCE(rec.fields::jsonb, '[]'::jsonb);
+        IF jsonb_typeof(fields_json) <> 'array' THEN
+            fields_json := '[]'::jsonb;
+        END IF;
+        changed := FALSE;
+
+        IF NOT EXISTS (
+            SELECT 1 FROM jsonb_array_elements(fields_json) AS f
+            WHERE f->>'name' = '_timestamp'
+        ) THEN
+            fields_json := fields_json || '[{"name":"_timestamp","type":"DATETIME","systemField":true}]'::jsonb;
+            changed := TRUE;
+        END IF;
+
+        IF NOT EXISTS (
+            SELECT 1 FROM jsonb_array_elements(fields_json) AS f
+            WHERE f->>'name' = '_json'
+        ) THEN
+            fields_json := fields_json || '[{"name":"_json","type":"STRING"}]'::jsonb;
+            changed := TRUE;
+        END IF;
+
+        IF NOT EXISTS (
+            SELECT 1 FROM jsonb_array_elements(fields_json) AS f
+            WHERE f->>'name' = '_id'
+        ) THEN
+            fields_json := fields_json || '[{"name":"_id","type":"LONG","unique":true,"systemField":true}]'::jsonb;
+            changed := TRUE;
+        END IF;
+
+        IF changed THEN
+            UPDATE uns_namespace SET fields = fields_json::json WHERE id = rec.id;
+        END IF;
+
+        EXECUTE format('ALTER TABLE IF EXISTS public.%I ADD COLUMN IF NOT EXISTS %I jsonb', rec.alias, '_json');
+    END LOOP;
+END $$;
+`
+	if err := db.Exec(sql).Error; err != nil {
+		log.Println("SQL WARN:", err, "repair jsonb uns fields")
+	}
+}
+
 func addPrimaryKeyForFlowUnsLink(db *gorm.DB) {
 	sql := `-- 检查是否已存在主键
 BEGIN;

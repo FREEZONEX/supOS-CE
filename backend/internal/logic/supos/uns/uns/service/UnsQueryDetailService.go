@@ -145,6 +145,9 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file types.UnsInfo,
 		dto.SetAccessLevel(constants.WithReadOnly(flags))
 	}
 	dto.SetProtocol(file.GetProtocolMap())
+	if dataType := file.GetDataType(); dataType != nil && *dataType == constants.JsonbType {
+		setJsonFieldsFallback(dto)
+	}
 	// 设置标签列表
 	if labelIds := file.GetLabelIds(); len(labelIds) > 0 {
 		if db == nil {
@@ -172,6 +175,15 @@ func (l *UnsQueryService) setDetailInfo(ctx context.Context, file types.UnsInfo,
 		}
 	}
 }
+
+func setJsonFieldsFallback(dto bo.UnsDetail) {
+	detail, ok := dto.(*types.InstanceDetail)
+	if !ok || len(detail.JsonFields) > 0 || len(detail.Fields) == 0 {
+		return
+	}
+	detail.JsonFields = detail.Fields
+}
+
 func getDisplayFields(unsInfo types.UnsInfo, fields []*types.FieldDefine) []*types.FieldDefine {
 	dataType := unsInfo.GetDataType()
 	if dataType == nil {

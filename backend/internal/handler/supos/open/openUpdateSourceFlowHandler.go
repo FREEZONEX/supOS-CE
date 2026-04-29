@@ -20,7 +20,11 @@ func OpenUpdateSourceFlowHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		err := sourceflow.NewUpdateSourceFlowLogic(r.Context(), svcCtx).UpdateSourceFlow(&req)
+		err := sourceflow.NewUpdateSourceFlowLogic(r.Context(), svcCtx).UpdateSourceFlow(&types.SourceFlowUpdateReq{
+			ID:          req.ID,
+			FlowName:    req.FlowName,
+			Description: req.Description,
+		})
 		result.Http(w, r, nil, err)
 	}
 }

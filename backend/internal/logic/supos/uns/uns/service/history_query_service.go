@@ -36,7 +36,7 @@ func (s *HistoryQueryService) Query(ctx context.Context, req *types.HistoryValue
 	}
 
 	data := &types.UnsHistoryQueryData{
-		Results:     make([]*types.UnsHistoryFileResult, 0, len(aliasList)),
+		Results:     make([]types.UnsHistoryFileResult, 0, len(aliasList)),
 		NotExists:   make([]string, 0),
 		ErrorFields: make(map[string]string),
 	}
@@ -52,7 +52,7 @@ func (s *HistoryQueryService) Query(ctx context.Context, req *types.HistoryValue
 			data.ErrorFields[alias] = err.Error()
 			continue
 		}
-		data.Results = append(data.Results, result)
+		data.Results = append(data.Results, *result)
 	}
 
 	if len(data.NotExists) == 0 {

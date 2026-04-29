@@ -20,7 +20,12 @@ func OpenCreateSourceFlowHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		resp, err := sourceflow.NewCreateSourceFlowLogic(r.Context(), svcCtx).CreateSourceFlow(&req)
+		resp, err := sourceflow.NewCreateSourceFlowLogic(r.Context(), svcCtx).CreateSourceFlow(&types.SourceFlowCreateReq{
+			FlowName:    req.FlowName,
+			Description: req.Description,
+			Template:    req.Template,
+			GroupId:     req.GroupId,
+		})
 		result.Http(w, r, resp, err)
 	}
 }

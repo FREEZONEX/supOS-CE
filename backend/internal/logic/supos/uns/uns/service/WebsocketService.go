@@ -10,7 +10,6 @@ import (
 	"backend/share/base"
 	"backend/share/spring"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/url"
 	"strconv"
@@ -513,11 +512,7 @@ func processWsMsg(message serviceApi.WebsocketMessage) []byte {
 					data[ct] = info.UpdateTime
 				}
 			} else if base.P2v(message.Def.DataType) == constants.JsonbType {
-				if jsonS, has := data["json"]; has {
-					str, isStr := jsonS.(string)
-					if !isStr {
-						str = fmt.Sprint(jsonS)
-					}
+				if str, has := data[constants.JsonbField].(string); has {
 					var dMap map[string]any
 					ers := json.Unmarshal([]byte(str), &dMap)
 					if ers == nil {
