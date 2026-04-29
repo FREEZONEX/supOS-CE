@@ -20,7 +20,10 @@ func OpenDeploySourceFlowHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		resp, err := sourceflow.NewDeploySourceFlowLogic(r.Context(), svcCtx).DeploySourceFlow(&req)
+		resp, err := sourceflow.NewDeploySourceFlowLogic(r.Context(), svcCtx).DeploySourceFlow(&types.SourceFlowDeployReq{
+			ID:    req.ID,
+			Flows: req.Flows,
+		})
 		result.Http(w, r, resp, err)
 	}
 }

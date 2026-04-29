@@ -20,7 +20,9 @@ func OpenDeleteSourceFlowHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		err := sourceflow.NewDeleteSourceFlowLogic(r.Context(), svcCtx).DeleteSourceFlow(&req)
+		err := sourceflow.NewDeleteSourceFlowLogic(r.Context(), svcCtx).DeleteSourceFlow(&types.SourceFlowDeleteReq{
+			ID: req.ID,
+		})
 		result.Http(w, r, nil, err)
 	}
 }

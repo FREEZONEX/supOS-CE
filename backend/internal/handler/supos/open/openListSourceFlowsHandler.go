@@ -20,7 +20,13 @@ func OpenListSourceFlowsHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		resp, err := sourceflow.NewListSourceFlowsLogic(r.Context(), svcCtx).ListSourceFlows(&req)
+		resp, err := sourceflow.NewListSourceFlowsLogic(r.Context(), svcCtx).ListSourceFlows(&types.SourceFlowListQuery{
+			Keyword:   req.Keyword,
+			OrderCode: req.OrderCode,
+			IsAsc:     req.IsAsc,
+			PageNo:    req.PageNo,
+			PageSize:  req.PageSize,
+		})
 		result.HttpWithoutWrap(w, r, resp, err)
 	}
 }
