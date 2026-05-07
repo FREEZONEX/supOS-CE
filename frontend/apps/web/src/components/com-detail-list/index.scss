@@ -14,6 +14,12 @@
 
     .item-content {
       flex: 1;
+
+      .ant-typography-edit-content {
+        inset-inline-start: 0;
+        inset-block-start: 0;
+        margin-bottom: 0;
+      }
     }
   }
 }

@@ -3,6 +3,7 @@ package relationDB
 import (
 	"backend/internal/types"
 	"context"
+	"strconv"
 	"time"
 
 	"gitee.com/unitedrhino/share/errors"
@@ -223,6 +224,17 @@ func (m *GroupMapper) CleanBizGroupById(db *gorm.DB, groupId int64, groupType *i
 
 // OperationGroup 操作分组数据（移入移出）
 func (m *GroupMapper) OperationGroup(db *gorm.DB, req *types.OperationGroupReq) error {
+	if req == nil || req.BizId == nil || req.Status == nil {
+		return errors.Parameter
+	}
+
+	if !*req.Status {
+		return m.moveBizToRoot(db, *req.BizId)
+	}
+
+	if req.ID == nil {
+		return errors.Parameter
+	}
 	// 查询分组信息
 	var group GroupModel
 	err := db.Where("id = ?", *req.ID).First(&group).Error
@@ -275,6 +287,33 @@ func (m *GroupMapper) OperationGroup(db *gorm.DB, req *types.OperationGroupReq) 
 }
 
 // 根据name查询 Group
+func (m *GroupMapper) moveBizToRoot(db *gorm.DB, bizID string) error {
+	if _, err := strconv.ParseInt(bizID, 10, 64); err == nil {
+		res := db.Exec(
+			"UPDATE supos_node_flows SET group_id = NULL WHERE id = ? AND template IN (?, ?)",
+			bizID, TemplateTypeSrcFlow, TemplateTypeEventFlow,
+		)
+		if res.Error != nil {
+			logx.Errorf("failed to move flow to root: %v", res.Error)
+			return res.Error
+		}
+		if res.RowsAffected > 0 {
+			return nil
+		}
+	}
+
+	res := db.Exec("UPDATE uns_dashboard SET group_id = NULL WHERE id = ?", bizID)
+	if res.Error != nil {
+		logx.Errorf("failed to move dashboard to root: %v", res.Error)
+		return res.Error
+	}
+	if res.RowsAffected > 0 {
+		return nil
+	}
+
+	return errors.NotFind
+}
+
 func (m *GroupMapper) SelectByName(db *gorm.DB, name string, typ int16) ([]*GroupModel, error) {
 	var groups []*GroupModel
 	err := db.Where("name = ? and type = ? ", name, typ).Find(&groups).Error
@@ -286,7 +325,7 @@ func (m *GroupMapper) SelectByName(db *gorm.DB, name string, typ int16) ([]*Grou
 }
 
 // 根据name查询 Group not id equals
-func (m *GroupMapper) SelectByNameNotId(db *gorm.DB, id int64, name string , typ int16) ([]*GroupModel, error) {
+func (m *GroupMapper) SelectByNameNotId(db *gorm.DB, id int64, name string, typ int16) ([]*GroupModel, error) {
 	var groups []*GroupModel
 	err := db.Where("name = ? and type = ?", name, typ).Where("id != ?", id).Find(&groups).Error
 	if err != nil {

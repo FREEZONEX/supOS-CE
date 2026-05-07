@@ -67,6 +67,22 @@ func (r *AuthRepo) GetUserByUsername(username string) (*relationDB.IamUser, erro
 	return &user, nil
 }
 
+func (r *AuthRepo) GetDisplayNamesByUsernames(usernames []string) (map[string]string, error) {
+	if len(usernames) == 0 {
+		return nil, nil
+	}
+	var users []relationDB.IamUser
+	err := r.db.Select("username, display_name").Where("username IN ?", usernames).Find(&users).Error
+	if err != nil {
+		return nil, stores.ErrFmt(err)
+	}
+	result := make(map[string]string, len(users))
+	for _, u := range users {
+		result[u.Username] = u.DisplayName
+	}
+	return result, nil
+}
+
 func (r *AuthRepo) GetSession(sessionID string) (*relationDB.IamSession, error) {
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {

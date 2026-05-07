@@ -100,6 +100,11 @@
   .ant-pagination-item-active a {
     color: var(--supos-theme-color) !important;
   }
+
+  .ant-pagination-options .ant-select-dropdown {
+    max-height: 150px;
+    overflow: auto;
+  }
 }
 
 .ant-table-cell.ant-table-cell-scrollbar .react-resizable-line {
