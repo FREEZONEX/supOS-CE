@@ -4,6 +4,7 @@
 package sourceflow
 
 import (
+	"backend/internal/repo/iam"
 	"backend/internal/repo/relationDB"
 	"backend/internal/svc"
 	"backend/internal/types"
@@ -55,6 +56,25 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 
 	// 转换为前端需要的格式
 	var groupVOList []types.GroupFlowVO
+
+	// 批量查询 creator 显示名
+	creatorSet := make(map[string]struct{})
+	for _, item := range items {
+		if item.Creator != "" {
+			creatorSet[item.Creator] = struct{}{}
+		}
+	}
+	usernames := make([]string, 0, len(creatorSet))
+	for u := range creatorSet {
+		usernames = append(usernames, u)
+	}
+	displayNameMap := make(map[string]string)
+	if len(usernames) > 0 {
+		if authRepo, aErr := iam.NewAuthRepo(l.ctx); aErr == nil {
+			displayNameMap, _ = authRepo.GetDisplayNamesByUsernames(usernames)
+		}
+	}
+
 	for _, item := range items {
 		groupFlowVO := types.GroupFlowVO{}
 		//存在分组
@@ -66,6 +86,9 @@ func (l *GetGroupedSourceFlowListLogic) GetGroupedSourceFlowList(req *types.Grou
 		groupFlowVO.Sort = item.Sort
 		groupFlowVO.CreateAt = item.CreateAt.UnixMilli()
 		groupFlowVO.Creator = item.Creator
+		if dn := displayNameMap[item.Creator]; dn != "" {
+			groupFlowVO.Creator = dn
+		}
 		groupFlowVO.FlowName = item.FlowName
 		groupFlowVO.FlowID = item.FlowID
 		groupFlowVO.FlowStatus = item.FlowStatus

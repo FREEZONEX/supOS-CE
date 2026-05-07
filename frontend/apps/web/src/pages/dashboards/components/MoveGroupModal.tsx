@@ -18,19 +18,18 @@ export interface MoveGroupModalProps {
 const MoveGroupModal = forwardRef<MoveGroupModalRef, MoveGroupModalProps>(({ refreshRequest }, ref) => {
   const [visible, setVisible] = useState(false);
   const [type, setType] = useState(1);
-  const [oldId, setOldId] = useState('5');
+  const [oldId, setOldId] = useState('0');
   const formatMessage = useTranslate();
   const [form] = Form.useForm();
   const { message } = App.useApp();
 
   const onOpen = (type: number, props: any) => {
+    const currentGroupId = props?.id ? props.id + '' : '0';
     form.setFieldsValue({
       ...props,
-      id: props?.id ? props.id + '' : '-9999',
+      id: currentGroupId === '0' ? '-9999' : currentGroupId,
     });
-    if (props.id) {
-      setOldId(props.id);
-    }
+    setOldId(currentGroupId);
     setType(type);
     setVisible(true);
   };

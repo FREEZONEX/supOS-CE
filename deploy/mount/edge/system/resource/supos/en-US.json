@@ -486,7 +486,7 @@
   "uns.nameFormat": "Only supports Chinese characters, letters, numbers, underscores (_), and hyphens (-)",
   "uns.pleaseInputNamespace": "Please enter namespace",
   "uns.modelFormat": "No special characters supported",
-  "uns.pleaseInputKeyName": "Please enter key",
+  "uns.pleaseInputKeyName": "Please enter key name",
   "uns.pleaseSelectKeyType": "Please select type",
   "uns.keyNameFormat": "Starts with a letter, followed by letters or digits or underscores",
   "uns.pleaseInputValue": "Please enter value",

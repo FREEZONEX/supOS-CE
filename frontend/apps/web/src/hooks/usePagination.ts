@@ -27,7 +27,7 @@ interface UsePaginationParams {
 const usePagination = <T>({
   initPageSize = 20,
   initPage = 1,
-  initPageSizes = [10, 20, 30, 50, 100],
+  initPageSizes: _initPageSizes = [10, 20, 30, 50, 100],
   fetchApi,
   defaultParams = {},
   firstNotGetData,
@@ -38,6 +38,9 @@ const usePagination = <T>({
   defaultSort = {},
   appendData = false,
 }: UsePaginationParams) => {
+  const initPageSizes = _initPageSizes.includes(initPageSize)
+    ? _initPageSizes
+    : [..._initPageSizes, initPageSize].sort((a, b) => a - b);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const firstUpdate = useRef(firstNotGetData === true);
