@@ -29,6 +29,7 @@
 
 ### UI 开发
 
+- UI 开发前必须阅读 [`DESIGN.md`](./DESIGN.md)，了解颜色体系、组件规范与布局原则。
 - 还原截图/设计稿时，**必须先调用 `match-screenshot-colors` skill** 映射颜色到 CSS 变量。
 - 颜色必须使用 `var(--supos-*)` CSS 变量，禁止硬编码色值（`#161616`、`#f4f4f4` 等）。
 - 优先使用应用级语义变量（`--supos-*`，定义于 `apps/web/src/index.scss :root`），禁止直接使用主题级变量（`--supos-t-*`）。
