@@ -4,7 +4,6 @@ set -e
 
 INIT_NODERED_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 source "$INIT_NODERED_DIR/../global/log.sh"
-source "$INIT_NODERED_DIR/apply-nodered-debug-patch.sh"
 
 info "start to init nodered modules ..."
 
@@ -94,8 +93,6 @@ ensure_registry_package nodered "node-red-contrib-buffer-parser" "3.2.2" "buffer
 ensure_local_tgz_package nodered "node-xlsx" "0.24.0" "/data/offline_modules/modules/node-xlsx-0.24.0.tgz"
 ensure_local_tgz_package nodered "formidable" "3.5.4" "/data/offline_modules/modules/formidable-3.5.4.tgz"
 ensure_registry_package nodered "node-red-contrib-postgresql" "0.14.2" "postgresql"
-
-apply_nodered_debug_patch nodered || error "node-red apply debug patch failed!"
 
 if [ "$modules_changed" -eq 1 ]; then
     info "Node-RED packages changed. Restarting nodered..."
