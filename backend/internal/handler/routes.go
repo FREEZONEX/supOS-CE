@@ -898,6 +898,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: supossourceflowservice_api.BatchSourceFlowByAliasesHandler(serverCtx),
 			},
 			{
+				// List missing Node-RED nodes across all source flow tabs
+				Method:  http.MethodGet,
+				Path:    "/proxy/missing-nodes",
+				Handler: supossourceflowservice_api.ListMissingNodeRedNodesHandler(serverCtx),
+			},
+			{
+				// Delete one missing Node-RED node by id and location
+				Method:  http.MethodDelete,
+				Path:    "/proxy/missing-nodes",
+				Handler: supossourceflowservice_api.DeleteMissingNodeRedNodeHandler(serverCtx),
+			},
+			{
 				// Proxy Node-RED /flows endpoint using cookie scoped id
 				Method:  http.MethodGet,
 				Path:    "/proxy/flows",

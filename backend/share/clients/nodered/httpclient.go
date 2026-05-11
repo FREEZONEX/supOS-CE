@@ -69,7 +69,34 @@ func (c Client) DoJSON(ctx context.Context, method, path string, reqBody any, ou
 	if resp != nil {
 		code = resp.StatusCode
 	} else {
-		errs = append(errs, fmt.Errorf("nodered DELETE no response: %s", c.url(path)))
+		errs = append(errs, fmt.Errorf("nodered no response: %s", c.url(path)))
+	}
+	return code, []byte(body), errs
+}
+
+func (c Client) DoBytes(ctx context.Context, method, path string, reqBody any) (int, []byte, []error) {
+	greq := gorequest.New().Retry(c.Retry, time.Second*2).Timeout(c.Timeout)
+	logx.WithContext(ctx).Debugf("nodered %s %s", method, c.url(path))
+	var resp gorequest.Response
+	var body []byte
+	var errs []error
+	switch strings.ToUpper(method) {
+	case "GET":
+		resp, body, errs = greq.Get(c.url(path)).EndBytes()
+	case "POST":
+		resp, body, errs = greq.Post(c.url(path)).Send(reqBody).EndBytes()
+	case "PUT":
+		resp, body, errs = greq.Put(c.url(path)).Send(reqBody).EndBytes()
+	case "DELETE":
+		resp, body, errs = greq.Delete(c.url(path)).EndBytes()
+	default:
+		errs = append(errs, fmt.Errorf("unsupported method: %s", method))
+	}
+	code := 0
+	if resp != nil {
+		code = resp.StatusCode
+	} else {
+		errs = append(errs, fmt.Errorf("nodered no response: %s", c.url(path)))
 	}
 	return code, []byte(body), errs
 }
@@ -85,5 +112,11 @@ func (c *Client) GetVersionRevV2(ctx context.Context, out any) (int, []byte, []e
 	url := c.url("/flows")
 	logx.WithContext(ctx).Debugf("nodered GET %s (v2)", url)
 	resp, body, errs := greq.Get(url).Set("node-red-api-version", "v2").EndStruct(out)
-	return resp.StatusCode, []byte(body), errs
+	code := 0
+	if resp != nil {
+		code = resp.StatusCode
+	} else {
+		errs = append(errs, fmt.Errorf("nodered no response: %s", url))
+	}
+	return code, []byte(body), errs
 }

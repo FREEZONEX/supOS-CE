@@ -50,6 +50,13 @@ func (l *SaveSourceFlowJsonLogic) SaveFlowJsonWithType(req *types.SourceFlowSave
 	}
 	var flowData string
 	if len(req.Flows) > 0 {
+		client := l.svcCtx.SourceNodeRed
+		if strings.TrimSpace(flowType) == constants.FlowTypeEVENTFLOW {
+			client = l.svcCtx.EventNodeRed
+		}
+		if err := flowcommon.ValidateNoMissingNodeTypes(l.ctx, client, req.Flows); err != nil {
+			return err
+		}
 		data, err := json.Marshal(req.Flows)
 		if err != nil {
 			return errors.Parameter.WithMsg("nodered.invalid.parameter")

@@ -33,24 +33,10 @@ func NewProxySourceFlowsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *ProxySourceFlowsLogic) ProxySourceFlows(flowID string) (string, error) {
-	primaryID := strings.TrimSpace(flowID)
-	if primaryID == "" {
-		return "", errors.Parameter.WithMsg("nodered.flowId.not.exist")
-	}
-	id, err := strconv.ParseInt(primaryID, 10, 64)
-	if err != nil || id <= 0 {
-		return "", errors.Parameter.WithMsg("nodered.invalid.parameter")
-	}
-
-	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
-	flow, err := repo.FindOne(l.ctx, id)
+	flow, err := l.resolveSourceFlow(flowID)
 	if err != nil {
 		return "", err
 	}
-	if flow == nil {
-		return "", errors.NotFind.WithMsg("nodered.flow.not.exist")
-	}
-
 	nodes, err := l.resolveSourceNodes(flow)
 	if err != nil {
 		return "", err
@@ -68,6 +54,27 @@ func (l *ProxySourceFlowsLogic) ProxySourceFlows(flowID string) (string, error) 
 		return "", errors.System.WithMsg("error.sys.systemError").AddDetail(err.Error())
 	}
 	return string(data), nil
+}
+
+func (l *ProxySourceFlowsLogic) resolveSourceFlow(flowID string) (*relationDB.NoderedSourceFlow, error) {
+	primaryID := strings.TrimSpace(flowID)
+	if primaryID == "" {
+		return nil, errors.Parameter.WithMsg("nodered.flowId.not.exist")
+	}
+	id, err := strconv.ParseInt(primaryID, 10, 64)
+	if err != nil || id <= 0 {
+		return nil, errors.Parameter.WithMsg("nodered.invalid.parameter")
+	}
+
+	repo := relationDB.NewNoderedSourceFlowRepo(l.ctx)
+	flow, err := repo.FindOne(l.ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if flow == nil {
+		return nil, errors.NotFind.WithMsg("nodered.flow.not.exist")
+	}
+	return flow, nil
 }
 
 func (l *ProxySourceFlowsLogic) resolveSourceNodes(flow *relationDB.NoderedSourceFlow) ([]map[string]any, error) {
@@ -93,8 +100,14 @@ func (l *ProxySourceFlowsLogic) resolveSourceNodes(flow *relationDB.NoderedSourc
 		l.Errorf("fetch node-red flow(%s) nodes failed: code=%d err=%v body=%s", flowRuntimeID, code, errs, string(body))
 		return make([]map[string]any, 0), nil
 	}
-	rawNodes, ok := out["nodes"].([]any)
-	if !ok || len(rawNodes) == 0 {
+	rawNodes := make([]any, 0)
+	if nodes, ok := out["nodes"].([]any); ok {
+		rawNodes = append(rawNodes, nodes...)
+	}
+	if configs, ok := out["configs"].([]any); ok {
+		rawNodes = append(rawNodes, configs...)
+	}
+	if len(rawNodes) == 0 {
 		return make([]map[string]any, 0), nil
 	}
 
@@ -144,18 +157,8 @@ func (l *ProxySourceFlowsLogic) ensureLabelNode(nodes []map[string]any, flow *re
 }
 
 func (l *ProxySourceFlowsLogic) appendGlobalNodes(nodes []map[string]any) []map[string]any {
-	client := l.svcCtx.SourceNodeRed
-	if client == nil {
-		return nodes
-	}
-	var out map[string]any
-	code, body, errs := client.DoJSON(l.ctx, "GET", "/flow/global", nil, &out)
-	if len(errs) > 0 || (code != 200 && code != 204) {
-		l.Errorf("fetch global nodes failed: code=%d err=%v body=%s", code, errs, string(body))
-		return nodes
-	}
-	configs, ok := out["configs"].([]any)
-	if !ok || len(configs) == 0 {
+	configs := l.filteredGlobalConfigs(nodes)
+	if len(configs) == 0 {
 		return nodes
 	}
 	existing := make(map[string]struct{}, len(nodes))
@@ -167,22 +170,89 @@ func (l *ProxySourceFlowsLogic) appendGlobalNodes(nodes []map[string]any) []map[
 			existing[strings.TrimSpace(id)] = struct{}{}
 		}
 	}
-	for _, item := range configs {
-		m, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
-		id, _ := m["id"].(string)
+	for _, cfg := range configs {
+		id, _ := cfg["id"].(string)
 		id = strings.TrimSpace(id)
 		if id != "" {
-			if _, exists := existing[id]; exists {
+			if _, ok := existing[id]; ok {
 				continue
 			}
 			existing[id] = struct{}{}
 		}
-		nodes = append(nodes, m)
+		nodes = append(nodes, cfg)
 	}
 	return nodes
+}
+
+func (l *ProxySourceFlowsLogic) filteredGlobalConfigs(nodes []map[string]any) []map[string]any {
+	client := l.svcCtx.SourceNodeRed
+	if client == nil {
+		return nil
+	}
+	installedTypes := flowcommon.FetchInstalledNodeTypes(l.ctx, client)
+	referencedIDs := flowcommon.ReferencedNodeIDs(nodes)
+	configs := make([]map[string]any, 0)
+	seen := make(map[string]struct{})
+	appendConfig := func(m map[string]any) {
+		if m == nil {
+			return
+		}
+		id, _ := m["id"].(string)
+		id = strings.TrimSpace(id)
+		if id == "" {
+			return
+		}
+		if _, exists := seen[id]; exists {
+			return
+		}
+		typ, _ := m["type"].(string)
+		typ = strings.TrimSpace(typ)
+		if len(installedTypes) > 0 && typ != "" && !installedTypes[typ] {
+			if _, referenced := referencedIDs[id]; !referenced {
+				return
+			}
+		}
+		seen[id] = struct{}{}
+		configs = append(configs, m)
+	}
+
+	for _, node := range nodes {
+		if !isGlobalConfigNode(node) {
+			continue
+		}
+		appendConfig(node)
+	}
+
+	var out map[string]any
+	code, body, errs := client.DoJSON(l.ctx, "GET", "/flow/global", nil, &out)
+	if len(errs) > 0 || (code != 200 && code != 204) {
+		l.Errorf("fetch global nodes failed: code=%d err=%v body=%s", code, errs, string(body))
+		return configs
+	}
+	rawConfigs, ok := out["configs"].([]any)
+	if !ok || len(rawConfigs) == 0 {
+		return configs
+	}
+	for _, item := range rawConfigs {
+		m, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		appendConfig(m)
+	}
+	return configs
+}
+
+func isGlobalConfigNode(node map[string]any) bool {
+	if node == nil {
+		return false
+	}
+	typ, _ := node["type"].(string)
+	if strings.TrimSpace(typ) == "" || strings.TrimSpace(typ) == "tab" {
+		return false
+	}
+	_, hasZ := node["z"]
+	return !hasZ
 }
 
 func (l *ProxySourceFlowsLogic) fetchVersionRev() string {

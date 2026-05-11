@@ -86,6 +86,14 @@ service backend {
     @doc "Batch query flows by UNS aliases"
     @handler batchSourceFlowByAliases
     post /flow/by/aliases (SourceFlowBatchAliasReq) returns (SourceFlowListResult)
+
+    @doc "List missing Node-RED nodes across all source flow tabs"
+    @handler listMissingNodeRedNodes
+    get /proxy/missing-nodes returns (NodeRedMissingNodeListResult)
+
+    @doc "Delete one missing Node-RED node by id and location"
+    @handler deleteMissingNodeRedNode
+    delete /proxy/missing-nodes (NodeRedMissingNodeDeleteReq) returns (NodeRedMissingNodeDeleteResult)
 }
 
 type (
@@ -143,6 +151,30 @@ type (
 
     SourceFlowBatchAliasReq {
         Aliases []string `json:"aliases"`
+    }
+
+    NodeRedMissingNode {
+        ID string `json:"id"`
+        Type string `json:"type"`
+        Name string `json:"name,optional"`
+        Scope string `json:"scope"`
+        FlowID string `json:"flowId,optional"`
+        FlowLabel string `json:"flowLabel,optional"`
+        Users int `json:"users,optional"`
+    }
+
+    NodeRedMissingNodeListResult {
+        Nodes []NodeRedMissingNode `json:"nodes"`
+    }
+
+    NodeRedMissingNodeDeleteReq {
+        ID string `json:"id"`
+        FlowID string `json:"flowId,optional"`
+        Scope string `json:"scope,optional"`
+    }
+
+    NodeRedMissingNodeDeleteResult {
+        Deleted int `json:"deleted"`
     }
 
     SourceFlowInfo {
