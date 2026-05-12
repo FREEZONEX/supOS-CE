@@ -87,11 +87,11 @@ service backend {
     @handler batchSourceFlowByAliases
     post /flow/by/aliases (SourceFlowBatchAliasReq) returns (SourceFlowListResult)
 
-    @doc "List missing Node-RED nodes across all source flow tabs"
+    @doc "List missing Node-RED nodes across source/event flow tabs"
     @handler listMissingNodeRedNodes
     get /proxy/missing-nodes returns (NodeRedMissingNodeListResult)
 
-    @doc "Delete one missing Node-RED node by id and location"
+    @doc "Delete one missing Node-RED node by id, location and flow type"
     @handler deleteMissingNodeRedNode
     delete /proxy/missing-nodes (NodeRedMissingNodeDeleteReq) returns (NodeRedMissingNodeDeleteResult)
 }
@@ -171,6 +171,7 @@ type (
         ID string `json:"id"`
         FlowID string `json:"flowId,optional"`
         Scope string `json:"scope,optional"`
+        FlowType string `json:"flowType,optional" form:"flowType,optional"`
     }
 
     NodeRedMissingNodeDeleteResult {

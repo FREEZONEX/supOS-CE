@@ -20,6 +20,9 @@ func DeleteMissingNodeRedNodeHandler(svcCtx *svc.ServiceContext) http.HandlerFun
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
+		if req.FlowType == "" {
+			req.FlowType = r.URL.Query().Get("flowType")
+		}
 
 		l := service_api.NewDeleteMissingNodeRedNodeLogic(r.Context(), svcCtx)
 		resp, err := l.DeleteMissingNodeRedNode(&req)

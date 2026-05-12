@@ -29,7 +29,7 @@ func NewDeleteMissingNodeRedNodeLogic(ctx context.Context, svcCtx *svc.ServiceCo
 }
 
 func (l *DeleteMissingNodeRedNodeLogic) DeleteMissingNodeRedNode(req *types.NodeRedMissingNodeDeleteReq) (*types.NodeRedMissingNodeDeleteResult, error) {
-	deleted, err := flowcommon.DeleteMissingRuntimeNode(l.ctx, l.svcCtx.SourceNodeRed, flowcommon.MissingNodeDeleteTarget{
+	deleted, err := flowcommon.DeleteMissingRuntimeNode(l.ctx, missingNodeRedClient(l.svcCtx, req.FlowType), flowcommon.MissingNodeDeleteTarget{
 		ID:     req.ID,
 		FlowID: req.FlowID,
 		Scope:  req.Scope,

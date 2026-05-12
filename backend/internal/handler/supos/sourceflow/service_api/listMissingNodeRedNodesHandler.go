@@ -15,7 +15,7 @@ import (
 func ListMissingNodeRedNodesHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		l := service_api.NewListMissingNodeRedNodesLogic(r.Context(), svcCtx)
-		resp, err := l.ListMissingNodeRedNodes()
+		resp, err := l.ListMissingNodeRedNodes(r.URL.Query().Get("flowType"))
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

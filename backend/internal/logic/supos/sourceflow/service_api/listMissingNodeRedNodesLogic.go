@@ -28,8 +28,8 @@ func NewListMissingNodeRedNodesLogic(ctx context.Context, svcCtx *svc.ServiceCon
 	}
 }
 
-func (l *ListMissingNodeRedNodesLogic) ListMissingNodeRedNodes() (*types.NodeRedMissingNodeListResult, error) {
-	nodes, err := flowcommon.ListMissingRuntimeNodes(l.ctx, l.svcCtx.SourceNodeRed)
+func (l *ListMissingNodeRedNodesLogic) ListMissingNodeRedNodes(flowType string) (*types.NodeRedMissingNodeListResult, error) {
+	nodes, err := flowcommon.ListMissingRuntimeNodes(l.ctx, missingNodeRedClient(l.svcCtx, flowType))
 	if err != nil {
 		return nil, err
 	}

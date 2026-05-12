@@ -1581,9 +1581,10 @@ type NodeRedMissingNode struct {
 }
 
 type NodeRedMissingNodeDeleteReq struct {
-	ID     string `json:"id"`
-	FlowID string `json:"flowId,optional"`
-	Scope  string `json:"scope,optional"`
+	ID       string `json:"id"`
+	FlowID   string `json:"flowId,optional"`
+	Scope    string `json:"scope,optional"`
+	FlowType string `json:"flowType,optional" form:"flowType,optional"`
 }
 
 type NodeRedMissingNodeDeleteResult struct {
