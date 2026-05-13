@@ -47,6 +47,9 @@ else
     command=$(sed -n '2p' "$VOLUMES_PATH/edge/system/active-services.txt")
 fi
 
-declare -g COMPOSE_PROFILE_ARGS_STR="$command"
+COMPOSE_PROFILE_ARGS_STR="$command"
+export COMPOSE_PROFILE_ARGS_STR
 
-declare -ag COMPOSE_PROFILE_ARGS=($command)
+# shellcheck disable=SC2206
+COMPOSE_PROFILE_ARGS=($command)
+export COMPOSE_PROFILE_ARGS

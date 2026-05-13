@@ -9,7 +9,7 @@ normalize_volume_shell_scripts() {
   local count=0
   local failed=0
   while IFS= read -r -d '' file; do
-    if sed -i 's/\r$//' "$file" 2>/dev/null; then
+    if sed_i 's/\r$//' "$file" 2>/dev/null; then
       count=$((count + 1))
     else
       failed=$((failed + 1))

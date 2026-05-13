@@ -11,11 +11,11 @@ fi
 
 write_volumes_path() {
     local updated_path="$1"
-    sed -i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$updated_path|" "$ENV_FILE"
+    sed_i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$updated_path|" "$ENV_FILE"
     source "$ENV_FILE"
 }
 
-if [[ "$platform" == MINGW* || "$platform" == MSYS* ]]; then
+if [[ "$PLATFORM" == MINGW* || "$PLATFORM" == MSYS* ]]; then
     # On Git Bash for Windows, replace Linux/WSL-style paths with a Git Bash
     # drive path so mkdir/cp/chmod all operate on the Windows host filesystem.
     if [ -z "$VOLUMES_PATH" ] || [ "$VOLUMES_PATH" == "/volumes/tier0/data" ]; then
@@ -37,7 +37,7 @@ if [[ "$platform" == MINGW* || "$platform" == MSYS* ]]; then
         info "Normalizing Git Bash home-style VOLUMES_PATH for Windows: $VOLUMES_PATH -> $normalized_path"
         write_volumes_path "$normalized_path"
     elif [[ "$VOLUMES_PATH" =~ ^/mnt/([A-Za-z])/(.*)$ ]]; then
-        drive_letter="${BASH_REMATCH[1],,}"
+        drive_letter="$(echo "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
         remainder_path="${BASH_REMATCH[2]}"
         normalized_path="/$drive_letter/$remainder_path"
         info "Normalizing WSL-style VOLUMES_PATH for Git Bash: $VOLUMES_PATH -> $normalized_path"
@@ -55,14 +55,14 @@ else
         info "VOLUMES_PATH is unset. Setting the default path for Linux."
         default_path="/volumes/tier0/data"
         info "Default storage path for Linux is set to: $default_path"
-        sed -i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$default_path|" "$ENV_FILE"
-        source "$ENV_FILE" # Reload .env for the current session
+        sed_i "s|^VOLUMES_PATH=.*|VOLUMES_PATH=$default_path|" "$ENV_FILE"
+        source "$ENV_FILE"
     else
         # WSL users sometimes keep a Git Bash style path like /d/tier0/data in
         # .env. Normalize it once so the later bash scripts and compose mounts
         # consistently see /mnt/d/... on Linux.
         if [[ "$VOLUMES_PATH" =~ ^/([A-Za-z])/(.*)$ ]] && [ ! -d "$VOLUMES_PATH" ]; then
-            drive_letter="${BASH_REMATCH[1],,}"
+            drive_letter="$(echo "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
             remainder_path="${BASH_REMATCH[2]}"
             normalized_path="/mnt/$drive_letter/$remainder_path"
             if [ -d "/mnt/$drive_letter" ]; then

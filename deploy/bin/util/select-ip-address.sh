@@ -16,11 +16,11 @@ if [ ! -t 0 ]; then
   non_interactive=true
 fi
 
-if [[ "$platform" == MINGW64* ]]; then
+if [[ "$PLATFORM" == MINGW64* ]]; then
     # IP selection logic for Windows
-    sed -i -e "s/^OS_PLATFORM_TYPE=.*/OS_PLATFORM_TYPE=windows/" "$ENV_FILE"
+    sed_i -e "s/^OS_PLATFORM_TYPE=.*/OS_PLATFORM_TYPE=windows/" "$ENV_FILE"
     current_entrance_domain=$(grep '^ENTRANCE_DOMAIN=' "$ENV_FILE" | cut -d '=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    sed -i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$ENV_FILE"
+    sed_i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$ENV_FILE"
 
     if [[ "$non_interactive" == true ]]; then
         selected_ip="$current_entrance_domain"
@@ -40,10 +40,10 @@ if [[ "$platform" == MINGW64* ]]; then
     fi
 else
     # IP selection menu for Linux/macOS
-    ips=($(hostname -I | awk '{print $1, $2, $3}'))
+    mapfile -t ips < <(get_local_ips)
     echo -e "\nAvailable options for ENTRANCE_DOMAIN:"
     current_entrance_domain=$(grep '^ENTRANCE_DOMAIN=' "$ENV_FILE" | cut -d '=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    sed -i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$ENV_FILE"
+    sed_i "s/^ENTRANCE_DOMAIN=.*/ENTRANCE_DOMAIN=$current_entrance_domain/" "$ENV_FILE"
     echo "0). Keep current: $current_entrance_domain (default)"
     for i in "${!ips[@]}"; do echo "$((i+1))). ${ips[$i]}"; done
     echo "$((${#ips[@]}+1))). Custom IP address (enter manually)"
@@ -68,7 +68,7 @@ fi
 
 if [ "$selected_ip" != "$current_entrance_domain" ]; then
     escaped_selected_ip=$(sed 's/[&]/\\&/g' <<< "$selected_ip")
-    sed -i "s|^ENTRANCE_DOMAIN=.*|ENTRANCE_DOMAIN=$escaped_selected_ip|" "$ENV_FILE"
+    sed_i "s|^ENTRANCE_DOMAIN=.*|ENTRANCE_DOMAIN=$escaped_selected_ip|" "$ENV_FILE"
     source "$ENV_FILE"
 fi
 

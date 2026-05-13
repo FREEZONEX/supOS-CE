@@ -4,7 +4,7 @@ networks:
 
 services:
   frontend:
-    image: tier0/tier0-frontend:1.0.3-R2
+    image: tier0/tier0-frontend:1.0.5-R1
     container_name: frontend
     ports:
       - "3010:3000"
@@ -27,12 +27,12 @@ services:
         fi
       "
     volumes:
-      - /etc/docker/certs:/certs
+      - ${DOCKER_CERTS_PATH:-/etc/docker/certs}:/certs
     networks:
       - edge_network
     restart: always
   uns:
-    image: tier0/tier0-backend:1.0.4-R2
+    image: tier0/tier0-backend:1.0.5-R1
     container_name: uns
     environment:
       - LLM_MODEL=${LLM_MODEL}
@@ -72,7 +72,7 @@ services:
       - ${VOLUMES_PATH}/edge/system/:/app/go-edge/system/
       - ${VOLUMES_PATH}/edge/attachment/:/app/go-edge/attachment/
       - ${VOLUMES_PATH}/edge/apps/:/app/data/apps/
-      - /etc/docker/certs:/certs
+      - ${DOCKER_CERTS_PATH:-/etc/docker/certs}:/certs
     ports:
       - "18998:8080"
     networks:
@@ -100,8 +100,8 @@ services:
       - service_redirect_url=/emqx/home/
       - service_account=admin
       - service_password=public
+      - TZ=UTC
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${VOLUMES_PATH}/emqx/data:/opt/emqx/data
       - ${VOLUMES_PATH}/emqx/log:/opt/emqx/log
       - ${VOLUMES_PATH}/certs/tls:/opt/emqx/etc/certs:ro
@@ -129,7 +129,6 @@ services:
       - NODE_OPTIONS=--openssl-legacy-provider
       - NODE_HTTP_API_PREFIX=/nodered-api
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${VOLUMES_PATH}/node-red:/data  # 使用当前目录的 data 目录
     depends_on:
       - emqx
@@ -154,7 +153,6 @@ services:
       - NODE_OPTIONS=--openssl-legacy-provider
       - NODE_HTTP_API_PREFIX=/eventflow-api
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${VOLUMES_PATH}/eventflow:/data  # 使用当前目录的 data 目录
     restart: always
     networks:
@@ -225,7 +223,6 @@ services:
       - "5432:5432"
     volumes:
       - ${VOLUMES_PATH}/postgresql/conf/postgresql.conf:/etc/postgresql/custom.conf
-      - /etc/localtime:/etc/localtime:ro
       - ${VOLUMES_PATH}/postgresql/pgdata:/var/lib/postgresql/data # 持久化数据
       - ${VOLUMES_PATH}/postgresql/init-scripts:/docker-entrypoint-initdb.d  # 加载初始化脚本
     command:

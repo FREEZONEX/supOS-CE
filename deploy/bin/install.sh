@@ -5,14 +5,18 @@ set -e
 # --- 1. Initialization ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Load the cross-platform compatibility layer first so sed_i, get_local_ips,
+# and DOCKER_CERTS_PATH are available immediately (and bash version is
+# validated / re-exec'd before any bash-4+ syntax is encountered).
+source "$SCRIPT_DIR/util/platform-compat.sh"
+
 ENV_FILE="$SCRIPT_DIR/../.env.default"
 if [ -f "$SCRIPT_DIR/../.env" ]; then
   ENV_FILE="$SCRIPT_DIR/../.env"
 fi
 
-
-sed -i 's/\r$//' "$ENV_FILE" # Clean .env file
-source "$ENV_FILE"          # Load initial environment variables
+sed_i 's/\r$//' "$ENV_FILE"
+source "$ENV_FILE"
 source "$SCRIPT_DIR/global/log.sh"
 source "$SCRIPT_DIR/global/choose-profile-command.sh"
 
@@ -36,8 +40,7 @@ EOF
 done
 export SKIP_VOLUME_SYNC
 
-platform=$(uname -s)
-info "Starting installation on platform: $platform"
+info "Starting installation on platform: $PLATFORM"
 echo
 
 # --- 2. Configuration Setup (sourcing from /util) ---

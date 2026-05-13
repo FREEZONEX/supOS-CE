@@ -2,6 +2,11 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+
+if ! declare -f sed_i > /dev/null 2>&1; then
+  source "$SCRIPT_DIR/util/platform-compat.sh"
+fi
+
 source "$SCRIPT_DIR/global/compose-context.sh"
 prepare_compose_context
 source "$SCRIPT_DIR/global/log.sh"
@@ -19,7 +24,8 @@ normalize_volumes_path() {
     # Git Bash works with /d/... paths. Normalize any WSL-style /mnt/d/... input
     # back to the Windows host drive path before attempting deletion.
     if [[ "$target" =~ ^/mnt/([A-Za-z])/(.*)$ ]]; then
-      local drive_letter="${BASH_REMATCH[1],,}"
+      local drive_letter
+      drive_letter="$(echo "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
       local remainder_path="${BASH_REMATCH[2]}"
       if [ -d "/$drive_letter" ]; then
         target="/$drive_letter/$remainder_path"
@@ -29,7 +35,8 @@ normalize_volumes_path() {
     # WSL/Linux prefers /mnt/d/... mounts. Normalize Git Bash style /d/... input
     # so cleanup works consistently when scripts are executed from Linux shells.
     if [[ "$target" =~ ^/([A-Za-z])/(.*)$ ]] && [ ! -d "$target" ]; then
-      local drive_letter="${BASH_REMATCH[1],,}"
+      local drive_letter
+      drive_letter="$(echo "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
       local remainder_path="${BASH_REMATCH[2]}"
       if [ -d "/mnt/$drive_letter" ]; then
         target="/mnt/$drive_letter/$remainder_path"
@@ -49,7 +56,12 @@ purge_volumes_path() {
   fi
 
   local resolved
-  resolved="$(realpath -m "$target")"
+  # realpath -m normalises the path without requiring the target to exist.
+  # macOS's realpath does not support -m; fall back to python3 (always present
+  # on macOS) or return the path as-is when neither is available.
+  resolved="$(realpath -m "$target" 2>/dev/null \
+    || python3 -c "import os,sys; print(os.path.normpath(os.path.abspath(sys.argv[1])))" "$target" 2>/dev/null \
+    || echo "$target")"
   if [ "$resolved" = "/" ] || [ "$resolved" = "/mnt" ] || [ "$resolved" = "/volumes" ] || [ "$resolved" = "/home" ]; then
     error "Refusing to purge unsafe VOLUMES_PATH: $resolved"
     return 1

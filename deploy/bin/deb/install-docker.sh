@@ -7,7 +7,7 @@ if [ -f "$DEPLOY_BIN/../.env" ]; then
     ENV_FILE="$DEPLOY_BIN/../.env"
 fi
 
-sed -i 's/\r$//' "$ENV_FILE" 2>/dev/null || true
+sed_i 's/\r$//' "$ENV_FILE" 2>/dev/null || true
 source "$ENV_FILE"
 source "$DEPLOY_BIN/global/log.sh"
 

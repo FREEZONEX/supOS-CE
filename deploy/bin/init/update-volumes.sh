@@ -8,6 +8,12 @@ is_windows_bind_path() {
     [[ "$1" =~ ^/mnt/[A-Za-z]/ ]] || [[ "$1" =~ ^/[A-Za-z]/ ]]
 }
 
+# is_macos is exported by platform-compat.sh; provide a local fallback so
+# update-volumes.sh stays safe if invoked outside the normal install flow.
+if ! declare -f is_macos > /dev/null 2>&1; then
+  is_macos() { [[ "${PLATFORM:-$(uname -s)}" == "Darwin" ]]; }
+fi
+
 # load npm cache
 rm -rf "$DEPLOY_ROOT/mount/node-red/.npm/"
 tar -xf "$DEPLOY_ROOT/mount/node-red/npmCache.tar.xz" -C "$DEPLOY_ROOT/mount/node-red/" > /dev/null 2>&1
@@ -51,8 +57,8 @@ cp -r "$DEPLOY_ROOT/mount/postgresql/"* "$VOLUMES_PATH/postgresql/"
 
 # Keep Linux ownership fixes for native volumes, but avoid failing on WSL /
 # Docker Desktop bind mounts where chmod/chown is either ignored or rejected.
-if is_windows_bind_path "$VOLUMES_PATH"; then
-    warn "Skipping chown for Windows-mounted volumes: $VOLUMES_PATH"
+if is_windows_bind_path "$VOLUMES_PATH" || is_macos; then
+    warn "Skipping chown for this platform: $VOLUMES_PATH"
 else
     chown 999:0 -R "$VOLUMES_PATH/postgresql"
     chown 1000:1000 -R "$VOLUMES_PATH/emqx"
@@ -62,8 +68,8 @@ fi
 cp "$DEPLOY_ROOT/docker-compose.yml" "$VOLUMES_PATH/edge/system/"
 
 # 设置.sh文件为可执行文件
-if is_windows_bind_path "$VOLUMES_PATH"; then
-    warn "Skipping chmod scan for Windows-mounted volumes: $VOLUMES_PATH"
+if is_windows_bind_path "$VOLUMES_PATH" || is_macos; then
+    warn "Skipping chmod scan for this platform: $VOLUMES_PATH"
 else
     find "$VOLUMES_PATH" -name "*.sh" -exec chmod +x {} \;
 fi

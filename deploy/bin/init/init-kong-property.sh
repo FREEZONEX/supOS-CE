@@ -2,6 +2,13 @@
 # Render Kong's declarative configuration from .env and .env.tmp so both fresh
 # installs and IP/profile changes converge on the same final gateway config.
 set -e
+
+# Ensure platform-compat.sh is loaded when this script is called standalone
+# (i.e. not from install.sh which already sourced it).
+if ! declare -f sed_i > /dev/null 2>&1; then
+  source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/util/platform-compat.sh"
+fi
+
 ROOT_DIR=$1
 ENV_FILE="$ROOT_DIR/.env.default"
 if [ -f "$ROOT_DIR/.env" ]; then
@@ -10,8 +17,7 @@ fi
 # ---------------------------------------------------------------------------
 # 0. Normalise .env line endings (Windows → Unix)
 # ---------------------------------------------------------------------------
-# Use the new variable name
-sed -i 's/\r$//' "$ENV_FILE"
+sed_i 's/\r$//' "$ENV_FILE"
 
 # ---------------------------------------------------------------------------
 # 1. Load variables from .env
@@ -53,7 +59,7 @@ export BASE_URL="$REDIRECT_BASE_URL"
 # Linux deployments render the same config from a single switch.
 # ---------------------------------------------------------------------------
 OS_AUTH_ENABLE=${OS_AUTH_ENABLE:-true}
-if [[ "${OS_AUTH_ENABLE,,}" == "true" ]]; then
+if [[ "$(echo "${OS_AUTH_ENABLE}" | tr '[:upper:]' '[:lower:]')" == "true" ]]; then
   export KONG_AUTH_ENABLED=true
 else
   export KONG_AUTH_ENABLED=false

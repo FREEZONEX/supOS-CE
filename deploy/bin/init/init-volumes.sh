@@ -8,6 +8,7 @@ is_windows_bind_path() {
     [[ "$1" =~ ^/mnt/[A-Za-z]/ ]] || [[ "$1" =~ ^/[A-Za-z]/ ]]
 }
 
+
 # load npm cache
 tar -xf "$DEPLOY_ROOT/mount/node-red/npmCache.tar.xz" -C "$DEPLOY_ROOT/mount/node-red/"
 tar -xf "$DEPLOY_ROOT/mount/node-red/npmCache.tar.xz" -C "$DEPLOY_ROOT/mount/eventflow/"
@@ -23,8 +24,8 @@ done
 # Linux-native mounts keep the original ownership model. Windows-backed mounts
 # under /mnt/<drive> or /d/... do not support the same uid/gid semantics, so
 # skip the ownership mutation there and rely on Docker Desktop's bind mounts.
-if is_windows_bind_path "$VOLUMES_PATH"; then
-    warn "Skipping chmod/chown for Windows-mounted volumes: $VOLUMES_PATH"
+if is_windows_bind_path "$VOLUMES_PATH" || is_macos; then
+    warn "Skipping chmod/chown for this platform: $VOLUMES_PATH"
 else
     chown 999:0 -R "$VOLUMES_PATH/postgresql"
     chmod 644 "$VOLUMES_PATH"/postgresql/conf/*.conf
@@ -34,8 +35,8 @@ fi
 
 cp "$DEPLOY_ROOT/docker-compose.yml" "$VOLUMES_PATH/edge/system/"
 # 设置.sh文件为可执行文件
-if is_windows_bind_path "$VOLUMES_PATH"; then
-    warn "Skipping chmod scan for Windows-mounted volumes: $VOLUMES_PATH"
+if is_windows_bind_path "$VOLUMES_PATH" || is_macos; then
+    warn "Skipping chmod scan for this platform: $VOLUMES_PATH"
 else
     find "$VOLUMES_PATH" -name "*.sh" -exec chmod +x {} \;
 fi
