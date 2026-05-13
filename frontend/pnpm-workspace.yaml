@@ -4,6 +4,12 @@ packages:
   - plugins/*
   - mcp/*
   - '!apps/services-hono'
+onlyBuiltDependencies:
+  - '@scarf/scarf'
+  - cpu-features
+  - protobufjs
+  - sharp
+  - ssh2
 catalogs:
   # 框架
   framework:
