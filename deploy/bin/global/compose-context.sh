@@ -35,11 +35,13 @@ load_all_compose_profiles() {
       in_profiles && /^[[:space:]]+-[[:space:]]+/ {
         line=$0
         sub(/^[[:space:]]*-[[:space:]]*/, "", line)
-        print line
+        if (!seen[line]++) {
+          print line
+        }
         next
       }
       in_profiles { in_profiles=0 }
-    ' "$DOCKER_COMPOSE_FILE" | sort -u
+    ' "$DOCKER_COMPOSE_FILE"
   )
 }
 

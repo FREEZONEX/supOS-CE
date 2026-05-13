@@ -1570,6 +1570,31 @@ type SourceFlowAliasQuery struct {
 	Alias string `form:"alias"`
 }
 
+type NodeRedMissingNode struct {
+	ID        string `json:"id"`
+	Type      string `json:"type"`
+	Name      string `json:"name,optional"`
+	Scope     string `json:"scope"`
+	FlowID    string `json:"flowId,optional"`
+	FlowLabel string `json:"flowLabel,optional"`
+	Users     int    `json:"users,optional"`
+}
+
+type NodeRedMissingNodeDeleteReq struct {
+	ID       string `json:"id"`
+	FlowID   string `json:"flowId,optional"`
+	Scope    string `json:"scope,optional"`
+	FlowType string `json:"flowType,optional" form:"flowType,optional"`
+}
+
+type NodeRedMissingNodeDeleteResult struct {
+	Deleted int `json:"deleted"`
+}
+
+type NodeRedMissingNodeListResult struct {
+	Nodes []NodeRedMissingNode `json:"nodes"`
+}
+
 type SourceFlowBatchAliasReq struct {
 	Aliases []string `json:"aliases"`
 }
