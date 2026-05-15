@@ -689,6 +689,18 @@ type GetLastMsgResp struct {
 	Data map[string]interface{} `json:"data"`
 }
 
+type GetMembersReq struct {
+	PageNo   int `json:"pageNo,optional,default=1"`
+	PageSize int `json:"pageSize,optional,default=20"`
+}
+
+type GetMembersResp struct {
+	PageNo   int           `json:"pageNo"`
+	PageSize int           `json:"pageSize"`
+	Total    int           `json:"total"`
+	List     []MemberBrief `json:"list"`
+}
+
 type GetPersonConfigReq struct {
 	UserID string `form:"userId"`
 }
@@ -1073,6 +1085,13 @@ type MarkTopRequest struct {
 	ID string `json:"id"`
 }
 
+type MemberBrief struct {
+	UserID    string `json:"userId"`
+	UserName  string `json:"userName"`
+	Email     string `json:"email,optional"`
+	UpdatedAt string `json:"updatedAt,optional"`
+}
+
 type Menu struct {
 	Name         string `json:"name,optional"`
 	Description  string `json:"description,optional"`
@@ -1126,6 +1145,31 @@ type MountDetailVo struct {
 	MountType   *int16 `json:"mountType,omitempty,string"`
 	MountSource string `json:"mountSource,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`
+}
+
+type NodeRedMissingNode struct {
+	ID        string `json:"id"`
+	Type      string `json:"type"`
+	Name      string `json:"name,optional"`
+	Scope     string `json:"scope"`
+	FlowID    string `json:"flowId,optional"`
+	FlowLabel string `json:"flowLabel,optional"`
+	Users     int    `json:"users,optional"`
+}
+
+type NodeRedMissingNodeDeleteReq struct {
+	ID       string `json:"id"`
+	FlowID   string `json:"flowId,optional"`
+	Scope    string `json:"scope,optional"`
+	FlowType string `json:"flowType,optional" form:"flowType,optional"`
+}
+
+type NodeRedMissingNodeDeleteResult struct {
+	Deleted int `json:"deleted"`
+}
+
+type NodeRedMissingNodeListResult struct {
+	Nodes []NodeRedMissingNode `json:"nodes"`
 }
 
 type OAuthAuthorizeReq struct {
@@ -1568,31 +1612,6 @@ type SimpleRouteVO struct {
 
 type SourceFlowAliasQuery struct {
 	Alias string `form:"alias"`
-}
-
-type NodeRedMissingNode struct {
-	ID        string `json:"id"`
-	Type      string `json:"type"`
-	Name      string `json:"name,optional"`
-	Scope     string `json:"scope"`
-	FlowID    string `json:"flowId,optional"`
-	FlowLabel string `json:"flowLabel,optional"`
-	Users     int    `json:"users,optional"`
-}
-
-type NodeRedMissingNodeDeleteReq struct {
-	ID       string `json:"id"`
-	FlowID   string `json:"flowId,optional"`
-	Scope    string `json:"scope,optional"`
-	FlowType string `json:"flowType,optional" form:"flowType,optional"`
-}
-
-type NodeRedMissingNodeDeleteResult struct {
-	Deleted int `json:"deleted"`
-}
-
-type NodeRedMissingNodeListResult struct {
-	Nodes []NodeRedMissingNode `json:"nodes"`
 }
 
 type SourceFlowBatchAliasReq struct {

@@ -29,3 +29,4 @@ deploy/mount/grafana/data/plugins/golioth-websocket-datasource/
 deploy/mount/grafana/data/plugins/grafana-mqtt-datasource/
 deploy/mount/kong/kong_config.yml
 deploy/mount/postgresql/init-scripts/create_keycloak_database.sql
+deploy/local.compose.yml

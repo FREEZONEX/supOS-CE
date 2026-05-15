@@ -2432,6 +2432,52 @@
         "title": "GetLastMsgResp",
         "type": "object"
       },
+      "GetMembersReq": {
+        "properties": {
+          "pageNo": {
+            "default": "1",
+            "format": "int32",
+            "type": "integer"
+          },
+          "pageSize": {
+            "default": "20",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "title": "GetMembersReq",
+        "type": "object"
+      },
+      "GetMembersResp": {
+        "properties": {
+          "list": {
+            "items": {
+              "$ref": "#/components/schemas/MemberBrief"
+            },
+            "type": "array"
+          },
+          "pageNo": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "pageSize": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "total": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pageNo",
+          "pageSize",
+          "total",
+          "list"
+        ],
+        "title": "GetMembersResp",
+        "type": "object"
+      },
       "GetPersonConfigReq": {
         "properties": {
           "userId": {
@@ -3826,6 +3872,28 @@
         "title": "MarkTopRequest",
         "type": "object"
       },
+      "MemberBrief": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "userName"
+        ],
+        "title": "MemberBrief",
+        "type": "object"
+      },
       "Menu": {
         "properties": {
           "description": {
@@ -4013,6 +4081,88 @@
           }
         },
         "title": "MountDetailVo",
+        "type": "object"
+      },
+      "NodeRedMissingNode": {
+        "properties": {
+          "flowId": {
+            "type": "string"
+          },
+          "flowLabel": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "users": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "scope"
+        ],
+        "title": "NodeRedMissingNode",
+        "type": "object"
+      },
+      "NodeRedMissingNodeDeleteReq": {
+        "properties": {
+          "flowId": {
+            "type": "string"
+          },
+          "flowType": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "NodeRedMissingNodeDeleteReq",
+        "type": "object"
+      },
+      "NodeRedMissingNodeDeleteResult": {
+        "properties": {
+          "deleted": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "NodeRedMissingNodeDeleteResult",
+        "type": "object"
+      },
+      "NodeRedMissingNodeListResult": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeRedMissingNode"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "nodes"
+        ],
+        "title": "NodeRedMissingNodeListResult",
         "type": "object"
       },
       "OAuthAuthorizeReq": {
@@ -8142,6 +8292,53 @@
         ]
       }
     },
+    "/inter-api/getMembers": {
+      "post": {
+        "operationId": "postInter-apiGetMembers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetMembersReq"
+              }
+            }
+          },
+          "required": true,
+          "x-originalParamName": "body"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "default": "200",
+                      "title": "返回code",
+                      "type": "integer"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/GetMembersResp"
+                    },
+                    "msg": {
+                      "title": "返回的消息",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response."
+          }
+        },
+        "summary": "List members",
+        "tags": [
+          "supos/open",
+          "suposOpen"
+        ]
+      }
+    },
     "/inter-api/iam/oauth2/authorize": {
       "get": {
         "operationId": "getInter-apiIamOauth2Authorize",
@@ -12253,8 +12450,8 @@
                   }
                 },
                 "required": [
-                  "files",
-                  "alias"
+                  "alias",
+                  "files"
                 ],
                 "type": "object"
               }
@@ -17015,8 +17212,8 @@
                   }
                 },
                 "required": [
-                  "files",
-                  "alias"
+                  "alias",
+                  "files"
                 ],
                 "type": "object"
               }
@@ -18649,6 +18846,85 @@
           }
         },
         "summary": "Proxy Node-RED /flows endpoint using cookie scoped id",
+        "tags": [
+          "supos/sourceflow/service_api",
+          "suposSourceflowService_api"
+        ]
+      }
+    },
+    "/service-api/supos/proxy/missing-nodes": {
+      "delete": {
+        "operationId": "deleteService-apiSuposProxyMissing-nodes",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "flowType",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "default": "200",
+                      "title": "返回code",
+                      "type": "integer"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/NodeRedMissingNodeDeleteResult"
+                    },
+                    "msg": {
+                      "title": "返回的消息",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response."
+          }
+        },
+        "summary": "Delete one missing Node-RED node by id, location and flow type",
+        "tags": [
+          "supos/sourceflow/service_api",
+          "suposSourceflowService_api"
+        ]
+      },
+      "get": {
+        "operationId": "getService-apiSuposProxyMissing-nodes",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "default": "200",
+                      "title": "返回code",
+                      "type": "integer"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/NodeRedMissingNodeListResult"
+                    },
+                    "msg": {
+                      "title": "返回的消息",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response."
+          }
+        },
+        "summary": "List missing Node-RED nodes across source/event flow tabs",
         "tags": [
           "supos/sourceflow/service_api",
           "suposSourceflowService_api"
