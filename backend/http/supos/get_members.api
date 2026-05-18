@@ -1,0 +1,40 @@
+syntax = "v1"
+
+info(
+    title: "Members API"
+    desc: "Members API"
+    author: "SupOS Team"
+    version: "v1"
+)
+
+@server(
+    group: supos/open
+    prefix: /inter-api
+    middleware: CheckTokenWare,InitCtxsWare
+)
+service backend {
+    @doc "List members"
+    @handler getMembers
+    post /getMembers (GetMembersReq) returns (GetMembersResp)
+}
+
+type (
+    GetMembersReq {
+        PageNo   int `json:"pageNo,optional,default=1"`
+        PageSize int `json:"pageSize,optional,default=20"`
+    }
+
+    GetMembersResp {
+        PageNo   int           `json:"pageNo"`
+        PageSize int           `json:"pageSize"`
+        Total    int           `json:"total"`
+        List     []MemberBrief `json:"list"`
+    }
+
+    MemberBrief {
+        UserID    string `json:"userId"`
+        UserName  string `json:"userName"`
+        Email     string `json:"email,optional"`
+        UpdatedAt string `json:"updatedAt,optional"`
+    }
+)

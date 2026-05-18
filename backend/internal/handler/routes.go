@@ -532,6 +532,36 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 用户详情
+				Method:  http.MethodGet,
+				Path:    "/:username",
+				Handler: suposopen.OpenUserDetailHandler(serverCtx),
+			},
+			{
+				// 用户列表
+				Method:  http.MethodGet,
+				Path:    "/pageList",
+				Handler: suposopen.OpenUserPageListHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/user"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 保存菜单
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: suposopen.SaveMenuHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/menu"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
 				// 模板实例附件上传
 				Method:  http.MethodPost,
 				Path:    "/attachment",
@@ -722,33 +752,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 保存菜单
-				Method:  http.MethodPost,
-				Path:    "/",
-				Handler: suposopen.SaveMenuHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/open-api/menu"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 用户详情
-				Method:  http.MethodGet,
-				Path:    "/:username",
-				Handler: suposopen.OpenUserDetailHandler(serverCtx),
-			},
-			{
-				// 用户列表
-				Method:  http.MethodGet,
-				Path:    "/pageList",
-				Handler: suposopen.OpenUserPageListHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/open-api/user"),
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// List members
+					Method:  http.MethodPost,
+					Path:    "/getMembers",
+					Handler: suposopen.GetMembersHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api"),
 	)
 
 	server.AddRoutes(
@@ -898,22 +913,22 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: supossourceflowservice_api.BatchSourceFlowByAliasesHandler(serverCtx),
 			},
 			{
-				// List missing Node-RED nodes across all source flow tabs
+				// Proxy Node-RED /flows endpoint using cookie scoped id
+				Method:  http.MethodGet,
+				Path:    "/proxy/flows",
+				Handler: supossourceflowservice_api.ProxySourceFlowsHandler(serverCtx),
+			},
+			{
+				// List missing Node-RED nodes across source/event flow tabs
 				Method:  http.MethodGet,
 				Path:    "/proxy/missing-nodes",
 				Handler: supossourceflowservice_api.ListMissingNodeRedNodesHandler(serverCtx),
 			},
 			{
-				// Delete one missing Node-RED node by id and location
+				// Delete one missing Node-RED node by id, location and flow type
 				Method:  http.MethodDelete,
 				Path:    "/proxy/missing-nodes",
 				Handler: supossourceflowservice_api.DeleteMissingNodeRedNodeHandler(serverCtx),
-			},
-			{
-				// Proxy Node-RED /flows endpoint using cookie scoped id
-				Method:  http.MethodGet,
-				Path:    "/proxy/flows",
-				Handler: supossourceflowservice_api.ProxySourceFlowsHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/service-api/supos"),
