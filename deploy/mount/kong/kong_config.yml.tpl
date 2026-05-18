@@ -210,6 +210,24 @@ services:
   id: 5f70fd49-e3d7-4ba8-b152-62eca6ec4455
   client_certificate: ~
   read_timeout: 300000
+- name: get-members-backend
+  path: /inter-api/getMembers
+  protocol: http
+  tags: []
+  ca_certificates: ~
+  retries: 5
+  created_at: 1766028600
+  port: 8080
+  updated_at: 1766028600
+  enabled: true
+  host: uns
+  tls_verify: ~
+  write_timeout: 300000
+  connect_timeout: 300000
+  tls_verify_depth: ~
+  id: 3d30c5c4-4d39-4ef6-ae5f-351a46529066
+  client_certificate: ~
+  read_timeout: 300000
 - name: iam-oauth-backend
   path: /inter-api/iam/oauth2/
   protocol: http
@@ -783,6 +801,30 @@ routes:
   request_buffering: true
   snis: ~
   id: 3794799e-0c23-4065-a88d-7a08c46fbaf4
+  tags: ~
+  protocols:
+  - http
+  - https
+- name: get-members-backend
+  sources: ~
+  preserve_host: true
+  destinations: ~
+  headers: ~
+  methods: ~
+  https_redirect_status_code: 426
+  service: 3d30c5c4-4d39-4ef6-ae5f-351a46529066
+  strip_path: true
+  paths:
+  - /inter-api/getMembers
+  created_at: 1766028600
+  updated_at: 1766028600
+  response_buffering: true
+  path_handling: v1
+  regex_priority: 0
+  hosts: ~
+  request_buffering: true
+  snis: ~
+  id: 41009dd0-0be2-4fa4-bde2-405f479c358e
   tags: ~
   protocols:
   - http
