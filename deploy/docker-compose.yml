@@ -4,7 +4,7 @@ networks:
 
 services:
   frontend:
-    image: tier0/tier0-frontend:1.0.5-R1
+    image: tier0/tier0-frontend:1.0.6-R1
     container_name: frontend
     ports:
       - "3010:3000"
