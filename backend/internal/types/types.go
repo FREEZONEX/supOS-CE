@@ -690,8 +690,10 @@ type GetLastMsgResp struct {
 }
 
 type GetMembersReq struct {
-	PageNo   int `json:"pageNo,optional,default=1"`
-	PageSize int `json:"pageSize,optional,default=20"`
+	UpdatedAtStart string `json:"updatedAtStart,optional"`
+	UpdatedAtEnd   string `json:"updatedAtEnd,optional"`
+	PageNo         int    `json:"pageNo,optional,default=1"`
+	PageSize       int    `json:"pageSize,optional,default=20"`
 }
 
 type GetMembersResp struct {

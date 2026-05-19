@@ -2443,6 +2443,12 @@
             "default": "20",
             "format": "int32",
             "type": "integer"
+          },
+          "updatedAtEnd": {
+            "type": "string"
+          },
+          "updatedAtStart": {
+            "type": "string"
           }
         },
         "title": "GetMembersReq",
@@ -12450,8 +12456,8 @@
                   }
                 },
                 "required": [
-                  "alias",
-                  "files"
+                  "files",
+                  "alias"
                 ],
                 "type": "object"
               }
@@ -17212,8 +17218,8 @@
                   }
                 },
                 "required": [
-                  "alias",
-                  "files"
+                  "files",
+                  "alias"
                 ],
                 "type": "object"
               }

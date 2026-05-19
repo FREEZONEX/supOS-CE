@@ -488,75 +488,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 创建 Flow
-				Method:  http.MethodPost,
-				Path:    "/",
-				Handler: suposopen.OpenCreateSourceFlowHandler(serverCtx),
-			},
-			{
-				// 查询 Flow 列表
-				Method:  http.MethodGet,
-				Path:    "/",
-				Handler: suposopen.OpenListSourceFlowsHandler(serverCtx),
-			},
-			{
-				// 更新 Flow
-				Method:  http.MethodPut,
-				Path:    "/",
-				Handler: suposopen.OpenUpdateSourceFlowHandler(serverCtx),
-			},
-			{
-				// 删除 Flow
-				Method:  http.MethodDelete,
-				Path:    "/",
-				Handler: suposopen.OpenDeleteSourceFlowHandler(serverCtx),
-			},
-			{
-				// 部署 Flow
-				Method:  http.MethodPost,
-				Path:    "/deploy",
-				Handler: suposopen.OpenDeploySourceFlowHandler(serverCtx),
-			},
-			{
-				// 查询 Flow Data
-				Method:  http.MethodGet,
-				Path:    "/flowData",
-				Handler: suposopen.OpenGetSourceFlowDataHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/open-api/flow"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 用户详情
-				Method:  http.MethodGet,
-				Path:    "/:username",
-				Handler: suposopen.OpenUserDetailHandler(serverCtx),
-			},
-			{
-				// 用户列表
-				Method:  http.MethodGet,
-				Path:    "/pageList",
-				Handler: suposopen.OpenUserPageListHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/open-api/user"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 保存菜单
-				Method:  http.MethodPost,
-				Path:    "/",
-				Handler: suposopen.SaveMenuHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/open-api/menu"),
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
+			[]rest.Route{
+				{
+					// List members
+					Method:  http.MethodPost,
+					Path:    "/getMembers",
+					Handler: suposopen.GetMembersHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/inter-api"),
 	)
 
 	server.AddRoutes(
@@ -752,18 +695,75 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
-		rest.WithMiddlewares(
-			[]rest.Middleware{serverCtx.CheckTokenWare, serverCtx.InitCtxsWare},
-			[]rest.Route{
-				{
-					// List members
-					Method:  http.MethodPost,
-					Path:    "/getMembers",
-					Handler: suposopen.GetMembersHandler(serverCtx),
-				},
-			}...,
-		),
-		rest.WithPrefix("/inter-api"),
+		[]rest.Route{
+			{
+				// 保存菜单
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: suposopen.SaveMenuHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/menu"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 创建 Flow
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: suposopen.OpenCreateSourceFlowHandler(serverCtx),
+			},
+			{
+				// 查询 Flow 列表
+				Method:  http.MethodGet,
+				Path:    "/",
+				Handler: suposopen.OpenListSourceFlowsHandler(serverCtx),
+			},
+			{
+				// 更新 Flow
+				Method:  http.MethodPut,
+				Path:    "/",
+				Handler: suposopen.OpenUpdateSourceFlowHandler(serverCtx),
+			},
+			{
+				// 删除 Flow
+				Method:  http.MethodDelete,
+				Path:    "/",
+				Handler: suposopen.OpenDeleteSourceFlowHandler(serverCtx),
+			},
+			{
+				// 部署 Flow
+				Method:  http.MethodPost,
+				Path:    "/deploy",
+				Handler: suposopen.OpenDeploySourceFlowHandler(serverCtx),
+			},
+			{
+				// 查询 Flow Data
+				Method:  http.MethodGet,
+				Path:    "/flowData",
+				Handler: suposopen.OpenGetSourceFlowDataHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/flow"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 用户详情
+				Method:  http.MethodGet,
+				Path:    "/:username",
+				Handler: suposopen.OpenUserDetailHandler(serverCtx),
+			},
+			{
+				// 用户列表
+				Method:  http.MethodGet,
+				Path:    "/pageList",
+				Handler: suposopen.OpenUserPageListHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/open-api/user"),
 	)
 
 	server.AddRoutes(
