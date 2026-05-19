@@ -130,6 +130,7 @@ services:
       - NODE_HTTP_API_PREFIX=/nodered-api
     volumes:
       - ${VOLUMES_PATH}/node-red:/data  # 使用当前目录的 data 目录
+      - ${VOLUMES_PATH}/edge/attachment:/attachment:ro  # 共享 uns 上传的附件目录（只读）
     depends_on:
       - emqx
     restart: always
