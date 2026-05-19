@@ -155,6 +155,7 @@ services:
       - NODE_HTTP_API_PREFIX=/eventflow-api
     volumes:
       - ${VOLUMES_PATH}/eventflow:/data  # 使用当前目录的 data 目录
+      - ${VOLUMES_PATH}/edge/attachment:/attachment:ro  # 共享 uns 上传的附件目录（只读）
     restart: always
     networks:
       - edge_network
