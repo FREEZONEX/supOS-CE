@@ -24,7 +24,7 @@ COPY . .
 COPY swagger ./swagger
 
 # Build application - static compilation
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o backend ./backend.go
+RUN CGO_ENABLED=0 GOOS=linux  go build -ldflags="-w -s" -o backend ./backend.go
 
 # Use lightweight alpine image as runtime environment
 FROM alpine:latest
