@@ -36,7 +36,7 @@ func (l *GetMembersLogic) GetMembers(req *types.GetMembersReq) (*types.GetMember
 		req = &types.GetMembersReq{}
 	}
 	pageNo, pageSize := normalizeGetMembersPage(req.PageNo, req.PageSize)
-	updatedAtStart, updatedAtEnd, err := parseGetMembersUpdatedAtRange(req)
+	updatedAtRange, err := parseGetMembersUpdatedAtRange(req)
 	if err != nil {
 		return nil, err
 	}
@@ -47,11 +47,15 @@ func (l *GetMembersLogic) GetMembers(req *types.GetMembersReq) (*types.GetMember
 	}
 
 	query := db.WithContext(l.ctx).Table("supos_user AS u")
-	if updatedAtStart != nil {
-		query = query.Where("u.updated_at >= ?", *updatedAtStart)
+	if updatedAtRange.Start != nil {
+		query = query.Where("u.updated_at >= ?", *updatedAtRange.Start)
 	}
-	if updatedAtEnd != nil {
-		query = query.Where("u.updated_at <= ?", *updatedAtEnd)
+	if updatedAtRange.End != nil {
+		if updatedAtRange.EndExclusive {
+			query = query.Where("u.updated_at < ?", *updatedAtRange.End)
+		} else {
+			query = query.Where("u.updated_at <= ?", *updatedAtRange.End)
+		}
 	}
 
 	var total int64
@@ -93,28 +97,56 @@ func (l *GetMembersLogic) GetMembers(req *types.GetMembersReq) (*types.GetMember
 	}, nil
 }
 
-func parseGetMembersUpdatedAtRange(req *types.GetMembersReq) (*time.Time, *time.Time, error) {
+type getMembersUpdatedAtRange struct {
+	Start        *time.Time
+	End          *time.Time
+	EndExclusive bool
+}
+
+func parseGetMembersUpdatedAtRange(req *types.GetMembersReq) (getMembersUpdatedAtRange, error) {
+	var result getMembersUpdatedAtRange
 	if req == nil {
-		return nil, nil, nil
+		return result, nil
 	}
-	var start *time.Time
 	if value := strings.TrimSpace(req.UpdatedAtStart); value != "" {
 		parsed, err := time.Parse(time.RFC3339, value)
 		if err != nil {
-			return nil, nil, errors.Parameter.WithMsg("updatedAtStart.invalid")
+			return result, errors.Parameter.WithMsg("updatedAtStart.invalid")
 		}
-		start = &parsed
+		result.Start = &parsed
 	}
 
-	var end *time.Time
 	if value := strings.TrimSpace(req.UpdatedAtEnd); value != "" {
 		parsed, err := time.Parse(time.RFC3339, value)
 		if err != nil {
-			return nil, nil, errors.Parameter.WithMsg("updatedAtEnd.invalid")
+			return result, errors.Parameter.WithMsg("updatedAtEnd.invalid")
 		}
-		end = &parsed
+		if !rfc3339HasFractionalSecond(value) {
+			parsed = parsed.Add(time.Second)
+			result.EndExclusive = true
+		}
+		result.End = &parsed
 	}
-	return start, end, nil
+	return result, nil
+}
+
+func rfc3339HasFractionalSecond(value string) bool {
+	tIndex := strings.IndexByte(value, 'T')
+	if tIndex < 0 {
+		return false
+	}
+	timePart := value[tIndex+1:]
+	if zIndex := strings.IndexByte(timePart, 'Z'); zIndex >= 0 {
+		timePart = timePart[:zIndex]
+	} else {
+		for i := len(timePart) - 1; i >= 0; i-- {
+			if timePart[i] == '+' || timePart[i] == '-' {
+				timePart = timePart[:i]
+				break
+			}
+		}
+	}
+	return strings.Contains(timePart, ".")
 }
 
 func normalizeGetMembersPage(pageNo, pageSize int) (int, int) {
