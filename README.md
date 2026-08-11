@@ -47,16 +47,23 @@ flowchart LR
 ### Install with Docker Compose
 
 ```bash
-cd deploy
-cp .env.default .env
-# Edit .env before the first startup, especially ADMIN_INITIAL_PASSWORD,
-# ENTRANCE_DOMAIN, VOLUMES_PATH, and BACKEND_IMAGE.
+git clone --branch feat-edge-new --single-branch https://github.com/FREEZONEX/Tier0-Edge.git
+cd Tier0-Edge/deploy
 bash bin/install.sh
 ```
 
-The installer can create `.env` automatically, but copying it first makes configuration explicit. Generated runtime secrets and resolved values are written to `deploy/.env.runtime`; do not edit that file manually.
+The default development image is `harbor.tier0.dev/tier0/tier0-edge-backend:dev`. The installer creates `.env`, generates runtime secrets, pulls the configured images, and starts the complete stack. Resolved values are written to `deploy/.env.runtime`; keep that file private and do not edit it manually.
 
-`harbor.tier0.dev` permits anonymous pulls for the public repositories used by this deployment. Public registry access and publication of a particular backend version are separate: if the configured `BACKEND_IMAGE` tag is not available yet, build it locally as described below.
+To customize ports, domains, storage, or the backend image before first startup:
+
+```bash
+cd deploy
+cp .env.default .env
+# Edit .env, then install.
+bash bin/install.sh
+```
+
+`harbor.tier0.dev` permits anonymous pulls for the public repositories used by this deployment.
 
 After installation:
 
