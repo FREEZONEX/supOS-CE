@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button, Flex, App, Form, Input, Select, InputNumber, DatePicker, Tooltip } from 'antd';
 import { useTranslate } from '@/hooks';
-import { batchWriteFileValue } from '@/apis/inter-api/uns';
-import { DocumentDownload } from '@carbon/icons-react';
+import { batchWriteFileValue } from '@/apis/core-api/uns';
+import { DocumentDownload } from '@/components/lucide-icon/carbon';
 
 import type { FieldItem } from '@/pages/uns/types';
 import { AuthWrapper } from '@/components/auth';
@@ -189,7 +189,7 @@ const WritDownData = ({ fileInfo = {}, websocketData = {}, auth }: any) => {
             gap="8px"
             style={{
               height: 40,
-              background: 'var(--supos-table-head-color)',
+              background: 'var(--ui-table-head-color)',
               marginBottom: 24,
               paddingLeft: 5,
             }}
@@ -210,7 +210,7 @@ const WritDownData = ({ fileInfo = {}, websocketData = {}, auth }: any) => {
                     style={{
                       minHeight: 32,
                       marginBottom: 24,
-                      borderBottom: '1px solid var(--supos-table-tr-color)',
+                      borderBottom: '1px solid var(--ui-table-tr-color)',
                       wordBreak: 'break-all',
                       paddingLeft: 5,
                     }}

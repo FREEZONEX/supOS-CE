@@ -1,73 +1,141 @@
-import { type Key, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { App, Button, Divider, Dropdown, Flex, Popover, Radio } from 'antd';
-import { getTreeStoreSnapshot, ROOT_NODE_ID, useTreeStore, useTreeStoreRef } from '../../store/treeStore';
-import type { TTreeType } from '../../store/types';
-import useTranslate from '@/hooks/useTranslate';
-import {
-  DocumentAdd,
-  Filter,
-  Folder,
-  FolderAdd,
-  FolderOpen,
-  GroupObjectsNew,
-  Renew,
-  RepoArtifact,
-  Document,
-  TrashCan,
-  WatsonHealth3DCurveAutoColon,
-  SendAlt,
-  ChartLine,
-  AddLarge,
-} from '@carbon/icons-react';
-import Icon from '@ant-design/icons';
+import { pasteUns } from '@/apis/core-api/uns';
 import { ButtonPermission } from '@/common-types/button-permission';
-import { debounce } from 'lodash-es';
-import type { ItemType } from 'antd/es/menu/interface';
-import { getInstanceInfo, getModelInfo, pasteUns } from '@/apis/inter-api/uns';
-import { useViewLabelModal } from '@/pages/uns/components';
-import ReverseModal from '@/pages/uns/components/reverse-modal';
-import type { UnsTreeNode } from '@/pages/uns/types';
-import { filterPermissionToList, hasPermission } from '@/utils/auth';
-import ComClickTrigger from '@/components/com-click-trigger';
+import ComButton from '@/components/com-button';
+import cx from 'classnames';
+import { DocumentAdd, FolderAdd, Renew, RepoArtifact, SquarePlus, TrashCan } from '@/components/lucide-icon/carbon';
+import { toolbarIconProps } from '@/components/lucide-icon/icon-props';
 import ProSearch from '@/components/pro-search';
 import ProTree, { type ProTreeProps } from '@/components/pro-tree';
 import TagAdd from '@/components/svg-components/TagAdd';
 import { usePageIsShow } from '@/contexts/tabs-lifecycle-context.ts';
-import { useUnsContext } from '@/pages/uns/UnsContext';
-import StatusDot from './StatusDot';
+import useTranslate from '@/hooks/useTranslate';
+import ReverseModal from '@/pages/uns/components/reverse-modal';
+import type { UnsTreeNode } from '@/pages/uns/types';
 import { useBaseStore } from '@/stores/base';
-import { getTargetNode } from '@/utils';
 import { useI18nStore } from '@/stores/i18n-store.ts';
-import ComButton from '@/components/com-button';
+import { getTargetNode } from '@/utils';
+import { filterPermissionToList, hasPermission } from '@/utils/auth';
+import Icon from '@ant-design/icons';
+import { App, Button, Divider, Dropdown, Flex } from 'antd';
+import type { ItemType } from 'antd/es/menu/interface';
+import { debounce } from 'lodash-es';
+import { type CSSProperties, type Key, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ROOT_NODE_ID, useTreeStore } from '../../store/treeStore';
+import type { TTreeType } from '../../store/types';
+import {
+  getFolderTopicType,
+  getNodeTopicType,
+  getUnsTopicFolderTextColor,
+  getUnsTopicFolderTitleStyle,
+  isTopicTypeFolder,
+  UnsTreeNodeIcon,
+} from './tree-icons';
+import './index.scss';
 
 const renderOperationDom = (type: string) => {
   switch (type) {
     case 'DocumentAdd':
-      return <DocumentAdd />;
+      return <DocumentAdd {...toolbarIconProps} />;
     case 'FolderAdd':
-      return <FolderAdd />;
+      return <FolderAdd {...toolbarIconProps} />;
     case 'RepoArtifact':
-      return <RepoArtifact />;
-    case 'GroupObjectsNew':
-      return <GroupObjectsNew />;
+      return <RepoArtifact {...toolbarIconProps} />;
     case 'TagAdd':
       return <Icon component={TagAdd} />;
     case 'Renew':
-      return <Renew />;
+      return <Renew {...toolbarIconProps} />;
     default:
       return null;
   }
 };
 
 // 操作
-const Operation = () => {
+interface UnsTreeBehaviorProps {
+  // Fallback to current data root when no node is selected.
+  enableRootAsParent?: boolean;
+  // Explicit fallback parent for create actions.
+  defaultCreateParentNode?: UnsTreeNode;
+  // Custom resolver for current data root node.
+  resolveCurrentDataRootNode?: (treeData: UnsTreeNode[]) => UnsTreeNode | undefined;
+  // Disable delete action for current data root node.
+  disableDeleteRoot?: boolean;
+  // Extra non-deletable node ids.
+  nonDeletableNodeIds?: Key[];
+}
+
+export const getDefaultDataRootNode = (treeData: UnsTreeNode[]) => {
+  return treeData.find((node) => node?.pathType === 0) || treeData[0];
+};
+
+export const normalizeNodeId = (id?: Key | null) => {
+  return id === null || id === undefined ? '' : String(id);
+};
+
+export const hasMountedTopicInSubtree = (node?: UnsTreeNode): boolean => {
+  if (!node) {
+    return false;
+  }
+  if (node.mount) {
+    return true;
+  }
+  return (node.children || []).some((child) => hasMountedTopicInSubtree(child));
+};
+
+const decorateMountedNamespaceTree = (nodes: UnsTreeNode[]) => {
+  const decorate = (items: UnsTreeNode[], depth = 0): UnsTreeNode[] =>
+    items.map((node) => {
+      const isMountedTopic = Boolean(node.mount && node.pathType === 2);
+      const decoratedNode: UnsTreeNode = {
+        ...node,
+        className: isMountedTopic
+          ? cx(node.className, 'uns-mount-node', 'uns-mount-group-start', 'uns-mount-group-end')
+          : node.className,
+        style: isMountedTopic
+          ? ({
+              ...node.style,
+              '--uns-mount-offset': `${depth * 24}px`,
+            } as CSSProperties)
+          : node.style,
+      };
+      decoratedNode.children = decorate(node.children || [], depth + 1);
+      return decoratedNode;
+    });
+
+  return decorate(nodes);
+};
+
+export const resolveCreateFallbackNode = ({
+  treeData,
+  enableRootAsParent,
+  defaultCreateParentNode,
+  resolveCurrentDataRootNode,
+}: {
+  treeData: UnsTreeNode[];
+  enableRootAsParent?: boolean;
+  defaultCreateParentNode?: UnsTreeNode;
+  resolveCurrentDataRootNode?: (treeData: UnsTreeNode[]) => UnsTreeNode | undefined;
+}) => {
+  if (defaultCreateParentNode) {
+    return defaultCreateParentNode;
+  }
+  if (!enableRootAsParent) {
+    return undefined;
+  }
+  return resolveCurrentDataRootNode?.(treeData) || getDefaultDataRootNode(treeData);
+};
+
+const Operation = ({
+  enableRootAsParent,
+  defaultCreateParentNode,
+  resolveCurrentDataRootNode,
+}: Pick<UnsTreeBehaviorProps, 'enableRootAsParent' | 'defaultCreateParentNode' | 'resolveCurrentDataRootNode'>) => {
   const formatMessage = useTranslate();
-  const { treeType, operationFns, setSelectedNode, selectedNode, loadData } = useTreeStore((state) => ({
+  const { treeType, operationFns, selectedNode, loadData, treeData } = useTreeStore((state) => ({
     treeType: state.treeType,
     operationFns: state.operationFns,
-    setSelectedNode: state.setSelectedNode,
     selectedNode: state.selectedNode,
     loadData: state.loadData,
+    treeData: state.treeData,
   }));
   const {
     systemInfo: { enableAutoCategorization },
@@ -80,8 +148,17 @@ const Operation = () => {
   const { message } = App.useApp();
   const [reverserOpen, setReverserOpen] = useState<boolean>(false); //复制的topic
 
-  const hasTopicType =
-    enableAutoCategorization && selectedNode && !(selectedNode?.pathType === 0 && !selectedNode?.dataType);
+  const createTargetNode =
+    selectedNode ||
+    resolveCreateFallbackNode({
+      treeData,
+      enableRootAsParent,
+      defaultCreateParentNode,
+      resolveCurrentDataRootNode,
+    });
+
+  const hasTopicType = enableAutoCategorization && createTargetNode && getNodeTopicType(createTargetNode) > 0;
+  const isMountedTopic = Boolean(createTargetNode?.mount && createTargetNode.pathType === 2);
 
   const options = useMemo(() => {
     return filterPermissionToList<{
@@ -99,7 +176,7 @@ const Operation = () => {
       {
         title: formatMessage('UserManagement.add'),
         onClick: () => {
-          operationFns?.setOptionOpen?.('addFile', selectedNode);
+          operationFns?.setOptionOpen?.('addFile', createTargetNode);
         },
         buttonType: 'Dropdown',
         showTreeType: 'uns',
@@ -109,19 +186,19 @@ const Operation = () => {
             label: formatMessage('uns.newFolder'),
             auth: ButtonPermission['uns.folderAdd'],
             onClick: () => {
-              operationFns?.setOptionOpen?.('addFolder', selectedNode);
+              operationFns?.setOptionOpen?.('addFolder', createTargetNode);
             },
             key: 'addFolder',
-            disabled: !!selectedNode?.mount || hasTopicType,
+            disabled: isMountedTopic || hasTopicType,
           },
           {
             label: formatMessage('uns.newFile'),
             auth: ButtonPermission['uns.fileAdd'],
             onClick: () => {
-              operationFns?.setOptionOpen?.('addFile', selectedNode);
+              operationFns?.setOptionOpen?.('addFile', createTargetNode);
             },
             key: 'addFile',
-            disabled: !!selectedNode?.mount,
+            disabled: isMountedTopic,
           },
           // {
           //   label: formatMessage('uns.batchGeneration'),
@@ -135,26 +212,6 @@ const Operation = () => {
         ],
       },
       {
-        title: formatMessage('uns.addTemplate'),
-        auth: ButtonPermission['uns.templateAdd'],
-        onClick: () => {
-          operationFns?.openTemplateModal?.('addTemplate', setSelectedNode);
-        },
-        buttonType: 'GroupObjectsNew',
-        showTreeType: 'template',
-        key: 'addTemplate',
-      },
-      {
-        title: formatMessage('uns.newLabel'),
-        auth: ButtonPermission['uns.labelAdd'],
-        onClick: () => {
-          operationFns?.setLabelOpen?.();
-        },
-        buttonType: 'TagAdd',
-        showTreeType: 'label',
-        key: 'addLabel',
-      },
-      {
         title: formatMessage('common.refresh'),
         onClick: () => {
           loadData({ reset: true, clearSelect: true }, () => {
@@ -165,7 +222,7 @@ const Operation = () => {
         key: 'reNew',
       },
     ])?.filter((item) => !item.showTreeType || item.showTreeType === treeType);
-  }, [treeType, operationFns, loadData, selectedNode, lang]);
+  }, [createTargetNode, formatMessage, hasTopicType, isMountedTopic, lang, loadData, message, operationFns, treeType]);
   return (
     <>
       {options?.map((item) => {
@@ -175,23 +232,25 @@ const Operation = () => {
           return (
             <Dropdown menu={{ items }} placement="bottom" key={item.key}>
               <Button
+                className="uns-tree-toolbar-button"
                 style={{
-                  background: 'var(--supos-switchwrap-bg-color)',
+                  background: 'var(--ui-switchwrap-bg-color)',
                   padding: '7px',
                 }}
                 color="default"
                 variant="filled"
                 title={item.title}
               >
-                <AddLarge />
+                <SquarePlus {...toolbarIconProps} />
               </Button>
             </Dropdown>
           );
         } else {
           return (
             <ComButton
+              className="uns-tree-toolbar-button"
               style={{
-                background: 'var(--supos-switchwrap-bg-color)',
+                background: 'var(--ui-switchwrap-bg-color)',
                 padding: '7px',
               }}
               auth={item.auth}
@@ -216,73 +275,6 @@ const Operation = () => {
         />
       )}
     </>
-  );
-};
-
-// 树类型
-const TreeTab = () => {
-  const formatMessage = useTranslate();
-
-  const { treeType } = useTreeStore((state) => ({
-    treeType: state.treeType,
-  }));
-  const stateRef = useTreeStoreRef();
-  const { setTreeType, setSearchValue, setLazyTree, loadData } = getTreeStoreSnapshot(stateRef, (state) => ({
-    setTreeType: state.setTreeType,
-    setSearchValue: state.setSearchValue,
-    setLazyTree: state.setLazyTree,
-    loadData: state.loadData,
-  }));
-
-  return (
-    <Flex justify="space-between" align="center">
-      <Radio.Group
-        onChange={(e) => {
-          setSearchValue('');
-          setTreeType(e.target.value);
-          loadData({ reset: true, clearSelect: true });
-        }}
-        optionType="button"
-        value={treeType}
-        style={{ padding: '16px 0' }}
-        size="small"
-        options={[
-          {
-            label: formatMessage('uns.tree'),
-            value: 'uns',
-            title: formatMessage('uns.tree'),
-          },
-          {
-            label: formatMessage('common.template'),
-            value: 'template',
-            title: formatMessage('common.template'),
-          },
-          {
-            label: formatMessage('common.label'),
-            value: 'label',
-            title: formatMessage('common.label'),
-          },
-        ]}
-      />
-      {treeType === 'uns' && (
-        <ComClickTrigger
-          style={{ flex: 1, height: 24 }}
-          onTrigger={() => {
-            setLazyTree((pre) => !pre);
-            loadData({ reset: true, clearSelect: true });
-          }}
-        />
-      )}
-      {
-        <ComClickTrigger
-          triggerCount={2}
-          style={{ flex: 1, height: 24 }}
-          onTrigger={() => {
-            console.warn(getTreeStoreSnapshot(stateRef));
-          }}
-        />
-      }
-    </Flex>
   );
 };
 
@@ -335,7 +327,6 @@ const Search = () => {
 
   const placeholderMap = {
     uns: formatMessage('common.searchPlaceholderUns'),
-    template: formatMessage('common.searchPlaceholderTem'),
     label: formatMessage('common.searchPlaceholderLabel'),
   };
 
@@ -352,7 +343,6 @@ const Search = () => {
         if (isComposingRef.current) return;
         onSearchChange();
       }}
-      style={{ borderRadius: '3px', flex: 1, backgroundColor: 'transparent', border: '1px solid #E0E0E0' }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
           loadData({ reset: true });
@@ -363,59 +353,37 @@ const Search = () => {
   );
 };
 
-// uns搜索类型
-const UnsTypeSearch = () => {
-  const formatMessage = useTranslate();
-  const { treeType, searchType, setSearchType, loadData } = useTreeStore((state) => ({
-    searchType: state.searchType,
-    treeType: state.treeType,
-    setSearchType: state.setSearchType,
-    loadData: state.loadData,
-    setSelectedNode: state.setSelectedNode,
-  }));
-
-  const popoverContent = (
-    <Radio.Group
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-      }}
-      value={searchType}
-      onChange={(e) => {
-        setSearchType(e.target.value);
-        loadData({ reset: true, clearSelect: true });
-      }}
-      options={[
-        { value: 1, label: formatMessage('fieldTypeSTRING'), title: formatMessage('fieldTypeSTRING') },
-        { value: 3, label: formatMessage('uns.hasTemplate'), title: formatMessage('uns.hasTemplate') },
-        { value: 2, label: formatMessage('uns.hasLabel'), title: formatMessage('uns.hasLabel') },
-      ]}
-    />
-  );
+const TreeHeader = ({
+  customTreeTab,
+  enableRootAsParent,
+  defaultCreateParentNode,
+  resolveCurrentDataRootNode,
+}: {
+  customTreeTab?: React.ReactNode;
+  enableRootAsParent?: boolean;
+  defaultCreateParentNode?: UnsTreeNode;
+  resolveCurrentDataRootNode?: (treeData: UnsTreeNode[]) => UnsTreeNode | undefined;
+}) => {
   return (
-    treeType === 'uns' && (
-      <Popover placement="bottomLeft" title="" content={popoverContent} trigger="hover">
-        <Button icon={<Filter />} style={{ flexShrink: 0 }} />
-      </Popover>
-    )
-  );
-};
-
-const TreeHeader = () => {
-  return (
-    <div>
-      <TreeTab />
-      <Flex gap={8} align="center">
-        <UnsTypeSearch />
-        <Search />
-        <Operation />
+    <div style={{ paddingTop: customTreeTab ? 8 : 14 }}>
+      {customTreeTab}
+      <Flex gap={8} align="center" className="tree-toolbar" style={{ marginTop: customTreeTab ? 8 : 0 }}>
+        <div className="tree-toolbar-search">
+          <Search />
+        </div>
+        <div className="tree-toolbar-actions">
+          <Operation
+            enableRootAsParent={enableRootAsParent}
+            defaultCreateParentNode={defaultCreateParentNode}
+            resolveCurrentDataRootNode={resolveCurrentDataRootNode}
+          />
+        </div>
       </Flex>
 
       <Divider
         style={{
-          background: '#e0e0e0',
-          margin: '16px 0 10px',
+          background: 'var(--ui-table-tr-color)',
+          margin: '14px 0 12px',
         }}
       />
     </div>
@@ -424,70 +392,20 @@ const TreeHeader = () => {
 
 // uns树的icon展示
 const TreeNodeIcon = memo(({ dataNode }: { dataNode: UnsTreeNode }) => {
-  const { mountStatus } = useUnsContext();
-  const { expandedKeys } = useTreeStore((state) => ({
-    expandedKeys: state.expandedKeys,
-  }));
   const {
     systemInfo: { enableAutoCategorization },
   } = useBaseStore((state) => ({
     systemInfo: state.systemInfo,
   }));
 
-  let Dom;
-  let color;
-  const parentDataType = enableAutoCategorization
-    ? dataNode.pathType === 0
-      ? dataNode.dataType
-      : dataNode.parentDataType
-    : 0;
-
-  switch (parentDataType) {
-    case 1:
-      Dom = Document;
-      color = '#D2A106';
-      break;
-    case 2:
-      Dom = SendAlt;
-      color = '#94C518';
-      break;
-    case 3:
-      Dom = ChartLine;
-      color = '#1D77FE';
-      break;
-    default:
-      break;
-  }
-  const commonStyle = { flexShrink: 0, marginRight: '5px' };
-
-  if (dataNode.pathType === 0) {
-    return (
-      <Flex align="center">
-        <div style={{ width: 10, display: 'flex', alignItems: 'center' }}>
-          {dataNode.alias && mountStatus[dataNode.alias] && <StatusDot status={mountStatus[dataNode.alias]} />}
-        </div>
-        {enableAutoCategorization ? (
-          dataNode.dataType && Dom ? (
-            <Dom style={{ ...commonStyle, color: color }} />
-          ) : (
-            <WatsonHealth3DCurveAutoColon style={commonStyle} />
-          )
-        ) : expandedKeys.includes(dataNode.key) && dataNode.hasChildren ? (
-          <FolderOpen style={commonStyle} />
-        ) : (
-          <Folder style={commonStyle} />
-        )}
-      </Flex>
-    );
-  } else if (dataNode.pathType === 2) {
-    return (
-      <Flex align="center">
-        <div style={{ width: 10 }} />
-        {Dom ? <Dom style={{ ...commonStyle, color: color }} /> : <Document style={commonStyle} />}
-      </Flex>
-    );
-  }
-  return null;
+  return (
+    <UnsTreeNodeIcon
+      dataNode={dataNode}
+      topicType={enableAutoCategorization ? getNodeTopicType(dataNode) : 0}
+      enableAutoCategorization={enableAutoCategorization}
+      isTopicTypeFolder={isTopicTypeFolder}
+    />
+  );
 });
 
 const findNodeWithParent = (
@@ -506,14 +424,42 @@ const findNodeWithParent = (
   return null;
 };
 
+/** 树上行走：按 UNS namespace（node.path，见 agent/tree-adapter.ts 的 `namespace: node.path`）
+ * 定位树节点；找不到（懒加载未展开到、路径不存在）返回 undefined，调用方静默跳过。 */
+const findNodeByPath = (tree: UnsTreeNode[], path: string): UnsTreeNode | undefined => {
+  for (const node of tree) {
+    if (node.path === path) return node;
+    if (node.children?.length) {
+      const found = findNodeByPath(node.children, path);
+      if (found) return found;
+    }
+  }
+  return undefined;
+};
+
+/** 树上行走高亮维持时长：过后自动淡出（inline style 的 transition 接管，见 renderTitleStyle）。 */
+const WALK_HIGHLIGHT_VISIBLE_MS = 2000;
+
 const TopTreeCom = ({
   header,
   treeNodeExtra,
   changeCurrentPath,
+  enableRightClick = true,
+  enableRootAsParent,
+  defaultCreateParentNode,
+  resolveCurrentDataRootNode,
+  disableDeleteRoot,
+  nonDeletableNodeIds,
 }: {
   header: ProTreeProps['header'];
   treeNodeExtra?: ProTreeProps['treeNodeExtra'];
   changeCurrentPath?: any;
+  enableRightClick?: boolean;
+  enableRootAsParent?: boolean;
+  defaultCreateParentNode?: UnsTreeNode;
+  resolveCurrentDataRootNode?: (treeData: UnsTreeNode[]) => UnsTreeNode | undefined;
+  disableDeleteRoot?: boolean;
+  nonDeletableNodeIds?: Key[];
 }) => {
   const formatMessage = useTranslate();
   const { message } = App.useApp();
@@ -548,10 +494,10 @@ const TopTreeCom = ({
     onRefresh,
     setCurrentTreeMapType,
     setScrollTreeNode,
-    setTreeType,
     handleExpandNode,
     setTreeData,
     setLoading,
+    walkHighlightKey,
   } = useTreeStore((state) => ({
     lazyTree: state.lazyTree,
     loadData: state.loadData,
@@ -576,10 +522,10 @@ const TopTreeCom = ({
     setTreeMap: state.setTreeMap,
     setCurrentTreeMapType: state.setCurrentTreeMapType,
     setScrollTreeNode: state.setScrollTreeNode,
-    setTreeType: state.setTreeType,
     handleExpandNode: state.handleExpandNode,
     setTreeData: state.setTreeData,
     setLoading: state.setLoading,
+    walkHighlightKey: state.walkHighlightKey,
   }));
 
   //滚动到目标树节点
@@ -593,6 +539,20 @@ const TopTreeCom = ({
     setScrollTreeNode(scrollTreeNode);
   }, [scrollTreeNode]);
 
+
+  // 树上行走：描边高亮维持 WALK_HIGHLIGHT_VISIBLE_MS 后自动淡出（renderTitleStyle 依据
+  // highlightVisibleKey 决定是否套用高亮样式；淡出靠 inline style 的 transition 接管，见下方）。
+  const [highlightVisibleKey, setHighlightVisibleKey] = useState<Key | undefined>(undefined);
+  useEffect(() => {
+    if (walkHighlightKey == null) {
+      setHighlightVisibleKey(undefined);
+      return;
+    }
+    setHighlightVisibleKey(walkHighlightKey);
+    const timer = setTimeout(() => setHighlightVisibleKey(undefined), WALK_HIGHLIGHT_VISIBLE_MS);
+    return () => clearTimeout(timer);
+  }, [walkHighlightKey]);
+
   const onLoadData = async (node: any) => {
     const _node = { ...node };
     return loadData({
@@ -600,18 +560,6 @@ const TopTreeCom = ({
       parentInfo: _node,
     });
   };
-  const toTargetNode = (type: TTreeType, node: any) => {
-    setTreeMap(false);
-    setTreeType(type);
-    scrollTreeNode(node.id);
-    loadData({ queryType: 'viewTemplate', newNodeKey: node.id }, (data) => {
-      setSelectedNode(data?.find((f) => f.id === node.id));
-      scrollTreeNode(node.id);
-      setCurrentTreeMapType('all');
-    });
-  };
-  const { ViewLabelModal, setLabelOpen } = useViewLabelModal({ toTargetNode: toTargetNode });
-
   const handleRenderLoadMoreNode = (moreNodeData: any) => {
     const { parentKey: nodeKey, currentPage } = moreNodeData;
     if (loadingKeys.has(nodeKey)) {
@@ -632,7 +580,47 @@ const TopTreeCom = ({
     }
   };
   const isUns = treeType === 'uns';
+  const renderedTreeData = useMemo(
+    () => (isUns ? decorateMountedNamespaceTree(treeData) : treeData),
+    [isUns, treeData]
+  );
   const isShow = usePageIsShow();
+  const createFallbackNode = resolveCreateFallbackNode({
+    treeData,
+    enableRootAsParent,
+    defaultCreateParentNode,
+    resolveCurrentDataRootNode,
+  });
+  const currentDataRootNode = resolveCurrentDataRootNode?.(treeData) || getDefaultDataRootNode(treeData);
+  const currentDataRootNodeId = normalizeNodeId(currentDataRootNode?.id);
+  const nonDeletableNodeIdSet = useMemo(
+    () => new Set((nonDeletableNodeIds || []).map((id) => normalizeNodeId(id))),
+    [nonDeletableNodeIds]
+  );
+
+  const isNodeDeletable = useCallback(
+    (node?: UnsTreeNode) => {
+      if (!node) {
+        return false;
+      }
+      if (hasMountedTopicInSubtree(node)) {
+        return false;
+      }
+      const nodeId = normalizeNodeId(node.id);
+      if (!nodeId) {
+        return true;
+      }
+      if (nonDeletableNodeIdSet.has(nodeId)) {
+        return false;
+      }
+      if (disableDeleteRoot && currentDataRootNodeId && nodeId === currentDataRootNodeId) {
+        return false;
+      }
+      return true;
+    },
+    [disableDeleteRoot, currentDataRootNodeId, nonDeletableNodeIdSet]
+  );
+
   const pasteHandle = (source: any, target: any) => {
     if (source) {
       setLoading(true);
@@ -691,7 +679,6 @@ const TopTreeCom = ({
   };
   return (
     <>
-      {ViewLabelModal}
       <ProTree
         onDndDragStart={(info) => {
           const { active } = info;
@@ -744,222 +731,216 @@ const TopTreeCom = ({
         isShow={isShow}
         ref={treeRef}
         rightClickMenuItems={
-          isUns
-            ? ({ node }) => {
-                if (!node) {
-                  // 空白点击
-                  return [
-                    {
-                      auth: [ButtonPermission['uns.folderPaste'], ButtonPermission['uns.filePaste']],
-                      key: 'paste',
-                      label: formatMessage('common.paste'),
-                      onClick: () => {
-                        pasteHandle(pasteNode, null);
+          enableRightClick
+            ? isUns
+              ? ({ node }) => {
+                  if (!node) {
+                    // 空白点击
+                    return [
+                      {
+                        auth: [ButtonPermission['uns.folderPaste'], ButtonPermission['uns.filePaste']],
+                        key: 'paste',
+                        label: formatMessage('common.paste'),
+                        onClick: () => {
+                          pasteHandle(pasteNode, null);
+                        },
                       },
-                    },
-                    {
-                      auth: [ButtonPermission['uns.folderPaste'], ButtonPermission['uns.filePaste']],
-                      key: 'pasteAndEdit',
-                      label: formatMessage('common.pasteAndEdit'),
-                      onClick: () => {
-                        if (pasteNode) {
-                          //纯前端方案
-                          operationFns?.setOptionOpen?.('paste', null, pasteNode);
-                        } else {
-                          message.warning(formatMessage('uns.copyTip'));
+                      {
+                        auth: [ButtonPermission['uns.folderPaste'], ButtonPermission['uns.filePaste']],
+                        key: 'pasteAndEdit',
+                        label: formatMessage('common.pasteAndEdit'),
+                        onClick: () => {
+                          if (pasteNode) {
+                            //纯前端方案
+                            operationFns?.setOptionOpen?.('paste', null, pasteNode);
+                          } else {
+                            message.warning(formatMessage('uns.copyTip'));
+                          }
+                        },
+                        disabled: !!(
+                          enableAutoCategorization &&
+                          pasteNode?.pathType === 0 &&
+                          getFolderTopicType(pasteNode)
+                        ),
+                      },
+                      {
+                        auth: ButtonPermission['uns.folderAdd'],
+                        key: 'addFolder',
+                        label: formatMessage('common.createNewFolder'),
+                        onClick: () => {
+                          operationFns?.setOptionOpen?.('addFolder', createFallbackNode);
+                        },
+                      },
+                      {
+                        auth: ButtonPermission['uns.fileAdd'],
+                        key: 'addFile',
+                        label: formatMessage('common.createNewFile'),
+                        onClick: () => {
+                          operationFns?.setOptionOpen?.('addFile', createFallbackNode);
+                        },
+                      },
+                    ];
+                  }
+                  const _node = { ...node };
+                  const nodeTopicType = getNodeTopicType(_node);
+                  const baseItems =
+                    (_node.pathType === 0 && !getFolderTopicType(_node)) || !enableAutoCategorization
+                      ? ['copy', 'paste', 'pasteAndEdit', 'addFolder', 'addFile', 'delete']
+                      : ['copy', 'paste', 'pasteAndEdit', 'addFile', 'delete'];
+                  let disabledPaste = false;
+                  let disabledPasteAndEdit = false;
+                  if (enableAutoCategorization && pasteNode) {
+                    if (pasteNode.pathType === 0) {
+                      const pasteTopicType = getFolderTopicType(pasteNode);
+                      if (pasteTopicType) {
+                        if (
+                          (_node.pathType === 0 && nodeTopicType && pasteTopicType !== nodeTopicType) ||
+                          (_node.pathType === 2 && pasteTopicType !== nodeTopicType)
+                        ) {
+                          disabledPaste = true;
+                          disabledPasteAndEdit = true;
                         }
-                      },
-                      disabled: !!(enableAutoCategorization && pasteNode?.pathType === 0 && pasteNode?.dataType),
-                    },
-                    {
-                      auth: ButtonPermission['uns.folderAdd'],
-                      key: 'addFolder',
-                      label: formatMessage('common.createNewFolder'),
-                      onClick: () => {
-                        operationFns?.setOptionOpen?.('addFolder');
-                      },
-                    },
-                    {
-                      auth: ButtonPermission['uns.fileAdd'],
-                      key: 'addFile',
-                      label: formatMessage('common.createNewFile'),
-                      onClick: () => {
-                        operationFns?.setOptionOpen?.('addFile');
-                      },
-                    },
-                  ];
-                }
-                const _node = { ...node };
-                const baseItems =
-                  (_node.pathType === 0 && !_node.dataType) || !enableAutoCategorization
-                    ? ['viewTemplate', 'copy', 'paste', 'pasteAndEdit', 'addFolder', 'addFile', 'delete']
-                    : ['viewTemplate', 'copy', 'paste', 'pasteAndEdit', 'addFile', 'delete'];
-                let disabledPaste = false;
-                let disabledPasteAndEdit = false;
-                if (enableAutoCategorization && pasteNode) {
-                  if (pasteNode.pathType === 0) {
-                    if (pasteNode.dataType) {
+                        if (
+                          (_node.pathType === 0 && pasteTopicType === nodeTopicType) ||
+                          (_node.pathType === 2 && pasteTopicType === nodeTopicType) ||
+                          !nodeTopicType
+                        ) {
+                          disabledPasteAndEdit = true;
+                        }
+                      } else {
+                        if (nodeTopicType) {
+                          disabledPaste = true;
+                          disabledPasteAndEdit = true;
+                        }
+                      }
+                    } else if (pasteNode.pathType === 2) {
                       if (
-                        (_node.pathType === 0 && _node.dataType && pasteNode.dataType !== _node.dataType) ||
-                        (_node.pathType === 2 && pasteNode.dataType !== _node.parentDataType)
+                        (_node.pathType === 0 && nodeTopicType && pasteNode.parentDataType !== nodeTopicType) ||
+                        (_node.pathType === 2 && pasteNode.parentDataType !== nodeTopicType)
                       ) {
                         disabledPaste = true;
                         disabledPasteAndEdit = true;
                       }
-                      if (
-                        (_node.pathType === 0 && pasteNode.dataType === _node.dataType) ||
-                        (_node.pathType === 2 && pasteNode.dataType === _node.parentDataType) ||
-                        !_node.dataType
-                      ) {
-                        disabledPasteAndEdit = true;
-                      }
-                    } else {
-                      if ((_node.pathType === 0 && _node.dataType) || (_node.pathType === 2 && _node.parentDataType)) {
-                        disabledPaste = true;
-                        disabledPasteAndEdit = true;
-                      }
-                    }
-                  } else if (pasteNode.pathType === 2) {
-                    if (
-                      (_node.pathType === 0 && _node.dataType && pasteNode.parentDataType !== _node.dataType) ||
-                      (_node.pathType === 2 && pasteNode.parentDataType !== _node.parentDataType)
-                    ) {
-                      disabledPaste = true;
-                      disabledPasteAndEdit = true;
                     }
                   }
+                  const folderItems = lazyTree
+                    ? ['refresh', ...baseItems, 'expandFolder', 'collapseFolder']
+                    : [...baseItems, 'expandFolder', 'collapseFolder'];
+
+                  const isMountedTopic = Boolean(_node.mount && _node.pathType === 2);
+                  const mapItem = (_node.pathType === 0 ? folderItems : baseItems).filter(
+                    (item) => !isMountedTopic || !['copy', 'delete'].includes(item)
+                  );
+                  const allowDelete = isNodeDeletable(_node);
+
+                  return filterPermissionToList<ItemType>(
+                    [
+                      {
+                        key: 'refresh',
+                        label: formatMessage('common.refresh'),
+                        onClick: () => {
+                          onRefresh(_node);
+                        },
+                      },
+                      {
+                        auth:
+                          _node.pathType === 0 ? ButtonPermission['uns.folderCopy'] : ButtonPermission['uns.fileCopy'],
+                        key: 'copy',
+                        label: formatMessage('common.copy'),
+                        onClick: () => {
+                          setPasteNode(_node);
+                          message.success(formatMessage('common.copySuccess'));
+                        },
+                      },
+                      {
+                        auth:
+                          _node.pathType === 0
+                            ? ButtonPermission['uns.folderPaste']
+                            : ButtonPermission['uns.filePaste'],
+                        key: 'paste',
+                        label: formatMessage('common.paste'),
+                        onClick: () => {
+                          pasteHandle(pasteNode, _node);
+                        },
+                        disabled: isMountedTopic || disabledPaste,
+                      },
+                      {
+                        auth:
+                          _node.pathType === 0
+                            ? ButtonPermission['uns.folderPaste']
+                            : ButtonPermission['uns.filePaste'],
+                        key: 'pasteAndEdit',
+                        label: formatMessage('common.pasteAndEdit'),
+                        onClick: () => {
+                          if (pasteNode) {
+                            //纯前端方案
+                            operationFns?.setOptionOpen?.('paste', _node, pasteNode);
+                          } else {
+                            message.warning(formatMessage('uns.copyTip'));
+                          }
+                        },
+                        disabled: isMountedTopic || disabledPasteAndEdit,
+                      },
+                      {
+                        auth: ButtonPermission['uns.folderAdd'],
+                        key: 'addFolder',
+                        label: formatMessage('common.createNewFolder'),
+                        onClick: () => {
+                          operationFns?.setOptionOpen?.('addFolder', _node);
+                        },
+                        disabled: isMountedTopic,
+                      },
+                      {
+                        auth: ButtonPermission['uns.fileAdd'],
+                        key: 'addFile',
+                        label: formatMessage('common.createNewFile'),
+                        onClick: () => {
+                          operationFns?.setOptionOpen?.('addFile', _node);
+                        },
+                        disabled: isMountedTopic,
+                      },
+                      {
+                        key: 'expandFolder',
+                        label: formatMessage('common.expandFolder'),
+                        onClick: () => {
+                          handleExpandNode(true, _node);
+                        },
+                      },
+                      {
+                        key: 'collapseFolder',
+                        label: formatMessage('common.collapseFolder'),
+                        onClick: () => {
+                          handleExpandNode(false, _node);
+                        },
+                      },
+                      {
+                        type: 'divider',
+                      },
+                      {
+                        auth:
+                          _node.pathType === 0
+                            ? ButtonPermission['uns.folderDelete']
+                            : ButtonPermission['uns.fileDelete'],
+                        key: 'delete',
+                        label: formatMessage('common.delete'),
+                        danger: true,
+                        onClick: () => {
+                          if (!allowDelete) {
+                            return;
+                          }
+                          operationFns?.setDeleteOpen?.(_node);
+                        },
+                        disabled: !allowDelete,
+                        extra: (
+                          <div style={{ display: 'flex' }}>
+                            <TrashCan {...toolbarIconProps} />
+                          </div>
+                        ),
+                      },
+                    ]?.filter((f) => !f.key || mapItem.includes(f.key)) as any
+                  );
                 }
-                const folderItems = lazyTree
-                  ? ['refresh', ...baseItems, 'collapseFolder']
-                  : [...baseItems, 'expandFolder', 'collapseFolder'];
-
-                const mapItem = _node.pathType === 0 ? folderItems : ['viewLabels', ...baseItems];
-                const isMountFile = !!node.mount;
-
-                return filterPermissionToList<ItemType>(
-                  [
-                    {
-                      key: 'refresh',
-                      label: formatMessage('common.refresh'),
-                      onClick: () => {
-                        onRefresh(_node);
-                      },
-                    },
-                    {
-                      key: 'viewLabels',
-                      label: formatMessage('common.viewLabels'),
-                      onClick: async () => {
-                        const getInfo = _node.pathType === 2 ? getInstanceInfo : getModelInfo;
-                        const detail: any = await getInfo({ id: _node.id });
-                        if (detail?.labelList?.length > 0) {
-                          setLabelOpen(detail.labelList);
-                        } else {
-                          message.warning(formatMessage('uns.noLabel'));
-                        }
-                      },
-                    },
-                    {
-                      key: 'viewTemplate',
-                      label: formatMessage('common.viewTemplate'),
-                      onClick: async () => {
-                        const getInfo = _node.pathType === 2 ? getInstanceInfo : getModelInfo;
-                        const detail: any = await getInfo({ id: _node.id });
-                        if (detail.modelId) {
-                          toTargetNode('template', { key: detail.modelId, pathType: 1, id: detail.modelId });
-                        } else {
-                          message.warning(formatMessage('uns.noTemplate'));
-                        }
-                      },
-                    },
-                    {
-                      auth:
-                        _node.pathType === 0 ? ButtonPermission['uns.folderCopy'] : ButtonPermission['uns.fileCopy'],
-                      key: 'copy',
-                      label: formatMessage('common.copy'),
-                      onClick: () => {
-                        setPasteNode(_node);
-                        message.success(formatMessage('common.copySuccess'));
-                      },
-                    },
-                    {
-                      auth:
-                        _node.pathType === 0 ? ButtonPermission['uns.folderPaste'] : ButtonPermission['uns.filePaste'],
-                      key: 'paste',
-                      label: formatMessage('common.paste'),
-                      onClick: () => {
-                        pasteHandle(pasteNode, _node);
-                      },
-                      disabled: isMountFile || disabledPaste,
-                    },
-                    {
-                      auth:
-                        _node.pathType === 0 ? ButtonPermission['uns.folderPaste'] : ButtonPermission['uns.filePaste'],
-                      key: 'pasteAndEdit',
-                      label: formatMessage('common.pasteAndEdit'),
-                      onClick: () => {
-                        if (pasteNode) {
-                          //纯前端方案
-                          operationFns?.setOptionOpen?.('paste', _node, pasteNode);
-                        } else {
-                          message.warning(formatMessage('uns.copyTip'));
-                        }
-                      },
-                      disabled: isMountFile || disabledPasteAndEdit,
-                    },
-                    {
-                      auth: ButtonPermission['uns.folderAdd'],
-                      key: 'addFolder',
-                      label: formatMessage('common.createNewFolder'),
-                      onClick: () => {
-                        operationFns?.setOptionOpen?.('addFolder', _node);
-                      },
-                      disabled: isMountFile,
-                    },
-                    {
-                      auth: ButtonPermission['uns.fileAdd'],
-                      key: 'addFile',
-                      label: formatMessage('common.createNewFile'),
-                      onClick: () => {
-                        operationFns?.setOptionOpen?.('addFile', _node);
-                      },
-                      disabled: isMountFile,
-                    },
-                    {
-                      key: 'expandFolder',
-                      label: formatMessage('common.expandFolder'),
-                      onClick: () => {
-                        handleExpandNode(true, _node);
-                      },
-                    },
-                    {
-                      key: 'collapseFolder',
-                      label: formatMessage('common.collapseFolder'),
-                      onClick: () => {
-                        handleExpandNode(false, _node);
-                      },
-                    },
-                    {
-                      type: 'divider',
-                    },
-                    {
-                      auth:
-                        _node.pathType === 0
-                          ? ButtonPermission['uns.folderDelete']
-                          : ButtonPermission['uns.fileDelete'],
-                      key: 'delete',
-                      label: formatMessage('common.delete'),
-                      onClick: () => {
-                        operationFns?.setDeleteOpen?.(_node);
-                      },
-                      extra: (
-                        <div style={{ display: 'flex' }}>
-                          <TrashCan />
-                        </div>
-                      ),
-                    },
-                  ]?.filter((f) => !f.key || mapItem.includes(f.key)) as any
-                );
-              }
+              : undefined
             : undefined
         }
         matchHighlightValue={searchValue}
@@ -972,17 +953,16 @@ const TopTreeCom = ({
           setCurrentTreeMapType('all');
         }}
         loading={loading}
-        treeData={treeData}
+        treeData={renderedTreeData}
         loadData={onLoadData}
         loadMoreData={handleRenderLoadMoreNode}
         loadedKeys={loadedKeys}
-        // onLoad={(newLoadedKeys) => setLoadedKeys(newLoadedKeys)}
+        onLoad={(newLoadedKeys) => setLoadedKeys(newLoadedKeys)}
         expandedKeys={expandedKeys}
         onExpand={(expandedKeys) => {
           setExpandedKeys(expandedKeys);
-          setLoadedKeys(expandedKeys);
         }}
-        lazy={treeType === 'template' ? true : lazyTree}
+        lazy={lazyTree}
         header={header}
         wrapperStyle={{ padding: '0 14px' }}
         height={0}
@@ -999,13 +979,7 @@ const TopTreeCom = ({
         treeNodeCount={(dataNode) => {
           return (
             dataNode.pathType === 0 && (
-              <span
-                style={{
-                  color: enableAutoCategorization ? '#161616' : 'var(--supos-text-color)',
-                  fontSize: '12px',
-                  opacity: 0.5,
-                }}
-              >
+              <span className={cx('uns-tree-node-count', !enableAutoCategorization && 'uns-tree-node-count--plain')}>
                 ({dataNode.countChildren})
               </span>
             )
@@ -1019,13 +993,15 @@ const TopTreeCom = ({
               align="center"
               className="overlay-dom"
               style={{
-                color: 'var(--supos-text-color)',
+                color: 'var(--ui-text-color)',
               }}
             >
               {isUns ? <TreeNodeIcon dataNode={dataNode} /> : undefined}
               <span style={{ fontWeight: 'bold', fontSize: 14 }}>{dataNode.title}</span>
               {dataNode.pathType === 0 && (
-                <span style={{ fontSize: '12px', opacity: 0.5 }}>({dataNode.countChildren})</span>
+                <span className={cx('uns-tree-node-count', !enableAutoCategorization && 'uns-tree-node-count--plain')}>
+                  ({dataNode.countChildren})
+                </span>
               )}
             </Flex>
           );
@@ -1041,29 +1017,36 @@ const TopTreeCom = ({
           }
         }}
         renderTitleStyle={(dataNode) => {
-          const bgColor =
-            dataNode.pathType === 0 && dataNode.dataType && enableAutoCategorization
-              ? dataNode.dataType === 1
-                ? '#FCF4D6'
-                : dataNode.dataType === 2
-                  ? '#F0FBD2'
-                  : '#E8F1FF'
-              : '';
+          const folderTopicType = getFolderTopicType(dataNode);
           const highNode =
             breadcrumbList
               ?.slice(0, -1)
               .map((e) => e.key)
               .includes(dataNode.key) ?? false;
 
-          return bgColor
+          const baseStyle =
+            !folderTopicType || !enableAutoCategorization
+              ? {}
+              : {
+                  ...getUnsTopicFolderTitleStyle(folderTopicType),
+                  color: highNode ? 'var(--ui-theme-color)' : getUnsTopicFolderTextColor(folderTopicType),
+                };
+
+          // 树上行走高亮：与选中态无关，纯视觉描边闪烁，WALK_HIGHLIGHT_VISIBLE_MS 后经 transition
+          // 自动淡出（品牌绿，描边色对齐 .ant-tree-treenode-selected 已在用的
+          // --ui-t-chartreuse-color-60）。非高亮态挂一条较慢的 transition，一旦 isWalking 变 false
+          // 就靠它把 highlight 态的背景/描边平滑淡回去。
+          const isWalking = highlightVisibleKey != null && String(dataNode.key) === String(highlightVisibleKey);
+          const walkStyle = isWalking
             ? {
-                height: '26px',
-                backgroundColor: bgColor,
-                borderRadius: '3px',
-                paddingRight: '8px',
-                color: highNode ? 'var(--supos-theme-color)' : '#161616',
+                backgroundColor: 'var(--ui-t-chartreuse-color-20, #e5f9b4)',
+                boxShadow: 'inset 0 0 0 1.5px var(--ui-t-chartreuse-color-60, #b2ed1d)',
+                borderRadius: 3,
+                transition: 'background-color .12s ease-in, box-shadow .12s ease-in',
               }
-            : {};
+            : { transition: 'background-color 1.6s ease-out, box-shadow 1.6s ease-out' };
+
+          return { ...baseStyle, ...walkStyle };
         }}
       />
     </>
@@ -1073,10 +1056,43 @@ const TopTreeCom = ({
 const UnsTree = ({
   treeNodeExtra,
   changeCurrentPath,
+  customTreeTab,
+  enableRightClick,
+  enableRootAsParent,
+  defaultCreateParentNode,
+  resolveCurrentDataRootNode,
+  disableDeleteRoot,
+  nonDeletableNodeIds,
 }: {
   treeNodeExtra?: ProTreeProps['treeNodeExtra'];
   changeCurrentPath?: any;
+  customTreeTab?: React.ReactNode;
+  enableRightClick?: boolean;
+  enableRootAsParent?: boolean;
+  defaultCreateParentNode?: UnsTreeNode;
+  resolveCurrentDataRootNode?: (treeData: UnsTreeNode[]) => UnsTreeNode | undefined;
+  disableDeleteRoot?: boolean;
+  nonDeletableNodeIds?: Key[];
 }) => {
-  return <TopTreeCom treeNodeExtra={treeNodeExtra} changeCurrentPath={changeCurrentPath} header={<TreeHeader />} />;
+  return (
+    <TopTreeCom
+      treeNodeExtra={treeNodeExtra}
+      changeCurrentPath={changeCurrentPath}
+      header={
+        <TreeHeader
+          customTreeTab={customTreeTab}
+          enableRootAsParent={enableRootAsParent}
+          defaultCreateParentNode={defaultCreateParentNode}
+          resolveCurrentDataRootNode={resolveCurrentDataRootNode}
+        />
+      }
+      enableRightClick={enableRightClick}
+      enableRootAsParent={enableRootAsParent}
+      defaultCreateParentNode={defaultCreateParentNode}
+      resolveCurrentDataRootNode={resolveCurrentDataRootNode}
+      disableDeleteRoot={disableDeleteRoot}
+      nonDeletableNodeIds={nonDeletableNodeIds}
+    />
+  );
 };
 export default UnsTree;

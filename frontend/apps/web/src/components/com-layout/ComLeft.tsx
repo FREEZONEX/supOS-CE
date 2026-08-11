@@ -121,8 +121,8 @@ const ComLeft: FC<ComLeftProps> = ({
       </div>
       {/* {isH5 && isFloating && (
         <Flex onClick={() => setIsFloating(false)} className={styles['floating-btn']}>
-          <TreeViewIcon size={20} style={{ color: 'var(--supos-theme-color)' }} />
-          <span style={{ color: 'var(--supos-theme-color)', paddingLeft: '4px' }}>{formatMessage('uns.treeList')}</span>
+          <TreeViewIcon size={20} style={{ color: 'var(--ui-theme-color)' }} />
+          <span style={{ color: 'var(--ui-theme-color)', paddingLeft: '4px' }}>{formatMessage('uns.treeList')}</span>
         </Flex>
       )} */}
       {isResizing && (

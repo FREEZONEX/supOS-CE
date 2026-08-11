@@ -7,15 +7,15 @@ $dark-color: #000;
   // top: 10px;
   // left: 10px;
   user-select: none;
-  background-color: var(--supos-bg-color);
+  background-color: var(--ui-bg-color);
 
   .navWrap {
     width: 280px;
     height: calc(100vh - 20px);
     border-radius: 1px;
-    border: 1px solid #c6c6c6;
+    border: 1px solid var(--ui-line-color);
     background: var(--background-color-light);
-    box-shadow: 1px 2px 4px 0 var(--supos-navwrap-color);
+    box-shadow: 1px 2px 4px 0 var(--ui-navwrap-color);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -78,7 +78,7 @@ $dark-color: #000;
     .navContent {
       flex: 1;
       overflow-y: auto;
-      background-color: var(--supos-bg-color);
+      background-color: var(--ui-bg-color);
 
       .navItem {
         height: 40px;
@@ -122,7 +122,7 @@ $dark-color: #000;
         align-items: center;
 
         .iconWrapper {
-          color: var(--supos-text-color);
+          color: var(--ui-text-color);
           display: flex;
           justify-content: center;
           align-items: center;
@@ -153,7 +153,7 @@ $dark-color: #000;
     .navItem {
       height: 40px;
       padding: 5px 0;
-      border-bottom: 1px solid #464646;
+      border-bottom: 1px solid var(--ui-line-color);
       font-size: 12px;
       cursor: pointer;
 
@@ -208,7 +208,7 @@ $dark-color: #000;
     background: $light-color;
 
     .navItem {
-      border-bottom: 1px solid #e5e5e5;
+      border-bottom: 1px solid var(--ui-line-color);
     }
   }
 }
@@ -243,7 +243,7 @@ $dark-color: #000;
 }
 
 .user-guide-icon {
-  color: var(--supos-text-color);
+  color: var(--ui-text-color);
   font-size: '16px';
   width: 100%;
   height: 100%;

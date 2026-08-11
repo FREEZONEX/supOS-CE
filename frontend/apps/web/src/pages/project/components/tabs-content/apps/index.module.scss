@@ -1,0 +1,190 @@
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nameIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgb(244 244 244 / 80%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #161616;
+  flex-shrink: 0;
+  padding: 4px;
+}
+
+.nameText {
+  font-weight: 500;
+  max-width: 80%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.descriptionCell {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ui-access-gray-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roleTagWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 400;
+  // margin-right: 8px;
+  max-width: 100%;
+  overflow: hidden;
+
+  svg {
+    color: currentColor;
+    flex-shrink: 0;
+  }
+}
+
+.tagText {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.statusActive {
+  background: #f6fef9;
+  border: 1px solid #b8f1d2;
+  color: #53b483;
+}
+
+.statusInactive {
+  background: #feebeb;
+  border: 1px solid #f77c7c;
+  color: #dd3636;
+}
+
+.statusDeploying {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #0969da;
+}
+
+.statusFailed {
+  background: #feebeb;
+  border: 1px solid #f77c7c;
+  color: #dd3636;
+}
+
+.roleTag {
+  background: #fffbeb;
+  color: #d97706;
+  border-radius: 60px;
+  border: none;
+}
+
+.operation {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+
+  > :global(div[data-button-auth]) {
+    display: inline-flex;
+  }
+}
+
+:global(.ant-table-tbody > tr.ant-table-row:hover) .operation,
+:global(.ant-table-tbody > tr.ant-table-row:focus-within) .operation {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.operationTooltip {
+  pointer-events: auto !important;
+}
+
+.operationButton {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ui-text-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  line-height: 0;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
+
+  &:hover {
+    background: var(--ui-fill-secondary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-theme-color);
+    outline-offset: 1px;
+  }
+}
+
+.operationButtonDanger:hover {
+  color: var(--ui-error-color);
+}
+
+.operationError {
+  color: var(--ui-error-color);
+}
+
+.highlightRow :global(td) {
+  background: #f4f4f4;
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .statusActive {
+    color: var(--ui-status-active-text);
+    background: var(--ui-status-active-bg);
+    border-color: var(--ui-status-active-border);
+  }
+
+  .statusInactive,
+  .statusFailed {
+    color: var(--ui-status-inactive-text);
+    background: var(--ui-status-inactive-bg);
+    border-color: var(--ui-status-inactive-border);
+  }
+
+  .statusDeploying {
+    color: var(--ui-access-blue-text);
+    background: var(--ui-access-blue-bg);
+    border-color: var(--ui-access-blue-border);
+  }
+
+  .highlightRow :global(td) {
+    background: var(--ui-fill-tertiary);
+  }
+}

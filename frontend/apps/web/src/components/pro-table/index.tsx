@@ -1,20 +1,31 @@
-import { useState, useRef, useEffect, memo, type FC, useMemo } from 'react';
+import { useState, useRef, useEffect, memo, type FC, useMemo, isValidElement, type ReactNode } from 'react';
 import { Button, Dropdown, Table } from 'antd';
 import type { TableColumnsType } from 'antd';
 import classNames from 'classnames';
 import useTranslate from '@/hooks/useTranslate.ts';
 import { useThemeStore } from '@/stores/theme-store.ts';
 import { useI18nStore } from '@/stores/i18n-store.ts';
-import { EllipsisOutlined } from '@ant-design/icons';
 import { hasPermission } from '@/utils/auth.ts';
 import { commonLabelRender } from '../operation-buttons/utils.tsx';
 import expandIcon from '@/assets/icons/expand.svg';
 import collapseIcon from '@/assets/icons/collapse.svg';
 import { ResizableTitle } from './ResizableTitle.tsx';
 import type { ATableProps } from './types.ts';
+import { fitColumnsToContainer, getColumnMax, getColumnMin, SELECTION_COL_WIDTH } from './column-fit.ts';
 import './index.scss';
 import { Pin, PinFilled } from '@carbon/icons-react';
+import { OverflowMenuHorizontal } from '@/components/lucide-icon/carbon';
 import ComButton from '../com-button';
+
+const resolveOperationIcon = (icon?: ReactNode, extra?: ReactNode): ReactNode => {
+  if (icon) return icon;
+  if (!extra || !isValidElement(extra)) return extra;
+  const { children } = extra.props as { children?: ReactNode };
+  if (children != null && children !== false) {
+    return children;
+  }
+  return extra;
+};
 
 const colorObj: any = {
   blue: {
@@ -26,8 +37,10 @@ const colorObj: any = {
     dark: '#242F06',
   },
 };
+
 const ProTable: FC<ATableProps> = ({
-  resizeable,
+  resizeable = true,
+  columnFit = true,
   columns,
   components,
   scroll,
@@ -46,8 +59,11 @@ const ProTable: FC<ATableProps> = ({
   }));
   const selectBgColor = colorObj?.[primaryColor]?.[theme];
   const [resizeColumns, setResizeColumns] = useState<TableColumnsType>(columns);
+  const [layoutWidth, setLayoutWidth] = useState(0);
   const tableWrapRef = useRef<HTMLDivElement>(null);
   const containerWidthRef = useRef(0);
+  const selectionWidth = restProps?.rowSelection ? SELECTION_COL_WIDTH : 0;
+  const useColumnFit = Boolean(resizeable && columnFit);
 
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [showAllColumns, setShowAllColumns] = useState<boolean>(true);
@@ -63,36 +79,28 @@ const ProTable: FC<ATableProps> = ({
       }
     : pagination;
 
-  // 计算有效列宽总和（排除固定列的潜在样式误差）
   const calculateEffectiveWidth = (cols: TableColumnsType) => {
     return cols.reduce((sum, col) => {
       let width = typeof col.width === 'number' ? col.width : 0;
-      // 修正固定列的边框误差
-      if (col.fixed) width += 2; // 补偿Ant Design的固定列边框
+      if (col.fixed) width += 2;
       return sum + width;
     }, 0);
   };
 
-  // 智能选择目标列
   const findFlexColumn = (cols: TableColumnsType) => {
-    // 从右向左查找第一个非固定列
     for (let i = cols.length - 1; i >= 0; i--) {
       if (!cols[i].fixed) return i;
     }
-    // 全固定列时选择倒数第二列
     return Math.max(0, cols.length - 2);
   };
 
-  // 动态平衡列宽
   const balanceColumns = (cols: TableColumnsType, changedIndex?: number) => {
     const containerWidth = containerWidthRef.current;
     if (!containerWidth) return cols;
-    // 新增：预留滚动条宽度
     const SCROLLBAR_WIDTH = 17;
     const totalWidth = calculateEffectiveWidth(cols);
     const delta = containerWidth - totalWidth - SCROLLBAR_WIDTH - (restProps?.rowSelection ? 35 : 0);
 
-    // 当列宽总和不足时自动扩展
     if (delta > 0) {
       const targetIndex = findFlexColumn(cols);
       const newColumns = [...cols];
@@ -103,7 +111,6 @@ const ProTable: FC<ATableProps> = ({
       return newColumns;
     }
 
-    // 处理主动缩小时同步调整固定列
     if (changedIndex !== undefined && cols[changedIndex]?.fixed) {
       const newColumns = [...cols];
       const nextIndex = changedIndex + 1;
@@ -118,17 +125,24 @@ const ProTable: FC<ATableProps> = ({
     return cols;
   };
 
+  const applyFit = (cols: TableColumnsType, resize?: { index: number; width: number }) => {
+    const width = tableWrapRef.current?.clientWidth ?? layoutWidth;
+    if (!width) return cols;
+    return fitColumnsToContainer(cols, width, selectionWidth, resize);
+  };
+
   const handleResize = (index: number) => (width?: number) => {
     if (!width || !tableWrapRef.current) return;
 
-    // 1：更新当前列宽
+    if (useColumnFit) {
+      setResizeColumns((prev) => applyFit(prev, { index, width }));
+      return;
+    }
+
     const newColumns = [...resizeColumns];
     newColumns[index] = { ...newColumns[index], width };
-
-    // 2：智能平衡列宽
     const balancedColumns = balanceColumns(newColumns, index);
 
-    // 3：同步固定列样式
     balancedColumns.forEach((col) => {
       if (col.fixed) {
         const selector = col.fixed === 'right' ? '.ant-table-cell-fix-right' : '.ant-table-cell-fix-left';
@@ -146,39 +160,69 @@ const ProTable: FC<ATableProps> = ({
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        containerWidthRef.current = entries[0].contentRect.width;
-        setResizeColumns((prev) => balanceColumns(prev));
+      const width = entries[0]?.contentRect.width ?? 0;
+      if (!width) return;
+
+      if (useColumnFit) {
+        setLayoutWidth(width);
+        setResizeColumns((prev) => fitColumnsToContainer(prev, width, selectionWidth));
+        return;
       }
+
+      containerWidthRef.current = width;
+      setResizeColumns((prev) => balanceColumns(prev));
     });
 
     if (tableWrapRef.current) {
       observer.observe(tableWrapRef.current);
-      containerWidthRef.current = tableWrapRef.current.clientWidth;
+      const width = tableWrapRef.current.clientWidth;
+      if (useColumnFit) {
+        setLayoutWidth(width);
+        setResizeColumns((prev) => fitColumnsToContainer(prev, width, selectionWidth));
+      } else {
+        containerWidthRef.current = width;
+        setResizeColumns((prev) => balanceColumns(prev));
+      }
     }
     return () => observer.disconnect();
-  }, []);
+  }, [selectionWidth, useColumnFit]);
 
   useEffect(() => {
-    if (!containerWidthRef.current) return;
+    const containerWidth = useColumnFit ? layoutWidth : containerWidthRef.current;
+    if (!containerWidth) return;
+
     const newColumns = columns.map((col) => {
       return typeof col.width === 'string'
         ? {
             ...col,
-            width: col.width.includes('%') ? containerWidthRef.current * (parseFloat(col.width) / 100) : col.width,
+            width: col.width.includes('%') ? containerWidth * (parseFloat(col.width) / 100) : col.width,
           }
         : col;
     });
+
+    if (useColumnFit) {
+      setResizeColumns(() => fitColumnsToContainer(newColumns, containerWidth, selectionWidth));
+      return;
+    }
+
     setResizeColumns(() => balanceColumns(newColumns));
-  }, [columns]);
+  }, [columns, layoutWidth, selectionWidth, useColumnFit]);
 
   const mergedColumns = resizeColumns.map<TableColumnsType[number]>((col, index) => ({
     ...col,
-    onHeaderCell: (column: TableColumnsType[number]) => ({
-      width: column.width,
-      minWidth: column.minWidth,
-      changeWidth: handleResize(index),
-    }),
+    onHeaderCell: (column: TableColumnsType[number]) =>
+      useColumnFit
+        ? {
+            width: column.width,
+            minWidth: getColumnMin(column),
+            maxWidth: getColumnMax(column),
+            changeWidth: handleResize(index),
+          }
+        : {
+            width: column.width,
+            minWidth: column.minWidth,
+            changeWidth: handleResize(index),
+          },
   }));
 
   const _classNames = classNames(className, 'pro-table', {
@@ -206,12 +250,24 @@ const ProTable: FC<ATableProps> = ({
         });
   };
 
+  const mergedScroll = useColumnFit
+    ? {
+        ...scroll,
+        x: layoutWidth > 0 ? layoutWidth : scroll?.x,
+      }
+    : resizeable
+      ? {
+          x: 'max-content',
+          ...scroll,
+        }
+      : scroll;
+
   return (
     <div
       ref={tableWrapRef}
       className="pro-table-container"
       style={{
-        '--supos-table-select-bg-color': selectBgColor,
+        '--ui-table-select-bg-color': selectBgColor,
         width: '100%',
         ...wrapperStyle,
       }}
@@ -226,10 +282,7 @@ const ProTable: FC<ATableProps> = ({
           className={_classNames}
           columns={changeShowColumns(mergedColumns)}
           pagination={newPagination}
-          scroll={{
-            x: 'max-content',
-            ...scroll,
-          }}
+          scroll={mergedScroll}
           components={{ ...components, header: { cell: ResizableTitle } }}
           tableLayout="fixed"
         />
@@ -262,9 +315,10 @@ const withIntlTable = (WrappedTable: FC<ATableProps>) => {
     const lang = useI18nStore((state) => state.lang);
     const formatMessage = useTranslate();
     const _columns = useMemo(() => {
+      const nextColumns = [...columns];
       if (pinOptions) {
         const { disabled, onClick, renderPinIcon, auth, ...restProps } = pinOptions;
-        columns.unshift({
+        nextColumns.unshift({
           title: ' ',
           dataIndex: 'pin',
           align: 'center',
@@ -279,7 +333,7 @@ const withIntlTable = (WrappedTable: FC<ATableProps>) => {
                 disabled={disabled}
                 onClick={() => onClick?.(record)}
                 className={classNames('custom-pin', !isPin && 'custom-pin-fixed')}
-                icon={isPin ? <Pin /> : <PinFilled />}
+                icon={isPin ? <Pin size={16} /> : <PinFilled size={16} />}
                 size="small"
                 type={'text'}
               />
@@ -289,8 +343,7 @@ const withIntlTable = (WrappedTable: FC<ATableProps>) => {
         });
       }
       if (operationOptions) {
-        // 通用操作项
-        columns.push({
+        nextColumns.push({
           title: () => formatMessage('common.operation'),
           width: 120,
           dataIndex: 'operation',
@@ -298,38 +351,51 @@ const withIntlTable = (WrappedTable: FC<ATableProps>) => {
           fixed: 'right',
           ...operationOptions,
           render: (_: any, record: any, index: number) => {
-            const contentRaw: any =
+            const visibleItems =
               operationOptions.render?.(record, index).filter((item: any) => {
                 return item && (!item.auth || hasPermission(item.auth));
               }) || [];
+            const contentRaw = visibleItems.filter((item: any, itemIndex: number) => {
+              if (item?.type !== 'divider') return true;
+              const prev = visibleItems[itemIndex - 1];
+              const next = visibleItems[itemIndex + 1];
+              return prev && prev.type !== 'divider' && next && next.type !== 'divider';
+            });
             if (contentRaw?.length === 0) return null;
+            const menuItems = contentRaw.map((item: any) => {
+              if (item?.type === 'divider') {
+                return { type: 'divider' as const };
+              }
+              const { key, label, icon, extra, title, onClick, disabled, danger, children, type } = item;
+              return {
+                key,
+                label: commonLabelRender(item),
+                icon: resolveOperationIcon(icon, extra),
+                title: title ? title : typeof label === 'string' ? label : '',
+                onClick: type !== 'Popconfirm' && onClick,
+                disabled,
+                // 全局统一：删除操作为危险样式（红色）
+                danger: danger ?? key === 'delete',
+                children,
+              };
+            });
             return (
               <div className="custom-operation">
                 <Dropdown
                   disabled={operationOptions.disabled}
-                  menu={{
-                    items: contentRaw.map((record: any) => {
-                      const { key, label, icon, title, onClick, disabled, type, extra } = record;
-                      return {
-                        key,
-                        label: commonLabelRender(record),
-                        icon,
-                        title: title ? title : typeof label === 'string' ? label : '',
-                        onClick: type !== 'Popconfirm' && onClick,
-                        disabled,
-                        extra,
-                      };
-                    }),
-                  }}
+                  overlayClassName="pro-table-operation-menu"
+                  menu={{ items: menuItems }}
+                  trigger={['click']}
+                  placement="bottomRight"
                 >
-                  <Button type="text" icon={<EllipsisOutlined />} style={{ height: 21 }} size="small" />
+                  <Button type="text" icon={<OverflowMenuHorizontal size={16} />} />
                 </Dropdown>
               </div>
             );
           },
         });
       }
-      return columns.map((i: any) => {
+      return nextColumns.map((i: any) => {
         const type = typeof i.title;
         if (i.titleIntlId) {
           return {

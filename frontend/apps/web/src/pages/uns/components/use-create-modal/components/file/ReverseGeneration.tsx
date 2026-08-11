@@ -1,9 +1,9 @@
 import { type FC, useState, useEffect, useMemo } from 'react';
 import { Form, Select, Flex, Button, message, Input } from 'antd';
-import { ChevronRight, ChevronLeft } from '@carbon/icons-react';
+import { ChevronRight, ChevronLeft } from '@/components/lucide-icon/carbon';
 import { useTranslate } from '@/hooks';
 import { getSourceList, getColumnList } from '@/apis/chat2db';
-import { ds2fs, json2fs } from '@/apis/inter-api/uns';
+import { ds2fs, json2fs } from '@/apis/core-api/uns';
 import FieldsFormList from '@/pages/uns/components/use-create-modal/components/FieldsFormList';
 import TableSelect from '@/pages/uns/components/use-create-modal/components/file/table-select';
 

@@ -1,0 +1,6 @@
+# Runtime images required by the edge-open-source profile.
+include ${BACKEND_IMAGE}
+include harbor.tier0.dev/library/timescaledb:2.20.0-pg17-pgvector0.8.5
+include harbor.tier0.dev/library/redis:7-alpine
+include harbor.tier0.dev/library/emqx:5.8
+include harbor.tier0.dev/library/node-red:4.1.10-22

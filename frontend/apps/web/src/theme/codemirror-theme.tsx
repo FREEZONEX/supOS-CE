@@ -9,13 +9,14 @@ export const codemirrorTheme = createTheme({
   // 基础设置
   settings: {
     // 编辑器背景色
-    background: 'var(--supos-modal-color)',
+    background: 'var(--ui-modal-color)',
+    fontFamily: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
     // 背景图片
     // backgroundImage: '',
     // 文本前景色
     // foreground: '#75baff',
     // 光标颜色
-    caret: 'var(--supos-text-color)',
+    caret: 'var(--ui-text-color)',
     // 选中文本背景色
     // selection: '#036dd626',
     // 匹配选中文本的背景色
@@ -23,9 +24,11 @@ export const codemirrorTheme = createTheme({
     // 当前行高亮颜色
     lineHighlight: 'transparent',
     // 行号区域背景色
-    gutterBackground: 'var(--supos-modal-color)',
+    gutterBackground: 'var(--ui-modal-color)',
     // 行号文本颜色
-    gutterForeground: 'var(--supos-text-color)',
+    gutterForeground: 'var(--ui-text-color)',
+    // 行号与内容区分割线（暗色主题由 --ui-codemirror-gutter-border 覆盖）
+    gutterBorder: 'var(--ui-codemirror-gutter-border, var(--ui-line-color))',
   },
   // 语法高亮样式配置
   styles: [

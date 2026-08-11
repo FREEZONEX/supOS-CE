@@ -9,7 +9,7 @@ import ComButtonFilter from '@/components/com-button-filter';
 export const render = (type: any, properties: any) => {
   switch (type) {
     case 'Input':
-      return <Input {...properties} />;
+      return <Input autoComplete="off" {...properties} />;
     case 'Password':
       return <Input.Password {...properties} />;
     case 'TextArea':

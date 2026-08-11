@@ -1,5 +1,5 @@
 .code-snippet {
-  background-color: var(--supos-switchwrap-bg-color);
+  background-color: var(--ui-switchwrap-bg-color);
 
   code,
   .code-snippet__line {
@@ -11,12 +11,12 @@
 
   // 当 placeholder 激活时，仅将文本颜色变淡，不影响行号
   code[data-placeholder-active='true'] {
-    color: rgb(var(--supos-text-color-rgb, 22, 22, 22), 0.4);
+    color: rgb(var(--ui-text-color-rgb, 22, 22, 22), 0.4);
   }
 
   &-btn--text {
     margin-right: 0.5rem;
-    color: var(--supos-text-color);
+    color: var(--ui-text-color);
   }
 
   &-btn--expand {
@@ -25,8 +25,8 @@
     right: 0;
     padding: 0.5rem 1rem;
     border: none;
-    background-color: var(--supos-switchwrap-bg-color);
-    color: var(--supos-theme-color);
+    background-color: var(--ui-switchwrap-bg-color);
+    color: var(--ui-theme-color);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -34,7 +34,7 @@
     z-index: 2;
 
     &:focus {
-      outline: 2px solid var(--supos-theme-color);
+      outline: 2px solid var(--ui-theme-color);
       outline-offset: -2px;
     }
 
@@ -44,7 +44,7 @@
 
     .code-snippet-icon {
       transition: transform 0.2s;
-      color: var(--supos-text-color);
+      color: var(--ui-text-color);
     }
   }
 
@@ -65,11 +65,11 @@
     justify-content: center;
     align-items: center;
     color: #161616;
-    background-color: var(--supos-switchwrap-bg-color);
+    background-color: var(--ui-switchwrap-bg-color);
     z-index: 2;
 
     &:focus {
-      outline: 2px solid var(--supos-theme-color);
+      outline: 2px solid var(--ui-theme-color);
       outline-offset: -2px;
     }
 
@@ -89,14 +89,14 @@
   &-overflow-indicator--left {
     left: 0;
     order: 2;
-    background-image: linear-gradient(to right, var(--supos-charttop-bg-color), transparent);
+    background-image: linear-gradient(to right, var(--ui-charttop-bg-color), transparent);
     margin-inline-end: -1rem;
   }
 
   &-overflow-indicator--right {
     right: 0;
     order: 2;
-    background-image: linear-gradient(to left, var(--supos-charttop-bg-color), transparent);
+    background-image: linear-gradient(to left, var(--ui-charttop-bg-color), transparent);
     margin-inline-start: -1rem;
   }
 }
@@ -123,7 +123,7 @@
     padding-inline-start: 1rem;
 
     &:focus {
-      outline: 2px solid var(--supos-theme-color);
+      outline: 2px solid var(--ui-theme-color);
       outline-offset: -2px;
     }
   }
@@ -134,7 +134,7 @@
   padding: 0;
   border: 1px solid transparent;
   border-radius: 4px;
-  color: var(--supos-text-color, #161616);
+  color: var(--ui-text-color, #161616);
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 400;
@@ -155,18 +155,18 @@
   &.code-snippet--copy-button {
     &:focus {
       box-shadow:
-        inset 0 0 0 1px var(--supos-theme-color),
+        inset 0 0 0 1px var(--ui-theme-color),
         inset 0 0 0 2px #fff;
     }
   }
 
   &:focus {
-    border: 1px solid var(--supos-theme-color);
+    border: 1px solid var(--ui-theme-color);
     outline: none;
   }
 
   &:hover {
-    background-color: var(--supos-uns-home-color);
+    background-color: var(--ui-uns-home-color);
   }
 }
 
@@ -198,7 +198,7 @@
     transition: max-height 150ms cubic-bezier(0.2, 0, 0.38, 0.9);
 
     &:focus {
-      outline: 2px solid var(--supos-theme-color);
+      outline: 2px solid var(--ui-theme-color);
       outline-offset: 0;
     }
 
@@ -239,9 +239,9 @@
       padding-right: 0.5rem;
       margin-right: 0.5rem;
       text-align: right;
-      color: var(--supos-text-secondary-color);
+      color: var(--ui-text-secondary-color);
       user-select: none;
-      border-right: 1px solid #e0e0e0;
+      border-right: 1px solid var(--ui-line-color);
     }
   }
 }

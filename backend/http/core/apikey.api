@@ -1,0 +1,56 @@
+syntax = "v1"
+
+@server(
+    prefix: /api/core/common
+    group: core/apikey
+    middleware: SessionAuth, Permission
+)
+service backend {
+    @doc(
+        summary: "获取 API Key 列表"
+        description: "分页查询当前工作空间下的 API Key 列表"
+        authType: "admin"
+        resource: "apikey"
+        action: "view"
+        group: "core/apikey"
+        recordLogMode: "1"
+    )
+    @handler ApiKeyList
+    get /api-keys (PageReq) returns (Envelope)
+
+    @doc(
+        summary: "创建 API Key"
+        description: "创建新的 API Key"
+        authType: "admin"
+        resource: "apikey"
+        action: "create"
+        group: "core/apikey"
+        recordLogMode: "1"
+    )
+    @handler ApiKeyCreate
+    post /api-keys (ApiKeyCreateReq) returns (Envelope)
+
+    @doc(
+        summary: "更新 API Key"
+        description: "更新指定 API Key"
+        authType: "admin"
+        resource: "apikey"
+        action: "update"
+        group: "core/apikey"
+        recordLogMode: "1"
+    )
+    @handler ApiKeyUpdate
+    put /api-keys/:apiKeyId (ApiKeyUpdateReq) returns (Envelope)
+
+    @doc(
+        summary: "删除 API Key"
+        description: "删除指定 API Key"
+        authType: "admin"
+        resource: "apikey"
+        action: "delete"
+        group: "core/apikey"
+        recordLogMode: "1"
+    )
+    @handler ApiKeyDelete
+    delete /api-keys/:apiKeyId (ApiKeyIdReq) returns (Envelope)
+}

@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
 import { useTranslate } from '@/hooks';
 import { App, Button, Form, Input } from 'antd';
-import { resetPwd } from '@/apis/inter-api/user-manage';
+import { resetPwd } from '@/apis/core-api/user-manage';
 import ProModal from '@/components/pro-modal';
-import { passwordRegex } from '@/utils';
+import { passwordRegex, passwordStrengthRegex } from '@/utils';
 
 const useResetPassword = ({ onSaveBack }: any) => {
   const { message } = App.useApp();
@@ -53,13 +53,10 @@ const useResetPassword = ({ onSaveBack }: any) => {
               message: '',
             },
             {
-              max: 10,
-              message: formatMessage('uns.labelMaxLength', {
-                label: formatMessage('appGui.password'),
-                length: 10,
-              }),
+              pattern: passwordRegex,
+              message: formatMessage('rule.password'),
             },
-            { pattern: passwordRegex, message: formatMessage('rule.password') },
+            { pattern: passwordStrengthRegex, message: formatMessage('rule.passwordStrength') },
           ]}
         >
           <Input.Password placeholder={formatMessage('appGui.password')} />
@@ -74,13 +71,10 @@ const useResetPassword = ({ onSaveBack }: any) => {
               message: '',
             },
             {
-              max: 10,
-              message: formatMessage('uns.labelMaxLength', {
-                label: formatMessage('appGui.password'),
-                length: 10,
-              }),
+              pattern: passwordRegex,
+              message: formatMessage('rule.password'),
             },
-            { pattern: passwordRegex, message: formatMessage('rule.password') },
+            { pattern: passwordStrengthRegex, message: formatMessage('rule.passwordStrength') },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('password') === value) {

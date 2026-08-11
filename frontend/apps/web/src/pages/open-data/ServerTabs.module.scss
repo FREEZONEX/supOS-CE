@@ -1,6 +1,6 @@
 .container {
-  background: var(--supos-switchwrap-active-bg-color);
-  border: 1px solid #c6c6c6;
+  background: var(--ui-switchwrap-active-bg-color);
+  border: 1px solid var(--ui-line-color);
   border-radius: 3px;
 
   :global {

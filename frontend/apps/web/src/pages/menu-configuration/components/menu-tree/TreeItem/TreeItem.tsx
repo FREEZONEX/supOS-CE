@@ -39,6 +39,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       onSelect,
       selected,
       disabledSelect,
+      readonly,
       ...restProps
     },
     ref
@@ -52,6 +53,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
       clone && styles.clone,
       ghost && styles.ghost,
       fixed && styles.fixed,
+      readonly && styles.readonly,
       disabledSelect && styles.disabledSelect,
       {
         [styles.notAllow]: allowDrop === false,
@@ -67,7 +69,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
         {...restProps}
         className={className}
         style={{
-          '--supos-select-bg-color': selectBgColor,
+          '--ui-select-bg-color': selectBgColor,
           '--spacing': `${indentationWidth * depth}px`,
           ...wrapperStyle,
         }}

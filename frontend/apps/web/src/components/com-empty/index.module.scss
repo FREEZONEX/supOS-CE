@@ -1,0 +1,28 @@
+.emptyWrap {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 16px;
+  box-sizing: border-box;
+}
+
+.emptyWrapInline {
+  min-height: 200px;
+  padding: 48px 16px;
+}
+
+.emptyDesc {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.emptyLine {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+}

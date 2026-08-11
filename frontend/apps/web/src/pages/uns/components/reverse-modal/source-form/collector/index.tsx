@@ -4,7 +4,7 @@ import {
   saveMount,
   getCollectorList,
   // getDeviceList
-} from '@/apis/inter-api/uns';
+} from '@/apis/core-api/uns';
 
 export interface CollectorFromProps {
   formatMessage: any;
@@ -89,7 +89,7 @@ const CollectorFrom: FC<CollectorFromProps> = ({ formatMessage, close }) => {
           allowClear
         />
       </Form.Item> */}
-      <Divider style={{ borderColor: '#c6c6c6' }} />
+      <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
       <Flex justify="flex-end" gap={10}>
         <Button color="primary" variant="solid" size="small" onClick={save} loading={loading}>
           {formatMessage('common.save')}

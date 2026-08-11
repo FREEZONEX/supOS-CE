@@ -22,7 +22,7 @@ import {
   getLanguageRecordsApi,
   getModulesListApi,
   getResourcesListApi,
-} from '@/apis/inter-api/i18n.ts';
+} from '@/apis/core-api/i18n.ts';
 import useSimpleRequest from '@/hooks/useSimpleRequest.ts';
 import { debounce } from 'lodash-es';
 import { EditableCell, EditableRow } from '@/pages/localization/components/Editable';
@@ -70,7 +70,7 @@ const TreeHeader = ({ request }: { request?: any }) => {
       <Popover placement="bottomLeft" title="" content={popoverContent} trigger="hover">
         <Button
           icon={<Filter />}
-          style={{ flexShrink: 0, background: 'var(--supos-switchwrap-bg-color)' }}
+          style={{ flexShrink: 0, background: 'var(--ui-switchwrap-bg-color)' }}
           color="default"
           variant="filled"
         />

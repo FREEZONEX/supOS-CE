@@ -1,5 +1,5 @@
 import { Close, Search } from '@carbon/icons-react';
-import { type CSSProperties, type FC, useEffect, useRef } from 'react';
+import { type CSSProperties, type FC, useEffect, useMemo, useRef } from 'react';
 import ComSelect from '../com-select';
 import { useMenuNavigate, usePropsValue, useTranslate } from '@/hooks';
 import { Space } from 'antd';
@@ -16,6 +16,14 @@ interface SearchSelectProps {
 const SearchSelect: FC<SearchSelectProps> = ({ onSearchCallback, value, onChange, selectStyle }) => {
   const formatMessage = useTranslate();
   const menuGroup = useBaseStore((state) => state.menuGroup?.filter((f) => !f.subMenu));
+  const translatedMenuGroup = useMemo(
+    () =>
+      menuGroup?.map((item) => ({
+        ...item,
+        translatedShowName: formatMessage(item.showName || '', undefined, item.showName || ''),
+      })),
+    [formatMessage, menuGroup]
+  );
   const selectRef = useRef<any>(null);
 
   const handleNavigate = useMenuNavigate();
@@ -39,15 +47,15 @@ const SearchSelect: FC<SearchSelectProps> = ({ onSearchCallback, value, onChange
         onSearchCallback?.();
       }}
     >
-      <Search size={20} style={{ color: 'var(--supos-text-color)' }} />
+      <Search size={20} style={{ color: 'var(--ui-text-color)' }} />
     </div>
   ) : (
-    <Space.Compact block>
+    <Space.Compact block className="page-search-compact">
       <ComSelect
         defaultOpen
         ref={selectRef}
         variant="filled"
-        options={menuGroup}
+        options={translatedMenuGroup}
         placeholder={formatMessage('common.searchPage')}
         style={{ width: 180, height: '100%', ...selectStyle }}
         onChange={(_: any, options: any) => {
@@ -57,15 +65,18 @@ const SearchSelect: FC<SearchSelectProps> = ({ onSearchCallback, value, onChange
         }}
         fieldNames={{
           value: 'id',
-          label: 'showName',
+          label: 'translatedShowName',
         }}
         filterOption={(input, option) =>
-          ((option?.showName as string) ?? '').toLowerCase().includes(input.toLowerCase())
+          `${(option?.translatedShowName as string) ?? ''} ${(option?.showName as string) ?? ''}`
+            .toLowerCase()
+            .includes(input.toLowerCase())
         }
         allowClear
         showSearch
       />
       <div
+        className="page-search-close"
         onClick={() => {
           setIcon(true);
         }}

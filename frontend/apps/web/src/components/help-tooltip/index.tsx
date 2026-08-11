@@ -8,7 +8,7 @@ export interface HelpTooltipProps extends Omit<TooltipProps, 'children'> {
 }
 
 const HelpTooltip: FC<HelpTooltipProps> = ({ icon, ...restProps }) => {
-  return <Tooltip {...restProps}>{icon ? icon : <Help style={{ cursor: 'help' }} />}</Tooltip>;
+  return <Tooltip {...restProps}>{icon ? icon : <Help style={{ cursor: 'default' }} />}</Tooltip>;
 };
 
 export default HelpTooltip;

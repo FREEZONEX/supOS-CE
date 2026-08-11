@@ -2,7 +2,7 @@ import { type FC, useState, useEffect } from 'react';
 import { Form, Select, Flex, Button, Divider, App } from 'antd';
 import ComCheckbox from '@/components/com-checkbox';
 // import HelpTooltip from '@/components/help-tooltip';
-import { saveMount, getSourceList } from '@/apis/inter-api/uns';
+import { saveMount, getSourceList } from '@/apis/core-api/uns';
 
 export interface DataSourceFromProps {
   formatMessage: any;
@@ -25,7 +25,7 @@ const DataSourceForm: FC<DataSourceFromProps> = ({ formatMessage, close }) => {
 
   const save = () => {
     form.validateFields().then(async (values) => {
-      const { targetFolder, dataType, dataSource, persistence, dashboard, syncMeta } = values;
+      const { targetFolder, dataType, dataSource, persistence, syncMeta } = values;
       const data = {
         targetType: 'folder',
         targetAlias: targetFolder,
@@ -36,7 +36,6 @@ const DataSourceForm: FC<DataSourceFromProps> = ({ formatMessage, close }) => {
           sourceName: dataSource.label,
         },
         persistence,
-        dashboard,
         syncMeta,
       };
       setLoading(true);
@@ -60,9 +59,6 @@ const DataSourceForm: FC<DataSourceFromProps> = ({ formatMessage, close }) => {
         <Form.Item name="persistence" valuePropName="checked" initialValue={false} noStyle>
           <ComCheckbox>{formatMessage('uns.batchPersistence')}</ComCheckbox>
         </Form.Item>
-        <Form.Item name="dashboard" valuePropName="checked" initialValue={false} noStyle>
-          <ComCheckbox>{formatMessage('uns.batchAutoDashboard')}</ComCheckbox>
-        </Form.Item>
         {/* <Form.Item name="syncMeta" valuePropName="checked" initialValue={false} noStyle>
           <ComCheckbox>
             <Flex gap={4} align="center">
@@ -85,7 +81,7 @@ const DataSourceForm: FC<DataSourceFromProps> = ({ formatMessage, close }) => {
           labelInValue
         />
       </Form.Item>
-      <Divider style={{ borderColor: '#c6c6c6' }} />
+      <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
       <Flex justify="space-between">
         {renderBatchChecks()}
         <Button color="primary" variant="solid" size="small" onClick={save} loading={loading}>

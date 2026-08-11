@@ -1,0 +1,176 @@
+.schemaTable {
+  :global {
+    .ant-table {
+      background: var(--ui-bg-color);
+    }
+
+    .ant-table-container {
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .ant-table-content,
+    table {
+      border-radius: 0 !important;
+      table-layout: fixed !important;
+      width: 100% !important;
+    }
+
+    .ant-table-thead > tr > th:nth-child(1),
+    .ant-table-tbody > tr > td:nth-child(1) {
+      width: auto !important;
+      max-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ant-table-thead > tr > th:nth-child(2),
+    .ant-table-tbody > tr > td:nth-child(2) {
+      width: 128px !important;
+      min-width: 128px !important;
+      max-width: 128px !important;
+    }
+
+    .ant-table-thead > tr > th:nth-child(3),
+    .ant-table-tbody > tr > td:nth-child(3) {
+      width: 96px !important;
+      min-width: 96px !important;
+      max-width: 96px !important;
+    }
+
+    .ant-table-thead > tr > th:last-child,
+    .ant-table-tbody > tr > td:last-child {
+      width: 104px !important;
+      min-width: 104px !important;
+      max-width: 104px !important;
+      padding: 12px !important;
+      text-align: left !important;
+      white-space: nowrap;
+    }
+
+    .ant-table-cell-fix-right::after,
+    .ant-table-cell-fix-right-first::after {
+      box-shadow: none !important;
+    }
+
+    .ant-table-thead > tr > th {
+      height: 48px;
+      padding: 12px !important;
+      border-bottom-color: var(--ui-table-tr-color) !important;
+      background: var(--ui-bg-color) !important;
+      color: var(--ui-text-color);
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 22px;
+    }
+
+    .ant-table-tbody > tr > td {
+      height: 48px;
+      padding: 12px !important;
+      border-bottom-color: var(--ui-table-tr-color) !important;
+      color: var(--ui-text-color);
+      font-size: 14px;
+      line-height: 22px;
+    }
+
+    .ant-table-tbody > tr.ant-table-measure-row,
+    .ant-table-tbody > tr.ant-table-measure-row > td {
+      height: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      font-size: 0 !important;
+      line-height: 0 !important;
+      visibility: hidden;
+    }
+
+    .ant-table-tbody > tr.ant-table-row:hover > td {
+      background: var(--ui-charttop-bg-color) !important;
+    }
+  }
+}
+
+.schemaKeyCell,
+.schemaUnitCell {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ui-text-color);
+  font-weight: 400;
+}
+
+.schemaActionCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 16px;
+  color: var(--ui-text-color);
+}
+
+.schemaDeleteBtn {
+  cursor: pointer;
+  opacity: 0;
+  color: var(--ui-text-color-secondary);
+  transition: opacity 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    color: var(--ui-error-color, #da1e28);
+  }
+}
+
+:global(.ant-table-tbody > tr.ant-table-row:hover) .schemaDeleteBtn {
+  opacity: 1;
+}
+
+.typePill {
+  margin: 0;
+  min-height: 24px;
+  padding: 2px 10px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.typePill--string {
+  background: #fff4e0;
+  border-color: #f2c66d;
+  color: #8a5a00;
+}
+
+.typePill--boolean {
+  background: #e7f7ef;
+  border-color: #8fd4b0;
+  color: #1f7a55;
+}
+
+.typePill--default {
+  background: var(--ui-access-gray-bg);
+  border-color: var(--ui-access-gray-border);
+  color: var(--ui-access-gray-text);
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .typePill--string {
+    background: rgba(242, 198, 109, 0.16);
+    border-color: rgba(242, 198, 109, 0.45);
+    color: #f2c66d;
+  }
+
+  .typePill--boolean {
+    background: var(--ui-status-active-bg);
+    border-color: var(--ui-status-active-border);
+    color: var(--ui-status-active-text);
+  }
+
+  .typePill--default {
+    background: var(--ui-access-gray-bg);
+    border-color: var(--ui-access-gray-border);
+    color: var(--ui-access-gray-text);
+  }
+}

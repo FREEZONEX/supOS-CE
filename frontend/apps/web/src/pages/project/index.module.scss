@@ -1,0 +1,115 @@
+.table-wrap {
+  height: 100%;
+  padding: 24px;
+}
+
+.empty-wrap {
+  height: 100%;
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  padding: 100px 16px;
+}
+
+.empty-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nameWrap {
+  display: flex;
+  gap: 8px;
+  color: var(--ui-text-color) !important;
+
+  &:hover,
+  &:focus,
+  &:active {
+    color: var(--ui-text-color) !important;
+  }
+}
+
+.name-link {
+  padding: 0;
+}
+
+.nameIcon {
+  // 与 Launchpad All Projects folder badge 配色对齐
+  --launchpad-folder-bg: var(--ui-t-chartreuse-color-30);
+  --launchpad-folder-fg: var(--ui-text-color);
+
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  color: var(--launchpad-folder-fg);
+  background: var(--launchpad-folder-bg);
+  border-radius: 4px;
+}
+
+.operation {
+  display: flex;
+  gap: 10px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.statusActive {
+  background: #f6fef9;
+  border: 1px solid #b8f1d2;
+  color: #53b483;
+}
+
+.statusInactive {
+  background: #feebeb;
+  border: 1px solid #f77c7c;
+  color: #dd3636;
+}
+
+.statusEmpty {
+  background: #f9f9f9;
+  border: 1px solid var(--ui-line-color);
+  color: #343434;
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .nameIcon {
+    --launchpad-folder-bg: color-mix(in srgb, var(--ui-t-chartreuse-color-70) 18%, var(--ui-t-chartreuse-color-100));
+    --launchpad-folder-fg: var(--ui-t-chartreuse-color-40);
+
+    background: var(--launchpad-folder-bg);
+  }
+
+  .statusActive {
+    color: var(--ui-status-active-text);
+    background: var(--ui-status-active-bg);
+    border-color: var(--ui-status-active-border);
+  }
+
+  .statusInactive {
+    color: var(--ui-status-inactive-text);
+    background: var(--ui-status-inactive-bg);
+    border-color: var(--ui-status-inactive-border);
+  }
+
+  .statusEmpty {
+    color: var(--ui-access-gray-text);
+    background: var(--ui-access-gray-bg);
+    border-color: var(--ui-access-gray-border);
+  }
+}

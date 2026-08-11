@@ -13,14 +13,14 @@ interface Config {
 }
 
 const config = ({ assetPrefix, name, hostOrigin, exposes = {} }: Config) => {
-  console.log(`当前remote：supos-ce/${name}`, '\n', { assetPrefix, hostOrigin });
+  console.log(`当前remote：app-shell/${name}`, '\n', { assetPrefix, hostOrigin });
 
   return defineConfig({
     base: assetPrefix || `/plugin/${name}`,
     plugins: [
       react(),
       federation({
-        name: `supos-ce/${name}`,
+        name: `app-shell/${name}`,
         manifest: true,
         exposes: {
           './index': './src/App.tsx',
@@ -29,7 +29,7 @@ const config = ({ assetPrefix, name, hostOrigin, exposes = {} }: Config) => {
           ...exposes,
         },
         remotes: {
-          '@supos_host': `supos-ce/host@${hostOrigin || ''}/mf-manifest.json`,
+          '@app_host': `app-shell/host@${hostOrigin || ''}/mf-manifest.json`,
         },
         shared: shared,
       }) as PluginOption,

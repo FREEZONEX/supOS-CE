@@ -1,15 +1,17 @@
 import CodeMirror from '@uiw/react-codemirror';
-import { Alert, Button, Flex } from 'antd';
+import { Alert, Flex } from 'antd';
 import { useClipboard, useTranslate } from '@/hooks';
 import { useSize } from 'ahooks';
 import { useRef } from 'react';
 import { json } from '@codemirror/lang-json';
-import { Copy, Download } from '@carbon/icons-react';
+import { Copy, Download } from '@/components/lucide-icon/carbon';
+import { toolbarIconProps } from '@/components/lucide-icon/icon-props';
 import { useTreeStore } from '@/pages/uns/components/export-modal/treeStore.tsx';
 import { downloadFn } from '@/utils/blob';
 import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
-import { exportExcel } from '@/apis/inter-api';
+import { exportExcel } from '@/apis/core-api';
 import ComButton from '@/components/com-button';
+import styles from './index.module.scss';
 
 export const CodeDom = () => {
   const formatMessage = useTranslate();
@@ -32,13 +34,13 @@ export const CodeDom = () => {
             <div>
               <ComButton
                 type="primary"
+                icon={<Download size={16} />}
                 onClick={() => {
                   return exportExcel(params).then((jsonData) => {
                     downloadFn({ data: JSON.stringify(jsonData), name: 'uns.json' });
                   });
                 }}
               >
-                <Download />
                 {formatMessage('common.download')}
               </ComButton>
             </div>
@@ -50,30 +52,23 @@ export const CodeDom = () => {
             />
           </>
         ) : (
-          <div
-            style={{
-              height: '100%',
-              borderRadius: 4,
-              border: '1px solid rgb(198, 198, 198)',
-              padding: 16,
-              position: 'relative',
-            }}
-            ref={ref}
-          >
+          <div className={styles.exportCodePanel} ref={ref}>
             <div
               style={{
                 position: 'absolute',
-                right: 4,
-                top: 4,
-                color: 'var(--supos-text-color)',
+                right: 8,
+                top: 8,
+                color: 'var(--ui-text-color)',
                 zIndex: 1,
                 cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
               }}
               onClick={() => {
                 copy(jsonData);
               }}
             >
-              <Copy />
+              <Copy {...toolbarIconProps} />
             </div>
             <CodeMirror
               // onChange={setJsonValue}
@@ -87,10 +82,11 @@ export const CodeDom = () => {
           </div>
         )}
       </div>
-      <Flex justify="end" gap={8} style={{ marginTop: 16 }}>
+      <Flex className={styles.exportPanelActions} justify="end" gap={8} style={{ marginTop: 16 }}>
         {
           <ComButton
             type="primary"
+            icon={<Download size={16} />}
             onClick={() => {
               return exportExcel(params).then((jsonData) => {
                 downloadFn({ data: JSON.stringify(jsonData), name: 'uns.json' });
@@ -98,20 +94,18 @@ export const CodeDom = () => {
             }}
             disabled={!(jsonData && smallFile)}
           >
-            <Download />
             {formatMessage('common.download')}
           </ComButton>
         }
-        <Button
-          type="primary"
+        <ComButton
+          icon={<Copy size={16} />}
           onClick={() => {
             copy(jsonData);
           }}
           disabled={!(jsonData && smallFile)}
         >
-          <Copy />
           {formatMessage('common.copy')}
-        </Button>
+        </ComButton>
       </Flex>
     </>
   );

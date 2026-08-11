@@ -25,12 +25,42 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
       defaultValue: initValue,
       onChange,
     });
+    const enforceLockedNodes = useCallback((data: PermissionNode[] = []) => {
+      const next = JSON.parse(JSON.stringify(data || [])) as PermissionNode[];
+      const refreshGroupState = (group: PermissionNode) => {
+        const menuNodes = group.children?.filter((child) => child.type === 2) || [];
+        const buttonNodes =
+          group.children?.flatMap((child) => child.children || []).filter((child) => child.type === 3) || [];
+        const allMenusChecked = menuNodes.length > 0 && menuNodes.every((menu) => menu.checked);
+        const allButtonsChecked = buttonNodes.length > 0 && buttonNodes.every((button) => button.checked);
+        group.pagePermissionChecked = allMenusChecked;
+        group.actionPermissionChecked = buttonNodes.length > 0 ? allButtonsChecked : false;
+        group.actionPermissionCheckedDisabled = buttonNodes.length === 0;
+        group.checked = buttonNodes.length > 0 ? allMenusChecked && allButtonsChecked : allMenusChecked;
+        group.locked = Boolean(group.children?.length) && (group.children || []).every((child) => child.locked);
+      };
+      const walk = (nodes: PermissionNode[]) => {
+        nodes.forEach((node) => {
+          if (node.locked) {
+            node.checked = true;
+          }
+          if (node.children?.length) {
+            walk(node.children);
+          }
+          if (node.type === 1) {
+            refreshGroupState(node);
+          }
+        });
+      };
+      walk(next);
+      return next;
+    }, []);
     useImperativeHandle(ref, () => {
       return {
-        getValue: () => permissionData,
-        setValue: (p) => setPermissionData(p),
+        getValue: () => enforceLockedNodes(permissionData),
+        setValue: (p) => setPermissionData(enforceLockedNodes(p)),
       };
-    }, [permissionData, setPermissionData]);
+    }, [enforceLockedNodes, permissionData, setPermissionData]);
 
     // 更新节点及其子节点的选中状态
     const updateNodeAndChildren = useCallback(
@@ -176,19 +206,21 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
           // 更新组及其所有子节点
           const updated = updateNodeAndChildren(prev, groupId, checked);
           // 同时更新组的pagePermissionChecked和actionPermissionChecked状态
-          return updated.map((node) => {
-            if (node.id === groupId) {
-              return {
-                ...node,
-                pagePermissionChecked: checked,
-                actionPermissionChecked: checked,
-              };
-            }
-            return node;
-          });
+          return enforceLockedNodes(
+            updated.map((node) => {
+              if (node.id === groupId) {
+                return {
+                  ...node,
+                  pagePermissionChecked: checked,
+                  actionPermissionChecked: checked,
+                };
+              }
+              return node;
+            })
+          );
         });
       },
-      [updateNodeAndChildren]
+      [enforceLockedNodes, updateNodeAndChildren]
     );
 
     // 处理页面权限复选框变化
@@ -198,10 +230,10 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
           // 更新组的页面权限
           const updated = updatePagePermissions(prev, groupId, checked);
           // 检查并更新组的状态
-          return checkAndUpdateGroupState(updated);
+          return enforceLockedNodes(checkAndUpdateGroupState(updated));
         });
       },
-      [updatePagePermissions, checkAndUpdateGroupState]
+      [enforceLockedNodes, updatePagePermissions, checkAndUpdateGroupState]
     );
 
     // 处理操作权限复选框变化
@@ -211,10 +243,10 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
           // 更新组的操作权限
           const updated = updateActionPermissions(prev, groupId, checked);
           // 检查并更新组的状态
-          return checkAndUpdateGroupState(updated);
+          return enforceLockedNodes(checkAndUpdateGroupState(updated));
         });
       },
-      [updateActionPermissions, checkAndUpdateGroupState]
+      [enforceLockedNodes, updateActionPermissions, checkAndUpdateGroupState]
     );
 
     // 处理菜单复选框变化
@@ -238,10 +270,10 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
             return node;
           });
           // 检查并更新组的状态
-          return checkAndUpdateGroupState(updated);
+          return enforceLockedNodes(checkAndUpdateGroupState(updated));
         });
       },
-      [checkAndUpdateGroupState]
+      [enforceLockedNodes, checkAndUpdateGroupState]
     );
 
     // 处理按钮复选框变化
@@ -251,10 +283,10 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
           // 更新按钮
           const updated = updateNodeAndChildren(prev, buttonId, checked);
           // 检查并更新组的状态
-          return checkAndUpdateGroupState(updated);
+          return enforceLockedNodes(checkAndUpdateGroupState(updated));
         });
       },
-      [updateNodeAndChildren, checkAndUpdateGroupState]
+      [enforceLockedNodes, updateNodeAndChildren, checkAndUpdateGroupState]
     );
 
     return (
@@ -265,7 +297,7 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
               key={item.id}
               style={{
                 marginTop: 10,
-                border: '1px solid var(--supos-t-dividr-color)',
+                border: '1px solid var(--ui-t-dividr-color)',
               }}
             >
               <Flex
@@ -273,7 +305,7 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
                 style={{
                   height: 40,
                   padding: '0 16px',
-                  background: 'var(--supos-table-head-color)',
+                  background: 'var(--ui-table-head-color)',
                 }}
               >
                 {/*控制所有菜单和按钮的全选反选*/}
@@ -290,7 +322,7 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
                     </Flex>
                   }
                   checked={item.checked}
-                  disabled={disabled}
+                  disabled={disabled || item.locked}
                   onChange={(e) => handleGroupCheckChange(item.id, e.target.checked)}
                 />
               </Flex>
@@ -298,9 +330,9 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
               <Flex
                 style={{
                   height: 40,
-                  background: 'var(--supos-uns-button-color)',
-                  borderBottom: '1px solid var(--supos-t-dividr-color)',
-                  borderTop: '1px solid var(--supos-t-dividr-color)',
+                  background: 'var(--ui-uns-button-color)',
+                  borderBottom: '1px solid var(--ui-t-dividr-color)',
+                  borderTop: '1px solid var(--ui-t-dividr-color)',
                 }}
               >
                 <Flex
@@ -308,18 +340,18 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
                   style={{
                     flex: '1 1 30%',
                     padding: '0 16px',
-                    borderRight: '1px solid var(--supos-t-dividr-color)',
+                    borderRight: '1px solid var(--ui-t-dividr-color)',
                   }}
                 >
                   {/*pagePermissionChecked控制children下面所有的页面全选反选*/}
                   <ComCheckbox
                     rootStyle={{
-                      '--custom-border-color': 'var(--supos-table-tr-color)',
+                      '--custom-border-color': 'var(--ui-table-tr-color)',
                     }}
                     className={styles['operation-bar']}
                     label={formatMessage('common.pagePermission')}
                     checked={item.pagePermissionChecked}
-                    disabled={disabled}
+                    disabled={disabled || item.locked}
                     onChange={(e) => handlePagePermissionChange(item.id, e.target.checked)}
                   />
                 </Flex>
@@ -333,12 +365,12 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
                   {/*actionPermissionChecked控制children下面所有的按钮全选反选*/}
                   <ComCheckbox
                     rootStyle={{
-                      '--custom-border-color': 'var(--supos-table-tr-color)',
+                      '--custom-border-color': 'var(--ui-table-tr-color)',
                     }}
                     className={styles['operation-bar']}
                     label={formatMessage('common.actionPermission')}
                     checked={item.actionPermissionCheckedDisabled ? false : item.actionPermissionChecked}
-                    disabled={disabled || item.actionPermissionCheckedDisabled}
+                    disabled={disabled || item.locked || item.actionPermissionCheckedDisabled}
                     onChange={(e) => handleActionPermissionChange(item.id, e.target.checked)}
                   />
                 </Flex>
@@ -350,21 +382,21 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
                     key={menu.id}
                     style={{
                       borderBottom:
-                        item?.children?.length === index + 1 ? undefined : '1px solid var(--supos-t-dividr-color)',
+                        item?.children?.length === index + 1 ? undefined : '1px solid var(--ui-t-dividr-color)',
                     }}
                   >
                     <Flex
                       style={{
                         flex: '1 1 30%',
                         overflow: 'hidden',
-                        borderRight: '1px solid var(--supos-t-dividr-color)',
+                        borderRight: '1px solid var(--ui-t-dividr-color)',
                         padding: '8px 16px',
                       }}
                     >
                       {/*控制自己的cheked*/}
                       <ComCheckbox
                         rootStyle={{
-                          '--custom-border-color': 'var(--supos-table-tr-color)',
+                          '--custom-border-color': 'var(--ui-table-tr-color)',
                         }}
                         label={formatShowName({
                           code: menu.code,
@@ -372,7 +404,7 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
                           showName: menu.showName,
                         })}
                         checked={menu.checked}
-                        disabled={disabled}
+                        disabled={disabled || menu.locked}
                         onChange={(e) => handleMenuCheckChange(menu.id, e.target.checked)}
                       />
                     </Flex>
@@ -392,9 +424,9 @@ const Permission = forwardRef<PermissionRefProps, PermissionProps>(
                             <Flex key={button.id}>
                               {/*控制自己的cheked*/}
                               <ComCheckbox
-                                disabled={disabled}
+                                disabled={disabled || button.locked}
                                 rootStyle={{
-                                  '--custom-border-color': 'var(--supos-table-tr-color)',
+                                  '--custom-border-color': 'var(--ui-table-tr-color)',
                                 }}
                                 label={formatShowName({
                                   code: button.code,

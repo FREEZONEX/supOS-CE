@@ -1,0 +1,36 @@
+<script type="text/html" data-template-name="opcua-read">
+  <div class="form-row">
+    <label for="node-input-connection"><i class="fa fa-plug"></i> Connection</label>
+    <input type="text" id="node-input-connection">
+  </div>
+  <div class="form-row">
+    <label for="node-input-nodeId"><i class="fa fa-tag"></i> NodeId</label>
+    <input type="text" id="node-input-nodeId" placeholder="ns=1;s=MyVariable">
+  </div>
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+  </div>
+</script>
+
+<script type="text/html" data-help-name="opcua-read">
+  <p>Read a value from an OPC UA server.</p>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('opcua-read', {
+    category: 'OPC UA',
+    color: '#C0DEED',
+    defaults: {
+      connection: { value: '', type: 'opcua-connection', required: true },
+      nodeId: { value: '' },
+      name: { value: '' }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'bridge.png',
+    label: function () {
+      return this.name || 'opcua read';
+    }
+  });
+</script>

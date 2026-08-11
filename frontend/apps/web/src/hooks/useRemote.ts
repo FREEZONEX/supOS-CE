@@ -73,7 +73,7 @@ const useRemote = ({
   const loadCrmPlugins = async () => {
     try {
       await registerRemote();
-      const remoteModule: any = await loadRemote(`supos-ce${name}/${moduleName || 'index'}`);
+      const remoteModule: any = await loadRemote(`app-shell${name}/${moduleName || 'index'}`);
       setErrorMsg(remoteModule?.error ? remoteModule?.error.toString() : '');
       try {
         // 再加载一次国际化

@@ -1,5 +1,5 @@
 {
-  "name": "@supos-os-edge/typescript-config",
+  "name": "@internal/typescript-config",
   "version": "0.0.1",
   "description": "共享的 TypeScript 配置",
   "main": "index.js",
@@ -15,7 +15,7 @@
     "src"
   ],
   "peerDependencies": {
-    "typescript": ">=5.7.2"
+    "typescript": ">=5.7.2 <6.0.0"
   },
   "keywords": [
     "typescript",

@@ -1,0 +1,35 @@
+syntax = "v1"
+
+@server(
+    prefix: /api/core
+    group: core/asset
+    middleware: SessionAuth, Permission
+)
+service backend {
+    @handler AssetList
+    get /assets (AssetListReq) returns (Envelope)
+
+    @handler AssetDetail
+    get /assets/:fileId (FileIdReq) returns (Envelope)
+
+    @handler AssetDownload
+    get /assets/:fileId/download (FileIdReq) returns (Envelope)
+
+    @handler AssetBind
+    post /asset-bindings (AssetBindReq) returns (Envelope)
+
+    @handler AssetUnbind
+    delete /asset-bindings/:id (IdReq) returns (Envelope)
+}
+
+// AssetUpload 单独分组：大文件 multipart 上传，全局 20s 超时不够用，路由级放宽到 5m
+@server(
+    prefix: /api/core
+    group: core/asset
+    middleware: SessionAuth, Permission
+    timeout: 5m
+)
+service backend {
+    @handler AssetUpload
+    post /assets (AssetUploadReq) returns (Envelope)
+}

@@ -68,7 +68,9 @@ export const formatShowName = ({
   finallyShowName?: string;
 }) => {
   // 如果code和showName一样，表明后端翻译未成功
-  if (showName && code !== showName) return showName;
+  if (showName && code !== showName) {
+    return formatMessage(showName, undefined, showName);
+  }
   if (code) {
     try {
       return formatMessage(code);

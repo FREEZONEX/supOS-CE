@@ -1,115 +1,225 @@
 .topology-wrap {
-  background-color: var(--supos-gray-color-10-message);
+  background-color: var(--ui-gray-color-10-message);
 }
 
 .topology-content {
   width: 100%;
-  height: 200px;
-}
+  height: 168px;
+  position: relative;
+  overflow: auto hidden;
+  scrollbar-width: none;
+  cursor: grab;
+  box-sizing: border-box;
+  padding: 48px 40px 0;
+  overscroll-behavior-x: contain;
 
-.common-node {
-  width: 100%;
-  height: 100%;
-  background-color: var(--supos-bg-color);
-  border-radius: 3px;
-  border: 1px solid transparent;
-  border-left: 4px solid var(--supos-mode-color, var(--supos-theme-color));
-  color: var(--supos-text-color);
-  padding: 0 12px;
-
-  .common-node-content {
-    flex: 1;
-    width: 90px;
-
-    .common-node-subtitle {
-      font-size: 10px;
-      color: #c6c6c6;
-      width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .common-node-title {
-      font-size: 14px;
-      letter-spacing: 0.16px;
-      width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  .common-node-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-
-    :global {
-      .ant-btn:hover {
-        color: var(--supos-theme-color) !important;
-      }
-
-      .ant-btn-variant-text:hover {
-        background-color: var(--supos-cell-hover-bg);
-      }
-    }
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 }
 
-.common-node-hover:hover:not(:has(.common-node-btn:hover)) {
-  background-color: var(--supos-primary-bg);
-  border-right: 1px solid var(--supos-mode-color, var(--supos-theme-color));
-  border-top: 1px solid var(--supos-mode-color, var(--supos-theme-color));
-  border-bottom: 1px solid var(--supos-mode-color, var(--supos-theme-color));
-  cursor: pointer;
+.topology-content-dragging {
+  cursor: grabbing;
+  user-select: none;
+
+  .topology-flow,
+  .topology-node-item,
+  .rf-node {
+    cursor: grabbing;
+  }
 }
 
-.activeBg {
-  background-color: var(--supos-bg-color);
-  border-right: 1px solid var(--supos-mode-color, var(--supos-theme-color));
-  border-top: 1px solid var(--supos-mode-color, var(--supos-theme-color));
-  border-bottom: 1px solid var(--supos-mode-color, var(--supos-theme-color));
+.topology-flow {
+  display: flex;
+  align-items: flex-start;
+  min-width: max-content;
 }
 
-.status-indicator {
-  position: absolute;
-  right: 0;
-  bottom: -20px;
+.topology-node-item {
+  flex: 0 0 auto;
+}
+
+.topology-link {
+  position: relative;
+  flex: 0 0 60px;
+  height: 1px;
+  border-top: 1.5px dashed var(--ui-mode-color, var(--ui-theme-color));
+  margin: 26px 0 0;
+  pointer-events: none;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--ui-mode-color, var(--ui-theme-color));
+    border-radius: 50%;
+  }
+
+  &::before {
+    left: -4px;
+  }
+
+  &::after {
+    right: -4px;
+  }
+}
+
+.topology-link-after-wide {
+  flex-basis: 40px;
+}
+
+// ─── 拓扑节点样式 ───
+
+.rf-node-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.rf-node {
   display: flex;
   align-items: center;
-  font-size: 12px;
-  color: #888;
+  gap: 8px;
+  min-width: 140px;
+  height: 52px;
+  background-color: var(--ui-bg-color);
+  border-radius: 3px;
+  border: 1px solid transparent;
+  border-left: 4px solid var(--ui-mode-color, var(--ui-theme-color));
+  color: var(--ui-text-color);
+  padding: 0 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--ui-primary-bg);
+    border-right-color: var(--ui-mode-color, var(--ui-theme-color));
+    border-top-color: var(--ui-mode-color, var(--ui-theme-color));
+    border-bottom-color: var(--ui-mode-color, var(--ui-theme-color));
+  }
 }
 
-.status-dot {
+.rf-node-wide {
+  width: 220px;
+  min-width: 220px;
+}
+
+.rf-node-active {
+  background-color: var(--ui-bg-color);
+  border-right-color: var(--ui-mode-color, var(--ui-theme-color));
+  border-top-color: var(--ui-mode-color, var(--ui-theme-color));
+  border-bottom-color: var(--ui-mode-color, var(--ui-theme-color));
+}
+
+.rf-node-static {
+  cursor: default;
+
+  &:hover {
+    background-color: var(--ui-bg-color);
+    border-right-color: transparent;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+  }
+}
+
+.rf-node-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rf-node-subtitle {
+  font-size: 10px;
+  color: var(--ui-text-color-secondary, var(--ui-text-color));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rf-node-title {
+  font-size: 14px;
+  letter-spacing: 0.16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rf-node-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.rf-node-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+
+  &:hover {
+    background-color: var(--ui-cell-hover-bg);
+    color: var(--ui-theme-color);
+  }
+
+  :global {
+    .ant-btn:hover {
+      color: var(--ui-theme-color) !important;
+    }
+
+    .ant-btn-variant-text:hover {
+      background-color: var(--ui-cell-hover-bg);
+    }
+  }
+}
+
+.rf-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ui-text-color-secondary, var(--ui-text-color));
+  margin-top: 4px;
+}
+
+.rf-indicator-dot {
   display: inline-block;
   width: 8px;
   height: 8px;
-  margin-right: 4px;
 }
 
-.status-content {
-  max-width: calc(190px - 12px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 16px;
-}
+// ─── 其他保留样式 ───
 
 .loading-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid var(--supos-gray-color-30);
-  border-top: 2px solid var(--supos-theme-color);
+  border: 2px solid var(--ui-gray-color-30);
+  border-top: 2px solid var(--ui-theme-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .topology-detail {
-  border-top: 1px dashed var(--supos-t-gray-color-30);
-  background-color: var(--supos-gray-color-10-message);
+  border-top: 1px dashed var(--ui-table-tr-color);
+  background-color: var(--ui-gray-color-10-message);
   display: flex;
   width: 100%;
   flex-direction: column;
@@ -120,13 +230,22 @@
     width: 100%;
 
     :global {
-      .ant-table-tbody .ant-table-cell {
-        background-color: var(--supos-gray-color-10-message) !important;
+      .ant-table,
+      .ant-table-container {
+        background-color: var(--ui-bg-color);
+      }
+
+      .ant-table-thead > tr > th,
+      .ant-table-tbody > tr > td {
+        background-color: var(--ui-bg-color) !important;
+        color: var(--ui-text-color);
+        border-bottom-color: var(--ui-table-tr-color) !important;
       }
     }
 
     .payloadFirstTd {
-      background-color: var(--supos-payloadfirsttd-color);
+      background-color: var(--ui-bg-color);
+      color: var(--ui-text-color);
     }
   }
 }
@@ -150,11 +269,11 @@
     align-items: flex-start;
     gap: 10px;
     flex: 1 0 0;
-    background-color: var(--supos-table-head-color);
-    border: 1px solid var(--supos-table-tr-color);
+    background-color: var(--ui-table-head-color);
+    border: 1px solid var(--ui-table-tr-color);
     font-size: 16px;
     font-style: normal;
-    line-height: 24px; /* 150% */
+    line-height: 24px;
     font-weight: bold;
   }
 
@@ -164,35 +283,9 @@
     align-items: center;
     gap: 4px;
     flex: 1 0 0;
-    border: 1px solid var(--supos-table-tr-color);
+    border: 1px solid var(--ui-table-tr-color);
     border-top: none;
-    background-color: #fff;
+    background-color: var(--ui-bg-color);
+    color: var(--ui-text-color);
   }
-}
-
-.buttonError {
-  width: 16px;
-  height: 16px;
-  background-color: red;
-  border-radius: 50%;
-
-  img {
-    width: 100%;
-  }
-
-  &:hover {
-    cursor: pointer;
-  }
-}
-
-.error {
-  display: flex;
-  padding: 10px 14px;
-  align-items: center;
-  gap: 10px;
-  border-radius: 3px;
-  border: 1px solid #f1aaae;
-  background: #fff1f1;
-  color: #000;
-  font-size: 16px;
 }

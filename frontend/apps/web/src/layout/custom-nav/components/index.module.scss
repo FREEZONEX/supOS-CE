@@ -3,7 +3,7 @@
   max-width: 100%;
   width: 100%;
   min-width: 100%;
-  border-top: 1px solid #c6c6c6;
+  border-top: 1px solid var(--ui-line-color);
   padding-top: 8px;
 
   :global {
@@ -29,11 +29,11 @@
     .ant-menu-item-selected {
       position: relative;
       border-radius: 0;
-      background-color: var(--supos-background-selected);
+      background-color: var(--ui-background-selected);
 
       &::before {
         position: absolute;
-        background-color: var(--supos-theme-color);
+        background-color: var(--ui-theme-color);
         content: '';
         inline-size: 3px;
         inset-block: 0;
@@ -48,12 +48,12 @@
     .ant-menu-submenu-selected:not(.ant-menu-submenu-open) > .ant-menu-submenu-title {
       &:hover {
         border: 0;
-        background-color: var(--supos-background-selected, rgb(141 141 141 / 20%));
+        background-color: var(--ui-background-selected, rgb(141 141 141 / 20%));
       }
     }
 
     .ant-menu-submenu-inline.ant-menu-submenu-selected.ant-menu-submenu-open > .ant-menu-submenu-title {
-      color: var(--supos-text-color);
+      color: var(--ui-text-color);
     }
 
     .ant-menu-submenu-inline.ant-menu-submenu-selected:not(.ant-menu-submenu-open) {
@@ -62,7 +62,7 @@
 
       &::before {
         position: absolute;
-        background-color: var(--supos-theme-color);
+        background-color: var(--ui-theme-color);
         content: '';
         inline-size: 3px;
         inset-block: 0;
@@ -70,13 +70,13 @@
       }
 
       & > .ant-menu-submenu-title {
-        color: var(--supos-text-color);
+        color: var(--ui-text-color);
       }
     }
 
     .ant-menu-submenu-selected > .ant-menu-submenu-title {
-      color: var(--supos-theme-color);
-      background-color: var(--supos-background-selected);
+      color: var(--ui-theme-color);
+      background-color: var(--ui-background-selected);
       width: 100%;
     }
 
@@ -86,7 +86,7 @@
       margin: 0;
 
       &:focus-within {
-        border-color: var(--supos-theme-color) !important;
+        border-color: var(--ui-theme-color) !important;
       }
     }
 

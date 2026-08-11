@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { Button, Flex, Form, Input } from 'antd';
 import type { FormItemProps } from 'antd';
-import { AddAlt, SubtractAlt } from '@carbon/icons-react';
+import { AddAlt, SubtractAlt } from '@/components/lucide-icon/carbon';
 import { useTranslate } from '@/hooks';
 
 export interface ExpandedKeyFormListProps {
@@ -55,9 +55,9 @@ const ExpandedKeyFormList: FC<ExpandedKeyFormListProps> = ({ formProps }) => {
                     remove(name);
                   }}
                   style={{
-                    border: '1px solid #CBD5E1',
-                    color: 'var(--supos-text-color)',
-                    backgroundColor: 'var(--supos-uns-button-color)',
+                    border: '1px solid var(--ui-line-color)',
+                    color: 'var(--ui-text-color)',
+                    backgroundColor: 'var(--ui-uns-button-color)',
                   }}
                 />
               </Flex>
@@ -71,8 +71,8 @@ const ExpandedKeyFormList: FC<ExpandedKeyFormListProps> = ({ formProps }) => {
                 }}
                 block
                 style={{
-                  color: 'var(--supos-text-color)',
-                  backgroundColor: 'var(--supos-uns-button-color)',
+                  color: 'var(--ui-text-color)',
+                  backgroundColor: 'var(--ui-uns-button-color)',
                 }}
                 icon={<AddAlt size={20} />}
               />

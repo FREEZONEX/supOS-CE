@@ -1,6 +1,7 @@
 import { ConfigProvider } from 'antd';
 import type { ReactNode } from 'react';
 import { IntlProvider } from 'react-intl';
+import ComEmpty from '@/components/com-empty';
 import { useI18nStore } from '@/stores/i18n-store.ts';
 import { useTranslate } from '@/hooks';
 
@@ -47,7 +48,7 @@ const LanguageProvider = (props: PropsTypes) => {
   };
   return (
     <IntlProvider messages={langMessages} locale={lang} defaultLocale={'en'} onError={(error) => console.error(error)}>
-      <ConfigProvider locale={{ ...antMessages, ...customAntdMessages }} {...config}>
+      <ConfigProvider locale={{ ...antMessages, ...customAntdMessages }} renderEmpty={() => <ComEmpty />} {...config}>
         {children}
       </ConfigProvider>
     </IntlProvider>

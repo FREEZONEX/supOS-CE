@@ -1,12 +1,27 @@
 .operation-form {
+  padding: 0;
+
   .ant-form-item .ant-form-item-label > label {
-    // color: #000;
     font-size: 14px;
     font-style: normal;
-    font-weight: 600;
+    font-weight: 400;
+    line-height: 18px;
+  }
+
+  &.ant-form-vertical .ant-form-item-label,
+  .ant-form-vertical .ant-form-item-label {
+    padding: 0 0 8px;
   }
 
   .ant-form-item {
-    margin-bottom: 18px;
+    margin-bottom: 16px;
   }
+
+  &__footer {
+    margin-top: 24px;
+  }
+}
+
+.ant-drawer-body > .operation-form {
+  padding: 20px 24px;
 }

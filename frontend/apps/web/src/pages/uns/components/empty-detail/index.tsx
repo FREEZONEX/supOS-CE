@@ -1,5 +1,5 @@
 import { Tag } from 'antd';
-import { ArrowRight, AddLarge, ChartLine, WatsonHealth3DCurveAutoColon, SendAlt, Document } from '@carbon/icons-react';
+import { ArrowRight, ChartLine, ClipboardList, Route, SendAlt, SquarePlus } from '@/components/lucide-icon/carbon';
 import { useTranslate } from '@/hooks';
 import './index.scss';
 
@@ -10,42 +10,35 @@ const EmptyDetail = () => {
     <div className="emptyDetail-wrap">
       <ul className="detailInfo-list">
         <li className="detailInfo-list-item">
-          <Tag>{formatMessage('uns.guideSwitchTabs')}</Tag>
-          <ArrowRight className="icon-arrow" size={12} />
-          {formatMessage('uns.guideBuild')} <span className="tag-info">{formatMessage('uns.treeList')}</span>/
-          <span className="tag-info">{formatMessage('common.template')}</span>/
-          <span className="tag-info">{formatMessage('common.label')}</span>
-        </li>
-        <li className="detailInfo-list-item">
           <Tag>
             {formatMessage('uns.guideClick')} &nbsp;
-            <AddLarge size={12} />
+            <SquarePlus size={12} strokeWidth={1.75} aria-hidden />
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
-          {formatMessage('uns.guideBuildUnsWay', {
-            namespace: <span className="tag-info">{formatMessage('uns.treeList')}</span>,
-          })}
+          {formatMessage('uns.guideBuildUnsWay')}
+        </li>
+        <li className="detailInfo-list-item">
+          <Tag>{formatMessage('uns.guideRightClick')}</Tag>
+          <ArrowRight className="icon-arrow" size={12} />
+          {formatMessage('uns.guideQuickExpand')}
         </li>
         <li className="detailInfo-list-item">
           <Tag>
-            {formatMessage('uns.guideClick')} &nbsp; <WatsonHealth3DCurveAutoColon size={12} />
-            {formatMessage('uns.model')}
+            {formatMessage('uns.guideClick')} &nbsp; <Route size={12} strokeWidth={1.75} aria-hidden />
+            {formatMessage('uns.guidePath')}
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
-          {formatMessage('uns.guideBrowseUns', {
-            namespace: <span className="tag-info">{formatMessage('uns.treeList')}</span>,
-          })}
+          {formatMessage('uns.guideBrowseUns')}
         </li>
         <li className="detailInfo-list-item">
           <Tag>
-            {formatMessage('uns.guideClick')} &nbsp; <ChartLine size={12} /> / <SendAlt size={12} /> /
-            <Document size={12} />
-            {formatMessage('uns.instance')}
+            {formatMessage('uns.guideClick')} &nbsp; <ChartLine size={12} strokeWidth={1.75} aria-hidden /> /{' '}
+            <SendAlt size={12} strokeWidth={1.75} aria-hidden /> /{' '}
+            <ClipboardList size={12} strokeWidth={1.75} aria-hidden />
+            {formatMessage('uns.guideTopic')}
           </Tag>
           <ArrowRight className="icon-arrow" size={12} />
-          {formatMessage('uns.guideManageUns', {
-            namespace: <span className="tag-info">{formatMessage('uns.treeList')}</span>,
-          })}
+          {formatMessage('uns.guideManageUns')}
         </li>
       </ul>
     </div>

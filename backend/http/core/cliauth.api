@@ -1,0 +1,20 @@
+syntax = "v1"
+
+@server(
+    prefix: /api/core/cli-auth
+    group: core/cliauth
+)
+service backend {
+    @handler CliAuthStatus
+    post /status (CliAuthStatusReq) returns (Envelope)
+}
+
+@server(
+    prefix: /api/core/cli-auth
+    group: core/cliauth
+    middleware: SessionAuth
+)
+service backend {
+    @handler CliAuthBind
+    post /bind (CliAuthBindReq) returns (Envelope)
+}

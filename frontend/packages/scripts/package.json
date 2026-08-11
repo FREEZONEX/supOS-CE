@@ -1,11 +1,11 @@
 {
-  "name": "@supos-os-edge/scripts",
+  "name": "@internal/scripts",
   "version": "1.0.0",
   "description": "平台执行脚本",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "supos-scripts": "./dist/bin.js"
+    "workspace-scripts": "./dist/bin.js"
   },
   "scripts": {
     "build": "tsdown",
@@ -15,7 +15,8 @@
   "author": "zhengfayue",
   "license": "ISC",
   "devDependencies": {
-    "@supos-os-edge/typescript-config": "workspace:^",
+    "@internal/typescript-config": "workspace:^",
+    "rolldown": "^1.0.2",
     "tencentcloud-sdk-nodejs-tmt": "catalog:util",
     "tsdown": "catalog:build"
   }

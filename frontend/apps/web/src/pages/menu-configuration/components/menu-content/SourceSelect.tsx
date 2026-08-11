@@ -2,7 +2,7 @@ import { Flex } from 'antd';
 import ComSelect from '@/components/com-select';
 import { useTranslate } from '@/hooks';
 import usePropsValue from '@/hooks/usePropsValue.ts';
-import { getKongRoutesApi } from '@/apis/inter-api';
+import { getKongRoutesApi } from '@/apis/core-api';
 
 const SourceSelect = ({ value, onChange }: { value?: any; onChange?: (v: any) => void }) => {
   const formatMessage = useTranslate();

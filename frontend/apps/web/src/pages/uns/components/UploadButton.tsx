@@ -1,20 +1,25 @@
-import { Button, Flex, message, Upload as AntUpload } from 'antd';
+import { Flex, message, Upload as AntUpload } from 'antd';
 import { useTranslate } from '@/hooks';
-import { FolderAdd, Upload } from '@carbon/icons-react';
-import { useState } from 'react';
-import { uploadAttachment } from '@/apis/inter-api/attachments.ts';
+import { Upload as UploadIcon } from '@/components/lucide-icon/carbon';
+import { type MouseEvent, useRef, useState } from 'react';
+import { uploadAttachment } from '@/apis/core-api/attachments.ts';
 import { AuthButton } from '@/components/auth';
 import ProModal from '@/components/pro-modal';
+import ComButton from '@/components/com-button';
+import '@/pages/uns/components/import-modal/index.scss';
+
 const { Dragger } = AntUpload;
 
 const UploadButton = ({
   alias,
+  ownerId,
   documentListRef,
   auth,
   setActiveList,
 }: {
   auth?: string;
   alias: string;
+  ownerId?: string | number;
   documentListRef: any;
   setActiveList?: any;
 }) => {
@@ -22,6 +27,14 @@ const UploadButton = ({
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState<any[]>([]);
   const [show, setShow] = useState(false);
+  const uploadRootRef = useRef<HTMLDivElement>(null);
+  const openFileDialog = (event?: MouseEvent<HTMLElement>) => {
+    event?.stopPropagation();
+    const target = event?.target as HTMLElement | null;
+    if (target?.tagName === 'INPUT') return;
+    if (target?.closest('.ant-upload-list')) return;
+    uploadRootRef.current?.querySelector<HTMLInputElement>('input[type="file"]')?.click();
+  };
   const onClose = () => {
     setFileList([]);
     setShow(false);
@@ -38,10 +51,14 @@ const UploadButton = ({
   };
 
   const onSave = () => {
+    if (!fileList.length) {
+      message.warning(formatMessage('uns.importDocumentSelect', {}, 'Please select a file'));
+      return;
+    }
     setLoading(true);
     uploadAttachment(
       fileList?.map((item: any) => ({ value: item, name: 'files', fileName: item.name })),
-      { alias }
+      { alias, ownerId }
     )
       .then(() => {
         documentListRef?.current?.refresh?.();
@@ -60,41 +77,59 @@ const UploadButton = ({
       <AuthButton
         auth={auth}
         onClick={() => setShow(true)}
-        style={{ border: '1px solid #C6C6C6', background: 'var(--supos-uns-button-color)' }}
-        icon={<Upload />}
+        style={{ border: '1px solid var(--ui-line-color)', background: 'var(--ui-uns-button-color)' }}
+        icon={<UploadIcon size={17} />}
       >
         {formatMessage('common.upload')}
       </AuthButton>
       <ProModal
         aria-label=""
-        title={
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>{formatMessage('uns.importDocument')}</span>
-          </div>
-        }
+        title={formatMessage('uns.importDocument')}
         onCancel={onClose}
         open={show}
-        className="importModalWrap"
-        size="xxs"
+        className="importModalWrap attachment-upload-modal"
+        width={520}
       >
-        <Dragger
-          className="uploadWrap"
-          action=""
-          multiple
-          fileList={fileList}
-          beforeUpload={beforeUpload}
-          onRemove={(file) => {
-            setFileList(fileList?.filter((item) => item.uid !== file.uid));
-          }}
-        >
-          <Flex vertical align="center" gap={10}>
-            <FolderAdd size={100} style={{ color: '#E0E0E0' }} />
-            <span style={{ fontSize: 12 }}>{formatMessage('uns.importDocumentMax')}</span>
-          </Flex>
-        </Dragger>
-        <Button loading={loading} color="primary" variant="solid" block onClick={onSave} style={{ marginTop: 20 }}>
-          {formatMessage('common.save')}
-        </Button>
+        <div ref={uploadRootRef} onClick={openFileDialog}>
+          <Dragger
+            className="uploadWrap"
+            action=""
+            multiple
+            fileList={fileList}
+            beforeUpload={beforeUpload}
+            openFileDialogOnClick={false}
+            onRemove={(file) => {
+              setFileList(fileList?.filter((item) => item.uid !== file.uid));
+            }}
+          >
+            <div className="upload-drag-content">
+              <UploadIcon size={32} className="upload-drag-icon" />
+              <p className="upload-hint-primary">
+                {formatMessage('uns.importDocumentDragHint', {}, 'Click or drag file to this area to upload')}
+              </p>
+              <p className="upload-hint-secondary">{formatMessage('uns.importDocumentMax')}</p>
+            </div>
+          </Dragger>
+        </div>
+        <Flex className="upload-modal-footer" gap={8} justify="end">
+          <ComButton
+            color="default"
+            variant="filled"
+            onClick={onClose}
+            title={formatMessage('common.cancel')}
+          >
+            {formatMessage('common.cancel')}
+          </ComButton>
+          <ComButton
+            type="primary"
+            variant="solid"
+            loading={loading}
+            onClick={onSave}
+            title={formatMessage('common.save')}
+          >
+            {formatMessage('common.save')}
+          </ComButton>
+        </Flex>
       </ProModal>
     </>
   );

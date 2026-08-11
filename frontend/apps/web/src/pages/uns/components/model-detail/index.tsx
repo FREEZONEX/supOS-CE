@@ -1,17 +1,10 @@
 import { useState, useEffect, type FC, type CSSProperties, useRef } from 'react';
-import { getModelInfo, modifyModel, updateModelSubscribe } from '@/apis/inter-api/uns';
+import { getModelInfo, updateModelSubscribe } from '@/apis/core-api/uns';
 import { useClipboard, useTranslate } from '@/hooks';
 import { Collapse, App, theme, Typography, Flex, Tag } from 'antd';
-import {
-  CaretRight,
-  Copy,
-  Folder,
-  WatsonHealth3DCurveAutoColon,
-  Document,
-  SendAlt,
-  ChartLine,
-} from '@carbon/icons-react';
-import Icon from '@ant-design/icons';
+import { CaretRight, ChartLine, ClipboardList, Copy, Folder, Route, SendAlt } from '@/components/lucide-icon/carbon';
+import { toolbarIconProps } from '@/components/lucide-icon/icon-props';
+import { UNS_TOPIC_ICON_COLORS, UnsTopicTypeIconWrap } from '@/pages/uns/components/uns-tree/tree-icons';
 import DocumentList from '@/pages/uns/components/DocumentList.tsx';
 import UploadButton from '@/pages/uns/components/UploadButton.tsx';
 import EditButton from '@/pages/uns/components/EditButton.tsx';
@@ -20,32 +13,30 @@ import EditDetailButton from '@/pages/uns/components/EditDetailButton.tsx';
 import type { InitTreeDataFnType, UnsTreeNode } from '@/pages/uns/types';
 import { formatTimestamp } from '@/utils/format';
 import ProTable from '@/components/pro-table';
-import FileEdit from '@/components/svg-components/FileEdit';
-import { hasPermission } from '@/utils/auth';
 import { useBaseStore } from '@/stores/base';
 import Subscribe from '@/pages/uns/components/subscribe';
 import CustomParagraph from '@/components/custom-paragraph';
-import { useUnsContext } from '@/pages/uns/UnsContext';
-import StatusDot from '@/pages/uns/components/uns-tree/StatusDot';
 
 const { Title } = Typography;
 
 const panelStyle: CSSProperties = {
-  background: 'val(--supos-bg-color)',
+  background: 'val(--ui-bg-color)',
   border: 'none',
 };
 
 export interface FolderDetailProps {
   currentNode: UnsTreeNode;
   initTreeData: InitTreeDataFnType;
+  readOnly?: boolean;
 }
 
 const Module: FC<FolderDetailProps> = (props) => {
   const { message } = App.useApp();
   const {
-    currentNode: { id, countChildren },
-    initTreeData,
+    currentNode: { id, countChildren, mount },
+    readOnly = false,
   } = props;
+  const folderReadOnly = readOnly || Boolean(mount);
   const documentListRef = useRef(null);
   const formatMessage = useTranslate();
   const systemInfo = useBaseStore((state) => state.systemInfo);
@@ -53,8 +44,6 @@ const Module: FC<FolderDetailProps> = (props) => {
   const { token } = theme.useToken();
 
   const [modelInfo, setModelInfo] = useState<{ [key: string]: any }>({});
-
-  const { mountStatus } = useUnsContext();
 
   const getModel = (id: string) => {
     getModelInfo({ id })
@@ -70,14 +59,6 @@ const Module: FC<FolderDetailProps> = (props) => {
     }
   }, [id]);
   const { copy } = useClipboard();
-
-  const mountTypeMap: { [key: number]: string } = {
-    16: formatMessage('uns.grpcGateway'),
-    50: formatMessage('streams.dataSource'),
-    51: formatMessage('streams.dataSource'),
-    52: formatMessage('streams.dataSource'),
-    100: formatMessage('streams.dataSource'),
-  };
 
   const folderTypeMap: { [key: number]: string } = {
     1: formatMessage('uns.state'),
@@ -101,7 +82,7 @@ const Module: FC<FolderDetailProps> = (props) => {
                   onClick={() => copy(modelInfo.topic)}
                   title={formatMessage('common.copy')}
                 >
-                  <Copy />
+                  <Copy {...toolbarIconProps} />
                 </span>
               </div>
             </div>
@@ -118,31 +99,22 @@ const Module: FC<FolderDetailProps> = (props) => {
             <div className="detailKey"> {formatMessage('uns.description')}</div>
             <div>{modelInfo.description}</div>
           </div>
-          {modelInfo.mount && (
-            <div className="detailItem">
-              <div className="detailKey">{formatMessage('uns.mountDataSource')}</div>
-              <div>
-                {mountTypeMap[modelInfo.mount?.mountType || 100]}（
-                {modelInfo.mount?.displayName || modelInfo.mount?.mountSource}）
-              </div>
-            </div>
-          )}
-          <div className="detailItem">
-            <div className="detailKey"> {formatMessage('uns.sourceTemplate')}</div>
-            <div>{modelInfo.modelName ? `${modelInfo.modelName}（${modelInfo.templateAlias}）` : ''}</div>
-          </div>
           {modelInfo?.subscribeEnable && (
             <div className="detailItem">
               <div className="detailKey"> {formatMessage('uns.subscriptionFrequency')}</div>
-              <CustomParagraph
-                value={modelInfo.subscribeFrequency}
-                onChange={(value) => {
-                  updateModelSubscribe({ id, ...value }).then(() => {
-                    message.success(formatMessage('uns.editSuccessful'));
-                    getModel(id as string);
-                  });
-                }}
-              />
+              {folderReadOnly ? (
+                <div>{modelInfo.subscribeFrequency || '-'}</div>
+              ) : (
+                <CustomParagraph
+                  value={modelInfo.subscribeFrequency}
+                  onChange={(value) => {
+                    updateModelSubscribe({ id, ...value }).then(() => {
+                      message.success(formatMessage('uns.editSuccessful'));
+                      getModel(id as string);
+                    });
+                  }}
+                />
+              )}
             </div>
           )}
           <div className="detailItem">
@@ -186,7 +158,7 @@ const Module: FC<FolderDetailProps> = (props) => {
         </>
       ),
       style: panelStyle,
-      extra: (
+      extra: folderReadOnly ? null : (
         <EditDetailButton
           auth={ButtonPermission['uns.folderDetail']}
           type="folder"
@@ -198,7 +170,7 @@ const Module: FC<FolderDetailProps> = (props) => {
     {
       key: 'definition',
       label: formatMessage('uns.definition'),
-      extra: (
+      extra: folderReadOnly ? null : (
         <EditButton
           auth={ButtonPermission['uns.folderDetail']}
           modelInfo={modelInfo}
@@ -221,25 +193,25 @@ const Module: FC<FolderDetailProps> = (props) => {
               title: formatMessage('uns.type'),
               dataIndex: 'type',
               width: '20%',
-              render: (text) => <span style={{ color: 'var(--supos-theme-color)' }}>{text}</span>,
+              render: (text) => <span style={{ color: 'var(--ui-theme-color)' }}>{text}</span>,
             },
             {
               title: formatMessage('common.length'),
               dataIndex: 'maxLen',
               width: '20%',
-              render: (text) => <span style={{ color: 'var(--supos-theme-color)' }}>{text}</span>,
+              render: (text) => <span style={{ color: 'var(--ui-theme-color)' }}>{text}</span>,
             },
             {
               title: formatMessage('uns.displayName'),
               dataIndex: 'displayName',
               width: '20%',
-              render: (text) => <span style={{ color: 'var(--supos-theme-color)' }}>{text}</span>,
+              render: (text) => <span style={{ color: 'var(--ui-theme-color)' }}>{text}</span>,
             },
             {
               title: formatMessage('uns.remark'),
               dataIndex: 'remark',
               width: '20%',
-              render: (text) => <span style={{ color: 'var(--supos-theme-color)' }}>{text}</span>,
+              render: (text) => <span style={{ color: 'var(--ui-theme-color)' }}>{text}</span>,
             },
           ]}
           dataSource={modelInfo?.fields || []}
@@ -253,12 +225,15 @@ const Module: FC<FolderDetailProps> = (props) => {
     {
       key: 'document',
       label: formatMessage('common.document'),
-      children: <DocumentList alias={modelInfo.alias} ref={documentListRef} />,
+      children: (
+        <DocumentList alias={modelInfo.alias} ownerId={modelInfo.id} readOnly={folderReadOnly} ref={documentListRef} />
+      ),
       style: panelStyle,
-      extra: (
+      extra: folderReadOnly ? null : (
         <UploadButton
           auth={ButtonPermission['uns.folderDetail']}
           alias={modelInfo.alias}
+          ownerId={modelInfo.id}
           documentListRef={documentListRef}
           setActiveList={setActiveList}
         />
@@ -275,13 +250,15 @@ const Module: FC<FolderDetailProps> = (props) => {
   const getFolderIcon = () => {
     switch (modelInfo.dataType) {
       case 0:
-        return <WatsonHealth3DCurveAutoColon size={20} />;
+        return <Route size={20} strokeWidth={1.75} aria-hidden />;
       case 1:
-        return <Document size={20} style={{ color: '#D2A106' }} />;
+        return (
+          <ClipboardList size={20} strokeWidth={1.75} aria-hidden style={{ color: UNS_TOPIC_ICON_COLORS.state }} />
+        );
       case 2:
-        return <SendAlt size={20} style={{ color: '#94C518' }} />;
+        return <SendAlt size={20} strokeWidth={1.75} aria-hidden style={{ color: UNS_TOPIC_ICON_COLORS.action }} />;
       case 3:
-        return <ChartLine size={20} style={{ color: '#1D77FE' }} />;
+        return <ChartLine size={20} strokeWidth={1.75} aria-hidden style={{ color: UNS_TOPIC_ICON_COLORS.metric }} />;
       default:
         return null;
     }
@@ -291,72 +268,25 @@ const Module: FC<FolderDetailProps> = (props) => {
     <div className="topicDetailWrap">
       <div className="topicDetailContent">
         <Flex className="detailTitle" gap={8} align="center">
-          <Flex align="center" gap={4}>
-            {modelInfo.alias && mountStatus?.[modelInfo.alias] && <StatusDot status={mountStatus[modelInfo.alias]} />}
-            {systemInfo.enableAutoCategorization ? (
-              <Flex
-                align="center"
-                justify="center"
-                style={{ width: 36, height: 36, background: '#f4f4f4', borderRadius: 3 }}
-              >
-                {getFolderIcon()}
-              </Flex>
-            ) : (
-              <Folder size={20} />
-            )}
-          </Flex>
-          <Title
-            level={2}
-            style={{ margin: 0, width: '100%', insetInlineStart: 0 }}
-            editable={
-              hasPermission(ButtonPermission['uns.folderDetail']) &&
-              systemInfo?.useAliasPathAsTopic &&
-              !modelInfo.dataType
-                ? {
-                    icon: (
-                      <Icon
-                        data-button-auth={ButtonPermission['uns.folderDetail']}
-                        component={FileEdit}
-                        style={{
-                          fontSize: 25,
-                          color: 'var(--supos-text-color)',
-                        }}
-                      />
-                    ),
-                    onChange: (val) => {
-                      if (val === modelInfo.pathName || !val) return;
-                      if (val.length > 63) {
-                        return message.warning(
-                          formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 })
-                        );
-                      }
-                      if (['label', 'template'].includes(val)) {
-                        return message.warning(formatMessage('uns.prohibitKeywords'));
-                      }
-                      if (!/^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/.test(val)) {
-                        return message.warning(formatMessage('uns.nameFormat'));
-                      }
-                      modifyModel({ id, name: val }).then(() => {
-                        message.success(formatMessage('uns.editSuccessful'));
-                        getModel(id as string);
-                        initTreeData({ queryType: 'editFolderName' });
-                      });
-                    },
-                  }
-                : false
-            }
-          >
+          {systemInfo.enableAutoCategorization ? (
+            <UnsTopicTypeIconWrap topicType={modelInfo.dataType ?? 0}>{getFolderIcon()}</UnsTopicTypeIconWrap>
+          ) : (
+            <Folder size={20} />
+          )}
+          <Title level={2} style={{ margin: 0, width: '100%', insetInlineStart: 0 }} editable={false}>
             {modelInfo.pathName}
           </Title>
-          <Subscribe
-            hidden
-            showModal
-            value={modelInfo.subscribeEnable}
-            topic={modelInfo.topic}
-            subscribeFrequency={modelInfo.subscribeFrequency}
-            fileCount={countChildren}
-            onChange={handleChangeSubscribe}
-          />
+          {!folderReadOnly && (
+            <Subscribe
+              hidden
+              showModal
+              value={modelInfo.subscribeEnable}
+              topic={modelInfo.topic}
+              subscribeFrequency={modelInfo.subscribeFrequency}
+              fileCount={countChildren}
+              onChange={handleChangeSubscribe}
+            />
+          )}
         </Flex>
         <div className="tableWrap">
           <Collapse

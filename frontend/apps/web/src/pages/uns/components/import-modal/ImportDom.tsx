@@ -1,31 +1,50 @@
 import cx from 'classnames';
-import { CheckmarkFilled, ErrorFilled, FolderAdd } from '@carbon/icons-react';
+import { CheckmarkFilled, ErrorFilled, Upload as UploadIcon } from '@/components/lucide-icon/carbon';
 import ComEllipsis from '../../../../components/com-ellipsis';
 import { App, Divider, Flex, Progress, Upload, type UploadFile } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslate } from '@/hooks';
 import ComButton from '../../../../components/com-button';
 import type { SocketDataType } from './type.ts';
 import InlineLoading from '@/components/inline-loading/index.tsx';
-import { readerSSE } from '@/pages/uns/components/import-modal/utils.ts';
+import { readerSSE } from './utils.ts';
+import { getToken } from '@/utils/auth.ts';
 const { Dragger } = Upload;
 
-const ImportDom = ({ initTreeData, onCloseModal }: any) => {
+const ImportDom = ({ initTreeData, onCloseModal, fillHeight = false }: any) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const uploadRef = useRef<any>(null);
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const formatMessage = useTranslate();
   const [loading, setLoading] = useState(false);
   const [socketData, setSocketData] = useState<SocketDataType>({});
   const [moduleMap, setModuleMap] = useState(new Map());
   const timer = useRef<number>();
 
+  const showImportError = (error?: unknown) => {
+    const msg = error instanceof Error && error.message ? error.message : formatMessage('uns.importFailed');
+    const item = {
+      code: 500,
+      finished: true,
+      progress: 100,
+      module: 'uns',
+      msg,
+    };
+    setModuleMap((prevMap) => {
+      const newMap = new Map(prevMap);
+      newMap.set(item.module, item);
+      return newMap;
+    });
+    setSocketData(item);
+    setLoading(false);
+  };
+
   const beforeUpload = (file: any) => {
-    const fileType = file.name.split('.').pop();
-    if (['json', 'zip'].includes(fileType.toLowerCase())) {
+    const fileType = (file.name.split('.').pop() || '').toLowerCase();
+    if (fileType === 'json') {
       setFileList([file]);
     } else {
-      message.warning(formatMessage('common.theFileFormatType', { fileType: '.json,.zip' }));
+      message.warning(formatMessage('common.theFileFormatType', { fileType: '.json' }));
     }
     return false;
   };
@@ -43,36 +62,47 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
         return;
       }
       setLoading(true);
-      const response = await fetch('/inter-api/supos/uns/importExport/import', {
+      const response = await fetch('/api/core/uns/import', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${getToken() || ''}`,
+        },
         body: fd,
       });
+      if (!response.ok) {
+        const msg = await response.text();
+        throw new Error(msg || response.statusText || formatMessage('uns.importFailed'));
+      }
       readerSSE(
         response,
         (data: any) => {
+          const item = {
+            module: data?.module || 'uns',
+            ...data,
+            finished: data?.finished || data?.progress >= 100,
+          };
           setModuleMap((prevMap) => {
             const newMap = new Map(prevMap);
-            newMap.set(data.module || 'uns', {
-              module: 'uns',
-              ...data,
-            });
+            newMap.set(item.module, item);
             return newMap;
           });
           setSocketData({
             code: data?.code,
-            finished: data?.progress >= 100,
+            finished: item.finished,
             progress: data?.progress,
             errTipFile: data?.errTipFile,
+            module: item.module,
+            msg: data?.msg,
           });
-          if (data?.progress >= 100) initTreeData({ reset: true });
+          if (item.finished && [200, 206].includes(item.code)) initTreeData({ reset: true });
         },
         () => {
-          setLoading(false);
+          showImportError();
         }
       );
     } catch (error) {
       console.error(error);
-      setLoading(false);
+      showImportError(error);
     }
   };
 
@@ -85,44 +115,33 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
       if (uploadRef.current) uploadRef?.current?.nativeElement?.querySelector('input').click();
     });
   };
-  const onClose = () => {
+  const onClose = useCallback(() => {
     onCloseModal?.();
-  };
+  }, [onCloseModal]);
 
   useEffect(() => {
     if (socketData.finished) {
       clearInterval(timer.current);
       if (socketData.code === 200) {
         message.success(formatMessage('uns.importFinished'));
-        // setTimeout(() => {
-        //   onClose();
-        // }, 3000);
+        onClose();
+      } else if (socketData.code !== 206) {
+        message.error(socketData.msg || formatMessage('uns.importFailed'));
       }
     }
     if (socketData.code === 206) {
-      modal.confirm({
-        title: formatMessage('uns.PartialDataImportFailed'),
-        onOk() {
-          window.open(`/inter-api/supos/uns/importExport/file/download?path=${socketData.errTipFile}`, '_self');
-        },
-        okButtonProps: {
-          title: formatMessage('common.confirm'),
-        },
-        cancelButtonProps: {
-          title: formatMessage('common.cancel'),
-        },
-      });
+      message.warning(socketData.msg || formatMessage('uns.PartialDataImportFailed'));
     }
-  }, [socketData]);
+  }, [formatMessage, message, onClose, socketData]);
 
   return (
-    <Flex vertical style={{ height: '100%', overflow: 'hidden' }}>
+    <Flex vertical style={{ height: fillHeight ? '100%' : undefined, overflow: 'hidden' }}>
       <div style={{ flexShrink: 0 }}>
         <Dragger
           ref={uploadRef}
           className={cx('import-upload', fileList?.length > 0 && 'upload-file')}
           action=""
-          accept=".json,.zip"
+          accept=".json"
           maxCount={1}
           disabled={loading}
           beforeUpload={beforeUpload}
@@ -135,20 +154,20 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
             <Flex vertical align="center" justify="center" gap={8}>
               <Flex align="center" gap={4}>
                 <CheckmarkFilled fill={'#24a148'} />
-                <span style={{ color: 'var(--supos-text-color)' }}>{formatMessage('uns.uploadSuccess')}</span>
+                <span style={{ color: 'var(--ui-text-color)' }}>{formatMessage('uns.uploadSuccess')}</span>
               </Flex>
               {!socketData?.finished && formatMessage('uns.waitingFormParsing')}
             </Flex>
           ) : (
-            <Flex style={{ height: 170 }} vertical align="center" justify="center" gap={8}>
-              <FolderAdd size={48} style={{ color: '#E0E0E0' }} />
-              <ComEllipsis style={{ padding: '16px 0' }}>{formatMessage('common.clickOrDragForUpload')}</ComEllipsis>
-            </Flex>
+            <div className="upload-drag-content">
+              <UploadIcon size={32} className="upload-drag-icon" />
+              <p className="upload-hint-primary">{formatMessage('common.clickOrDragForUpload')}</p>
+            </div>
           )}
         </Dragger>
       </div>
-      <div style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
-        {loading && (
+      {loading ? (
+        <div style={{ flex: fillHeight ? 1 : undefined, minHeight: fillHeight ? 0 : undefined, overflow: 'auto', paddingTop: 16 }}>
           <div>
             <ComEllipsis style={{ color: '#525252' }}>{formatMessage('uns.overallProgress')}</ComEllipsis>
             <Flex align="center" gap={8}>
@@ -166,15 +185,15 @@ const ImportDom = ({ initTreeData, onCloseModal }: any) => {
                   status={item?.finished ? (item?.code === 200 ? 'finished' : 'error') : 'active'}
                   description={
                     <Flex justify="space-between">
-                      <span>{item.module}</span>
+                      <span>{item.msg || item.module}</span>
                     </Flex>
                   }
                 />
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      ) : null}
       <div style={{ flexShrink: 0 }}>
         <Divider style={{ backgroundColor: 'rgb(198, 198, 198)', margin: '16px 0' }} />
         <Flex align="center" gap={8} justify="flex-end">

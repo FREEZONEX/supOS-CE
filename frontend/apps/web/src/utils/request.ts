@@ -88,8 +88,10 @@ service.defaults.paramsSerializer = function (params) {
 // request interceptor
 service.interceptors.request.use(
   (config) => {
-    if (getToken()) {
-      config.headers['X-Sa-Token'] = getToken();
+    const token = getToken();
+    if (token) {
+      config.headers['X-Sa-Token'] = token;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -114,16 +116,18 @@ service.interceptors.response.use(
         return Promise.reject({ code: 403 });
       }
       // 特殊处理403弹框（后端接口直接重定向了）
-      notification.error({
-        message: getIntl(
-          'common.noPermissionMessage',
-          {},
-          "You don't have permission to do this, contact your administrator."
-        ),
-        // description: response.config?.url,
-        duration: 2,
-        showProgress: true,
-      });
+      if (config?.[CustomAxiosConfigEnum.NoMessage] !== true) {
+        notification.error({
+          message: getIntl(
+            'common.noPermissionMessage',
+            {},
+            "You don't have permission to do this, contact your administrator."
+          ),
+          // description: response.config?.url,
+          duration: 2,
+          showProgress: true,
+        });
+      }
       return Promise.reject({ code: 403 });
     }
 
@@ -140,7 +144,11 @@ service.interceptors.response.use(
     } else {
       if (config?.[CustomAxiosConfigEnum.NoMessage] !== true) {
         // HttpCode.Fail 的情况，这里提示，上层接失败处理
-        message.error(res.msg ?? getIntl('common.serverBusy', {}, 'Server is busy, please try again later'));
+        message.error(
+          res.msg
+            ? getIntl(res.msg, {}, res.msg)
+            : getIntl('common.serverBusy', {}, 'Server is busy, please try again later')
+        );
       }
     }
     // 如果 是业务上的错误，reject {code,msg,data} 给业务层自己处理
@@ -152,25 +160,42 @@ service.interceptors.response.use(
       msg: error.message,
       config: error.config,
     };
+    const config: AxiosWrapperRequestConfig | undefined = error.config;
+    const showDefaultMessage = config?.[CustomAxiosConfigEnum.NoMessage] !== true;
     if (error.message === 'canceled') {
       // 取消请求
       console.log('error-msg: canceled');
     } else {
       if (error.response) {
+        const responseCode = error.response?.data?.code;
+        const responseMsg = error.response?.data?.msg;
+        if (responseCode !== undefined) {
+          err.code = responseCode;
+        } else if (error.response.status === 403 || error.response.status === 404) {
+          // 中间件返回纯文本 403/404 时 body 无 code 字段，用 HTTP status 兜底
+          err.code = error.response.status;
+        }
+        if (responseMsg) {
+          err.msg = responseMsg;
+        }
         if (error.response.status === 401) {
           return Promise.reject(error);
-        } else if (error.response.status === 403) {
+        } else if (error.response.status === 403 && showDefaultMessage) {
           message.error(getIntl('common.noPermission', {}, 'No Permission'));
-        } else if (error.response.status === 404) {
+        } else if (error.response.status === 404 && showDefaultMessage) {
           message.error(getIntl('common.interfaceNotExist', {}, 'Interface does not exist'));
-        } else {
+        } else if (showDefaultMessage) {
           message.error(
-            error.response?.data?.msg || getIntl('common.serverBusy', {}, 'Server is busy, please try again later')
+            responseMsg
+              ? getIntl(responseMsg, {}, responseMsg)
+              : getIntl('common.serverBusy', {}, 'Server is busy, please try again later')
           );
         }
-      } else if (error.message === 'Network Error') {
+      } else if (error.code === 'ECONNABORTED' && showDefaultMessage) {
+        message.error(getIntl('common.requestTimeout', {}, 'Request timed out. Please check your network and try again.'));
+      } else if (error.message === 'Network Error' && showDefaultMessage) {
         message.error(getIntl('common.networkFailed', {}, 'Network connection failed, please check your network'));
-      } else {
+      } else if (showDefaultMessage) {
         message.error(getIntl('common.serverBusy', {}, 'Server is busy, please try again later'));
       }
     }
@@ -242,8 +267,7 @@ export class ApiWrapper {
     const configCopy = {
       ...config,
       headers: {
-        ...(config?.headers || {}), // 如果 config.headers 存在，使用它，否则创建空对象
-        'Content-Type': 'multipart/form-data',
+        ...(config?.headers || {}), // 浏览器会为 FormData 自动补 multipart boundary
       },
     };
     return this.request({ url: this.baseUrl + url, data: fd, method: 'put', ...configCopy });
@@ -264,8 +288,7 @@ export class ApiWrapper {
     const configCopy = {
       ...config,
       headers: {
-        ...(config?.headers || {}), // 如果 config.headers 存在，使用它，否则创建空对象
-        'Content-Type': 'multipart/form-data',
+        ...(config?.headers || {}), // 浏览器会为 FormData 自动补 multipart boundary
       },
     };
     return this.request({

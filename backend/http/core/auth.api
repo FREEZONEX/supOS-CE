@@ -1,0 +1,38 @@
+syntax = "v1"
+
+@server(
+    prefix: /api/core/auth
+    group: core/auth
+)
+service backend {
+    @handler Login
+    post /login (LoginReq) returns (Envelope)
+}
+
+@server(
+    prefix: /api/core/auth
+    group: core/auth
+    middleware: SessionAuth
+)
+service backend {
+    @handler CurrentUser
+    get /me returns (Envelope)
+
+    @handler Logout
+    post /logout returns (Envelope)
+
+    @handler CurrentUserConfigGet
+    get /config returns (Envelope)
+
+    @handler CurrentUserConfigPatch
+    patch /config (CurrentUserConfigReq) returns (Envelope)
+
+    @handler CurrentUserConfigPut
+    put /config (CurrentUserConfigReq) returns (Envelope)
+
+    @handler CurrentUserProfileUpdate
+    put /profile (CurrentUserProfileReq) returns (Envelope)
+
+    @handler CurrentUserPasswordUpdate
+    put /password (CurrentUserPasswordReq) returns (Envelope)
+}

@@ -1,70 +1,52 @@
-﻿Name: backend
+Name: backend
 Host: 0.0.0.0
 Port: 8080
-CpuThreshold: 0
 Timeout: 20000
+# 全局请求体上限：500 MiB 文件上限 + 1 MiB multipart 开销余量，
+# 与 assetUploadHandler 的 MaxBytesReader 对齐，保证恰好 500 MiB 的包能进入应用层、超限返回明确 413
+MaxBytes: 525336576
+CertFile:
+KeyFile:
+Log:
+  Mode: file
+  Encoding: json
+  Path: /app/logs
+  Level: info
+  Compress: true
+  KeepDays: 14
+  Rotation: daily
 
 Database:
-  DBType: pgsql
-  DSN: postgres://postgres:postgres@postgresql:5432/postgres?search_path=supos
-
-log:
-  ServiceName: uns
-  Mode: console
-  Path: logs
-  Level: info
-  KeepDays: 7
-
-sink:
-  postgresql: postgres://postgres:postgres@tsdb:5432/postgres
-  timescaledb: postgres://postgres:postgres@tsdb:5432/postgres
-
-export:
-  limitSmallFileRows: 10000
-
-CacheRedis:
-  - Host: localhost:6379
-    Pass:
-    Type: node
-TimedJobRpc:
-  Enable: true
-  Mode: grpc
-  Conf:
-    Timeout: 1000000
-    Etcd:
-      Key: timedjob.rpc
-DevLink:
-  Mode: mqtt
-  SubMode: emq
-  Mqtt:
-    ClientID: supos_server
-    Pass: uns
-    User: unssvr
-    ConnNum: 6
-    Brokers:
-      - tcp://emqx:1883
-    OpenApi:
-      Host: http://emqx:18083
-      ApiKey: b441dbabd9bd5c26
-      SecretKey: 59CdRlRvDaygamiil6789A2JvbXfO9ADRcLEcgxB9CYVv5Y
-OssConf:
-  OssType: local # 如果不需要minio,可以填写local,默认存储路径为 ../oss
-  PublicBucketName: tier0-upload-public
-  PrivateBucketName: tier0-upload
-  TemporaryBucketName: tier0-upload-temp
-  AccessKeyID: ${ossAk}
-  AccessKeySecret: ${ossSk}
-  Location:
-  Region: ap-southeast-1
-NodeRed:
-  Source:
-    Host: nodered
-    Port: "1880"
-  Event:
-    Host: eventflow
-    Port: "1889"
-Kong:
-  Host: kong
-  Port: 8001
-#max file size 100MB
-MaxBytes: 104857600
+  UnsDbUrl: ${UNS_DB_URL}
+  SinkDbUrl: ${SINK_DB_URL}
+Redis:
+  Addr: ${REDIS_ADDR}
+  Password: ${REDIS_PASSWORD}
+  DB: 0
+Security:
+  JwtSecret: ${JWT_SECRET}
+  InitialAdminPassword: ${ADMIN_INITIAL_PASSWORD}
+  PluginAPIKey: ${TIER0_API_KEY}
+Gateway:
+  WebDir: ${WEB_DIR}
+  LocalFrontendDev: false
+  FrontendDevUrl: ${FRONTEND_DEV_PROXY_URL}
+  SourceFlowUrl: ${SOURCEFLOW_URL}
+  EventFlowUrl: ${EVENTFLOW_URL}
+  EmqxUrl: ${EMQX_URL}
+DataIngest:
+  Enabled: false
+  MqttBrokers: ${DATAINGEST_MQTT_BROKERS}
+  MqttClientID: ${DATAINGEST_MQTT_CLIENT_ID}
+  MqttUsername: ${DATAINGEST_MQTT_USERNAME}
+  MqttPassword: ${DATAINGEST_MQTT_PASSWORD}
+  MqttTopic: ${DATAINGEST_MQTT_TOPIC}
+  QueueSize: 0
+  BatchSize: 0
+  FlushIntervalMs: 0
+Tier0Sdk:
+  ApiHost: ${TIER0_SDK_API_HOST}
+  MqttHost: ${TIER0_SDK_MQTT_HOST}
+  MqttPort: ${TIER0_SDK_MQTT_PORT}
+Storage:
+  FileRoot: ${FILESTORE_LOCAL_ROOT}

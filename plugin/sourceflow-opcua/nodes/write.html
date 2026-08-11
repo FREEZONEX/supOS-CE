@@ -1,0 +1,49 @@
+<script type="text/html" data-template-name="opcua-write">
+  <div class="form-row">
+    <label for="node-input-connection"><i class="fa fa-plug"></i> Connection</label>
+    <input type="text" id="node-input-connection">
+  </div>
+  <div class="form-row">
+    <label for="node-input-nodeId"><i class="fa fa-tag"></i> NodeId</label>
+    <input type="text" id="node-input-nodeId" placeholder="ns=1;s=MyVariable">
+  </div>
+  <div class="form-row">
+    <label for="node-input-dataType">Data Type</label>
+    <select id="node-input-dataType">
+      <option value="String">String</option>
+      <option value="Boolean">Boolean</option>
+      <option value="Int32">Int32</option>
+      <option value="UInt32">UInt32</option>
+      <option value="Double">Double</option>
+      <option value="Float">Float</option>
+      <option value="Byte">Byte</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+  </div>
+</script>
+
+<script type="text/html" data-help-name="opcua-write">
+  <p>Write a value to an OPC UA server.</p>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('opcua-write', {
+    category: 'OPC UA',
+    color: '#C0DEED',
+    defaults: {
+      connection: { value: '', type: 'opcua-connection', required: true },
+      nodeId: { value: '' },
+      dataType: { value: 'String' },
+      name: { value: '' }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'bridge.png',
+    label: function () {
+      return this.name || 'opcua write';
+    }
+  });
+</script>

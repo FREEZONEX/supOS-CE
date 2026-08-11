@@ -1,0 +1,11 @@
+syntax = "v1"
+
+@server(
+    prefix: /openapi/v1
+    group: openapi/v1/auth
+    middleware: ApiKeyAuth
+)
+service backend {
+    @handler OpenapiWhoami
+    post /auth/whoami returns (AuthWhoamiResp)
+}

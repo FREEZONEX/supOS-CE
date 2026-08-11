@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Flex } from 'antd';
-import { Launch } from '@carbon/icons-react';
+import { Launch } from '@/components/lucide-icon/carbon';
 import { useTranslate } from '@/hooks';
 import ProModal from '@/components/pro-modal';
 
@@ -37,9 +37,9 @@ const Module = ({ toTargetNode }: any) => {
               height: 'max-content',
               minHeight: '24px',
               maxWidth: '100%',
-              border: '1px solid #CBD5E1',
-              color: 'var(--supos-text-color)',
-              backgroundColor: 'var(--supos-uns-button-color)',
+              border: '1px solid var(--ui-line-color)',
+              color: 'var(--ui-text-color)',
+              backgroundColor: 'var(--ui-uns-button-color)',
             }}
             onClick={() => {
               toTargetNode('label', { pathType: 7, id: label.id });

@@ -1,7 +1,6 @@
 import './index.scss';
 import type { CSSProperties, FC, ReactNode } from 'react';
 import UserPopover from './UserPopover';
-import NoticePopover from './NoticePopover';
 import { AuthWrapper } from '../auth';
 
 interface OptionProps {
@@ -32,14 +31,6 @@ const ComGroupButton: FC<ComGroupButtonProps> = ({ options }) => {
                   {item.label}
                 </div>
               </UserPopover>
-            );
-          case 'notice':
-            return (
-              <NoticePopover key={item.key} trigger="click" updateDotStatus={item.onClick}>
-                <div style={item.style} className="item">
-                  {item.label}
-                </div>
-              </NoticePopover>
             );
           default:
             return (

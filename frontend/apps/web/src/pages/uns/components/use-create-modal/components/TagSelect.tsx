@@ -2,7 +2,7 @@ import { useState, type FC, useEffect } from 'react';
 import { Select, App } from 'antd';
 import { usePropsValue, useTranslate } from '@/hooks';
 import type { SelectProps } from 'antd';
-import { getAllLabel } from '@/apis/inter-api/uns';
+import { getAllLabel } from '@/apis/core-api/uns';
 
 interface TagSelectProps extends SelectProps {
   tagMaxLen?: number;

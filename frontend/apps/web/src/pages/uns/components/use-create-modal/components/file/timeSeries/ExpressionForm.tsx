@@ -1,6 +1,6 @@
 import { type FC, useEffect, useState, useRef } from 'react';
 import { Form, Select, Button, Divider, Flex } from 'antd';
-import { SubtractAlt, AddAlt } from '@carbon/icons-react';
+import { SubtractAlt, AddAlt } from '@/components/lucide-icon/carbon';
 import { useTranslate } from '@/hooks';
 import SearchSelect from '@/pages/uns/components/use-create-modal/components/SearchSelect';
 
@@ -156,9 +156,9 @@ const ExpressionForm: FC<ExpressionFormProps> = ({
                       formulaRef?.current?.restValue();
                     }}
                     style={{
-                      border: '1px solid #CBD5E1',
-                      color: 'var(--supos-text-color)',
-                      backgroundColor: 'var(--supos-uns-button-color)',
+                      border: '1px solid var(--ui-line-color)',
+                      color: 'var(--ui-text-color)',
+                      backgroundColor: 'var(--ui-uns-button-color)',
                     }}
                     disabled={fields.length === 1}
                   />
@@ -170,14 +170,14 @@ const ExpressionForm: FC<ExpressionFormProps> = ({
                 variant="filled"
                 onClick={() => add()}
                 block
-                style={{ color: 'var(--supos-text-color)', backgroundColor: 'var(--supos-uns-button-color)' }}
+                style={{ color: 'var(--ui-text-color)', backgroundColor: 'var(--ui-uns-button-color)' }}
                 icon={<AddAlt size={20} />}
               />
             </>
           );
         }}
       </Form.List>
-      <Divider style={{ borderColor: '#c6c6c6' }} />
+      <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
       <Form.Item
         name={expressionName}
         rules={[
@@ -201,7 +201,7 @@ const ExpressionForm: FC<ExpressionFormProps> = ({
         </div>
       </Form.Item>
 
-      <Divider style={{ borderColor: '#c6c6c6' }} />
+      <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
       {showTimeReference && (
         <Form.Item
           name={timeReferenceName}

@@ -1,0 +1,35 @@
+syntax = "v1"
+
+@server(
+    prefix: /api/core/iam
+    group: core/iam
+    middleware: SessionAuth, Permission
+)
+service backend {
+    @handler UserList
+    get /users (PageReq) returns (Envelope)
+
+    @handler UserCreate
+    post /users (UserSaveReq) returns (Envelope)
+
+    @handler UserUpdate
+    put /users/:id (UserUpdateReq) returns (Envelope)
+
+    @handler UserPasswordReset
+    post /users/:id/password/reset (UserPasswordResetReq) returns (Envelope)
+
+    @handler UserDelete
+    delete /users/:id (IdReq) returns (Envelope)
+
+    @handler RoleList
+    get /roles (PageReq) returns (Envelope)
+
+    @handler RoleCreate
+    post /roles (RoleSaveReq) returns (Envelope)
+
+    @handler RoleUpdate
+    put /roles/:id (RoleSaveReq) returns (Envelope)
+
+    @handler RoleDelete
+    delete /roles/:id (IdReq) returns (Envelope)
+}

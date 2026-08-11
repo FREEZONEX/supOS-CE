@@ -1,15 +1,15 @@
 .upload-data {
   width: 100%;
   border-radius: 3px;
-  border: 1px solid #c6c6c6;
-  background: var(--supos-uns-button-color);
+  border: 1px solid var(--ui-line-color);
+  background: var(--ui-uns-button-color);
   display: flex;
   padding: 12px;
   gap: 10px;
 
   .upload-data-info {
     flex: 1;
-    color: var(--supos-text-color);
+    color: var(--ui-text-color);
     overflow: hidden;
 
     .info-title {
@@ -28,10 +28,10 @@
 
   .upload-data-code {
     flex: 1;
-    color: var(--supos-text-color);
-    background: var(--supos-switchwrap-active-bg-color);
+    color: var(--ui-text-color);
+    background: var(--ui-switchwrap-active-bg-color);
     border-radius: 3px;
-    border: 1px solid #c9c9c9;
+    border: 1px solid var(--ui-line-color);
     overflow: hidden;
   }
 
@@ -52,8 +52,8 @@
 
   .leftFormItems {
     padding: 16px;
-    border: 1px solid #c9c9c9;
-    background: var(--supos-switchwrap-active-bg-color);
+    border: 1px solid var(--ui-line-color);
+    background: var(--ui-switchwrap-active-bg-color);
     overflow: auto;
   }
 
@@ -67,14 +67,14 @@
     }
 
     .ant-tabs-nav {
-      background: var(--supos-switchwrap-active-bg-color);
+      background: var(--ui-switchwrap-active-bg-color);
     }
 
     .demo-table {
       th,
       td {
         padding: 5px 10px;
-        border: 1px solid #c6c6c6;
+        border: 1px solid var(--ui-line-color);
       }
     }
   }

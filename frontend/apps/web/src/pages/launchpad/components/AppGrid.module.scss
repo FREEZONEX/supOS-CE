@@ -1,0 +1,26 @@
+.appGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  .appCard {
+    width: 280px;
+  }
+}
+
+@media (width <= 768px) {
+  .appGrid {
+    .appCard {
+      width: calc(50% - 8px);
+      min-width: 0;
+    }
+  }
+}
+
+@media (width <= 480px) {
+  .appGrid {
+    .appCard {
+      width: 100%;
+    }
+  }
+}

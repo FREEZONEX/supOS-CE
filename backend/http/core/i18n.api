@@ -1,0 +1,17 @@
+syntax = "v1"
+
+@server(
+    prefix: /api/core/i18n
+    group: core/i18n
+)
+service backend {
+    @doc "获取系统语言包"
+    @handler I18nMessages
+    get /messages (I18nMessagesReq) returns (Envelope)
+}
+
+type (
+    I18nMessagesReq {
+        Lang string `form:"lang"`
+    }
+)

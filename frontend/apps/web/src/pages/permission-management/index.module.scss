@@ -1,0 +1,150 @@
+.leftHeader {
+  margin: 0 16px 12px 0;
+}
+
+.leftTitle {
+  color: #161616;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.leftSubTitle {
+  margin-top: 2px;
+  color: #6f6f6f;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.search {
+  margin: 0 16px 12px 0;
+  width: auto;
+
+  &:global(.custom-search) {
+    width: 100%;
+  }
+}
+
+.treeNode {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 26px;
+  min-width: 0;
+  overflow: hidden;
+  line-height: 26px;
+}
+
+.treeNodeName {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #161616;
+  font-size: 14px;
+}
+
+.treeNodeReadonly {
+  cursor: default;
+
+  .treeNodeName {
+    color: #a8a8a8;
+  }
+}
+
+.detailPane {
+  height: 100%;
+  overflow: auto;
+  padding: 20px 24px;
+}
+
+.detailHeader {
+  margin-bottom: 18px;
+}
+
+.titleBlock {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin-bottom: 4px;
+  color: #6f6f6f;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.resourceName {
+  overflow: hidden;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 32px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resourceKey {
+  margin-top: 4px;
+  color: #6f6f6f;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.section {
+  margin-top: 18px;
+}
+
+.sectionTitle {
+  color: #161616;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.sectionHint {
+  margin-top: 2px;
+  color: #6f6f6f;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px 24px;
+  margin-top: 10px;
+  padding: 14px 0;
+  border-top: 1px solid var(--ui-line-color);
+  border-bottom: 1px solid var(--ui-line-color);
+
+  > div {
+    min-width: 0;
+  }
+
+  span {
+    display: block;
+    margin-bottom: 4px;
+    color: #6f6f6f;
+    font-size: 13px;
+  }
+
+  strong {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: #161616;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.sectionHeader {
+  margin-bottom: 10px;
+}
+
+@media (width <= 900px) {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}

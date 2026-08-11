@@ -345,10 +345,10 @@ const ProTreeSelect = forwardRef<TreeSelectRefType, ProTreeSelectProps>(
         placeholder={placeholder || formatMessage('common.select')}
         popupRender={(originNode) => {
           return (
-            <div style={{ background: 'var(--supos-bg-color)', padding: '8px 8px 0' }}>
+            <div style={{ background: 'var(--ui-bg-color)', padding: '8px 8px 0' }}>
               {selectAllAble && multiple && (
                 <>
-                  <Flex justify="space-between" align="center">
+                  <Flex className="pro-tree-select-select-all" justify="space-between" align="center">
                     <Checkbox
                       checked={allChecked}
                       onChange={(e) => {
@@ -394,7 +394,7 @@ const ProTreeSelect = forwardRef<TreeSelectRefType, ProTreeSelectProps>(
                       }}
                     />
                   </Flex>
-                  <Divider style={{ borderColor: '#c6c6c6', margin: '8px 0' }} />
+                  <Divider style={{ borderColor: 'var(--ui-line-color)', margin: '8px 0' }} />
                 </>
               )}
               {popupRender ? popupRender(originNode) : originNode}

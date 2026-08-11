@@ -1,8 +1,8 @@
-import { useState, useEffect, type FC, useRef } from 'react';
-import { getInstanceInfo, modifyModel } from '@/apis/inter-api/uns';
-import { Button, Collapse, Flex, theme, Typography, App, Space } from 'antd';
-import Icon, { FullscreenOutlined } from '@ant-design/icons';
-import { CaretRight, Document, Code, TableSplit, SendAlt, ChartLine } from '@carbon/icons-react';
+import { useState, useEffect, useRef, useMemo, useCallback, type FC } from 'react';
+import { getInstanceInfo } from '@/apis/core-api/uns';
+import { Collapse, Flex, theme, Typography } from 'antd';
+import { CaretRight, ClipboardList, SendAlt, ChartLine } from '@/components/lucide-icon/carbon';
+import { UNS_TOPIC_ICON_COLORS, UnsTopicTypeIconWrap } from '@/pages/uns/components/uns-tree/tree-icons';
 import { useTranslate } from '@/hooks';
 import type { CSSProperties } from 'react';
 import type { CollapseProps } from 'antd';
@@ -12,6 +12,7 @@ import Definition from './Definition';
 import Payload from './Payload';
 import Dashboard from './Dashboard';
 import RawData from './RawData';
+import PayloadViewSegmented, { type PayloadViewMode } from './PayloadViewSegmented';
 // import SqlQuery from './SqlQuery';
 import DocumentList from '@/pages/uns/components/DocumentList.tsx';
 import UploadButton from '@/pages/uns/components/UploadButton.tsx';
@@ -19,45 +20,38 @@ import { ButtonPermission } from '@/common-types/button-permission.ts';
 import { useMediaSize } from '@/hooks';
 import EditDetailButton from '@/pages/uns/components/EditDetailButton';
 import type { InitTreeDataFnType, UnsTreeNode, FieldItem } from '@/pages/uns/types';
-import FileEdit from '@/components/svg-components/FileEdit';
-import { hasPermission, getToken } from '@/utils/auth';
 import { isJsonString } from '@/utils/common';
 import { useBaseStore } from '@/stores/base';
 // import Subscribe from '@/pages/uns/components/subscribe';
 import EditButton from '@/pages/uns/components/EditButton.tsx';
-import screenfull from 'screenfull';
-import { CustomAxiosConfigEnum } from '@/utils';
 import useSSE from '@/hooks/useSSE.ts';
-import { checkDashboardIsExist, createDashboard, getDashboardByUns } from '@/apis/inter-api/dashboard.ts';
-
-const { Title } = Typography;
 
 export interface FileDetailProps {
   currentNode: UnsTreeNode;
   initTreeData: InitTreeDataFnType;
   handleDelete: (node: UnsTreeNode) => void;
+  readOnly?: boolean;
 }
 
 interface InstanceInfoType {
   [key: string]: any;
 }
 
+const { Title } = Typography;
+
 const Module: FC<FileDetailProps> = (props) => {
   const {
-    currentNode: { id },
-    initTreeData,
+    currentNode: { id, mount },
+    readOnly = false,
   } = props;
   const {
-    systemInfo: { qualityName = 'quality', timestampName = 'timeStamp', useAliasPathAsTopic, enableAutoCategorization },
+    systemInfo: { qualityName = '_quality', timestampName = '_timestamp', enableAutoCategorization },
   } = useBaseStore((state) => ({
     systemInfo: state.systemInfo,
   }));
-  const [createLoading, setCreateLoading] = useState(false);
   const formatMessage = useTranslate();
-  const { message } = App.useApp();
   const documentListRef = useRef(null);
   const [instanceInfo, setInstanceInfo] = useState<InstanceInfoType>({});
-  const [dashboardInfo, setDashboardInfo] = useState<any>();
   const [activeList, setActiveList] = useState<string[]>([
     'topologyChart',
     'definition',
@@ -65,13 +59,13 @@ const Module: FC<FileDetailProps> = (props) => {
     'dashboard',
     // 'sqlQuery',
   ]);
-  const [showPayloadTable, setShowPayloadTable] = useState<boolean>(true);
+  const [payloadView, setPayloadView] = useState<PayloadViewMode>('table');
   const [websocketData, setWebsocketData] = useState<any>({});
-  const [wsTimeStamp, setWsTimeStamp] = useState<number>(0);
+  const [localSchemaFields, setLocalSchemaFields] = useState<FieldItem[] | null>(null);
   const { token } = theme.useToken();
 
   const panelStyle: CSSProperties = {
-    background: 'val(--supos-bg-color)',
+    background: 'val(--ui-bg-color)',
     border: 'none',
   };
 
@@ -138,52 +132,55 @@ const Module: FC<FileDetailProps> = (props) => {
     return digits === 0 ? intPart : `${intPart}.${dec}`;
   };
 
-  useSSE(
-    instanceInfo.id && wsTimeStamp
-      ? `/inter-api/supos/uns/newMsg?id=${instanceInfo.id}&t=${wsTimeStamp}&token=${getToken()}`
-      : '',
-    {
-      onMessage: (event) => {
-        const dataJson = event.data;
-        if (isJsonString(dataJson)) {
-          const data = JSON.parse(dataJson);
-          console.log(data);
-          if (qualityName && data?.data?.[qualityName]) {
-            //质量码做特殊处理
-            data.data[qualityName] = longToJavaHex(data.data[qualityName]);
-          }
-          if (!isJsonString(data.payload)) {
-            data.payload = null;
-          }
-          if (instanceInfo?.dataType === 2 && timestampName && data?.data?.[timestampName]) {
-            //关系型文件手动隐藏消息体里的时间戳
-            delete data.data[timestampName];
-          }
-          instanceInfo?.fields?.forEach((field: FieldItem) => {
-            if (
-              ['FLOAT', 'DOUBLE'].includes(field.type) &&
-              data?.data?.[field.name] &&
-              isZeroOrPositiveInteger(field.decimal)
-            ) {
-              data.data[field.name] = formatDecimal(data.data[field.name], Number(field.decimal));
-            }
-          });
-          setWebsocketData(data);
+  useSSE(instanceInfo.id ? `/api/core/uns/newMsg?id=${instanceInfo.id}` : '', {
+    onMessage: (event) => {
+      const dataJson = event.data;
+      if (isJsonString(dataJson)) {
+        const data = JSON.parse(dataJson);
+        if (qualityName && data?.data?.[qualityName]) {
+          //质量码做特殊处理
+          data.data[qualityName] = longToJavaHex(data.data[qualityName]);
         }
-      },
-      onError: (error) => console.error('WebSocket error:', error),
-    }
-  );
+        if (typeof data.payload === 'string' && !isJsonString(data.payload)) {
+          data.payload = null;
+        } else if (data.payload != null && typeof data.payload !== 'string' && typeof data.payload !== 'object') {
+          data.payload = null;
+        }
+        if (instanceInfo?.dataType === 2 && timestampName && data?.data?.[timestampName]) {
+          //关系型文件手动隐藏消息体里的时间戳
+          delete data.data[timestampName];
+        }
+        instanceInfo?.fields?.forEach((field: FieldItem) => {
+          if (
+            ['FLOAT', 'DOUBLE'].includes(field.type) &&
+            data?.data?.[field.name] &&
+            isZeroOrPositiveInteger(field.decimal)
+          ) {
+            data.data[field.name] = formatDecimal(data.data[field.name], Number(field.decimal));
+          }
+        });
+        setWebsocketData(data);
+      }
+    },
+    onError: (error) => console.error('WebSocket error:', error),
+  });
 
   useEffect(() => {
     setWebsocketData({});
+    setLocalSchemaFields(null);
     if (id) {
       getFileDetail(id as string);
     } else {
       setInstanceInfo({});
-      setWsTimeStamp(0);
     }
   }, [id]);
+
+  const schemaFields = useMemo(() => {
+    if (localSchemaFields !== null) {
+      return localSchemaFields;
+    }
+    return Array.isArray(instanceInfo.fields) ? instanceInfo.fields : [];
+  }, [instanceInfo, localSchemaFields]);
 
   const getFileDetail = (id: string) => {
     return getInstanceInfo({ id })
@@ -198,36 +195,44 @@ const Module: FC<FileDetailProps> = (props) => {
               field.decimal = undefined;
             }
           });
-          if (JSON.stringify(data.fields) !== JSON.stringify(instanceInfo.fields)) {
-            setWsTimeStamp(Date.now());
-          }
           // data.extendFieldUsed = data.mount
           //   ? ['unit', 'upperLimit', 'lowerLimit', 'decimal']
           //   : data.extendFieldUsed || [];
           data.extendFieldUsed = [];
-          if (data.withDashboard) {
-            try {
-              const { code } = await checkDashboardIsExist({ alias: data.alias });
-              data.dashboardIsExist = code === 200;
-            } catch (err) {
-              console.error(err);
-            }
+          if (data?.lastPayload) {
+            setWebsocketData(data.lastPayload);
+          } else {
+            setWebsocketData({});
           }
           setInstanceInfo(data);
-          return getDashboardByUns(data?.alias, { [CustomAxiosConfigEnum.NoMessage]: true }).then((data) => {
-            setDashboardInfo(data || { type: 0 });
-            return data;
-          });
+          return data;
         }
       })
       .catch(() => {});
   };
 
-  const getItems: (
-    panelStyle: CSSProperties,
-    instanceInfo: InstanceInfoType,
-    dashboardType: number
-  ) => CollapseProps['items'] = (panelStyle, instanceInfo) => {
+  const refreshSchemaModel = useCallback(
+    (savedFields?: FieldItem[]) => {
+      if (savedFields !== undefined) {
+        setLocalSchemaFields(savedFields);
+        void getFileDetail(id as string);
+        return Promise.resolve();
+      }
+      setLocalSchemaFields(null);
+      return getFileDetail(id as string);
+    },
+    [id]
+  );
+
+  const getItems: (panelStyle: CSSProperties, instanceInfo: InstanceInfoType) => CollapseProps['items'] = (
+    panelStyle,
+    instanceInfo
+  ) => {
+    const isMountedTopic = Boolean(mount || instanceInfo.mount);
+    const schemaModelInfo = { ...instanceInfo, fields: schemaFields, mount: isMountedTopic };
+    const topicReadOnly = readOnly || isMountedTopic;
+    const schemaEditable = !topicReadOnly && [1, 2, 8].includes(instanceInfo.dataType);
+
     const items = [
       {
         key: 'detail',
@@ -236,10 +241,10 @@ const Module: FC<FileDetailProps> = (props) => {
           <Details instanceInfo={instanceInfo} updateTime={websocketData?.updateTime} websocketData={websocketData} />
         ),
         style: panelStyle,
-        extra: (
+        extra: readOnly ? null : (
           <EditDetailButton
             auth={ButtonPermission['uns.fileDetail']}
-            modelInfo={instanceInfo}
+            modelInfo={{ ...instanceInfo, mount: isMountedTopic }}
             getModel={() => getFileDetail(id as string)}
           />
         ),
@@ -247,36 +252,43 @@ const Module: FC<FileDetailProps> = (props) => {
       {
         key: [1, 2, 3, 6, 7, 8].includes(instanceInfo.dataType) ? 'definition' : '',
         label: formatMessage('uns.definition'),
-        children: <Definition instanceInfo={instanceInfo} />,
+        children: (
+          <Definition
+            instanceInfo={{ ...instanceInfo, fields: schemaFields }}
+            modelInfo={schemaModelInfo}
+            getModel={refreshSchemaModel}
+            auth={ButtonPermission['uns.fileDetail']}
+            editable={schemaEditable}
+          />
+        ),
         style: panelStyle,
-        extra:
-          [1, 2, 8].includes(instanceInfo.dataType) && !instanceInfo.mount && !instanceInfo.modelId ? (
-            <EditButton
-              auth={ButtonPermission['uns.fileDetail']}
-              modelInfo={instanceInfo}
-              getModel={() => getFileDetail(id as string)}
-              editType="file"
-            />
-          ) : null,
+        extra: schemaEditable ? (
+          <EditButton
+            auth={ButtonPermission['uns.fileDetail']}
+            modelInfo={schemaModelInfo}
+            getModel={refreshSchemaModel}
+            editType="file"
+            triggerIcon="add"
+          />
+        ) : null,
       },
       {
         key: [1, 2, 3, 6, 7, 8].includes(instanceInfo.dataType) ? 'payload' : '',
         label: formatMessage('uns.payload'),
         children:
-          instanceInfo.dataType === 8 || !showPayloadTable ? (
-            <RawData payload={websocketData?.data} />
+          instanceInfo.dataType === 8 || payloadView === 'code' ? (
+            <RawData payload={websocketData?.payload ?? websocketData?.data} className="payload-code-view" />
           ) : (
-            <Payload websocketData={websocketData} fields={instanceInfo.fields || []} />
+            <Payload websocketData={websocketData} fields={schemaFields} />
           ),
         style: panelStyle,
         extra:
           instanceInfo.dataType === 8 ? null : (
-            <Button
-              style={{ border: '1px solid #C6C6C6' }}
-              color="default"
-              variant="filled"
-              icon={showPayloadTable ? <Code /> : <TableSplit />}
-              onClick={() => setShowPayloadTable(!showPayloadTable)}
+            <PayloadViewSegmented
+              value={payloadView}
+              onChange={setPayloadView}
+              tableTitle={formatMessage('common.table')}
+              codeTitle="JSON"
             />
           ),
       },
@@ -287,74 +299,6 @@ const Module: FC<FileDetailProps> = (props) => {
               label: formatMessage('uns.dashboard'),
               children: <Dashboard instanceInfo={instanceInfo} />,
               style: panelStyle,
-              // extra: (
-              //   <Space>
-              //     <DashboardBinding
-              //       key={instanceInfo?.id}
-              //       selectValue={dashboardInfo?.id}
-              //       isCreated={instanceInfo.withDashboard || instanceInfo.dashboardIsExist}
-              //       onCreated={handleCreateDashboard}
-              //       onBinding={(item: any) => {
-              //         return bindDashboardForUns({
-              //           dashboardId: item.id,
-              //           unsAlias: instanceInfo.alias,
-              //         }).then(() => {
-              //           message.success(formatMessage('common.optsuccess'));
-              //           getFileDetail(instanceInfo.id).then((dashboardInfo) => {
-              //             navigate(
-              //               `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`
-              //             );
-              //           });
-              //         });
-              //       }}
-              //     />
-              //     {(instanceInfo.withDashboard || instanceInfo.dashboardIsExist) && (
-              //       <Button
-              //         title={formatMessage('common.fullScreen')}
-              //         icon={<FullscreenOutlined />}
-              //         onClick={() => {
-              //           if (screenfull.isEnabled) {
-              //             const el = document.getElementById('dashboardIframe');
-              //             if (el) {
-              //               screenfull.request(el);
-              //             } else {
-              //               message.error('未找到全屏元素');
-              //             }
-              //           } else {
-              //             message.error('该浏览器,不支持全屏功能');
-              //           }
-              //         }}
-              //       />
-              //     )}
-              //   </Space>
-              // ),
-              extra: instanceInfo.dataType !== 7 && (
-                <Space.Compact block>
-                  {(!instanceInfo.withDashboard || !instanceInfo.dashboardIsExist) && (
-                    <Button loading={createLoading} onClick={handleCreateDashboard}>
-                      {formatMessage('common.create')}
-                    </Button>
-                  )}
-                  {(instanceInfo.withDashboard || instanceInfo.dashboardIsExist) && (
-                    <Button
-                      title={formatMessage('common.fullScreen')}
-                      icon={<FullscreenOutlined />}
-                      onClick={() => {
-                        if (screenfull.isEnabled) {
-                          const el = document.getElementById('dashboardIframe');
-                          if (el) {
-                            screenfull.request(el);
-                          } else {
-                            message.error('未找到全屏元素');
-                          }
-                        } else {
-                          message.error('该浏览器,不支持全屏功能');
-                        }
-                      }}
-                    />
-                  )}
-                </Space.Compact>
-              ),
             },
             {
               key: [1, 2, 8].includes(instanceInfo.dataType) ? 'topologyChart' : '',
@@ -363,7 +307,7 @@ const Module: FC<FileDetailProps> = (props) => {
                 <TopologyChart
                   getFileDetail={getFileDetail}
                   instanceInfo={instanceInfo}
-                  dashboardInfo={dashboardInfo}
+                  readOnly={topicReadOnly}
                   // payload={websocketData?.data}
                   // dt={websocketData?.dt || {}}
                 />
@@ -386,13 +330,21 @@ const Module: FC<FileDetailProps> = (props) => {
       {
         key: 'document',
         label: formatMessage('common.document'),
-        children: <DocumentList alias={instanceInfo.alias} ref={documentListRef} />,
+        children: (
+          <DocumentList
+            alias={instanceInfo.alias}
+            ownerId={instanceInfo.id}
+            readOnly={topicReadOnly}
+            ref={documentListRef}
+          />
+        ),
         style: panelStyle,
-        extra: (
+        extra: topicReadOnly ? null : (
           <UploadButton
             setActiveList={setActiveList}
             auth={ButtonPermission['uns.fileDetail']}
             alias={instanceInfo.alias}
+            ownerId={instanceInfo.id}
             documentListRef={documentListRef}
           />
         ),
@@ -401,17 +353,6 @@ const Module: FC<FileDetailProps> = (props) => {
     return items.filter((item: any) => item.key);
   };
 
-  const handleCreateDashboard = () => {
-    setCreateLoading(true);
-    return createDashboard(instanceInfo.alias)
-      .then(() => {
-        message.success(formatMessage('common.optsuccess'));
-        getFileDetail(instanceInfo.id);
-      })
-      .finally(() => {
-        setCreateLoading(false);
-      });
-  };
   // const handleChangeSubscribe = async (enable: boolean, frequency?: string) => {
   //   await updateModelSubscribe({ id, enable, frequency });
   //   getFileDetail(id as string);
@@ -421,11 +362,13 @@ const Module: FC<FileDetailProps> = (props) => {
   const getFileIcon = () => {
     switch (instanceInfo.parentDataType) {
       case 1:
-        return <Document size={20} style={{ color: '#D2A106' }} />;
+        return (
+          <ClipboardList size={20} strokeWidth={1.75} aria-hidden style={{ color: UNS_TOPIC_ICON_COLORS.state }} />
+        );
       case 2:
-        return <SendAlt size={20} style={{ color: '#94C518' }} />;
+        return <SendAlt size={20} strokeWidth={1.75} aria-hidden style={{ color: UNS_TOPIC_ICON_COLORS.action }} />;
       case 3:
-        return <ChartLine size={20} style={{ color: '#1D77FE' }} />;
+        return <ChartLine size={20} strokeWidth={1.75} aria-hidden style={{ color: UNS_TOPIC_ICON_COLORS.metric }} />;
       default:
         return null;
     }
@@ -443,52 +386,11 @@ const Module: FC<FileDetailProps> = (props) => {
       >
         <Flex className="detailTitle" gap={8} align="center">
           {enableAutoCategorization ? (
-            <Flex
-              align="center"
-              justify="center"
-              style={{ width: 36, height: 36, background: '#f4f4f4', borderRadius: 3 }}
-            >
-              {getFileIcon()}
-            </Flex>
+            <UnsTopicTypeIconWrap topicType={instanceInfo.parentDataType ?? 0}>{getFileIcon()}</UnsTopicTypeIconWrap>
           ) : (
-            <Document size={20} />
+            <ClipboardList size={20} strokeWidth={1.75} aria-hidden />
           )}
-          <Title
-            level={2}
-            style={{ margin: 0, width: '100%', insetInlineStart: 0 }}
-            editable={
-              hasPermission(ButtonPermission['uns.fileDetail']) && useAliasPathAsTopic
-                ? {
-                    icon: (
-                      <Icon
-                        data-button-auth={ButtonPermission['uns.fileDetail']}
-                        component={FileEdit}
-                        style={{
-                          fontSize: 25,
-                          color: 'var(--supos-text-color)',
-                        }}
-                      />
-                    ),
-                    onChange: (val) => {
-                      if (val === instanceInfo.pathName || !val) return;
-                      if (val.length > 63) {
-                        return message.warning(
-                          formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 })
-                        );
-                      }
-                      if (!/^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/.test(val)) {
-                        return message.warning(formatMessage('uns.nameFormat'));
-                      }
-                      modifyModel({ id, name: val }).then(() => {
-                        message.success(formatMessage('uns.editSuccessful'));
-                        getFileDetail(id as string);
-                        initTreeData({ queryType: 'editFileName' });
-                      });
-                    },
-                  }
-                : false
-            }
-          >
+          <Title level={2} style={{ margin: 0, width: '100%', insetInlineStart: 0 }} editable={false}>
             {instanceInfo.pathName}
           </Title>
           {/*<Subscribe*/}
@@ -507,7 +409,7 @@ const Module: FC<FileDetailProps> = (props) => {
               <CaretRight size={20} style={{ rotate: isActive ? '90deg' : '0deg', transition: '200ms' }} />
             )}
             style={{ background: token.colorBgContainer }}
-            items={getItems(panelStyle, instanceInfo, dashboardInfo)}
+            items={getItems(panelStyle, instanceInfo)}
           />
         </div>
       </div>

@@ -48,6 +48,7 @@ export interface ProCardProps {
     titleDescription?: ReactNode;
     onClick?: (item?: any) => void;
     customIconBg?: string;
+    showChevron?: boolean;
   };
   description?: false | string | { content?: string; rows?: number; empty?: string };
   secondaryDescription?: ReactNode;

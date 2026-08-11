@@ -1,31 +1,74 @@
-.unsDashboard {
-  padding: 24px 24px 0;
+.uns-dashboard {
+  padding: 24px;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: auto;
+  min-width: 0;
+}
+
+.overview-section {
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .overview {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-  flex-wrap: wrap;
 }
 
 .overview-item {
-  width: calc((100% - 48px) / 4);
+  min-width: 0;
+}
+
+.overview-card {
+  min-height: 120px;
+}
+
+.overview-card-header {
+  height: 24px !important;
+}
+
+.overview-card-value-wrap {
+  overflow: visible;
+}
+
+.overview-icon {
+  height: 100%;
+}
+
+.overview-value {
+  margin-top: 10px;
+  color: var(--ui-theme-color);
+  font-size: 50px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.overview-unit {
+  flex: 1;
+  color: var(--ui-description-card-color);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 28px;
 }
 
 .title {
   font-size: 30px;
   font-weight: 500;
+  line-height: 39px;
   letter-spacing: 0.16px;
 }
 
 .mqtt {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--ui-select-card-color);
+  background: var(--ui-promodal-bg-pg-color);
   padding: 16px;
   border-radius: 3px;
+  min-height: 378px;
+  height: 100%;
+  min-width: 0;
 }
 
 .mqtt-item {
@@ -34,60 +77,145 @@
   padding: 0 16px;
 
   &:first-child {
-    border-right: 1px dotted #e0e0e0;
+    border-right: 1px dotted var(--ui-home-border-color);
   }
 }
 
-.mqtt-wrapper {
-  width: calc((100% - 48px) / 4);
+.dashboard-divider {
+  flex-shrink: 0;
+  margin: 24px 0 !important;
+  background: var(--ui-select-card-color);
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: minmax(282px, 314px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  min-height: 0;
+  width: 100%;
+}
+
+.access-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.mqtt-wrapper,
+.cloudsync-wrapper {
+  min-width: 0;
+}
+
+.cloudsync-wrapper {
+  min-height: 234px;
 }
 
 .functions-wrapper {
-  flex: 1;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
 }
 
+.functions {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.functions-header {
+  min-height: 39px;
+}
+
+.functions-segmented {
+  flex: 0 1 auto;
+  max-width: 100%;
+  overflow-x: auto;
+
+  :global(.ant-segmented-item) {
+    min-width: 62px;
+  }
+}
+
+.functions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+
 .functions-item {
-  width: calc((100% - 32px) / 3);
+  min-width: 0;
+  min-height: 102px;
+}
+
+.function-card {
+  min-height: 102px;
+  height: 100%;
+}
+
+.function-card-header {
+  height: 40px !important;
+}
+
+.function-card-title {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+.function-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
 }
 
 @media (width <= 800px) {
-  .overview-item {
-    width: 100%;
+  .overview {
+    grid-template-columns: 1fr;
   }
 
-  .mqtt-wrapper {
-    display: none;
+  .mqtt-wrapper,
+  .cloudsync-wrapper,
+  .functions-wrapper {
+    width: 100%;
+    min-width: 0;
   }
 
   .functions-item {
     width: 100%;
+  }
+
+  .functions-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (800px < width <= 1400px) {
-  .overview-item {
-    width: calc(50% - 8px);
-  }
-
-  .mqtt-wrapper {
-    width: calc(50% - 8px);
-  }
-
-  .functions-item {
+@media (800px < width <= 1100px) {
+  .dashboard-content {
+    grid-template-columns: 1fr;
     width: 100%;
+  }
+
+  .overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .functions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 .new-app {
-  border: 1px dashed var(--supos-theme-color);
+  border: 1px dashed var(--ui-theme-color);
   border-radius: 3px;
-  color: var(--supos-theme-color);
+  color: var(--ui-theme-color);
   cursor: pointer;
   min-height: 122px;
 
   &:hover {
-    background: rgb(var(--supos-theme-color-rgb), 0.1);
+    background: rgb(var(--ui-theme-color-rgb), 0.1);
   }
 }
 
@@ -96,15 +224,15 @@
 
   &:hover {
     &::before {
-      border-block-start-color: var(--supos-theme-color);
+      border-block-start-color: var(--ui-theme-color);
     }
 
     &::after {
-      border-block-start-color: var(--supos-theme-color);
+      border-block-start-color: var(--ui-theme-color);
     }
 
     .add-app-modal-divider-center {
-      color: var(--supos-theme-color);
+      color: var(--ui-theme-color);
     }
   }
 }
@@ -123,7 +251,7 @@
       .ant-upload-drag {
         height: 150px;
         border-radius: 4px;
-        border: 1px dashed #d9d9d9;
+        border: 1px dashed var(--ui-home-border-color);
         background: transparent;
       }
 

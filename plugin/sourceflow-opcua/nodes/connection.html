@@ -1,0 +1,70 @@
+<script type="text/html" data-template-name="opcua-connection">
+  <div class="form-row">
+    <label for="node-config-input-endpoint"><i class="fa fa-globe"></i> Endpoint</label>
+    <input type="text" id="node-config-input-endpoint" placeholder="opc.tcp://127.0.0.1:4840">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-securityMode">Security Mode</label>
+    <select id="node-config-input-securityMode">
+      <option value="None">None</option>
+      <option value="Sign">Sign</option>
+      <option value="SignAndEncrypt">SignAndEncrypt</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-securityPolicy">Security Policy</label>
+    <select id="node-config-input-securityPolicy">
+      <option value="None">None</option>
+      <option value="Basic256Sha256">Basic256Sha256</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-user">User</label>
+    <input type="text" id="node-config-input-user">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-password">Password</label>
+    <input type="password" id="node-config-input-password">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-certificate">Certificate</label>
+    <input type="text" id="node-config-input-certificate">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-privateKey">Private Key</label>
+    <input type="text" id="node-config-input-privateKey">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-requestedSessionTimeout">Session Timeout</label>
+    <input type="number" id="node-config-input-requestedSessionTimeout" value="60000">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-reconnectInterval">Reconnect Interval</label>
+    <input type="number" id="node-config-input-reconnectInterval" value="5000">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-name">Name</label>
+    <input type="text" id="node-config-input-name">
+  </div>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('opcua-connection', {
+    category: 'config',
+    defaults: {
+      endpoint: { value: '', required: true },
+      securityMode: { value: 'None' },
+      securityPolicy: { value: 'None' },
+      user: { value: '' },
+      password: { value: '' },
+      certificate: { value: '' },
+      privateKey: { value: '' },
+      requestedSessionTimeout: { value: 60000, validate: RED.validators.number() },
+      reconnectInterval: { value: 5000, validate: RED.validators.number() },
+      name: { value: '' }
+    },
+    label: function () {
+      return this.name || this.endpoint || 'OPC UA Connection';
+    }
+  });
+</script>

@@ -20,7 +20,29 @@ export function getBaseUrl() {
 }
 
 export function getDevProxyBaseUrl() {
-  return import.meta.env.MODE === 'development' ? '/iframe' : '';
+  if (import.meta.env.MODE !== 'development') {
+    return '';
+  }
+
+  const apiBaseUrl = import.meta.env.REACT_APP_BASE_URL || process.env.API_PROXY_URL || '';
+  if (!apiBaseUrl || typeof window === 'undefined') {
+    return '/iframe';
+  }
+
+  try {
+    const apiUrl = new URL(apiBaseUrl, window.location.origin);
+    const currentUrl = new URL(window.location.origin);
+    const sameOrigin = apiUrl.origin === currentUrl.origin;
+    const sameLoopbackPort =
+      apiUrl.protocol === currentUrl.protocol &&
+      apiUrl.port === currentUrl.port &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(apiUrl.hostname) &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(currentUrl.hostname);
+
+    return sameOrigin || sameLoopbackPort ? '' : '/iframe';
+  } catch {
+    return '/iframe';
+  }
 }
 
 export function getFileName(path: string) {
@@ -40,12 +62,13 @@ const CHARTREUSE_UNSUPPORTED_ICONS = new Set([
   'DevTools',
   'Home',
   'Homepage',
+  'Launchpad',
+  'Project',
   'Settings',
   'UNS',
   'menu.tag.apps',
   'menu.tag.appspace',
   'menu.tag.connections',
-  'menu.tag.devtools',
   'menu.tag.settings',
   'menu.tag.system',
   'menu.tag.uns',
@@ -95,6 +118,7 @@ export const getImageSrcByTheme = (theme: string, iconName?: string) => {
     };
   }
   const baseUrl = `${getBaseUrl()}${STORAGE_PATH}${MENU_TARGET_PATH}/`;
+
   // 检查iconName是否已经包含有效的文件后缀
   // 常见的图片扩展名列表
   const validExtensions = ['.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico'];
@@ -121,8 +145,7 @@ export const getImageSrcByTheme = (theme: string, iconName?: string) => {
     iconNameWithoutExt = iconName;
   }
 
-  const supportsChartreuse =
-    theme.includes('chartreuse') && !CHARTREUSE_UNSUPPORTED_ICONS.has(iconNameWithoutExt);
+  const supportsChartreuse = theme.includes('chartreuse') && !CHARTREUSE_UNSUPPORTED_ICONS.has(iconNameWithoutExt);
   // 拼接带主题后缀的文件名
   const themeImageUrl = `${baseUrl}${iconNameWithoutExt}${supportsChartreuse ? '-chartreuse' : ''}${extension}`;
   // 默认文件名

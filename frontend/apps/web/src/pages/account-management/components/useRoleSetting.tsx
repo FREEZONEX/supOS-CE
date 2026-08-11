@@ -2,21 +2,27 @@ import { useTranslate } from '@/hooks';
 import { useEffect, useRef, useState } from 'react';
 import { App, Button, ConfigProvider, Divider, Flex, Form, Input, Popover, Tabs } from 'antd';
 import styles from './RoleSetting.module.scss';
-import { getRoleList } from '@/apis/inter-api/user-manage.ts';
+import { getRoleList } from '@/apis/core-api/user-manage.ts';
 import { Add, Close, UserAvatar } from '@carbon/icons-react';
 import { produce } from 'immer';
 import Permission from '@/pages/account-management/components/Permission.tsx';
-import { addRole, deleteRole, putRole } from '@/apis/inter-api/role.ts';
+import { addRole, deleteRole, putRole } from '@/apis/core-api/role.ts';
 import { childrenRoutes } from '@/routers';
 import { validSpecialCharacter } from '@/utils/pattern';
 import Loading from '@/components/loading';
 import ProModal from '@/components/pro-modal';
 import { useBaseStore } from '@/stores/base';
 import type { ResourceProps } from '@/stores/types.ts';
+import ComSelect from '@/components/com-select';
+import { formatShowName } from '@/utils';
+import { createDeleteConfirmOptions } from '@/utils/modal-confirm';
 
-export const AdminRoleId = '7ca9f922-0d35-44cf-8747-8dcfd5e66f8e';
-const generalRoleId = '71dd6dc2-6b12-4273-9ec0-b44b86e5b500';
-const disabledRoleList = [AdminRoleId, generalRoleId];
+export const BuilderRoleId = '7ca9f922-0d35-44cf-8747-8dcfd5e66f8e';
+const operatorRoleId = '71dd6dc2-6b12-4273-9ec0-b44b86e5b500';
+const disabledRoleList = [BuilderRoleId, operatorRoleId];
+
+const isSystemRole = (role?: any) =>
+  disabledRoleList.includes(role?.roleId) || ['admin', 'builder', 'operator'].includes(role?.roleCode || role?.code);
 
 const AddRoleContent = ({ successBack, disabled }: { successBack: (data: any) => void; disabled?: boolean }) => {
   const formatMessage = useTranslate();
@@ -38,7 +44,13 @@ const AddRoleContent = ({ successBack, disabled }: { successBack: (data: any) =>
       .then((data) => {
         setOpen(false);
         message.success(formatMessage('common.optsuccess'));
-        successBack?.({ roleId: data?.roleId, roleName: info?.roleName });
+        successBack?.({
+          roleId: data?.roleId,
+          roleName: info?.roleName,
+          roleCode: data?.roleCode,
+          defaultHomePage: data?.defaultHomePage,
+          resourceList: data?.resourceList,
+        });
       })
       .finally(() => {
         setLoading(false);
@@ -92,7 +104,7 @@ const AddRoleContent = ({ successBack, disabled }: { successBack: (data: any) =>
 
           <Divider
             style={{
-              background: 'var(--supos-t-dividr-color)',
+              background: 'var(--ui-t-dividr-color)',
               margin: '14px auto',
             }}
           />
@@ -131,11 +143,16 @@ export interface PermissionNode {
   id: string;
   showName: string;
   code?: string;
+  url?: string;
   type: number;
+  sort?: number;
   checked: boolean;
+  locked?: boolean;
   pagePermissionChecked?: boolean;
   actionPermissionChecked?: boolean;
   actionPermissionCheckedDisabled?: boolean;
+  resourceIds?: string[];
+  skipAutoCheckChildren?: boolean;
   children?: PermissionNode[];
 }
 
@@ -145,21 +162,49 @@ export interface PermissionRefProps {
   setValue: (value: PermissionNode[]) => void;
 }
 
+const flowPageResourceIds = ['resource:flow.collection.page', 'resource:flow.event.page'];
+const flowActionResourceIds = ['resource:flow.read', 'resource:flow.manage'];
+const flowRootResourceId = 'resource:flow';
+const flowPermissionRowId = 'permission:flow';
+const mandatoryRoleResourceId = 'resource:uns.page';
+const defaultRoleHomePage = '/uns';
+const permissionFallbackExcludedPaths = new Set(['/routing-management', '/edge-connection']);
+const permissionFallbackExcludedCodes = new Set(['route.routingManagement', 'menu.cloudSync']);
+const homePageByResourceId: Record<string, string> = {
+  'resource:home.page': '/home',
+  'resource:uns.page': '/uns',
+  'resource:flow.collection.page': '/flow',
+  'resource:flow.event.page': '/flow',
+  [flowPermissionRowId]: '/flow',
+  'resource:project.view': '/project',
+  'resource:notebook.view': '/notebook',
+};
+
 const getButtonGroup = (allButtonGroup: ResourceProps[], menuGroup: ResourceProps[]) => {
   const result: ResourceProps[] = [];
   allButtonGroup.forEach((item) => {
     if (item.parentId) {
-      let parent = result.find((p) => p.id === item.parentId);
+      let parent = result.find((p) => String(p.id) === String(item.parentId));
       if (!parent) {
-        const menuParent = menuGroup.find((p) => p.id === item.parentId)!;
+        const menuParent = menuGroup.find((p) => String(p.id) === String(item.parentId));
+        if (!menuParent && String(item.parentId) !== flowRootResourceId) {
+          return;
+        }
         // 如果父项不存在，创建并添加到结果
         parent = {
-          ...menuParent,
+          ...(menuParent || {
+            id: flowRootResourceId,
+            showName: 'common.flow',
+            code: 'common.flow',
+            type: 1,
+            sort: 20,
+          }),
           children: [],
         };
         result.push(parent);
       }
-      parent.children?.push({ ...item, checked: false, id: 'button:' + item.code });
+      const id = String(item.id || '').startsWith('resource:') ? item.id : 'button:' + item.code;
+      parent.children?.push({ ...item, checked: false, id });
     }
   });
   return result;
@@ -197,6 +242,90 @@ const getAllMenuTree = (originMenu: ResourceProps[] = []) => {
   });
   return tree.filter((f) => f.type === 2 || (f.type === 1 && f?.children?.length)).sort((a, b) => a.sort - b.sort);
 };
+
+const clonePermissionData = (data: PermissionNode[] = []) => JSON.parse(JSON.stringify(data || [])) as PermissionNode[];
+
+const enforceMandatoryPermissions = (data: PermissionNode[] = []) => {
+  const next = clonePermissionData(data);
+  const refreshGroupState = (group: PermissionNode) => {
+    const menuNodes = group.children?.filter((child) => child.type === 2) || [];
+    const buttonNodes =
+      group.children?.flatMap((child) => child.children || []).filter((child) => child.type === 3) || [];
+    const allMenusChecked = menuNodes.length > 0 && menuNodes.every((menu) => menu.checked);
+    const allButtonsChecked = buttonNodes.length > 0 && buttonNodes.every((button) => button.checked);
+    group.pagePermissionChecked = allMenusChecked;
+    group.actionPermissionChecked = buttonNodes.length > 0 ? allButtonsChecked : false;
+    group.actionPermissionCheckedDisabled = buttonNodes.length === 0;
+    group.checked = buttonNodes.length > 0 ? allMenusChecked && allButtonsChecked : allMenusChecked;
+    group.locked = Boolean(group.children?.length) && (group.children || []).every((child) => child.locked);
+  };
+  const walk = (nodes: PermissionNode[]) => {
+    nodes.forEach((node) => {
+      if (node.id === mandatoryRoleResourceId) {
+        node.checked = true;
+        node.locked = true;
+      }
+      if (node.children?.length) {
+        walk(node.children);
+      }
+      if (node.type === 1) {
+        refreshGroupState(node);
+      }
+    });
+  };
+  walk(next);
+  return next;
+};
+
+const pageRouteForPermission = (node: PermissionNode) => {
+  if (node.url) return node.url;
+  if (homePageByResourceId[node.id]) return homePageByResourceId[node.id];
+  const resourceId = node.resourceIds?.find((id) => homePageByResourceId[id]);
+  return resourceId ? homePageByResourceId[resourceId] : '';
+};
+
+const getDefaultHomePageOptions = (data: PermissionNode[] = [], formatMessage: (id: string) => string) => {
+  const options: { label: string; value: string }[] = [];
+  const addOption = (node: PermissionNode, value: string) => {
+    if (!value || options.some((option) => option.value === value)) return;
+    options.push({
+      value,
+      label: formatShowName({
+        code: node.code,
+        formatMessage,
+        showName: node.showName,
+      }),
+    });
+  };
+  const walk = (nodes: PermissionNode[]) => {
+    nodes.forEach((node) => {
+      if (node.type === 2 && node.checked) {
+        addOption(node, pageRouteForPermission(node));
+      }
+      if (node.children?.length) {
+        walk(node.children);
+      }
+    });
+  };
+  walk(data);
+  if (!options.some((option) => option.value === defaultRoleHomePage)) {
+    options.push({ value: defaultRoleHomePage, label: formatMessage('route.uns') });
+  }
+  return options;
+};
+
+const ensureDefaultHomePage = (
+  value: string | undefined,
+  data: PermissionNode[] = [],
+  formatMessage: (id: string) => string
+) => {
+  const options = getDefaultHomePageOptions(data, formatMessage);
+  if (value && options.some((option) => option.value === value)) {
+    return value;
+  }
+  return options.find((option) => option.value === defaultRoleHomePage)?.value || options[0]?.value || defaultRoleHomePage;
+};
+
 const useRoleSetting = ({ onSaveBack }: any) => {
   const formatMessage = useTranslate();
   const { originMenu, allButtonGroup } = useBaseStore((state) => ({
@@ -210,8 +339,6 @@ const useRoleSetting = ({ onSaveBack }: any) => {
   const initItems = useRef<any[]>([]);
   // 初始的菜单按钮配置
   const initialRolePermissionData = useRef<any[]>([]);
-  // 所有button
-  const allButtonData = useRef<any[]>([]);
   // 跟踪每个标签页的保存状态
   const unsavedChanges = useRef<Map<string, boolean>>(new Map());
   const [loading, setLoading] = useState(false);
@@ -253,22 +380,21 @@ const useRoleSetting = ({ onSaveBack }: any) => {
       const menuGroup = originMenu?.filter((i) => i.type !== 3 && i.enable);
       const menuTree = getAllMenuTree(menuGroup);
       getRoleList().then((role) => {
-        const buttons = getButtonGroup(allButtonGroup, menuGroup);
+        const buttons = getButtonGroup(
+          allButtonGroup.filter((item) => String(item.id || '').startsWith('resource:')),
+          menuGroup
+        );
         initialRolePermissionData.current = mapInitialRolePermissionData(menuTree, buttons);
-        allButtonData.current = extractButtonIds(buttons);
         const info =
           role?.map?.((i: any) => {
-            const denyResourceButtonList = i.denyResourceList?.filter((f: any) => f.uri?.includes('button:')) || [];
-            const resourceButtonList = i?.resourceList?.some((i: any) => i.uri?.includes('button:'))
-              ? (allButtonData.current.filter((f: any) => !denyResourceButtonList.some((s: any) => s.uri === f)) ?? [])
-              : [];
+            const permissionData = updatePermissionData(
+              initialRolePermissionData.current,
+              i?.resourceList?.map((item: any) => item.uri) ?? []
+            );
             return {
               ...i,
-              resourceList: updatePermissionData(
-                initialRolePermissionData.current,
-                [...(i?.resourceList?.map((item: any) => item.uri) ?? []), ...resourceButtonList],
-                i.roleId === AdminRoleId
-              ),
+              defaultHomePage: ensureDefaultHomePage(i?.defaultHomePage, permissionData, formatMessage),
+              resourceList: permissionData,
             };
           }) || [];
         setItems(info);
@@ -281,13 +407,15 @@ const useRoleSetting = ({ onSaveBack }: any) => {
   const onSave = () => {
     setLoading(true);
     const newValue = permissionRefs.current.get(activeKey)?.getValue?.();
-    const { checkedFalseButtons, checkedTrueMenus } = filterMenuAndButtonItems(newValue);
-    const allButton = checkedFalseButtons?.length === 0;
+    const roleItem = items?.find((i: any) => i.roleId === activeKey);
+    const defaultHomePage = ensureDefaultHomePage(roleItem?.defaultHomePage, newValue, formatMessage);
+    const { checkedResources } = filterMenuAndButtonItems(newValue);
     putRole({
       id: activeKey,
-      name: items?.find((i: any) => i.roleId === activeKey)?.roleName,
-      denyResourceList: allButton ? [] : checkedFalseButtons?.map((item) => ({ uri: item })),
-      allowResourceList: [...(checkedTrueMenus?.map?.((item) => ({ uri: item })) ?? []), { uri: 'button:*' }],
+      name: roleItem?.roleName,
+      defaultHomePage,
+      denyResourceList: [],
+      allowResourceList: checkedResources?.map?.((item) => ({ uri: item })) ?? [],
     })
       .then(() => {
         message.success(formatMessage('common.optsuccess'));
@@ -295,7 +423,8 @@ const useRoleSetting = ({ onSaveBack }: any) => {
           produce(items, (draft) => {
             const info = draft.find((todo) => todo.roleId === activeKey);
             if (info) {
-              info['resourceList'] = newValue;
+              info['resourceList'] = enforceMandatoryPermissions(newValue);
+              info['defaultHomePage'] = defaultHomePage;
             }
           })
         );
@@ -303,7 +432,8 @@ const useRoleSetting = ({ onSaveBack }: any) => {
           if (item.roleId === activeKey) {
             return {
               ...item,
-              resourceList: newValue,
+              defaultHomePage,
+              resourceList: enforceMandatoryPermissions(newValue),
             };
           } else {
             return item;
@@ -363,11 +493,16 @@ const useRoleSetting = ({ onSaveBack }: any) => {
           <AddRoleContent
             successBack={(data) => {
               setItems((items) => {
+                const resourceUris = data?.resourceList?.map?.((item: any) => item.uri)?.filter(Boolean) || [
+                  mandatoryRoleResourceId,
+                ];
+                const permissionData = updatePermissionData(initialRolePermissionData.current, resourceUris);
                 const newItems = [
                   ...items,
                   {
                     ...data,
-                    resourceList: updatePermissionData(initialRolePermissionData.current, []),
+                    defaultHomePage: ensureDefaultHomePage(data?.defaultHomePage, permissionData, formatMessage),
+                    resourceList: permissionData,
                   },
                 ];
                 initItems.current = newItems;
@@ -384,7 +519,7 @@ const useRoleSetting = ({ onSaveBack }: any) => {
         theme={{
           components: {
             Tabs: {
-              itemSelectedColor: 'var(--supos-theme-color)',
+              itemSelectedColor: 'var(--ui-theme-color)',
               zIndexPopup: 9999,
               horizontalMargin: '0 0 0 0',
             },
@@ -397,7 +532,7 @@ const useRoleSetting = ({ onSaveBack }: any) => {
         <Loading spinning={loading}>
           <Tabs
             more={{
-              overlayStyle: { '--supos-text-color': '#000' },
+              overlayStyle: { '--ui-text-color': '#000' },
             }}
             onChange={onChange}
             activeKey={activeKey}
@@ -406,13 +541,17 @@ const useRoleSetting = ({ onSaveBack }: any) => {
                 label: (
                   <Flex justify="space-between" align="center" gap={8}>
                     {item.roleName}
-                    {!disabledRoleList.includes(item.roleId) && (
+                    {!isSystemRole(item) && (
                       <Close
                         style={{ cursor: 'pointer' }}
-                        onClick={(e) => {
+                        onClick={(e: any) => {
                           e.stopPropagation();
                           modal.confirm({
-                            title: formatMessage('common.deleteConfirm'),
+                            ...createDeleteConfirmOptions({
+                              title: formatMessage('common.deleteConfirm'),
+                              name: item?.roleName,
+                              formatMessage,
+                            }),
                             onOk: async () => {
                               return await deleteRole(item?.roleId).then(() => {
                                 message.success(formatMessage('common.deleteSuccessfully'));
@@ -430,12 +569,6 @@ const useRoleSetting = ({ onSaveBack }: any) => {
                                 );
                               });
                             },
-                            okButtonProps: {
-                              title: formatMessage('common.confirm'),
-                            },
-                            cancelButtonProps: {
-                              title: formatMessage('common.cancel'),
-                            },
                           });
                         }}
                       />
@@ -443,25 +576,71 @@ const useRoleSetting = ({ onSaveBack }: any) => {
                   </Flex>
                 ),
                 key: item.roleId,
-                children: (
-                  <Permission
-                    disabled={disabledRoleList.includes(item.roleId)}
-                    ref={(el) => permissionRefs.current.set(item.roleId, el)}
-                    initValue={item.resourceList}
-                    onChange={(pre) => {
-                      const currentDataString = JSON.stringify(pre);
-                      const hasChanges =
-                        currentDataString !==
-                        JSON.stringify(initItems?.current?.find((i) => i.roleId === item.roleId)?.resourceList);
-                      unsavedChanges.current.set(item.roleId, hasChanges);
-                    }}
-                  />
-                ),
+                children: (() => {
+                  const roleDisabled = isSystemRole(item);
+                  const homePageOptions = getDefaultHomePageOptions(item.resourceList, formatMessage);
+                  return (
+                    <Flex vertical gap={12}>
+                      <Flex align="center" gap={12} className={styles['role-homepage']}>
+                        <span>{formatMessage('account.defaultHomePage')}</span>
+                        <ComSelect
+                          value={item.defaultHomePage}
+                          disabled={roleDisabled}
+                          options={homePageOptions}
+                          style={{ width: 260 }}
+                          onChange={(value) => {
+                            setItems((current) =>
+                              produce(current, (draft) => {
+                                const info = draft.find((todo) => todo.roleId === item.roleId);
+                                if (info) {
+                                  info.defaultHomePage = value;
+                                }
+                              })
+                            );
+                            const initItem = initItems.current.find((i) => i.roleId === item.roleId);
+                            unsavedChanges.current.set(
+                              item.roleId,
+                              value !== initItem?.defaultHomePage ||
+                                JSON.stringify(item.resourceList) !== JSON.stringify(initItem?.resourceList)
+                            );
+                          }}
+                        />
+                      </Flex>
+                      <Permission
+                        disabled={roleDisabled}
+                        ref={(el) => permissionRefs.current.set(item.roleId, el)}
+                        initValue={item.resourceList}
+                        onChange={(pre) => {
+                          const nextPermission = enforceMandatoryPermissions(pre);
+                          const nextHomePage = ensureDefaultHomePage(
+                            item.defaultHomePage,
+                            nextPermission,
+                            formatMessage
+                          );
+                          setItems((current) =>
+                            produce(current, (draft) => {
+                              const info = draft.find((todo) => todo.roleId === item.roleId);
+                              if (info) {
+                                info.resourceList = nextPermission;
+                                info.defaultHomePage = nextHomePage;
+                              }
+                            })
+                          );
+                          const initItem = initItems.current.find((i) => i.roleId === item.roleId);
+                          const hasChanges =
+                            JSON.stringify(nextPermission) !== JSON.stringify(initItem?.resourceList) ||
+                            nextHomePage !== initItem?.defaultHomePage;
+                          unsavedChanges.current.set(item.roleId, hasChanges);
+                        }}
+                      />
+                    </Flex>
+                  );
+                })(),
               };
             })}
           />
           <Button
-            disabled={disabledRoleList.includes(activeKey)}
+            disabled={isSystemRole(items?.find((item: any) => item.roleId === activeKey))}
             onClick={onSave}
             style={{ height: 32, marginTop: 20 }}
             block
@@ -486,7 +665,14 @@ const useRoleSetting = ({ onSaveBack }: any) => {
 const getOtherRoutes = () => {
   return childrenRoutes
     ?.filter((route) => {
-      return route?.handle?.parentPath === '/_common' && !['dev', 'all'].includes(route?.handle?.type || '');
+      const path = String(route?.path || '');
+      const code = String(route?.handle?.code || '');
+      return (
+        route?.handle?.parentPath === '/_common' &&
+        !['dev', 'all'].includes(route?.handle?.type || '') &&
+        !permissionFallbackExcludedPaths.has(path) &&
+        !permissionFallbackExcludedCodes.has(code)
+      );
     })
     ?.map((route) => {
       const children = [
@@ -509,7 +695,7 @@ const getOtherRoutes = () => {
 
 // 根据前端维护的button、路由以及kong维护的路由进行初始化数据整合
 const mapInitialRolePermissionData = (routes: any, buttonGroup: ResourceProps[]) => {
-  return [...routes, ...getOtherRoutes()]?.map((group: any) => {
+  const permissionData = [...routes, ...getOtherRoutes()]?.map((group: any) => {
     // id就是路由 keycloke配置的路由
     return {
       ...group,
@@ -524,7 +710,7 @@ const mapInitialRolePermissionData = (routes: any, buttonGroup: ResourceProps[])
               const buttonList = buttonGroup?.find((f) => f.id === menu.id)?.children;
               return {
                 ...menu,
-                id: menu?.urlType === 1 ? menu?.url : '/' + menu?.code,
+                id: menu.id,
                 checked: false,
                 children: buttonList,
               };
@@ -532,29 +718,80 @@ const mapInitialRolePermissionData = (routes: any, buttonGroup: ResourceProps[])
           : [
               {
                 ...group,
-                id: group?.urlType === 1 ? group?.url : '/' + group?.code,
+                id: group.id,
                 checked: false,
                 children: buttonGroup?.find((f) => f.id === group.id)?.children,
               },
             ],
     };
   });
+  return mergeFlowPermissionRows(permissionData, buttonGroup);
 };
 
-// 过滤出未选中的button和选中的menu
+const mergeFlowPermissionRows = (permissionData: PermissionNode[], buttonGroup: ResourceProps[]) => {
+  const flowActions =
+    buttonGroup
+      ?.find((item) => item.id === flowRootResourceId)
+      ?.children?.filter((item) => flowActionResourceIds.includes(String(item.id)))
+      ?.sort((a, b) => a.sort - b.sort)
+      ?.map((item): PermissionNode => ({
+        ...item,
+        showName: item.showName || item.code || item.id,
+        checked: false,
+        children: undefined,
+      })) || [];
+
+  return permissionData.map((group) => {
+    if (group.code !== 'menu.uns' || !group.children?.length) {
+      return group;
+    }
+
+    const flowMenus = group.children.filter((menu) => flowPageResourceIds.includes(menu.id));
+    if (!flowMenus.length) {
+      return group;
+    }
+
+    const otherMenus = group.children.filter((menu) => !flowPageResourceIds.includes(menu.id));
+    const mergedResourceIds = flowPageResourceIds.filter((id) => flowMenus.some((menu) => menu.id === id));
+    const firstFlowMenu = flowMenus[0];
+    const flowMenu: PermissionNode = {
+      ...firstFlowMenu,
+      id: flowPermissionRowId,
+      showName: 'common.flow',
+      code: 'common.flow',
+      checked: false,
+      resourceIds: mergedResourceIds,
+      skipAutoCheckChildren: true,
+      sort: Math.min(...flowMenus.map((menu) => Number(menu.sort || 0))),
+      children: flowActions,
+    };
+
+    return {
+      ...group,
+      children: [...otherMenus, flowMenu].sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0)),
+    };
+  });
+};
+
+// 角色只保存 resource 节点，button/API 由 resource_action 绑定。
 function filterMenuAndButtonItems(data: PermissionNode[] = []) {
   const result = {
-    checkedTrueMenus: [] as string[], // type: "menu" && checked: true
-    checkedFalseButtons: [] as string[], // type: "button" && checked: false
+    checkedResources: [] as string[],
+  };
+  const addResource = (id: string) => {
+    if (String(id || '').startsWith('resource:') && !result.checkedResources.includes(id)) {
+      result.checkedResources.push(id);
+    }
   };
 
   function traverse(items: PermissionNode[]) {
     items.forEach((item: PermissionNode) => {
-      // 处理当前项
-      if (item.type === 2 && item.checked) {
-        result.checkedTrueMenus.push(item.id);
-      } else if (item.type === 3 && !item.checked) {
-        result.checkedFalseButtons.push(item.id);
+      if ((item.type === 2 || item.type === 3) && item.checked) {
+        if (item.resourceIds?.length) {
+          item.resourceIds.forEach(addResource);
+        } else {
+          addResource(item.id);
+        }
       }
 
       // 递归处理子项
@@ -565,41 +802,22 @@ function filterMenuAndButtonItems(data: PermissionNode[] = []) {
   }
 
   traverse(data);
+  addResource(mandatoryRoleResourceId);
   return result;
 }
 
-// 过滤所有buttons的id
-function extractButtonIds(data: any[]): string[] {
-  const buttonIds: string[] = [];
-
-  function traverse(nodes: PermissionNode[]) {
-    nodes.forEach((node) => {
-      if (node.type === 3) {
-        buttonIds.push(node.id);
-      }
-      if (node.children && node.children.length) {
-        traverse(node.children);
-      }
-    });
-  }
-
-  traverse(data);
-  return buttonIds;
-}
-
 // 回显值
-function updatePermissionData(data: any, idArray: string[], isAdmin: boolean = false) {
+function updatePermissionData(data: any, idArray: string[]) {
   const newData = JSON.parse(JSON.stringify(data));
   function updateChecked(items: any) {
     if (!items || !Array.isArray(items)) return;
 
     items.forEach((item: any) => {
-      // 如果是管理员角色，直接设置所有节点为选中状态
-      // 否则，检查当前项的id是否在idArray中
-      if (isAdmin) {
+      if (idArray?.includes(item.id) || item.resourceIds?.some((id: string) => idArray?.includes(id))) {
         item.checked = true;
-      } else if (idArray?.includes(item.id)) {
-        item.checked = true;
+      }
+      if (item.type === 2 && item.checked && item.children?.length && !item.skipAutoCheckChildren) {
+        item.children = item.children.map((child: any) => ({ ...child, checked: true }));
       }
 
       if (item.children && item.children.length) {
@@ -642,7 +860,7 @@ function updatePermissionData(data: any, idArray: string[], isAdmin: boolean = f
   }
 
   updateChecked(newData);
-  return newData;
+  return enforceMandatoryPermissions(newData);
 }
 
 export default useRoleSetting;

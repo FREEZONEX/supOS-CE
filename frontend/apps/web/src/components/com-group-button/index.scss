@@ -6,7 +6,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
+    width: var(--ui-bar-height, 52px);
     height: 100%;
     cursor: pointer;
 
@@ -23,22 +23,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
+    width: var(--ui-bar-height, 52px);
     height: 100%;
     cursor: pointer;
   }
 }
 
 .ant-popover .ant-popover-arrow::before {
-  background-color: var(--supos-bg-color);
+  background-color: var(--ui-bg-color);
 }
 
 .ant-popover .ant-popover-arrow::after {
-  background-color: var(--supos-user-color);
+  background-color: var(--ui-user-color);
 }
 
 .userPopover .ant-popover-inner {
-  background-color: var(--supos-user-color) !important;
+  background-color: var(--ui-user-color) !important;
 
   .userPopoverWrap {
     width: 226px;
@@ -51,7 +51,7 @@
     .userAvatar {
       width: 40px;
       height: 40px;
-      background-color: var(--supos-useravatar-color);
+      background-color: var(--ui-useravatar-color);
       border-radius: 20px;
       line-height: 40px;
       text-align: center;
@@ -61,7 +61,7 @@
     .userRole {
       font-size: 12px;
       font-weight: 400;
-      color: var(--supos-theme-color);
+      color: var(--ui-theme-color);
       letter-spacing: 0.16px;
       min-height: 20px;
       text-align: center;
@@ -78,7 +78,7 @@
 
     .userEmail {
       font-size: 12px;
-      color: var(--supos-useremail-color);
+      color: var(--ui-useremail-color);
       max-width: 100%;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -149,7 +149,7 @@
     }
 
     .noticePagination {
-      border-top: 1px solid var(--supos-table-tr-color);
+      border-top: 1px solid var(--ui-table-tr-color);
       padding: 10px 0;
       text-align: center;
       flex-shrink: 0;

@@ -1,10 +1,10 @@
 import { loadRemote, registerRemotes } from '@module-federation/enhanced/runtime';
-import { getPlugI18Api } from '@/apis/inter-api/uns.ts';
+import { getPlugI18Api } from '@/apis/core-api/uns.ts';
 
 // 获取通用的Remotes 相关信息  name：/Alert
 export const getRemotesInfo = ({ name }: { name: string }) => {
   return {
-    name: `supos-ce${name}`,
+    name: `app-shell${name}`,
     entry: `${import.meta.env.VITE_ENABLE_LOCAL_REMOTE === '1' && import.meta.env.DEV ? import.meta.env.VITE_REMOTE_PREFIX : window.origin + '/plugin' + name}/mf-manifest.json?t=${Date.now()}`,
   };
 };
@@ -19,7 +19,7 @@ export const getPluginI18n = async ({
   lang: string;
   backendName: string;
 }) => {
-  let messages: any = await loadRemote(`supos-ce${name}/${lang === 'zh-CN' ? 'zhCN' : 'enUS'}`);
+  let messages: any = await loadRemote(`app-shell${name}/${lang === 'zh-CN' ? 'zhCN' : 'enUS'}`);
   messages = messages?.default || messages;
   if (messages.error && typeof messages?.error === 'object') {
     return {};

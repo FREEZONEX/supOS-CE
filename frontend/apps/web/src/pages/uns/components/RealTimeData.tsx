@@ -1,14 +1,15 @@
 import { type FC, useEffect, useState } from 'react';
 import { attempt, isEmpty, isError, map } from 'lodash-es';
 import { useWebSocket } from 'ahooks';
-import { Copy } from '@carbon/icons-react';
+import { Copy } from '@/components/lucide-icon/carbon';
+import { toolbarIconProps } from '@/components/lucide-icon/icon-props';
 import Clipboard from 'clipboard';
 import { useTranslate } from '@/hooks';
 import { Button, Empty, message, Tooltip } from 'antd';
 import { ClearOutlined } from '@ant-design/icons';
 import type { UnsTreeNode } from '@/pages/uns/types';
 import { isJsonString } from '@/utils/common';
-import { formatTimestamp, getToken } from '@/utils';
+import { formatTimestamp } from '@/utils';
 
 interface IProps {
   currentNode: UnsTreeNode;
@@ -62,14 +63,8 @@ const RealTimeData: FC<IProps> = ({ currentNode: { id, pathType, pathName } }) =
 
   useEffect(() => {
     setDataSource([]);
-    if (pathType === 2) {
-      setSocketUrl(
-        `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/inter-api/supos/uns/ws?topic=${id}&token=${getToken()}`
-      );
-    } else {
-      setSocketUrl('');
-      webSocketIns?.close();
-    }
+    setSocketUrl('');
+    webSocketIns?.close();
   }, [id, pathType]);
 
   if (pathType === 0) return null;
@@ -114,7 +109,7 @@ const RealTimeData: FC<IProps> = ({ currentNode: { id, pathType, pathName } }) =
                       </div>
                       <div className="realTimeList-copy-overlap">
                         <div className="realTimeList-copy" data-clipboard-text={payload}>
-                          <Copy />
+                          <Copy {...toolbarIconProps} />
                         </div>
                       </div>
                     </div>

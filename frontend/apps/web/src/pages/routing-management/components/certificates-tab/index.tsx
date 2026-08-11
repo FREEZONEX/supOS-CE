@@ -2,10 +2,12 @@ import { type FC, useCallback, useMemo, useState } from 'react';
 import { Button, App, Tag, Input, Descriptions, Drawer, Form, Typography } from 'antd';
 import { Add, Renew, Edit, TrashCan } from '@carbon/icons-react';
 import ProTable from '@/components/pro-table';
-import { getCertificates, createCertificate, updateCertificate, deleteCertificate } from '@/apis/inter-api/kong';
+import ProSearch from '@/components/pro-search';
+import { getCertificates, createCertificate, updateCertificate, deleteCertificate } from '@/apis/core-api/kong';
 import useKongTable from '../../hooks/useKongTable';
 import useKongModal from '../../hooks/useKongModal';
 import useTranslate from '@/hooks/useTranslate';
+import { mergeDeleteConfirmProps } from '@/utils/delete-confirm-modal';
 
 const CertificatesTab: FC = () => {
   const { modal } = App.useApp();
@@ -91,14 +93,18 @@ const CertificatesTab: FC = () => {
 
   const handleDelete = useCallback(
     (record: any) => {
-      modal.confirm({
-        title: formatMessage('kong.deleteCertificate', { id: record.id.slice(0, 8) }),
-        okButtonProps: { danger: true },
-        onOk: async () => {
-          await deleteCertificate(record.id);
-          refresh();
-        },
-      });
+      modal.confirm(
+        mergeDeleteConfirmProps(
+          {
+            title: formatMessage('kong.deleteCertificate', { id: record.id.slice(0, 8) }),
+            onOk: async () => {
+              await deleteCertificate(record.id);
+              refresh();
+            },
+          },
+          formatMessage
+        )
+      );
     },
     [modal, refresh, formatMessage]
   );
@@ -179,12 +185,16 @@ const CertificatesTab: FC = () => {
           </Button>
         </div>
         <div className="toolbar-right">
-          <Input.Search
+          <ProSearch
+            size="sm"
             placeholder={formatMessage('kong.searchCertificate')}
-            allowClear
             style={{ width: 280 }}
+            onChange={(e) => {
+              if (!e.target.value) {
+                setSearch('');
+              }
+            }}
             onSearch={setSearch}
-            onChange={(e) => !e.target.value && setSearch('')}
           />
         </div>
       </div>

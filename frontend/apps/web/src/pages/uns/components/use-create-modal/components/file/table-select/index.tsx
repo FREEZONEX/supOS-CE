@@ -1,7 +1,7 @@
 import { type FC, useState, useEffect } from 'react';
 import { App, TreeSelect } from 'antd';
 import type { TreeDataNode, TreeSelectProps } from 'antd';
-import { Db2Database, ContainerServices, Folder, TableSplit } from '@carbon/icons-react';
+import { Db2Database, ContainerServices, Folder, TableSplit } from '@/components/lucide-icon/carbon';
 import { getDatabaseList, getSchemaList, getTableList } from '@/apis/chat2db';
 import './index.scss';
 

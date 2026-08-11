@@ -1,0 +1,41 @@
+<script type="text/html" data-template-name="opcua-subscribe">
+  <div class="form-row">
+    <label for="node-input-connection"><i class="fa fa-plug"></i> Connection</label>
+    <input type="text" id="node-input-connection">
+  </div>
+  <div class="form-row">
+    <label for="node-input-nodeId"><i class="fa fa-tag"></i> NodeId</label>
+    <input type="text" id="node-input-nodeId" placeholder="ns=1;s=MyVariable">
+  </div>
+  <div class="form-row">
+    <label for="node-input-samplingInterval">Sampling Interval (ms)</label>
+    <input type="number" id="node-input-samplingInterval" value="1000">
+  </div>
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+  </div>
+</script>
+
+<script type="text/html" data-help-name="opcua-subscribe">
+  <p>Subscribe to value changes of an OPC UA node.</p>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('opcua-subscribe', {
+    category: 'OPC UA',
+    color: '#C0DEED',
+    defaults: {
+      connection: { value: '', type: 'opcua-connection', required: true },
+      nodeId: { value: '' },
+      samplingInterval: { value: 1000, validate: RED.validators.number() },
+      name: { value: '' }
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: 'bridge.png',
+    label: function () {
+      return this.name || 'opcua subscribe';
+    }
+  });
+</script>

@@ -4,7 +4,7 @@ import { useTranslate } from '@/hooks';
 import JsonForm from './source-form/json';
 import DataSource from './source-form/data-source';
 import Collector from './source-form/collector';
-import { getTypes, getEmptyFolder } from '@/apis/inter-api/uns';
+import { getTypes, getEmptyFolder } from '@/apis/core-api/uns';
 
 import type { UnsTreeNode, InitTreeDataFnType } from '@/pages/uns/types';
 import ComRadio from '@/components/com-radio';
@@ -128,7 +128,6 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
       open={reverserOpen}
       onCancel={() => close()}
       maskClosable={false}
-      centered={false}
       keyboard={false}
       onFullScreenCallBack={(e) => {
         setFullScreen(e);
@@ -162,7 +161,6 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
                 // targetFolder: undefined,
                 dataSource: undefined,
                 persistence: false,
-                dashboard: false,
                 syncMeta: false,
                 ...(enableAutoCategorization
                   ? {
@@ -210,7 +208,7 @@ const ReverseModal: FC<ReverseModalProps> = ({ reverserOpen, setReverserOpen, cu
             disabled={enableAutoCategorization && attributeType === 2}
           />
         </Form.Item>
-        <Divider style={{ borderColor: '#c6c6c6' }} />
+        <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
         <Form.Item name="source" label={formatMessage('uns.source')} rules={[{ required: true }]}>
           <Select placeholder={formatMessage('uns.source')} options={sourceOptionsMap[attributeType]} />
         </Form.Item>

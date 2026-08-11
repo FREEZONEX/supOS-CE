@@ -3,5 +3,18 @@
     .cm-focused {
       outline: none;
     }
+
+    .cm-editor,
+    .cm-scroller,
+    .cm-content,
+    .cm-line,
+    .cm-gutters,
+    .cm-placeholder {
+      font-family: var(--ui-font-mono, 'IBM Plex Mono', monospace) !important;
+    }
+
+    .cm-gutters.cm-gutters-before {
+      border-right-color: var(--ui-codemirror-gutter-border, var(--ui-line-color)) !important;
+    }
   }
 }

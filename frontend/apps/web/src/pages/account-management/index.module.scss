@@ -1,0 +1,146 @@
+.titleActions {
+  flex-shrink: 0;
+  margin-right: 0;
+}
+
+.accountContent {
+  > :global(.title) {
+    padding: 0 36px !important;
+  }
+
+  > :global(.content) {
+    padding-top: 24px !important;
+  }
+}
+
+:global([class*='embedded-page']) .accountContent > :global(.content) {
+  padding-top: 24px !important;
+}
+
+.accountTable {
+  :global {
+    .ant-table {
+      background: var(--ui-bg-color);
+    }
+
+    .ant-table-container,
+    .ant-table-content,
+    table {
+      border-radius: 0 !important;
+    }
+
+    .ant-table-thead > tr > th {
+      height: 48px;
+      padding: 12px !important;
+      border-bottom-color: var(--ui-table-tr-color) !important;
+      background: var(--ui-table-head-bg-color) !important;
+      color: var(--ui-t-gray-color-40, #a8a8a8);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 22px;
+    }
+
+    .ant-table-tbody > tr > td {
+      height: 48px;
+      padding: 12px !important;
+      border-bottom-color: var(--ui-table-tr-color) !important;
+      color: var(--ui-text-color);
+      font-size: 14px;
+      line-height: 22px;
+    }
+
+    .ant-table-tbody > tr.ant-table-measure-row,
+    .ant-table-tbody > tr.ant-table-measure-row > td {
+      height: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      font-size: 0 !important;
+      line-height: 0 !important;
+    }
+
+    .ant-table-cell-fix-right {
+      background: var(--ui-bg-color);
+    }
+
+    .ant-table-tbody > tr.ant-table-row:hover > td,
+    .ant-table-tbody > tr.ant-table-row:hover > td.ant-table-cell-fix-right {
+      background: var(--ui-charttop-bg-color) !important;
+    }
+
+    .ant-table-tbody > tr > td:has(.operation) {
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .ant-table-tbody > tr:hover > td:has(.operation) .custom-operation {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .ant-table-thead > tr > th.ant-table-cell-fix-right .react-resizable-line,
+    .ant-table-thead > tr > th.ant-table-cell-scrollbar .react-resizable-line,
+    .ant-table-thead > tr > th:not(.ant-table-cell-fix-right):has(+ th.ant-table-cell-fix-right-first)
+      .react-resizable-line {
+      display: none;
+    }
+  }
+}
+
+.statusPill {
+  margin: 0;
+  min-height: 24px;
+  padding: 2px 10px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.statusAvailable {
+  background: #d4f4e2;
+  border-color: #9cdcba;
+  color: #2f8f63;
+}
+
+.statusUnavailable {
+  background: #fcd9d9;
+  border-color: #ef9999;
+  color: #c92a2a;
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .statusAvailable {
+    background: var(--ui-status-active-bg);
+    border-color: var(--ui-status-active-border);
+    color: var(--ui-status-active-text);
+  }
+
+  .statusUnavailable {
+    background: var(--ui-status-inactive-bg);
+    border-color: var(--ui-status-inactive-border);
+    color: var(--ui-status-inactive-text);
+  }
+}
+
+.operation {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 22px;
+}
+
+.operationIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.operationDisabled {
+  opacity: 0.38;
+}

@@ -1,24 +1,34 @@
-import { App, Empty, Flex, Image, Tooltip } from 'antd';
+import { App, Flex, Image, Tooltip } from 'antd';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { deleteAttachments, getAttachment, getAttachmentsList } from '@/apis/inter-api/attachments.ts';
-import { Close, Download, View } from '@carbon/icons-react';
+import { deleteAttachments, getAttachment, getAttachmentsList } from '@/apis/core-api/attachments.ts';
+import { Close, Download, View } from '@/components/lucide-icon/carbon';
 import { useTranslate } from '@/hooks';
 import ComCopy from '@/components/com-copy';
 import ComItem from '@/components/com-item';
+import { ComEmptyState } from '@/components';
 import { downloadFn } from '@/utils/blob';
 import { validPicRegex } from '@/utils/pattern';
 export interface DocumentListRef {
   refresh: () => any;
 }
-const DocumentList = forwardRef<DocumentListRef | undefined, { alias: string }>(function ({ alias }, ref) {
+interface DocumentListProps {
+  alias: string;
+  ownerId?: string | number;
+  readOnly?: boolean;
+}
+
+const DocumentList = forwardRef<DocumentListRef | undefined, DocumentListProps>(function (
+  { alias, ownerId, readOnly = false },
+  ref
+) {
   const formatMessage = useTranslate();
   const [visible, setVisible] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const { message } = App.useApp();
   const [data, setData] = useState<any[]>([]);
   const request = () => {
-    if (!alias) return;
-    getAttachmentsList({ alias }).then((data: any) => {
+    if (!ownerId && !alias) return;
+    getAttachmentsList({ alias, ownerId }).then((data: any) => {
       setData(
         data?.list?.map((item: any) => {
           const lastDotIndex = item.originalName.lastIndexOf('.');
@@ -41,10 +51,10 @@ const DocumentList = forwardRef<DocumentListRef | undefined, { alias: string }>(
   });
   useEffect(() => {
     request();
-  }, [alias]);
+  }, [alias, ownerId]);
 
   const onDelete = (item: any) => {
-    deleteAttachments({ objectName: item?.attachmentPath }).then(() => {
+    deleteAttachments({ bindingId: item?.bindingId }).then(() => {
       message.success(formatMessage('common.deleteSuccessfully'));
       request();
     });
@@ -69,28 +79,30 @@ const DocumentList = forwardRef<DocumentListRef | undefined, { alias: string }>(
         {data?.map((item) => (
           <ComItem
             key={item.id}
-            addonBefore={<span style={{ color: 'var(--supos-theme-color)' }}>{item._type}</span>}
+            addonBefore={<span style={{ color: 'var(--ui-theme-color)' }}>{item._type}</span>}
             label={item._label}
             style={{ flex: '0 0 calc(50% - 6px)' }}
             extra={
               <Flex justify="end" align="center" gap={10} style={{ cursor: 'pointer' }}>
                 {item.isPic && (
-                  <Tooltip title={formatMessage('dashboards.preview')}>
+                  <Tooltip title={formatMessage('common.preview')}>
                     <View onClick={() => onPreview(item)} />
                   </Tooltip>
                 )}
                 {item.isPic && (
                   <ComCopy
-                    textToCopy={`${location.origin}/inter-api/supos/uns/attachment?objectName=${item?.attachmentPath}`}
+                    textToCopy={`${location.origin}/api/core/assets/${item?.attachmentPath}/download`}
                     title={formatMessage('common.copy')}
                   />
                 )}
                 <Tooltip title={formatMessage('common.download')}>
                   <Download size={16} onClick={() => onDownload(item)} />
                 </Tooltip>
-                <Tooltip title={formatMessage('common.delete')}>
-                  <Close size={16} onClick={() => onDelete(item)} />
-                </Tooltip>
+                {!readOnly && (
+                  <Tooltip title={formatMessage('common.delete')}>
+                    <Close size={16} onClick={() => onDelete(item)} />
+                  </Tooltip>
+                )}
               </Flex>
             }
           />
@@ -113,7 +125,7 @@ const DocumentList = forwardRef<DocumentListRef | undefined, { alias: string }>(
       />
     </>
   ) : (
-    <Empty />
+    <ComEmptyState variant="inline" description={formatMessage('uns.noData')} />
   );
 });
 

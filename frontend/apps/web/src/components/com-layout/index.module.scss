@@ -10,13 +10,19 @@
       justify-content: center;
       align-items: center;
     }
+
+    .ant-segmented-item-icon svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
   }
 }
 
 .com-left {
   flex-shrink: 0;
   width: 300px;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--ui-line-color);
   display: flex;
   flex-direction: column;
   user-select: none;
@@ -24,10 +30,10 @@
 
   :global {
     .title {
-      border-bottom: 1px solid #e0e0e0;
-      background: var(--supos-user-color);
-      color: var(--supos-text-color);
-      height: 48px;
+      border-bottom: 1px solid var(--ui-line-color);
+      background: var(--ui-user-color);
+      color: var(--ui-text-color);
+      height: var(--ui-bar-height, 52px);
       font-size: 16px;
       font-weight: 700;
       padding: 0 16px;
@@ -54,7 +60,7 @@
   height: 100%;
   width: 350px;
   position: relative;
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid var(--ui-line-color);
 
   :global {
     .close {
@@ -77,8 +83,8 @@
   :global {
     .title {
       overflow: auto;
-      border-bottom: 1px solid #e0e0e0;
-      height: 48px;
+      border-bottom: 1px solid var(--ui-line-color);
+      height: var(--ui-bar-height, 52px);
       padding: 0 20px;
       width: 100%;
       display: flex;
@@ -87,7 +93,7 @@
       gap: 8px;
       font-size: 18px;
       font-weight: 700;
-      background-color: var(--supos-user-color);
+      background-color: var(--ui-user-color);
     }
 
     .content {
@@ -98,13 +104,22 @@
   }
 }
 
+:global(.dark),
+:global(.chartreuseDark) {
+  .com-left :global(.title),
+  .com-content :global(.title) {
+    background: var(--ui-header-bg-color);
+    color: var(--ui-text-color);
+  }
+}
+
 @media (width <= 640px) {
   .com-left {
     position: fixed;
     inset: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--supos-user-color);
+    background-color: var(--ui-user-color);
     z-index: 999;
     overflow: auto;
     box-shadow: 0 4px 8px rgb(0 0 0 / 20%);
@@ -131,6 +146,6 @@
     cursor: pointer;
     z-index: 999;
     padding: 10px;
-    background-color: var(--supos-copilot-color);
+    background-color: var(--ui-copilot-color);
   }
 }

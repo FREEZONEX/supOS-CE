@@ -1,7 +1,7 @@
 import { type CSSProperties, type FC, useEffect } from 'react';
-import { Form, Flex, Input, Select, Button, InputNumber, Divider, ConfigProvider } from 'antd';
-import { SubtractAlt, AddAlt } from '@carbon/icons-react';
-import { useTranslate, useFormValue } from '@/hooks';
+import { Form, Flex, Input, Select, Button } from 'antd';
+import { SubtractAlt, AddAlt } from '@/components/lucide-icon/carbon';
+import { useTranslate } from '@/hooks';
 import Icon from '@ant-design/icons';
 import { getDefaultFields } from '@/pages/uns/components/CONST';
 import './FieldsFormList.scss';
@@ -11,7 +11,7 @@ import ComPopupGuide from '@/components/com-popup-guide';
 import HelpTooltip from '@/components/help-tooltip';
 import MainKey from '@/components/svg-components/MainKey';
 import { useBaseStore } from '@/stores/base';
-import { getTemplateDetail } from '@/apis/inter-api/uns';
+import { MAX_LENGTHS } from '@/utils/limits';
 
 const { Option } = Select;
 
@@ -29,6 +29,7 @@ export interface FieldsFormListProps {
   mainKeyName?: string | (string | number)[];
   hasDefaultVal?: boolean;
   showMoreBtn?: boolean;
+  requiredFields?: boolean;
   style?: CSSProperties;
 }
 
@@ -44,21 +45,17 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
   dataTypeName = 'dataType',
   fieldsName = 'fields',
   mainKeyName = 'mainKey',
-  showMoreBtn = false,
+  requiredFields = true,
   style,
 }) => {
-  console.log(disabled);
   const formatMessage = useTranslate();
   const form = Form.useFormInstance();
   const dataType = Form.useWatch(dataTypeName, form);
   const calculationType = Form.useWatch('calculationType');
   const fieldList = Form.useWatch(fieldsName, form) || [];
   const mainKey = Form.useWatch(mainKeyName, form);
-  const attributeType = Form.useWatch('attributeType', form);
-  const extendFieldUsed = useFormValue('extendFieldUsed', form) || []; //更多字段使用
-  const modelId = useFormValue('modelId', form); //模板
 
-  const { qualityName = 'quality', timestampName = 'timeStamp' } = useBaseStore((state) => state.systemInfo);
+  const { qualityName = '_quality', timestampName = '_timestamp' } = useBaseStore((state) => state.systemInfo);
   const defaultFields = getDefaultFields(qualityName, timestampName);
 
   const setMainKey = (index?: number) => {
@@ -118,30 +115,15 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
       Array.isArray(fieldList) &&
       JSON.stringify(fieldList.slice(-2)) !== JSON.stringify(defaultFields)
     ) {
-      const removeDefaultFields = fieldList?.filter(
-        (e: FieldItem) => !(e?.systemField || (modelId && [qualityName, timestampName].includes(e?.name)))
-      );
+      const removeDefaultFields = fieldList?.filter((e: FieldItem) => !e?.systemField);
       form.setFieldValue(fieldsName, [...removeDefaultFields, ...defaultFields]);
     }
-    if (dataType === 2 && fieldList?.some((e: FieldItem) => e?.systemField) && !modelId) {
+    if (![1, 3].includes(dataType) && fieldList?.some((e: FieldItem) => e?.systemField)) {
       const removeDefaultFields = fieldList?.filter((e: FieldItem) => !e?.systemField);
       form.setFieldValue(fieldsName, removeDefaultFields?.length > 0 ? removeDefaultFields : [{}]);
       triggerNameFieldValidation();
     }
   }, [dataType, fieldList]);
-
-  useEffect(() => {
-    if (dataType === 2 && modelId && modelId !== 'custom') {
-      getTemplateDetail({ id: modelId }).then((res) => {
-        res?.fields.forEach((e: FieldItem) => {
-          e.systemField = false;
-        });
-        setTimeout(() => {
-          form.setFieldValue(fieldsName, res?.fields || []);
-        });
-      });
-    }
-  }, [dataType]);
 
   const defaultDisabled = (item: FieldItem) => {
     const { systemField } = item || {};
@@ -151,9 +133,6 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
   const handleChangeType = (type: string, index: number) => {
     if (index === mainKey && !['integer', 'long', 'string'].includes(type.toLowerCase())) {
       setMainKey(undefined);
-    }
-    if (type.toLowerCase() !== 'string' && !isCreateFolder) {
-      form.setFieldValue([fieldsName, index, 'maxLen'], undefined);
     }
   };
 
@@ -166,90 +145,6 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
     }
   };
 
-  // const fieldSelectorContent = (
-  //   <Form.Item name="extendFieldUsed" noStyle>
-  //     <Checkbox.Group
-  //       style={{
-  //         display: 'flex',
-  //         flexDirection: 'column',
-  //         gap: 8,
-  //       }}
-  //       options={[
-  //         { label: formatMessage('uns.unit'), value: 'unit' },
-  //         { label: formatMessage('uns.upperLimit'), value: 'upperLimit' },
-  //         { label: formatMessage('uns.lowerLimit'), value: 'lowerLimit' },
-  //         { label: formatMessage('uns.decimal'), value: 'decimal' },
-  //       ]}
-  //     />
-  //   </Form.Item>
-  // );
-  const commonStyle = {
-    width: 'calc((100% - 32px) / 5)',
-    marginBottom: 0,
-  };
-  const renderMoreField = (fieldName: string, name: number, restField: any, disabled?: boolean) => {
-    switch (fieldName) {
-      case 'unit':
-        return (
-          <Form.Item
-            {...restField}
-            name={[name, 'unit']}
-            style={commonStyle}
-            labelCol={{ span: 0 }}
-            wrapperCol={{ span: 24 }}
-            key={fieldName + name}
-          >
-            <Input placeholder={formatMessage('uns.unit')} disabled={disabled} maxLength={5} />
-          </Form.Item>
-        );
-      case 'upperLimit':
-        return (
-          <Form.Item
-            {...restField}
-            name={[name, 'upperLimit']}
-            style={commonStyle}
-            labelCol={{ span: 0 }}
-            wrapperCol={{ span: 24 }}
-            key={fieldName + name}
-          >
-            <InputNumber placeholder={formatMessage('uns.upperLimit')} disabled={disabled} style={{ width: '100%' }} />
-          </Form.Item>
-        );
-      case 'lowerLimit':
-        return (
-          <Form.Item
-            {...restField}
-            name={[name, 'lowerLimit']}
-            style={commonStyle}
-            labelCol={{ span: 0 }}
-            wrapperCol={{ span: 24 }}
-            key={fieldName + name}
-          >
-            <InputNumber placeholder={formatMessage('uns.lowerLimit')} disabled={disabled} style={{ width: '100%' }} />
-          </Form.Item>
-        );
-      case 'decimal':
-        return (
-          <Form.Item
-            {...restField}
-            name={[name, 'decimal']}
-            style={commonStyle}
-            labelCol={{ span: 0 }}
-            wrapperCol={{ span: 24 }}
-            key={fieldName + name}
-          >
-            <InputNumber
-              placeholder={formatMessage('uns.decimal')}
-              disabled={disabled}
-              precision={0}
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
-        );
-      default:
-        return null;
-    }
-  };
   const content = (
     <>
       <Flex align="center" justify="space-between" style={{ paddingBottom: '10px' }}>
@@ -270,249 +165,141 @@ const FieldsFormList: FC<FieldsFormListProps> = ({
           )}
           {showTooltip && <HelpTooltip title={formatMessage('uns.keyTooltip')} />}
         </Flex>
-        {/* {showMoreBtn && (
-          <Popover
-            content={fieldSelectorContent}
-            trigger="click"
-            getPopupContainer={(triggerNode) => triggerNode}
-            placement="bottomLeft"
-          >
-            <Button icon={<Add />} color="default" variant="filled">
-              {formatMessage('uns.fieldSelector')}
-            </Button>
-          </Popover>
-        )} */}
       </Flex>
 
       <Form.Item name={mainKeyName} hidden>
         <Input />
       </Form.Item>
-      <ConfigProvider
-        theme={{
-          components: {
-            Form: {
-              itemMarginBottom: extendFieldUsed.length > 0 && showMoreBtn ? 8 : 16,
-            },
-          },
-        }}
-      >
-        <Form.List name={fieldsName} rules={[{ validator: validateFieldsRequired }]}>
-          {(fields, { add, remove }, { errors }) => (
-            <>
-              {fields.map(({ key, name, ...restField }, index) => {
-                const moreField = extendFieldUsed.length > 0 && showMoreBtn;
-                return (
-                  <div key={key}>
-                    <Flex align={moreField ? 'center' : 'flex-start'} gap={8}>
-                      <Flex gap={8} vertical style={{ flex: 1, overflow: 'hidden' }}>
-                        <Flex gap={8}>
-                          {/* 主键按钮 */}
-                          {dataType === 2 && showMainKey && (
-                            <Button
-                              className={mainKey === index ? 'activeKeyIndexBtn' : 'keyIndexBtn'}
-                              color="default"
-                              variant="filled"
-                              icon={<Icon component={MainKey} />}
-                              onClick={() => setMainKey(mainKey === index ? undefined : index)}
-                              style={{
-                                color: 'var(--supos-text-color)',
-                                backgroundColor: 'var(--supos-uns-button-color)',
-                              }}
-                              disabled={
-                                !(
-                                  fieldList[index]?.type &&
-                                  ['integer', 'long', 'string'].includes(fieldList[index]?.type?.toLowerCase())
-                                )
-                              }
-                            />
-                          )}
+      <Form.List name={fieldsName} rules={[{ validator: validateFieldsRequired }]}>
+        {(fields, { add, remove }, { errors }) => (
+          <>
+            {fields.map(({ key, name, ...restField }, index) => (
+              <div key={key}>
+                <Flex align="flex-start" gap={8}>
+                  <Flex gap={8} style={{ flex: 1, minWidth: 0 }}>
+                    {dataType === 2 && showMainKey && (
+                      <Button
+                        className={mainKey === index ? 'activeKeyIndexBtn' : 'keyIndexBtn'}
+                        color="default"
+                        variant="filled"
+                        icon={<Icon component={MainKey} />}
+                        onClick={() => setMainKey(mainKey === index ? undefined : index)}
+                        style={{
+                          color: 'var(--ui-text-color)',
+                          backgroundColor: 'var(--ui-uns-button-color)',
+                        }}
+                        disabled={
+                          !(
+                            fieldList[index]?.type &&
+                            ['integer', 'long', 'string'].includes(fieldList[index]?.type?.toLowerCase())
+                          )
+                        }
+                      />
+                    )}
 
-                          {/* 字段名 */}
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'name']}
-                            rules={[
-                              { required: true, message: formatMessage('uns.pleaseInputKeyName') },
-                              ...(!fieldList[index]?.systemField
-                                ? [
-                                    {
-                                      pattern: /^[A-Za-z][A-Za-z0-9_]*$/,
-                                      message: formatMessage('uns.keyNameFormat'),
-                                    },
-                                  ]
-                                : []),
-                              { validator: validateUnique }, // 添加自定义校验规则
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'name']}
+                      rules={[
+                        { required: requiredFields, message: formatMessage('uns.pleaseInputKeyName') },
+                        ...(!fieldList[index]?.systemField
+                          ? [
                               {
-                                max: 63,
-                                message: formatMessage('uns.labelMaxLength', {
-                                  label: formatMessage('common.name'),
-                                  length: 63,
-                                }),
+                                pattern: /^[A-Za-z][A-Za-z0-9_]*$/,
+                                message: formatMessage('uns.keyNameFormat'),
                               },
-                              // { validator: (_, value) => validateSystemField(value, fieldList?.[index]?.systemField) }, // 添加自定义校验规则
-                            ]}
-                            wrapperCol={{ span: 24 }}
-                            style={{ flex: 1 }}
-                          >
-                            <Input
-                              disabled={disabled || defaultDisabled(fieldList[index])}
-                              placeholder={formatMessage('common.name')}
-                              title={fieldList?.[index]?.name || formatMessage('common.name')}
-                              onChange={triggerNameFieldValidation}
-                            />
-                          </Form.Item>
+                            ]
+                          : []),
+                        { validator: validateUnique },
+                        {
+                          max: MAX_LENGTHS.name,
+                          message: formatMessage('uns.labelMaxLength', {
+                            label: formatMessage('common.name'),
+                            length: MAX_LENGTHS.name,
+                          }),
+                        },
+                      ]}
+                      wrapperCol={{ span: 24 }}
+                      style={{ flex: 1 }}
+                    >
+                      <Input
+                        disabled={disabled || defaultDisabled(fieldList[index])}
+                        placeholder={formatMessage('common.name')}
+                        title={fieldList?.[index]?.name || formatMessage('common.name')}
+                        onChange={triggerNameFieldValidation}
+                      />
+                    </Form.Item>
 
-                          {/* 类型选择 */}
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'type']}
-                            rules={[{ required: true, message: formatMessage('uns.pleaseSelectKeyType') }]}
-                            wrapperCol={{ span: 24 }}
-                            style={{ width: '97px' }}
-                          >
-                            <Select
-                              disabled={disabled || defaultDisabled(fieldList[index])}
-                              placeholder={formatMessage('uns.type')}
-                              title={fieldList?.[index]?.type || formatMessage('uns.type')}
-                              onChange={(type) => handleChangeType(type, index)}
-                            >
-                              {getTypes(dataType, types).map((e: string) => (
-                                <Option key={e} value={e}>
-                                  {e}
-                                </Option>
-                              ))}
-                            </Select>
-                          </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'type']}
+                      rules={[{ required: requiredFields, message: formatMessage('uns.pleaseSelectKeyType') }]}
+                      wrapperCol={{ span: 24 }}
+                      style={{ width: '97px' }}
+                    >
+                      <Select
+                        disabled={disabled || defaultDisabled(fieldList[index])}
+                        placeholder={formatMessage('uns.type')}
+                        title={fieldList?.[index]?.type || formatMessage('uns.type')}
+                        onChange={(type) => handleChangeType(type, index)}
+                      >
+                        {getTypes(dataType, types).map((e: string) => (
+                          <Option key={e} value={e}>
+                            {e}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
 
-                          {/* 最大长度 */}
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'maxLen']}
-                            wrapperCol={{ span: 24 }}
-                            style={{ flex: 1 }}
-                          >
-                            <InputNumber
-                              disabled={
-                                disabled ||
-                                fieldList?.[index]?.type?.toLowerCase() !== 'string' ||
-                                defaultDisabled(fieldList[index])
-                              }
-                              style={{ width: '100%' }}
-                              min={1}
-                              max={10485760}
-                              step={1}
-                              precision={0}
-                              placeholder={formatMessage('common.length')}
-                              title={fieldList?.[index]?.maxLen || formatMessage('common.length')}
-                            />
-                          </Form.Item>
-
-                          {/* 显示名称 */}
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'displayName']}
-                            wrapperCol={{ span: 24 }}
-                            style={{ flex: 1 }}
-                          >
-                            <Input
-                              disabled={disabled || defaultDisabled(fieldList[index])}
-                              placeholder={`${formatMessage('uns.displayName')}(${formatMessage('uns.optional')})`}
-                              title={
-                                fieldList?.[index]?.displayName ||
-                                `${formatMessage('uns.displayName')}(${formatMessage('uns.optional')})`
-                              }
-                            />
-                          </Form.Item>
-
-                          {/* 备注 */}
-                          <Form.Item
-                            {...restField}
-                            name={[name, 'remark']}
-                            wrapperCol={{ span: 24 }}
-                            style={{ flex: 1 }}
-                          >
-                            <Input
-                              disabled={disabled || defaultDisabled(fieldList[index])}
-                              placeholder={`${formatMessage('uns.remark')}(${formatMessage('uns.optional')})`}
-                              title={
-                                fieldList?.[index]?.remark ||
-                                `${formatMessage('uns.remark')}(${formatMessage('uns.optional')})`
-                              }
-                            />
-                          </Form.Item>
-                        </Flex>
-                        {moreField && (
-                          <Flex gap={8} justify="flex-start">
-                            {[...extendFieldUsed].map((item: string) =>
-                              renderMoreField(item, name, restField, fieldList?.[index]?.systemField)
-                            )}
-                          </Flex>
-                        )}
-                      </Flex>
-                      {/* 删除按钮 */}
-                      {!disabled && !(dataType === 3 && calculationType === 3) && !defaultDisabled(fieldList[index]) ? (
-                        <Button
-                          color="default"
-                          variant="filled"
-                          icon={<SubtractAlt />}
-                          onClick={() => {
-                            remove(name);
-                            form.setFieldValue('functions', undefined);
-                            if (mainKey === index) setMainKey(undefined);
-                            triggerNameFieldValidation();
-                          }}
-                          style={{ border: '1px solid #CBD5E1', flexShrink: 0, height: moreField ? '70px' : '32px' }}
-                          disabled={fields.length === 1 && !isCreateFolder}
-                        />
-                      ) : dataType !== 3 && calculationType !== 3 && defaultDisabled(fieldList[index]) && !disabled ? (
-                        <span style={{ width: '32px', flexShrink: 0 }} />
-                      ) : null}
-                    </Flex>
-                    {moreField && <Divider dashed style={{ borderColor: '#C6C6C6', margin: '12px 0' }} />}
-                  </div>
-                );
-              })}
-              {/* 基于template创建自定义字段 */}
-              {attributeType === 2 && (
-                <Button
-                  color="default"
-                  variant="filled"
-                  onClick={() => {
-                    if (dataType && dataType !== 3) {
-                      form.setFieldsValue({ attributeType: 1, modelId: undefined });
-                    } else {
-                      form.setFieldsValue({
-                        modelId: 'custom',
-                      });
-                    }
-                  }}
-                  block
-                  icon={<AddAlt size={20} />}
-                />
-              )}
-              {/* 新增按钮 */}
-              {!disabled && (dataType !== 3 || (dataType === 3 && calculationType === 4)) && (
-                <Button
-                  color="default"
-                  variant="filled"
-                  onClick={() => {
-                    if (!isCreateFolder && dataType === 1) {
-                      const insertIndex = fields.length - 2 > 0 ? fields.length - 2 : 0;
-                      add({}, insertIndex);
-                    } else {
-                      add();
-                    }
-                    form.setFieldValue('functions', undefined);
-                  }}
-                  block
-                  icon={<AddAlt size={20} />}
-                />
-              )}
-              <Form.ErrorList errors={errors} />
-            </>
-          )}
-        </Form.List>
-      </ConfigProvider>
+                    <Form.Item {...restField} name={[name, 'unit']} wrapperCol={{ span: 24 }} style={{ flex: 1 }}>
+                      <Input
+                        disabled={disabled || defaultDisabled(fieldList[index])}
+                        placeholder={formatMessage('uns.unit')}
+                        title={fieldList?.[index]?.unit || formatMessage('uns.unit')}
+                      />
+                    </Form.Item>
+                  </Flex>
+                  {!disabled && !(dataType === 3 && calculationType === 3) && !defaultDisabled(fieldList[index]) ? (
+                    <Button
+                      color="default"
+                      variant="filled"
+                      icon={<SubtractAlt />}
+                      onClick={() => {
+                        remove(name);
+                        form.setFieldValue('functions', undefined);
+                        if (mainKey === index) setMainKey(undefined);
+                        triggerNameFieldValidation();
+                      }}
+                      style={{ border: '1px solid var(--ui-line-color)', flexShrink: 0, height: '32px' }}
+                      disabled={fields.length === 1 && !isCreateFolder}
+                    />
+                  ) : dataType !== 3 && calculationType !== 3 && defaultDisabled(fieldList[index]) && !disabled ? (
+                    <span style={{ width: '32px', flexShrink: 0 }} />
+                  ) : null}
+                </Flex>
+              </div>
+            ))}
+            {!disabled && (dataType !== 3 || (dataType === 3 && calculationType === 4)) && (
+              <Button
+                color="default"
+                variant="filled"
+                onClick={() => {
+                  if (!isCreateFolder && dataType === 1) {
+                    const insertIndex = fields.length - 2 > 0 ? fields.length - 2 : 0;
+                    add({}, insertIndex);
+                  } else {
+                    add();
+                  }
+                  form.setFieldValue('functions', undefined);
+                }}
+                block
+                icon={<AddAlt size={20} />}
+              />
+            )}
+            <Form.ErrorList errors={errors} />
+          </>
+        )}
+      </Form.List>
     </>
   );
 

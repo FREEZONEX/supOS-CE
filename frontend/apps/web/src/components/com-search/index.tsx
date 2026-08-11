@@ -1,10 +1,10 @@
-import { Button, Flex, Form, type FormInstance, type FormProps } from 'antd';
+import { Form, type FormInstance, type FormProps } from 'antd';
 import type { FC } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import ProSearch from '../pro-search';
 import RenderFormItem, { type RenderFormItemProps } from '../operation-form/render-form-item.tsx';
+import { getIntl } from '@/stores/i18n-store.ts';
 import './index.scss';
-import { useTranslate } from '@/hooks';
-// import { Search } from '@carbon/icons-react';
 
 export interface ComSearchProps {
   form: FormInstance;
@@ -14,8 +14,23 @@ export interface ComSearchProps {
   loading?: boolean;
 }
 
+const isSearchInputField = (item: RenderFormItemProps) =>
+  Boolean(item.name && !item.hidden && !item.render && !item.component && (item.type === 'Input' || !item.type));
+
 const ComSearch: FC<ComSearchProps> = ({ form, formConfig, formItemOptions, onSearch }) => {
-  const formatMessage = useTranslate();
+  const { onFinish: formOnFinish, disabled, ...restFormConfig } = formConfig || {};
+
+  const triggerSearch = () => {
+    form.submit();
+  };
+
+  const handleFinish = (values: Record<string, unknown>) => {
+    if (formOnFinish) {
+      formOnFinish(values);
+      return;
+    }
+    onSearch?.();
+  };
 
   return (
     <Form
@@ -24,29 +39,37 @@ const ComSearch: FC<ComSearchProps> = ({ form, formConfig, formItemOptions, onSe
       colon={false}
       form={form}
       layout="inline"
-      {...formConfig}
-      style={{ flexWrap: 'nowrap', ...formConfig?.style }}
+      disabled={disabled}
+      {...restFormConfig}
+      style={{ flexWrap: 'nowrap', ...restFormConfig?.style }}
+      onFinish={handleFinish}
     >
-      {formItemOptions?.map((item: any) => {
-        return <RenderFormItem key={item.name || uuidv4()} {...item} />;
+      {formItemOptions?.map((item: RenderFormItemProps) => {
+        const key = String(item.name || uuidv4());
+
+        if (item.hidden) {
+          return <RenderFormItem key={key} {...item} />;
+        }
+
+        if (isSearchInputField(item)) {
+          const width = item.properties?.style?.width ?? 300;
+          return (
+            <Form.Item key={key} name={item.name} style={{ marginInlineEnd: 0, ...item.style }}>
+              <ProSearch
+                size="sm"
+                className="custom-search-page"
+                style={{ width }}
+                placeholder={item.properties?.placeholder}
+                closeButtonLabelText={getIntl('common.clearSearchInput')}
+                disabled={disabled || item.properties?.disabled}
+                onSearch={triggerSearch}
+              />
+            </Form.Item>
+          );
+        }
+
+        return <RenderFormItem key={key} {...item} />;
       })}
-      <Flex gap={4}>
-        <Button
-          color="primary"
-          variant="outlined"
-          style={{ height: 32, background: 'var(--supos-bg-color)' }}
-          onClick={() => {
-            onSearch?.();
-          }}
-        >
-          {/* <Flex gap={32} align="center"> */}
-          {/* <span> */}
-          {formatMessage('common.search')}
-          {/* </span> */}
-          {/* <Search size={14} /> */}
-          {/* </Flex> */}
-        </Button>
-      </Flex>
     </Form>
   );
 };

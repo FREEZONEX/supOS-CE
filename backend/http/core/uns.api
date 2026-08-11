@@ -1,0 +1,65 @@
+syntax = "v1"
+
+@server(
+    prefix: /api/core/uns
+    group: core/uns
+    middleware: SessionAuth, Permission
+)
+service backend {
+    @handler UnsNodeList
+    get /nodes (UnsListReq) returns (Envelope)
+
+    @handler UnsNodeCreate
+    post /nodes (UnsNodeSaveReq) returns (Envelope)
+
+    @handler UnsNodeDetail
+    get /nodes/:nodeId (NodeIdReq) returns (Envelope)
+
+    @handler UnsNodeUpdate
+    put /nodes/:nodeId (UnsNodeSaveReq) returns (Envelope)
+
+    @handler UnsNodeDelete
+    delete /nodes/:nodeId (NodeIdReq) returns (Envelope)
+
+    @handler UnsLabelList
+    get /labels (PageReq) returns (Envelope)
+
+    @handler UnsLabelCreate
+    post /labels (UnsLabelReq) returns (Envelope)
+
+    @handler UnsLabelDetail
+    get /labels/:id (IdReq) returns (Envelope)
+
+    @handler UnsLabelUpdate
+    put /labels/:id (UnsLabelReq) returns (Envelope)
+
+    @handler UnsLabelDelete
+    delete /labels/:id (IdReq) returns (Envelope)
+
+    @handler UnsNewMsg
+    get /newMsg returns (Envelope)
+
+    @handler UnsDashboard
+    get /dashboard (UnsDashboardReq) returns (Envelope)
+
+    @handler UnsExport
+    post /export (UnsExportJobReq) returns (Envelope)
+
+    @handler UnsExportGlobal
+    post /export/global (UnsExportJobReq) returns (Envelope)
+
+    @handler UnsImport
+    post /import returns (Envelope)
+
+    @handler UnsImportJobCreate
+    post /import-jobs (UnsImportJobReq) returns (Envelope)
+
+    @handler UnsImportJobDetail
+    get /import-jobs/:jobId (JobIdReq) returns (Envelope)
+
+    @handler UnsExportJobCreate
+    post /export-jobs (UnsExportJobReq) returns (Envelope)
+
+    @handler UnsExportJobDetail
+    get /export-jobs/:jobId (JobIdReq) returns (Envelope)
+}

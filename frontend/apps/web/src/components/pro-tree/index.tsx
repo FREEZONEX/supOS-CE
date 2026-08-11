@@ -1,5 +1,6 @@
 import { forwardRef, type Key, type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { Empty, Flex, Spin, Tree, type TreeProps } from 'antd';
+import ComEmpty from '@/components/com-empty';
+import { Flex, Spin, Tree, type TreeProps } from 'antd';
 import { useSize } from 'ahooks';
 import cx from 'classnames';
 import type { DataNodeProps, ProTreeProps, ProTreeRef } from './types';
@@ -98,7 +99,7 @@ const ProTree = forwardRef<ProTreeRef, ProTreeProps>((props, ref) => {
     onRightClick?.(info);
   };
 
-  const _Empty = empty ? empty : <Empty />;
+  const _Empty = empty ? empty : <ComEmpty />;
 
   const _titleRender = (node: DataNodeProps) => {
     const title = node.title as ReactNode;

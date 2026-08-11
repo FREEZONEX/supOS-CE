@@ -30,20 +30,20 @@
 
 ::selection {
   /* Firefox */
-  background: var(--supos-theme-color);
+  background: var(--ui-theme-color);
   color: #fff;
 }
 
 /* autoprefixer: ignore next */
 ::-webkit-selection {
   /* Chrome, Safari, Opera */
-  background: var(--supos-theme-color);
+  background: var(--ui-theme-color);
   color: #fff;
 }
 
 body {
-  background-color: var(--supos-bg-color) !important;
-  color: var(--supos-text-color, #161616) !important;
+  background-color: var(--ui-bg-color) !important;
+  color: var(--ui-text-color, #161616) !important;
 }
 
 .ant-btn > span {

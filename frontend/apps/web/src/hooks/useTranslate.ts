@@ -16,6 +16,7 @@ import { useCallback } from 'react';
  */
 const useTranslate = (prefix?: string) => {
   const lang = useI18nStore((state) => state.lang);
+  const langMessages = useI18nStore((state) => state.langMessages);
   return useCallback(
     (id: string, opt?: any, defaultMessage?: string, description?: string | object) => {
       if (id) {
@@ -24,7 +25,7 @@ const useTranslate = (prefix?: string) => {
         return '';
       }
     },
-    [lang]
+    [lang, langMessages, prefix]
   );
 };
 

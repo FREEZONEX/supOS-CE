@@ -45,7 +45,7 @@ const CustomParagraph = (props: PropsTypes) => {
               component={FileEdit}
               style={{
                 fontSize: 17,
-                color: 'var(--supos-text-color)',
+                color: 'var(--ui-text-color)',
               }}
             />
           </div>

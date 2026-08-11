@@ -1,41 +1,77 @@
-import { type Location, type RouteObject, useNavigate, useRoutes } from 'react-router';
-import Layout from '@/layout';
-import Uns from '@/pages/uns';
-import Todo from '@/pages/todo';
-import GrafanaDesign from '@/pages/grafana-design';
-import NotFoundPage from '@/pages/not-found-Page/NotFoundPage';
-import NotPage from '@/pages/not-found-Page';
-import CollectionFlow from '@/pages/collection-flow';
-import FlowPreview from '@/pages/collection-flow/FlowPreview';
-import Dashboards from '@/pages/dashboards';
-import DashboardsPreview from '@/pages/dashboards/DashboardsPreview';
-import Localization from '@/pages/localization';
-import MenuConfiguration from '@/pages/menu-configuration';
-import Home from '@/pages/home';
-import AccountManagement from '@/pages/account-management';
-import AdvancedUse from '@/pages/advanced-use';
-import DevPage from '@/pages/dev-page';
-import LoginPage from '@/pages/login';
-import NoPermission from '@/pages/not-found-Page/NoPermission';
 import { LOGIN_URL, OMC_MODEL } from '@/common-types/constans';
-import Share from '@/pages/share';
-import EventFlow from '@/pages/event-flow';
-import EventFlowPreview from '@/pages/event-flow/FlowPreview.tsx';
-import PluginManagement from '@/pages/plugin-management';
-import OpenData from '@/pages/open-data';
-import RoutingManagement from '@/pages/routing-management';
-import qs from 'qs';
-import { useEffect } from 'react';
-import { useBaseStore } from '@/stores/base';
-import { setToken } from '@/utils';
-import DynamicMFComponent from '../components/dynamic-mf-component';
+import Layout from '@/layout';
+import AccountManagement from '@/pages/account-management';
+import AuditLogPage from '@/pages/audit-log';
+import FlowPreview from '@/pages/collection-flow/FlowPreview';
+import FlowPage, { EventFlowRedirect, SourceFlowRedirect } from '@/pages/flow';
+import DevPage from '@/pages/dev-page';
+import AnchorFrame from '@/components/anchor-frame';
 import DynamicIframe from '@/pages/dynamic-iframe';
+import EventFlowPreview from '@/pages/event-flow/FlowPreview.tsx';
+import Home from '@/pages/home';
+import MenuConfiguration from '@/pages/menu-configuration';
+import MqttAuthPage from '@/pages/mqtt-auth';
+import FleetNodeDetailPage from '@/pages/fleet-management/FleetNodeDetailPage';
+import FleetRuntimePage from '@/pages/fleet-runtime';
+import NotPage from '@/pages/not-found-Page';
+import NoPermission from '@/pages/not-found-Page/NoPermission';
+import NotFoundPage from '@/pages/not-found-Page/NotFoundPage';
+import NotebookPage from '@/pages/notebook';
+import NotebookEditorPage from '@/pages/notebook/editor';
+import OAuthClients from '@/pages/oauth-clients';
+import OpenData from '@/pages/open-data';
+import PermissionManagement from '@/pages/permission-management';
+import RoutingManagement from '@/pages/routing-management';
+import LoginPage from '@/pages/login';
+import LicenseActivation from '@/pages/license-activation';
+import CliAuthPage from '@/pages/cli-auth';
+import ClusterPage from '@/pages/cluster';
+import Share from '@/pages/share';
+import SettingsPage from '@/pages/settings';
+import Uns from '@/pages/uns';
+import VisionCameraPage from '@/pages/vision';
+import { useBaseStore } from '@/stores/base';
 import type { ResourceProps, SystemInfoProps, UserInfoProps } from '@/stores/types.ts';
+import { isLaunchpadStandaloneAllowedPath, isLaunchpadStandalonePort } from '@/utils/launchpad-site';
 import Cookies from 'js-cookie';
+import qs from 'qs';
+import { lazy, type ReactNode, useEffect } from 'react';
+import { type Location, type RouteObject, useNavigate, useRoutes } from 'react-router';
+import DynamicMFComponent from '../components/dynamic-mf-component';
 
 // 根路径重定向到外部login页
 
 const defaultPostLoginPath = '/uns';
+const disabledOpenSourceRoutePrefixes = ["/home","/account-management","/audit-log","/oauth-clients","/routing-management","/edge-connection","/mqtt-auth","/permission-management","/menu-configuration","/PermissionManagement","/MenuConfiguration","/runtime","/vision","/cluster","/project","/notebook","/launchpad","/license-activation"];
+const isDisabledOpenSourceRoute = (path?: string) =>
+  Boolean(path && disabledOpenSourceRoutePrefixes.some((prefix) => path === prefix || path.startsWith(prefix + '/')));
+
+const LaunchpadPage = lazy(() => import('@/pages/launchpad'));
+const LaunchpadProjectDetail = lazy(() => import('@/pages/launchpad/project-detail'));
+const LaunchpadAppDetail = lazy(() => import('@/pages/launchpad/app-detail'));
+
+const AdminOnlyPage = ({ children }: { children: ReactNode }) => {
+  const isAdmin = useBaseStore((state) => state.currentUserInfo?.superAdmin === true);
+  return isAdmin ? children : <NoPermission />;
+};
+
+const FleetRuntimeAdminPage = () => (
+  <AdminOnlyPage>
+    <FleetRuntimePage />
+  </AdminOnlyPage>
+);
+
+const FleetNodeDetailAdminPage = () => (
+  <AdminOnlyPage>
+    <FleetNodeDetailPage />
+  </AdminOnlyPage>
+);
+
+const ClusterAdminPage = () => (
+  <AdminOnlyPage>
+    <ClusterPage />
+  </AdminOnlyPage>
+);
 
 const normalizeRedirectUri = (redirectUri?: string | string[] | null) => {
   if (typeof redirectUri !== 'string') {
@@ -45,7 +81,14 @@ const normalizeRedirectUri = (redirectUri?: string | string[] | null) => {
   if (!next || !next.startsWith('/')) {
     return '';
   }
-  if (next === '/' || next === '/?isLogin=true' || next === LOGIN_URL) {
+  const [pathname] = next.split('?');
+  if (
+    next === '/' ||
+    next === '/?isLogin=true' ||
+    next === '/login' ||
+    next === LOGIN_URL ||
+    (isLaunchpadStandalonePort() && !isLaunchpadStandaloneAllowedPath(pathname))
+  ) {
     return '';
   }
   return next;
@@ -58,33 +101,29 @@ const RootRedirect = () => {
   }));
   const params = qs.parse(window.location.search, { ignoreQueryPrefix: true });
   useEffect(() => {
-    if (params?.isLogin) {
-      window.location.replace(normalizeRedirectUri(currentUserInfo?.homePage) || defaultPostLoginPath);
-    } else {
+    const handleRedirect = async () => {
+      if (params?.isLogin) {
+        window.location.replace(normalizeRedirectUri(currentUserInfo?.homePage) || defaultPostLoginPath);
+        return;
+      }
+
+      if (currentUserInfo?.homePage) {
+        window.location.replace(normalizeRedirectUri(currentUserInfo.homePage) || defaultPostLoginPath);
+        return;
+      }
+
       if (Cookies.get(OMC_MODEL)) {
         console.warn('omc——cookie失效');
         window.location.replace('/403');
-      } else {
-        console.log('登录cookie不存在，要跳转到登录页');
-        window.location.replace(systemInfo?.loginPath || LOGIN_URL);
+        return;
       }
-    }
-  }, [currentUserInfo?.homePage, params?.isLogin, systemInfo?.loginPath]);
-  return null;
-};
 
-const FreeLoginLoader = () => {
-  const params = qs.parse(window.location.search, { ignoreQueryPrefix: true });
-  useEffect(() => {
-    if (params?.token) {
-      setToken(params.token as string, {
-        expires: 365,
-      });
-      window.location.replace(normalizeRedirectUri(params?.redirectUri as string | undefined) || defaultPostLoginPath);
-    } else {
-      window.location.replace('/403');
-    }
-  }, [params?.redirectUri, params?.token]);
+
+      window.location.replace(systemInfo?.loginPath || LOGIN_URL);
+    };
+
+    handleRedirect();
+  }, [params?.isLogin, currentUserInfo?.homePage, systemInfo?.loginPath]);
   return null;
 };
 
@@ -94,26 +133,20 @@ export const childrenRoutes = [
     Component: Home,
   },
   {
+    path: '/runtime',
+    Component: FleetRuntimeAdminPage,
+    handle: {
+      parentPath: '/home',
+      code: 'fleet.runtime.title',
+    },
+  },
+  {
     path: '/uns',
     Component: Uns,
   },
   {
-    path: '/todo',
-    Component: Todo,
-    handle: {
-      parentPath: '/_common',
-      code: 'common.taskCenter',
-      type: 'all',
-    },
-  },
-  {
-    path: '/grafana-design',
-    Component: GrafanaDesign,
-    handle: {
-      parentPath: '/_common',
-      code: 'common.grafanaDesign',
-      type: 'all',
-    },
+    path: '/vision',
+    Component: VisionCameraPage,
   },
   // {
   //   path: '/app-display',
@@ -148,39 +181,55 @@ export const childrenRoutes = [
   //   },
   // },
   {
+    path: '/flow',
+    Component: FlowPage,
+  },
+  {
     path: '/collection-flow',
-    Component: CollectionFlow,
+    Component: SourceFlowRedirect,
   },
   {
     path: '/collection-flow/flow-editor',
     Component: FlowPreview,
     handle: {
-      parentPath: '/collection-flow',
+      parentPath: '/flow',
       code: 'route.flowEditor',
+      multiInstance: true,
     },
   },
   {
     path: '/EventFlow',
-    Component: EventFlow,
+    Component: EventFlowRedirect,
+  },
+  {
+    path: '/event-flow',
+    Component: EventFlowRedirect,
   },
   {
     path: '/EventFlow/Editor',
     Component: EventFlowPreview,
     handle: {
-      parentPath: '/EventFlow',
+      parentPath: '/flow',
       code: 'route.eventFlowEditor',
+      multiInstance: true,
     },
   },
   {
-    path: '/dashboards',
-    Component: Dashboards,
+    path: '/event-flow/flow-editor',
+    Component: EventFlowPreview,
+    handle: {
+      parentPath: '/flow',
+      code: 'route.eventFlowEditor',
+      multiInstance: true,
+    },
   },
   {
-    path: '/dashboards/preview',
-    Component: DashboardsPreview,
+    path: '/event-flow/editor',
+    Component: EventFlowPreview,
     handle: {
-      parentPath: '/dashboards',
-      code: 'route.dashboardsPreview',
+      parentPath: '/flow',
+      code: 'route.eventFlowEditor',
+      multiInstance: true,
     },
   },
   {
@@ -188,16 +237,39 @@ export const childrenRoutes = [
     Component: AccountManagement,
   },
   {
-    path: '/Localization',
-    Component: Localization,
+    path: '/settings',
+    Component: SettingsPage,
+    handle: {
+      parentPath: '/_common',
+      code: 'common.settings',
+      type: 'all',
+    },
+  },
+  {
+    path: '/settings/:section',
+    Component: SettingsPage,
+    handle: {
+      parentPath: '/settings',
+      code: 'common.settings',
+      type: 'all',
+    },
+  },
+  {
+    path: '/audit-log',
+    Component: AuditLogPage,
+    handle: {
+      parentPath: '/_common',
+      code: 'route.auditLog',
+      type: 'all',
+    },
   },
   {
     path: '/MenuConfiguration',
     Component: MenuConfiguration,
   },
   {
-    path: '/advanced-use',
-    Component: AdvancedUse,
+    path: '/PermissionManagement',
+    Component: PermissionManagement,
   },
   {
     path: '/dev-page',
@@ -207,26 +279,30 @@ export const childrenRoutes = [
       type: 'all',
     },
   },
-  {
-    path: '/plugin-management',
-    Component: PluginManagement,
-  },
   // 插件移到主项目 数据开放
   {
     path: '/OpenData',
     Component: OpenData,
   },
   {
+    path: '/oauth-clients',
+    Component: OAuthClients,
+  },
+  {
     path: '/routing-management',
     Component: RoutingManagement,
+    handle: {
+      parentPath: '/_common',
+      code: 'route.routingManagement',
+    },
   },
-  // app管理
   {
-    path: '/AppManagement',
-    Component: PluginManagement,
-    // handle: {
-    //   type: 'dev',
-    // },
+    path: '/cluster',
+    Component: ClusterAdminPage,
+    handle: {
+      parentPath: '/_common',
+      code: 'menu.cloudSync',
+    },
   },
   {
     path: '/403',
@@ -246,43 +322,159 @@ export const childrenRoutes = [
       type: 'all',
     },
   },
+  {
+    path: '/project',
+    Component: lazy(() => import('@/pages/project')),
+  },
+  {
+    path: '/project/:projectId',
+    Component: lazy(() => import('@/pages/project/Detail')),
+    handle: {
+      parentPath: '/project',
+      code: 'route.projectDetail',
+    },
+  },
+  {
+    path: '/notebook',
+    Component: NotebookPage,
+    handle: {
+      parentPath: '/_common',
+      showName: 'Notebook',
+      code: 'Notebook.title',
+      type: 'all',
+    },
+  },
+  {
+    path: '/notebook/editor/:id',
+    Component: NotebookEditorPage,
+    handle: {
+      parentPath: '/notebook',
+      code: 'Notebook.editor',
+      dynamicTabName: true,
+    },
+  },
+  {
+    path: '/edge-connection/nodes/:nodeKey',
+    Component: FleetNodeDetailAdminPage,
+    handle: {
+      parentPath: '/edge-connection',
+      code: 'menu.mqttAuth',
+      multiInstance: true,
+    },
+  },
+  {
+    path: '/edge-connection',
+    Component: MqttAuthPage,
+    handle: {
+      parentPath: '/_common',
+      code: 'menu.mqttAuth',
+      type: 'all',
+      multiInstance: true,
+    },
+  },
+  {
+    path: '/mqtt-auth',
+    Component: MqttAuthPage,
+    handle: {
+      parentPath: '/_common',
+      code: 'menu.mqttAuth',
+      type: 'all',
+      multiInstance: true,
+    },
+  },
+].filter((route) => !isDisabledOpenSourceRoute(route.path));
+
+export const launchpadChildRoutes = [
+  {
+    path: '/launchpad',
+    Component: LaunchpadPage,
+    handle: {
+      parentPath: '/_common',
+      code: 'Launchpad.title',
+      type: 'all',
+    },
+  },
+  {
+    path: '/launchpad/:projectName',
+    Component: LaunchpadProjectDetail,
+    handle: {
+      parentPath: '/launchpad',
+      code: 'Launchpad.title',
+      showName: 'Launchpad.title',
+      type: 'all',
+      multiInstance: true,
+    },
+  },
+  {
+    path: '/launchpad/:projectName/:appName',
+    Component: LaunchpadAppDetail,
+    handle: {
+      parentPath: '/launchpad',
+      code: 'Launchpad.title',
+      showName: 'Launchpad.title',
+      type: 'all',
+      multiInstance: true,
+    },
+  },
 ];
 
-// 前端路由路径
-export const frontendPathList = childrenRoutes?.map((item) => item.path);
+const launchpadSettingsChildRoutes = [
+  {
+    path: '/settings',
+    Component: SettingsPage,
+    handle: {
+      parentPath: '/_common',
+      code: 'common.settings',
+      type: 'all',
+    },
+  },
+  {
+    path: '/settings/:section',
+    Component: SettingsPage,
+    handle: {
+      parentPath: '/settings',
+      code: 'common.settings',
+      type: 'all',
+    },
+  },
+];
 
-const routes = [
+const getLaunchpadRoutes = () => [];
+
+const getMainChildrenRoutes = () => childrenRoutes;
+
+// 前端路由路径
+export const frontendPathList = [
+  ...childrenRoutes.map((item) => item.path),
+  ...launchpadChildRoutes.map((item) => item.path),
+  ...launchpadSettingsChildRoutes.map((item) => item.path),
+];
+
+const getRoutes = () => [
   {
     path: '/',
     element: <RootRedirect />,
   },
+  ...getLaunchpadRoutes(),
   {
     path: '/',
     element: <Layout />,
-    children: childrenRoutes,
-  },
-  {
-    path: '/freeLogin',
-    element: <FreeLoginLoader />,
-    // 数据路由无法使用
-    // loader: ({ request }: any) => {
-    //   const url = new URL(request.url);
-    //   const token = url.searchParams.get('token');
-    //   if (token) {
-    //     console.log('123');
-    //     // 免登录逻辑
-    //     // 21600秒 = 6小时 = 0.25天
-    //     setToken(token, {
-    //       expires: 0.25,
-    //     });
-    //     return redirect('/?isLogin=true');
-    //   }
-    //   return null;
-    // },
+    handle: {
+      layout: 'main',
+    },
+    children: getMainChildrenRoutes(),
   },
   {
     path: LOGIN_URL,
     Component: LoginPage,
+  },
+  {
+    path: '/license-activation',
+    Component: LicenseActivation,
+  },
+  {
+    path: '/cli-auth',
+    Component: CliAuthPage,
   },
   {
     path: '/share',
@@ -292,7 +484,7 @@ const routes = [
     path: '*',
     element: <NotPage />,
   },
-];
+].filter((route) => !isDisabledOpenSourceRoute(route.path));
 
 export const getRoutesDom = ({
   menuGroup,
@@ -303,8 +495,11 @@ export const getRoutesDom = ({
   systemInfo?: SystemInfoProps;
   currentUserInfo?: UserInfoProps;
 }) => {
-  return routes.map((route, index) => {
-    if (index === 1 && route.children) {
+  return getRoutes().map((route) => {
+    if ((route.handle as any)?.layout === 'launchpad') {
+      return route;
+    }
+    if (route.children) {
       return {
         ...route,
         children: [
@@ -351,7 +546,8 @@ export const getRoutesDom = ({
                   handle: {
                     ...child.handle,
                     path: child.path,
-                    code: child.handle?.code ?? child.path,
+                    // multiInstance 路由不设置 code，因为它们的标题来自 location.state.tabName
+                    code: (child.handle as any)?.multiInstance ? undefined : (child.handle?.code ?? child.path),
                   },
                 };
               } else {
@@ -381,6 +577,21 @@ export const getRoutesDom = ({
                     // 模块联邦子模块
                     moduleName: d?.remoteModelName,
                     parentPath: '/' + d?.parentCode,
+                  },
+                };
+              }
+              // Anchor 3D 子应用走专用宿主（bridge 上下文/生命周期同步、加载态与同源白名单）
+              if (d?.code?.startsWith('anchor.') || d?.url?.startsWith('/anchor')) {
+                return {
+                  path: '/' + d?.code,
+                  element: <AnchorFrame url={d?.url} name={d?.showName} />,
+                  handle: {
+                    openType: d?.openType,
+                    key: d?.code,
+                    code: d?.code,
+                    showName: d?.showName,
+                    icon: d?.icon,
+                    path: '/' + d?.code,
                   },
                 };
               }

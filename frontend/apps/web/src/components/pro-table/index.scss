@@ -1,5 +1,19 @@
+@use './operation-menu.scss';
+
 .pro-table,
 .resizable-table {
+  .ant-table-content {
+    overflow-x: hidden !important;
+  }
+
+  .ant-table-body {
+    overflow-x: hidden !important;
+  }
+
+  .ant-table-sticky-scroll {
+    display: none !important;
+  }
+
   .ant-table-row {
     &:hover {
       .custom-operation {
@@ -9,6 +23,10 @@
       .custom-pin {
         display: block;
       }
+    }
+
+    &:has(.ant-dropdown-open) > .ant-table-cell {
+      background: var(--ui-charttop-bg-color) !important;
     }
 
     .custom-operation {
@@ -21,6 +39,50 @@
 
     .custom-pin-fixed {
       display: block !important;
+    }
+
+    // 行内操作图标统一 16x16
+    .operation,
+    .custom-operation,
+    .custom-pin {
+      svg {
+        width: 16px !important;
+        height: 16px !important;
+      }
+    }
+
+    svg.custom-operation,
+    svg.custom-pin {
+      width: 16px !important;
+      height: 16px !important;
+      flex-shrink: 0;
+    }
+
+    .custom-operation:not(svg) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      .anticon,
+      svg {
+        width: 16px;
+        height: 16px;
+        font-size: 16px;
+      }
+    }
+
+    .operation {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+
+      > i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+      }
     }
   }
 
@@ -39,19 +101,18 @@
         width: 6px;
         height: 100%;
         cursor: col-resize;
-        transition:
-          background-color 0.2s,
-          width 0.2s;
+        transition: box-shadow 0.2s;
 
         &:hover {
-          background-color: var(--supos-theme-color);
+          background-color: transparent;
+          box-shadow: inset -2px 0 0 var(--ui-theme-color);
         }
       }
     }
   }
 
   .ant-table-row.ant-table-row-selected > .ant-table-cell {
-    background-color: var(--supos-table-select-bg-color) !important;
+    background-color: var(--ui-table-select-bg-color) !important;
   }
 
   .ant-table-tbody {
@@ -89,16 +150,16 @@
   .ant-pagination-item,
   .ant-pagination-options-quick-jumper,
   .ant-pagination-options-quick-jumper input {
-    background-color: var(--supos-header-bg-color) !important;
+    background-color: var(--ui-header-bg-color) !important;
   }
 
   .ant-pagination-item-active,
   .ant-pagination-options-quick-jumper input:focus-within {
-    border-color: var(--supos-theme-color) !important;
+    border-color: var(--ui-theme-color) !important;
   }
 
   .ant-pagination-item-active a {
-    color: var(--supos-theme-color) !important;
+    color: var(--ui-theme-color) !important;
   }
 
   .ant-pagination-options .ant-select-dropdown {
@@ -142,7 +203,7 @@
     width: 40px;
     height: 100%;
     border-radius: 0 3px 3px 0;
-    border: 1px solid #c6c6c6;
+    border: 1px solid var(--ui-line-color);
     background: #f4f4f4;
     cursor: pointer;
     transition: right 0.2s;
@@ -164,5 +225,14 @@
 
   &:hover {
     text-decoration: underline;
+  }
+
+  &.table-link-button-neutral {
+    color: var(--ui-text-color);
+
+    &:not(:disabled):not(.ant-btn-disabled):hover,
+    &:not(:disabled):not(.ant-btn-disabled):focus {
+      color: var(--ui-theme-color);
+    }
   }
 }

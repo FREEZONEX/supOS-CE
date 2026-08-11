@@ -58,11 +58,13 @@
   .shepherd-button {
     font-size: 12px;
     padding: 8px 14px;
-    background: var(--supos-theme-color);
+    background: var(--ui-primary-button-bg);
+    color: var(--ui-primary-button-text);
     position: relative;
 
     &:not(:disabled):hover {
-      background: var(--supos-theme-button-hover-color);
+      background: var(--ui-primary-button-bg-hover);
+      color: var(--ui-primary-button-text);
     }
 
     &.prev-class {
@@ -78,11 +80,11 @@
 
     &.back-class {
       background-color: rgb(29 119 254 / 10%);
-      color: var(--supos-theme-color);
+      color: var(--ui-theme-color);
 
       &:hover {
         background-color: rgb(29 119 254 / 20%);
-        color: var(--supos-theme-color);
+        color: var(--ui-theme-color);
       }
     }
 

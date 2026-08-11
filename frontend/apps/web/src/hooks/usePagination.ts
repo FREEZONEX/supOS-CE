@@ -1,5 +1,5 @@
-import { type Key, useCallback, useEffect, useRef, useState } from 'react';
 import { isArray } from 'lodash-es';
+import { type Key, useCallback, useEffect, useRef, useState } from 'react';
 interface UsePaginationParams {
   initPageSize?: number; // 每页大小，默认为10
   initPageSizes?: number[];
@@ -148,6 +148,7 @@ const usePagination = <T>({
       clearTime();
       cancelRequest(); // 组件卸载时取消请求
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramsData, autoRefresh, refreshInterval]);
 
   const onPageChange = useCallback((page: number | { page: number; pageSize: number }) => {
@@ -165,6 +166,7 @@ const usePagination = <T>({
         pageSize: page.pageSize,
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const reload = useCallback(() => {
@@ -224,36 +226,73 @@ const usePagination = <T>({
       setSelectedRows(a?.map((aa) => data?.find((f: any) => f[rowKey] === aa))?.filter((f) => f));
     }
   };
-  const onChange = useCallback((_a: any, _b: any, sort: any, action: any) => {
-    if (action.action === 'sort') {
-      if (sort instanceof Array) {
-        const sortData = sort?.map((m: any) => ({
-          orderCode: m.column.sortKey || (isArray(m.field) ? m.field.join('.') : m.field),
-          isAsc: m.order === 'ascend',
-        }));
+  const onChange = useCallback((_a: any, _b: any, sort: any, extra: any) => {
+    if (extra?.action !== 'sort') return;
+
+    const resetSort = () =>
+      setParamsData((o) => ({
+        ...o,
+        sortData: defaultSort,
+      }));
+
+    const resolveOrderCode = (item: any) => {
+      const field = item?.field ?? item?.columnKey ?? item?.column?.dataIndex;
+      if (!field) return '';
+      return item?.column?.sortKey || (isArray(field) ? field.join('.') : field);
+    };
+
+    if (Array.isArray(sort)) {
+      const active = sort.filter((item) => item?.order);
+      if (!active.length) {
+        resetSort();
+        return;
+      }
+      if (active.length === 1) {
+        const current = active[0];
+        const orderCode = resolveOrderCode(current);
+        if (!orderCode) {
+          resetSort();
+          return;
+        }
         setParamsData((o) => ({
           ...o,
           sortData: {
-            sortData,
+            orderCode,
+            isAsc: current.order === 'ascend',
           },
         }));
-      } else {
-        if (sort.field) {
-          setParamsData((o) => ({
-            ...o,
-            sortData: {
-              orderCode: sort.column.sortKey || (isArray(sort.field) ? sort.field.join('.') : sort.field),
-              isAsc: sort.order === 'ascend',
-            },
-          }));
-        } else {
-          setParamsData((o) => ({
-            ...o,
-            sortData: defaultSort,
-          }));
-        }
+        return;
       }
+      const sortData = active.map((item) => ({
+        orderCode: resolveOrderCode(item),
+        isAsc: item.order === 'ascend',
+      }));
+      setParamsData((o) => ({
+        ...o,
+        sortData: { sortData },
+      }));
+      return;
     }
+
+    if (!sort?.order) {
+      resetSort();
+      return;
+    }
+
+    const orderCode = resolveOrderCode(sort);
+    if (!orderCode) {
+      resetSort();
+      return;
+    }
+
+    setParamsData((o) => ({
+      ...o,
+      sortData: {
+        orderCode,
+        isAsc: sort.order === 'ascend',
+      },
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
@@ -263,10 +302,10 @@ const usePagination = <T>({
     reload,
     setData,
     refreshRequest: getData,
-    // eslint-disable-next-line react-hooks/refs
+
     pagination: {
       // 总共多少个操作数字
-      // eslint-disable-next-line react-hooks/refs
+
       totalItems: totalRef.current,
       // 当前页
       page: paramsData.pageNo,
@@ -274,7 +313,7 @@ const usePagination = <T>({
       pageSizes: initPageSizes,
       onChange: onPageChange,
       onShowSizeChange: onShowPageSizeChange,
-      // eslint-disable-next-line react-hooks/refs
+
       total: totalRef.current,
     },
     setSearchParams,
