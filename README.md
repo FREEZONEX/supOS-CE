@@ -52,7 +52,7 @@ cd Tier0-Edge/deploy
 bash bin/install.sh
 ```
 
-The default development image is `harbor.tier0.dev/tier0/tier0-edge-backend:dev`. The installer creates `.env`, generates runtime secrets, pulls the configured images, and starts the complete stack. Resolved values are written to `deploy/.env.runtime`; keep that file private and do not edit it manually.
+The default development image is `harbor.tier0.dev/tier0/tier0-edge-backend:dev`. The installer creates `.env`, generates internal runtime secrets, pulls the configured images, and starts the complete stack. The development login is `tier0` / `tier0`. Resolved values are written to `deploy/.env.runtime`; keep that file private and do not edit it manually.
 
 To customize ports, domains, storage, or the backend image before first startup:
 
@@ -68,7 +68,8 @@ bash bin/install.sh
 After installation:
 
 - Open `http://127.0.0.1:8088/uns` when using the defaults.
-- Sign in as `tier0` with the value configured in `ADMIN_INITIAL_PASSWORD`.
+- Sign in with `tier0` / `tier0` when using the defaults.
+- Override `ADMIN_INITIAL_PASSWORD` in `deploy/.env` before exposing the service outside a trusted development network.
 - Check readiness with `curl http://127.0.0.1:8088/readyz`.
 
 ### Verify an installed runtime

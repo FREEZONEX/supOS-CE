@@ -463,7 +463,7 @@ print_install_summary() {
   printf 'Tier0 Edge deployment %s.\n\n' "$([[ "${NO_START}" == "true" ]] && printf 'prepared' || printf 'started')"
   printf 'Open the platform: %s\n' "$(platform_url)"
   printf 'Default username: tier0\n'
-  printf 'Admin password: use the configured credential.\n'
+  printf 'Default password: tier0\n'
   if is_true "${LOCAL_FRONTEND_DEV}"; then
     printf 'Frontend dev server: %s\n' "${FRONTEND_DEV_URL}"
     printf 'Frontend command (PowerShell): %s\n' "$(frontend_dev_powershell_command)"
@@ -911,7 +911,7 @@ run_deploy_workflow() {
   REDIS_PASSWORD="${REDIS_PASSWORD:-$(random_hex 12)}"
   JWT_SECRET="${JWT_SECRET:-$(random_hex 32)}"
   TIER0_API_KEY="${TIER0_API_KEY:-$(random_hex 24)}"
-  ADMIN_INITIAL_PASSWORD="${ADMIN_INITIAL_PASSWORD:-$(random_hex 12)}"
+  ADMIN_INITIAL_PASSWORD="${ADMIN_INITIAL_PASSWORD:-tier0}"
   UNS_DB_NAME="${UNS_DB_NAME:-postgres}"
   DEFAULT_UNS_DB_URL="postgres://postgres:${TSDB_PASSWORD}@tsdb:5432/${UNS_DB_NAME}?sslmode=disable"
   if [[ -z "${UNS_DB_URL:-}" ]] || is_legacy_postgresql_url "${UNS_DB_URL:-}"; then UNS_DB_URL="${DEFAULT_UNS_DB_URL}"; fi
