@@ -217,6 +217,7 @@ type FlowMockField struct {
 
 type FlowSaveReq struct {
 	FlowId          int64           `path:"flowId,optional"`
+	SourceId        int64           `json:"sourceId,optional"`
 	ParentId        int64           `json:"parentId,optional"`
 	FlowType        string          `json:"flowType"`
 	NodeType        string          `json:"nodeType"`

@@ -12,6 +12,7 @@ import (
 	"backend/internal/infra/outbox"
 	"backend/internal/repo"
 
+	"github.com/google/uuid"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -25,6 +26,7 @@ type Service struct {
 
 type SaveCommand struct {
 	ID              int64
+	SourceID        int64
 	ParentID        int64
 	FlowType        string
 	NodeType        string
@@ -50,8 +52,6 @@ type MockField struct {
 	Name string
 	Type string
 }
-
-
 
 func New(ctx context.Context, sourceFlowURL, eventFlowURL string) *Service {
 	return &Service{
@@ -88,6 +88,19 @@ func (s *Service) Create(ctx context.Context, cmd SaveCommand) (map[string]any, 
 	if err != nil {
 		return nil, err
 	}
+	var source repo.Flow
+	if cmd.SourceID > 0 {
+		if item.NodeType != 2 {
+			return nil, ErrInvalid
+		}
+		source, err = s.flows.GetFlow(ctx, cmd.SourceID)
+		if err != nil {
+			return nil, normalizeNotFound(err)
+		}
+		if source.NodeType != 2 || source.FlowType != item.FlowType {
+			return nil, ErrInvalid
+		}
+	}
 	item.CreatedBy = cmd.UserID
 	name, err := s.flows.AvailableFlowName(ctx, item.FlowType, item.ParentID, item.Name)
 	if err != nil {
@@ -95,14 +108,30 @@ func (s *Service) Create(ctx context.Context, cmd SaveCommand) (map[string]any, 
 	}
 	item.Name = name
 	if item.NodeType == 2 {
-		item.FlowData = defaultFlowData(item.Name, mockSpecFromCommand(cmd))
+		if cmd.SourceID > 0 {
+			item.FlowData, err = rewriteCopiedFlowData(source.FlowData, item.Name)
+			if err != nil {
+				return nil, err
+			}
+			item.FlowData, _, err = s.normalizeAndValidateRuntimeNodes(ctx, item, item.FlowData)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			item.FlowData = defaultFlowData(item.Name, mockSpecFromCommand(cmd))
+		}
+		created, err := s.flows.CreateFlow(ctx, item)
+		if err != nil {
+			return nil, err
+		}
+		if cmd.AutoDeploy {
+			return s.Deploy(ctx, created.ID, cmd.UserID, "")
+		}
+		return s.flowResp(ctx, created), nil
 	}
 	created, err := s.flows.CreateFlow(ctx, item)
 	if err != nil {
 		return nil, err
-	}
-	if cmd.AutoDeploy && item.NodeType == 2 {
-		return s.Deploy(ctx, created.ID, cmd.UserID, "")
 	}
 	return s.flowResp(ctx, created), nil
 }
@@ -327,11 +356,6 @@ func (s *Service) deployEnabled(ctx context.Context, id, userID int64) (map[stri
 	return s.flowResp(ctx, item), nil
 }
 
-
-
-
-
-
 func commandToFlow(cmd SaveCommand) (repo.Flow, error) {
 	if strings.TrimSpace(cmd.Name) == "" {
 		return repo.Flow{}, ErrInvalid
@@ -379,7 +403,6 @@ func (s *Service) flowListResp(ctx context.Context, items []repo.Flow) map[strin
 	return map[string]any{"list": list, "total": len(list)}
 }
 
-
 func (s *Service) userNameMap(ctx context.Context, ids ...int64) map[int64]string {
 	userNames, err := s.flows.UserNamesByIDs(ctx, ids)
 	if err != nil {
@@ -401,33 +424,32 @@ func userDisplayName(userNames map[int64]string, userID int64) string {
 func flowResp(item repo.Flow, userNames map[int64]string) map[string]any {
 	creator := userDisplayName(userNames, item.CreatedBy)
 	return map[string]any{
-		"id":               item.ID,
-		"flowId":           item.RuntimeFlowID,
-		"runtimeFlowId":    item.RuntimeFlowID,
-		"name":             item.Name,
-		"flowName":         item.Name,
-		"description":      item.Description,
-		"flowType":         flowTypeName(item.FlowType),
-		"nodeType":         nodeTypeName(item.NodeType),
-		"parentId":         item.ParentID,
-		"flowData":         item.FlowData,
-		"status":           item.Status,
-		"flowStatus":       item.Status,
-		"template":         item.Template,
-		"flowTemplate":     item.Template,
-		"unsNodeIds":       item.UnsNodeIDs,
-		"sortKey":          item.SortKey,
-		"isFavorite":       item.IsFavorite,
-		"createdBy":        item.CreatedBy,
-		"createdByName":    creator,
-		"creator":          creator,
-		"operatorName":     creator,
-		"updatedBy":        item.UpdatedBy,
-		"createdTime":      item.CreatedTime,
-		"updatedTime":      item.UpdatedTime,
+		"id":            item.ID,
+		"flowId":        item.RuntimeFlowID,
+		"runtimeFlowId": item.RuntimeFlowID,
+		"name":          item.Name,
+		"flowName":      item.Name,
+		"description":   item.Description,
+		"flowType":      flowTypeName(item.FlowType),
+		"nodeType":      nodeTypeName(item.NodeType),
+		"parentId":      item.ParentID,
+		"flowData":      item.FlowData,
+		"status":        item.Status,
+		"flowStatus":    item.Status,
+		"template":      item.Template,
+		"flowTemplate":  item.Template,
+		"unsNodeIds":    item.UnsNodeIDs,
+		"sortKey":       item.SortKey,
+		"isFavorite":    item.IsFavorite,
+		"createdBy":     item.CreatedBy,
+		"createdByName": creator,
+		"creator":       creator,
+		"operatorName":  creator,
+		"updatedBy":     item.UpdatedBy,
+		"createdTime":   item.CreatedTime,
+		"updatedTime":   item.UpdatedTime,
 	}
 }
-
 
 type mockSpec struct {
 	enabled         bool
@@ -751,14 +773,139 @@ func jsString(value string) string {
 	return string(data)
 }
 
+func rewriteCopiedFlowData(source, flowName string) (string, error) {
+	source = strings.TrimSpace(source)
+	if source == "" {
+		return defaultFlowData(flowName, mockSpec{}), nil
+	}
+	var nodes []map[string]any
+	if err := json.Unmarshal([]byte(source), &nodes); err != nil {
+		return "", err
+	}
+	rewriteCopiedNodeIDs(nodes)
+	for _, node := range nodes {
+		stripCopiedFlowCredentials(node)
+		if isInternalMQTTBrokerNode(node) {
+			node["name"] = flowMQTTBrokerNodeName(flowName)
+		}
+	}
+	out, err := json.Marshal(nodes)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
 
+func stripCopiedFlowCredentials(value any) {
+	switch typed := value.(type) {
+	case map[string]any:
+		for key, item := range typed {
+			switch strings.ToLower(strings.TrimSpace(key)) {
+			case "authtoken", "clientid", "credentialclientid", "credentials", "password", "username":
+				delete(typed, key)
+			default:
+				stripCopiedFlowCredentials(item)
+			}
+		}
+	case []any:
+		for _, item := range typed {
+			stripCopiedFlowCredentials(item)
+		}
+	case []map[string]any:
+		for _, item := range typed {
+			stripCopiedFlowCredentials(item)
+		}
+	}
+}
 
+func isInternalMQTTBrokerNode(node map[string]any) bool {
+	if strings.TrimSpace(asString(node["type"])) != "mqtt-broker" {
+		return false
+	}
+	broker := strings.ToLower(strings.TrimSpace(asString(node["broker"])))
+	if broker == "" {
+		broker = strings.ToLower(strings.TrimSpace(asString(node["host"])))
+	}
+	return broker == "" || broker == "emqx"
+}
 
+func shouldReplaceCopiedNodeID(node map[string]any) bool {
+	if _, ok := node["z"]; ok {
+		return true
+	}
+	typ := strings.TrimSpace(asString(node["type"]))
+	return typ == "subflow" || typ == "mqtt-broker"
+}
 
+func rewriteCopiedNodeIDs(nodes []map[string]any) {
+	replacements := make(map[string]string)
+	usedIDs := make(map[string]struct{}, len(nodes))
+	for _, node := range nodes {
+		if id := strings.TrimSpace(asString(node["id"])); id != "" {
+			usedIDs[id] = struct{}{}
+		}
+	}
+	for _, node := range nodes {
+		if !shouldReplaceCopiedNodeID(node) {
+			continue
+		}
+		oldID := strings.TrimSpace(asString(node["id"]))
+		if oldID == "" {
+			continue
+		}
+		for {
+			newID := newRuntimeNodeID()
+			if _, exists := usedIDs[newID]; exists {
+				continue
+			}
+			replacements[oldID] = newID
+			usedIDs[newID] = struct{}{}
+			break
+		}
+	}
+	for _, node := range nodes {
+		rewriteCopiedNodeReferences(node, replacements)
+	}
+}
 
+func rewriteCopiedNodeReferences(value any, replacements map[string]string) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		for key, item := range typed {
+			typed[key] = rewriteCopiedNodeReferences(item, replacements)
+		}
+		return typed
+	case []any:
+		for index, item := range typed {
+			typed[index] = rewriteCopiedNodeReferences(item, replacements)
+		}
+		return typed
+	case []map[string]any:
+		for _, item := range typed {
+			rewriteCopiedNodeReferences(item, replacements)
+		}
+		return typed
+	case string:
+		if replacement, ok := replacements[typed]; ok {
+			return replacement
+		}
+		if strings.HasPrefix(typed, "subflow:") {
+			oldID := strings.TrimSpace(strings.TrimPrefix(typed, "subflow:"))
+			if replacement, ok := replacements[oldID]; ok {
+				return "subflow:" + replacement
+			}
+		}
+	}
+	return value
+}
 
-
-
+func newRuntimeNodeID() string {
+	raw := strings.ReplaceAll(uuid.NewString(), "-", "")
+	if len(raw) > 16 {
+		return raw[:16]
+	}
+	return raw
+}
 
 func (s *Service) deployRuntime(ctx context.Context, flow repo.Flow, disabled bool) (string, error) {
 	baseURL := s.runtimeBaseURL(flow.FlowType)

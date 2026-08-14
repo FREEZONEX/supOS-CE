@@ -124,6 +124,49 @@ export const inspectMockFlow = (flowData, expectedTopic, expectedFieldName = reg
   };
 };
 
+const flowNodes = (value, name) => {
+  const nodes = typeof value === 'string' ? JSON.parse(value) : value;
+  if (!Array.isArray(nodes)) throw new Error(`${name} Flow data is not a node array`);
+  return nodes;
+};
+
+export const inspectCopiedFlow = (sourceFlowData, copiedFlowData) => {
+  const sourceNodes = flowNodes(sourceFlowData, 'source');
+  const copiedNodes = flowNodes(copiedFlowData, 'copied');
+  const sourceTypes = sourceNodes.map((node) => String(node?.type || '')).sort();
+  const copiedTypes = copiedNodes.map((node) => String(node?.type || '')).sort();
+  if (JSON.stringify(sourceTypes) !== JSON.stringify(copiedTypes)) {
+    throw new Error(`copied Flow node types changed: ${sourceTypes.join(',')} -> ${copiedTypes.join(',')}`);
+  }
+  const sourceIDs = new Set(sourceNodes.map((node) => String(node?.id || '')).filter(Boolean));
+  const copiedIDs = copiedNodes.map((node) => String(node?.id || '')).filter(Boolean);
+  const reusedIDs = copiedIDs.filter((id) => sourceIDs.has(id));
+  if (reusedIDs.length) throw new Error(`copied Flow reused node IDs: ${reusedIDs.join(', ')}`);
+
+  const inject = copiedNodes.find((node) => node?.type === 'inject');
+  const mqttOut = copiedNodes.find((node) => node?.type === 'mqtt out');
+  const broker = copiedNodes.find((node) => node?.type === 'mqtt-broker');
+  if (!inject || !mqttOut || !broker) throw new Error('copied Flow is missing inject, MQTT output or broker nodes');
+  if (!wiredTo(inject, mqttOut.id)) throw new Error('copied Flow did not preserve the inject-to-MQTT wire');
+  if (String(mqttOut.broker) !== String(broker.id)) throw new Error('copied Flow MQTT output still references the source broker');
+  if (broker.name !== 'emqx' || broker.broker !== 'emqx' || String(broker.port) !== '1883') {
+    throw new Error('copied Flow does not use the new anonymous emqx configuration node');
+  }
+  const forbiddenCredentialPaths = findForbiddenFlowCredentialPaths(copiedNodes);
+  if (forbiddenCredentialPaths.length) {
+    throw new Error(`copied Flow contains MQTT credential fields: ${forbiddenCredentialPaths.join(', ')}`);
+  }
+  return {
+    nodeCount: copiedNodes.length,
+    nodeTypes: copiedTypes,
+    allNodeIDsReplaced: true,
+    wiringPreserved: true,
+    mqttBrokerReferenceReplaced: true,
+    configurationName: broker.name,
+    credentialFree: true,
+  };
+};
+
 export const hasPersistedMetricData = (detail, dashboard, fieldName = 'value') => {
   const latestValue = detail?.lastPayload?.data?.[fieldName];
   const history = Array.isArray(dashboard?.list) ? dashboard.list : [];
@@ -669,6 +712,137 @@ const runFoundationJourney = async ({ baseURL, authHeaders }) => {
   return journey;
 };
 
+const runFlowCopyJourney = async ({ baseURL, authHeaders }) => {
+  const suffix = `${Date.now().toString(36)}_${process.pid.toString(36)}`;
+  const sourceName = `e2e_copy_source_${suffix}`;
+  const copiedName = `e2e_copy_target_${suffix}`;
+  const sourceNodes = [
+    {
+      id: `inject_${suffix}`,
+      type: 'inject',
+      z: `workspace_${suffix}`,
+      name: 'copy-source-inject',
+      props: [{ p: 'payload' }],
+      repeat: '',
+      once: false,
+      wires: [[`mqtt_${suffix}`]],
+    },
+    {
+      id: `mqtt_${suffix}`,
+      type: 'mqtt out',
+      z: `workspace_${suffix}`,
+      name: 'copy-source-mqtt',
+      topic: `regression/copy/${suffix}`,
+      qos: '0',
+      retain: 'false',
+      broker: `broker_${suffix}`,
+      wires: [],
+    },
+    {
+      id: `broker_${suffix}`,
+      type: 'mqtt-broker',
+      name: 'source-broker-name',
+      broker: 'emqx',
+      port: '1883',
+      usetls: false,
+      protocolVersion: '4',
+      keepalive: '60',
+      cleansession: true,
+    },
+  ];
+  let sourceID = 0;
+  let copiedID = 0;
+  let evidence;
+  let primaryError;
+
+  try {
+    const source = requireEnvelopeSuccess(
+      'create populated source Event Flow',
+      await request(baseURL, '/api/core/flows', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          flowType: 'event',
+          nodeType: 'flow',
+          name: sourceName,
+          description: 'runtime regression source for deep copy',
+          template: 'node-red',
+        }),
+      })
+    );
+    sourceID = Number(source?.id || 0);
+    if (!sourceID) throw new Error('source Event Flow create returned no ID');
+    requireEnvelopeSuccess(
+      `save populated source Event Flow ${sourceID}`,
+      await request(baseURL, `/api/core/flows/${sourceID}/data`, {
+        method: 'PUT',
+        headers: authHeaders,
+        body: JSON.stringify({ flowData: JSON.stringify(sourceNodes) }),
+      })
+    );
+    const copied = requireEnvelopeSuccess(
+      'copy populated Event Flow from list contract',
+      await request(baseURL, '/api/core/flows', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          sourceId: sourceID,
+          flowType: 'event',
+          nodeType: 'flow',
+          name: copiedName,
+          description: 'runtime regression copied Flow',
+          template: 'node-red',
+        }),
+      })
+    );
+    copiedID = Number(copied?.id || 0);
+    if (!copiedID) throw new Error('copied Event Flow create returned no ID');
+    const copiedDetail = requireEnvelopeSuccess(
+      `read copied Event Flow ${copiedID}`,
+      await request(baseURL, `/api/core/flows/${copiedID}`, { headers: authHeaders })
+    );
+    const copyInspection = inspectCopiedFlow(sourceNodes, copiedDetail?.flowData);
+    requireEnvelopeSuccess(
+      `deploy copied Event Flow ${copiedID}`,
+      await request(baseURL, `/api/core/flows/${copiedID}/deploy`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ flowData: copiedDetail?.flowData }),
+      })
+    );
+    const deployed = requireEnvelopeSuccess(
+      `read deployed copied Event Flow ${copiedID}`,
+      await request(baseURL, `/api/core/flows/${copiedID}`, { headers: authHeaders })
+    );
+    if (deployed?.status !== 'deployed' || !String(deployed?.runtimeFlowId || '')) {
+      throw new Error('copied Event Flow did not deploy to a new Node-RED runtime Flow');
+    }
+    evidence = {
+      status: 'passed',
+      ...copyInspection,
+      deployed: true,
+    };
+  } catch (error) {
+    primaryError = error;
+  } finally {
+    for (const [label, id] of [['copied', copiedID], ['source', sourceID]]) {
+      if (!id) continue;
+      try {
+        requireEnvelopeSuccess(
+          `cleanup ${label} Event Flow ${id}`,
+          await request(baseURL, `/api/core/flows/${id}`, { method: 'DELETE', headers: authHeaders })
+        );
+      } catch (error) {
+        if (primaryError) primaryError.message = `${primaryError.message}; Flow copy cleanup failed: ${error.message}`;
+        else primaryError = error;
+      }
+    }
+  }
+  if (primaryError) throw primaryError;
+  evidence.cleanup = { copiedFlowDeleted: true, sourceFlowDeleted: true };
+  return evidence;
+};
+
 const updateMarker = async (markerPath, result) => {
   if (!markerPath) return;
   const marker = JSON.parse(await readFile(markerPath, 'utf8'));
@@ -693,6 +867,7 @@ const updateMarker = async (markerPath, result) => {
       metricTopicType: result.foundationJourney.topicType,
       mockIntervalSeconds: result.foundationJourney.flow.repeatSeconds,
       mqttConfigurationName: result.foundationJourney.flow.configurationName,
+      flowCopy: result.flowCopyJourney,
       firstCreateCompletedAtomically: result.foundationJourney.firstCreateCompletedAtomically,
       historyRows: result.foundationJourney.historyRows,
       persistenceLatencyMs: result.foundationJourney.persistenceLatencyMs,
@@ -798,12 +973,15 @@ export const runRuntimeRegression = async ({
   checks.push('user-create-default-admin-cleanup');
 
   let foundationJourney;
+  let flowCopyJourney;
   let atomicityFaultInjection;
   if (scope === 'foundation') {
     if (faultInjection) {
       atomicityFaultInjection = await runAtomicityFaultInjection({ baseURL, authHeaders, deployRoot });
       checks.push('metric-create-failure-compensation-identical-retry');
     }
+    flowCopyJourney = await runFlowCopyJourney({ baseURL, authHeaders });
+    checks.push('flow-list-copy-nodes-wiring-new-anonymous-mqtt');
     foundationJourney = await runFoundationJourney({ baseURL, authHeaders });
     checks.push('metric-mock-flow-mqtt-history-cleanup');
   }
@@ -817,6 +995,7 @@ export const runRuntimeRegression = async ({
     browser,
     defaultAdminUserJourney,
     ...(atomicityFaultInjection ? { atomicityFaultInjection } : {}),
+    ...(flowCopyJourney ? { flowCopyJourney } : {}),
     ...(foundationJourney ? { foundationJourney } : {}),
   };
   await updateMarker(marker, result);

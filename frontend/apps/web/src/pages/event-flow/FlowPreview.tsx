@@ -1,5 +1,4 @@
 import {
-  copyFlow,
   deployFlow,
   getFlowDetail,
   saveFlow,
@@ -7,19 +6,16 @@ import {
 import type { PageProps } from '@/common-types';
 import { ButtonPermission } from '@/common-types/button-permission.ts';
 import { AuthButton } from '@/components/auth';
-import ComDrawer from '@/components/com-drawer';
 import ComBackButton from '@/components/com-back-button';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
 import ComText from '@/components/com-text';
-import OperationForm from '@/components/operation-form';
 import { postFlowIframeTheme, useFlowIframeThemeBridge, useLocalStorage, useTabName, useTranslate } from '@/hooks';
 import { hasPermission } from '@/utils/auth';
-import { validInputPattern } from '@/utils/pattern';
 import { getDevProxyBaseUrl, getSearchParamsObj, getSearchParamsString } from '@/utils/url-util';
 import { ChevronLeft, OverflowMenuVertical } from '@/components/lucide-icon/carbon';
 import { useUpdateEffect } from 'ahooks';
-import { App, Breadcrumb, Button, Dropdown, Flex, Form, message, Space } from 'antd';
+import { Breadcrumb, Button, Dropdown, Flex, message, Space } from 'antd';
 import { type FC, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import './index.scss';
@@ -38,17 +34,9 @@ const truncateFlowTabName = (value: string) =>
   value.length > FLOW_TAB_MAX_NAME_LENGTH ? `${value.slice(0, FLOW_TAB_MAX_NAME_LENGTH)}...` : value;
 
 const EventFlowPreview: FC<PageProps> = ({ location }) => {
-  const { modal } = App.useApp();
-  const [form] = Form.useForm();
-  const [show, setShow] = useState(false);
   const state = getSearchParamsObj(location?.search) || {};
   const fromPath = state.from;
   const navigate = useNavigate();
-  // 支持不同入口通过 query 参数控制复制按钮显隐。
-  const copyEnableValue = String(state?.copyEnable ?? '')
-    .trim()
-    .toLowerCase();
-  const isCopyButtonEnabled = !['0', 'false', 'off', 'no', 'n', '否'].includes(copyEnableValue);
   const formatMessage = useTranslate();
   const [flowName, setFlowName] = useState(state.name || '');
   const tabRawName = String(flowName || state.name || '').trim();
@@ -60,7 +48,6 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
   const nodeRedLang = useLocalStorage('editor-language');
   const flowIframeRef = useRef<HTMLIFrameElement | null>(null);
   const [loading, setLoading] = useState(true);
-  const [apiLoading, setApiLoading] = useState(false);
   const [nodeRedWorkspace, setNodeRedWorkspace] = useState<NodeRedWorkspaceState | null>(null);
   const observerRef = useRef<any>(null);
   // const [buttonDisabled, setDisabled] = useState(state?.status === 'RUNNING');
@@ -213,62 +200,12 @@ const saveFlowsToBackend = async (data: any) => {
     setPostMessage('deploy');
   };
 
-  const onCopyFlows = () => {
-    setShow(true);
-  };
 
   const onOpenMenuHandle = (id: string) => {
     if (flowIframeRef.current) {
       flowIframeRef.current.contentWindow!.postMessage({ data: { id }, type: 'openEventMenu' }, '*');
     }
   };
-
-  const onClose = () => {
-    setShow(false);
-    form.resetFields();
-  };
-
-  const formItemOptions = [
-    {
-      label: formatMessage('eventFlow.copyFlow'),
-    },
-    {
-      label: formatMessage('common.name'),
-      name: 'flowName',
-      rules: [
-        { required: true, message: '' },
-        { pattern: validInputPattern, message: '' },
-      ],
-    },
-    {
-      label: formatMessage('collectionFlow.flowTemplate'),
-      name: 'template',
-      type: 'Select',
-      properties: {
-        options: [
-          {
-            label: 'node-red',
-            value: 'node-red',
-          },
-        ],
-        disabled: true,
-      },
-      initialValue: 'node-red',
-      rules: [{ required: true, message: '' }],
-    },
-    {
-      label: formatMessage('uns.description'),
-      name: 'description',
-    },
-    {
-      label: 'id',
-      name: 'id',
-      hidden: true,
-    },
-    {
-      type: 'divider',
-    },
-  ];
 
   useEffect(() => {
     const targetId = 'red-ui-loading-progress';
@@ -332,42 +269,6 @@ const saveFlowsToBackend = async (data: any) => {
     };
   }, [key, state?.id, state?.flowId]);
 
-  const onSave = async () => {
-    const values = await form.validateFields();
-    setApiLoading(true);
-    copyFlow({
-      ...values,
-      sourceId: state.id,
-    })
-      .then((data) => {
-        const copiedId = data?.id || data;
-        setShow(false);
-        modal.confirm({
-          title: formatMessage('common.copyConfirm'),
-          onOk: () => {
-            form.resetFields();
-            navigate(
-              `/event-flow/flow-editor?${getSearchParamsString({ id: copiedId, name: values.flowName, status: 'DRAFT' })}`,
-              {
-                replace: true,
-              }
-            );
-          },
-          onCancel: () => {
-            form.resetFields();
-          },
-          okButtonProps: {
-            title: formatMessage('common.confirm'),
-          },
-          cancelButtonProps: {
-            title: formatMessage('common.cancel'),
-          },
-        });
-      })
-      .finally(() => {
-        setApiLoading(false);
-      });
-  };
 
   const items: any = [
     {
@@ -476,17 +377,6 @@ const saveFlowsToBackend = async (data: any) => {
               )}
             </div>
             <Space>
-              {isCopyButtonEnabled && (
-                <AuthButton
-                  auth={ButtonPermission['EventFlow.copy']}
-                  loading={loading}
-                  color="primary"
-                  variant="outlined"
-                  onClick={onCopyFlows}
-                >
-                  {formatMessage('common.copy')}
-                </AuthButton>
-              )}
               <AuthButton
                 auth={ButtonPermission['EventFlow.deploy']}
                 loading={loading}
@@ -525,15 +415,6 @@ const saveFlowsToBackend = async (data: any) => {
           src={`${getDevProxyBaseUrl()}${iframeUrl}`}
         />
       </ComContent>
-      <ComDrawer title=" " open={show} onClose={onClose}>
-        <OperationForm
-          loading={apiLoading}
-          form={form}
-          onCancel={onClose}
-          onSave={onSave}
-          formItemOptions={formItemOptions}
-        />
-      </ComDrawer>
     </ComLayout>
   );
 };

@@ -33,7 +33,7 @@ func NewFlowCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *FlowCr
 
 func (l *FlowCreateLogic) FlowCreate(req *types.FlowSaveReq) (resp *types.Envelope, err error) {
 	data, err := l.svcCtx.App.Flow.Create(l.ctx, domainflow.SaveCommand{
-		ParentID: req.ParentId, FlowType: req.FlowType, NodeType: req.NodeType, Name: req.Name,
+		SourceID: req.SourceId, ParentID: req.ParentId, FlowType: req.FlowType, NodeType: req.NodeType, Name: req.Name,
 		Description: req.Description, Template: req.Template, UnsNodeIDs: req.UnsNodeIds, UserID: logicx.UserID(l.ctx),
 		MockData: req.MockData, MockTopic: req.MockTopic, MockFields: flowMockFieldsFromReq(req.MockFields),
 		MockTriggerMode: req.MockTriggerMode,

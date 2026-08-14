@@ -4433,6 +4433,10 @@
     "FlowSaveReq": {
       "type": "object",
       "properties": {
+        "sourceId": {
+          "type": "integer",
+          "format": "int64"
+        },
         "parentId": {
           "type": "integer",
           "format": "int64"

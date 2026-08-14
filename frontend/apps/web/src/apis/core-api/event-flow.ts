@@ -30,6 +30,7 @@ const paginateFlowItems = (list: any[], params?: Record<string, unknown>) => {
 };
 
 const toPayload = (data: any) => ({
+  sourceId: toNodeID(data?.sourceId),
   parentId: Number(data?.parentId || data?.groupId || 0),
   flowType: 'event',
   nodeType: data?.nodeType || 'flow',

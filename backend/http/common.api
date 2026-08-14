@@ -386,6 +386,7 @@ type FlowMockField {
 
 type FlowSaveReq {
     flowId int64 `path:"flowId,optional"`
+    sourceId int64 `json:"sourceId,optional"`
     parentId int64 `json:"parentId,optional"`
     flowType string `json:"flowType"`
     nodeType string `json:"nodeType"`

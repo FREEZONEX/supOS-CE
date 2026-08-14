@@ -63,6 +63,7 @@ const paginateFlowItems = (list: any[], params?: Record<string, unknown>) => {
 const toPayload = (data: any) => {
   const mockData = Boolean(data?.mockData);
   return {
+    sourceId: toNodeID(data?.sourceId),
     parentId: Number(data?.parentId || data?.groupId || 0),
     flowType: 'source',
     nodeType: data?.nodeType || 'flow',

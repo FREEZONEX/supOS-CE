@@ -865,7 +865,7 @@
   "common.uninstallConfirm": "Uninstall?",
   "common.clearData": "Business data will be cleared!",
   "common.deleteTemplateConfirm": "Template and topics associated with it will all be deleted. Proceed?",
-  "common.copyConfirm": "Success. Start the copied flow?",
+  "common.copyConfirm": "Open the copied flow now?",
   "common.confirmOpt": "Confirm?",
   "common.send": "Send",
   "common.question": "Ask chatbot a question",
