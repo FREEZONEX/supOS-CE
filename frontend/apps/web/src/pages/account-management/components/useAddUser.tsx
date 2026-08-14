@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslate } from '@/hooks';
 import { App, Button, Col, Form, Input, Row } from 'antd';
-import { createUser, getRoleList, updateUser } from '@/apis/core-api/user-manage';
+import { createUser, updateUser } from '@/apis/core-api/user-manage';
 import styles from './RoleSetting.module.scss';
-import ComSelect from '@/components/com-select';
 import ProModal from '@/components/pro-modal';
 import { validNameRegex, passwordRegex, passwordStrengthRegex } from '@/utils/pattern';
 import { useBaseStore } from '@/stores/base';
@@ -13,7 +12,6 @@ const useAddUser = ({ onSaveBack }: any) => {
   const { message } = App.useApp();
   const [open, setOpen] = useState(false);
   const [isEdit, setEdit] = useState(false);
-  const [options, setOptions] = useState([]);
   const [form] = Form.useForm();
   const formatMessage = useTranslate();
   const [loading, setLoading] = useState(false);
@@ -21,19 +19,6 @@ const useAddUser = ({ onSaveBack }: any) => {
   const ldapEnable = useBaseStore((state) => state?.systemInfo?.ldapEnable);
   const menuGroupNoSub = useBaseStore((state) => state.menuGroup?.filter((item) => !item.subMenu));
   const editingUserId = Form.useWatch('userId', form);
-
-  useEffect(() => {
-    if (open) {
-      getRoleList().then((data: any) => {
-        setOptions(
-          data?.map((d: any) => ({
-            label: d?.roleName,
-            value: d?.roleId,
-          }))
-        );
-      });
-    }
-  }, [open]);
 
   const onAddOpen = (data?: any) => {
     if (data) {
@@ -43,13 +28,6 @@ const useAddUser = ({ onSaveBack }: any) => {
         ...data,
         username: data.preferredUsername,
         userId: data.id,
-        roleList:
-          data?.roleList?.length > 0
-            ? {
-                label: data?.roleList?.[0]?.roleName,
-                value: data?.roleList?.[0]?.roleId,
-              }
-            : undefined,
       });
     } else {
       setEdit(false);
@@ -69,9 +47,7 @@ const useAddUser = ({ onSaveBack }: any) => {
     try {
       await api({
         ...info,
-        roleList: info?.roleList ? [{ roleId: info?.roleList?.value, roleName: info?.roleList?.label }] : [],
         enabled: true,
-        operateRole: isEdit ? true : undefined,
       });
       message.success(formatMessage('common.optsuccess'));
       onClose();
@@ -199,29 +175,7 @@ const useAddUser = ({ onSaveBack }: any) => {
               <Input disabled={ldapEnable && !isLocalEditableUser} placeholder={formatMessage('account.email')} />
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item
-              label={formatMessage('account.role')}
-              name="roleList"
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage('rule.required'),
-                },
-              ]}
-            >
-              <ComSelect
-                placeholder={formatMessage('account.role')}
-                options={options}
-                // mode="multiple"
-                allowClear
-                onClick={(e) => {
-                  e.preventDefault();
-                }}
-                labelInValue
-              />
-            </Form.Item>
-          </Col>
+
           {isEdit && (
             <Col span={12}>
               <Form.Item label={formatMessage('account.homePage')} name="homePage">

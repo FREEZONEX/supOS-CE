@@ -7,13 +7,11 @@ import useAddUser from '@/pages/account-management/components/useAddUser';
 import { cloneElement, useEffect, useRef, useState, type FC, type ReactElement } from 'react';
 import type { PageProps } from '@/common-types';
 import { ButtonPermission } from '@/common-types/button-permission';
-import useRoleSetting from './components/useRoleSetting';
 import type { PaginationProps } from 'antd';
 import { AuthButton, AuthWrapper } from '@/components/auth';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
 import ProTable from '@/components/pro-table';
-import { useThemeStore } from '@/stores/theme-store.ts';
 import { useBaseStore } from '@/stores/base';
 import { createDeleteConfirmOptions } from '@/utils/modal-confirm';
 import styles from './index.module.scss';
@@ -33,9 +31,8 @@ const flexibleColumnConfig = {
   displayName: { min: 130, max: 220, padding: 46 },
   phone: { min: 130, max: 180, padding: 46 },
   email: { min: 220, max: 320, padding: 46 },
-  role: { min: 180, max: 260, padding: 46 },
 };
-const flexibleColumnKeys = ['account', 'displayName', 'phone', 'email', 'role'] as const;
+const flexibleColumnKeys = ['account', 'displayName', 'phone', 'email'] as const;
 type FlexibleColumnKey = (typeof flexibleColumnKeys)[number];
 const minFlexibleWidth = flexibleColumnKeys.reduce((sum, key) => sum + flexibleColumnConfig[key].min, 0);
 const absoluteFlexibleMin = 72;
@@ -50,8 +47,6 @@ const getElementContentWidth = (element: HTMLElement) => {
   const horizontalPadding = (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0);
   return Math.max(0, element.getBoundingClientRect().width - horizontalPadding);
 };
-
-const roleText = (record: any) => record?.roleList?.map((item: any) => item.roleName)?.join(',') || '';
 
 const distributeExtraWidth = (widths: Record<FlexibleColumnKey, number>, extraWidth: number) => {
   let restWidth = extraWidth;
@@ -69,7 +64,7 @@ const distributeExtraWidth = (widths: Record<FlexibleColumnKey, number>, extraWi
     restWidth -= usedWidth;
   }
   if (restWidth > 0) {
-    widths.role += restWidth;
+    widths.email += restWidth;
   }
 };
 
@@ -79,7 +74,6 @@ const resolveFlexibleColumnWidths = (records: any[], containerWidth: number) => 
     displayName: flexibleColumnConfig.displayName.min,
     phone: flexibleColumnConfig.phone.min,
     email: flexibleColumnConfig.email.min,
-    role: flexibleColumnConfig.role.min,
   };
 
   records.forEach((record) => {
@@ -93,12 +87,11 @@ const resolveFlexibleColumnWidths = (records: any[], containerWidth: number) => 
     );
     widths.phone = Math.max(widths.phone, estimateTextWidth(record?.phone || '', flexibleColumnConfig.phone));
     widths.email = Math.max(widths.email, estimateTextWidth(record?.email || '', flexibleColumnConfig.email));
-    widths.role = Math.max(widths.role, estimateTextWidth(roleText(record), flexibleColumnConfig.role));
   });
 
   const fixedWidth = fixedColumnWidth.status + fixedColumnWidth.operation;
   const availableWidth = containerWidth > 0 ? Math.max(0, containerWidth - fixedWidth) : minFlexibleWidth;
-  const flexibleWidth = widths.account + widths.displayName + widths.phone + widths.email + widths.role;
+  const flexibleWidth = widths.account + widths.displayName + widths.phone + widths.email;
 
   if (flexibleWidth > availableWidth) {
     const shrinkableWidth =
@@ -109,9 +102,7 @@ const resolveFlexibleColumnWidths = (records: any[], containerWidth: number) => 
       widths.phone -
       flexibleColumnConfig.phone.min +
       widths.email -
-      flexibleColumnConfig.email.min +
-      widths.role -
-      flexibleColumnConfig.role.min;
+      flexibleColumnConfig.email.min;
     const overflow = flexibleWidth - availableWidth;
     if (shrinkableWidth > 0) {
       const shrinkRatio = Math.min(1, overflow / shrinkableWidth);
@@ -119,14 +110,13 @@ const resolveFlexibleColumnWidths = (records: any[], containerWidth: number) => 
       widths.displayName -= (widths.displayName - flexibleColumnConfig.displayName.min) * shrinkRatio;
       widths.phone -= (widths.phone - flexibleColumnConfig.phone.min) * shrinkRatio;
       widths.email -= (widths.email - flexibleColumnConfig.email.min) * shrinkRatio;
-      widths.role -= (widths.role - flexibleColumnConfig.role.min) * shrinkRatio;
     } else if (availableWidth > 0) {
       const scale = availableWidth / flexibleWidth;
       flexibleColumnKeys.forEach((key) => {
         widths[key] = Math.max(absoluteFlexibleMin, Math.round(widths[key] * scale));
       });
       const currentSum = flexibleColumnKeys.reduce((sum, key) => sum + widths[key], 0);
-      widths.role = Math.max(absoluteFlexibleMin, widths.role + (availableWidth - currentSum));
+      widths.email = Math.max(absoluteFlexibleMin, widths.email + (availableWidth - currentSum));
     }
   } else if (containerWidth && flexibleWidth < availableWidth) {
     distributeExtraWidth(widths, availableWidth - flexibleWidth);
@@ -137,7 +127,6 @@ const resolveFlexibleColumnWidths = (records: any[], containerWidth: number) => 
     displayName: Math.round(widths.displayName),
     phone: Math.round(widths.phone),
     email: Math.round(widths.email),
-    role: Math.round(widths.role),
   };
 };
 
@@ -146,7 +135,6 @@ const getTableScrollX = (widths: ReturnType<typeof resolveFlexibleColumnWidths>)
   widths.displayName +
   widths.phone +
   widths.email +
-  widths.role +
   fixedColumnWidth.status +
   fixedColumnWidth.operation;
 
@@ -155,9 +143,6 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
   const tableShellRef = useRef<HTMLDivElement>(null);
   const formatMessage = useTranslate();
   const ldapEnable = useBaseStore((state) => state?.systemInfo?.ldapEnable);
-  const theme = useThemeStore((state) => state.theme);
-
-  const buttonBg = theme.includes('dark') ? '#393939' : '#c6c6c6';
   const { modal } = App.useApp();
   const { isH5 } = useMediaSize();
   const { data, pagination, setLoading, loading, refreshRequest } = usePagination({
@@ -202,9 +187,6 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
   const onAddHandle = () => {
     onAddOpen();
   };
-  const { onRoleModalOpen, RoleModal } = useRoleSetting({
-    onSaveBack: refreshRequest,
-  });
   const renderStatusTag = (enabled: boolean) =>
     enabled ? (
       <Tag bordered={false} className={`${styles.statusPill} ${styles.statusAvailable}`}>
@@ -319,15 +301,6 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
       maxWidth: flexibleColumnConfig.email.max,
     },
     {
-      dataIndex: 'roleList',
-      ellipsis: true,
-      titleIntlId: 'account.role',
-      render: (text: any) => text?.map((i: any) => i.roleName)?.join(','),
-      width: flexibleColumnWidth.role,
-      minWidth: flexibleColumnConfig.role.min,
-      maxWidth: flexibleColumnConfig.role.max,
-    },
-    {
       dataIndex: 'enabled',
       titleIntlId: 'common.status',
       fixed: 'right',
@@ -407,15 +380,6 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
             >
               {formatMessage('account.newUsers')}
             </AuthButton>
-            <AuthButton
-              auth={ButtonPermission['UserManagement.roleSettings']}
-              style={{ height: 28, backgroundColor: buttonBg }}
-              color="default"
-              variant="filled"
-              onClick={onRoleModalOpen}
-            >
-              {formatMessage('account.roleSettings')}
-            </AuthButton>
           </Flex>
         }
       >
@@ -446,7 +410,6 @@ const AccountManagement: FC<PageProps> = ({ title }) => {
         </div>
         {ModalDom}
         {ModalAddDom}
-        {RoleModal}
       </ComContent>
     </ComLayout>
   );

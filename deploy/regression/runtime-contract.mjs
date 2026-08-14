@@ -41,6 +41,8 @@ export const regressionContract = {
     'OAuth 客户端',
     '审计日志',
   ],
+  hiddenUserManagementLabels: ['Role Permission', 'Role Settings', '角色权限'],
+  hiddenUserTableHeaders: ['Role', '角色'],
   retainedSettingsRoutes: ['/settings/users'],
   disabledSettingsRoutes: [],
   disabledFrontendRoutes: [

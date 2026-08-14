@@ -96,7 +96,7 @@ func (s *Service) Users(ctx context.Context) ([]map[string]any, error) {
 func (s *Service) CreateUser(ctx context.Context, cmd UserSaveCommand) (map[string]any, error) {
 	username := strings.TrimSpace(cmd.Username)
 	password := strings.TrimSpace(cmd.Password)
-	roleID := int64(0)
+	roleID := repo.SystemRoleAdminID
 	if len(cmd.RoleList) > 0 {
 		roleID = cmd.RoleList[0].RoleID
 	}

@@ -210,9 +210,9 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
       `open ${baseURL}${path}`,
       'wait --load networkidle',
       browserEval(`JSON.stringify({retainedSettingsRoute:${JSON.stringify(path)},path:location.pathname,body:document.body.innerText.slice(0,3000)})`),
-      browserEval(`(() => { const button = [...document.querySelectorAll('button')].find((item) => /Role Permission|Role Settings|角色权限/.test(item.innerText || '')); if (button) button.click(); return JSON.stringify({roleTrigger:Boolean(button),label:button?.innerText || ''}); })()`),
+      browserEval(`(() => { const buttons = [...document.querySelectorAll('button')]; const roleButton = buttons.find((item) => /Role Permission|Role Settings|角色权限/.test(item.innerText || '')); const newUserButton = buttons.find((item) => /New Users?|新增用户|新建用户/.test(item.innerText || '')); const headers = [...document.querySelectorAll('th')].map((item) => (item.innerText || '').trim()).filter(Boolean); if (newUserButton) newUserButton.click(); return JSON.stringify({rolePermissionTrigger:Boolean(roleButton),newUserTrigger:Boolean(newUserButton),userTableHeaders:headers}); })()`),
       'wait --load networkidle',
-      browserEval(`(() => { const dialogs = [...document.querySelectorAll('[role="dialog"]')]; const dialog = dialogs.at(-1); return JSON.stringify({roleDialog:Boolean(dialog),roleDialogText:(dialog?.innerText || '').slice(0,4000)}); })()`),
+      browserEval(`(() => { const dialogs = [...document.querySelectorAll('[role="dialog"]')]; const dialog = dialogs.at(-1); return JSON.stringify({newUserDialog:Boolean(dialog),newUserDialogText:(dialog?.innerText || '').slice(0,4000),newUserDialogLabels:[...(dialog?.querySelectorAll('label') || [])].map((item) => (item.innerText || '').trim()).filter(Boolean)}); })()`),
     ]),
     ...regressionContract.disabledSettingsRoutes.flatMap((path) => [
       `open ${baseURL}${path}`,
@@ -280,12 +280,21 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
       throw new Error(`retained user management route did not render the tier0 account: ${path}`);
     }
   }
-  const roleTrigger = browserObjects.find((item) => Object.hasOwn(item, 'roleTrigger'));
-  if (!roleTrigger?.roleTrigger) throw new Error('Role Permission trigger was not rendered');
-  const roleDialog = browserObjects.find((item) => Object.hasOwn(item, 'roleDialog'));
-  const roleDialogText = String(roleDialog?.roleDialogText || '');
-  if (!roleDialog?.roleDialog || roleDialogText.length < 80 || !/Admin/i.test(roleDialogText) || !/UNS|Namespace|命名空间/i.test(roleDialogText)) {
-    throw new Error('Role Permission dialog did not render the retained role/resource tree');
+  const userManagementState = browserObjects.find((item) => Object.hasOwn(item, 'rolePermissionTrigger'));
+  if (!userManagementState) throw new Error('user management UI state was not emitted');
+  if (userManagementState.rolePermissionTrigger) throw new Error('Role Permission trigger remained visible');
+  const leakedHeaders = (userManagementState.userTableHeaders || []).filter((label) =>
+    regressionContract.hiddenUserTableHeaders.includes(label)
+  );
+  if (leakedHeaders.length) throw new Error(`Role table column remained visible: ${leakedHeaders.join(', ')}`);
+  if (!userManagementState.newUserTrigger) throw new Error('New User trigger was not rendered');
+  const newUserDialog = browserObjects.find((item) => Object.hasOwn(item, 'newUserDialog'));
+  if (!newUserDialog?.newUserDialog) throw new Error('New User dialog did not render');
+  const leakedDialogLabels = (newUserDialog.newUserDialogLabels || []).filter((label) =>
+    regressionContract.hiddenUserTableHeaders.includes(label)
+  );
+  if (leakedDialogLabels.length) {
+    throw new Error(`New User dialog still requires a role selection: ${leakedDialogLabels.join(', ')}`);
   }
   const disabledSettingsRouteStates = browserObjects.filter((item) => Object.hasOwn(item, 'disabledSettingsRoute'));
   for (const path of regressionContract.disabledSettingsRoutes) {
@@ -320,69 +329,60 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
     notFoundOrPermissionState: false,
     disabledSettingsVisible: false,
     userManagementVisible: true,
-    rolePermissionVisible: true,
+    roleManagementHidden: true,
+    newUserRoleSelectorHidden: true,
     disabledRoutes: regressionContract.disabledFrontendRoutes,
   };
 };
 
-const runIAMManagementJourney = async ({ baseURL, authHeaders }) => {
-  const name = `e2e_role_${Date.now().toString(36)}_${process.pid.toString(36)}`;
-  let roleID = 0;
+const runDefaultAdminUserJourney = async ({ baseURL, authHeaders }) => {
+  const name = `e2e_user_${Date.now().toString(36)}_${process.pid.toString(36)}`;
+  let userID = 0;
   let primaryError;
-  const evidence = { name, created: false, permissionsUpdated: false, deleted: false };
+  const evidence = { name, rolePayloadOmitted: true, assignedRole: '', created: false, deleted: false };
   try {
     const created = requireEnvelopeSuccess(
-      'create local role',
-      await request(baseURL, '/api/core/iam/roles', {
+      'create local user without role payload',
+      await request(baseURL, '/api/core/iam/users', {
         method: 'POST',
         headers: authHeaders,
-        body: JSON.stringify({ name }),
-      })
-    );
-    roleID = Number(created?.roleId ?? created?.id ?? 0);
-    if (!roleID) throw new Error('role create returned no role identifier');
-    evidence.created = true;
-
-    requireEnvelopeSuccess(
-      `update local role ${roleID}`,
-      await request(baseURL, `/api/core/iam/roles/${roleID}`, {
-        method: 'PUT',
-        headers: authHeaders,
         body: JSON.stringify({
-          id: roleID,
-          name,
-          defaultHomePage: '/uns',
-          allowResourceList: [
-            { uri: 'resource:uns.page' },
-            { uri: 'resource:uns.read' },
-            { uri: 'resource:iam.user.view' },
-          ],
-          denyResourceList: [],
+          username: name,
+          password: `Tier0#${Date.now()}Aa`,
+          firstName: name,
+          enabled: true,
         }),
       })
     );
-    const roles = requireEnvelopeSuccess(
-      'read updated local role',
-      await request(baseURL, '/api/core/iam/roles', { headers: authHeaders })
-    );
-    const role = (roles?.list || []).find((item) => Number(item?.id ?? item?.roleId) === roleID);
-    const assigned = new Set((role?.resourceList || []).map((item) => item?.uri));
-    if (!role || role?.defaultHomePage !== '/uns' || !assigned.has('resource:uns.page') || !assigned.has('resource:iam.user.view')) {
-      throw new Error('role permission update was not persisted');
+    userID = Number(created?.userId ?? created?.id ?? 0);
+    if (!userID) throw new Error('user create returned no user identifier');
+    evidence.created = true;
+    const createdRole = (created?.roleList || [])[0];
+    if (String(createdRole?.roleCode || '').toLowerCase() !== 'admin' || Number(createdRole?.roleId) !== 1) {
+      throw new Error('new user response was not assigned the built-in Admin role');
     }
-    evidence.permissionsUpdated = true;
+    const users = requireEnvelopeSuccess(
+      'read default-Admin local user',
+      await request(baseURL, '/api/core/iam/users?pageNo=1&pageSize=100', { headers: authHeaders })
+    );
+    const user = (users?.list || []).find((item) => Number(item?.userId ?? item?.id) === userID);
+    const listedRole = (user?.roleList || [])[0];
+    if (!user || String(listedRole?.roleCode || '').toLowerCase() !== 'admin' || Number(listedRole?.roleId) !== 1) {
+      throw new Error('new user did not persist the built-in Admin role');
+    }
+    evidence.assignedRole = 'admin';
   } catch (error) {
     primaryError = error;
   } finally {
-    if (roleID) {
+    if (userID) {
       try {
         requireEnvelopeSuccess(
-          `delete local role ${roleID}`,
-          await request(baseURL, `/api/core/iam/roles/${roleID}`, { method: 'DELETE', headers: authHeaders })
+          `delete local user ${userID}`,
+          await request(baseURL, `/api/core/iam/users/${userID}`, { method: 'DELETE', headers: authHeaders })
         );
         evidence.deleted = true;
       } catch (error) {
-        if (primaryError) primaryError.message = `${primaryError.message}; role cleanup failed: ${error.message}`;
+        if (primaryError) primaryError.message = `${primaryError.message}; user cleanup failed: ${error.message}`;
         else primaryError = error;
       }
     }
@@ -682,6 +682,7 @@ const updateMarker = async (markerPath, result) => {
     baseUrl: result.baseUrl,
     defaultRoute: result.browser.path,
     requiredResourceKeys: regressionContract.requiredResourceKeys,
+    defaultAdminUserRole: result.defaultAdminUserJourney.assignedRole,
     completedAt: new Date().toISOString(),
   };
   marker.phases.runtimeSmoke = runtimePhase;
@@ -793,8 +794,8 @@ export const runRuntimeRegression = async ({
     checks.push(`404 ${check.method} ${check.path}`);
   }
 
-  const iamManagementJourney = await runIAMManagementJourney({ baseURL, authHeaders });
-  checks.push('user-list-role-permission-crud-cleanup');
+  const defaultAdminUserJourney = await runDefaultAdminUserJourney({ baseURL, authHeaders });
+  checks.push('user-create-default-admin-cleanup');
 
   let foundationJourney;
   let atomicityFaultInjection;
@@ -814,7 +815,7 @@ export const runRuntimeRegression = async ({
     expectedVersion: expectedVersion || '',
     checks,
     browser,
-    iamManagementJourney,
+    defaultAdminUserJourney,
     ...(atomicityFaultInjection ? { atomicityFaultInjection } : {}),
     ...(foundationJourney ? { foundationJourney } : {}),
   };
