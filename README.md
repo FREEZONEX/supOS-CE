@@ -84,10 +84,10 @@
 ### 2. Model Data Source Connection
 > Connect real data to make models alive.
 1. Use nodes based on the data source type to build a flow, and end it with an `mqtt out` node.
-  Install nodes from Node-RED community for your requirements. Official nodes often start with `node-red-contrib`.
+  > Install nodes from Node-RED community for your requirements. Official nodes often start with `node-red-contrib`.
 
 2. Make sure the **Server** of the `mqtt out` node is set to the UNS broker, and topic is a model from **UNS**.
-  The UNS broker has the same name as that of the flow.
+  > The UNS broker has the same name as that of the flow.
 ---
 ## License
 This project is licensed under the [Apache 2.0 License](./LICENSE).
