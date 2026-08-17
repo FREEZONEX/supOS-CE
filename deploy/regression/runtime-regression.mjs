@@ -916,7 +916,7 @@ const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
 
     const sourceRoot = await list({ flowType: 'source', parentId: '0' }, 'list typed Source Flow root');
     const eventRoot = await list({ flowType: 'event', parentId: '0' }, 'list typed Event Flow root');
-    const allRoot = await list({ parentId: '0' }, 'list unfiltered Flow root for Move to Folder');
+    const allRoot = await list({ parentId: '0' }, 'list unfiltered Flow root for All and Move to Folder');
     const sourceChildren = await list(
       { flowType: 'source', parentId: String(sourceFolderID) },
       'list Source Flow binding folder children'
@@ -932,13 +932,14 @@ const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
       throw new Error('Event Flow tab did not retain only folders containing Event Flows');
     }
     if (![sourceFolderID, eventFolderID, emptyFolderID].every((id) => allRootIDs.has(id))) {
-      throw new Error('unfiltered Move to Folder list did not contain every root folder');
+      throw new Error('unfiltered All/Move to Folder list did not contain every root folder');
     }
     if (sourceChildren.length !== 1 || Number(sourceChildren[0]?.id || 0) !== sourceFlowID || sourceChildren[0]?.nodeType === 'folder') {
       throw new Error('Source Flow binding child list did not expose exactly the Flow row');
     }
     evidence = {
       status: 'passed',
+      allTabContainsEmptyFolders: true,
       typedTabsHideEmptyAndOtherTypeFolders: true,
       moveFolderListContainsAllFolders: true,
       bindingCandidatesContainFlowsOnly: true,

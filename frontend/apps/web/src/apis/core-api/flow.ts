@@ -82,10 +82,10 @@ const toPayload = (data: any) => {
   };
 };
 
-const listFlows = async (params?: Record<string, unknown>) => {
+const listFlowItems = async (params?: Record<string, unknown>, flowType?: 'source') => {
   const resp = await coreApi.get('/flows', {
     params: {
-      flowType: 'source',
+      ...(flowType ? { flowType } : {}),
       parentId: params?.groupId,
       keyword: params?.k || params?.keyword,
     },
@@ -94,11 +94,21 @@ const listFlows = async (params?: Record<string, unknown>) => {
   const list = sortFlowItems(
     (resp?.list || [])
       .map(mapFlow)
+      .map((item: any) =>
+        flowType
+          ? item
+          : {
+              ...item,
+              flowKind: String(item?.flowType || '').toLowerCase() === 'event' ? 'event' : 'source',
+            }
+      )
       .filter((item: any) => !category || category === 'all' || item.category === category),
     params
   );
   return paginateFlowItems(list, params);
 };
+
+const listFlows = async (params?: Record<string, unknown>) => listFlowItems(params, 'source');
 
 const sortValue = (item: any, key: string) => {
   if (key === 'flowName' || key === 'name') return item.name || item.flowName || '';
@@ -291,3 +301,4 @@ export const bindFlowForUns = async (params: any) => {
   return editFlow({ ...detail, unsNodeIds });
 };
 export const getFlowAndGroupList = async (params?: Record<string, unknown>, _config?: any) => listFlows(params);
+export const getAllFlowAndGroupList = async (params?: Record<string, unknown>, _config?: any) => listFlowItems(params);
