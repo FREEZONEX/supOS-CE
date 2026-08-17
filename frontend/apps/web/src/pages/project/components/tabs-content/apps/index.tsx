@@ -314,27 +314,29 @@ const Apps: FC<AppsProps> = ({ projectId }) => {
                       </button>
                     </Tooltip>
                   </AuthWrapper>
-                  <Tooltip title={formatMessage('common.delete')} classNames={operationTooltipClassNames}>
-                    <button
-                      type="button"
-                      className={`${styles.operationButton} ${styles.operationButtonDanger}`}
-                      aria-label={formatMessage('common.delete')}
-                      onClick={() => {
-                        modal.confirm({
-                          ...createDeleteConfirmOptions({
-                            title: formatMessage('project.confirmDeleteAppTitle'),
-                            content: formatMessage('project.confirmDeleteAppDesc'),
-                            okText: formatMessage('common.delete'),
-                            cancelText: formatMessage('common.cancel'),
-                          }),
-                          onOk: () => handleDelete(record),
-                        });
-                      }}
-                    >
-                      <TrashCan size={16} strokeWidth={1.75} />
-                    </button>
-                  </Tooltip>
                 </>
+              )}
+              {(!isDeploying || !record.url) && (
+                <Tooltip title={formatMessage('common.delete')} classNames={operationTooltipClassNames}>
+                  <button
+                    type="button"
+                    className={`${styles.operationButton} ${styles.operationButtonDanger}`}
+                    aria-label={formatMessage('common.delete')}
+                    onClick={() => {
+                      modal.confirm({
+                        ...createDeleteConfirmOptions({
+                          title: formatMessage('project.confirmDeleteAppTitle'),
+                          content: formatMessage('project.confirmDeleteAppDesc'),
+                          okText: formatMessage('common.delete'),
+                          cancelText: formatMessage('common.cancel'),
+                        }),
+                        onOk: () => handleDelete(record),
+                      });
+                    }}
+                  >
+                    <TrashCan size={16} strokeWidth={1.75} />
+                  </button>
+                </Tooltip>
               )}
             </span>
           );

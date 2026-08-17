@@ -146,12 +146,48 @@ func (s *Service) AuthenticateAPIKey(ctx context.Context, raw string) (contextx.
 		UserName:     user.UserName,
 		Email:        user.Email,
 		AuthType:     "apiKey",
+		APIKeyID:     key.ID,
 		APIKeyName:   key.Name,
 		APIKeyPrefix: key.KeyPrefix,
 		KeyType:      key.KeyType,
 		ResourceKeys: toSet(effective),
 		UIActions:    uiActions,
 	}, nil
+}
+
+// RevalidateMQTTAPIKey reloads an established MQTT session's API key by its
+// non-secret record ID. Invalid or disabled credentials are returned as
+// valid=false, while repository failures remain errors so callers do not
+// disconnect healthy clients during a transient database outage.
+func (s *Service) RevalidateMQTTAPIKey(ctx context.Context, keyID int64) (contextx.Subject, bool, error) {
+	key, err := s.apiKeys.ValidateAPIKeyByIDDetail(ctx, keyID)
+	if err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			return contextx.Subject{}, false, nil
+		}
+		return contextx.Subject{}, false, err
+	}
+	user, err := s.iam.GetUserByID(ctx, key.OwnerID)
+	if err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			return contextx.Subject{}, false, nil
+		}
+		return contextx.Subject{}, false, err
+	}
+	if user.Status != 1 {
+		return contextx.Subject{}, false, nil
+	}
+	return contextx.Subject{
+		UserID:       user.ID,
+		UserName:     user.UserName,
+		Email:        user.Email,
+		AuthType:     "apiKey",
+		APIKeyID:     key.ID,
+		APIKeyName:   key.Name,
+		APIKeyPrefix: key.KeyPrefix,
+		KeyType:      key.KeyType,
+		ResourceKeys: toSet(key.ResourceKeys),
+	}, true, nil
 }
 
 func UsesDefaultPassword(user repo.User) bool {

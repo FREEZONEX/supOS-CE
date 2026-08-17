@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, App, Form, Input, Radio, Space, Spin, Tag } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { App, Form, Input, Space, Spin, Tag } from 'antd';
 import {
   createAIProviderConfig,
   queryAIProviderConfigs,
@@ -18,21 +18,15 @@ import styles from './index.module.scss';
 
 const WORKSPACE_ID = 1;
 const CONFIG_NAME = 'Enterprise AI';
+/** 仅用于探测 Base URL 是否提供 /embeddings；不代表用户最终选用的模型。 */
+const EMBED_PROBE_MODEL = 'text-embedding-3-small';
 
-type AIConfigFormValues = Pick<
-  AIProviderConfigPayload,
-  'baseUrl' | 'model' | 'apiKey' | 'embeddingMode' | 'embeddingBaseUrl' | 'embeddingApiKey' | 'embeddingModel'
->;
+type AIConfigFormValues = Pick<AIProviderConfigPayload, 'baseUrl' | 'model' | 'apiKey' | 'embeddingModel'>;
 
-// 影响向量连接测试结果的字段；这些字段一变，上次的实测结果即失效。
-const EMBEDDING_TEST_FIELDS: (keyof AIConfigFormValues)[] = [
-  'baseUrl',
-  'apiKey',
-  'embeddingMode',
-  'embeddingBaseUrl',
-  'embeddingApiKey',
-  'embeddingModel',
-];
+type EmbedSupport = 'unknown' | 'supported' | 'unsupported';
+
+/** 影响探测/实测结果的连接字段；一变即失效上次测试态。 */
+const CONNECTION_TEST_FIELDS: (keyof AIConfigFormValues)[] = ['baseUrl', 'apiKey', 'model', 'embeddingModel'];
 
 const AIProviderConfigPanel = () => {
   const formatMessage = useTranslate('OpenData');
@@ -43,22 +37,42 @@ const AIProviderConfigPanel = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [testingEmbedding, setTestingEmbedding] = useState(false);
   const [embeddingTest, setEmbeddingTest] = useState<AIEmbeddingTestResult>();
-  const embeddingMode = Form.useWatch('embeddingMode', form) ?? 'inherit';
+  const [embedSupport, setEmbedSupport] = useState<EmbedSupport>('unknown');
+  const [chatTestError, setChatTestError] = useState<string>();
+  const [embeddingFieldError, setEmbeddingFieldError] = useState<string>();
   const embeddingModel = Form.useWatch('embeddingModel', form);
+
+  const embeddingEnabled = embedSupport === 'supported';
+
+  // 本页不再提供「单独配置」编辑：已有 custom 配置，或改了 URL/Key 尚未重测时，
+  // 保存 payload 不带 embedding 字段，避免后端把 embedding 列一并改写/清空。
+  const shouldWriteEmbeddingFields =
+    config?.embeddingMode !== 'custom' && (embedSupport === 'supported' || embedSupport === 'unsupported');
+
+  const embeddingHelpText = useMemo(() => {
+    if (embeddingFieldError) return embeddingFieldError;
+    if (embedSupport === 'unsupported') return formatMessage('aiEmbedUnsupportedHint');
+    if (!embeddingEnabled) return formatMessage('aiEmbedDisabledHint');
+    if (!embeddingModel?.trim()) return formatMessage('aiEmbedEmptyWarn');
+    return formatMessage('aiEmbedUnsOnlyHint');
+  }, [embeddingEnabled, embeddingFieldError, embeddingModel, embedSupport, formatMessage]);
+
+  const embeddingHelpIsError = Boolean(embeddingFieldError || embedSupport === 'unsupported');
 
   const applyConfig = useCallback(
     (current?: AIProviderConfig) => {
       setConfig(current);
       setEmbeddingTest(undefined);
+      setChatTestError(undefined);
+      setEmbeddingFieldError(undefined);
+      const savedEmbed = Boolean(current?.embeddingModel?.trim());
+      // custom 模式仍展示已存模型名，但不视为本页可改的 inherit 探测态
+      setEmbedSupport(current?.embeddingMode === 'custom' ? 'unknown' : savedEmbed ? 'supported' : 'unknown');
       form.setFieldsValue({
         baseUrl: current?.baseUrl || 'https://api.openai.com/v1',
         model: current?.model || '',
         apiKey: '',
-        embeddingMode: current?.embeddingMode || 'inherit',
-        embeddingBaseUrl: current?.embeddingBaseUrl || '',
-        embeddingApiKey: '',
         embeddingModel: current?.embeddingModel || '',
       });
     },
@@ -84,21 +98,20 @@ const AIProviderConfigPanel = () => {
 
   const buildPayload = (values: AIConfigFormValues): AIProviderConfigPayload => {
     const payload: AIProviderConfigPayload = {
-      ...values,
       workspaceId: WORKSPACE_ID,
       name: config?.name || CONFIG_NAME,
       provider: 'openai_compatible',
+      baseUrl: values.baseUrl,
+      model: values.model,
+      apiKey: values.apiKey,
     };
     if (!payload.apiKey?.trim()) {
       delete payload.apiKey;
     }
-    if (!payload.embeddingApiKey?.trim()) {
-      delete payload.embeddingApiKey;
-    }
-    // 复用模式下不提交未启用的单独连接字段，避免表单里残留的值被后端校验拦下。
-    if (payload.embeddingMode !== 'custom') {
-      delete payload.embeddingBaseUrl;
-      delete payload.embeddingApiKey;
+    if (shouldWriteEmbeddingFields) {
+      payload.embeddingMode = 'inherit';
+      // unsupported：明确清空 inherit 下的模型；supported：写入表单值（可为空表示透传）
+      payload.embeddingModel = embedSupport === 'supported' ? values.embeddingModel || '' : '';
     }
     return payload;
   };
@@ -123,10 +136,14 @@ const AIProviderConfigPanel = () => {
 
   const saveConfig = async () => {
     const values = await form.validateFields();
-    // 向量模型非必填：没填视为未启用（网关透传），页面常驻警告已提示影响，直接保存。
-    // 填了但未实测通过（或维度不符）时给二次确认，避免静默保存后语义检索悄悄失效。
+    // 未打算改写 embedding 列时直接保存（保留 custom / 未重测前的已存模型）
+    if (!shouldWriteEmbeddingFields) {
+      await doSave(values);
+      return;
+    }
+    const embedName = embedSupport === 'supported' ? values.embeddingModel?.trim() : '';
     const testPassed = embeddingTest?.status === 'ok' && embeddingTest.dimensionsMatch;
-    if (!values.embeddingModel?.trim() || testPassed) {
+    if (!embedName || testPassed) {
       await doSave(values);
       return;
     }
@@ -145,57 +162,80 @@ const AIProviderConfigPanel = () => {
     });
   };
 
-  const testConnection = async () => {
-    const values = await form.validateFields();
-    setTesting(true);
-    try {
-      await testAIProviderConnection(buildPayload(values));
-      message.success(formatMessage('aiTestSuccess'));
-    } catch {
-      // The shared request interceptor displays the localized API error.
-    } finally {
-      setTesting(false);
-    }
+  const mapEmbeddingFieldError = (result: AIEmbeddingTestResult, userFilledModel: boolean): string | undefined => {
+    if (!userFilledModel) return undefined;
+    const params = {
+      model: result.model,
+      dims: result.dimensions,
+      expected: result.expectedDimensions,
+      code: result.httpStatus,
+    };
+    if (result.status === 'ok' && result.dimensionsMatch) return undefined;
+    if (result.status === 'ok') return formatMessage('aiEmbedTestDim', params);
+    if (result.status === 'model_not_found') return formatMessage('aiEmbedUnavailable');
+    if (result.status === 'unauthorized') return formatMessage('aiEmbedTestAuth', params);
+    if (result.status === 'unsupported') return formatMessage('aiEmbedUnsupportedHint');
+    return formatMessage('aiEmbedUnavailable');
   };
 
-  const testEmbedding = async () => {
-    if (!form.getFieldValue('embeddingModel')?.trim()) {
-      message.warning(formatMessage('aiEmbedTestNeedModel'));
-      return;
-    }
-    const fields: (keyof AIConfigFormValues)[] =
-      embeddingMode === 'custom' ? ['embeddingBaseUrl', 'embeddingApiKey'] : ['baseUrl', 'apiKey'];
-    await form.validateFields(fields);
-    const values = form.getFieldsValue();
-    setTestingEmbedding(true);
+  const testConnection = async () => {
+    const values = await form.validateFields(['baseUrl', 'apiKey']);
+    const allValues = { ...form.getFieldsValue(), ...values };
+    setTesting(true);
+    setChatTestError(undefined);
+    setEmbeddingFieldError(undefined);
+    setEmbeddingTest(undefined);
+
+    const payload = buildPayload(allValues);
+    let chatOk = false;
     try {
-      const result = await testAIEmbeddingConnection(buildPayload(values));
-      setEmbeddingTest(result);
-      const params = {
-        model: result.model,
-        dims: result.dimensions,
-        expected: result.expectedDimensions,
-        code: result.httpStatus,
-      };
-      if (result.status === 'ok' && result.dimensionsMatch) {
-        message.success(formatMessage('aiEmbedTestOk', params));
-      } else if (result.status === 'ok') {
-        message.warning(formatMessage('aiEmbedTestDim', params), 6);
-      } else if (result.status === 'unsupported') {
-        message.error(formatMessage('aiEmbedTestNoApi', params), 6);
-      } else if (result.status === 'model_not_found') {
-        message.error(formatMessage('aiEmbedTestNoModel', params), 6);
-      } else if (result.status === 'unauthorized') {
-        message.error(formatMessage('aiEmbedTestAuth', params));
+      await testAIProviderConnection(payload);
+      chatOk = true;
+    } catch {
+      setChatTestError(formatMessage('aiChatUnavailable'));
+    }
+
+    const userFilledModel = Boolean(allValues.embeddingModel?.trim());
+    const probeModel = userFilledModel ? allValues.embeddingModel!.trim() : EMBED_PROBE_MODEL;
+    let nextSupport: EmbedSupport = 'unknown';
+    let embedOkForUser = !userFilledModel;
+
+    try {
+      const result = await testAIEmbeddingConnection({
+        ...payload,
+        embeddingMode: 'inherit',
+        embeddingModel: probeModel,
+      });
+      setEmbeddingTest(userFilledModel ? result : undefined);
+
+      if (result.status === 'unsupported') {
+        nextSupport = 'unsupported';
+        embedOkForUser = true;
+        form.setFieldValue('embeddingModel', '');
+        setEmbeddingFieldError(undefined);
       } else {
-        message.error(formatMessage('aiEmbedTestFailed'));
+        // API 路径存在（含 model_not_found / dim 不符 / unauthorized），开放填写。
+        nextSupport = 'supported';
+        const fieldError = mapEmbeddingFieldError(result, userFilledModel);
+        setEmbeddingFieldError(fieldError);
+        embedOkForUser = !fieldError;
       }
     } catch {
-      setEmbeddingTest(undefined);
-      // The shared request interceptor displays the localized API error.
-    } finally {
-      setTestingEmbedding(false);
+      if (userFilledModel) {
+        setEmbeddingFieldError(formatMessage('aiEmbedUnavailable'));
+        embedOkForUser = false;
+      }
     }
+
+    setEmbedSupport(nextSupport);
+
+    if (chatOk && (nextSupport === 'unsupported' || embedOkForUser)) {
+      message.success(formatMessage('aiTestSuccess'));
+    } else if (chatOk && nextSupport === 'supported' && userFilledModel && !embedOkForUser) {
+      message.warning(formatMessage('aiTestChatOkEmbedFail'));
+    }
+
+    setTesting(false);
   };
 
   const editAuth = ButtonPermission[config ? 'OpenData.aiConfigEdit' : 'OpenData.aiConfigAdd'];
@@ -216,11 +256,32 @@ const AIProviderConfigPanel = () => {
           requiredMark={false}
           className={styles.aiSingletonForm}
           onValuesChange={(changed) => {
-            if (EMBEDDING_TEST_FIELDS.some((field) => field in changed)) {
+            if (CONNECTION_TEST_FIELDS.some((field) => field in changed)) {
               setEmbeddingTest(undefined);
+              setChatTestError(undefined);
+              if ('baseUrl' in changed || 'apiKey' in changed) {
+                setEmbedSupport('unknown');
+                setEmbeddingFieldError(undefined);
+              } else if ('embeddingModel' in changed) {
+                setEmbeddingFieldError(undefined);
+              } else if ('model' in changed) {
+                setChatTestError(undefined);
+              }
             }
           }}
         >
+          <Form.Item
+            name="baseUrl"
+            label={
+              <Space size={4}>
+                {formatMessage('aiBaseUrl')}
+                <HelpTooltip title={formatMessage('aiBaseUrlHint')} />
+              </Space>
+            }
+            rules={[{ required: true, type: 'url' }]}
+          >
+            <Input />
+          </Form.Item>
           <Form.Item
             name="apiKey"
             label={
@@ -236,88 +297,37 @@ const AIProviderConfigPanel = () => {
               autoComplete="new-password"
             />
           </Form.Item>
-          <Form.Item name="model" label={formatMessage('aiModel')}>
+          <Form.Item
+            name="model"
+            label={formatMessage('aiModel')}
+            validateStatus={chatTestError ? 'error' : undefined}
+            help={chatTestError}
+          >
             <Input placeholder="e.g. gpt-4o" maxLength={128} />
           </Form.Item>
           <Form.Item
-            name="baseUrl"
+            name="embeddingModel"
             label={
               <Space size={4}>
-                {formatMessage('aiBaseUrl')}
-                <HelpTooltip title={formatMessage('aiBaseUrlHint')} />
+                {formatMessage('aiEmbedModel')}
+                <HelpTooltip title={formatMessage('aiEmbedModelHint', { expected: 1536 })} />
               </Space>
             }
-            rules={[{ required: true, type: 'url' }]}
+            validateStatus={embeddingHelpIsError ? 'error' : undefined}
+            help={
+              embeddingHelpText ? (
+                <span className={embeddingHelpIsError ? styles.aiFieldError : styles.aiFieldHint}>
+                  {embeddingHelpText}
+                </span>
+              ) : undefined
+            }
           >
-            <Input />
+            <Input
+              placeholder="text-embedding-3-small"
+              maxLength={128}
+              disabled={!embeddingEnabled}
+            />
           </Form.Item>
-
-          <div className={styles.aiEmbeddingSection}>
-            <div className={styles.aiEmbeddingTitle}>{formatMessage('aiEmbedTitle')}</div>
-            <Alert type="info" showIcon message={formatMessage('aiEmbedIntro')} className={styles.aiEmbeddingIntro} />
-            <Form.Item name="embeddingMode" initialValue="inherit">
-              <Radio.Group>
-                <Radio value="inherit">{formatMessage('aiEmbedInherit')}</Radio>
-                <Radio value="custom">{formatMessage('aiEmbedCustom')}</Radio>
-              </Radio.Group>
-            </Form.Item>
-            {embeddingMode === 'inherit' && (
-              <p className={styles.aiEmbeddingNote}>{formatMessage('aiEmbedInheritNote')}</p>
-            )}
-            {embeddingMode === 'custom' && (
-              <>
-                <Form.Item
-                  name="embeddingBaseUrl"
-                  label={
-                    <Space size={4}>
-                      {formatMessage('aiBaseUrl')}
-                      <HelpTooltip title={formatMessage('aiBaseUrlHint')} />
-                    </Space>
-                  }
-                  rules={[{ required: true, type: 'url' }]}
-                >
-                  <Input />
-                </Form.Item>
-                <Form.Item
-                  name="embeddingApiKey"
-                  label={
-                    <Space size={4}>
-                      {formatMessage('aiKey')}
-                      <HelpTooltip title={formatMessage(config?.embeddingApiKeySet ? 'aiKeyUnchanged' : 'aiKeyHint')} />
-                    </Space>
-                  }
-                  rules={[{ required: !config?.embeddingApiKeySet }]}
-                >
-                  <Input.Password
-                    placeholder={config?.embeddingApiKeySet ? '••••••••••' : 'sk-********'}
-                    autoComplete="new-password"
-                  />
-                </Form.Item>
-              </>
-            )}
-            <Form.Item
-              name="embeddingModel"
-              label={
-                <Space size={4}>
-                  {formatMessage('aiEmbedModel')}
-                  <HelpTooltip title={formatMessage('aiEmbedModelHint', { expected: 1536 })} />
-                </Space>
-              }
-            >
-              <Input placeholder="text-embedding-3-small" maxLength={128} />
-            </Form.Item>
-            {!embeddingModel?.trim() && (
-              <Alert
-                type="warning"
-                showIcon
-                message={formatMessage('aiEmbedEmptyWarn')}
-                className={styles.aiEmbeddingIntro}
-              />
-            )}
-            <AuthButton auth={editAuth} loading={testingEmbedding} onClick={() => void testEmbedding()}>
-              {formatMessage('aiEmbedTest')}
-            </AuthButton>
-          </div>
 
           <div className={styles.aiConfigActions}>
             <AuthButton auth={editAuth} loading={testing} onClick={() => void testConnection()}>

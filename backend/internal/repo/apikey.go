@@ -32,6 +32,7 @@ type APIKey struct {
 func (APIKey) TableName() string { return "sys_api_key" }
 
 type APIKeyValidation struct {
+	ID           int64
 	OwnerID      int64
 	ResourceKeys []string
 	Name         string
@@ -270,7 +271,19 @@ func (r *APIKeyRepo) ValidateAPIKey(ctx context.Context, raw string) (int64, []s
 }
 
 func (r *APIKeyRepo) ValidateAPIKeyDetail(ctx context.Context, raw string) (APIKeyValidation, error) {
+	return r.validateAPIKeyDetail(ctx, "key_hash = ?", hashSecret(raw))
+}
+
+func (r *APIKeyRepo) ValidateAPIKeyByIDDetail(ctx context.Context, id int64) (APIKeyValidation, error) {
+	if id <= 0 {
+		return APIKeyValidation{}, ErrNotFound
+	}
+	return r.validateAPIKeyDetail(ctx, "id = ?", id)
+}
+
+func (r *APIKeyRepo) validateAPIKeyDetail(ctx context.Context, condition string, value any) (APIKeyValidation, error) {
 	var row struct {
+		ID           int64  `gorm:"column:id"`
 		OwnerID      int64  `gorm:"column:owner_id"`
 		ResourceKeys string `gorm:"column:resource_keys"`
 		Name         string `gorm:"column:name"`
@@ -278,18 +291,18 @@ func (r *APIKeyRepo) ValidateAPIKeyDetail(ctx context.Context, raw string) (APIK
 		OwnerType    string `gorm:"column:owner_type"`
 		Permission   string `gorm:"column:permission"`
 	}
-	keyHash := hashSecret(raw)
 	if err := r.db.WithContext(ctx).Table("sys_api_key").
-		Select("owner_id, resource_keys, name, key_prefix, owner_type, permission").
-		Where("key_hash = ? AND status = 1 AND deleted_time = 0", keyHash).
+		Select("id, owner_id, resource_keys, name, key_prefix, owner_type, permission").
+		Where(condition+" AND status = 1 AND deleted_time = 0", value).
 		Take(&row).Error; err != nil {
 		return APIKeyValidation{}, err
 	}
 	now := time.Now().UTC().UnixMilli()
 	_ = r.db.WithContext(ctx).Model(&APIKey{}).
-		Where("key_hash = ? AND deleted_time = 0", keyHash).
+		Where("id = ? AND deleted_time = 0", row.ID).
 		Update("last_used_time", now).Error
 	return APIKeyValidation{
+		ID:           row.ID,
 		OwnerID:      row.OwnerID,
 		ResourceKeys: splitCSV(row.ResourceKeys),
 		Name:         row.Name,

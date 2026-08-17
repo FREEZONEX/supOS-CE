@@ -40,5 +40,15 @@ func (r *IAMRepo) ListPlatformMemberRows(ctx context.Context, workspaceID int64)
 		Where("wu.workspace_id = ? AND wu.deleted_time = 0", workspaceID).
 		Order("wu.user_id ASC, ri.id ASC").
 		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	for index := range rows {
+		email, _, err := decryptUserContacts(rows[index].UserID, rows[index].Email, "")
+		if err != nil {
+			return nil, err
+		}
+		rows[index].Email = email
+	}
 	return rows, err
 }

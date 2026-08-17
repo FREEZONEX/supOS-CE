@@ -42,12 +42,10 @@ export const optGroup = async (params: { type?: number; bizId: string; id: strin
 };
 
 export const getGroupList = async (params?: Record<string, unknown>) => {
-  const type = normalizeType(params?.type);
   const keyword = String(params?.name || params?.keyword || '').trim();
 
   const resp = await coreApi.get('/flows', {
     params: {
-      flowType: flowTypeFor(type),
       parentId: 0,
       keyword,
     },

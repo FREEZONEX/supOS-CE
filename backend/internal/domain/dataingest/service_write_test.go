@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -73,6 +75,43 @@ func TestMetricPayloadRemainsSchemaDriven(t *testing.T) {
 	}
 	if len(payload) != 1 || payload["aaa"] != int64(123222333452) {
 		t.Fatalf("metric payload = %#v, want only schema field aaa", payload)
+	}
+}
+
+func TestMissingMetricColumnsSkipsExistingPhysicalColumns(t *testing.T) {
+	recordMappings := make([]metricFieldMapping, 0, 32)
+	for index := 1; index <= 32; index++ {
+		recordMappings = append(recordMappings, metricFieldMapping{
+			Field:        Field{Name: fmt.Sprintf("field_%d", index), Type: "float"},
+			SourceColumn: fmt.Sprintf("double_%d", index),
+		})
+	}
+	mappings := map[int64][]metricFieldMapping{
+		1: recordMappings,
+	}
+
+	missing := missingMetricColumns(mappings, []string{"_id", "DOUBLE_1"})
+	if len(missing) != 31 {
+		t.Fatalf("missing columns = %d, want 31", len(missing))
+	}
+	if _, ok := missing["double_1"]; ok {
+		t.Fatal("existing double_1 must not be returned as missing")
+	}
+	statements := metricColumnDDLStatements(mappings, []string{"_id", "DOUBLE_1"})
+	wantStatements := (31 + physicalDDLColumnBatch - 1) / physicalDDLColumnBatch
+	if len(statements) != wantStatements {
+		t.Fatalf("DDL statements = %d, want %d bounded batches", len(statements), wantStatements)
+	}
+	totalColumns := 0
+	for _, statement := range statements {
+		columnsInStatement := strings.Count(statement, "ADD COLUMN")
+		if columnsInStatement < 1 || columnsInStatement > physicalDDLColumnBatch {
+			t.Fatalf("DDL statement adds %d columns, want 1..%d: %s", columnsInStatement, physicalDDLColumnBatch, statement)
+		}
+		totalColumns += columnsInStatement
+	}
+	if totalColumns != 31 {
+		t.Fatalf("DDL columns = %d, want all 31 missing columns", totalColumns)
 	}
 }
 

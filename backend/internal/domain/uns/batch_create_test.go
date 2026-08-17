@@ -172,3 +172,36 @@ func TestWalkRejectsFolderCollidingWithExistingTopic(t *testing.T) {
 		t.Fatalf("created = %d, want 0", len(state.created))
 	}
 }
+
+func TestValidateImportExistingSystemFolderAllowsZeroTopicType(t *testing.T) {
+	tests := []struct {
+		name      string
+		topicType int16
+	}{
+		{name: "State", topicType: 1},
+		{name: "Action", topicType: 2},
+		{name: "Metric", topicType: 3},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			node := repo.UnsNode{Name: tt.name, Type: 1, TopicType: 0}
+			if err := validateImportExistingNode(node, "folder", true, tt.topicType); err != nil {
+				t.Fatalf("validateImportExistingNode() error = %v, want nil", err)
+			}
+			topic, parentTopicType := importExistingNodeTopicContext(node, "", tt.name, true, tt.topicType)
+			if topic != tt.name || parentTopicType != tt.topicType {
+				t.Fatalf("importExistingNodeTopicContext() = (%q, %d), want (%q, %d)", topic, parentTopicType, tt.name, tt.topicType)
+			}
+			if nodeType := importNodeTypeNameForParent("", parentTopicType); nodeType != "file" {
+				t.Fatalf("importNodeTypeNameForParent() = %q, want file for child of %s", nodeType, tt.name)
+			}
+		})
+	}
+}
+
+func TestValidateImportExistingSystemFolderRejectsConflictingTopicType(t *testing.T) {
+	node := repo.UnsNode{Name: "Metric", Type: 1, TopicType: 1}
+	if err := validateImportExistingNode(node, "folder", true, 3); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("validateImportExistingNode() error = %v, want ErrInvalid", err)
+	}
+}

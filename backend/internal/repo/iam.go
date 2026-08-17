@@ -173,12 +173,18 @@ func (sysWorkspaceUser) TableName() string { return "sys_workspace_user" }
 func (r *IAMRepo) GetUserByUsername(ctx context.Context, username string) (User, error) {
 	var user User
 	err := r.db.WithContext(ctx).Where("user_name = ? AND deleted_time = 0", username).Take(&user).Error
+	if err == nil {
+		user.Email, user.Phone, err = decryptUserContacts(user.ID, user.Email, user.Phone)
+	}
 	return user, err
 }
 
 func (r *IAMRepo) GetUserByID(ctx context.Context, userID int64) (User, error) {
 	var user User
 	err := r.db.WithContext(ctx).Where("user_id = ? AND deleted_time = 0", userID).Take(&user).Error
+	if err == nil {
+		user.Email, user.Phone, err = decryptUserContacts(user.ID, user.Email, user.Phone)
+	}
 	return user, err
 }
 
@@ -220,12 +226,16 @@ func (r *IAMRepo) ListUsers(ctx context.Context) ([]map[string]any, error) {
 	}
 	out := make([]map[string]any, 0, len(rows))
 	for _, r := range rows {
+		email, phone, err := decryptUserContacts(r.UserID, r.Email, r.Phone)
+		if err != nil {
+			return nil, err
+		}
 		out = append(out, map[string]any{
 			"userId":      r.UserID,
 			"userName":    r.UserName,
 			"nickName":    r.NickName,
-			"email":       r.Email,
-			"phone":       r.Phone,
+			"email":       email,
+			"phone":       phone,
 			"status":      r.Status,
 			"lastLogin":   r.LastLogin,
 			"isRandomPwd": r.IsRandomPwd,
@@ -256,6 +266,9 @@ func (r *IAMRepo) CreateUser(ctx context.Context, input UserCreate) (map[string]
 	var createdID int64
 	var role sysRoleInfo
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := lockUserEmailWrites(tx); err != nil {
+			return err
+		}
 		if err := tx.Where("id = ? AND deleted_time = 0", input.RoleID).Take(&role).Error; err != nil {
 			return err
 		}
@@ -266,13 +279,12 @@ func (r *IAMRepo) CreateUser(ctx context.Context, input UserCreate) (map[string]
 		if count > 0 {
 			return ErrUserAccountDuplicate
 		}
-		if email != "" {
-			if err := tx.Model(&sysUserInfo{}).Where("email = ? AND deleted_time = 0", email).Count(&count).Error; err != nil {
-				return err
-			}
-			if count > 0 {
-				return ErrUserEmailDuplicate
-			}
+		if err := ensureUserEmailAvailable(tx, email, 0); err != nil {
+			return err
+		}
+		encryptedEmail, encryptedPhone, err := encryptUserContactPair(email, phone)
+		if err != nil {
+			return err
 		}
 		userID, err := nextPersonalID(tx, "sys_user_info", "user_id")
 		if err != nil {
@@ -283,8 +295,8 @@ func (r *IAMRepo) CreateUser(ctx context.Context, input UserCreate) (map[string]
 			UserName:    username,
 			NickName:    nickName,
 			Password:    input.Password,
-			Email:       email,
-			Phone:       phone,
+			Email:       encryptedEmail,
+			Phone:       encryptedPhone,
 			Status:      status,
 			IsRandomPwd: false,
 		}
@@ -371,10 +383,19 @@ func (r *IAMRepo) UpdateUser(ctx context.Context, input UserUpdate) (map[string]
 	now := time.Now().UTC().UnixMilli()
 	ts := repoTimeFromMilli(now)
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := lockUserEmailWrites(tx); err != nil {
+			return err
+		}
 		var current sysUserInfo
 		if err := tx.Where("user_id = ? AND deleted_time = 0", input.UserID).Take(&current).Error; err != nil {
 			return err
 		}
+		plaintextEmail, plaintextPhone, decryptErr := decryptUserContacts(current.ID, current.Email, current.Phone)
+		if decryptErr != nil {
+			return decryptErr
+		}
+		current.Email = plaintextEmail
+		current.Phone = plaintextPhone
 		isSystemUser := strings.EqualFold(strings.TrimSpace(current.UserName), "tier0")
 		isSelfProfileUpdate := input.ActorID == input.UserID && !input.HasRole
 		if isSystemUser && !isSelfProfileUpdate {
@@ -410,20 +431,21 @@ func (r *IAMRepo) UpdateUser(ctx context.Context, input UserUpdate) (map[string]
 				return ErrUserAccountDuplicate
 			}
 		}
-		if email != "" && email != current.Email {
-			if err := tx.Model(&sysUserInfo{}).Where("email = ? AND user_id <> ? AND deleted_time = 0", email, input.UserID).Count(&count).Error; err != nil {
+		if email != current.Email {
+			if err := ensureUserEmailAvailable(tx, email, input.UserID); err != nil {
 				return err
 			}
-			if count > 0 {
-				return ErrUserEmailDuplicate
-			}
+		}
+		encryptedEmail, encryptedPhone, err := encryptUserContactPair(email, phone)
+		if err != nil {
+			return err
 		}
 		if err := tx.Model(&sysUserInfo{}).Where("user_id = ? AND deleted_time = 0", input.UserID).
 			Updates(touchByValues(map[string]any{
 				"user_name": username,
 				"nick_name": nickName,
-				"email":     email,
-				"phone":     phone,
+				"email":     encryptedEmail,
+				"phone":     encryptedPhone,
 				"status":    status,
 			}, input.ActorID, now)).Error; err != nil {
 			return err
@@ -551,6 +573,12 @@ func (r *IAMRepo) GetUserInfoMap(ctx context.Context, userID int64) (map[string]
 		Where("user_id = ? AND deleted_time = 0", userID).Take(&row).Error; err != nil {
 		return nil, err
 	}
+	plaintextEmail, plaintextPhone, err := decryptUserContacts(row.UserID, row.Email, row.Phone)
+	if err != nil {
+		return nil, err
+	}
+	row.Email = plaintextEmail
+	row.Phone = plaintextPhone
 	roleMap, err := r.userRoleLists(ctx, []int64{userID})
 	if err != nil {
 		return nil, err

@@ -117,6 +117,21 @@ func (r *FlowRepo) UpdateFlow(ctx context.Context, flow Flow) (Flow, error) {
 	return r.GetFlow(ctx, flow.ID)
 }
 
+// UpdateFlowConnectClient 回写 Flow 的 connect_client_id（导入 flow 补建本地 MQTT 凭证时使用）。
+func (r *FlowRepo) UpdateFlowConnectClient(ctx context.Context, id, connectClientID int64, userID int64) error {
+	now := time.Now().UTC().UnixMilli()
+	res := r.db.WithContext(ctx).Model(&Flow{}).
+		Where("id = ? AND deleted_time = 0", id).
+		Updates(touchByValues(map[string]any{"connect_client_id": connectClientID}, userID, now))
+	if res.Error != nil {
+		return normalizeDBError(res.Error)
+	}
+	if res.RowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (r *FlowRepo) MarkFlow(ctx context.Context, id int64, pinned bool, userID int64) (Flow, error) {
 	now := time.Now().UTC().UnixMilli()
 	sortKey := int64(0)
@@ -145,7 +160,18 @@ func (r *FlowRepo) MarkFlow(ctx context.Context, id int64, pinned bool, userID i
 func (r *FlowRepo) ListFlows(ctx context.Context, filter FlowFilter) ([]Flow, error) {
 	q := r.db.WithContext(ctx).Where("deleted_time = 0")
 	if filter.FlowType != 0 {
-		q = q.Where("flow_type = ?", filter.FlowType)
+		q = q.Where(`(
+			(node_type <> 1 AND flow_type = ?)
+			OR
+			(node_type = 1 AND EXISTS (
+				SELECT 1
+				FROM uns_nodered_flow AS flow_child
+				WHERE flow_child.deleted_time = 0
+					AND flow_child.parent_id = uns_nodered_flow.id
+					AND flow_child.node_type <> 1
+					AND flow_child.flow_type = ?
+			))
+		)`, filter.FlowType, filter.FlowType)
 	}
 	q = q.Where("parent_id = ?", filter.ParentID)
 	if kw := strings.TrimSpace(filter.Keyword); kw != "" {

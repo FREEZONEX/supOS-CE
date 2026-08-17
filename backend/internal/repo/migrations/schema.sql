@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS sys_user_info (
     user_name VARCHAR(60) NOT NULL,
     nick_name VARCHAR(60) NOT NULL DEFAULT '',
     password VARCHAR(128) NOT NULL,
-    email VARCHAR(255) NOT NULL DEFAULT '',
-    phone VARCHAR(32) NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    phone TEXT NOT NULL DEFAULT '',
     github_pid VARCHAR(128) NOT NULL DEFAULT '',
     google_pid VARCHAR(128) NOT NULL DEFAULT '',
     last_ip VARCHAR(128) NOT NULL DEFAULT '',
@@ -23,9 +23,8 @@ CREATE TABLE IF NOT EXISTS sys_user_info (
     deleted_time BIGINT NOT NULL DEFAULT 0
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_sys_user_info_tc_un ON sys_user_info(user_name, deleted_time);
-ALTER TABLE sys_user_info ADD COLUMN IF NOT EXISTS phone VARCHAR(32) NOT NULL DEFAULT '';
+ALTER TABLE sys_user_info ADD COLUMN IF NOT EXISTS phone TEXT NOT NULL DEFAULT '';
 DROP INDEX IF EXISTS idx_sys_user_info_tc_email;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_sys_user_info_tc_email ON sys_user_info(email, deleted_time) WHERE email <> '';
 
 CREATE TABLE IF NOT EXISTS sys_user_config (
     user_id BIGINT PRIMARY KEY,
@@ -267,7 +266,6 @@ CREATE TABLE IF NOT EXISTS sys_user_oper_log (
     code BIGINT NOT NULL DEFAULT 200,
     is_show_in_recent BIGINT NOT NULL DEFAULT 1,
     operator_name VARCHAR(100) NOT NULL DEFAULT '',
-    operator_email VARCHAR(200) NOT NULL DEFAULT '',
     created_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_sys_user_oper_log_created_time ON sys_user_oper_log(created_time DESC);

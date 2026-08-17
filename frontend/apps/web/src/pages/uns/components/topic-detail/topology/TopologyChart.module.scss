@@ -126,6 +126,18 @@
   }
 }
 
+.rf-node-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+
+  &:hover {
+    background-color: var(--ui-bg-color);
+    border-right-color: transparent;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+  }
+}
+
 .rf-node-text {
   display: flex;
   flex-direction: column;

@@ -168,6 +168,44 @@ const sourceFlows = async (keyword?: string) => {
   return result.data || [];
 };
 
+export const sourceFlowBindingPage = async (params?: Record<string, unknown>) => {
+  const rootResp = await coreApi.get('/flows', {
+    params: {
+      flowType: 'source',
+      parentId: 0,
+    },
+  });
+  const rootItems = (rootResp?.list || []).map(mapFlow);
+  const folders = rootItems.filter((item: any) => item.category === 'group');
+  const childResponses = await Promise.all(
+    folders.map((folder: any) =>
+      coreApi.get('/flows', {
+        params: {
+          flowType: 'source',
+          parentId: folder.id,
+        },
+      })
+    )
+  );
+  const keyword = String(params?.k || params?.keyword || '')
+    .trim()
+    .toLowerCase();
+  const allFlows = [
+    ...rootItems.filter((item: any) => item.category !== 'group'),
+    ...childResponses.flatMap((resp: any) => (resp?.list || []).map(mapFlow)),
+  ].filter((item: any) => {
+    if (item.category === 'group') return false;
+    if (!keyword) return true;
+    return [item.name, item.flowName, item.description].some((value) =>
+      String(value || '')
+        .toLowerCase()
+        .includes(keyword)
+    );
+  });
+  const uniqueFlows = Array.from(new Map(allFlows.map((item: any) => [String(item.id), item])).values());
+  return paginateFlowItems(sortFlowItems(uniqueFlows, params), params);
+};
+
 export const addFlow = async (data: any) => mapFlow(await coreApi.post('/flows', toPayload(data)));
 export const createFlow = async (data: any) => {
   const name = flowNameFromData(data);

@@ -173,27 +173,14 @@
   width: min(640px, 100%);
 }
 
-.aiEmbeddingSection {
-  margin-bottom: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--ui-line-color, #e0e0e0);
+.aiFieldHint {
+  color: var(--ui-access-gray-text, #7b7f86);
+  font-size: 12px;
+  line-height: 20px;
 }
 
-.aiEmbeddingTitle {
-  margin-bottom: 12px;
-  color: var(--ui-text-color);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 22px;
-}
-
-.aiEmbeddingIntro {
-  margin-bottom: 16px;
-}
-
-.aiEmbeddingNote {
-  margin: -8px 0 16px;
-  color: var(--ui-access-gray-text);
+.aiFieldError {
+  color: var(--ui-error-color, #d45b5b);
   font-size: 12px;
   line-height: 20px;
 }
@@ -202,7 +189,8 @@
   display: flex;
   justify-content: flex-start;
   gap: 8px;
-  padding-top: 4px;
+  margin-top: 12px;
+  padding-top: 16px;
 }
 
 .apiKeyFormModal {

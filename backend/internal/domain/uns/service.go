@@ -1292,14 +1292,7 @@ func (s *Service) importNamespaceTree(ctx context.Context, payload map[string]an
 					return err
 				}
 				skipped++
-				nextTopic := inheritedTopic
-				nextParentTopicType := int16(0)
-				if existing.TopicType != 0 {
-					nextTopic = topicTypeName(existing.TopicType)
-					nextParentTopicType = existing.TopicType
-				} else if topicType != "" {
-					nextTopic = topicType
-				}
+				nextTopic, nextParentTopicType := importExistingNodeTopicContext(existing, inheritedTopic, topicType, systemTopicFolder, systemTopicType)
 				if err := walk(item.Children, existing.ID, existing.Namespace, nextTopic, nextParentTopicType); err != nil {
 					return err
 				}
@@ -1619,10 +1612,27 @@ func validateImportExistingNode(node repo.UnsNode, nodeType string, systemTopicF
 	if node.Type != expectedType {
 		return ErrInvalid
 	}
-	if systemTopicFolder && node.TopicType != systemTopicType {
+	// Older trees kept State, Action, and Metric grouping folders at topic_type=0.
+	// Treat zero as unspecified while still rejecting a conflicting non-zero type.
+	if systemTopicFolder && node.TopicType != 0 && node.TopicType != systemTopicType {
 		return ErrInvalid
 	}
 	return nil
+}
+
+func importExistingNodeTopicContext(node repo.UnsNode, inheritedTopic, topicType string, systemTopicFolder bool, systemTopicType int16) (string, int16) {
+	if node.TopicType != 0 {
+		return topicTypeName(node.TopicType), node.TopicType
+	}
+	// Preserve the type inferred from the special folder name for child recursion
+	// without mutating the legacy folder row.
+	if systemTopicFolder && systemTopicType != 0 {
+		return topicTypeName(systemTopicType), systemTopicType
+	}
+	if topicType != "" {
+		return topicType, 0
+	}
+	return inheritedTopic, 0
 }
 
 func normalizeImportTopicType(value string) string {

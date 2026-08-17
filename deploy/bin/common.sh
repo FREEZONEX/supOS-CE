@@ -160,6 +160,10 @@ runtime_env_value() {
     index($0, k "=") == 1 {
       sub("^[^=]*=", "")
       sub(/\r$/, "")
+      if ((substr($0, 1, 1) == "\047" && substr($0, length($0), 1) == "\047") ||
+          (substr($0, 1, 1) == "\042" && substr($0, length($0), 1) == "\042")) {
+        $0 = substr($0, 2, length($0) - 2)
+      }
       print
       found = 1
       exit
@@ -167,6 +171,7 @@ runtime_env_value() {
     END { exit found ? 0 : 1 }
   ' "${RUNTIME_ENV_FILE}"
 }
+
 
 env_file_value() {
   local file="$1"
@@ -251,16 +256,14 @@ restore_runtime_env_from_volume() {
   if [[ -f "${RUNTIME_ENV_FILE}" || ! -f "${backup_file}" ]]; then
     return
   fi
-
   backup_project="$(env_file_value "${backup_file}" COMPOSE_PROJECT_NAME || true)"
   if [[ -n "${backup_project}" && "${backup_project}" != "${COMPOSE_PROJECT_NAME}" ]]; then
-    warn "runtime env backup belongs to compose project '${backup_project}', not '${COMPOSE_PROJECT_NAME}'; skipping ${backup_file}"
+    warn "ignoring runtime environment from another Compose project: ${backup_project}"
     return
   fi
-
   cp "${backup_file}" "${RUNTIME_ENV_FILE}"
   chmod 600 "${RUNTIME_ENV_FILE}" 2>/dev/null || true
-  install_detail "Restored runtime env from ${backup_file}"
+  install_detail "Restored runtime environment: ${backup_file}"
   load_runtime_defaults
 }
 

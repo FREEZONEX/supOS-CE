@@ -22,6 +22,7 @@ const (
 	metricTable            = "uns_timeserial"
 	sinkSchema             = "uns"
 	physicalDDLAdvisoryKey = "tier0.uns.physical.ensure"
+	physicalDDLColumnBatch = 4
 
 	metricIDColumn       = "_id"
 	metricTimeColumn     = "_timestamp"
@@ -225,60 +226,115 @@ func (w *SinkWriter) ensurePhysicalForRecords(ctx context.Context, records []Rec
 		}
 	}
 	aliases := sortedStringSet(aliasSet)
-	tx, err := w.pool.Begin(ctx)
-	if err != nil {
+	catalogNames := append([]string{metricTable}, aliases...)
+	var mappings map[int64][]metricFieldMapping
+	var existingMetricColumns []string
+	if err := w.runPhysicalDDLTransaction(ctx, func(tx pgx.Tx) error {
+		catalog, err := loadSinkRelationCatalog(ctx, tx, catalogNames)
+		if err != nil {
+			return err
+		}
+		mappings = metricMappings(metricRecords, catalog)
+		existingMetricColumns = append([]string(nil), catalog[metricTable].Columns...)
+		return nil
+	}); err != nil {
 		return nil, err
 	}
-	defer tx.Rollback(ctx)
-	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, physicalDDLAdvisoryKey); err != nil {
-		return nil, err
-	}
-	catalog, err := loadSinkRelationCatalog(ctx, tx, aliases)
-	if err != nil {
-		return nil, err
-	}
-	mappings := metricMappings(metricRecords, catalog)
-	batch := &pgx.Batch{}
 	if len(metricRecords) > 0 {
-		queueMetricColumns(batch, mappings)
-		queueMetricViews(batch, metricRecords, mappings)
-	}
-	queueEventAliasTables(batch, sortedStringSet(eventAliases), catalog)
-	if batch.Len() > 0 {
-		results := tx.SendBatch(ctx, batch)
-		var batchErr error
-		for i := 0; i < batch.Len(); i++ {
-			if _, err := results.Exec(); err != nil {
-				if batchErr == nil {
-					batchErr = err
-				}
+		for _, statement := range metricColumnDDLStatements(mappings, existingMetricColumns) {
+			statement := statement
+			if err := w.runPhysicalDDLTransaction(ctx, func(tx pgx.Tx) error {
+				_, err := tx.Exec(ctx, statement)
+				return err
+			}); err != nil {
+				return nil, err
 			}
 		}
-		closeErr := results.Close()
-		if batchErr != nil {
-			return nil, batchErr
-		}
-		if closeErr != nil {
-			return nil, closeErr
-		}
 	}
-	if err := tx.Commit(ctx); err != nil {
+	if err := w.runPhysicalDDLTransaction(ctx, func(tx pgx.Tx) error {
+		catalog, err := loadSinkRelationCatalog(ctx, tx, catalogNames)
+		if err != nil {
+			return err
+		}
+		batch := &pgx.Batch{}
+		if len(metricRecords) > 0 {
+			queueMetricViews(batch, metricRecords, mappings)
+		}
+		queueEventAliasTables(batch, sortedStringSet(eventAliases), catalog)
+		return executePhysicalDDLBatch(ctx, tx, batch)
+	}); err != nil {
 		return nil, err
 	}
 	return mappings, nil
 }
 
-func queueMetricColumns(batch *pgx.Batch, mappings map[int64][]metricFieldMapping) {
+func (w *SinkWriter) runPhysicalDDLTransaction(ctx context.Context, run func(pgx.Tx) error) error {
+	tx, err := w.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, physicalDDLAdvisoryKey); err != nil {
+		return err
+	}
+	if err := run(tx); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func executePhysicalDDLBatch(ctx context.Context, tx pgx.Tx, batch *pgx.Batch) error {
+	if batch.Len() == 0 {
+		return nil
+	}
+	results := tx.SendBatch(ctx, batch)
+	var batchErr error
+	for i := 0; i < batch.Len(); i++ {
+		if _, err := results.Exec(); err != nil && batchErr == nil {
+			batchErr = err
+		}
+	}
+	closeErr := results.Close()
+	if batchErr != nil {
+		return batchErr
+	}
+	return closeErr
+}
+
+func metricColumnDDLStatements(mappings map[int64][]metricFieldMapping, existingColumns []string) []string {
+	columns := missingMetricColumns(mappings, existingColumns)
+	names := sortedColumnNames(columns)
+	statements := make([]string, 0, (len(names)+physicalDDLColumnBatch-1)/physicalDDLColumnBatch)
+	for start := 0; start < len(names); start += physicalDDLColumnBatch {
+		end := min(start+physicalDDLColumnBatch, len(names))
+		clauses := make([]string, 0, end-start)
+		for _, column := range names[start:end] {
+			field := columns[column]
+			clauses = append(clauses, fmt.Sprintf(`ADD COLUMN IF NOT EXISTS %s %s NULL`,
+				quoteIdent(column), metricSQLType(column, field.Type)))
+		}
+		// TimescaleDB propagates every added column to every chunk. Bound the
+		// columns per statement to avoid the memory peak of one large ALTER while
+		// avoiding a full chunk-catalog traversal for every individual column.
+		statements = append(statements, fmt.Sprintf(`ALTER TABLE %s %s`,
+			sinkQualifiedName(metricTable), strings.Join(clauses, ", ")))
+	}
+	return statements
+}
+
+func missingMetricColumns(mappings map[int64][]metricFieldMapping, existingColumns []string) map[string]Field {
 	columns := metricColumns(mappings)
 	columns[metricFallbackColumn] = Field{Name: metricFallbackColumn, Type: "double"}
-	clauses := make([]string, 0, len(columns))
-	for _, column := range sortedColumnNames(columns) {
-		field := columns[column]
-		clauses = append(clauses, fmt.Sprintf(`ADD COLUMN IF NOT EXISTS %s %s NULL`, quoteIdent(column), metricSQLType(column, field.Type)))
+	existing := make(map[string]struct{}, len(existingColumns))
+	for _, column := range existingColumns {
+		existing[strings.ToLower(strings.TrimSpace(column))] = struct{}{}
 	}
-	if len(clauses) > 0 {
-		batch.Queue(fmt.Sprintf(`ALTER TABLE %s %s`, sinkQualifiedName(metricTable), strings.Join(clauses, ", ")))
+	for column := range columns {
+		if _, ok := existing[strings.ToLower(column)]; ok {
+			delete(columns, column)
+		}
 	}
+	return columns
 }
 
 func queueMetricViews(batch *pgx.Batch, records []Record, mappings map[int64][]metricFieldMapping) {

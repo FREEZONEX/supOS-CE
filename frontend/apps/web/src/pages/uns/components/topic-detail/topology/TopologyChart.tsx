@@ -10,12 +10,11 @@ import tdengine from '@/assets/home-icons/tdengine.png';
 import timescaleDB from '@/assets/home-icons/timescaleDB.svg';
 import { useBaseStore } from '@/stores/base';
 import { getSearchParamsString } from '@/utils';
-import { bindFlowForUns, createFlow, goFlow } from '@/apis/core-api/flow.ts';
+import { bindFlowForUns, createFlow, goFlow, sourceFlowBindingPage } from '@/apis/core-api/flow.ts';
 import { useNavigate } from 'react-router';
 import { useTranslate } from '@/hooks';
 import { getRefreshList, getSourceList } from '@/apis/chat2db';
 import Binding from '../binding/Binding.tsx';
-import { flowPage } from '@/apis/core-api/flow.ts';
 import {
   NodeRedDetail,
   MqttDetail,
@@ -79,7 +78,7 @@ function SourceFlowNode({ data, readOnly }: { data: TopologyNodeData; readOnly?:
             <div data-action="noNavigate" className={styles['rf-node-btn']}>
               <Binding
                 selectValue={data.bindId ? String(data.bindId) : undefined}
-                api={flowPage}
+                api={sourceFlowBindingPage}
                 onBinding={(item: any) =>
                   data.onBindingChange ? data.onBindingChange('nodeRed1', item) : Promise.resolve()
                 }
@@ -138,7 +137,12 @@ function DataBaseNode({ data, readOnly }: { data: TopologyNodeData; readOnly?: b
 
   return (
     <div className={styles['rf-node-wrap']}>
-      <div className={`${styles['rf-node']} ${data.active ? styles['rf-node-active'] : ''}`}>
+      <div
+        className={`${styles['rf-node']} ${!data.enabled ? styles['rf-node-disabled'] : ''} ${
+          data.active ? styles['rf-node-active'] : ''
+        }`}
+        aria-disabled={!data.enabled}
+      >
         <img
           src={isRelational ? postgresql : dataBaseType.includes('tdengine') ? tdengine : timescaleDB}
           alt=""
@@ -150,7 +154,7 @@ function DataBaseNode({ data, readOnly }: { data: TopologyNodeData; readOnly?: b
             {isRelational ? 'Relational DB' : dataBaseType.includes('tdengine') ? 'tdengine' : 'Database'}
           </span>
         </div>
-        {!readOnly && isRelational && systemInfo?.containerMap?.chat2db && (
+        {!readOnly && data.enabled && isRelational && systemInfo?.containerMap?.chat2db && (
           <div data-action="navigate" className={styles['rf-node-btn']}>
             <Launch {...titleIconProps} />
           </div>
@@ -328,7 +332,7 @@ const TopologyChart = ({ instanceInfo, getFileDetail, readOnly = false }: any) =
             })
             .catch(() => {});
         }
-      } else if (nodeId === 'database' && nodeData.dataType === 2) {
+      } else if (nodeId === 'database' && nodeData.enabled && nodeData.dataType === 2) {
         getSourceList().then((data: any) => {
           const sourceData = data?.data?.data?.find((i: any) => i.alias === '@postgresql');
           const loadData = (params: any) => {
@@ -358,7 +362,7 @@ const TopologyChart = ({ instanceInfo, getFileDetail, readOnly = false }: any) =
   );
 
   const selectTopologyNode = useCallback((node: TopologyNode) => {
-    if (node.id === 'eventFlow') {
+    if (node.id === 'eventFlow' || (node.id === 'database' && !node.data.enabled)) {
       return;
     }
 
@@ -534,7 +538,7 @@ const TopologyChart = ({ instanceInfo, getFileDetail, readOnly = false }: any) =
           <MqttDetail2 instanceInfo={instanceInfo} />
         </div>
       )}
-      {active === 'database' && (
+      {active === 'database' && Boolean(instanceInfo?.persistence || Number(instanceInfo?.enableHistory) === 1) && (
         <div className={styles['topology-detail']}>
           <DataBaseDetail instanceInfo={instanceInfo} />
         </div>

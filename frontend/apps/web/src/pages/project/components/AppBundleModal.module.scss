@@ -8,6 +8,12 @@
   margin-top: 16px;
 }
 
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .field-label {
   display: block;
   margin-bottom: 4px;

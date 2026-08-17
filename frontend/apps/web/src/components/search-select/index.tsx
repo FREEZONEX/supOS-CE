@@ -52,15 +52,16 @@ const SearchSelect: FC<SearchSelectProps> = ({ onSearchCallback, value, onChange
   ) : (
     <Space.Compact block className="page-search-compact">
       <ComSelect
+        autoFocus
         defaultOpen
         ref={selectRef}
         variant="filled"
         options={translatedMenuGroup}
         placeholder={formatMessage('common.searchPage')}
         style={{ width: 180, height: '100%', ...selectStyle }}
-        onChange={(_: any, options: any) => {
-          console.log(options);
-          handleNavigate(options);
+        onChange={(selectedValue: any) => {
+          const selectedItem = translatedMenuGroup?.find((item) => String(item.id) === String(selectedValue));
+          handleNavigate(selectedItem);
           setIcon(true);
         }}
         fieldNames={{

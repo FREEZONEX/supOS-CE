@@ -30,6 +30,7 @@ type SettingsTab = 'profile' | 'preferences' | 'security' | 'license';
 
 type AccountSettingsPanelProps = {
   activeTab?: SettingsTab;
+  embedded?: boolean;
 };
 
 const logout = (path?: string) => {
@@ -50,7 +51,7 @@ const maskLicenseKey = (licenseKey?: string) => {
   return `${licenseKey.slice(0, 5)}****${licenseKey.slice(-4)}`;
 };
 
-const AccountSettingsPanel = ({ activeTab = 'profile' }: AccountSettingsPanelProps) => {
+const AccountSettingsPanel = ({ activeTab = 'profile', embedded = false }: AccountSettingsPanelProps) => {
   const formatMessage = useTranslate();
   const { message } = App.useApp();
   const { currentUserInfo, systemInfo, menuGroup, pluginList } = useBaseStore((state) => ({
@@ -507,10 +508,14 @@ const AccountSettingsPanel = ({ activeTab = 'profile' }: AccountSettingsPanelPro
   if (activeTab === 'license') {
     return (
       <div className={`${styles['settings-panel']} ${styles['license-panel']}`}>
-        <div className={styles['panel-header']}>
-          <h1 className={styles['panel-title']}>{formatMessage('common.license')}</h1>
-          <div className={styles['panel-subtitle']}>{formatMessage('settings.licenseDesc')}</div>
-        </div>
+        {embedded ? (
+          <h2 className={styles['section-title']}>{formatMessage('common.license')}</h2>
+        ) : (
+          <div className={styles['panel-header']}>
+            <h1 className={styles['panel-title']}>{formatMessage('common.license')}</h1>
+            <div className={styles['panel-subtitle']}>{formatMessage('settings.licenseDesc')}</div>
+          </div>
+        )}
         <div className={styles['license-section']}>
           <div className={styles['license-row']}>
             <div className={styles['license-label']}>{formatMessage('license.licenseKey')}</div>

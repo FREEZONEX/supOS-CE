@@ -2,6 +2,7 @@ package outbox
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -23,6 +24,12 @@ func (s *Service) Enqueue(ctx context.Context, eventType, aggregateType, aggrega
 		return err
 	}
 	eventID := fmt.Sprintf("%s:%s:%d", eventType, aggregateID, time.Now().UTC().UnixNano())
+	// event_id 列为 VARCHAR(64)；aggregateID 较长时（如 UNS 异步任务的 36 位 jobKey）
+	// 组合 ID 会超长导致入队失败，超长时按既有约定（见 user_sync.go）退化为 sha256 摘要。
+	if len(eventID) > 64 {
+		digest := sha256.Sum256([]byte(eventID))
+		eventID = fmt.Sprintf("%x", digest[:])
+	}
 	return s.store.EnqueueOutbox(ctx, repo.OutboxEvent{
 		EventID:       eventID,
 		EventType:     eventType,

@@ -63,6 +63,13 @@ func (c *Client) SetString(ctx context.Context, key, value string, ttl time.Dura
 	return c.rdb.Set(ctx, key, value, ttl).Err()
 }
 
+func (c *Client) SetNX(ctx context.Context, key, value string, ttl time.Duration) (bool, error) {
+	if c == nil || c.rdb == nil {
+		return false, errors.New("redis not initialized")
+	}
+	return c.rdb.SetNX(ctx, key, value, ttl).Result()
+}
+
 func (c *Client) Del(ctx context.Context, keys ...string) error {
 	if len(keys) == 0 {
 		return nil

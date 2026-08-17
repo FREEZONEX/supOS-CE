@@ -40,9 +40,14 @@ type Store struct {
 	commonDB                 *gorm.DB
 	unsDB                    *gorm.DB
 	timeseriesRetentionYears int
+	userContactCipher        *userContactCipher
 }
 
 func Open(ctx context.Context, c config.DatabaseConf) (*Store, error) {
+	contactCipher, err := newUserContactCipher()
+	if err != nil {
+		return nil, err
+	}
 	commonDB, err := openPostgres(c.UnsDbUrl)
 	if err != nil {
 		return nil, err
@@ -61,10 +66,12 @@ func Open(ctx context.Context, c config.DatabaseConf) (*Store, error) {
 	}
 	commonConn = commonDB
 	unsConn = unsDB
+	activeUserContactCipher = contactCipher
 	return &Store{
 		commonDB:                 commonDB,
 		unsDB:                    unsDB,
 		timeseriesRetentionYears: config.NormalizeTimeseriesRetentionYears(c.TimeseriesRetentionYears),
+		userContactCipher:        contactCipher,
 	}, nil
 }
 
@@ -82,6 +89,14 @@ func openPostgres(dsn string) (*gorm.DB, error) {
 	}
 	sqlDB.SetMaxOpenConns(10)
 	return db, nil
+}
+
+// SetStoreForTest 覆盖包级连接 fallback（GetCommonConn/GetUnsConn 的后备连接），
+// 供测试基建（internal/testkit）把仓库查询注入到独立测试库。仅测试代码调用；
+// 不影响已打开 Store 实例自身的连接，也不接管其生命周期。
+func SetStoreForTest(common, uns *gorm.DB) {
+	commonConn = common
+	unsConn = uns
 }
 
 func GetCommonConn(in any) *gorm.DB {
@@ -157,6 +172,9 @@ func (s *Store) Close() {
 	if unsConn == s.unsDB {
 		unsConn = nil
 	}
+	if activeUserContactCipher == s.userContactCipher {
+		activeUserContactCipher = nil
+	}
 }
 
 func (s *Store) Ping(ctx context.Context) error {
@@ -193,6 +211,9 @@ func (s *Store) Migrate(ctx context.Context) error {
 		return err
 	}
 	if err := s.runVersionedMigrations(ctx, "sink", s.UnsDB(), "migrations/versions/sink"); err != nil {
+		return err
+	}
+	if err := s.migrateUserContacts(ctx); err != nil {
 		return err
 	}
 	return s.syncTimeseriesRetentionPolicy(ctx)

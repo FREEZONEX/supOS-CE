@@ -46,6 +46,14 @@ export const fetchMergedAllFlows = async (params?: Record<string, unknown>) => {
     ...(sourceResp?.data || []).map((item: any) => ({ ...item, flowKind: 'source' as const })),
     ...(eventResp?.data || []).map((item: any) => ({ ...item, flowKind: 'event' as const })),
   ];
-  const sorted = sortFlowListItems(merged, params);
+  const unique = Array.from(
+    new Map(
+      merged.map((item: any) => [
+        item.category === 'group' ? `group-${item.id}` : `${item.flowKind || 'source'}-${item.id}`,
+        item,
+      ])
+    ).values()
+  );
+  const sorted = sortFlowListItems(unique, params);
   return paginateMergedFlows(sorted, params);
 };

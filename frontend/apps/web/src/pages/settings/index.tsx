@@ -3,6 +3,7 @@ import { Api, CloudServices, User } from '@carbon/icons-react';
 import AccountManagement from '@/pages/account-management';
 import OpenData from '@/pages/open-data';
 import AIProviderConfigPanel from '@/pages/open-data/AIProviderConfigPanel';
+import SystemConfiguration from '@/pages/system-configuration';
 import { useTranslate } from '@/hooks';
 import { useBaseStore } from '@/stores/base';
 import { isLaunchpadStandalonePort } from '@/utils/launchpad-site';
@@ -13,8 +14,10 @@ import styles from './index.module.scss';
 type SettingsItem = {
   key: string;
   labelKey: string;
+  labelFallback?: string;
   path: string;
   resourceKey?: string;
+  superAdminOnly?: boolean;
   accessUris?: string[];
   icon?: ReactNode;
   render: (title: string) => ReactNode;
@@ -70,12 +73,6 @@ const SettingsPage = () => {
         icon: <Api size={16} />,
         items: [
           {
-            key: 'license',
-            labelKey: 'common.license',
-            path: '/settings/license',
-            render: () => <AccountSettingsPanel activeTab="license" />,
-          },
-          {
             key: 'api-keys',
             labelKey: 'menu.apiKey',
             path: '/settings/api-keys',
@@ -103,6 +100,13 @@ const SettingsPage = () => {
         icon: <CloudServices size={16} />,
         items: [
           {
+            key: 'system-configuration',
+            labelKey: 'settings.systemConfig',
+            path: '/settings/system-configuration',
+            superAdminOnly: true,
+            render: (title) => <SystemConfiguration title={title} />,
+          },
+          {
             key: 'users',
             labelKey: 'UserManagement',
             path: '/settings/users',
@@ -127,6 +131,7 @@ const SettingsPage = () => {
       items: group.items.filter(
         (item) =>
           !hiddenSettingsItemKeys.has(item.key) &&
+          (!item.superAdminOnly || currentUserInfo?.superAdmin) &&
           canAccess(item, pageUris, currentUserInfo?.superAdmin, systemInfo?.authEnable)
       ),
     }))
@@ -158,7 +163,7 @@ const SettingsPage = () => {
                 className={item.key === activeItem?.key ? `${styles['nav-item']} ${styles.active}` : styles['nav-item']}
                 onClick={() => navigate(item.path)}
               >
-                {formatMessage(item.labelKey)}
+                {formatMessage(item.labelKey, {}, item.labelFallback)}
               </button>
             ))}
           </div>
@@ -168,12 +173,12 @@ const SettingsPage = () => {
         <div className={styles['content-inner']}>
           <div
             className={
-              activeItem?.resourceKey
+              activeItem?.resourceKey || isPlatformItem
                 ? `${styles['embedded-page']} ${isPlatformItem ? styles['platform-embedded-page'] : ''}`
                 : `${styles['embedded-page']} ${styles['settings-account-page']}`
             }
           >
-            {activeItem?.render(formatMessage(activeItem.labelKey))}
+            {activeItem?.render(formatMessage(activeItem.labelKey, {}, activeItem.labelFallback))}
           </div>
         </div>
       </main>

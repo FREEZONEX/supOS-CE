@@ -125,7 +125,7 @@ type AuditLog struct {
 	Code             int64     `gorm:"column:code;type:BIGINT;not null;default:200" json:"code"`
 	IsShowInRecent   int64     `gorm:"column:is_show_in_recent;type:BIGINT;not null;default:1" json:"isShowInRecent"`
 	OperatorName     string    `gorm:"column:operator_name;type:VARCHAR(100)" json:"operatorName"`
-	OperatorEmail    string    `gorm:"column:operator_email;type:VARCHAR(200)" json:"operatorEmail"`
+	OperatorEmail    string    `gorm:"-" json:"operatorEmail"`
 	CreatedTime      time.Time `gorm:"column:created_time;type:TIMESTAMPTZ;index;not null;default:CURRENT_TIMESTAMP" json:"-"`
 
 	OperatorID   string `gorm:"-" json:"operatorId"`
@@ -147,12 +147,13 @@ type AuditLogFilter struct {
 	ResID            string
 	BusinessTypeCode int64
 	OperatorKeyword  string
+	OperatorUserIDs  []int64
 	Code             *int
 	StartTime        int64
 	EndTime          int64
 }
 
-const auditSelect = "id, user_id, res_type, res_id, res_name, business_type, detail, code, is_show_in_recent, operator_name, operator_email, created_time"
+const auditSelect = "id, user_id, res_type, res_id, res_name, business_type, detail, code, is_show_in_recent, operator_name, created_time"
 
 func AuditBusinessTypeCode(value string) int64 {
 	value = strings.TrimSpace(value)
@@ -187,6 +188,11 @@ func (r *AuditRepo) ListAuditLogs(ctx context.Context, filter AuditLogFilter) ([
 	if pageSize > 200 {
 		pageSize = 200
 	}
+	operatorUserIDs, err := r.userIDsMatchingEmail(ctx, filter.OperatorKeyword)
+	if err != nil {
+		return nil, 0, err
+	}
+	filter.OperatorUserIDs = operatorUserIDs
 
 	var total int64
 	if err := applyAuditFilter(r.db.WithContext(ctx).Model(&AuditLog{}), filter).Count(&total).Error; err != nil {
@@ -195,8 +201,11 @@ func (r *AuditRepo) ListAuditLogs(ctx context.Context, filter AuditLogFilter) ([
 
 	var out []AuditLog
 	q := applyAuditFilter(r.db.WithContext(ctx).Model(&AuditLog{}).Select(auditSelect), filter)
-	err := q.Order("created_time DESC, id DESC").Limit(pageSize).Offset((pageNo - 1) * pageSize).Find(&out).Error
+	err = q.Order("created_time DESC, id DESC").Limit(pageSize).Offset((pageNo - 1) * pageSize).Find(&out).Error
 	if err != nil {
+		return nil, 0, err
+	}
+	if err := r.attachOperatorEmails(ctx, out); err != nil {
 		return nil, 0, err
 	}
 	normalizeAuditLogs(out)
@@ -207,6 +216,11 @@ func (r *AuditRepo) GetAuditLog(ctx context.Context, id int64) (AuditLog, error)
 	var item AuditLog
 	err := r.db.WithContext(ctx).Model(&AuditLog{}).Select(auditSelect).Where("id = ?", id).Take(&item).Error
 	if err == nil {
+		items := []AuditLog{item}
+		if attachErr := r.attachOperatorEmails(ctx, items); attachErr != nil {
+			return AuditLog{}, attachErr
+		}
+		item = items[0]
 		normalizeAuditLog(&item)
 	}
 	return item, err
@@ -230,6 +244,9 @@ func (r *AuditRepo) ListRecentAuditLogs(ctx context.Context, userID int64, limit
 	}
 	err := query.Order("created_time DESC, id DESC").Limit(limit).Find(&out).Error
 	if err != nil {
+		return nil, err
+	}
+	if err := r.attachOperatorEmails(ctx, out); err != nil {
 		return nil, err
 	}
 	normalizeAuditLogs(out)
@@ -262,7 +279,6 @@ func (r *AuditRepo) InsertAuditLog(ctx context.Context, item AuditLog) error {
 		"code":              item.Code,
 		"is_show_in_recent": item.IsShowInRecent,
 		"operator_name":     truncateAuditField(item.OperatorName, 100),
-		"operator_email":    truncateAuditField(item.OperatorEmail, 200),
 		"created_time":      item.CreatedTime,
 	}).Error
 }
@@ -279,7 +295,11 @@ func applyAuditFilter(db *gorm.DB, f AuditLogFilter) *gorm.DB {
 	}
 	if kw := strings.TrimSpace(f.OperatorKeyword); kw != "" {
 		like := "%" + kw + "%"
-		db = db.Where("(operator_name ILIKE ? OR operator_email ILIKE ? OR CAST(user_id AS TEXT) ILIKE ?)", like, like, like)
+		if len(f.OperatorUserIDs) > 0 {
+			db = db.Where("(operator_name ILIKE ? OR CAST(user_id AS TEXT) ILIKE ? OR user_id IN ?)", like, like, f.OperatorUserIDs)
+		} else {
+			db = db.Where("(operator_name ILIKE ? OR CAST(user_id AS TEXT) ILIKE ?)", like, like)
+		}
 	}
 	if f.Code != nil {
 		db = db.Where("code = ?", *f.Code)
@@ -291,6 +311,73 @@ func applyAuditFilter(db *gorm.DB, f AuditLogFilter) *gorm.DB {
 		db = db.Where("created_time <= ?", time.UnixMilli(f.EndTime))
 	}
 	return db
+}
+
+func (r *AuditRepo) userIDsMatchingEmail(ctx context.Context, keyword string) ([]int64, error) {
+	keyword = strings.ToLower(strings.TrimSpace(keyword))
+	if keyword == "" {
+		return nil, nil
+	}
+	type row struct {
+		UserID int64  `gorm:"column:user_id"`
+		Email  string `gorm:"column:email"`
+	}
+	var rows []row
+	if err := r.db.WithContext(ctx).Table("sys_user_info").Select("user_id, email").Where("email <> ''").Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	userIDs := make([]int64, 0)
+	for _, item := range rows {
+		email, _, err := decryptUserContacts(item.UserID, item.Email, "")
+		if err != nil {
+			return nil, err
+		}
+		if strings.Contains(strings.ToLower(email), keyword) {
+			userIDs = append(userIDs, item.UserID)
+		}
+	}
+	return userIDs, nil
+}
+
+func (r *AuditRepo) attachOperatorEmails(ctx context.Context, items []AuditLog) error {
+	if len(items) == 0 {
+		return nil
+	}
+	userIDs := make([]int64, 0, len(items))
+	seen := make(map[int64]struct{}, len(items))
+	for _, item := range items {
+		if item.UserID <= 0 {
+			continue
+		}
+		if _, ok := seen[item.UserID]; ok {
+			continue
+		}
+		seen[item.UserID] = struct{}{}
+		userIDs = append(userIDs, item.UserID)
+	}
+	if len(userIDs) == 0 {
+		return nil
+	}
+	type row struct {
+		UserID int64  `gorm:"column:user_id"`
+		Email  string `gorm:"column:email"`
+	}
+	var rows []row
+	if err := r.db.WithContext(ctx).Table("sys_user_info").Select("user_id, email").Where("user_id IN ?", userIDs).Scan(&rows).Error; err != nil {
+		return err
+	}
+	emails := make(map[int64]string, len(rows))
+	for _, item := range rows {
+		email, _, err := decryptUserContacts(item.UserID, item.Email, "")
+		if err != nil {
+			return err
+		}
+		emails[item.UserID] = email
+	}
+	for index := range items {
+		items[index].OperatorEmail = emails[items[index].UserID]
+	}
+	return nil
 }
 
 func normalizeAuditLogs(items []AuditLog) {

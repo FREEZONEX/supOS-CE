@@ -227,6 +227,57 @@ func (g *HTTPGateway) tryGatewayRoute(w http.ResponseWriter, r *http.Request) bo
 	return false
 }
 
+// nodeRedAdminAPIPrefixes 是 Node-RED Admin API 的固定首段路径（Node-RED 官方定义，4.x 含 plugins/locales/resources）。
+// /flow/{source|event}/** 网关路由只放开 http in 节点接口，这些 Admin 路径一律拦截。
+// 注意：不含 node（Node-RED 无独立 /node 路由，避免误伤用户 http in 如 /node/health）；
+// debug 是 Admin 路由（debug 节点 emit/clear），保留。
+var nodeRedAdminAPIPrefixes = []string{
+	"flows", "flow", "nodes", "settings", "comms", "auth", "credentials",
+	"context", "debug", "palette", "editor", "info", "theme",
+	"diagnostics", "icons", "library", "history", "preview", "projects",
+	"runtime", "version", "plugins", "locales", "resources",
+}
+
+// isFlowAPIProxyRoute 判断路由是否为 App 访问 Node-RED 原生接口的 /flow/{source|event}/** 路由。
+func isFlowAPIProxyRoute(route repo.GatewayRoute) bool {
+	return strings.HasPrefix(route.PathPattern, "/flow/source/") ||
+		strings.HasPrefix(route.PathPattern, "/flow/event/")
+}
+
+// isNodeRedAdminPath 判断 /flow/{source|event}/<path> 的 <path> 首段是否为 Node-RED Admin API。
+// 大小写不敏感（Node-RED 的 Express router 默认大小写不敏感，/Flows 也会命中 /flows）。
+// 空 suffix（/flow/source/ 或 /flow/event/）视为 Admin（会代理到 Node-RED 根路径 editor 页面）→ true。
+// 例：/flow/source/flows -> "flows" -> true；/flow/source/Flows -> "flows" -> true；
+//
+//	/flow/source/api/custom -> "api" -> false。
+func isNodeRedAdminPath(path string) bool {
+	rest := path
+	for _, prefix := range []string{"/flow/source/", "/flow/event/"} {
+		if strings.HasPrefix(rest, prefix) {
+			rest = strings.TrimPrefix(rest, prefix)
+			break
+		}
+	}
+	// 非 /flow/{source|event}/ 前缀不算 Admin 路径
+	if rest == path {
+		return false
+	}
+	// 空 suffix（/flow/source/ 或 /flow/event/ 尾斜杠）→ editor 根页面，拒绝
+	if rest == "" {
+		return true
+	}
+	first := strings.ToLower(strings.Trim(rest, "/"))
+	if i := strings.IndexByte(first, '/'); i >= 0 {
+		first = first[:i]
+	}
+	for _, p := range nodeRedAdminAPIPrefixes {
+		if first == p {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *HTTPGateway) authorizeRoute(w http.ResponseWriter, r *http.Request, route repo.GatewayRoute) bool {
 	switch route.AuthPolicy {
 	case "public":
@@ -235,6 +286,41 @@ func (g *HTTPGateway) authorizeRoute(w http.ResponseWriter, r *http.Request, rou
 		subject, err := g.auth.AuthenticateRequest(r)
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return false
+		}
+		allowed, required, err := g.permission.Allow(r.Context(), subject, "gateway", r.Method, r.URL.Path)
+		if err != nil {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return false
+		}
+		if allowed {
+			return true
+		}
+		if required != "" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return false
+		}
+		if route.ResourceKey != "" {
+			if !contextx.HasResource(subject, route.ResourceKey) {
+				http.Error(w, "forbidden", http.StatusForbidden)
+				return false
+			}
+			return true
+		}
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return false
+	case "apikey":
+		// API key 鉴权：用于 App 直接访问 Node-RED 自身接口（/flow/{source|event}/**）。
+		// 复用 OpenAPI 的 API key 解析（兼容 SDK 双头：Authorization: Bearer + X-API-Key）。
+		subject, err := g.auth.AuthenticateAPIKey(r.Context(), auth.APIKeyFromRequest(r))
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return false
+		}
+		// 收窄策略：/flow/{source|event}/** 只放开 http in 节点接口，
+		// 拦截 Node-RED Admin API 固定路径（/flows /flow /nodes /settings /comms 等）。
+		if isFlowAPIProxyRoute(route) && isNodeRedAdminPath(r.URL.Path) {
+			http.Error(w, "forbidden: node-red admin api not allowed", http.StatusForbidden)
 			return false
 		}
 		allowed, required, err := g.permission.Allow(r.Context(), subject, "gateway", r.Method, r.URL.Path)

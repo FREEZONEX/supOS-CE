@@ -45,6 +45,7 @@ const ReplaceAppModal = forwardRef<ReplaceAppModalRef, ReplaceAppModalProps>(({ 
   const [saveLoading, setSaveLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [appIdMismatch, setAppIdMismatch] = useState(false);
+  const [versionNotIncreased, setVersionNotIncreased] = useState(false);
   const [deployedAppId, setDeployedAppId] = useState<string>();
   const [deployStatus, setDeployStatus] = useState<string>();
   const [deployError, setDeployError] = useState<string>();
@@ -76,6 +77,7 @@ const ReplaceAppModal = forwardRef<ReplaceAppModalRef, ReplaceAppModalProps>(({ 
     setSaveLoading(false);
     setUploadError('');
     setAppIdMismatch(false);
+    setVersionNotIncreased(false);
     setDeployedAppId(undefined);
     setDeployStatus(undefined);
     setDeployError(undefined);
@@ -146,6 +148,11 @@ const ReplaceAppModal = forwardRef<ReplaceAppModalRef, ReplaceAppModalProps>(({ 
       // 不一致时硬阻断；workspaceId/projectId 仅记录不参与校验。
       // 目标应用未记录来源身份（手工创建/旧数据）时不预校验，交给后端裁决。
       setAppIdMismatch(Boolean(targetApp.sourceAppId) && meta.appId !== targetApp.sourceAppId);
+      // 版本检查：参考 SaaS 规则（版本为递增整数），包内版本低于或等于当前版本时仅警告、不阻断。
+      // 当前应用版本缺失或无法解析为数字时跳过比较。
+      const currentVersion = Number(targetApp.version);
+      const hasCurrentVersion = targetApp.version !== '' && !Number.isNaN(currentVersion);
+      setVersionNotIncreased(meta.version !== undefined && hasCurrentVersion && meta.version <= currentVersion);
       setBundleMeta(meta);
       return contents;
     },
@@ -225,6 +232,7 @@ const ReplaceAppModal = forwardRef<ReplaceAppModalRef, ReplaceAppModalProps>(({ 
     setBundleMeta(undefined);
     setUploadedFileInfo(null);
     setAppIdMismatch(false);
+    setVersionNotIncreased(false);
     setIconAssetId(undefined);
     setCoverAssetId(undefined);
     setIconUrl(undefined);
@@ -429,6 +437,7 @@ const ReplaceAppModal = forwardRef<ReplaceAppModalRef, ReplaceAppModalProps>(({ 
             setBundleMeta(undefined);
             setUploadError('');
             setAppIdMismatch(false);
+            setVersionNotIncreased(false);
             setIconAssetId(undefined);
             setCoverAssetId(undefined);
             setIconUrl(undefined);
@@ -446,8 +455,21 @@ const ReplaceAppModal = forwardRef<ReplaceAppModalRef, ReplaceAppModalProps>(({ 
           showIcon
           message={formatMessage(
             'project.replace.appIdMismatchBlock',
-            {},
+            { bundleAppId: bundleMeta?.appId ?? '', currentAppId: String(targetApp?.appId ?? '') },
             'The App ID in the package does not match the current App and cannot be replaced.'
+          )}
+        />
+      ) : null}
+
+      {versionNotIncreased ? (
+        <Alert
+          className={styles['identity-warning']}
+          type="warning"
+          showIcon
+          message={formatMessage(
+            'project.replace.versionNotIncreased',
+            { bundleVersion: String(bundleMeta?.version ?? ''), currentVersion: targetApp?.version ?? '' },
+            'The package version is not higher than the current App version. The version will not increase after replacement.'
           )}
         />
       ) : null}
@@ -463,6 +485,20 @@ const ReplaceAppModal = forwardRef<ReplaceAppModalRef, ReplaceAppModalProps>(({ 
               maxLength={64}
               disabled={uploading || saveLoading}
             />
+          </div>
+          <div className={bundleStyles['meta-grid']}>
+            <div>
+              <label className={bundleStyles['field-label']}>
+                {formatMessage('project.replace.bundleAppId', {}, 'Bundle App ID')}
+              </label>
+              <Input value={bundleMeta.appId} disabled />
+            </div>
+            <div>
+              <label className={bundleStyles['field-label']}>
+                {formatMessage('project.replace.bundleVersion', {}, 'Bundle Version')}
+              </label>
+              <Input value={bundleMeta.version !== undefined ? String(bundleMeta.version) : ''} disabled />
+            </div>
           </div>
           <div>
             <label className={bundleStyles['field-label']}>{formatMessage('common.description')}</label>

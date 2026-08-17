@@ -40,7 +40,11 @@ func (s *Store) Seed(ctx context.Context, security config.SecurityConf, gateway 
 		}
 		builderRoleID := builderRole.ID
 
-		builderUser := sysUserInfo{UserName: "tier0", NickName: "Admin", Password: string(passwordHash), Email: "tier0@example.com", Status: 1, IsRandomPwd: false}
+		builderEmail, err := encryptUserContact(userContactFieldEmail, "tier0@example.com")
+		if err != nil {
+			return err
+		}
+		builderUser := sysUserInfo{UserName: "tier0", NickName: "Admin", Password: string(passwordHash), Email: builderEmail, Status: 1, IsRandomPwd: false}
 		builderUser.CreatedTime = ts
 		builderUser.UpdatedTime = ts
 		if err := tx.Clauses(clause.OnConflict{
@@ -441,6 +445,8 @@ func seedActions() []ResourceAction {
 		{ResourceID: 300, ActionType: "gateway", ActionValue: "/eventflow/home/flows", Methods: "GET,HEAD"},
 		{ResourceID: 300, ActionType: "gateway", ActionValue: "/nodered/**", Methods: "GET"},
 		{ResourceID: 300, ActionType: "gateway", ActionValue: "/eventflow/**", Methods: "GET"},
+		{ResourceID: 300, ActionType: "gateway", ActionValue: "/flow/source/**", Methods: "GET,HEAD"},
+		{ResourceID: 300, ActionType: "gateway", ActionValue: "/flow/event/**", Methods: "GET,HEAD"},
 		{ResourceID: 310, ActionType: "api", ActionValue: "/api/core/flows", Methods: "POST"},
 		{ResourceID: 310, ActionType: "api", ActionValue: "/api/core/flows/**", Methods: "PUT,DELETE,POST"},
 		{ResourceID: 310, ActionType: "openapi", ActionValue: "/openapi/v1/flow/create", Methods: "POST"},
@@ -471,6 +477,8 @@ func seedActions() []ResourceAction {
 		{ResourceID: 310, ActionType: "ui", ActionValue: "button:EventFlow.moveToGroup"},
 		{ResourceID: 310, ActionType: "gateway", ActionValue: "/nodered/**", Methods: "POST,PUT,DELETE,PATCH"},
 		{ResourceID: 310, ActionType: "gateway", ActionValue: "/eventflow/**", Methods: "POST,PUT,DELETE,PATCH"},
+		{ResourceID: 310, ActionType: "gateway", ActionValue: "/flow/source/**", Methods: "POST,PUT,DELETE,PATCH"},
+		{ResourceID: 310, ActionType: "gateway", ActionValue: "/flow/event/**", Methods: "POST,PUT,DELETE,PATCH"},
 		{ResourceID: 500, ActionType: "openapi", ActionValue: "/openapi/v1/auth/whoami", Methods: "POST"},
 		{ResourceID: 500, ActionType: "openapi", ActionValue: "/openapi/v1/info", Methods: "POST"},
 		{ResourceID: 700, ActionType: "api", ActionValue: "/api/core/assets", Methods: "POST"},

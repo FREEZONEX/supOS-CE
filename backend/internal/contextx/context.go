@@ -7,6 +7,7 @@ type Subject struct {
 	UserName     string
 	Email        string
 	AuthType     string
+	APIKeyID     int64
 	APIKeyName   string
 	APIKeyPrefix string
 	KeyType      string

@@ -79,6 +79,7 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
   const [appName, setAppName] = useState('');
   const [appDescription, setAppDescription] = useState('');
   const [bundleAppId, setBundleAppId] = useState<string>();
+  const [bundleVersion, setBundleVersion] = useState<number>();
   const [iconAssetId, setIconAssetId] = useState<number>();
   const [coverAssetId, setCoverAssetId] = useState<number>();
   const [iconUrl, setIconUrl] = useState<string>();
@@ -314,6 +315,7 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
     setAppName('');
     setAppDescription('');
     setBundleAppId(undefined);
+    setBundleVersion(undefined);
     setIconAssetId(undefined);
     setCoverAssetId(undefined);
     setIconUrl(undefined);
@@ -485,6 +487,7 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
     setAppName('');
     setAppDescription('');
     setBundleAppId(undefined);
+    setBundleVersion(undefined);
     setIconAssetId(undefined);
     setCoverAssetId(undefined);
     setIconUrl(undefined);
@@ -495,11 +498,13 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
     try {
       contents = await readAppBundleContents(file);
       setBundleAppId(contents.meta.appId);
+      setBundleVersion(contents.meta.version);
       setAppName((contents.meta.name || fallbackName).slice(0, 64));
       setAppDescription((contents.meta.description || '').slice(0, 200));
     } catch {
       // 兼容没有标准 meta.json 的旧包，名称继续沿用文件名回退规则。
       setBundleAppId(undefined);
+      setBundleVersion(undefined);
       setAppName(fallbackName.slice(0, 64));
       setAppDescription('');
     }
@@ -544,14 +549,25 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
     [appDescription, appName, coverAssetId, iconAssetId, projectId]
   );
 
-  // 同项目已存在相同 App ID 的应用时的替换确认弹窗（客户端预查与服务端 replaceRequired 兜底共用）
+  // 同项目已存在相同 App ID 的应用（matchedApp），替换确认弹窗带包内 appId 与已有应用来源 appId 的差异
+  const matchedApp = bundleAppId ? (existingApps ?? []).find((app) => app.sourceAppId === bundleAppId) : undefined;
+  // 版本未增加提醒：参考 SaaS 规则（版本为递增整数），包内版本低于或等于当前应用版本时仅警告、不阻断。
+  // 当前应用版本缺失或无法解析为数字时跳过比较。
+  const currentVersion = Number(matchedApp?.version);
+  const versionNotIncreased =
+    bundleVersion !== undefined &&
+    matchedApp !== undefined &&
+    matchedApp.version !== '' &&
+    !Number.isNaN(currentVersion) &&
+    bundleVersion <= currentVersion;
+
   const confirmReplace = () =>
     new Promise<boolean>((resolve) => {
       openConfirmModal(modal, {
         title: formatMessage('project.replace.title', {}, 'Replace App'),
         content: formatMessage(
           'project.importApp.replaceConfirm',
-          {},
+          { bundleAppId: bundleAppId ?? '' },
           'An app with the same App ID already exists in this project. Replace and update it?'
         ),
         okText: formatMessage('common.confirm'),
@@ -590,8 +606,6 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
       }
       return;
     }
-
-    const matchedApp = bundleAppId ? (existingApps ?? []).find((app) => app.sourceAppId === bundleAppId) : undefined;
 
     if (matchedApp) {
       // 同项目已存在相同 App ID 的应用：确认后改走覆盖更新（替换接口），
@@ -790,6 +804,7 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
             setAppName('');
             setAppDescription('');
             setBundleAppId(undefined);
+            setBundleVersion(undefined);
             setIconAssetId(undefined);
             setCoverAssetId(undefined);
             setIconUrl(undefined);
@@ -853,6 +868,20 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
               disabled={uploading || saveLoading}
             />
           </div>
+          <div className={bundleStyles['meta-grid']}>
+            <div>
+              <label className={bundleStyles['field-label']}>
+                {formatMessage('project.replace.bundleAppId', {}, 'Bundle App ID')}
+              </label>
+              <Input value={bundleAppId ?? ''} disabled />
+            </div>
+            <div>
+              <label className={bundleStyles['field-label']}>
+                {formatMessage('project.replace.bundleVersion', {}, 'Bundle Version')}
+              </label>
+              <Input value={bundleVersion !== undefined ? String(bundleVersion) : ''} disabled />
+            </div>
+          </div>
           <div>
             <label className={bundleStyles['field-label']}>{formatMessage('common.description')}</label>
             <Input.TextArea
@@ -873,6 +902,19 @@ const ImportAppModal = forwardRef<AddGroupModalRef, AddGroupModalProps>(({ refre
           />
         </div>
       )}
+
+      {versionNotIncreased ? (
+        <Alert
+          className={bundleStyles['error-alert']}
+          type="warning"
+          showIcon
+          message={formatMessage(
+            'project.replace.versionNotIncreased',
+            { bundleVersion: String(bundleVersion), currentVersion: matchedApp?.version ?? '' },
+            'The package version is not higher than the current App version. The version will not increase after replacement.'
+          )}
+        />
+      ) : null}
 
       {uploadError ? (
         <Alert className={bundleStyles['error-alert']} type="error" showIcon message={uploadError} />

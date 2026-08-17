@@ -703,16 +703,35 @@ func sanitizeDetail(detail map[string]any) map[string]any {
 	if len(detail) == 0 {
 		return map[string]any{}
 	}
-	sanitized := make(map[string]any, len(detail))
-	for key, value := range detail {
-		switch strings.ToLower(strings.TrimSpace(key)) {
-		case "password", "newpassword", "client_secret", "clientsecret", "authorization", "token", "cookie", "license", "licensetoken", "license_token":
-			continue
-		default:
-			sanitized[key] = value
-		}
+	sanitized, ok := sanitizeDetailValue(detail).(map[string]any)
+	if !ok {
+		return map[string]any{}
 	}
 	return sanitized
+}
+
+func sanitizeDetailValue(value any) any {
+	switch item := value.(type) {
+	case map[string]any:
+		sanitized := make(map[string]any, len(item))
+		for key, child := range item {
+			switch strings.ToLower(strings.TrimSpace(key)) {
+			case "password", "newpassword", "client_secret", "clientsecret", "authorization", "token", "cookie", "license", "licensetoken", "license_token", "email", "phone":
+				continue
+			default:
+				sanitized[key] = sanitizeDetailValue(child)
+			}
+		}
+		return sanitized
+	case []any:
+		sanitized := make([]any, len(item))
+		for index, child := range item {
+			sanitized[index] = sanitizeDetailValue(child)
+		}
+		return sanitized
+	default:
+		return value
+	}
 }
 
 func marshalDetail(detail map[string]any) string {

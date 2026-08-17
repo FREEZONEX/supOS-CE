@@ -246,6 +246,13 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
     'wait --load networkidle',
     browserEval('JSON.stringify({path:location.pathname,body:document.body.innerText.slice(0,1000)})'),
     `screenshot ${screenshot}`,
+    `open ${baseURL}/flow`,
+    'wait --load networkidle',
+    browserEval("(() => { document.querySelector('.com-header-search-select')?.click(); return 'opened'; })()"),
+    'wait 300',
+    browserEval("(() => { const option = [...document.querySelectorAll('.ant-select-item-option')].find((item) => /Namespace|命名空间/.test(item.innerText || '')); option?.dispatchEvent(new MouseEvent('click', { bubbles: true })); return JSON.stringify({pageSearchOption:Boolean(option)}); })()"),
+    'wait --load networkidle',
+    browserEval('JSON.stringify({pageSearchPath:location.pathname})'),
     `open ${baseURL}/settings/profile`,
     'wait --load networkidle',
     browserEval("JSON.stringify({settingsPath:location.pathname,settingsItems:document.querySelector('aside').innerText,settingsBody:document.body.innerText.slice(0,1500)})"),
@@ -303,6 +310,10 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
   }
   if (/Not found\.|No permission|无权访问|Interface does not exist/i.test(state.body || '')) {
     throw new Error('browser rendered a not-found or no-permission state');
+  }
+  const pageSearchState = browserObjects.find((item) => Object.hasOwn(item, 'pageSearchPath'));
+  if (pageSearchState?.pageSearchPath !== regressionContract.defaultRoute) {
+    throw new Error(`Page Search landed on ${pageSearchState?.pageSearchPath || '<empty>'}, expected ${regressionContract.defaultRoute}`);
   }
   const settingsState = browserObjects.find((item) => Object.hasOwn(item, 'settingsPath'));
   if (!settingsState) throw new Error('settings browser state was not emitted');
@@ -367,6 +378,7 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
   }
   return {
     path: state.path,
+    pageSearchNavigation: true,
     screenshot,
     forbiddenRequestsObserved: false,
     notFoundOrPermissionState: false,
@@ -380,9 +392,11 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
 
 const runDefaultAdminUserJourney = async ({ baseURL, authHeaders }) => {
   const name = `e2e_user_${Date.now().toString(36)}_${process.pid.toString(36)}`;
+  const email = `${name}@example.com`;
+  const phone = `1${String(Date.now()).slice(-10)}`;
   let userID = 0;
   let primaryError;
-  const evidence = { name, rolePayloadOmitted: true, assignedRole: '', created: false, deleted: false };
+  const evidence = { name, rolePayloadOmitted: true, assignedRole: '', contactsRoundTripped: false, created: false, deleted: false };
   try {
     const created = requireEnvelopeSuccess(
       'create local user without role payload',
@@ -393,6 +407,8 @@ const runDefaultAdminUserJourney = async ({ baseURL, authHeaders }) => {
           username: name,
           password: `Tier0#${Date.now()}Aa`,
           firstName: name,
+          email,
+          phone,
           enabled: true,
         }),
       })
@@ -413,7 +429,11 @@ const runDefaultAdminUserJourney = async ({ baseURL, authHeaders }) => {
     if (!user || String(listedRole?.roleCode || '').toLowerCase() !== 'admin' || Number(listedRole?.roleId) !== 1) {
       throw new Error('new user did not persist the built-in Admin role');
     }
+    if (user.email !== email || user.phone !== phone) {
+      throw new Error('new user email or phone did not round-trip through the list API');
+    }
     evidence.assignedRole = 'admin';
+    evidence.contactsRoundTripped = true;
   } catch (error) {
     primaryError = error;
   } finally {
@@ -843,6 +863,106 @@ const runFlowCopyJourney = async ({ baseURL, authHeaders }) => {
   return evidence;
 };
 
+const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
+  const suffix = `${Date.now().toString(36)}_${process.pid.toString(36)}`;
+  const createdIDs = [];
+  let primaryError;
+  let evidence;
+  const create = async ({ name, flowType, nodeType, parentId = 0 }) => {
+    const item = requireEnvelopeSuccess(
+      `create ${nodeType} ${name}`,
+      await request(baseURL, '/api/core/flows', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          flowType,
+          nodeType,
+          parentId,
+          name,
+          description: `runtime regression ${nodeType}`,
+          ...(nodeType === 'flow' ? { template: 'node-red' } : {}),
+        }),
+      })
+    );
+    const id = Number(item?.id || 0);
+    if (!id) throw new Error(`${nodeType} ${name} create returned no ID`);
+    createdIDs.push(id);
+    return id;
+  };
+  const list = async (query, label) => {
+    const data = requireEnvelopeSuccess(
+      label,
+      await request(baseURL, `/api/core/flows?${new URLSearchParams(query)}`, { headers: authHeaders })
+    );
+    return data?.list || [];
+  };
+
+  try {
+    const sourceFolderID = await create({ name: `e2e_source_folder_${suffix}`, flowType: 'source', nodeType: 'folder' });
+    const sourceFlowID = await create({
+      name: `e2e_source_child_${suffix}`,
+      flowType: 'source',
+      nodeType: 'flow',
+      parentId: sourceFolderID,
+    });
+    const eventFolderID = await create({ name: `e2e_event_folder_${suffix}`, flowType: 'event', nodeType: 'folder' });
+    await create({
+      name: `e2e_event_child_${suffix}`,
+      flowType: 'event',
+      nodeType: 'flow',
+      parentId: eventFolderID,
+    });
+    const emptyFolderID = await create({ name: `e2e_empty_folder_${suffix}`, flowType: 'source', nodeType: 'folder' });
+
+    const sourceRoot = await list({ flowType: 'source', parentId: '0' }, 'list typed Source Flow root');
+    const eventRoot = await list({ flowType: 'event', parentId: '0' }, 'list typed Event Flow root');
+    const allRoot = await list({ parentId: '0' }, 'list unfiltered Flow root for Move to Folder');
+    const sourceChildren = await list(
+      { flowType: 'source', parentId: String(sourceFolderID) },
+      'list Source Flow binding folder children'
+    );
+    const ids = (items) => new Set(items.map((item) => Number(item?.id || 0)));
+    const sourceRootIDs = ids(sourceRoot);
+    const eventRootIDs = ids(eventRoot);
+    const allRootIDs = ids(allRoot);
+    if (!sourceRootIDs.has(sourceFolderID) || sourceRootIDs.has(eventFolderID) || sourceRootIDs.has(emptyFolderID)) {
+      throw new Error('Source Flow tab did not retain only folders containing Source Flows');
+    }
+    if (!eventRootIDs.has(eventFolderID) || eventRootIDs.has(sourceFolderID) || eventRootIDs.has(emptyFolderID)) {
+      throw new Error('Event Flow tab did not retain only folders containing Event Flows');
+    }
+    if (![sourceFolderID, eventFolderID, emptyFolderID].every((id) => allRootIDs.has(id))) {
+      throw new Error('unfiltered Move to Folder list did not contain every root folder');
+    }
+    if (sourceChildren.length !== 1 || Number(sourceChildren[0]?.id || 0) !== sourceFlowID || sourceChildren[0]?.nodeType === 'folder') {
+      throw new Error('Source Flow binding child list did not expose exactly the Flow row');
+    }
+    evidence = {
+      status: 'passed',
+      typedTabsHideEmptyAndOtherTypeFolders: true,
+      moveFolderListContainsAllFolders: true,
+      bindingCandidatesContainFlowsOnly: true,
+    };
+  } catch (error) {
+    primaryError = error;
+  } finally {
+    for (const id of [...createdIDs].reverse()) {
+      try {
+        requireEnvelopeSuccess(
+          `cleanup Flow folder journey item ${id}`,
+          await request(baseURL, `/api/core/flows/${id}`, { method: 'DELETE', headers: authHeaders })
+        );
+      } catch (error) {
+        if (primaryError) primaryError.message = `${primaryError.message}; Flow folder cleanup failed: ${error.message}`;
+        else primaryError = error;
+      }
+    }
+  }
+  if (primaryError) throw primaryError;
+  evidence.cleanup = { deletedItems: createdIDs.length };
+  return evidence;
+};
+
 const updateMarker = async (markerPath, result) => {
   if (!markerPath) return;
   const marker = JSON.parse(await readFile(markerPath, 'utf8'));
@@ -868,6 +988,7 @@ const updateMarker = async (markerPath, result) => {
       mockIntervalSeconds: result.foundationJourney.flow.repeatSeconds,
       mqttConfigurationName: result.foundationJourney.flow.configurationName,
       flowCopy: result.flowCopyJourney,
+      flowFolders: result.flowFolderJourney,
       firstCreateCompletedAtomically: result.foundationJourney.firstCreateCompletedAtomically,
       historyRows: result.foundationJourney.historyRows,
       persistenceLatencyMs: result.foundationJourney.persistenceLatencyMs,
@@ -974,6 +1095,7 @@ export const runRuntimeRegression = async ({
 
   let foundationJourney;
   let flowCopyJourney;
+  let flowFolderJourney;
   let atomicityFaultInjection;
   if (scope === 'foundation') {
     if (faultInjection) {
@@ -982,6 +1104,8 @@ export const runRuntimeRegression = async ({
     }
     flowCopyJourney = await runFlowCopyJourney({ baseURL, authHeaders });
     checks.push('flow-list-copy-nodes-wiring-new-anonymous-mqtt');
+    flowFolderJourney = await runFlowFolderJourney({ baseURL, authHeaders });
+    checks.push('flow-tabs-folders-move-binding-cleanup');
     foundationJourney = await runFoundationJourney({ baseURL, authHeaders });
     checks.push('metric-mock-flow-mqtt-history-cleanup');
   }
@@ -996,6 +1120,7 @@ export const runRuntimeRegression = async ({
     defaultAdminUserJourney,
     ...(atomicityFaultInjection ? { atomicityFaultInjection } : {}),
     ...(flowCopyJourney ? { flowCopyJourney } : {}),
+    ...(flowFolderJourney ? { flowFolderJourney } : {}),
     ...(foundationJourney ? { foundationJourney } : {}),
   };
   await updateMarker(marker, result);

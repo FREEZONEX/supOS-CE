@@ -95,6 +95,12 @@ func (s *Service) EnsurePhysicalForNodes(ctx context.Context, nodes []repo.UnsNo
 	if s == nil || s.writer == nil || s.writer.pool == nil || len(nodes) == 0 {
 		return nil
 	}
+	// dataingest 关闭时同时跳过 UNS 节点触发的物理表结构维护（ALTER 加列）。
+	// 否则 outbox 的 uns.physical.ensure 任务仍会在节点创建/变更时持续触发
+	// uns_timeserial 动态加列，绕过 DATAINGEST_ENABLED 开关，在小内存主机上引发 OOM。
+	if !s.cfg.Enabled {
+		return nil
+	}
 	records := make([]Record, 0, len(nodes))
 	for _, node := range nodes {
 		if node.Type != 2 {

@@ -16,7 +16,6 @@ services:
       start_period: 20s
     ports:
       - "${ENTRANCE_PORT:-8088}:8080"
-      - "${ENTRANCE_SSL_PORT:-8443}:8080"
     environment:
       UNS_DB_URL: ${UNS_DB_URL}
       SINK_DB_URL: ${SINK_DB_URL:-}
