@@ -7,27 +7,6 @@
 
 **Tier0** is an open-source industrial data integration platform built on the **Unified Namespace (UNS)** methodology and powered by production-grade open-source technologies.
 
-<img width="750" src="/deploy/assert/image/open source.png" />
-
----
-
-## Architecture Overview
-<img width="750" src="deploy/assert/image/function_update.png" />
-
-- **Source Flow**  
-  Serves as the connection pipeline to devices and systems. It handles real-time protocol translation into JSON payloads. Built entirely on Node-RED.
-@@ -20,10 +20,9 @@
-  The core of Tier0. A semantic MQTT broker and parser that models data using topic hierarchies and structured JSON payloads.
-
-- **Sink**  
-  The storage layer of Tier0.
-  - Time-series Namespace values are stored in **TimescaleDB**.
-  - Relational Namespace values (e.g., CRM data) are stored in **PostgreSQL**.  
-    This enables efficient querying and compression.
-
-- **Event Flow**  
-  Orchestrates Namespaces into higher-level event/information flows. Supports merging JSON payloads and appending system-generated prompts for LLM-powered optimization.
-
 ---
 
 ## Hardware Requirements
@@ -96,56 +75,19 @@
 
 ## Important Startup Operations
 ### 1. UNS Data Model Creation
-#### 1.1 Building Models Manually
-> `Factory/workshop/equipment/CNC` will be used as an example, in which `Factory`, `workshop` and `equipment` are paths and `CNC` is a topic.
-1. Log in to Tier0, and then select **UNS** > **Namespace**.
-2. Under **Topic**, click <img src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/5.png" /> to add a path (e.g. `factory`).
-
-<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/34.png" />
-
-3. Select **equipment**, and then click <img src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/7.png" /> to add a topic (e.g.`CNC`) under it.
-
-<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/36.png" />
-
-4. Enter the information of the topic, and then click **Save**.
-
-#### 1.2 Importing Models
-1. Log in to Tier0, and then select **UNS** > **Namespace**.
-2. Click **Import** at the upper-right corner.
-
-<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69.png" />
-
-3. Import JSON to create models.
-- Directly enter JSON.
-
-<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-1.png" />
-
-- Click **Upload File** to download the template and enter the model content according to template rules.
-
-<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-2.png" />
-
-
-> You can manually add a path and topic, export it and use it as an example for import.
-
-<img width="450" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/69-3.png" />
-
-
-4. Save the template file, and then click **Import** on the **Namespace** page.
-5. Select the template, and then click **Save**.
-
+1. Send the template JSON from **Import** to an LLM, and use a similar prompt.
+    ```
+    Generate a UNS model used for xx in xx plant, including xx equipment and data sources based on the template.
+    ```
+2. Import the generated result in UNS.
 
 ### 2. Model Data Source Connection
 > Connect real data to make models alive.
-1. Log in to Tier0, go to **UNS** > **Namespace**, and under the **Topic** tab, select a file.
-2. Scroll down to **Topology**, click the icon on **Source Flow** to redirect to the generated data flow.
+1. Use nodes based on the data source type to build a flow, and end it with an `mqtt out` node.
+  Install nodes from Node-RED community for your requirements. Official nodes often start with `node-red-contrib`.
 
-<img width="650" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/49.png" />
-
-3. Change the data source of the generated flow.
-
-<img width="650" src="http://communityimage2.oss-cn-hangzhou.aliyuncs.com/51.png" />
-
-4. Deploy and trigger the flow.
+2. Make sure the **Server** of the `mqtt out` node is set to the UNS broker, and topic is a model from **UNS**.
+  The UNS broker has the same name as that of the flow.
 ---
 ## License
 This project is licensed under the [Apache 2.0 License](./LICENSE).
