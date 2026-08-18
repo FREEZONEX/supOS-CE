@@ -127,6 +127,16 @@ const EditAppModal = forwardRef<EditAppModalRef, EditAppModalProps>(({ refreshRe
         >
           <Input placeholder={formatMessage('apps.namePlaceholder')} maxLength={64} />
         </Form.Item>
+        <div className={styles['meta-grid']} style={COMPACT_ITEM_STYLE}>
+          <div>
+            <label className={styles['meta-label']}>{formatMessage('common.appId')}</label>
+            <Input value={editingApp ? editingApp.sourceAppId || String(editingApp.appId) : ''} disabled />
+          </div>
+          <div>
+            <label className={styles['meta-label']}>{formatMessage('common.version')}</label>
+            <Input value={editingApp?.version || ''} disabled />
+          </div>
+        </div>
         <Form.Item name="description" label={formatMessage('common.description')} className={styles.descriptionItem}>
           <Input.TextArea
             rows={3}

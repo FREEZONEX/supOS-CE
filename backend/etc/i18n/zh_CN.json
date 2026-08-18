@@ -1100,6 +1100,7 @@
   "common.clickSourceFlow": "单击此处设置SourceFlow的数据连接。",
   "common.dev": "开发者",
   "common.version": "版本",
+  "common.appId": "应用 ID",
   "common.dependencies": "依赖",
   "common.pluginName": "插件名称",
   "common.description": "描述",

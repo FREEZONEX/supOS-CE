@@ -1100,6 +1100,7 @@
   "common.clickSourceFlow": "Click here to set data connection in Source Flow.",
   "common.dev": "Dev",
   "common.version": "Version",
+  "common.appId": "App ID",
   "common.dependencies": "Dependent",
   "common.pluginName": "Plug-in Name",
   "common.description": "Description",

@@ -236,6 +236,8 @@ var nodeRedAdminAPIPrefixes = []string{
 	"context", "debug", "palette", "editor", "info", "theme",
 	"diagnostics", "icons", "library", "history", "preview", "projects",
 	"runtime", "version", "plugins", "locales", "resources",
+	// built-in node 提供的 admin 触发端点（触发流执行，非 http in 接口）
+	"inject",
 }
 
 // isFlowAPIProxyRoute 判断路由是否为 App 访问 Node-RED 原生接口的 /flow/{source|event}/** 路由。
@@ -246,25 +248,25 @@ func isFlowAPIProxyRoute(route repo.GatewayRoute) bool {
 
 // isNodeRedAdminPath 判断 /flow/{source|event}/<path> 的 <path> 首段是否为 Node-RED Admin API。
 // 大小写不敏感（Node-RED 的 Express router 默认大小写不敏感，/Flows 也会命中 /flows）。
-// 空 suffix（/flow/source/ 或 /flow/event/）视为 Admin（会代理到 Node-RED 根路径 editor 页面）→ true。
+// 空 suffix（/flow/source、/flow/source/ 或 /flow/event/ 等）视为 Admin（会代理到 Node-RED 根路径 editor 页面）→ true。
 // 例：/flow/source/flows -> "flows" -> true；/flow/source/Flows -> "flows" -> true；
 //
 //	/flow/source/api/custom -> "api" -> false。
 func isNodeRedAdminPath(path string) bool {
 	rest := path
-	for _, prefix := range []string{"/flow/source/", "/flow/event/"} {
+	for _, prefix := range []string{"/flow/source", "/flow/event"} {
 		if strings.HasPrefix(rest, prefix) {
 			rest = strings.TrimPrefix(rest, prefix)
+			// 裸前缀或空 suffix（/flow/source、/flow/source/、/flow/source// 等）→ editor 根页面，拒绝
+			if rest == "" || rest == "/" || strings.Trim(rest, "/") == "" {
+				return true
+			}
 			break
 		}
 	}
-	// 非 /flow/{source|event}/ 前缀不算 Admin 路径
+	// 非 /flow/{source|event} 前缀不算 Admin 路径
 	if rest == path {
 		return false
-	}
-	// 空 suffix（/flow/source/ 或 /flow/event/ 尾斜杠）→ editor 根页面，拒绝
-	if rest == "" {
-		return true
 	}
 	first := strings.ToLower(strings.Trim(rest, "/"))
 	if i := strings.IndexByte(first, '/'); i >= 0 {
@@ -281,6 +283,12 @@ func isNodeRedAdminPath(path string) bool {
 func (g *HTTPGateway) authorizeRoute(w http.ResponseWriter, r *http.Request, route repo.GatewayRoute) bool {
 	switch route.AuthPolicy {
 	case "public":
+		// /flow/source/** 公开 http in 接口（无需 API key）；
+		// Node-RED Admin API 仍拦截（防止公开改画布/部署）。
+		if isFlowAPIProxyRoute(route) && isNodeRedAdminPath(r.URL.Path) {
+			http.Error(w, "forbidden: node-red admin api not allowed", http.StatusForbidden)
+			return false
+		}
 		return true
 	case "login":
 		subject, err := g.auth.AuthenticateRequest(r)

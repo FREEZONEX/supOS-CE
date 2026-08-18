@@ -76,4 +76,5 @@ done
 # shellcheck source=common.sh
 source "${SCRIPT_DIR}/common.sh"
 
+tier0_require_rootful_docker || exit 1
 run_deploy_workflow

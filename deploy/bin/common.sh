@@ -31,6 +31,8 @@ BACKEND_IMAGE_REPOSITORY="harbor.tier0.dev/tier0/tier0-edge-backend"
 
 # shellcheck source=env-loader.sh
 source "${SCRIPT_DIR}/env-loader.sh"
+# shellcheck source=docker-runtime.sh
+source "${SCRIPT_DIR}/docker-runtime.sh"
 
 # Script-maintainer switch only. Keep this out of .env to avoid making package
 # install timing part of the user-facing deployment contract.
@@ -603,6 +605,7 @@ OS_NAME=${OS_NAME}
 TIER0_INSTALLATION_ID=${TIER0_INSTALLATION_ID}
 LOCK
 }
+
 
 prepare_volume_dirs() {
   local root="$1"
