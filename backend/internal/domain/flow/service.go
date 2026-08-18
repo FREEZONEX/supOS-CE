@@ -141,6 +141,16 @@ func (s *Service) Update(ctx context.Context, cmd SaveCommand) (map[string]any, 
 	if err != nil {
 		return nil, err
 	}
+	current, err := s.flows.GetFlow(ctx, cmd.ID)
+	if err != nil {
+		return nil, normalizeNotFound(err)
+	}
+	if current.FlowType != item.FlowType || current.NodeType != item.NodeType {
+		return nil, ErrInvalid
+	}
+	if len(item.UnsNodeIDs) > 0 && !canBindUns(current) {
+		return nil, ErrInvalid
+	}
 	item.ID = cmd.ID
 	item.UpdatedBy = cmd.UserID
 	updated, err := s.flows.UpdateFlow(ctx, item)
@@ -166,7 +176,7 @@ func (s *Service) BindUns(ctx context.Context, flowID, unsID, userID int64) (map
 	if err != nil {
 		return nil, normalizeNotFound(err)
 	}
-	if current.NodeType == 1 || current.FlowType != 1 {
+	if !canBindUns(current) {
 		return nil, ErrInvalid
 	}
 	for _, nodeID := range current.UnsNodeIDs {
@@ -371,6 +381,9 @@ func commandToFlow(cmd SaveCommand) (repo.Flow, error) {
 	if nodeType == 1 && cmd.ParentID != 0 {
 		return repo.Flow{}, ErrInvalid
 	}
+	if len(cmd.UnsNodeIDs) > 0 && (flowType != 1 || nodeType != 2) {
+		return repo.Flow{}, ErrInvalid
+	}
 	template := strings.TrimSpace(cmd.Template)
 	if nodeType == 2 && template == "" {
 		template = "node-red"
@@ -384,6 +397,10 @@ func commandToFlow(cmd SaveCommand) (repo.Flow, error) {
 		Template:    template,
 		UnsNodeIDs:  cmd.UnsNodeIDs,
 	}, nil
+}
+
+func canBindUns(flow repo.Flow) bool {
+	return flow.FlowType == 1 && flow.NodeType == 2
 }
 
 func (s *Service) flowResp(ctx context.Context, item repo.Flow) map[string]any {
@@ -1068,6 +1085,9 @@ func nodeTypeName(value int) string {
 func normalizeNotFound(err error) error {
 	if errors.Is(err, repo.ErrNotFound) {
 		return ErrNotFound
+	}
+	if errors.Is(err, repo.ErrInvalidArgument) {
+		return ErrInvalid
 	}
 	return err
 }

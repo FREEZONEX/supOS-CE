@@ -2,12 +2,14 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Flow struct {
@@ -74,6 +76,9 @@ func (r *FlowRepo) UserNamesByIDs(ctx context.Context, ids []int64) (map[int64]s
 }
 
 func (r *FlowRepo) CreateFlow(ctx context.Context, flow Flow) (Flow, error) {
+	if len(flow.UnsNodeIDs) > 0 && !flowCanBindUns(flow) {
+		return Flow{}, ErrInvalidArgument
+	}
 	now := time.Now().UTC().UnixMilli()
 	ensureID(&flow.ID)
 	if flow.Status == "" {
@@ -94,13 +99,27 @@ func (r *FlowRepo) CreateFlow(ctx context.Context, flow Flow) (Flow, error) {
 func (r *FlowRepo) UpdateFlow(ctx context.Context, flow Flow) (Flow, error) {
 	now := time.Now().UTC().UnixMilli()
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var current Flow
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Select("id", "flow_type", "node_type").
+			Where("id = ? AND deleted_time = 0", flow.ID).
+			Take(&current).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ErrNotFound
+			}
+			return err
+		}
+		if current.FlowType != flow.FlowType || current.NodeType != flow.NodeType {
+			return ErrInvalidArgument
+		}
+		if len(flow.UnsNodeIDs) > 0 && !flowCanBindUns(current) {
+			return ErrInvalidArgument
+		}
 		res := tx.Model(&Flow{}).Where("id = ? AND deleted_time = 0", flow.ID).
 			Updates(touchByValues(map[string]any{
 				"flow_name":   flow.Name,
 				"template":    flow.Template,
 				"description": flow.Description,
-				"flow_type":   flow.FlowType,
-				"node_type":   flow.NodeType,
 				"parent_id":   flow.ParentID,
 			}, flow.UpdatedBy, now))
 		if res.Error != nil {
@@ -115,6 +134,10 @@ func (r *FlowRepo) UpdateFlow(ctx context.Context, flow Flow) (Flow, error) {
 		return Flow{}, normalizeDBError(err)
 	}
 	return r.GetFlow(ctx, flow.ID)
+}
+
+func flowCanBindUns(flow Flow) bool {
+	return flow.FlowType == 1 && flow.NodeType == 2
 }
 
 // UpdateFlowConnectClient 回写 Flow 的 connect_client_id（导入 flow 补建本地 MQTT 凭证时使用）。

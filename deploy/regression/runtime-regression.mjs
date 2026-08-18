@@ -897,11 +897,26 @@ const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
     );
     return data?.list || [];
   };
+  const requireRejectedUpdate = async (flowID, payload, label) => {
+    const response = await request(baseURL, `/api/core/flows/${flowID}`, {
+      method: 'PUT',
+      headers: authHeaders,
+      body: JSON.stringify(payload),
+    });
+    if (response.status === 200 && response.body?.code === 200) {
+      throw new Error(`${label} unexpectedly succeeded`);
+    }
+  };
 
   try {
-    const sourceFolderID = await create({ name: `e2e_source_folder_${suffix}`, flowType: 'source', nodeType: 'folder' });
+    const sourceFolderName = `e2e_source_folder_${suffix}`;
+    const sourceFlowName = `e2e_source_child_${suffix}`;
+    const eventFolderName = `e2e_event_folder_${suffix}`;
+    const eventFlowName = `e2e_event_child_${suffix}`;
+    const emptyFolderName = `e2e_empty_folder_${suffix}`;
+    const sourceFolderID = await create({ name: sourceFolderName, flowType: 'source', nodeType: 'folder' });
     const sourceFlowID = await create({
-      name: `e2e_source_child_${suffix}`,
+      name: sourceFlowName,
       flowType: 'source',
       nodeType: 'flow',
       parentId: sourceFolderID,
@@ -950,14 +965,70 @@ const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
     if (!(boundSource?.unsNodeIds || []).map(Number).includes(unsNodeID)) {
       throw new Error('folder Source Flow binding response did not contain the State UNS ID');
     }
-    const eventFolderID = await create({ name: `e2e_event_folder_${suffix}`, flowType: 'event', nodeType: 'folder' });
-    await create({
-      name: `e2e_event_child_${suffix}`,
+    const eventFolderID = await create({ name: eventFolderName, flowType: 'event', nodeType: 'folder' });
+    const eventFlowID = await create({
+      name: eventFlowName,
       flowType: 'event',
       nodeType: 'flow',
       parentId: eventFolderID,
     });
-    const emptyFolderID = await create({ name: `e2e_empty_folder_${suffix}`, flowType: 'source', nodeType: 'folder' });
+    const emptyFolderID = await create({ name: emptyFolderName, flowType: 'source', nodeType: 'folder' });
+
+    await requireRejectedUpdate(
+      sourceFolderID,
+      {
+        parentId: 0,
+        flowType: 'source',
+        nodeType: 'folder',
+        name: sourceFolderName,
+        unsNodeIds: [unsNodeID],
+      },
+      'folder UNS binding update'
+    );
+    await requireRejectedUpdate(
+      sourceFolderID,
+      {
+        parentId: 0,
+        flowType: 'source',
+        nodeType: 'flow',
+        name: sourceFolderName,
+        unsNodeIds: [unsNodeID],
+      },
+      'folder node type forgery update'
+    );
+    await requireRejectedUpdate(
+      eventFlowID,
+      {
+        parentId: eventFolderID,
+        flowType: 'source',
+        nodeType: 'flow',
+        name: eventFlowName,
+        template: 'node-red',
+        unsNodeIds: [unsNodeID],
+      },
+      'event Flow type forgery update'
+    );
+    const sourceAfterAttacks = requireEnvelopeSuccess(
+      'read Source Flow after rejected binding attacks',
+      await request(baseURL, `/api/core/flows/${sourceFlowID}`, { headers: authHeaders })
+    );
+    const folderAfterAttack = requireEnvelopeSuccess(
+      'read folder after rejected binding attacks',
+      await request(baseURL, `/api/core/flows/${sourceFolderID}`, { headers: authHeaders })
+    );
+    const eventAfterAttack = requireEnvelopeSuccess(
+      'read Event Flow after rejected binding attacks',
+      await request(baseURL, `/api/core/flows/${eventFlowID}`, { headers: authHeaders })
+    );
+    if (!(sourceAfterAttacks?.unsNodeIds || []).map(Number).includes(unsNodeID)) {
+      throw new Error('rejected binding attack removed the original Source Flow relation');
+    }
+    if ((folderAfterAttack?.unsNodeIds || []).length || (eventAfterAttack?.unsNodeIds || []).length) {
+      throw new Error('rejected binding attack created a folder or Event Flow relation');
+    }
+    if (folderAfterAttack?.nodeType !== 'folder' || eventAfterAttack?.flowType !== 'event') {
+      throw new Error('rejected binding attack changed a persisted Flow type');
+    }
 
     const sourceRoot = await list({ flowType: 'source', parentId: '0' }, 'list typed Source Flow root');
     const eventRoot = await list({ flowType: 'event', parentId: '0' }, 'list typed Event Flow root');
@@ -992,6 +1063,8 @@ const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
       moveFolderListContainsAllFolders: true,
       bindingCandidatesContainFlowsOnly: true,
       folderFlowBindingPersistsAndResolves: true,
+      invalidBindingUpdatesRejected: true,
+      originalBindingPreservedAfterAttack: true,
     };
   } catch (error) {
     primaryError = error;
