@@ -866,6 +866,7 @@ const runFlowCopyJourney = async ({ baseURL, authHeaders }) => {
 const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
   const suffix = `${Date.now().toString(36)}_${process.pid.toString(36)}`;
   const createdIDs = [];
+  let unsNodeID = 0;
   let primaryError;
   let evidence;
   const create = async ({ name, flowType, nodeType, parentId = 0 }) => {
@@ -905,6 +906,50 @@ const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
       nodeType: 'flow',
       parentId: sourceFolderID,
     });
+    const unsNode = requireEnvelopeSuccess(
+      'create State UNS for Source Flow binding',
+      await request(baseURL, '/api/core/uns/nodes', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({
+          parentId: 0,
+          name: `e2e_bind_state_${suffix}`,
+          displayName: `E2E Bind State ${suffix}`,
+          type: 'file',
+          topicType: 'State',
+          schema: JSON.stringify([{ name: 'value', type: 'DOUBLE' }]),
+          persistence: false,
+          withFlow: false,
+          addFlow: false,
+          mockData: false,
+        }),
+      })
+    );
+    unsNodeID = Number(unsNode?.id || 0);
+    if (!unsNodeID) throw new Error('State UNS create returned no ID for Source Flow binding');
+    const sourceDetail = requireEnvelopeSuccess(
+      'read folder Source Flow before binding',
+      await request(baseURL, `/api/core/flows/${sourceFlowID}`, { headers: authHeaders })
+    );
+    const boundSource = requireEnvelopeSuccess(
+      'bind folder Source Flow to State UNS',
+      await request(baseURL, `/api/core/flows/${sourceFlowID}`, {
+        method: 'PUT',
+        headers: authHeaders,
+        body: JSON.stringify({
+          parentId: sourceDetail?.parentId,
+          flowType: sourceDetail?.flowType,
+          nodeType: sourceDetail?.nodeType,
+          name: sourceDetail?.name,
+          description: sourceDetail?.description || '',
+          template: sourceDetail?.template || 'node-red',
+          unsNodeIds: [...new Set([...(sourceDetail?.unsNodeIds || []).map(Number), unsNodeID])],
+        }),
+      })
+    );
+    if (!(boundSource?.unsNodeIds || []).map(Number).includes(unsNodeID)) {
+      throw new Error('folder Source Flow binding response did not contain the State UNS ID');
+    }
     const eventFolderID = await create({ name: `e2e_event_folder_${suffix}`, flowType: 'event', nodeType: 'folder' });
     await create({
       name: `e2e_event_child_${suffix}`,
@@ -937,12 +982,16 @@ const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
     if (sourceChildren.length !== 1 || Number(sourceChildren[0]?.id || 0) !== sourceFlowID || sourceChildren[0]?.nodeType === 'folder') {
       throw new Error('Source Flow binding child list did not expose exactly the Flow row');
     }
+    if (!(sourceChildren[0]?.unsNodeIds || []).map(Number).includes(unsNodeID)) {
+      throw new Error('bound folder Source Flow could not be resolved from the flattened binding candidates');
+    }
     evidence = {
       status: 'passed',
       allTabContainsEmptyFolders: true,
       typedTabsHideEmptyAndOtherTypeFolders: true,
       moveFolderListContainsAllFolders: true,
       bindingCandidatesContainFlowsOnly: true,
+      folderFlowBindingPersistsAndResolves: true,
     };
   } catch (error) {
     primaryError = error;
@@ -958,9 +1007,20 @@ const runFlowFolderJourney = async ({ baseURL, authHeaders }) => {
         else primaryError = error;
       }
     }
+    if (unsNodeID) {
+      try {
+        requireEnvelopeSuccess(
+          `cleanup Source Flow binding UNS ${unsNodeID}`,
+          await request(baseURL, `/api/core/uns/nodes/${unsNodeID}`, { method: 'DELETE', headers: authHeaders })
+        );
+      } catch (error) {
+        if (primaryError) primaryError.message = `${primaryError.message}; Source Flow binding UNS cleanup failed: ${error.message}`;
+        else primaryError = error;
+      }
+    }
   }
   if (primaryError) throw primaryError;
-  evidence.cleanup = { deletedItems: createdIDs.length };
+  evidence.cleanup = { deletedItems: createdIDs.length, unsNodeDeleted: true };
   return evidence;
 };
 

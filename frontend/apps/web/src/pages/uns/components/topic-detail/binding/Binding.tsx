@@ -28,6 +28,7 @@ const Binding: FC<{
   });
   const formatMessage = useTranslate();
   const [searchValue, setSearchValue] = useState('');
+  const [bindingId, setBindingId] = useState<string>();
   const { data, pagination, clearData, setSearchParams, hasMore } = usePagination({
     firstNotGetData: true,
     appendData: true,
@@ -60,10 +61,27 @@ const Binding: FC<{
     }
   };
 
+  const handleBinding = useCallback(
+    async (item: any) => {
+      const itemId = String(item.id);
+      if (!onBinding || bindingId) return;
+      setBindingId(itemId);
+      try {
+        await onBinding(item);
+        setSelected(itemId);
+        setOpen(false);
+      } finally {
+        setBindingId(undefined);
+      }
+    },
+    [bindingId, onBinding, setSelected]
+  );
+
   return (
     <Dropdown
       open={open}
       onOpenChange={setOpen}
+      trigger={['click']}
       placement="bottomRight"
       getPopupContainer={() => document.body}
       overlayStyle={{
@@ -106,17 +124,17 @@ const Binding: FC<{
                   return (
                     <Flex
                       style={{ height: 32 }}
-                      className={classNames(styles['list-item'], selected === item.id && styles.selected)}
+                      className={classNames(
+                        styles['list-item'],
+                        String(selected) === String(item.id) && styles.selected
+                      )}
                       align="center"
-                      onClick={() => {
-                        onBinding?.(item).then(() => {
-                          setSelected(item.id);
-                        });
-                      }}
+                      aria-busy={bindingId === String(item.id)}
+                      onClick={() => void handleBinding(item)}
                       gap={8}
                     >
                       <Flex align="center" style={{ flexShrink: 0, minWidth: 20 }}>
-                        {selected === item.id ? <Checkmark /> : <span></span>}
+                        {String(selected) === String(item.id) ? <Checkmark /> : <span></span>}
                       </Flex>
                       <ComEllipsis style={{ flex: 1, color: 'var(--ui-text-color)' }}>
                         {item.name || item.flowName}

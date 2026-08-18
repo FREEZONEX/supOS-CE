@@ -286,7 +286,8 @@ export const saveAsFlowVersion = async (
 export const goFlow = async (alias?: string, unsId?: string | number) => {
   const nodeId = unsId || (await resolveUnsNode(alias))?.id;
   if (!nodeId) return {};
-  return (await sourceFlows()).find((item: any) => item.unsNodeIds?.map(String).includes(String(nodeId))) || {};
+  const result = await sourceFlowBindingPage();
+  return (result.data || []).find((item: any) => item.unsNodeIds?.map(String).includes(String(nodeId))) || {};
 };
 export const flowPage = async (params?: Record<string, unknown>) => listFlows(params);
 export const processList = async () => ({ data: [], total: 0, pageNo: 1, pageSize: 20 });

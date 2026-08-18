@@ -205,16 +205,17 @@ const TopologyChart = ({ instanceInfo, getFileDetail, readOnly = false }: any) =
   }, []);
 
   const onBindingChange = useCallback(
-    (_type: string, item: any) => {
-      return bindFlowForUns({
+    async (_type: string, item: any) => {
+      await bindFlowForUns({
         flowId: item.id,
         unsAlias: instanceInfo.alias,
         unsId: instanceInfo.id,
-      }).then(() => {
-        message.success(formatMessage('common.optsuccess'));
-        getFileDetail(instanceInfo.id);
-        refreshNodeRedData(instanceInfo.alias, instanceInfo.id);
       });
+      await Promise.all([
+        Promise.resolve(getFileDetail(instanceInfo.id)),
+        refreshNodeRedData(instanceInfo.alias, instanceInfo.id),
+      ]);
+      message.success(formatMessage('common.optsuccess'));
     },
     [instanceInfo, message, formatMessage, getFileDetail, refreshNodeRedData]
   );
