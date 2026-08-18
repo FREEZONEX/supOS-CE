@@ -92,6 +92,7 @@ const Binding: FC<{
           <div
             style={{ width: 350, borderRadius: 5, border: '1px solid var(--ui-line-color)', padding: '4px 0' }}
             className={classNames(styles['container'])}
+            onPointerDown={(event) => event.stopPropagation()}
           >
             <ComInput
               allowClear
@@ -129,8 +130,21 @@ const Binding: FC<{
                         String(selected) === String(item.id) && styles.selected
                       )}
                       align="center"
+                      role="option"
+                      tabIndex={0}
+                      aria-selected={String(selected) === String(item.id)}
                       aria-busy={bindingId === String(item.id)}
-                      onClick={() => void handleBinding(item)}
+                      onPointerDown={(event) => {
+                        if (event.button !== 0) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void handleBinding(item);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
+                        void handleBinding(item);
+                      }}
                       gap={8}
                     >
                       <Flex align="center" style={{ flexShrink: 0, minWidth: 20 }}>
