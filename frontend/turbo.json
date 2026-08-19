@@ -13,14 +13,6 @@
       "dependsOn": ["^build"],
       "outputs": ["build/**", "dist/**"]
     },
-    "build:server": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
-    "build:servicesExpress": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
     "dev": {
       "dependsOn": ["^build"],
       "persistent": true,
@@ -30,17 +22,6 @@
       "dependsOn": ["^build"],
       "persistent": true,
       "cache": false
-    },
-    "dev:server": {
-      "dependsOn": ["^build"],
-      "persistent": true,
-      "cache": false
-    },
-    "dev:servicesExpress": {
-      "dependsOn": ["^build"],
-      "persistent": true,
-      "cache": false,
-      "inputs": ["src/**/*.ts", "tsdown.config.ts"]
     },
     "start": {
       "persistent": true,

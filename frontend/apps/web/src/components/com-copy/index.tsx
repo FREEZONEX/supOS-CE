@@ -1,4 +1,5 @@
-import { Copy } from '@carbon/icons-react';
+import { Copy } from '@/components/lucide-icon/carbon';
+import { toolbarIconProps } from '@/components/lucide-icon/icon-props';
 import { useClipboard } from '@/hooks';
 import { type CSSProperties, type FC, useRef } from 'react';
 import { Flex, Tooltip } from 'antd';
@@ -19,7 +20,7 @@ const ComCopy: FC<{ textToCopy: string | number; title?: string; bg?: boolean; s
         bg
           ? {
               padding: 6,
-              background: 'var(--supos-switchwrap-bg-color)',
+              background: 'var(--ui-switchwrap-bg-color)',
               cursor: 'pointer',
               ...style,
             }
@@ -30,7 +31,7 @@ const ComCopy: FC<{ textToCopy: string | number; title?: string; bg?: boolean; s
       }
     >
       <Tooltip title={title}>
-        <Copy />
+        <Copy {...toolbarIconProps} />
       </Tooltip>
     </Flex>
   );

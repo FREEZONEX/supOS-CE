@@ -1,0 +1,35 @@
+.confirm-modal {
+  :global(.ant-modal-content) {
+    background: var(--ui-modal-color);
+  }
+
+  :global(.ant-modal-confirm-body) {
+    display: block;
+  }
+
+  :global(.ant-modal-confirm-paragraph) {
+    margin: 0;
+    row-gap: 4px;
+  }
+
+  :global(.ant-modal-confirm-title) {
+    margin: 0;
+    color: var(--ui-text-color);
+  }
+
+  :global(.ant-modal-confirm-content) {
+    max-width: none;
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+    color: var(--ui-text-color);
+  }
+
+  :global(.ant-modal-confirm-btns .ant-btn-dangerous.ant-btn-primary) {
+    color: var(--ui-primary-button-text);
+
+    &:hover,
+    &:focus {
+      color: var(--ui-primary-button-text);
+    }
+  }
+}

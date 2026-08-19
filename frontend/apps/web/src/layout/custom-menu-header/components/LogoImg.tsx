@@ -20,11 +20,13 @@ const LogoImg: FC<IconImgProps> = ({ isDark, onClick, ...props }) => {
     setImageSrc('');
     const loadImage = async () => {
       const baseUrl = `${getBaseUrl()}${STORAGE_PATH}${MENU_TARGET_PATH}/`;
-      // 从服务器 加载 /files/system/resource/supos/
+      // 从服务器加载菜单静态资源。
       const hasTheme = systemInfo.themeConfig?.[isDark ? 'dark' : 'light']?.logo;
-      const themeLogoUrl = hasTheme
-        ? `${baseUrl}${hasTheme}?t=${new Date().getTime()}`
-        : `${baseUrl}logo-${isDark ? 'dark' : 'light'}.svg`;
+      if (!hasTheme) {
+        setImageSrc(isDark ? logoDark : logoLight);
+        return;
+      }
+      const themeLogoUrl = `${baseUrl}${hasTheme}?t=${new Date().getTime()}`;
       const themeExists = await checkImageExists(themeLogoUrl);
       if (themeExists) {
         setImageSrc(themeLogoUrl);

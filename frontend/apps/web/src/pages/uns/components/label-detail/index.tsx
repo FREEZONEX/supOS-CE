@@ -1,9 +1,9 @@
 import { useState, useEffect, type FC, type CSSProperties, useRef } from 'react';
-import { getLabelDetail, updateLabel, makeSingleLabel, updateLabelSubscribe } from '@/apis/inter-api/uns';
+import { getLabelDetail, updateLabel, makeSingleLabel, updateLabelSubscribe } from '@/apis/core-api/uns';
 import { useTranslate } from '@/hooks';
 import { Collapse, theme, Form, Flex, Button, message, Typography } from 'antd';
-import { CaretRight, Copy, Tag } from '@carbon/icons-react';
-import { ButtonPermission } from '@/common-types/button-permission.ts';
+import { CaretRight, Copy, Tag } from '@/components/lucide-icon/carbon';
+import { toolbarIconProps } from '@/components/lucide-icon/icon-props';
 import SearchSelect from '@/pages/uns/components/use-create-modal/components/SearchSelect';
 import Icon from '@ant-design/icons';
 import FileList from './FileList';
@@ -20,9 +20,10 @@ import { formatTimestamp } from '@/utils/format.ts';
 import styles from './index.module.scss';
 
 const { Title } = Typography;
+const legacyLabelDetailAuth = 'Namespace.label_detail';
 
 const panelStyle: CSSProperties = {
-  background: 'val(--supos-bg-color)',
+  background: 'val(--ui-bg-color)',
   border: 'none',
 };
 
@@ -117,7 +118,7 @@ const Module: FC<LabelDetailProps> = (props) => {
                       onClick={() => copy(modelInfo.topic)}
                       title={formatMessage('common.copy')}
                     >
-                      <Copy />
+                      <Copy {...toolbarIconProps} />
                     </span>
                   </div>
                 );
@@ -164,12 +165,12 @@ const Module: FC<LabelDetailProps> = (props) => {
       style: panelStyle,
       extra: (
         <AuthButton
-          auth={ButtonPermission['uns.labelDetail']}
+          auth={legacyLabelDetailAuth}
           onClick={handleAdd}
           style={{
-            border: '1px solid #C6C6C6',
-            background: 'var(--supos-uns-button-color)',
-            color: 'var(--supos-text-color)',
+            border: '1px solid var(--ui-line-color)',
+            background: 'var(--ui-uns-button-color)',
+            color: 'var(--ui-text-color)',
           }}
         >
           +
@@ -191,11 +192,11 @@ const Module: FC<LabelDetailProps> = (props) => {
             level={2}
             style={{ margin: 0, width: '100%', insetInlineStart: 0 }}
             editable={
-              hasPermission(ButtonPermission['uns.labelDetail'])
+              hasPermission(legacyLabelDetailAuth)
                 ? {
                     icon: (
                       <Icon
-                        data-button-auth={ButtonPermission['uns.labelDetail']}
+                        data-button-auth={legacyLabelDetailAuth}
                         component={FileEdit}
                         style={{
                           fontSize: 25,
@@ -258,7 +259,7 @@ const Module: FC<LabelDetailProps> = (props) => {
             style={{ background: token.colorBgContainer }}
           />
         </div>
-        <AuthWrapper auth={ButtonPermission['uns.labelDetail']}>
+        <AuthWrapper auth={legacyLabelDetailAuth}>
           <div className="deleteBtnWrap" style={{ marginTop: 0 }}>
             <Button
               type="primary"

@@ -2,7 +2,7 @@ import type { Key } from 'react';
 import type { UnsTreeNode } from '@/pages/uns/types';
 
 export type TSearchType = 1 | 2 | 3;
-export type TTreeType = 'uns' | 'template' | 'label';
+export type TTreeType = 'uns';
 // all-内部topic，unusedTopic-外部topic
 export type TCurrentTreeMapType = 'all' | 'unusedTopic';
 
@@ -16,12 +16,13 @@ export type NodePaginationStateProps = Record<string | number, NodePaginationSta
 
 export type TreeStoreState = {
   loadMoreText?: string;
+  loadDataDefaultParams?: Record<string, unknown>;
   loading: boolean;
   // 搜索框值
   searchValue: string;
-  // 树类型 1 'uns' | 3 'template' | 2 'label'
+  // 树类型
   treeType: TTreeType;
-  // uns 树搜索的类型 1 'uns' | 'template' | 'label'
+  // uns 树搜索的类型
   searchType: TSearchType;
   // 树数据
   treeData: UnsTreeNode[];
@@ -50,6 +51,9 @@ export type TreeStoreState = {
   currentTreeMapType: TCurrentTreeMapType;
   // 跳转 Todo: 完善ts
   scrollTreeNode?: any;
+  // 树上行走高亮（agent 过程可视化，@tier0/uns-agent-ui 树上行走注入缝驱动）：agent 工具命中某
+  // UNS 节点时临时高亮对应树节点。与 selectedNode 完全独立——只做视觉高亮，不改变选中态。
+  walkHighlightKey?: Key;
 };
 
 export type TreeStoreActions = {
@@ -63,8 +67,7 @@ export type TreeStoreActions = {
   // 设置树数据
   setTreeData: (
     newTreeData:
-      | ((treeData: TreeStoreState['treeData']) => TreeStoreState['treeData'] | void)
-      | TreeStoreState['treeData']
+      ((treeData: TreeStoreState['treeData']) => TreeStoreState['treeData'] | void) | TreeStoreState['treeData']
   ) => void;
   // 重置
   reset: (value: Partial<TreeStoreState>) => void;
@@ -98,7 +101,6 @@ export type TreeStoreActions = {
     ) => void
   ) => void;
   recursiveLoadData: TreeStoreActions['loadData'];
-  recursiveLoadDataForList: TreeStoreActions['loadData'];
   // 设置展开收起key
   setExpandedKeys: (newExpandedKeys: ((expandedKeys: Key[]) => Key[] | void) | Key[]) => void;
   // 设置异步加载的key
@@ -106,8 +108,7 @@ export type TreeStoreActions = {
   // 设置节点懒加载的配置
   setNodePaginationState: (
     newNodePaginationState:
-      | ((nodePaginationState: NodePaginationStateProps) => void | NodePaginationStateProps)
-      | NodePaginationStateProps
+      ((nodePaginationState: NodePaginationStateProps) => void | NodePaginationStateProps) | NodePaginationStateProps
   ) => void;
   // loadingKeys相关操作
   addLoadingKey: (key: Key) => void;
@@ -139,6 +140,8 @@ export type TreeStoreActions = {
   resetTreeData: () => void;
   // 展开\收起
   handleExpandNode: (expand: boolean, node: UnsTreeNode) => void;
+  // 设置树上行走高亮节点（与 selectedNode 完全独立）
+  setWalkHighlightKey: (value?: Key) => void;
 };
 
 export type TreeStoreProps = TreeStoreState & TreeStoreActions;

@@ -17,6 +17,7 @@ import {
 } from 'antd';
 import { Add, Renew, Edit, TrashCan } from '@carbon/icons-react';
 import ProTable from '@/components/pro-table';
+import ProSearch from '@/components/pro-search';
 import {
   getServices,
   createService,
@@ -26,10 +27,11 @@ import {
   createRoute,
   updateRoute,
   deleteRoute,
-} from '@/apis/inter-api/kong';
+} from '@/apis/core-api/kong';
 import useKongTable from '../../hooks/useKongTable';
 import useKongModal from '../../hooks/useKongModal';
 import useTranslate from '@/hooks/useTranslate';
+import { mergeDeleteConfirmProps } from '@/utils/delete-confirm-modal';
 
 const SVC_PROTOCOLS = ['http', 'https', 'grpc', 'grpcs', 'tcp', 'tls', 'udp'];
 const ROUTE_PROTOCOLS = ['http', 'https', 'grpc', 'grpcs', 'tcp', 'tls', 'udp'];
@@ -122,14 +124,18 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
 
   const handleDeleteRoute = useCallback(
     (route: any) => {
-      modal.confirm({
-        title: formatMessage('kong.deleteRoute', { name: route.name ?? route.id }),
-        okButtonProps: { danger: true },
-        onOk: async () => {
-          await deleteRoute(route.id);
-          if (detailRecord?.id) refreshRoutes(detailRecord.id);
-        },
-      });
+      modal.confirm(
+        mergeDeleteConfirmProps(
+          {
+            title: formatMessage('kong.deleteRoute', { name: route.name ?? route.id }),
+            onOk: async () => {
+              await deleteRoute(route.id);
+              if (detailRecord?.id) refreshRoutes(detailRecord.id);
+            },
+          },
+          formatMessage
+        )
+      );
     },
     [modal, detailRecord, refreshRoutes, formatMessage]
   );
@@ -223,15 +229,19 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
 
   const handleDelete = useCallback(
     (record: any) => {
-      modal.confirm({
-        title: formatMessage('kong.deleteService', { name: record.name ?? record.id }),
-        content: formatMessage('kong.deleteServiceContent'),
-        okButtonProps: { danger: true },
-        onOk: async () => {
-          await deleteService(record.id);
-          refresh();
-        },
-      });
+      modal.confirm(
+        mergeDeleteConfirmProps(
+          {
+            title: formatMessage('kong.deleteService', { name: record.name ?? record.id }),
+            content: formatMessage('kong.deleteServiceContent'),
+            onOk: async () => {
+              await deleteService(record.id);
+              refresh();
+            },
+          },
+          formatMessage
+        )
+      );
     },
     [modal, refresh, formatMessage]
   );
@@ -449,12 +459,16 @@ const ServicesTab: FC<ServicesTabProps> = ({ onViewRoute }) => {
           </Button>
         </div>
         <div className="toolbar-right">
-          <Input.Search
+          <ProSearch
+            size="sm"
             placeholder={formatMessage('kong.searchService')}
-            allowClear
             style={{ width: 280 }}
+            onChange={(e) => {
+              if (!e.target.value) {
+                setSearch('');
+              }
+            }}
             onSearch={setSearch}
-            onChange={(e) => !e.target.value && setSearch('')}
           />
         </div>
       </div>

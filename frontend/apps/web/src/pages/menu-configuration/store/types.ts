@@ -10,8 +10,8 @@ export interface MenuProps {
   url?: string;
   // 类型 1-内部地址 2-外部链接
   urlType: 1 | 2;
-  // 打开方式：1-当前页面跳转 2-新窗口打开
-  openType: 1 | 2;
+  // 打开方式：0-当前页面 iframe 1-新窗口打开
+  openType: 0 | 1;
   // 图标  传文件上传的附件地址
   icon: string;
   // 描述国际化Key

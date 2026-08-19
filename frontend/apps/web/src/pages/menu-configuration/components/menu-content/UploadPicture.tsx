@@ -1,4 +1,4 @@
-import { type FC, useRef } from 'react';
+import { type FC, type MouseEvent, useRef } from 'react';
 import { Upload, App } from 'antd';
 import { AddLarge } from '@carbon/icons-react';
 import useTranslate from '@/hooks/useTranslate.ts';
@@ -20,6 +20,14 @@ const Module: FC<UploadPictureProps> = ({ value, onChange, maxCount = 1, ...rest
   });
 
   const uploadRef = useRef<any>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const openFileDialog = (event?: MouseEvent<HTMLElement>) => {
+    event?.stopPropagation();
+    const target = event?.target as HTMLElement | null;
+    if (target?.tagName === 'INPUT') return;
+    rootRef.current?.querySelector<HTMLInputElement>('input[type="file"]')?.click();
+  };
 
   const beforeUpload = (file: any) => {
     const fileType = file.name.split('.').pop();
@@ -45,7 +53,7 @@ const Module: FC<UploadPictureProps> = ({ value, onChange, maxCount = 1, ...rest
   };
 
   return (
-    <>
+    <div ref={rootRef} onClick={openFileDialog}>
       <Upload
         action=""
         listType="picture-card"
@@ -55,15 +63,20 @@ const Module: FC<UploadPictureProps> = ({ value, onChange, maxCount = 1, ...rest
         beforeUpload={beforeUpload}
         onRemove={onRemove}
         ref={uploadRef}
+        openFileDialogOnClick={false}
       >
         {fileList?.length >= maxCount ? null : (
-          <button style={{ color: 'inherit', cursor: 'inherit', border: 0, background: 'none' }} type="button">
+          <button
+            style={{ color: 'inherit', cursor: 'pointer', border: 0, background: 'none' }}
+            type="button"
+            onClick={openFileDialog}
+          >
             <AddLarge />
           </button>
         )}
       </Upload>
       <span style={{ color: '#6F6F6F', marginTop: 4 }}>{formatMessage('common.imageSize', { size: '28*28' })}</span>
-    </>
+    </div>
   );
 };
 export default Module;

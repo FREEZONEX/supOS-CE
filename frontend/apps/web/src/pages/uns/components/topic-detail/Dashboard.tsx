@@ -1,15 +1,15 @@
-import { type FC, useEffect, useRef, useState, useCallback } from 'react';
-import md5 from 'blueimp-md5';
-import { ResizableBox } from 'react-resizable';
-import '@/components/resizable-container/index.scss';
-import { Result, type TimeRangePickerProps } from 'antd';
-import { Flex, DatePicker, Button, Empty } from 'antd';
-import { Renew } from '@carbon/icons-react';
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Line } from '@ant-design/charts';
+import { Alert, Button, DatePicker, Flex, Spin, Table, Typography, type TimeRangePickerProps } from 'antd';
+import { Renew } from '@/components/lucide-icon/carbon';
+import { toolbarIconProps } from '@/components/lucide-icon/icon-props';
+import { ComEmptyState } from '@/components';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { useTranslate } from '@/hooks';
-import IframeMask from '@/components/iframe-mask';
-import { useBaseStore } from '@/stores/base';
+import { getUnsDashboardData } from '@/apis/core-api/uns';
+import { formatTimestamp, simpleFormat } from '@/utils/format';
+import { ThemeType, useThemeStore } from '@/stores/theme-store';
 
 const { RangePicker } = DatePicker;
 
@@ -17,130 +17,50 @@ interface DetailDashboardProps {
   instanceInfo: { [key: string]: any };
 }
 
+interface DashboardField {
+  name: string;
+  type?: string;
+}
+
+interface DashboardPoint {
+  timestamp: number;
+  payload?: unknown;
+}
+
+const numericTypes = new Set(['integer', 'int', 'long', 'float', 'double', 'number', 'decimal']);
+
+const isNumericField = (field: DashboardField) => numericTypes.has(String(field.type || '').toLowerCase());
+
+const normalizeValue = (value: unknown) => {
+  const text = simpleFormat(value);
+  return typeof text === 'string' ? text : String(text);
+};
+
+const normalizePayload = (payload: unknown): Record<string, unknown> => {
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    return payload as Record<string, unknown>;
+  }
+  if (typeof payload === 'string') {
+    try {
+      const parsed = JSON.parse(payload);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return { value: payload };
+    }
+  }
+  return payload == null ? {} : { value: payload };
+};
+
 const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo }) => {
-  const { dataType, refers, alias } = instanceInfo;
-
   const formatMessage = useTranslate();
-  const hasDashboards = useBaseStore((state) => {
-    console.log(
-      state.menuGroup?.some((f) => f.url === '/dashboards'),
-      state.menuGroup
-    );
-    return state.menuGroup?.some((f) => f.url === '/dashboards');
-  });
-  const observer = useRef<MutationObserver | null>(null);
-  const newAlias = dataType === 7 ? refers?.[0]?.alias : alias;
-  const aliasHash = md5(newAlias).slice(8, 24);
-  const iframeName = `${newAlias?.replaceAll('_', '-')}`;
-
-  const [iframeUrl, setIframeUrl] = useState(
-    `/grafana/home/d-solo/${aliasHash}/${iframeName}?orgId=1&panelId=1&__feature.dashboardSceneSolo`
-  );
-  const [dates, setDates] = useState<any>(null);
-
-  useEffect(() => {
-    handleDefaultTime();
-  }, [instanceInfo]);
-
-  useEffect(() => {
-    const timeFrame = dates ? `&from=${dayjs(dates[0]).valueOf()}&to=${dayjs(dates[1]).valueOf()}` : '';
-    setIframeUrl(
-      `/grafana/home/d-solo/${aliasHash}/${iframeName}?orgId=1&panelId=1&__feature.dashboardSceneSolo${timeFrame}`
-    );
-  }, [dates]);
-
-  const iframeCallbackRef = useCallback(
-    (iframe: HTMLIFrameElement | null) => {
-      // ===== 清理阶段（iframe 卸载时）=====
-      if (observer.current) {
-        observer.current.disconnect();
-        observer.current = null;
-      }
-
-      // ===== 挂载阶段 =====
-      if (!iframe) return;
-      const handleMutation = (mutationsList: MutationRecord[]) => {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (!iframeDoc) return;
-
-        for (const mutation of mutationsList) {
-          if (mutation.type === 'childList') {
-            // 遍历新增的节点
-            // 使用 querySelectorAll 获取所有匹配的元素，并遍历它们
-            iframeDoc.querySelectorAll<HTMLElement>('.show-on-hover').forEach(handleButton);
-            // mutation.addedNodes.forEach((node) => {
-            //   // 如果新增的是 Element 节点
-            //   if (node.nodeType === Node.ELEMENT_NODE) {
-            //     const element = node as HTMLElement;
-
-            //     // 检查自身是否是目标按钮
-            //     if (element.classList.contains('show-on-hover')) {
-            //       handleButton(element);
-            //     }
-
-            //     // 检查子树中是否有目标按钮（因为 subtree: true）
-            //     const buttons = element.querySelectorAll<HTMLElement>('.show-on-hover');
-            //     buttons.forEach(handleButton);
-            //   }
-            // });
-          }
-        }
-      };
-
-      // 抽离处理逻辑，避免重复
-      const handleButton = (btn: HTMLElement) => {
-        if (!(btn as any).__handled__) {
-          btn.style.display = 'none';
-          btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          });
-          (btn as any).__handled__ = true;
-        }
-      };
-
-      // 注入滚动条样式
-      const injectStyles = (doc: Document) => {
-        const style = doc.createElement('style');
-        style.textContent = `
-      body::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; }
-      body::-webkit-scrollbar-track { margin: 4px 0; border-radius: 8px; }
-      body::-webkit-scrollbar-thumb { border-radius: 8px; background: #d3d3d3; cursor: pointer; }
-      body::-webkit-scrollbar-thumb:hover { background: #a5a5a5; }
-    `;
-        doc.head.appendChild(style);
-      };
-
-      // onload 处理
-      const onLoad = () => {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (!iframeDoc) return;
-
-        injectStyles(iframeDoc);
-
-        // 创建并启动 observer
-        observer.current = new MutationObserver(handleMutation);
-        observer.current.observe(iframeDoc.body, {
-          childList: true,
-          subtree: true,
-        });
-
-        // 立即处理已有元素（防止 missed）
-        handleMutation([{ type: 'childList', addedNodes: iframeDoc.body.childNodes } as any]);
-      };
-
-      // 绑定 onload
-      iframe.onload = onLoad;
-
-      // 注意：如果 iframe 已经加载完成（比如从缓存），可能需要手动触发
-      if (iframe.contentDocument?.readyState === 'complete') {
-        setTimeout(onLoad, 0); // 确保在下一 tick 执行
-      }
-    },
-    [iframeUrl]
-  ); // 依赖 iframeUrl，确保 URL 变化时重新绑定
-
-  const [isResizing, setIsResizing] = useState(false);
+  const theme = useThemeStore((state) => state.theme);
+  const [dates, setDates] = useState<[Dayjs, Dayjs]>([dayjs().add(-5, 'minute'), dayjs()]);
+  const [fields, setFields] = useState<DashboardField[]>([]);
+  const [list, setList] = useState<DashboardPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const rangePresets: TimeRangePickerProps['presets'] = [
     {
@@ -167,78 +87,190 @@ const DetailDashboard: FC<DetailDashboardProps> = ({ instanceInfo }) => {
       label: <span title={formatMessage('uns.last1week')}>{formatMessage('uns.last1week')}</span>,
       value: [dayjs().add(-1, 'w'), dayjs()],
     },
-    {
-      label: <span title={formatMessage('uns.last6weeks')}>{formatMessage('uns.last6weeks')}</span>,
-      value: [dayjs().add(-6, 'w'), dayjs()],
-    },
-    {
-      label: <span title={formatMessage('uns.last1year')}>{formatMessage('uns.last1year')}</span>,
-      value: [dayjs().add(-1, 'y'), dayjs()],
-    },
   ];
 
-  const handleDefaultTime = () => {
-    setDates([dataType === 2 ? dayjs().add(-6, 'h') : dayjs().add(-5, 'm'), dayjs()]);
+  const loadDashboard = useCallback(async () => {
+    if (!instanceInfo?.id) return;
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getUnsDashboardData({
+        nodeId: instanceInfo.id,
+        timeStart: dates[0].valueOf(),
+        timeEnd: dates[1].valueOf(),
+        limit: 1000,
+      });
+      setFields(Array.isArray(data?.fields) ? data.fields : []);
+      setList(Array.isArray(data?.list) ? data.list : []);
+    } catch (err) {
+      console.error(err);
+      setFields([]);
+      setList([]);
+      setError(formatMessage('uns.dashboardLoadFailed'));
+    } finally {
+      setLoading(false);
+    }
+  }, [dates, formatMessage, instanceInfo?.id]);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  const normalizedList = useMemo(
+    () => list.map((point) => ({ ...point, payload: normalizePayload(point.payload) })),
+    [list]
+  );
+
+  const displayFields = useMemo<DashboardField[]>(() => {
+    const byName = new Map<string, DashboardField>(fields.map((field) => [field.name, field] as const));
+    normalizedList.forEach((point) => {
+      Object.keys(point.payload).forEach((name) => {
+        if (!byName.has(name)) {
+          byName.set(name, { name });
+        }
+      });
+    });
+    return Array.from(byName.values());
+  }, [fields, normalizedList]);
+
+  // 与云端保持一致：只有所有展示字段都明确是数值类型时才画折线。
+  // State/Action 的 _json 可能包含 schema 外字段，必须切到表格，避免静默隐藏数据。
+  const chartCompatible = useMemo(
+    () => displayFields.length > 0 && displayFields.every(isNumericField),
+    [displayFields]
+  );
+
+  const chartData = useMemo(() => {
+    if (!chartCompatible) return [];
+    return normalizedList.flatMap((point) => {
+      const timestamp = Number(point.timestamp);
+      return displayFields
+        .map((field) => ({
+          time: dayjs(timestamp).format('MM-DD HH:mm:ss'),
+          timestamp,
+          field: field.name,
+          value: Number(point.payload[field.name]),
+        }))
+        .filter((item) => Number.isFinite(item.value));
+    });
+  }, [chartCompatible, displayFields, normalizedList]);
+
+  const lineConfig = useMemo(() => {
+    const isDark = theme === ThemeType.Dark;
+    const labelColor = isDark ? '#c6c6c6' : '#525252';
+    const axisColor = isDark ? '#525252' : '#d9d9d9';
+    const gridColor = isDark ? '#393939' : '#e8e8e8';
+
+    return {
+      data: chartData,
+      xField: 'time',
+      yField: 'value',
+      colorField: 'field',
+      height: 320,
+      autoFit: true,
+      smooth: true,
+      point: { size: 2 },
+      axis: {
+        x: { title: false, labelFill: labelColor, lineStroke: axisColor, tickStroke: axisColor },
+        y: { title: false, labelFill: labelColor, gridStroke: gridColor },
+      },
+      legend: {
+        color: {
+          position: 'bottom',
+          layout: { justifyContent: 'center' },
+          itemLabelFill: labelColor,
+        },
+      },
+    } as any;
+  }, [chartData, theme]);
+
+  const tableColumns = useMemo(
+    () => [
+      {
+        title: formatMessage('common.latestUpdate'),
+        dataIndex: '__displayTimestamp',
+        key: '__displayTimestamp',
+        width: 190,
+        fixed: 'left' as const,
+        defaultSortOrder: 'descend' as const,
+        sorter: (left: Record<string, any>, right: Record<string, any>) =>
+          left.__timestampSortValue - right.__timestampSortValue,
+      },
+      ...displayFields.map((field) => ({
+        title: field.name,
+        dataIndex: ['payload', field.name],
+        key: field.name,
+        ellipsis: true,
+        render: (value: unknown) => {
+          const text = normalizeValue(value);
+          return text ? (
+            <Typography.Text copyable={{ text }} ellipsis style={{ maxWidth: 220 }}>
+              {text}
+            </Typography.Text>
+          ) : (
+            <span style={{ color: 'var(--ui-text-color)', opacity: 0.45 }}>-</span>
+          );
+        },
+      })),
+    ],
+    [displayFields, formatMessage]
+  );
+
+  const tableData = useMemo(
+    () =>
+      normalizedList.map((point, index) => ({
+        key: `${point.timestamp}-${index}`,
+        __displayTimestamp: formatTimestamp(point.timestamp) || dayjs(point.timestamp).format('YYYY-MM-DD HH:mm:ss'),
+        __timestampSortValue: Number(point.timestamp) || 0,
+        payload: point.payload,
+      })),
+    [normalizedList]
+  );
+
+  const refreshRange = () => {
+    const duration = dates[1].valueOf() - dates[0].valueOf();
+    const end = dayjs();
+    setDates([end.add(-duration, 'millisecond'), end]);
   };
 
-  const onRangeChange = (dates: null | (Dayjs | null)[]) => {
-    setDates(dates);
-  };
-  if (!instanceInfo?.withDashboard) {
-    return <Empty />;
-  }
-  return hasDashboards ? (
-    <>
-      <Flex gap={10} style={{ marginBottom: '10px' }}>
+  return (
+    <Flex vertical gap={12}>
+      <Flex gap={10} wrap="wrap">
         <RangePicker
           showTime
           format="YYYY-MM-DD HH:mm:ss"
           value={dates}
-          onChange={onRangeChange}
-          presets={rangePresets}
-        />
-        <Button
-          color="default"
-          variant="filled"
-          icon={<Renew />}
-          onClick={() => {
-            if (dates) {
-              setDates([dayjs().add(dates[0] - dates[1], 'ms'), dayjs()]);
-            } else {
-              handleDefaultTime();
+          onChange={(nextDates) => {
+            if (nextDates?.[0] && nextDates?.[1]) {
+              setDates([nextDates[0], nextDates[1]]);
             }
           }}
-          style={{
-            border: '1px solid #CBD5E1',
-            color: 'var(--supos-text-color)',
-            backgroundColor: 'var(--supos-uns-button-color)',
-          }}
+          presets={rangePresets}
         />
+        <Button icon={<Renew {...toolbarIconProps} />} onClick={refreshRange} />
       </Flex>
 
-      <ResizableBox
-        className="resizable-container resizable-hover-handles"
-        width={900}
-        height={300}
-        minConstraints={[200, 200]}
-        maxConstraints={[1280, 500]}
-        axis="both"
-        resizeHandles={['se']} // 只允许右下角拖拽
-        onResizeStart={() => setIsResizing(true)}
-        onResizeStop={() => setIsResizing(false)}
-      >
-        <>
-          <iframe ref={iframeCallbackRef} height="100%" width="100%" id="dashboardIframe" src={iframeUrl} />
-          <IframeMask style={{ display: isResizing ? 'block' : 'none' }} />
-        </>
-      </ResizableBox>
-    </>
-  ) : (
-    <Result
-      status="403"
-      title={403}
-      subTitle={<span style={{ color: 'var(--supos-text-color)' }}>{formatMessage('common.pageNoPermission')}</span>}
-    />
+      {error ? <Alert type="error" showIcon message={error} /> : null}
+      <Spin spinning={loading}>
+        {normalizedList.length === 0 ? (
+          <ComEmptyState variant="inline" description={formatMessage('uns.dashboardNoData')} />
+        ) : chartCompatible && chartData.length > 0 ? (
+          <Line {...lineConfig} />
+        ) : tableData.length > 0 && displayFields.length > 0 ? (
+          <Table
+            bordered
+            size="middle"
+            pagination={{ pageSize: 10, showSizeChanger: false }}
+            columns={tableColumns}
+            dataSource={tableData}
+            scroll={{ x: Math.max(760, displayFields.length * 180 + 190) }}
+          />
+        ) : (
+          <ComEmptyState variant="inline" description={formatMessage('uns.dashboardNoNumericFields')} />
+        )}
+      </Spin>
+    </Flex>
   );
 };
+
 export default DetailDashboard;

@@ -22,7 +22,7 @@ const HighlightText: React.FC<HighlightTextProps> = ({ needle, haystack }) => {
     // 使用 map 方法遍历 parts 数组，为每个匹配项添加 <span>
     const highlightedParts = parts.map((part, index) =>
       new RegExp(needle, 'i').test(part) ? (
-        <span key={index} style={{ color: 'var(--supos-theme-color)' }}>
+        <span key={index} style={{ color: 'var(--ui-theme-color)' }}>
           {part}
         </span>
       ) : (

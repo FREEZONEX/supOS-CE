@@ -1,0 +1,14 @@
+{
+  "name": "@internal/anchor-bridge",
+  "version": "1.0.0",
+  "description": "主站与 Anchor 3D 子应用的 postMessage 通信契约（无 React 依赖，两侧共用）",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "catalog:lint"
+  }
+}

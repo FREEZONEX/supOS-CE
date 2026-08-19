@@ -1,11 +1,8 @@
 import type { ContainerItemProps, ResourceProps } from './types.ts';
 import { frontendPathList } from '@/routers';
+import { isHiddenSidebarMenuResourceKey } from '@/apis/core-api/core-adapter';
 import { storageOpt } from '@/utils';
-import {
-  SUPOS_USER_GUIDE_ROUTES,
-  SUPOS_USER_LAST_LOGIN_ENABLE,
-  SUPOS_USER_TIPS_ENABLE,
-} from '@/common-types/constans.ts';
+import { APP_USER_GUIDE_ROUTES, APP_USER_LAST_LOGIN_ENABLE, APP_USER_TIPS_ENABLE } from '@/common-types/constans.ts';
 import { filter, includes, isBoolean, isEmpty, map } from 'lodash-es';
 import { setUserTipsEnable } from '@/stores/base';
 
@@ -78,12 +75,11 @@ export function handleButtonPermissions(patterns: string[] = [], allButtonGroup:
   return [...new Set(matchedButtons)];
 }
 
-// 拆分关于我们和高阶使用
+// 拆分关于我们展示项
 export const filterContainerList = (containerMap: { [key: string]: ContainerItemProps } = {}) => {
   const containerList = Object.values(containerMap);
   const _containerList = containerList?.filter((f) => f.envMap?.service_is_show);
   return {
-    advancedUse: _containerList?.filter((f) => f.envMap?.service_redirect_url) || [],
     aboutUs: _containerList || [],
   };
 };
@@ -116,10 +112,11 @@ function buildSortedTree(data: ResourceProps[]) {
 }
 
 export function buildResourceTrees(resources: ResourceProps[]) {
-  const menuGroup = resources.filter((r) => r.type === 2 || r.type === 5);
+  const navigationResources = resources.filter((item) => !isHiddenSidebarMenuResourceKey(item.resourceKey));
+  const menuGroup = navigationResources.filter((r) => r.type === 2 || r.type === 5);
   const homeGroup = menuGroup?.filter((r) => r.homeEnable);
-  const homeTabGroup = resources?.filter((r) => r.type === 4 && r.homeEnable);
-  const treeResources = resources.filter((r) => r.type !== 5 && r.type !== 4);
+  const homeTabGroup = navigationResources?.filter((r) => r.type === 4 && r.homeEnable);
+  const treeResources = navigationResources.filter((r) => r.type !== 5 && r.type !== 4);
   return {
     // 菜单分组 不带子菜单，过滤掉空目录
     menuTree: buildSortedTree(treeResources)?.filter((f) => f.type === 2 || (f.type === 1 && f?.children?.length)),
@@ -188,37 +185,37 @@ const GuidePagePaths = ['/home', '/uns'];
 // 新手指引设置
 export function guideConfig({ systemInfo, menuGroup, info }: { systemInfo: any; menuGroup: any; info: any }) {
   // 1.新手导航：根据authenable和token区分是否为免登录
-  //      a.先获取上次免登录状态和当前比较，如果发生改变，则说明用户登录发生变化（比如由需要登陆变为免登或者免登变为需要），需要清除之前的SUPOS_USER_GUIDE_ROUTES状态，并设置新的免登状态
+  //      a.先获取上次免登录状态和当前比较，如果发生改变，则说明用户登录发生变化（比如由需要登陆变为免登或者免登变为需要），需要清除之前的APP_USER_GUIDE_ROUTES状态，并设置新的免登状态
   //      b.然后判断当前是否为免登
-  //          如果是免登录，先判断SUPOS_USER_GUIDE_ROUTES是否存在，不存在，则添加，存在则不做处理
+  //          如果是免登录，先判断APP_USER_GUIDE_ROUTES是否存在，不存在，则添加，存在则不做处理
   //          如果需要登陆，再按原有逻辑（用户第一次登录）进行引导
   // 2.tips: 用户访问时进入系统则展示tips，且可勾选不再展示（每次登录或者每次免登状态都需考虑）
   //         1).判断是否免登 2).是否为刚登录 3).判断用户是否支持展示
-  const lastLoginEnable = storageOpt.getOrigin(SUPOS_USER_LAST_LOGIN_ENABLE);
+  const lastLoginEnable = storageOpt.getOrigin(APP_USER_LAST_LOGIN_ENABLE);
 
   // 用户是guest表明登录成功
   const token = info?.sub === 'guest' ? undefined : 'login';
   const isLoginEnable = isBoolean(systemInfo?.authEnable) && !isEmpty(token);
   // 获取上次免登录状态和当前比较，如果发生改变，则说明用户登录发生变化,或者systemInfo?.authEnable获取失败则清除缓存
   if (!isBoolean(systemInfo?.authEnable) || lastLoginEnable !== `${isLoginEnable}`) {
-    storageOpt.remove(SUPOS_USER_GUIDE_ROUTES);
+    storageOpt.remove(APP_USER_GUIDE_ROUTES);
     storageOpt.setOrigin(
-      SUPOS_USER_LAST_LOGIN_ENABLE,
+      APP_USER_LAST_LOGIN_ENABLE,
       `${isBoolean(systemInfo?.authEnable) ? isLoginEnable : systemInfo?.authEnable}`
     );
-    storageOpt.remove(SUPOS_USER_TIPS_ENABLE);
+    storageOpt.remove(APP_USER_TIPS_ENABLE);
   }
 
   // 是否为免登录：authEnable===false并且不存在token时
   const notLogin = systemInfo?.authEnable === false && !token;
   // 如果为免登录，则判断是否存在新手导航数据，存在则继续触发，不存在则添加
   if (notLogin) {
-    if (!storageOpt.getOrigin(SUPOS_USER_TIPS_ENABLE)) {
+    if (!storageOpt.getOrigin(APP_USER_TIPS_ENABLE)) {
       setUserTipsEnable('1');
     }
-    if (!storageOpt.get(SUPOS_USER_GUIDE_ROUTES)) {
+    if (!storageOpt.get(APP_USER_GUIDE_ROUTES)) {
       storageOpt.set(
-        SUPOS_USER_GUIDE_ROUTES,
+        APP_USER_GUIDE_ROUTES,
         map(
           filter(menuGroup, (r) => includes(GuidePagePaths, r?.url)),
           (route) => ({ ...route, isVisited: false })
@@ -230,7 +227,7 @@ export function guideConfig({ systemInfo, menuGroup, info }: { systemInfo: any; 
   if (isLoginEnable) {
     // 判断用户是否手动禁用tips展示
     const tipsEnable = info?.tipsEnable;
-    if (tipsEnable && !storageOpt.getOrigin(SUPOS_USER_TIPS_ENABLE)) {
+    if (tipsEnable && !storageOpt.getOrigin(APP_USER_TIPS_ENABLE)) {
       setUserTipsEnable('1');
     }
     if (!tipsEnable) {
@@ -238,9 +235,9 @@ export function guideConfig({ systemInfo, menuGroup, info }: { systemInfo: any; 
     }
     const isFirstLogin = info?.firstTimeLogin;
     // 首次登录且未初始化用户引导路由信息，则需初始化该信息；已经初始化则继续使用缓存的状态
-    if (isFirstLogin === 1 && !storageOpt.get(SUPOS_USER_GUIDE_ROUTES)) {
+    if (isFirstLogin === 1 && !storageOpt.get(APP_USER_GUIDE_ROUTES)) {
       storageOpt.set(
-        SUPOS_USER_GUIDE_ROUTES,
+        APP_USER_GUIDE_ROUTES,
         map(
           filter(menuGroup, (r) => includes(GuidePagePaths, r?.url)),
           (route) => ({ ...route, isVisited: false })
@@ -250,7 +247,7 @@ export function guideConfig({ systemInfo, menuGroup, info }: { systemInfo: any; 
     // 由于存在手动启用新手导航功能，先取消清除的逻辑
     // if (isFirstLogin !== 1) {
     //   // 非首次登录直接清除用户引导路由信息
-    //   storageOpt.remove(SUPOS_USER_GUIDE_ROUTES);
+    //   storageOpt.remove(APP_USER_GUIDE_ROUTES);
     // }
   }
 }

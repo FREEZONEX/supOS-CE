@@ -13,7 +13,7 @@
       cursor: pointer;
 
       &:hover {
-        background-color: var(--supos-t-card-hover-bg);
+        background-color: var(--ui-t-card-hover-bg);
 
         .infinite-scroll-list-extra {
           display: flex;
@@ -24,7 +24,7 @@
 
   .active {
     position: relative;
-    background-color: var(--supos-select-card-color);
+    background-color: var(--ui-select-card-color);
 
     &::before {
       content: '';
@@ -33,7 +33,7 @@
       height: 32px;
       top: 0;
       left: 0;
-      background-color: var(--supos-theme-color);
+      background-color: var(--ui-theme-color);
     }
   }
 

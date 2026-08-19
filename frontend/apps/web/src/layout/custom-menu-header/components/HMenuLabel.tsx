@@ -1,6 +1,6 @@
 import { type FC, type ReactNode, useRef } from 'react';
 import { Flex } from 'antd';
-import { ChevronDown } from '@carbon/icons-react';
+import { ChevronDown } from '@/components/lucide-icon/carbon';
 import './index.scss';
 
 const HMenuLabel: FC<{ label: ReactNode; iconUrl?: string; expand?: boolean }> = ({ label, expand }) => {

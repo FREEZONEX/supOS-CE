@@ -137,7 +137,7 @@ export const guideSteps: (navigate: any, opt: any, theme: any) => Array<StepOpti
     //     },
     //     {
     //       action() {
-    //         const userGuideRoute = storageOpt.get(SUPOS_USER_GUIDE_ROUTES);
+    //         const userGuideRoute = storageOpt.get(APP_USER_GUIDE_ROUTES);
     //         const currentRoute = find(userGuideRoute, (route) => route?.menu?.url === '/uns' && route?.menu?.picked);
     //         if (currentRoute && currentRoute?.isVisited === false) {
     //           this.addStep({

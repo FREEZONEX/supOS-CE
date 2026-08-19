@@ -127,11 +127,9 @@ const useSSE = (url: string, options: UseServerSentEventsOptions = {}): UseServe
     try {
       setStatus(SSEConnectionStatus.CONNECTING);
 
-      // 创建EventSource实例
       const eventSource = new EventSource(url, {
         withCredentials: true,
       });
-      console.log('SSE连接建立:', url);
 
       eventSourceRef.current = eventSource;
 

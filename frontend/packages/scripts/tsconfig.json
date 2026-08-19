@@ -1,5 +1,5 @@
 {
-  "extends": "@supos-os-edge/typescript-config/node",
+  "extends": "@internal/typescript-config/node",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",

@@ -70,6 +70,7 @@ export const SortableTree: FC<SortableTreeProps> = ({
   treeData = [],
   loading,
   disabledSelected,
+  disabledDraggable,
   onHandleDragEnd,
   // ...restProps
 }) => {
@@ -93,6 +94,7 @@ export const SortableTree: FC<SortableTreeProps> = ({
   }, [activeId, data]);
 
   const activeItem = activeId ? flattenedItems.find(({ id }) => id === activeId) : null;
+  const isDragDisabled = (node: any) => Boolean(disabledDraggable?.(node) || node.fixed);
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -112,6 +114,8 @@ export const SortableTree: FC<SortableTreeProps> = ({
   };
 
   const handleDragStart = ({ active: { id: activeId } }: DragStartEvent) => {
+    const activeNode = flattenedItems.find(({ id }) => id === activeId);
+    if (activeNode && isDragDisabled(activeNode)) return;
     setActiveId(activeId);
     setOverId(activeId);
     document.body.style.setProperty('cursor', 'grabbing');
@@ -163,6 +167,8 @@ export const SortableTree: FC<SortableTreeProps> = ({
 
   const sortedIds = useMemo(() => flattenedItems.map(({ id }) => id), [flattenedItems]);
 
+  const getDisplayDepth = (item: FlattenedItem) => (item.type === 2 ? Math.max(item.depth, 1) : item.depth);
+
   return (
     <Spin spinning={!!loading} wrapperClassName={styles['sortable-tree-loading']}>
       <div style={style} className={styles['sortable-tree-wrap']}>
@@ -188,10 +194,16 @@ export const SortableTree: FC<SortableTreeProps> = ({
                   if (item.showTabs) {
                     const tabChildren = item.tabChildren?.filter((f) => f.id !== '102');
                     return (
-                      <Flex wrap style={{ paddingLeft: item.depth * indentationWidth }} gap={8} key={item.id}>
+                      <Flex
+                        wrap
+                        style={{ paddingLeft: getDisplayDepth(item) * indentationWidth }}
+                        gap={8}
+                        key={item.id}
+                      >
                         {tabChildren?.map((tab) => {
                           const length = tabChildren && tabChildren?.length < 3 ? tabChildren?.length : 3;
                           const disabledSelect = disabledSelected?.(tab) || false;
+                          const dragDisabled = isDragDisabled(tab);
                           return (
                             <SortableTreeItem
                               node={tab}
@@ -201,9 +213,10 @@ export const SortableTree: FC<SortableTreeProps> = ({
                                 onSelect?.(v, node);
                               }}
                               disabledSelect={disabledSelect}
+                              readonly={dragDisabled}
                               key={tab.id}
                               indicator={indicator}
-                              fixed={tab.fixed}
+                              fixed={dragDisabled}
                               wrapperStyle={{
                                 width: `calc((100% - ${(length - 1) * 8}px)/ ${length})`,
                               }}
@@ -229,11 +242,12 @@ export const SortableTree: FC<SortableTreeProps> = ({
                         onSelect?.(v, node);
                       }}
                       disabledSelect={disabledSelect}
+                      readonly={isDragDisabled(item)}
                       key={item.id}
                       indicator={indicator}
-                      fixed={item.fixed}
+                      fixed={isDragDisabled(item)}
                       id={item.id}
-                      depth={item.id === activeId && projected ? projected.depth : item.depth}
+                      depth={item.id === activeId && projected ? projected.depth : getDisplayDepth(item)}
                       label={renderLabel ? renderLabel(item) : item.label}
                       rightExtra={typeof rightExtra === 'function' ? rightExtra?.(item) : rightExtra}
                       leftExtra={typeof leftExtra === 'function' ? leftExtra?.(item) : leftExtra}

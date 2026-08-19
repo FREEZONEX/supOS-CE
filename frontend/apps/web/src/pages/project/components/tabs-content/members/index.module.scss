@@ -1,0 +1,71 @@
+.memberCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  background: var(--ui-t-gray-color-10);
+  color: var(--ui-text-color);
+  flex-shrink: 0;
+}
+
+.memberName {
+  font-weight: 500;
+  color: var(--ui-text-color);
+}
+
+.accessTag {
+  padding: 4px 12px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  border-radius: 60px;
+}
+
+.accessAdmin {
+  background: var(--ui-access-purple-bg);
+  color: var(--ui-access-purple-text);
+  border: 1px solid var(--ui-access-purple-border);
+}
+
+.accessEdit {
+  background: var(--ui-access-blue-bg);
+  color: var(--ui-access-blue-text);
+  border: 1px solid var(--ui-access-blue-border);
+}
+
+.accessView {
+  background: var(--ui-access-gray-bg);
+  color: var(--ui-access-gray-text);
+  border: 1px solid var(--ui-access-gray-border);
+}
+
+.roleTag {
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 400;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  background: #fffbeb;
+  color: #d97706;
+  border-radius: 60px;
+  border: none;
+}
+
+.labelStyle {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  letter-spacing: 0.16px;
+  color: var(--ui-text-color);
+  opacity: 0.65;
+}
+
+.operation {
+  display: flex;
+  gap: 10px;
+}

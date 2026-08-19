@@ -1,5 +1,14 @@
-import { forwardRef, useState, useRef, type ChangeEvent, type InputHTMLAttributes, useEffect } from 'react';
-import { Search, Close } from '@carbon/icons-react';
+import {
+  forwardRef,
+  useState,
+  useRef,
+  type ChangeEvent,
+  type InputHTMLAttributes,
+  type KeyboardEvent,
+  useEffect,
+} from 'react';
+import { Search, Close } from '@/components/lucide-icon/carbon';
+import { toolbarIconProps } from '@/components/lucide-icon/icon-props';
 import { useMergedRefs } from '@/hooks/useMergedRefs';
 import cx from 'classnames';
 import './index.scss';
@@ -8,6 +17,7 @@ type InputPropsBase = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>;
 export interface ASearchProps extends InputPropsBase {
   closeButtonLabelText?: string;
   onClear?: () => void;
+  onSearch?: (value: string) => void;
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -19,9 +29,11 @@ const ProSearch = forwardRef<HTMLInputElement, ASearchProps>(
       value,
       onChange,
       onClear,
+      onSearch,
       closeButtonLabelText,
       style,
       size = 'md',
+      onKeyDown,
       ...restProps
     },
     searchRef
@@ -48,7 +60,16 @@ const ProSearch = forwardRef<HTMLInputElement, ASearchProps>(
       const inputTarget = Object.assign({}, inputRef.current, { value: '' });
       handleChange({ target: inputTarget, type: 'change' } as ChangeEvent<HTMLInputElement>);
       onClear?.();
+      onSearch?.('');
       inputRef.current?.focus();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        onSearch?.(String(val ?? ''));
+      }
+      onKeyDown?.(event);
     };
 
     useEffect(() => {
@@ -57,7 +78,7 @@ const ProSearch = forwardRef<HTMLInputElement, ASearchProps>(
 
     return (
       <div className={searchClasses}>
-        <Search className="custom-search-icon" />
+        <Search className="custom-search-icon" {...toolbarIconProps} />
         <input
           {...restProps}
           autoComplete={autoComplete}
@@ -65,11 +86,15 @@ const ProSearch = forwardRef<HTMLInputElement, ASearchProps>(
           className="custom-search-input"
           value={val}
           onChange={handleChange}
-          style={{ ...style, paddingRight: val ? '32px' : '10px' }}
+          onKeyDown={handleKeyDown}
+          style={{
+            ...style,
+            ...(val ? { paddingRight: size === 'sm' ? 32 : size === 'lg' ? 48 : 40 } : {}),
+          }}
         />
         {val && (
           <button className="custom-search-clear" onClick={handleClear} title={closeButtonLabelText}>
-            <Close />
+            <Close {...toolbarIconProps} />
           </button>
         )}
       </div>

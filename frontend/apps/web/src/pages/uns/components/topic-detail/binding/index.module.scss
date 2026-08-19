@@ -1,6 +1,6 @@
 .container {
-  background-color: var(--supos-bg-color);
-  box-shadow: 1px 1px 10px 2px var(--supos-boxshadow-color);
+  background-color: var(--ui-bg-color);
+  box-shadow: 1px 1px 10px 2px var(--ui-boxshadow-color);
 }
 
 .list-item {
@@ -8,10 +8,10 @@
   padding: 0 8px;
 
   &:hover {
-    background-color: var(--supos-t-card-hover-bg);
+    background-color: var(--ui-t-card-hover-bg);
   }
 }
 
 .selected {
-  background-color: var(--supos-select-card-color);
+  background-color: var(--ui-select-card-color);
 }

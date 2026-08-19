@@ -42,17 +42,18 @@
       line-height: 32px;
       margin-bottom: 0;
       padding-left: 10px;
+      padding-right: 10px;
 
       &::before {
         height: 0;
       }
 
       &:has(.has-right-click) {
-        background-color: var(--supos-t-card-hover-bg);
+        background-color: var(--ui-t-card-hover-bg);
       }
 
       &:hover {
-        background-color: var(--supos-t-card-hover-bg);
+        background-color: var(--ui-t-card-hover-bg);
       }
 
       .custom-tree-node {
@@ -117,6 +118,49 @@
           vertical-align: middle;
         }
       }
+
+      &.uns-mount-node {
+        position: relative;
+        background-color: transparent;
+
+        &::after {
+          position: absolute;
+          z-index: 0;
+          inset: 0 0 0 calc(6px + var(--uns-mount-offset, 0px));
+          border-left: 1px dashed var(--ui-border-color);
+          background: color-mix(in srgb, var(--ui-t-card-hover-bg) 44%, transparent);
+          content: '';
+          pointer-events: none;
+        }
+
+        &.uns-mount-group-start::after {
+          border-radius: 4px 4px 0 0;
+        }
+
+        &.uns-mount-group-end::after {
+          border-radius: 0 0 4px 4px;
+        }
+
+        &.uns-mount-group-start.uns-mount-group-end::after {
+          border-radius: 4px;
+        }
+
+        &:hover::after,
+        &:has(.has-right-click)::after,
+        &.ant-tree-treenode-selected::after {
+          background: var(--ui-t-card-hover-bg);
+        }
+
+        &.ant-tree-treenode-selected::before {
+          z-index: 2;
+          left: calc(6px + var(--uns-mount-offset, 0px));
+        }
+
+        > * {
+          position: relative;
+          z-index: 1;
+        }
+      }
     }
 
     .ant-tree-treenode-selected.ant-tree-treenode:not(.ant-tree-treenode-disabled).filter-node .ant-tree-title {
@@ -124,7 +168,8 @@
     }
 
     .ant-tree-treenode-selected {
-      background-color: var(--supos-t-card-hover-bg);
+      background-color: var(--ui-t-card-hover-bg);
+      border-radius: 4px;
       position: relative;
 
       &::before {
@@ -133,7 +178,8 @@
         height: 32px;
         top: 0;
         left: 0;
-        background-color: var(--supos-theme-color);
+        border-radius: 4px 0 0 4px;
+        background-color: var(--ui-t-chartreuse-color-60, #b2ed1d);
       }
 
       .ant-tree-node-content-wrapper.ant-tree-node-selected {

@@ -1,6 +1,5 @@
 import localZhCN from '@/locale/zh-CN.json';
 import localEnUS from '@/locale/en-US.json';
-import { getSystemI18Api } from '@/apis/inter-api/uns.ts';
 import { LOGIN_URL } from '@/common-types/constans.ts';
 
 type I18n = 'zh-CN' | 'en-US';
@@ -11,7 +10,7 @@ const localSources: { [x: string]: any } = {
   'en-US': localEnUS,
 };
 
-const publicI18nPaths = new Set(['/', '/403', '/404', '/freeLogin', '/share', LOGIN_URL, '/license-activation']);
+const publicI18nPaths = new Set(['/', '/403', '/404', '/share', LOGIN_URL, '/license-activation']);
 
 // antd 所有语言包
 const antSources: Record<string, () => Promise<any>> = {
@@ -104,6 +103,7 @@ export const loadMessages = async (lang: I18n, options?: { skipRemoteMessages?: 
     const skipRemoteMessages = options?.skipRemoteMessages || publicI18nPaths.has(window.location.pathname);
     if (!skipRemoteMessages) {
       try {
+        const { getSystemI18Api } = await import('@/apis/core-api/i18n.ts');
         const content = await getSystemI18Api(lang);
         backEndMessages = content?.messages || {};
         // backEndMessages = content;
@@ -111,7 +111,7 @@ export const loadMessages = async (lang: I18n, options?: { skipRemoteMessages?: 
         console.log(e);
       }
     }
-    // 合并语言包，以后端服务器存储的为准
+    // 前端 locale 仅作为 fallback；普通业务词条在所有环境都以后端语言包为准。
     const messages = { ...localMessages, ...backEndMessages };
     // 如果两个来源都没有加载到语言包，则抛出错误
     if (Object.keys(messages).length === 0) {

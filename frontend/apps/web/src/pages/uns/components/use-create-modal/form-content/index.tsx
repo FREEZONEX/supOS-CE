@@ -1,14 +1,19 @@
 import { type FC, useState, useEffect } from 'react';
 import { Form } from 'antd';
-import { getTypes, getAllTemplate } from '@/apis/inter-api/uns';
+import { getTypes } from '@/apis/core-api/uns';
 import { useTranslate, useFormValue } from '@/hooks';
 import FormItems, { type FormItemType } from './FormItems';
 import { uniqBy } from 'lodash-es';
-import { deriveParentDataTypeFromName, isMultiSegmentName, validateNamespaceName } from '../path-utils';
+import {
+  deriveParentDataTypeFromName,
+  getDefaultDataTypeByParent,
+  isMultiSegmentName,
+  validateNamespaceName,
+} from '../path-utils';
 
 import type { FieldItem } from '@/pages/uns/types';
 import { useBaseStore } from '@/stores/base';
-import { useI18nStore } from '@/stores/i18n-store';
+import { MAX_LENGTHS } from '@/utils/limits';
 
 export interface FormContentProps {
   step: number;
@@ -19,12 +24,9 @@ export interface FormContentProps {
   topicType: number;
 }
 
-type TemplateItemType = { label: string; value: string };
-
 type GetFormDataParamsType = {
   currentStep: number;
   dataType: number;
-  modelId: string;
   fields: FieldItem[];
   windowType: string;
   addModalType: string;
@@ -40,26 +42,21 @@ const FormContent: FC<FormContentProps> = ({
   const form = Form.useFormInstance();
   const formatMessage = useTranslate();
   const {
-    dashboardType,
     systemInfo: { enableAutoCategorization },
   } = useBaseStore((state) => ({
-    dashboardType: state.dashboardType,
     systemInfo: state.systemInfo,
   }));
-  const lang = useI18nStore((state) => state.lang);
 
   const [types, setTypes] = useState([]);
-  const [templateList, setTemplateList] = useState<TemplateItemType[]>([]); //模版列表
 
   const topic = useFormValue('topic', form);
   const path = useFormValue('path', form);
   const name = useFormValue('name', form);
   const calculationType = useFormValue('calculationType', form);
   const dataType = useFormValue('dataType', form);
-  const modelId = useFormValue('modelId', form);
   const fields = useFormValue('fields', form) || [];
   const windowType = useFormValue(['streamOptions', 'window', 'windowType'], form);
-  const parentDataType = useFormValue('parentDataType', form);
+  const parentDataType = useFormValue('parentDataType', form) || topicType || 1;
 
   const isCreateFolder = addModalType.includes('Folder');
   const isFormTopic = addModalType.includes('topic');
@@ -77,19 +74,7 @@ const FormContent: FC<FormContentProps> = ({
       .catch((err) => {
         console.log(err);
       });
-    getAllTemplate({ pageNo: 1, pageSize: 9999 }).then((res: any) => {
-      if (res && Array.isArray(res)) {
-        const _res = res.map((item) => ({
-          ...item,
-          label: item.name,
-          value: item.id,
-        }));
-        setTemplateList([{ label: formatMessage('common.custom'), value: 'custom' }].concat(_res));
-      } else {
-        setTemplateList([{ label: formatMessage('common.custom'), value: 'custom' }]);
-      }
-    });
-  }, [open, formatMessage]);
+  }, [open]);
 
   const selectAll = (options: any[] = []) => {
     const currentReferTopics = form.getFieldValue('referIds') || [];
@@ -145,7 +130,7 @@ const FormContent: FC<FormContentProps> = ({
   };
 
   const getFormData = (data: GetFormDataParamsType) => {
-    const { currentStep, dataType, modelId, fields, windowType } = data;
+    const { currentStep, dataType, windowType } = data;
 
     const formItemList: FormItemType[] = [];
 
@@ -200,6 +185,16 @@ const FormContent: FC<FormContentProps> = ({
                       parentDataType: topicType,
                     });
                     if (error) {
+                      if (error.key === 'uns.namespaceSegmentTooLong') {
+                        return Promise.reject(
+                          new Error(
+                            formatMessage('uns.labelMaxLength', {
+                              label: formatMessage('common.name'),
+                              length: error.values?.length || MAX_LENGTHS.name,
+                            })
+                          )
+                        );
+                      }
                       return Promise.reject(
                         new Error(formatMessage(error.key, error.values ? { ...error.values } : undefined))
                       );
@@ -209,14 +204,17 @@ const FormContent: FC<FormContentProps> = ({
                   if (!/^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/.test(value)) {
                     return Promise.reject(new Error(formatMessage('uns.nameFormat')));
                   }
-                  if (value.length > 63) {
+                  if (value.length > MAX_LENGTHS.name) {
                     return Promise.reject(
                       new Error(
-                        formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 })
+                        formatMessage('uns.labelMaxLength', {
+                          label: formatMessage('common.name'),
+                          length: MAX_LENGTHS.name,
+                        })
                       )
                     );
                   }
-                  if (isCreateFolder && ['label', 'template'].includes(value)) {
+                  if (isCreateFolder && value === 'label') {
                     return Promise.reject(new Error(formatMessage('uns.prohibitKeywords')));
                   }
                   return Promise.resolve();
@@ -234,7 +232,7 @@ const FormContent: FC<FormContentProps> = ({
             formProps: {
               name: 'parentDataType',
               label: formatMessage('uns.parentDataType'),
-              initialValue: 1,
+              initialValue: topicType || 1,
               tooltip: {
                 title: (
                   <div>
@@ -285,7 +283,6 @@ const FormContent: FC<FormContentProps> = ({
                 const attributeTypeObj = {
                   fields: [{}],
                   attributeType: 1,
-                  modelId: undefined,
                   jsonData: undefined,
                   jsonList: [],
                   jsonDataPath: undefined,
@@ -316,7 +313,7 @@ const FormContent: FC<FormContentProps> = ({
           formProps: {
             name: 'dataType',
             label: formatMessage('uns.databaseType'),
-            initialValue: enableAutoCategorization ? 8 : 8,
+            initialValue: enableAutoCategorization ? getDefaultDataTypeByParent(topicType || 1) || 8 : 8,
             hidden: !!enableAutoCategorization,
             tooltip: {
               title: (
@@ -357,7 +354,6 @@ const FormContent: FC<FormContentProps> = ({
                 Object.assign(resetObj, {
                   fields: [{}],
                   attributeType: 1,
-                  modelId: undefined,
                   jsonData: undefined,
                   jsonList: [],
                   jsonDataPath: undefined,
@@ -384,7 +380,7 @@ const FormContent: FC<FormContentProps> = ({
             formItemList.push({
               formType: 'attributeTypeForm',
               formProps: { name: 'attributeTypeForm' },
-              childProps: { types, addNamespaceForAi, setAddNamespaceForAi, dataType, templateList },
+              childProps: { types, addNamespaceForAi, setAddNamespaceForAi, dataType },
             });
           }
         }
@@ -503,22 +499,23 @@ const FormContent: FC<FormContentProps> = ({
         {
           formType: 'input',
           formProps: {
-            rules: [{ required: true }],
+            rules: [{ required: true }, { max: MAX_LENGTHS.alias }],
             name: 'alias',
             label: formatMessage('uns.alias'),
             tooltip: {
               title: formatMessage('uns.aliasTooltip'),
             },
           },
-          childProps: {},
+          childProps: { maxLength: MAX_LENGTHS.alias },
         },
         {
           formType: 'input',
           formProps: {
             name: 'displayName',
             label: formatMessage('uns.displayName'),
-            rules: [{ max: 128 }],
+            rules: [{ max: MAX_LENGTHS.displayName }],
           },
+          childProps: { maxLength: MAX_LENGTHS.displayName },
         },
         {
           formType: 'textArea',
@@ -527,104 +524,28 @@ const FormContent: FC<FormContentProps> = ({
             label: formatMessage(isCreateFolder ? 'uns.folderDescription' : 'uns.fileDescription'),
             rules: [
               {
-                max: 512,
+                max: MAX_LENGTHS.description,
                 message: formatMessage('uns.labelMaxLength', {
                   label: formatMessage(isCreateFolder ? 'uns.folderDescription' : 'uns.fileDescription'),
-                  length: 512,
+                  length: MAX_LENGTHS.description,
                 }),
               },
             ],
           },
-          childProps: { rows: 2 },
+          childProps: { rows: 2, maxLength: MAX_LENGTHS.description },
         }
       );
-
-      if (!isCreateFolder) {
-        collapseFormItemList.push({
-          formType: 'tagSelect',
-          formProps: {
-            name: 'tags',
-            label: formatMessage('common.label'),
-            tooltip: {
-              title: formatMessage('uns.labelTooltip'),
-            },
-          },
-          childProps: {
-            tagMaxLen: 63,
-          },
-        });
-        if ([1, 2].includes(dataType)) {
-          collapseFormItemList.push({
-            formType: 'select',
-            formProps: {
-              tooltip: {
-                title: formatMessage('uns.writDownDataTooltip'),
-              },
-              label: formatMessage('uns.writDownData'),
-              name: 'accessLevel',
-              initialValue: 'READ_ONLY',
-            },
-            childProps: {
-              options: [
-                { label: formatMessage('uns.true'), value: 'READ_WRITE' },
-                { label: formatMessage('uns.false'), value: 'READ_ONLY' },
-              ],
-            },
-          });
-        }
-      }
 
       collapseFormItemList.push({ formType: 'expandFormList', formProps: { name: 'expandFormList' } });
       if (isCreateFolder) {
         //创建文件夹
-        collapseFormItemList.push(
-          // {
-          //   formType: 'divider',
-          //   formProps: { name: 'modelDescriptionDivider' },
-          //   childProps: {
-          //     style: {
-          //       marginTop: 0,
-          //     },
-          //   },
-          // },
-          {
-            formType: 'select',
-            formProps: {
-              name: 'modelId',
-              label: formatMessage('common.template'),
-              initialValue: 'custom',
-            },
-            childProps: {
-              showSearch: true,
-              optionFilterProp: 'path',
-              options: templateList,
-              onChange: (modelId: string) => {
-                if (modelId === 'custom' || !modelId) {
-                  form.setFieldValue('fields', undefined);
-                }
-              },
-            },
-          }
-        );
-
-        if (modelId === 'custom' && fields.length) {
-          collapseFormItemList.push({
-            formType: 'checkbox',
-            formProps: {
-              name: 'createTemplate',
-              label: formatMessage('uns.generationTemplate'),
-              initialValue: true,
-              valuePropName: 'checked',
-            },
-          });
-        }
         collapseFormItemList.push({
           formType: 'fieldsFormList',
           formProps: {
             name: 'fields',
           },
           childProps: {
-            disabled: modelId !== 'custom',
+            disabled: false,
             isCreateFolder,
             showMainKey: false,
             types,
@@ -659,7 +580,7 @@ const FormContent: FC<FormContentProps> = ({
             formType: 'checkbox',
             formProps: {
               name: 'addFlow',
-              initialValue: true,
+              initialValue: false,
               valuePropName: 'checked',
               wrapperCol: { span: 22 },
               labelCol: { span: 1 },
@@ -677,35 +598,11 @@ const FormContent: FC<FormContentProps> = ({
           });
         }
 
-        if (dashboardType?.includes('grafana')) {
-          rowFormItemList.push({
-            formType: 'checkbox',
-            formProps: {
-              name: 'addDashBoard',
-              initialValue: true,
-              valuePropName: 'checked',
-              className: lang === 'en-US' ? 'customLabelStyle' : '',
-              wrapperCol: { span: 22 },
-              labelCol: { span: 1 },
-              style: {
-                marginBottom: 0,
-              },
-            },
-            childProps: {
-              label: formatMessage('uns.autoDashboard'),
-              tooltip: {
-                title: formatMessage('uns.autoDashboardTooltip'),
-              },
-              rootClassname: 'opt-checkbox',
-            },
-          });
-        }
-
         rowFormItemList.push({
           formType: 'checkbox',
           formProps: {
-            name: 'save2db',
-            initialValue: false,
+            name: 'persistence',
+            initialValue: true,
             valuePropName: 'checked',
             wrapperCol: { span: 22 },
             labelCol: { span: 1 },
@@ -779,35 +676,11 @@ const FormContent: FC<FormContentProps> = ({
 
       const rowFormItemList: FormItemType[] = [];
 
-      if (dashboardType?.includes('grafana')) {
-        rowFormItemList.push({
-          formType: 'checkbox',
-          formProps: {
-            name: 'addDashBoard',
-            initialValue: true,
-            valuePropName: 'checked',
-            className: lang === 'en-US' ? 'customLabelStyle' : '',
-            wrapperCol: { span: 22 },
-            labelCol: { span: 1 },
-            style: {
-              marginBottom: 0,
-            },
-          },
-          childProps: {
-            label: formatMessage('uns.autoDashboard'),
-            tooltip: {
-              title: formatMessage('uns.autoDashboardTooltip'),
-            },
-            rootClassname: 'opt-checkbox',
-          },
-        });
-      }
-
       rowFormItemList.push({
         formType: 'checkbox',
         formProps: {
-          name: 'save2db',
-          initialValue: false,
+          name: 'persistence',
+          initialValue: true,
           valuePropName: 'checked',
           wrapperCol: { span: 22 },
           labelCol: { span: 1 },
@@ -908,7 +781,6 @@ const FormContent: FC<FormContentProps> = ({
       formData={getFormData({
         currentStep: step,
         dataType,
-        modelId,
         fields,
         windowType,
         addModalType,

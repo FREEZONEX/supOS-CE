@@ -1,22 +1,22 @@
 {
   "name": "frontend",
   "private": true,
-  "description": "pnpm monorepo supos-os-edge",
+  "description": "pnpm monorepo tier0",
   "type": "module",
   "scripts": {
     "prepare": "cd .. && husky frontend/.husky",
-    "lint": "eslint .",
+    "lint": "pnpm i18n:fallback:check && eslint .",
+    "i18n:fallback:check": "node apps/web/scripts/check-i18n-fallback.mjs",
     "intl:once": "turbo run intl:once",
     "intl:watch": "turbo run intl:watch",
     "properties:convert": "turbo run properties:convert",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter ./apps/web",
-    "dev:servicesExpress": "turbo run dev --filter ./apps/services-express",
-    "start:servicesExpress": "turbo run start --filter ./apps/services-express",
+    "dev:anchor": "turbo run dev --filter ./apps/anchor",
     "build": "turbo run build",
     "build:web": "turbo run build --filter ./apps/web",
+    "build:anchor": "turbo run build --filter ./apps/anchor",
     "build:scripts": "turbo run build --filter ./packages/scripts",
-    "build:servicesExpress": "turbo run build --filter ./apps/services-express",
     "clean": "rimraf --glob \"**/node_modules\"  || exit 0"
   },
   "lint-staged": {
@@ -30,34 +30,30 @@
       "prettier --write"
     ]
   },
-  "dependencies": {
-    "lodash-es": "catalog:util"
-  },
   "devDependencies": {
+    "@commitlint/cli": "catalog:lint",
+    "@commitlint/config-conventional": "catalog:lint",
+    "@commitlint/prompt-cli": "catalog:lint",
     "@eslint/js": "catalog:lint",
     "eslint": "catalog:lint",
+    "eslint-config-prettier": "catalog:lint",
+    "eslint-plugin-prettier": "catalog:lint",
     "eslint-plugin-react-hooks": "catalog:lint",
     "eslint-plugin-react-refresh": "catalog:lint",
     "globals": "catalog:lint",
-    "typescript": "catalog:lint",
-    "typescript-eslint": "catalog:lint",
+    "husky": "catalog:lint",
+    "lint-staged": "catalog:lint",
     "prettier": "catalog:lint",
-    "eslint-config-prettier": "catalog:lint",
-    "eslint-plugin-prettier": "catalog:lint",
+    "rimraf": "catalog:build",
     "stylelint": "catalog:lint",
     "stylelint-config-prettier": "catalog:lint",
     "stylelint-config-standard": "catalog:lint",
     "stylelint-config-standard-scss": "catalog:lint",
     "stylelint-prettier": "catalog:lint",
     "stylelint-scss": "catalog:lint",
-    "@commitlint/cli": "catalog:lint",
-    "@commitlint/config-conventional": "catalog:lint",
-    "@commitlint/prompt-cli": "catalog:lint",
-    "@types/lodash-es": "catalog:type",
-    "lint-staged": "catalog:lint",
-    "husky": "catalog:lint",
     "turbo": "catalog:build",
-    "rimraf": "catalog:build"
+    "typescript": "catalog:lint",
+    "typescript-eslint": "catalog:lint"
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {

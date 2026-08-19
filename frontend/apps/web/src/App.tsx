@@ -1,33 +1,101 @@
-import { useEffect, useMemo } from 'react';
-import { App as AntApp } from 'antd';
-import { BrowserRouter } from 'react-router';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { App as AntApp, Modal } from 'antd';
+import { BrowserRouter, useLocation } from 'react-router';
 import { getRoutesDom, RoutesElement } from '@/routers';
 import CookieContext from '@/CookieContext';
 import themeToken from './theme/theme-token.ts';
 import 'shepherd.js/dist/css/shepherd.css';
 import './App.css';
 import { userLogin } from '@/apis/chat2db';
+import { getSystemConfig } from '@/apis/core-api/system-config.ts';
 import { UnsTreeMapProvider } from '@/UnsTreeMapContext';
-import {
-  APP_TITLE,
-  LOGIN_URL,
-  MENU_TARGET_PATH,
-  OMC_MODEL,
-  STORAGE_PATH,
-  SUPOS_LANG,
-} from '@/common-types/constans.ts';
+import { APP_TITLE, LOGIN_URL, MENU_TARGET_PATH, OMC_MODEL, STORAGE_PATH, APP_LANG } from '@/common-types/constans.ts';
 import LanguageProvider from './LanguageProvider.tsx';
 import { queryChat2dbCurUser } from '@/utils/chat2db.ts';
 import { checkImageExists, isInIframe } from '@/utils/url-util.ts';
-import { fetchBaseStore, useBaseStore } from '@/stores/base';
-import { setThemeBySystem, ThemeType, useThemeStore } from '@/stores/theme-store.ts';
-import { cleanupI18nSubscriptions, defaultLanguage, initI18n } from './stores/i18n-store.ts';
+import { getToken, removeToken } from '@/utils/auth.ts';
+import { fetchBaseStore, fetchLaunchpadBaseStore, useBaseStore } from '@/stores/base';
+import { restoreThemeRootFromStore, setThemeBySystem, ThemeType, useThemeStore } from '@/stores/theme-store.ts';
+import { cleanupI18nSubscriptions, defaultLanguage, I18nEnum, initI18n } from './stores/i18n-store.ts';
 import Cookies from 'js-cookie';
 import { useI18nStore } from '@/stores/i18n-store';
 import { CookiesProvider } from 'react-cookie';
+import { isPublicAccessPath, replaceWithLicenseActivation, resolveLicenseGate } from '@/utils/license-auth';
 import { storageOpt } from '@/utils/storage.ts';
+import DefaultPasswordReminder from '@/components/default-password-reminder';
+import {
+  isLaunchpadSiteRequest,
+  isLaunchpadStandaloneAllowedPath,
+  isLaunchpadStandalonePort,
+} from '@/utils/launchpad-site';
+import { isolatePublicPageTheme } from '@/utils/public-page-theme';
+
+const RouteModalCleanup = () => {
+  const location = useLocation();
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    if (mountedRef.current) {
+      Modal.destroyAll();
+    }
+    mountedRef.current = true;
+  }, [location.pathname]);
+
+  return null;
+};
+
+const PublicPageThemeBoundary = () => {
+  const location = useLocation();
+  const theme = useThemeStore((state) => state.theme);
+
+  useLayoutEffect(() => {
+    if (!isPublicAccessPath(location.pathname) && getToken()) {
+      return;
+    }
+    const restoreIsolatedTheme = isolatePublicPageTheme();
+    return () => {
+      restoreIsolatedTheme();
+      restoreThemeRootFromStore();
+    };
+  }, [location.pathname, theme]);
+
+  return null;
+};
+
+const normalizeSupportedLanguage = (language?: string | null) => {
+  const normalized = language?.trim().replace('_', '-').toLowerCase();
+  if (normalized === 'zh' || normalized === 'zh-cn') {
+    return I18nEnum.ZhCN;
+  }
+  if (normalized === 'en' || normalized === 'en-us') {
+    return I18nEnum.EnUS;
+  }
+  return undefined;
+};
+
+const resolvePublicBootstrapLanguage = async (preferredEnvLang?: string) => {
+  try {
+    const systemConfig = await getSystemConfig();
+    const systemLang = normalizeSupportedLanguage(systemConfig?.lang);
+    if (systemLang) {
+      return systemLang;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+  const preferred = normalizeSupportedLanguage(preferredEnvLang);
+  if (preferred) {
+    return preferred;
+  }
+
+  return normalizeSupportedLanguage(storageOpt.getOrigin(APP_LANG)) || defaultLanguage;
+};
 
 function App() {
+  const currentPath = window.location.pathname;
+  const isLaunchpadAllowedPath = isLaunchpadStandaloneAllowedPath(currentPath);
+  const isLaunchpadSite = isLaunchpadSiteRequest(currentPath);
   const { systemInfo, loading, routesStatus, currentUserInfo, menuGroup } = useBaseStore((state) => ({
     systemInfo: state.systemInfo,
     loading: state.loading,
@@ -40,9 +108,15 @@ function App() {
 
   useEffect(() => {
     const isOmc = isInIframe([], 'webview');
-    const currentPath = window.location.pathname;
-    const skipBootstrap = currentPath === LOGIN_URL || currentPath === '/freeLogin';
-    const preferredEnvLang = import.meta.env.REACT_APP_LOCAL_LANG || import.meta.env.REACT_APP_OS_LANG;
+    const skipBootstrap = isPublicAccessPath(currentPath);
+    const shouldBootstrapBaseStore =
+      !skipBootstrap || ((currentPath === '/403' || currentPath === '/404') && !!getToken());
+    const preferredEnvLang =
+      import.meta.env.VITE_LANGUAGE ||
+      import.meta.env.VITE_OS_LANG ||
+      import.meta.env.VITE_APP_LANG ||
+      import.meta.env.REACT_APP_LOCAL_LANG ||
+      import.meta.env.REACT_APP_OS_LANG;
     if (isOmc) {
       Cookies.set(OMC_MODEL, '1', {
         expires: 365,
@@ -50,31 +124,50 @@ function App() {
     } else {
       Cookies.remove(OMC_MODEL, { path: '/' });
     }
-    if (skipBootstrap) {
-      const initPublicPage = async () => {
-        const fallbackLang = preferredEnvLang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
+    const init = async () => {
+      if (
+        isLaunchpadStandalonePort() &&
+        currentPath !== '/' &&
+        !isLaunchpadAllowedPath &&
+        !isPublicAccessPath(currentPath)
+      ) {
+        window.location.replace('/launchpad');
+        return;
+      }
+      if (!shouldBootstrapBaseStore) {
+        const fallbackLang = await resolvePublicBootstrapLanguage(preferredEnvLang);
         try {
-          useBaseStore.setState({
-            systemInfo: {
-              ...useBaseStore.getState().systemInfo,
-              appTitle: APP_TITLE,
-            },
-          });
-          await initI18n(fallbackLang, {}, { skipRemoteMessages: true });
+          document.title = APP_TITLE;
+          await initI18n(fallbackLang);
         } catch (error) {
           console.log(error);
-          await initI18n(fallbackLang, {}, { skipRemoteMessages: true });
+          await initI18n(fallbackLang);
         } finally {
           useBaseStore.setState({
             loading: false,
           });
         }
-      };
-      initPublicPage();
-    } else {
-      // 初始化
+        return;
+      }
+      if (!isOmc) {
+        try {
+          const licenseGate = await resolveLicenseGate();
+          if (licenseGate.status === 'not_activated' || licenseGate.status === 'expired') {
+            replaceWithLicenseActivation(licenseGate.status);
+            return;
+          }
+        } catch (error) {
+          console.error('Failed to check license status on init:', error);
+        }
+      }
+      if (isLaunchpadSite) {
+        fetchLaunchpadBaseStore();
+        return;
+      }
       fetchBaseStore(true);
-    }
+    };
+
+    init();
     return () => {
       cleanupI18nSubscriptions();
     };
@@ -82,11 +175,11 @@ function App() {
 
   useEffect(() => {
     if (systemInfo?.containerMap?.chat2db) {
-      // chat2db登录逻辑
+      // chat2db鐧诲綍閫昏緫
       try {
         queryChat2dbCurUser?.()?.then(async (res) => {
           if (!res) {
-            // 重新登录
+            // 閲嶆柊鐧诲綍
             await userLogin?.();
             await queryChat2dbCurUser?.();
           }
@@ -100,18 +193,19 @@ function App() {
   useEffect(() => {
     if (!systemInfo.appTitle) return;
     const loadFavicon = async () => {
-      // 浏览器标题
+      // 娴忚鍣ㄦ爣棰?
       document.title = `${systemInfo.themeConfig?.general?.browserTitle || systemInfo.appTitle}`;
-      const baseUrl = `${STORAGE_PATH}${MENU_TARGET_PATH}/${systemInfo?.themeConfig?.general?.browserIco || `logo-ico.svg`}`;
-      const themeExists = await checkImageExists(baseUrl);
+      const browserIco = systemInfo?.themeConfig?.general?.browserIco;
+      const baseUrl = browserIco ? `${STORAGE_PATH}${MENU_TARGET_PATH}/${browserIco}` : '';
+      const themeExists = browserIco ? await checkImageExists(baseUrl) : false;
 
-      // 统一处理文件类型和路径
-      const [type, path] = themeExists ? ['image/svg+xml', baseUrl] : ['image/svg+xml', '/logo-ico.svg'];
+      // 缁熶竴澶勭悊鏂囦欢绫诲瀷鍜岃矾寰?
+      const [type, path] = themeExists ? ['image/svg+xml', baseUrl] : ['image/x-icon', '/favicon.ico'];
 
-      // 统一处理时间戳
+      // 缁熶竴澶勭悊鏃堕棿鎴?
       const href = `${path}?v=${Date.now()}`;
 
-      // 查找或创建 link 元素
+      // 鏌ユ壘鎴栧垱寤?link 鍏冪礌
       let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
       if (!link) {
         link = document.createElement('link');
@@ -119,7 +213,7 @@ function App() {
         document.head.append(link);
       }
 
-      // 统一设置属性
+      // 缁熶竴璁剧疆灞炴€?
       Object.assign(link, { type, href });
     };
 
@@ -139,26 +233,43 @@ function App() {
     }
   }, [_theme]);
 
+  useEffect(() => {
+    if (routesStatus !== 401) {
+      return;
+    }
+    removeToken();
+    const loginPath = systemInfo?.loginPath || LOGIN_URL;
+    const currentPath = `${window.location.pathname}${window.location.search}`;
+    const redirectUri =
+      currentPath && currentPath !== '/' && currentPath !== loginPath
+        ? `?redirectUri=${encodeURIComponent(currentPath)}`
+        : '';
+    window.location.replace(`${loginPath}${redirectUri}`);
+  }, [routesStatus, systemInfo?.loginPath]);
+
   const routeDom = useMemo(() => {
     return getRoutesDom({ menuGroup, systemInfo, currentUserInfo });
   }, [menuGroup, systemInfo, currentUserInfo, lang]);
 
-  if (loading) {
+  if (loading && !isLaunchpadSite) {
     return <div>Loading...</div>;
   }
 
   if (routesStatus === 401) {
-    return <div></div>;
+    return null;
   }
 
   return (
     <CookiesProvider defaultSetOptions={{ path: '/' }}>
       <CookieContext />
-      <LanguageProvider config={{ theme: themeToken }}>
-        {/*antd组件库的主题*/}
+      <LanguageProvider config={{ theme: themeToken, modal: { centered: true } }}>
+        {/*antd缁勪欢搴撶殑涓婚*/}
         <UnsTreeMapProvider>
           <AntApp>
             <BrowserRouter>
+              <PublicPageThemeBoundary />
+              <RouteModalCleanup />
+              <DefaultPasswordReminder />
               <RoutesElement routeDom={routeDom} />
             </BrowserRouter>
           </AntApp>

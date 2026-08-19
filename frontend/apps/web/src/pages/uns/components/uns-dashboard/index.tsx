@@ -1,8 +1,8 @@
-import { Divider, Flex } from 'antd';
+import { Divider } from 'antd';
 import Overview from './Overview.tsx';
 // import { useUnsContext } from '@/pages/uns/UnsContext.tsx';
 import { useDeepCompareEffect } from 'ahooks';
-import { Connect, DataConnected, Package } from '@carbon/icons-react';
+import { Connect, DataConnected, Package } from '@/components/lucide-icon/carbon';
 import { useImmer } from 'use-immer';
 import type { OverviewListProps } from './type';
 import Icon from '@ant-design/icons';
@@ -10,6 +10,7 @@ import PackageTop from '@/components/svg-components/PackageTop.tsx';
 import styles from './index.module.scss';
 import Functions from './Functions.tsx';
 import MQTT from './MQTT.tsx';
+import CloudSync from './CloudSync.tsx';
 import useUnsGlobalWs from '@/pages/uns/useUnsGlobalWs.ts';
 
 const UnsDashboard = () => {
@@ -59,18 +60,24 @@ const UnsDashboard = () => {
   }, [topologyData]);
 
   return (
-    <div className={styles['unsDashboard']}>
+    <div className={styles['uns-dashboard']}>
       <Overview overviewList={overviewList} />
-      <Divider style={{ background: '#e0e0e0', flexShrink: 0 }} />
-      <Flex gap={16}>
+      <Divider className={styles['dashboard-divider']} />
+      <div className={styles['dashboard-content']}>
+        <div className={styles['access-column']}>
+          <div className={styles['cloudsync-wrapper']}>
+            <CloudSync />
+          </div>
+          <div className={styles['mqtt-wrapper']}>
+            <MQTT />
+          </div>
+        </div>
         <div className={styles['functions-wrapper']}>
           <Functions />
         </div>
-        <div className={styles['mqtt-wrapper']}>
-          <MQTT />
-        </div>
-      </Flex>
+      </div>
     </div>
   );
 };
+
 export default UnsDashboard;

@@ -1,402 +1,231 @@
-import { App, Flex, Form, Tag } from 'antd';
+import { App, Button, Form, Input, Tag } from 'antd';
 import useTranslate from '@/hooks/useTranslate.ts';
 import BasicInfo, { type FormItemType } from './BasicInfo.tsx';
-import OperationInfo from './OperationInfo.tsx';
-import { AuthButton } from '@/components/auth';
-import { batchDeleteResourceApi, batchEditResourceApi, postResourceApi } from '@/apis/inter-api/resource.ts';
 import { useMenuStore } from '../../store/menuStore.tsx';
 import { useEffect, useState } from 'react';
-import { uploadAttachment } from '@/apis/inter-api';
-import { getIconUrl, passwordRegex } from '@/utils';
+import { saveResourceApi } from '@/apis/core-api/resource.ts';
 import { ButtonPermission } from '@/common-types/button-permission.ts';
+import { AuthButton } from '@/components/auth';
+import { WarningFilled } from '@/components/lucide-icon/carbon';
+import styles from './MenuContent.module.scss';
 
-const Title = () => {
-  const name = Form.useWatch('name');
-  const id = Form.useWatch('id');
-  const formatMessage = useTranslate();
-  return (
-    <Flex style={{ overflow: 'hidden' }} align="center" justify="space-between" title={name}>
-      <span style={{ fontSize: 30, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{name}</span>
-      {!id && (
-        <span>
-          <Tag color="success">{formatMessage('common.new')}</Tag>
-        </span>
-      )}
-    </Flex>
-  );
-};
+const textItem = (name: string, label: string, hidden = false): FormItemType => ({
+  formType: 'input',
+  label,
+  formProps: {
+    name,
+    hidden,
+  },
+});
+
+const radioItem = (name: string, label: string, options: { label: string; value: number }[]): FormItemType => ({
+  formType: 'radioGroup',
+  label,
+  formProps: {
+    name,
+  },
+  childProps: {
+    options,
+  },
+});
+
 const MenuContent = () => {
   const formatMessage = useTranslate();
   const [form] = Form.useForm();
-  const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
-  const { requestMenu, setContentType, setSelectNode, selectNode, contentType, menuTree } = useMenuStore((state) => ({
-    requestMenu: state.requestMenu,
-    setContentType: state.setContentType,
-    setSelectNode: state.setSelectNode,
+  const { message, modal } = App.useApp();
+  const name = Form.useWatch('name', form);
+  const { selectNode, menuList, requestMenu, setSelectNode, setContentType, contentType } = useMenuStore((state) => ({
     selectNode: state.selectNode,
+    menuList: state.menuList,
+    requestMenu: state.requestMenu,
+    setSelectNode: state.setSelectNode,
+    setContentType: state.setContentType,
     contentType: state.contentType,
-    menuTree: state.menuTree,
   }));
   const [configs, setConfigs] = useState<FormItemType[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [hasUserEdited, setHasUserEdited] = useState(false);
+  const isEditable = !selectNode?.coreResourceId || selectNode?.editEnable !== false;
+  const levelLabel =
+    selectNode?.type === 1
+      ? formatMessage('MenuConfiguration.level1')
+      : selectNode?.type === 2
+        ? formatMessage('MenuConfiguration.level2')
+        : '';
+  const displayTitle =
+    name ||
+    (selectNode?.showName
+      ? formatMessage(selectNode.showName, undefined, selectNode.showName)
+      : selectNode?.showName) ||
+    formatMessage('common.new');
+  const isAdding = contentType === 'addMenu' || contentType === 'addGroup';
 
   useEffect(() => {
     form.resetFields();
-    // 是否是编辑
-    const isEdit = ['editGroup', 'editMenu'].includes(contentType || '');
-    // 设置表单项
-    setConfigs(
-      ['addMenu', 'editMenu'].includes(contentType || '')
+    const isPage = selectNode?.type === 2;
+    const displayName = selectNode?.showName
+      ? formatMessage(selectNode.showName, undefined, selectNode.showName)
+      : selectNode?.showName;
+    setConfigs([
+      textItem('name', formatMessage('MenuConfiguration.menuName')),
+      textItem('code', formatMessage('MenuConfiguration.menuCode')),
+      {
+        formType: 'menuIcon',
+        label: formatMessage('MenuConfiguration.menuIcon'),
+        formProps: {
+          name: 'icon',
+        },
+      },
+      ...(isPage
         ? [
-            {
-              formType: 'sourceSelect',
-              formProps: {
-                name: 'source',
-                label: formatMessage('MenuConfiguration.menuSource'),
-                initialValue: {
-                  routeSource: 1,
-                  route: null,
-                },
-                validateTrigger: ['onBlur', 'onChange'],
-                rules: [
-                  { required: true, message: formatMessage('rule.required') },
-                  {
-                    validator(_, value) {
-                      if (value.routeSource === 1) {
-                        return Promise.resolve();
-                      }
-                      if (value.routeSource === 2 && value?.route) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(formatMessage('rule.required'));
-                    },
-                    validateTrigger: 'onBlur',
-                  },
-                ],
-              },
-              childProps: {
-                onChange: (value: any) => {
-                  form.setFieldsValue({
-                    code: value?.route?.name,
-                    url: value?.route?.url,
-                  });
-                },
-              },
-            },
-            {
-              formType: 'codeInput',
-              formProps: {
-                name: 'code',
-                label: formatMessage('MenuConfiguration.menuCode'),
-                rules: [
-                  { required: true, message: formatMessage('rule.required') },
-                  {
-                    max: 255,
-                    message: formatMessage('uns.labelMaxLength', {
-                      label: formatMessage('MenuConfiguration.menuCode'),
-                      length: 255,
-                    }),
-                  },
-                  { pattern: passwordRegex, message: formatMessage('rule.password') },
-                ],
-              },
-              childProps: {
-                disabled: isEdit,
-              },
-            },
-            {
-              formType: 'input',
-              formProps: {
-                name: 'name',
-                label: formatMessage('MenuConfiguration.menuName'),
-                rules: [
-                  { required: true, message: formatMessage('rule.required') },
-                  {
-                    max: 255,
-                    message: formatMessage('uns.labelMaxLength', {
-                      label: formatMessage('MenuConfiguration.menuName'),
-                      length: 255,
-                    }),
-                  },
-                ],
-              },
-            },
-            {
-              formType: 'uploadPicture',
-              formProps: {
-                name: 'iconFile',
-                label: formatMessage('MenuConfiguration.menuIcon'),
-              },
-              childProps: {
-                onChange: (fileList: any) => {
-                  console.log(fileList);
-                  if (fileList.length > 0) {
-                    uploadAttachment(
-                      fileList?.map((item: any) => ({ value: item?.file, name: 'files', fileName: item?.file?.name })),
-                      { alias: '__templates__' }
-                    ).then((data) => {
-                      form.setFieldValue('icon', data?.list?.[0]?.attachmentPath);
-                    });
-                  } else {
-                    form.setFieldValue('icon', undefined);
-                  }
-                },
-              },
-            },
-            {
-              formType: 'radioGroup',
-              formProps: {
-                initialValue: 1,
-                name: 'openType',
-                label: formatMessage('MenuConfiguration.openMode'),
-              },
-              childProps: {
-                options: [
-                  { label: formatMessage('MenuConfiguration.openCurrentTab'), value: 0 },
-                  { label: formatMessage('MenuConfiguration.openNewTab'), value: 1 },
-                ],
-              },
-            },
-            {
-              formType: 'input',
-              formProps: {
-                name: 'url',
-                label: formatMessage('MenuConfiguration.menuUrl'),
-                rules: [{ required: true, message: formatMessage('rule.required') }],
-              },
-            },
-            {
-              formType: 'radioGroup',
-              formProps: {
-                hidden: true,
-                initialValue: 2,
-                name: 'urlType',
-                label: 'urlType',
-              },
-              childProps: {
-                options: [
-                  { label: '内部地址', value: 1 },
-                  { label: '外部地址', value: 2 },
-                ],
-              },
-            },
-            {
-              formType: 'textArea',
-              formProps: {
-                name: 'description',
-                label: formatMessage('MenuConfiguration.menuDescription'),
-              },
-              childProps: {
-                row: 5,
-              },
-            },
-            {
-              formType: 'checkbox',
-              formProps: {
-                name: 'homeEnable',
-                label: formatMessage('MenuConfiguration.homepageDisplay'),
-                initialValue: true,
-                valuePropName: 'checked',
-              },
-            },
+            radioItem('urlType', formatMessage('MenuConfiguration.addressType'), [
+              { label: formatMessage('MenuConfiguration.internalRoute'), value: 1 },
+              { label: formatMessage('MenuConfiguration.externalUrl'), value: 2 },
+            ]),
+            textItem('url', formatMessage('MenuConfiguration.menuUrl')),
+            radioItem('openType', formatMessage('MenuConfiguration.openMode'), [
+              { label: formatMessage('MenuConfiguration.openCurrentTab'), value: 0 },
+              { label: formatMessage('MenuConfiguration.openNewTab'), value: 1 },
+            ]),
           ]
-        : [
-            {
-              formType: 'codeInput',
-              formProps: {
-                name: 'code',
-                label: formatMessage('MenuConfiguration.menuCode'),
-                rules: [
-                  { required: true, message: formatMessage('rule.required') },
-                  { pattern: passwordRegex, message: formatMessage('rule.password') },
-                ],
-              },
-              childProps: {
-                disabled: isEdit,
-              },
-            },
-            {
-              formType: 'input',
-              formProps: {
-                name: 'name',
-                label: formatMessage('MenuConfiguration.menuName'),
-                rules: [{ required: true, message: formatMessage('rule.required') }],
-              },
-            },
-            {
-              formType: 'uploadPicture',
-              formProps: {
-                name: 'iconFile',
-                label: formatMessage('MenuConfiguration.menuIcon'),
-              },
-              childProps: {
-                onChange: (fileList: any) => {
-                  if (fileList.length > 0) {
-                    uploadAttachment(
-                      fileList?.map((item: any) => ({ value: item?.file, name: 'files', fileName: item?.file?.name })),
-                      { alias: '__templates__' }
-                    ).then((data) => {
-                      form.setFieldValue('icon', data?.list?.[0]?.attachmentPath);
-                    });
-                  } else {
-                    form.setFieldValue('icon', undefined);
-                  }
-                },
-              },
-            },
-            {
-              formType: 'textArea',
-              formProps: {
-                name: 'description',
-                label: formatMessage('MenuConfiguration.menuDescription'),
-              },
-              childProps: {
-                row: 5,
-              },
-            },
-            {
-              formType: 'checkbox',
-              formProps: {
-                name: 'homeEnable',
-                label: formatMessage('MenuConfiguration.homepageDisplay'),
-                initialValue: true,
-                valuePropName: 'checked',
-              },
-            },
-          ]
-    );
-    if (selectNode && ['editMenu', 'editGroup'].includes(contentType || '')) {
-      // 赋值
-      const url = getIconUrl(selectNode?.icon);
+        : []),
+      textItem('description', formatMessage('MenuConfiguration.menuDescription')),
+    ]);
+    if (selectNode) {
       form.setFieldsValue({
         ...selectNode,
-        type: contentType === 'editGroup' ? 1 : 2,
-        name: selectNode.showName,
+        id: selectNode.id,
+        name: displayName,
         description: selectNode.showDescription,
-        // 来源
-        source: {
-          routeSource: selectNode.routeSource,
-          route:
-            selectNode.routeSource === 2
-              ? {
-                  name: selectNode.code,
-                }
-              : null,
-        },
-        // 文件
-        iconFile: selectNode.icon
-          ? [
-              {
-                uid: '-1',
-                name: 'icon.svg',
-                url,
-                status: 'done',
-              },
-            ]
-          : undefined,
-        operationChildren:
-          selectNode?.operationChildren?.map((m) => {
-            return {
-              ...m,
-              name: m.showName,
-              description: m.showDescription,
-            };
-          }) || [],
-      });
-    } else {
-      form.setFieldsValue({
-        sort: selectNode?.children ? selectNode?.children?.length + 1 : (menuTree?.length ?? 0) + 1,
-        type: contentType === 'addGroup' ? 1 : 2,
-        parentId: selectNode?.id,
+        urlType: selectNode.urlType ?? 1,
+        openType: selectNode.openType ?? 0,
       });
     }
-  }, [contentType, selectNode, menuTree]);
+    setHasUserEdited(false);
+  }, [form, formatMessage, isEditable, selectNode]);
 
   const onSave = async () => {
-    const info = await form.validateFields();
-    setLoading(true);
-    const delIds = info.delOperationChildren?.filter((f: any) => !f.id.includes('add_')).map((m: any) => m.id);
-    if (info?.id && delIds?.length > 0) {
-      // 删除权限
-      batchDeleteResourceApi(delIds);
-    }
-    const fn = () => {
-      postResourceApi({
-        ...info,
-        iconFile: undefined,
-        routeSource: info?.source?.routeSource,
-        source: undefined,
-        children: info?.operationChildren?.map((m: any, index: number) => ({
-          id: m.id.includes('add_') ? undefined : m.id,
-          code: m.code,
-          name: m.name,
-          description: m.description,
-          type: 3,
-          sort: index + 1,
-        })),
-      })
-        .then(() => {
-          setContentType(null);
-          setSelectNode(null);
-          requestMenu();
-          message.success(info.id ? formatMessage('uns.editSuccessful') : formatMessage('uns.newSuccessfullyAdded'));
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    };
-    if (!info?.parentId && menuTree && menuTree?.length > 0) {
-      const lastInfo = menuTree[menuTree?.length - 1];
-      // 更新最后一组sort
-      batchEditResourceApi([
-        {
-          id: lastInfo.id,
-          sort: menuTree?.length + 2,
-        },
-      ]).then(() => {
-        fn();
+    if (!selectNode) return;
+    const values = await form.validateFields();
+    setSaving(true);
+    try {
+      const saved = await saveResourceApi({
+        ...values,
+        id: selectNode.coreResourceId || selectNode.id,
+        parentId: menuList?.find((item) => item.id === selectNode.parentId)?.coreResourceId || 0,
+        resourceKey: selectNode.resourceKey || values.code,
+        routePath: values.url,
+        enabled: selectNode.enable === false ? 0 : 1,
       });
-    } else {
-      fn();
+      await requestMenu();
+      setSelectNode({
+        ...selectNode,
+        ...values,
+        coreResourceId: String(saved?.id || selectNode.coreResourceId || ''),
+        url: values.url,
+        showName: values.name,
+        showDescription: values.description,
+      });
+      message.success(formatMessage('common.optsuccess'));
+    } finally {
+      setSaving(false);
     }
   };
+
+  const closeAddDetail = () => {
+    form.resetFields();
+    setHasUserEdited(false);
+    setSelectNode(null);
+    setContentType(null);
+  };
+
+  const onCancel = () => {
+    if (!isAdding) {
+      form.resetFields();
+      return;
+    }
+
+    if (!hasUserEdited) {
+      closeAddDetail();
+      return;
+    }
+
+    modal.confirm({
+      title: null,
+      icon: null,
+      width: 420,
+      className: 'menu-unsaved-confirm-modal',
+      content: (
+        <div className="menu-unsaved-confirm-content">
+          <WarningFilled size={20} className="menu-unsaved-confirm-icon" aria-hidden />
+          <span>{formatMessage('MenuConfiguration.confirmCloseUnsaved')}</span>
+        </div>
+      ),
+      okText: formatMessage('common.confirm'),
+      cancelText: formatMessage('common.cancel'),
+      onOk: closeAddDetail,
+      okButtonProps: {
+        title: formatMessage('common.confirm'),
+      },
+      cancelButtonProps: {
+        title: formatMessage('common.cancel'),
+      },
+    });
+  };
+
   return (
-    <Form
-      labelWrap
-      style={{ padding: 16, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}
-      form={form}
-      colon={false}
-      labelCol={{ span: 4 }}
-      wrapperCol={{ span: 10 }}
-      labelAlign="left"
-      disabled={selectNode?.editEnable === false}
-    >
-      <Flex gap={8} align="center" style={{ marginBottom: 16, flexShrink: 0, height: 48 }} justify="space-between">
-        <Flex gap={8} align="center" style={{ overflow: 'hidden' }}>
-          <Title />
-          <span>
-            <Tag color="success">
-              level{' '}
-              {(selectNode?.depth ?? 0) +
-                (selectNode?.type === 4 ? 2 : selectNode && contentType?.includes('add') ? 2 : 1)}
+    <div className={styles.menuContent}>
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <h2 className={styles.title} title={displayTitle}>
+            {displayTitle}
+          </h2>
+          {levelLabel ? (
+            <Tag bordered={false} className={styles.levelTag}>
+              {levelLabel}
             </Tag>
-          </span>
-        </Flex>
-        <AuthButton
-          type="primary"
-          auth={contentType?.includes('edit') ? ButtonPermission['MenuConfiguration.editMenu'] : undefined}
-          onClick={onSave}
-          loading={loading}
-          disabled={selectNode?.editEnable === false}
-        >
-          {formatMessage('common.save')}
-        </AuthButton>
-      </Flex>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <BasicInfo configs={configs} />
-        {selectNode?.type === 2 || selectNode?.type === 4 ? <OperationInfo /> : null}
+          ) : null}
+          {isEditable && !name ? (
+            <Tag bordered={false} color="success" className={styles.newTag}>
+              {formatMessage('common.new')}
+            </Tag>
+          ) : null}
+        </div>
+        <div className={styles.headerRight}>
+          {!isEditable ? (
+            <Tag bordered={false} className={styles.readonlyTag}>
+              {formatMessage('route.systemReadonly')}
+            </Tag>
+          ) : (
+            <div className={styles.actions}>
+              <Button onClick={onCancel}>{formatMessage('common.cancel')}</Button>
+              <AuthButton
+                auth={ButtonPermission['MenuConfiguration.editMenu']}
+                type="primary"
+                loading={saving}
+                onClick={onSave}
+              >
+                {formatMessage('common.save')}
+              </AuthButton>
+            </div>
+          )}
+        </div>
       </div>
-    </Form>
+      <div className={styles.body}>
+        <Form
+          className={styles.form}
+          form={form}
+          colon={false}
+          disabled={!isEditable}
+          onValuesChange={() => setHasUserEdited(true)}
+        >
+          <Form.Item name="coreResourceId" hidden>
+            <Input />
+          </Form.Item>
+          <BasicInfo configs={configs} iconMenuItem={selectNode} iconDisabled={!isEditable} />
+        </Form>
+      </div>
+    </div>
   );
 };
 

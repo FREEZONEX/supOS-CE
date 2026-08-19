@@ -12,7 +12,7 @@ const NotFoundPage = () => {
     <Result
       status="403"
       title={403}
-      subTitle={<span style={{ color: 'var(--supos-text-color)' }}>{formatMessage('common.pageNoPermission')}</span>}
+      subTitle={<span style={{ color: 'var(--ui-text-color)' }}>{formatMessage('common.pageNoPermission')}</span>}
       extra={
         security && (
           <Button type="primary" onClick={onClick}>

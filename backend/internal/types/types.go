@@ -3,1060 +3,339 @@
 
 package types
 
-type AdminResetPwdReq struct {
-	UserID   string `json:"userId"`
-	Password string `json:"password"`
+type ApiKeyCreateReq struct {
+	Name         string   `json:"name"`
+	Permission   string   `json:"permission,optional"`
+	UsageType    string   `json:"usageType,optional"`
+	KeyType      string   `json:"keyType,optional"`
+	ResourceKeys []string `json:"resourceKeys,optional"`
+	ExpireTime   int64    `json:"expireTime,optional"`
 }
 
-type AlarmHandlerVo struct {
-	Id       int64  `json:"id"`
-	UnsId    string `json:"unsId,omitempty"`
-	UserId   string `json:"userId,omitempty"`
-	Username string `json:"username,omitempty"`
-	CreateAt int64  `json:"createAt,omitzero"`
+type ApiKeyIdReq struct {
+	ApiKeyId int64 `path:"apiKeyId"`
 }
 
-type AlarmRuleDefine struct {
-	Condition    string  `json:"condition"`
-	LimitValue   float64 `json:"limitValue" validate:"required"`
-	DeadBandType int     `json:"deadBandType"`
-	DeadBand     float64 `json:"deadBand"`
-	OverTime     int64   `json:"overTime"`
+type ApiKeyUpdateReq struct {
+	ApiKeyId   int64  `path:"apiKeyId"`
+	Name       string `json:"name,optional"`
+	Permission string `json:"permission,optional"`
 }
 
-type AliasPathReq struct {
-	Alias string `path:"alias"`
+type AssetBindReq struct {
+	FileId        int64  `json:"fileId"`
+	OwnerType     string `json:"ownerType"`
+	OwnerId       string `json:"ownerId"`
+	PermissionKey string `json:"permissionKey,optional"`
 }
 
-type AliasRequest struct {
-	Alias string `path:"alias"`
+type AssetListReq struct {
+	PageNo    int    `form:"pageNo,optional"`
+	PageSize  int    `form:"pageSize,optional"`
+	OwnerType string `form:"ownerType,optional"`
+	OwnerId   int64  `form:"ownerId,optional"`
 }
 
-type AppDetail struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	ImageSource string `json:"imageSource"`
-	ImagePath   string `json:"imagePath,omitempty"`
-	ImageUrl    string `json:"imageUrl,omitempty"`
-	IconPath    string `json:"iconPath,omitempty"`
-	MenuUrl     string `json:"menuUrl"`
-	ComposeYaml string `json:"composeYaml"`
-	RouterTrim  bool   `json:"routerTrim"`
-	KeepHost    bool   `json:"keepHost"`
-	InstallTime string `json:"installTime,omitempty"`
-	Status      string `json:"status,optional"`
+type AssetUploadReq struct {
+	FileName    string `json:"fileName"`
+	ContentType string `json:"contentType,optional"`
+	Size        int64  `json:"size,optional"`
+	Sha256      string `json:"sha256,optional"`
+	StorageKey  string `json:"storageKey,optional"`
+	IsPublic    bool   `json:"isPublic,optional"`
+	Business    string `json:"business,optional"`
+	UseBy       string `json:"useBy,optional"`
 }
 
-type AppDetailResponse struct {
-	Code    int       `json:"code"`
-	Message string    `json:"message,optional"`
-	Data    AppDetail `json:"data"`
+type AssetUploadResp struct {
+	UploadUrl string `json:"uploadUrl"`
+	FilePath  string `json:"filePath"`
+	FileUrl   string `json:"fileUrl,optional"`
 }
 
-type AppInfo struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	ImageSource string `json:"imageSource"`
-	MenuUrl     string `json:"menuUrl"`
-	Installed   bool   `json:"installed"`
-	InstallTime string `json:"installTime,optional"`
-	Status      string `json:"status,optional"`
+type AuditLogPageReq struct {
+	PageNo          int    `json:"pageNo,optional"`
+	PageSize        int    `json:"pageSize,optional"`
+	ScopeType       int    `json:"scopeType,optional"`
+	ScopeId         int64  `json:"scopeId,optional"`
+	ResType         string `json:"resType,optional"`
+	BusinessType    string `json:"businessType,optional"`
+	OperatorKeyword string `json:"operatorKeyword,optional"`
+	Code            int    `json:"code,optional"`
+	StartTime       string `json:"startTime,optional"`
+	EndTime         string `json:"endTime,optional"`
 }
 
-type AppKeyInfo struct {
-	ID             string `json:"id"`
-	AppSecretKey   string `json:"appSecretKey"`
-	AppSecretValue string `json:"appSecretValue"`
-	Status         int32  `json:"status"`
-	CreateTime     int64  `json:"createTime"`
+type AuthWhoamiResp struct {
+	UserID        int64    `json:"userID"`
+	UserName      string   `json:"userName"`
+	Email         string   `json:"email"`
+	WorkspaceID   int64    `json:"workspaceID"`
+	WorkspaceName string   `json:"workspaceName"`
+	ApiKeyName    string   `json:"apiKeyName"`
+	KeyPrefix     string   `json:"keyPrefix"`
+	Permissions   []string `json:"permissions"`
+	Roles         []string `json:"roles"`
+	KeyType       string   `json:"keyType"`
 }
 
-type AttachmentDeleteReq struct {
-	ObjectName string `form:"objectName"`
+type BrowseReq struct {
+	Path             string `json:"path,optional"`
+	MaxDepth         int64  `json:"max_depth,optional"`
+	IncludeMetadata  bool   `json:"include_metadata,optional"`
+	IncludeLeafValue bool   `json:"include_leaf_value,optional"`
 }
 
-type AttachmentDownloadReq struct {
-	ObjectName string `form:"objectName"`
+type BrowseResp struct {
+	Tree []OpenapiNodeInfo `json:"tree"`
 }
 
-type AttachmentInfo struct {
-	FileID        string   `json:"fileId"`
-	Filename      string   `json:"filename"`
-	FileSize      int64    `json:"fileSize"`
-	FileType      string   `json:"fileType"`
-	Category      string   `json:"category,optional"`
-	Description   string   `json:"description,optional"`
-	Tags          []string `json:"tags,optional"`
-	MD5           string   `json:"md5"`
-	UploadTime    string   `json:"uploadTime"`
-	Uploader      string   `json:"uploader,optional"`
-	DownloadCount int64    `json:"downloadCount"`
+type CliAuthBindReq struct {
+	SetupCode  string `json:"setupCode"`
+	Name       string `json:"name,optional"`
+	Permission string `json:"permission,optional"`
 }
 
-type AttachmentPreviewReq struct {
-	ObjectName string `form:"objectName"`
+type CliAuthBindResp struct {
+	ApiKey        string `json:"apiKey"`
+	Name          string `json:"name"`
+	Permission    string `json:"permission"`
+	WorkspaceName string `json:"workspaceName,optional"`
 }
 
-type AttachmentPreviewResp struct {
-	FileName string `json:"fileName"`
-	Content  string `json:"content"`
+type CliAuthStatusReq struct {
+	SetupCode string `json:"setupCode"`
 }
 
-type AttachmentUploadReq struct {
-	Alias string `form:"alias"`
+type CliAuthStatusResp struct {
+	Status        string `json:"status"`
+	ApiKey        string `json:"apiKey"`
+	WorkspaceName string `json:"workspaceName"`
+	ExpiresAt     string `json:"expiresAt"`
 }
 
-type AttachmentUploadResp struct {
-	List []UnsAttachmentBo `json:"list"`
+type ContainerAppIdReq struct {
+	AppId int64 `path:"appId"`
 }
 
-type BaseResult struct {
-	Code int    `json:"code"`
-	Msg  string `json:"msg"`
+type ContainerAppSaveReq struct {
+	AppId          int64  `path:"appId,optional"`
+	Name           string `json:"name"`
+	Description    string `json:"description,optional"`
+	IconAssetId    int64  `json:"iconAssetId,optional"`
+	EntryUrl       string `json:"entryUrl"`
+	OpenInPlatform bool   `json:"openInPlatform,optional"`
 }
 
-type BatchCreateReq struct {
-	Flags      int               `form:"flags,optional"`
-	FromImport bool              `form:"fromImport,optional,default=false"`
-	List       []*CreateTopicDto `json:"list"`
+type ContainerAppVisibilityReq struct {
+	AppId   int64 `path:"appId"`
+	Enabled bool  `json:"enabled"`
 }
 
-type BatchQueryFileReq struct {
-	AliasList []string `json:"aliasList"`
+type CreateResp struct {
+	Success bool                  `json:"success"`
+	Results []OpenapiCreateResult `json:"results"`
 }
 
-type BatchRemoveUnsDto struct {
-	RemoveUnsOptions
-	AliasList []string `json:"aliasList"`
+type CurrentUserConfigReq struct {
+	HomePage     string `json:"homePage,optional"`
+	MainLanguage string `json:"mainLanguage,optional"`
 }
 
-type BatchUpdateFileResult struct {
-	Code int               `json:"code"`
-	Msg  string            `json:"msg"`
-	Data UnsDataResponseVo `json:"data,optional"`
+type CurrentUserConfigResp struct {
+	UserId       int64  `json:"userId"`
+	HomePage     string `json:"homePage,optional"`
+	MainLanguage string `json:"mainLanguage,optional"`
 }
 
-type BatchUpdateResource struct {
-	ID              int64   `json:"id,string,optional"` // 同上
-	Code            *string `json:"code,optional"`
-	Name            *string `json:"name,optional"`
-	NameCode        *string `json:"nameCode,optional"`
-	DescriptionCode *string `json:"descriptionCode,optional"`
-	ParentID        *int64  `json:"parentId,string,optional"` // 如有需要
-	Type            *int    `json:"type,optional"`
-	Source          *string `json:"source,optional"`
-	RouteSource     *int    `json:"routeSource,optional"`
-	URL             *string `json:"url,optional"`
-	URLType         *int    `json:"urlType,optional"`
-	OpenType        *int    `json:"openType,optional"`
-	Icon            *string `json:"icon,optional"`
-	Description     *string `json:"description,optional"`
-	Sort            *int    `json:"sort,optional"`
-	EditEnable      *bool   `json:"editEnable,optional"`
-	HomeEnable      *bool   `json:"homeEnable,optional"`
-	Fixed           *bool   `json:"fixed,optional"`
-	Enable          *bool   `json:"enable,optional"`
+type CurrentUserPasswordReq struct {
+	OldPassword string `json:"oldPassword,optional"`
+	Password    string `json:"password,optional"`
+	NewPassword string `json:"newPassword"`
 }
 
-type BatchUpdateResourceReq struct {
-	Items []BatchUpdateResource
+type CurrentUserProfileReq struct {
+	FirstName string `json:"firstName,optional"`
+	Email     string `json:"email,optional"`
+	Phone     string `json:"phone,optional"`
 }
 
-type BindUnsReq struct {
-	DashboardID string `json:"dashboardId"`
-	UnsAlias    string `json:"unsAlias"`
-}
-
-type CancelLabelReq struct {
-	UnsId    int64   `form:"unsId"`
-	LabelIds []int64 `json:"labelIds"`
-}
-
-type CheckDuplicationNameReq struct {
-	Folder    string `form:"folder,optional"`
-	Name      string `form:"name"`
-	CheckType int    `form:"checkType"`
-}
-
-type CommonResp struct {
-	ID int64 `json:"id,optional"` // id
-}
-
-type Compare struct {
-	CmpTYpe string `json:"cmpType"` //"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询,只有string类型可以使用
-	Value   string `json:"value"`
-	CastTo  string `json:"castTo"` //参数的类型(填写了会进行数据类型的转换): int float string
-}
-
-type CompareInt64 struct {
-	CmpTYpe string `json:"cmpType"` //"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询
-	Value   int64  `json:"value,string"`
-}
-
-type CompareString struct {
-	CmpTYpe string `json:"cmpType"` //"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询
-	Value   string `json:"value"`
-}
-
-type ContainerInfo struct {
-	Name        string                 `json:"name,optional"`
-	Version     string                 `json:"version,optional"`
-	Description string                 `json:"description,optional"`
-	EnvMap      map[string]interface{} `json:"envMap,optional"`
-}
-
-type CreateAppKeyReq struct {
-}
-
-type CreateFileDto struct {
-	Name             string                 `json:"name"`
-	Alias            string                 `json:"alias,optional"`
-	DisplayName      string                 `json:"displayName,optional"`
-	ParentAlias      string                 `json:"parentAlias,optional"`
-	DataType         int                    `json:"dataType,optional"`
-	Description      string                 `json:"description,optional"`
-	Definition       []FieldDefine          `json:"definition,optional"`
-	Persistence      bool                   `json:"persistence,optional"`
-	DashBoard        bool                   `json:"dashBoard,optional"`
-	AddFlow          bool                   `json:"addFlow,optional"`
-	Refers           []InstanceField        `json:"refers,optional"`
-	Expression       string                 `json:"expression,optional"`
-	Frequency        string                 `json:"frequency,optional"`
-	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
-	TemplateAlias    string                 `json:"templateAlias,optional"`
-	LabelNames       []string               `json:"labelNames,optional"`
-}
-
-type CreateLabelDto struct {
-	LabelName string `json:"labelName" validate:"required,max=63"`
-}
-
-type CreateLabelReq struct {
-	Name string `form:"name"`
-}
-
-type CreateLabelResp struct {
-	BaseResult
-	Data *LabelVo `json:"data"`
-}
-
-type CreateOpenApiFileDto struct {
-	Name             string                 `json:"name" validate:"required,max=63"`
-	Alias            string                 `json:"alias,optional" validate:"max=63"`
-	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
-	ParentAlias      string                 `json:"parentAlias,optional"`
-	DataType         int16                  `json:"dataType,optional" validate:"min=1,max=7"`
-	Description      string                 `json:"description,optional" validate:"max=512"`
-	Definition       []FieldDefine          `json:"definition,optional"`
-	Persistence      bool                   `json:"persistence,optional"`
-	DashBoard        bool                   `json:"dashBoard,optional"`
-	AddFlow          bool                   `json:"addFlow,optional"`
-	Refers           []InstanceField        `json:"refers,optional"`
-	Expression       string                 `json:"expression,optional" validate:"max=255"`
-	Frequency        string                 `json:"frequency,optional"`
-	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
-	TemplateAlias    string                 `json:"templateAlias,optional"`
-	LabelNames       []string               `json:"labelNames,optional"`
-	ParentDataType   int16                  `json:"parentDataType,optional"`
-}
-
-type CreateOpenApiFolderDto struct {
-	Name             string                 `json:"name" validate:"required,max=63"`
-	Alias            string                 `json:"alias,optional" validate:"max=63"`
-	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
-	ParentAlias      string                 `json:"parentAlias,optional"`
-	Description      string                 `json:"description,optional" validate:"max=512"`
-	Definition       []FieldDefine          `json:"definition,optional"`
-	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
-	TemplateAlias    string                 `json:"templateAlias,optional"`
-}
-
-type CreateTemplateReq struct {
-	Batch       int            `json:"batch,optional" swaggerignore:"true"`
-	Index       int            `json:"index,optional" swaggerignore:"true"`
-	FlagNo      string         `json:"flagNo,optional" swaggerignore:"true"`
-	Name        string         `json:"name" validate:"required,max=63"`
-	Alias       string         `json:"alias,optional" validate:"omitempty,max=63,alias"`
-	Fields      []*FieldDefine `json:"fields" validate:"required,min=1"`
-	Description string         `json:"description,optional" validate:"omitempty,max=512"`
-}
-
-type CreateTemplateResp struct {
-	BaseResult
-	Id string `json:"data,optional,omitempty"`
-}
-
-type CreateTemplateVo struct {
-	Alias       string        `json:"alias,optional" validate:"max=63"`
-	Name        string        `json:"name" validate:"required,max=63"`
-	Fields      []FieldDefine `json:"fields" validate:"required"`
-	Description string        `json:"description,optional" validate:"max=512"`
-}
-
-type CreateTopicDto struct {
-	Id                            int64                     `json:"id,string,optional,omitzero"`
-	Batch                         int                       `json:"-"`
-	Index                         int                       `json:"-"`
-	FlagNo                        string                    `json:"-"`
-	Name                          string                    `json:"name" validate:"required"`
-	DisplayName                   *string                   `json:"displayName,optional,omitempty" validate:"max=128"`
-	PathType                      int16                     `json:"pathType" validate:"required,min=0,max=2"`
-	Path                          string                    `json:"path,optional,omitzero"`
-	Alias                         string                    `json:"alias" validate:"required"`
-	Description                   *string                   `json:"description,optional,omitzero" validate:"max=512"`
-	ModelId                       *int64                    `json:"modelId,string,optional,omitempty"`
-	ModelAlias                    *string                   `json:"modelAlias,optional,omitempty"`
-	Template                      *CreateTopicDto           `json:"-"`
-	ParentAlias                   *string                   `json:"parentAlias,optional,omitempty"`
-	ParentId                      *int64                    `json:"parentId,string,optional,omitempty"`
-	DataType                      *int16                    `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"` // Data type and fields
-	ParentDataType                *int16                    `json:"parentDataType,optional,string,omitempty"`
-	Fields                        []*FieldDefine            `json:"fields,optional,omitempty"`
-	JsonFields                    []*FieldDefine            `json:"jsonFields,optional,omitempty"` // jsonb 预定义字段，存在protocol
-	DataSrcID                     int16                     `json:"-"`
-	TableName                     string                    `json:"-"` // Table fields
-	TbFieldName                   string                    `json:"-"`
-	PrimaryField                  []string                  `json:"-"`
-	HasBlobField                  bool                      `json:"-"`
-	ReferUns                      string                    `json:"referUns,optional,omitzero"` // Reference fields
-	ReferIds                      []int64                   `json:"referIds,optional,omitzero"`
-	RefUns                        map[int64]int             `json:"refUns,optional,omitempty"`
-	LayRec                        string                    `json:"-"`
-	ReferTable                    string                    `json:"referTable,optional,omitzero"`
-	RefFields                     []*FieldDefine            `json:"refFields,optional,omitzero"`
-	ReferModelID                  string                    `json:"referModelId,optional,omitzero"`
-	Refers                        []*InstanceField          `json:"refers,optional,omitzero"` // Calculation fields
-	Expression                    *string                   `json:"expression,optional,omitzero" validate:"max=255"`
-	CompileExpression             interface{}               `json:"-"`
-	StreamOptions                 *StreamOptions            `json:"streamOptions,optional,omitzero"`
-	DataPath                      *string                   `json:"dataPath,optional,omitempty"`
-	Protocol                      map[string]interface{}    `json:"protocol,optional,omitempty"`
-	ProtocolType                  *string                   `json:"protocolType,optional,omitzero"`
-	ProtocolBean                  interface{}               `json:"-"`
-	WithFlags                     *int32                    `json:"withFlags,optional,omitempty"` // Flags and options
-	AddFlow                       *bool                     `json:"addFlow,optional,omitempty"`
-	AddDashBoard                  *bool                     `json:"addDashBoard,optional,omitempty"`
-	Save2Db                       *bool                     `json:"save2db,optional,omitempty"`
-	RetainTableWhenDeleteInstance *bool                     `json:"retainTableWhenDeleteInstance,optional,omitempty"`
-	CreateTemplate                *bool                     `json:"createTemplate,optional,omitempty"`
-	SubscribeEnable               *bool                     `json:"subscribeEnable,optional,omitempty"`
-	Frequency                     string                    `json:"frequency,optional,omitzero"` // Frequency for merge type
-	FrequencySeconds              *int64                    `json:"-"`
-	AlarmRuleDefine               interface{}               `json:"-"`                                         // AlarmRuleDefine type
-	Extend                        map[string]interface{}    `json:"extend,optional,omitzero" validate:"max=3"` // Extended fields
-	ExtendFieldUsed               []string                  `json:"extendFieldUsed,optional,omitzero"`
-	LabelNames                    []string                  `json:"labelNames,optional,omitzero"`
-	LabelIDs                      map[int64]string          `json:"-"`
-	Order                         int                       `json:"-"`
-	RefSource                     string                    `json:"refSource,optional,omitzero"` // Pride specific fields
-	ValueType                     string                    `json:"valueType,optional,omitzero"`
-	InitValue                     interface{}               `json:"initValue,optional,omitzero"`
-	StrMaxLen                     int                       `json:"strMaxLen,optional,omitzero"`
-	AccessLevel                   string                    `json:"accessLevel,optional,omitzero"`       // Access level
-	MountType                     *int16                    `json:"mountType,optional,omitempty,string"` // Mount fields
-	MountSource                   *string                   `json:"mountSource,optional,omitzero"`
-	UpdateAt                      int64                     `json:"updateAt,optional,omitzero"` // Update metadata
-	CreateAt                      int64                     `json:"createAt,optional,omitzero"`
-	FieldsChanged                 bool                      `json:"-"`
-	TmField                       string                    `json:"-"` // Internal fields
-	FieldDefines                  *FieldDefines             `json:"-"`
-	RefTopicFields                map[int64]map[string]bool `json:"-"`
-	Status                        int16                     `json:"-"`
-	CountExistsSiblings           int64                     `json:"-"`
-	Timestamps                    [2]int64                  `json:"-"`
-}
-
-type CreateUnsNodeRedDto struct {
-	Path      string `json:"path"`
-	Alias     string `json:"alias,optional"`
-	FieldType string `json:"fieldType,optional"`
-	FieldName string `json:"fieldName,optional"`
-	Tag       string `json:"tag,optional"`
-}
-
-type CreateUnsResp struct {
-	BaseResult
-	Data CreateUnsResult `json:"data,optional"`
-}
-
-type CreateUnsResult struct {
-	Id       string `json:"id"`
-	ParentId string `json:"parentId"`
-}
-
-type DashboardDto struct {
-	ID          string `json:"id,optional,omitzero"`
-	Name        string `json:"name"`
-	Type        int    `json:"type"`                    // 1-grafana 2-fuxa
-	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
-	NeedInit    bool   `json:"needInit,optional"`
-	Description string `json:"description,optional,omitzero"`
-	JsonContent string `json:"jsonContent,optional,omitzero"`
-	Creator     string `json:"creator,optional,omitzero"`
-	UpdateTime  string `json:"updateTime,optional,omitzero"`
-	CreateTime  string `json:"createTime,optional,omitzero"`
-}
-
-type DashboardExportParam struct {
-	GroupIds   []int64  `json:"gids,string,optional,omitempty,omitzero"`
-	DashIds    []string `json:"ids,string,optional,omitempty,omitzero"`
-	ExportType string   `json:"exportType,optional,omitempty,omitzero"`
-}
-
-type DashboardGroupPageResp struct {
-	PageResultDTO
-	Data []GroupBizVO `json:"data"`
-}
-
-type DashboardPageResp struct {
-	PageResultDTO
-	Data []DashboardDto `json:"data"`
-}
-
-type DashboardRefDto struct {
-	DashboardID string `json:"dashboardId"`
-	UnsAlias    string `json:"unsAlias"`
-}
-
-type DateRange struct {
-	Start string `json:"start,optional"` //开始时间 格式：yyyy-mm-dd
-	End   string `json:"end,optional"`   //结束时间 格式：yyyy-mm-dd
-}
-
-type DbFieldDefineVo struct {
-	Name       string `json:"name"`
-	Type       string `json:"type"`
-	Length     int    `json:"length"`
-	IsNullable bool   `json:"isNullable"`
-	Comment    string `json:"comment"`
-}
-
-type DbFieldsInfoVo struct {
-	DatabaseType string            `json:"databaseType"`
-	Fields       []DbFieldDefineVo `json:"fields"`
-}
-
-type DbFieldsInfoVoResp struct {
-	BaseResult
-	Data []FieldDefine `json:"data"`
-}
-
-type DeleteAttachmentRequest struct {
-	FileID string `form:"fileId"`
-}
-
-type DeleteAttachmentResponse struct {
-	Code    int          `json:"code"`
-	Message string       `json:"message,optional"`
-	Data    DeleteResult `json:"data"`
-}
-
-type DeleteIDReq struct {
-	ID int64 `path:"id"`
-}
-
-type DeleteResult struct {
-	FileID  string `json:"fileId"`
-	Success bool   `json:"success"`
-}
-
-type DetailRequest struct {
-	ID string `form:"id"`
-}
-
-type DetectRemoveReq struct {
-	Id int64 `form:"id"`
-}
-
-type DownloadAttachmentRequest struct {
-	FileID   string `form:"fileId"`
-	Filename string `form:"filename,optional"`
-}
-
-type EmailUpdateReq struct {
-	Email string `form:"email"`
+type CurrentUserResp struct {
+	UserId              int64    `json:"userId"`
+	UserName            string   `json:"userName"`
+	NickName            string   `json:"nickName"`
+	Email               string   `json:"email"`
+	Phone               string   `json:"phone"`
+	RoleCode            string   `json:"roleCode,optional"`
+	ForceChangePassword bool     `json:"forceChangePassword"`
+	ResourceKeys        []string `json:"resourceKeys"`
+	UiActions           []string `json:"uiActions"`
 }
 
 type Empty struct {
 }
 
-type EmptyFolderReq struct {
+type Envelope struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data,optional"`
 }
 
-type EmptyFolderResp struct {
-	BaseResult
-	Data []*CreateTopicDto `json:"data"`
+type FileIdReq struct {
+	FileId int64 `path:"fileId"`
 }
 
-type EventFlowCopyReq struct {
-	SourceID    string `json:"sourceId"`
-	FlowName    string `json:"flowName"`
-	Description string `json:"description,optional"`
-	Template    string `json:"template,optional"`
-	GroupId     *int64 `json:"groupId,optional,string"`
+type FlowDataReq struct {
+	FlowId   int64  `path:"flowId"`
+	FlowData string `json:"flowData"`
 }
 
-type EventFlowCreateReq struct {
-	FlowName    string `json:"flowName"`
-	Description string `json:"description,optional"`
-	Template    string `json:"template,optional"`
-	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
+type FlowDeployReq struct {
+	FlowId   int64  `path:"flowId"`
+	FlowData string `json:"flowData,optional"`
 }
 
-type EventFlowDeleteReq struct {
-	ID string `form:"id"`
+type FlowIdReq struct {
+	FlowId int64 `path:"flowId"`
 }
 
-type EventFlowDeployReq struct {
-	ID    string                   `json:"id"`
-	Flows []map[string]interface{} `json:"flows,optional"`
-}
-
-type EventFlowExportParam struct {
-	GroupIds   []int64 `json:"gids,string,optional,omitempty,omitzero"`
-	FlowIds    []int64 `json:"ids,string,optional,omitempty,omitzero"`
-	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
-}
-
-type EventFlowGroupPageResp struct {
-	PageResultDTO
-	Data []GroupFlowVO `json:"data"`
-}
-
-type EventFlowInfo struct {
-	ID          string `json:"id,optional"`
-	FlowName    string `json:"flowName,optional"`
-	FlowID      string `json:"flowId,optional"`
-	Description string `json:"description,optional"`
-	FlowStatus  string `json:"flowStatus,optional"`
-	Template    string `json:"template,optional"`
-	Mark        int    `json:"mark,optional"`
-	Creator     string `json:"creator,optional"`
-	CreateTime  int    `json:"createTime,optional"`
-}
-
-type EventFlowListQuery struct {
-	Keyword   string `form:"k,optional"`
-	OrderCode string `form:"orderCode,optional"`
-	IsAsc     string `form:"isAsc,optional"`
-	PageNo    int64  `form:"pageNo,optional,default=1"`
-	PageSize  int64  `form:"pageSize,optional,default=10"`
-}
-
-type EventFlowPageResult struct {
-	Code     int             `json:"code"`
-	Msg      string          `json:"msg,optional"`
-	PageNo   int64           `json:"pageNo"`
-	PageSize int64           `json:"pageSize"`
-	Total    int64           `json:"total"`
-	Data     []EventFlowInfo `json:"data,optional"`
-}
-
-type EventFlowSaveReq struct {
-	ID    string                   `json:"id"`
-	Flows []map[string]interface{} `json:"flows,optional"`
-}
-
-type EventFlowUpdateReq struct {
-	ID          string `json:"id"`
-	FlowName    string `json:"flowName"`
-	Description string `json:"description,optional"`
-}
-
-type ExportPathResult struct {
-	SmallFile bool   `json:"smallFile"`
-	FilePath  string `json:"filePath"`
-}
-
-type ExportReq struct {
-	UnsExportParam
-	CheckSmallFile *bool `json:"checkSmallFile,optional,omitempty,omitzero"`
-}
-
-type ExportResp struct {
-	BaseResult
-	Data *ExportPathResult `json:"data"`
-}
-
-type Field struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
-
-type FieldDefine struct {
-	Name        string      `json:"name"`
-	Type        string      `json:"type"`
-	Unique      *bool       `json:"unique,optional,omitempty"`
-	Index       *string     `json:"index,optional,omitempty"`
-	DisplayName *string     `json:"displayName,optional,omitempty"`
-	Remark      *string     `json:"remark,optional,omitempty"`
-	MaxLen      *int        `json:"maxLen,optional,omitempty,string"`
-	TbValueName *string     `json:"tbValueName,optional,omitempty"`
-	Unit        *string     `json:"unit,optional,omitempty"`
-	UpperLimit  *float64    `json:"upperLimit,optional,omitempty"`
-	LowerLimit  *float64    `json:"lowerLimit,optional,omitempty"`
-	Decimal     *int        `json:"decimal,optional,omitempty,string"`
-	SystemField *bool       `json:"systemField,optional,omitempty"`
-	Inc         *bool       `json:"inc,optional,omitempty"`
-	LastValue   string      `json:"-,optional"`
-	LastTime    int64       `json:"-,optional"`
-	Uns         interface{} `json:"-"`
-}
-
-type FieldDefines struct {
-	FieldsMap     map[string]*FieldDefine // Field name -> FieldDefine  // Field name -> FieldDefine
-	FieldIndexMap map[string]string       // Index -> Field name  // Index -> Field name
-	UniqueKeys    map[string]bool         // Set of unique field names  // Set of unique field names
-	CalcField     *FieldDefine            // Calculation field  // Calculation field
-}
-
-type FieldsAndData struct {
-	Table    string          `json:"table"`
-	Column   string          `json:"column"`
-	Function SelectFunction  `json:"function,optional"`
-	HasNext  bool            `json:"hasNext"`
-	Fields   []string        `json:"fields"`
-	Datas    [][]interface{} `json:"datas"`
-}
-
-type FileDownloadReq struct {
-	Path string `form:"path"`
-}
-
-type FileVo struct {
-	UnsId    string `json:"unsId"`
-	Name     string `json:"name"`
-	Path     string `json:"path"`
-	PathType int16  `json:"pathType"`
-}
-
-type Fill struct {
-	Strategy string `json:"strategy,optional"`
+type FlowListReq struct {
+	FlowType string `form:"flowType,optional"`
+	ParentId int64  `form:"parentId,optional"`
+	Keyword  string `form:"keyword,optional"`
 }
 
 type FlowMarkReq struct {
-	ID string `json:"id,optional"`
+	FlowId int64 `path:"flowId"`
+	Pinned bool  `json:"pinned"`
 }
 
-type FlowUNMarkReq struct {
-	ID string `form:"id,optional"`
+type FlowMockField struct {
+	Name      string `json:"name"`
+	FieldType string `json:"type,optional"`
 }
 
-type GetAppRequest struct {
-	Name string `path:"name"`
+type FlowSaveReq struct {
+	FlowId          int64           `path:"flowId,optional"`
+	SourceId        int64           `json:"sourceId,optional"`
+	ParentId        int64           `json:"parentId,optional"`
+	FlowType        string          `json:"flowType"`
+	NodeType        string          `json:"nodeType"`
+	Name            string          `json:"name"`
+	Description     string          `json:"description,optional"`
+	Template        string          `json:"template,optional"`
+	UnsNodeIds      []int64         `json:"unsNodeIds,optional"`
+	MockData        bool            `json:"mockData,optional"`
+	MockTopic       string          `json:"mockTopic,optional"`
+	MockFields      []FlowMockField `json:"mockFields,optional"`
+	MockTriggerMode string          `json:"mockTriggerMode,optional"`
 }
 
-type GetByPathReq struct {
-	Path string `form:"path"`
+type FlowStatusReq struct {
+	FlowId int64  `path:"flowId"`
+	Status string `json:"status"`
 }
 
-type GetByUnsReq struct {
-	UnsAlias string `form:"unsAlias"`
+type GatewayRouteListResp struct {
+	List  []GatewayRouteReq `json:"list"`
+	Total int64             `json:"total"`
 }
 
-type GetByUnsRequest struct {
-	UnsAlias string `form:"unsAlias"`
+type GatewayRouteReq struct {
+	RouteKey    string   `json:"routeKey"`
+	Name        string   `json:"name"`
+	Description string   `json:"description,optional"`
+	TargetType  string   `json:"targetType"`
+	MatchType   string   `json:"matchType"`
+	PathPattern string   `json:"pathPattern"`
+	Methods     []string `json:"methods,optional"`
+	TargetUrl   string   `json:"targetUrl,optional"`
+	TargetPath  string   `json:"targetPath,optional"`
+	StripPrefix bool     `json:"stripPrefix,optional"`
+	RewritePath string   `json:"rewritePath,optional"`
+	AuthPolicy  string   `json:"authPolicy"`
+	ResourceKey string   `json:"resourceKey,optional"`
+	TimeoutMs   int      `json:"timeoutMs,optional"`
+	Priority    int      `json:"priority,optional"`
+	Enabled     bool     `json:"enabled"`
 }
 
-type GetDefRequest struct {
-	Uns string `path:"uns,optional"`
+type HistoryAggregation struct {
+	Interval string                    `json:"interval"`
+	Function string                    `json:"function,optional"`
+	Field    string                    `json:"field,optional"`
+	Fields   []HistoryAggregationField `json:"fields,optional"`
 }
 
-type GetInstanceTopologyReq struct {
-	UnsId int64 `form:"unsId,optional"`
+type HistoryAggregationField struct {
+	Name     string `json:"name"`
+	Function string `json:"function,optional"`
 }
 
-type GetInstanceTopologyResp struct {
-	Data []InstanceTopologyData `json:"data"`
+type HistoryQueryMeta struct {
+	Aggregated          bool   `json:"aggregated"`
+	Sampled             bool   `json:"sampled"`
+	RawTotal            int64  `json:"rawTotal"`
+	ReturnedTotal       int64  `json:"returnedTotal"`
+	RequestedIntervalMs int64  `json:"requestedIntervalMs,optional"`
+	ActualIntervalMs    int64  `json:"actualIntervalMs,optional"`
+	Strategy            string `json:"strategy,optional"`
 }
 
-type GetLanguagesReq struct {
-	OnlyForEnabled bool `form:"onlyForEnabled,optional"`
+type HistoryReq struct {
+	Topics      []string            `json:"topics"`
+	StartTime   string              `json:"start_time"`
+	EndTime     string              `json:"end_time"`
+	Aggregation *HistoryAggregation `json:"aggregation,optional"`
+	Page        int64               `json:"page,optional"`
+	Size        int64               `json:"size,optional"`
 }
 
-type GetLanguagesResp struct {
-	List []I18nLanguageVO `json:"list"`
+type HistoryResp struct {
+	Success bool                 `json:"success"`
+	Results []OpenapiHistoryItem `json:"results"`
+	Page    int64                `json:"page"`
+	Size    int64                `json:"size"`
+	Total   int64                `json:"total"`
 }
 
-type GetLastMsgReq struct {
-	Paths []string `form:"path,optional"`
-	Id    int64    `form:"id,optional"`
-	Alias string   `form:"alias,optional"`
+type HomeRecentItem struct {
+	Key          string `json:"key"`
+	ResourceKey  string `json:"resourceKey"`
+	ResourceName string `json:"resourceName"`
+	ResourceType string `json:"resourceType"`
+	BusinessType string `json:"businessType"`
+	RoutePath    string `json:"routePath"`
+	Icon         string `json:"icon"`
+	OperatedAt   int64  `json:"operatedAt"`
 }
 
-type GetLastMsgResp struct {
-	BaseResult
-	Data map[string]interface{} `json:"data"`
+type HomeRecentReq struct {
+	Limit int `form:"limit,optional"`
 }
 
-type GetMembersReq struct {
-	UpdatedAtStart string `json:"updatedAtStart,optional"`
-	UpdatedAtEnd   string `json:"updatedAtEnd,optional"`
-	PageNo         int    `json:"pageNo,optional,default=1"`
-	PageSize       int    `json:"pageSize,optional,default=20"`
-}
-
-type GetMembersResp struct {
-	PageNo   int           `json:"pageNo"`
-	PageSize int           `json:"pageSize"`
-	Total    int           `json:"total"`
-	List     []MemberBrief `json:"list"`
-}
-
-type GetPersonConfigReq struct {
-	UserID string `form:"userId"`
-}
-
-type GetPersonConfigResp struct {
-	UserID       string `json:"userId"`
-	MainLanguage string `json:"mainLanguage"`
-	CreateAt     int64  `json:"createAt"`
-	UpdateAt     int64  `json:"updateAt"`
-}
-
-type GetUnsI18nMessagesReq struct {
+type I18nMessagesReq struct {
 	Lang string `form:"lang"`
 }
 
-type GetUnsI18nMessagesResp struct {
-	Messages map[string]string `json:"messages"`
+type IdReq struct {
+	Id int64 `path:"id"`
 }
 
-type GlobalExportParam struct {
-	Name                 string                 `json:"name,optional,omitempty,omitzero"`
-	UnsExportParam       *UnsExportParam        `json:"unsExportParam,optional,omitzero"`
-	SrcFlowExportParam   *SourceFlowExportParam `json:"sourceFlowExportParam,optional,omitzero"`
-	EventFlowExportParam *EventFlowExportParam  `json:"eventFlowExportParam,optional,omitzero"`
-	DashboardExportParam *DashboardExportParam  `json:"dashboardExportParam,optional,omitzero"`
+type InfoResp struct {
+	Name         string   `json:"name"`
+	Version      string   `json:"version"`
+	Capabilities []string `json:"capabilities"`
+	MqttBroker   string   `json:"mqttBroker"`
 }
 
-type GlobalTopologyData struct {
-	ModelNum             int64             `json:"Folder"`               // Number of models (path_type=0)
-	InstanceNum          int64             `json:"File"`                 // Number of instances (path_type=2)
-	AlarmNum             int64             `json:"Alarm"`                // Number of alarms
-	AllConnections       int64             `json:"allConnections"`       // Total MQTT connections
-	LiveConnections      int64             `json:"liveConnections"`      // Active MQTT connections
-	MessageInThroughput  int64             `json:"messageInThroughput"`  // Messages/sec into MQTT broker
-	MessageOutThroughput int64             `json:"messageOutThroughput"` // Messages/sec out of MQTT broker
-	Protocol             map[string]int64  `json:"protocol"`             // Protocol counts: {"mqtt": 200, "opcua": 50}
-	ICMPStates           []interface{}     `json:"icmpStates"`           // ICMP ping states
-	MountStatus          map[string]string `json:"mountStatus"`          // Mount status by alias
+type JobIdReq struct {
+	JobId string `path:"jobId"`
 }
 
-type GroupBatchDeleteReq struct {
-	IDs []int64 `json:"ids"`
-}
-
-type GroupBizVO struct {
-	ID          string `json:"id"`
-	Category    string `json:"category,optional"` //分类 group-分组 file-文件
-	GroupType   *int64 `json:"groupType,optional"`
-	Name        string `json:"name"`
-	Description string `json:"description,optional"`
-	Sort        int32  `json:"sort,optional"`
-	GroupId     *int64 `json:"groupId,optional"`
-	CreateAt    int64  `json:"createAt,optional"`
-	Creator     string `json:"creator,optional,omitzero"`
-	HasChildren bool   `json:"hasChildren,optional"`
-}
-
-type GroupBy struct {
-	Time string `json:"time,optional"`
-}
-
-type GroupByTypeQuery struct {
-	Type int16   `form:"type"` //1-sourceflow 2-eventflow 3-datasource
-	Name *string `form:"name,optional"`
-	PageInfo
-}
-
-type GroupFlowVO struct {
-	ID          string `json:"id"`
-	Category    string `json:"category,optional"` //分类 group-分组 file-文件
-	GroupType   *int64 `json:"groupType,optional"`
-	Name        string `json:"name"`
-	Description string `json:"description,optional"`
-	Sort        int32  `json:"sort,optional"`
-	GroupId     *int64 `json:"groupId,optional"`
-	CreateAt    int64  `json:"createAt,optional"`
-	Creator     string `json:"creator,optional,omitzero"`
-	FlowName    string `json:"flowName,optional"`
-	FlowID      string `json:"flowId,optional"`
-	FlowStatus  string `json:"flowStatus,optional"`
-	Template    string `json:"template,optional"`
-	HasChildren bool   `json:"hasChildren,optional"`
-}
-
-type GroupIDReq struct {
-	ID int64 `path:"id"`
-}
-
-type GroupPageRequest struct {
-	GroupType int64  `form:"groupType,optional"`
-	GroupId   int64  `form:"groupId,optional"`
-	K         string `form:"k,optional"`
-	PageNo    int64  `form:"pageNo,default=1"`
-	PageSize  int64  `form:"pageSize,default=10"`
-	Category  string `form:"category,optional"` //分类 group-分组 file-文件
-	Creator   string `form:"creator,optional"`
-	OrderCode string `form:"orderCode,optional"` // 排序字段
-	IsAsc     bool   `form:"isAsc,optional"`     // 是否升序
-}
-
-type GroupPageResultVO struct {
-	PageNo   int64     `json:"pageNo"`
-	PageSize int64     `json:"pageSize"`
-	Total    int64     `json:"total"`
-	Code     int64     `json:"code"`
-	Data     []GroupVO `json:"data"`
-}
-
-type GroupQuery struct {
-	Type *int16  `form:"type,optional"`
-	Name *string `form:"name,optional"`
-	PageInfo
-}
-
-type GroupVO struct {
-	ID          int64  `json:"id"`
-	Type        *int16 `json:"type,optional"`
-	Name        string `json:"name"`
-	Description string `json:"description,optional"`
-	Sort        int32  `json:"sort,optional"`
-	UpdateAt    string `json:"updateAt,optional"`
-	CreateAt    string `json:"createAt,optional"`
-	Creator     string `json:"creator,optional,omitzero"`
-}
-
-type HistoryValueRequest struct {
-	AliasList []string `json:"aliasList"`
-	TimeStart int64    `json:"timeStart"`
-	TimeEnd   int64    `json:"timeEnd"`
-	Limit     int      `json:"limit,optional"`
-	Order     string   `json:"order,optional"`
-}
-
-type HistoryValueResult struct {
-	Code int                 `json:"code"`
-	Msg  string              `json:"msg"`
-	Data UnsHistoryQueryData `json:"data,optional"`
-}
-
-type HomePageReq struct {
-	HomePage string `form:"homePage"`
-}
-
-type I18nLanguageVO struct {
-	Id           int64  `json:"id"`           // 主键
-	LanguageCode string `json:"languageCode"` // 语言编码，例如 zh_CN、en_US
-	LanguageName string `json:"languageName"` // 语言名称，例如 中文（中国）、English (US)
-	LanguageType int32  `json:"languageType"` // 语言类型：1-内置，2-自定义
-	HasUsed      bool   `json:"hasUsed"`      // 是否启用
-}
-
-type IDList struct {
-	IDs []int64 `json:"ids"`
-}
-
-type InstallAppRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description,optional"`
-	ImagePath   string `json:"imagePath,optional"`
-	ImageUrl    string `json:"imageUrl,optional"`
-	IconPath    string `json:"iconPath,optional"`
-	MenuUrl     string `json:"menuUrl"`
-	Menu        *Menu  `json:"menu,optional"`
-	ComposeYaml string `json:"composeYaml"`
-	RouterTrim  bool   `json:"routerTrim,optional,default=true"`
-	KeepHost    bool   `json:"keepHost,optional,default=false"`
-}
-
-type InstallAppResponse struct {
-	Code    int           `json:"code"`
-	Message string        `json:"message,optional"`
-	Data    InstallResult `json:"data"`
-}
-
-type InstallResult struct {
-	Name        string `json:"name"`
-	Success     bool   `json:"success"`
-	Message     string `json:"message,optional"`
-	InstallTime string `json:"installTime,optional"`
-}
-
-type InstalledAppsResponse struct {
-	Code    int       `json:"code"`
-	Message string    `json:"message,optional"`
-	Data    []AppInfo `json:"data"`
-	Total   int       `json:"total"`
-}
-
-type InstanceDetail struct {
-	Id               string                 `json:"id"`
-	Topic            string                 `json:"topic"`
-	Alias            string                 `json:"alias"`
-	ParentAlias      *string                `json:"parentAlias,omitempty"`
-	Path             string                 `json:"path,omitempty"`
-	DataType         *int16                 `json:"dataType,omitempty"`
-	ParentDataType   *int16                 `json:"parentDataType,omitempty"`
-	DataPath         *string                `json:"dataPath,omitempty"`
-	PathType         int16                  `json:"pathType"`
-	Fields           []*FieldDefine         `json:"fields,omitempty"`
-	JsonFields       []*FieldDefine         `json:"jsonFields,omitempty"`
-	CreateTime       int64                  `json:"createTime,omitzero"`
-	UpdateTime       int64                  `json:"updateTime,omitzero"`
-	Protocol         map[string]interface{} `json:"protocol,omitempty"`
-	ModelDescription string                 `json:"modelDescription,omitempty"`
-	Description      string                 `json:"description,omitempty"`
-	WithFlow         bool                   `json:"withFlow"`
-	WithDashboard    bool                   `json:"withDashboard"`
-	WithSave2db      bool                   `json:"withSave2db"`
-	Save2db          bool                   `json:"save2db"`
-	SubscribeEnable  bool                   `json:"subscribeEnable"`
-	Expression       string                 `json:"expression,omitempty"`
-	ShowExpression   string                 `json:"showExpression,omitempty"`
-	Refers           []InstanceField        `json:"refers,omitempty"`
-	LabelList        []LabelVo              `json:"labelList,omitempty"`
-	Name             string                 `json:"name,omitempty"`
-	DisplayName      string                 `json:"displayName,omitempty"`
-	PathName         string                 `json:"pathName,omitempty"`
-	ModelId          string                 `json:"modelId,omitempty"`
-	ModelName        string                 `json:"modelName,omitempty"`
-	Extend           map[string]interface{} `json:"extend,omitempty"`
-	Payload          string                 `json:"payload,omitempty"`
-	TemplateName     string                 `json:"templateName,omitempty"`
-	TemplateAlias    string                 `json:"templateAlias,omitempty"`
-	AccessLevel      string                 `json:"accessLevel,omitempty"`
-	Mount            *MountDetailVo         `json:"mount,omitempty"`
-	Table            string                 `json:"table,omitempty"`
-	TbFieldName      string                 `json:"tbFieldName,omitempty"`
-}
-
-type InstanceDetailReq struct {
-	Id int64 `form:"id"`
-}
-
-type InstanceDetailResp struct {
-	BaseResult
-	Data *InstanceDetail `json:"data"`
-}
-
-type InstanceField struct {
-	Id    int64  `json:"id"`
-	Alias string `json:"alias"`
-	Path  string `json:"path"`
-	Topic string `json:"path"`
-	Field string `json:"field"`
-	Uts   bool   `json:"uts"`
-}
-
-type InstanceTopologyData struct {
-	TopologyNode string `json:"topologyNode"`
-	EventCode    string `json:"eventCode"`
-	EventMessage string `json:"eventMessage,omitempty"`
-	EventTime    int64  `json:"eventTime,omitempty"`
-}
-
-type IsExistReq struct {
-	Alias string `form:"alias"`
-}
-
-type IsExistRequest struct {
-	Alias string `form:"alias"`
-}
-
-type JsonResult struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data,omitzero"`
-}
-
-type LabelDetailResult struct {
-	BaseResult
-	Data *LabelVo `json:"data"`
-}
-
-type LabelOpenVo struct {
-	Id         string `json:"id"`
-	LabelName  string `json:"labelName"`
-	CreateTime int64  `json:"createTime,optional"`
-}
-
-type LabelPageReq struct {
-	LabelId  int64 `form:"labelId"`
-	PageNo   int64 `form:"pageNo,optional,default=1"`
-	PageSize int64 `form:"pageSize,optional,default=20"`
-}
-
-type LabelPageResult struct {
-	PageNo   int64         `json:"pageNo"`
-	PageSize int64         `json:"pageSize"`
-	Total    int64         `json:"total"`
-	Code     int64         `json:"code"`
-	Data     []LabelOpenVo `json:"data,optional"`
-}
-
-type LabelQueryDto struct {
-	PageNo   int    `form:"pageNo,optional,default=1"`
-	PageSize int    `form:"pageSize,optional,default=20"`
-	Key      string `form:"key,optional"`
-}
-
-type LabelVo struct {
-	ID                 int64  `json:"id,string"`
-	LabelName          string `json:"labelName,omitempty"`
-	Topic              string `json:"topic,omitempty"`
-	SubscribeEnable    *bool  `json:"subscribeEnable,omitempty"`
-	SubscribeFrequency string `json:"subscribeFrequency,omitempty"`
-	CreateTime         int64  `json:"createTime,omitzero"`
-	SubscribeAt        int64  `json:"subscribeAt,omitzero"`
-}
-
-type ListAppKeyResp struct {
-	BaseResult
-	Data []*AppKeyInfo `json:"data"`
-}
-
-type ListAttachmentReq struct {
-	Alias string `form:"alias"`
-}
-
-type ListAttachmentResp struct {
-	List []UnsAttachmentBo `json:"list"`
-}
-
-type ListAttachmentsRequest struct {
-	Category string `form:"category,optional"`
-	Tag      string `form:"tag,optional"`
-	Page     int    `form:"page,optional,default=1"`
-	PageSize int    `form:"pageSize,optional,default=20"`
-}
-
-type ListAttachmentsResponse struct {
-	Code    int        `json:"code"`
-	Message string     `json:"message,optional"`
-	Data    ListResult `json:"data"`
-	Total   int        `json:"total"`
-}
-
-type ListResult struct {
-	Items      []AttachmentInfo `json:"items"`
-	Page       int              `json:"page"`
-	PageSize   int              `json:"pageSize"`
-	TotalPages int              `json:"totalPages"`
-}
-
-type ListTypesResult struct {
-	BaseResult
-	Data []string `json:"data"`
-}
-
-type LogConfigRequest struct {
-	Level string `path:"level,optional"`
-}
-
-type LogConfigResponse struct {
-	Level string `json:"rootLevel"`
+type ListResp struct {
+	List  []interface{} `json:"list"`
+	Total int64         `json:"total"`
 }
 
 type LoginReq struct {
@@ -1064,1270 +343,553 @@ type LoginReq struct {
 	Password string `json:"password"`
 }
 
-type MakeLabelDto struct {
-	FileAlias  string   `json:"fileAlias"`
-	LabelNames []string `json:"labelNames"`
+type LoginResp struct {
+	Token               string   `json:"token"`
+	UserId              int64    `json:"userId"`
+	UserName            string   `json:"userName"`
+	NickName            string   `json:"nickName"`
+	Email               string   `json:"email"`
+	Phone               string   `json:"phone"`
+	RoleCode            string   `json:"roleCode,optional"`
+	IsRandomPwd         bool     `json:"isRandomPwd"`
+	ForceChangePassword bool     `json:"forceChangePassword"`
+	ResourceKeys        []string `json:"resourceKeys"`
+	UiActions           []string `json:"uiActions"`
 }
 
-type MakeLabelDtoArray struct {
-	Items []MakeLabelDto `json:"items"`
+type NamespaceNode struct {
+	Name             string            `json:"name"`
+	Type             string            `json:"type,optional"`
+	Children         []NamespaceNode   `json:"children,optional"`
+	TopicType        string            `json:"topicType,optional"`
+	Fields           []SchemaField     `json:"fields,optional"`
+	Description      string            `json:"description,optional"`
+	DisplayName      string            `json:"displayName,optional"`
+	ExtendProperties map[string]string `json:"extendProperties,optional"`
+	Alias            string            `json:"alias,optional"`
+	EnableHistory    *bool             `json:"enableHistory,optional"`
 }
 
-type MakeLabelReq struct {
-	UnsId     int64      `form:"unsId"`
-	LabelList []*LabelVo `json:"labelList,optional"`
+type NodeCreateReq struct {
+	Namespace []NamespaceNode `json:"namespace"`
 }
 
-type MakeSingleLabelReq struct {
-	UnsId   int64 `form:"unsId"`
-	LabelId int64 `form:"labelId"`
+type NodeDeleteReq struct {
+	Topics []string `json:"topics"`
 }
 
-type MarkTopRequest struct {
-	ID string `json:"id"`
+type NodeIdReq struct {
+	NodeId int64 `path:"nodeId"`
 }
 
-type MemberBrief struct {
-	UserID    string `json:"userId"`
-	UserName  string `json:"userName"`
-	Email     string `json:"email,optional"`
-	UpdatedAt string `json:"updatedAt,optional"`
-}
-
-type Menu struct {
-	Name         string `json:"name,optional"`
-	Description  string `json:"description,optional"`
-	IndexUrl     string `json:"indexUrl"`
-	OpenType     int    `json:"openType,optional,default=0"`
-	StripPath    bool   `json:"stripPath,optional,default=true"`
-	PreserveHost bool   `json:"preserveHost,optional,default=false"`
-	IconUrl      string `json:"iconUrl,optional"`
-}
-
-type MockInstanceTopologyReq struct {
-	UnsId int64  `form:"unsId,optional"`
-	Topic string `form:"topic,optional"` // The java code has topic, but it seems unused in log method. Kept for compatibility.
-	Node  string `form:"node,optional"`
-}
-
-type ModelDetail struct {
-	Id                 string                 `json:"id"`
-	Topic              string                 `json:"topic"`
-	SubscribeEnable    bool                   `json:"subscribeEnable"`
-	SubscribeFrequency string                 `json:"subscribeFrequency,omitempty"`
-	Alias              string                 `json:"alias"`
-	ParentAlias        string                 `json:"parentAlias,omitempty"`
-	Path               string                 `json:"path,omitempty"`
-	PathType           int16                  `json:"pathType"`
-	DataType           *int16                 `json:"dataType,omitempty"`
-	Fields             []*FieldDefine         `json:"fields,omitempty"`
-	CreateTime         int64                  `json:"createTime"`
-	UpdateTime         int64                  `json:"updateTime"`
-	Description        string                 `json:"description,omitempty"`
-	Name               string                 `json:"name,omitempty"`
-	DisplayName        string                 `json:"displayName,omitempty"`
-	PathName           string                 `json:"pathName,omitempty"`
-	ModelId            string                 `json:"modelId,omitempty"`
-	ModelName          string                 `json:"modelName,omitempty"`
-	Extend             map[string]interface{} `json:"extend,omitempty"`
-	TemplateAlias      string                 `json:"templateAlias,omitempty"`
-	Mount              *MountDetailVo         `json:"mount,omitempty"`
-}
-
-type ModelDetailReq struct {
-	Id int64 `form:"id"`
-}
-
-type ModelDetailResp struct {
-	BaseResult
-	Data *ModelDetail `json:"data"`
-}
-
-type MountDetailVo struct {
-	MountType   *int16 `json:"mountType,omitempty,string"`
-	MountSource string `json:"mountSource,omitempty"`
-	DisplayName string `json:"displayName,omitempty"`
-}
-
-type NodeRedMissingNode struct {
-	ID        string `json:"id"`
-	Type      string `json:"type"`
-	Name      string `json:"name,optional"`
-	Scope     string `json:"scope"`
-	FlowID    string `json:"flowId,optional"`
-	FlowLabel string `json:"flowLabel,optional"`
-	Users     int    `json:"users,optional"`
+type NodeRedMissingNodeCleanupReq struct {
+	FlowType string `json:"flowType,optional"`
 }
 
 type NodeRedMissingNodeDeleteReq struct {
-	ID       string `json:"id"`
-	FlowID   string `json:"flowId,optional"`
-	Scope    string `json:"scope,optional"`
-	FlowType string `json:"flowType,optional" form:"flowType,optional"`
+	Id       string `form:"id"`
+	FlowId   string `form:"flowId,optional"`
+	Scope    string `form:"scope,optional"`
+	FlowType string `form:"flowType"`
 }
 
-type NodeRedMissingNodeDeleteResult struct {
-	Deleted int `json:"deleted"`
+type NodeRedMissingNodeListReq struct {
+	FlowType string `form:"flowType"`
 }
 
-type NodeRedMissingNodeListResult struct {
-	Nodes []NodeRedMissingNode `json:"nodes"`
+type NodeRedNodeTypeListReq struct {
+	FlowType string `form:"flowType"`
+}
+
+type NodeUpdateReq struct {
+	Path             string            `json:"path"`
+	Name             string            `json:"name,optional"`
+	Description      string            `json:"description,optional"`
+	DisplayName      string            `json:"displayName,optional"`
+	ExtendProperties map[string]string `json:"extendProperties,optional"`
+	Fields           []SchemaField     `json:"fields,optional"`
+	Alias            string            `json:"alias,optional"`
+	EnableHistory    *bool             `json:"enableHistory,optional"`
+	UpdateMask       []string          `json:"updateMask,optional"`
 }
 
 type OAuthAuthorizeReq struct {
-	ResponseType string `form:"response_type"`
-	ClientID     string `form:"client_id"`
-	RedirectURI  string `form:"redirect_uri"`
-	Scope        string `form:"scope,optional"`
-	State        string `form:"state,optional"`
+	ResponseType        string `form:"responseType"`
+	ClientId            string `form:"clientId"`
+	RedirectUri         string `form:"redirectUri"`
+	Scope               string `form:"scope,optional"`
+	State               string `form:"state,optional"`
+	CodeChallenge       string `form:"codeChallenge,optional"`
+	CodeChallengeMethod string `form:"codeChallengeMethod,optional"`
+}
+
+type OAuthClientReq struct {
+	Id             int64    `path:"id,optional"`
+	ClientName     string   `json:"clientName"`
+	RedirectUris   []string `json:"redirectUris"`
+	AllowedOrigins []string `json:"allowedOrigins,optional"`
+	AppId          int64    `json:"appId,optional"`
 }
 
 type OAuthTokenReq struct {
-	GrantType    string `form:"grant_type,optional"`
-	Code         string `form:"code"`
-	RedirectURI  string `form:"redirect_uri"`
-	ClientID     string `form:"client_id"`
-	ClientSecret string `form:"client_secret,optional"`
+	GrantType    string `json:"grantType"`
+	Code         string `json:"code,optional"`
+	RedirectUri  string `json:"redirectUri,optional"`
+	ClientId     string `json:"clientId"`
+	CodeVerifier string `json:"codeVerifier,optional"`
 }
 
-type OAuthTokenResp struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int64  `json:"expires_in"`
-	Scope       string `json:"scope,optional"`
+type OpenapiCreateResult struct {
+	Success bool             `json:"success"`
+	Topic   string           `json:"topic"`
+	Error   OpenapiItemError `json:"error,optional"`
 }
 
-type OAuthUserInfoResp struct {
-	Sub               string `json:"sub"`
-	PreferredUsername string `json:"preferred_username,optional"`
-	Email             string `json:"email,optional"`
-	Name              string `json:"name,optional"`
-}
-
-type OpenSourceFlowCreateReq struct {
-	FlowName    string `json:"flowName"`
-	Description string `json:"description,optional"`
-	Template    string `json:"template,optional"`
-	GroupId     *int64 `json:"groupId,optional,string"`
-}
-
-type OpenSourceFlowDataQuery struct {
-	ID string `form:"id"`
-}
-
-type OpenSourceFlowDataResp struct {
-	Flows []map[string]interface{} `json:"flows,optional"`
-	Rev   string                   `json:"rev,optional"`
-}
-
-type OpenSourceFlowDeleteReq struct {
-	ID string `form:"id"`
-}
-
-type OpenSourceFlowDeployReq struct {
-	ID    string                   `json:"id"`
-	Flows []map[string]interface{} `json:"flows,optional"`
-}
-
-type OpenSourceFlowDeployResult struct {
-	FlowID  string `json:"flowId,optional"`
-	Version string `json:"version,optional"`
-}
-
-type OpenSourceFlowInfo struct {
-	ID          string `json:"id,optional"`
-	FlowName    string `json:"flowName,optional"`
-	FlowID      string `json:"flowId,optional"`
-	Description string `json:"description,optional"`
-	FlowStatus  string `json:"flowStatus,optional"`
-	Template    string `json:"template,optional"`
-	Mark        int    `json:"mark,optional"`
-	Creator     string `json:"creator,optional"`
-	CreateTime  int    `json:"createTime,optional"`
-}
-
-type OpenSourceFlowListQuery struct {
-	Keyword   string `form:"k,optional"`
-	OrderCode string `form:"orderCode,optional"`
-	IsAsc     string `form:"isAsc,optional"`
-	PageNo    int64  `form:"pageNo,optional,default=1"`
-	PageSize  int64  `form:"pageSize,optional,default=10"`
-}
-
-type OpenSourceFlowPageResult struct {
-	Code     int                  `json:"code"`
-	PageNo   int64                `json:"pageNo"`
-	PageSize int64                `json:"pageSize"`
-	Total    int64                `json:"total"`
-	Data     []OpenSourceFlowInfo `json:"data,optional"`
-}
-
-type OpenSourceFlowUpdateReq struct {
-	ID          string `json:"id"`
-	FlowName    string `json:"flowName"`
-	Description string `json:"description,optional"`
-}
-
-type OpenTemplateVo struct {
-	Id          int64         `json:"id"`
-	Name        string        `json:"name"`
-	Alias       string        `json:"alias"`
-	Definition  []FieldDefine `json:"definition,optional"`
-	CreateTime  int64         `json:"createTime,optional"`
-	Description string        `json:"description,optional"`
-}
-
-type OpenUserInfo struct {
-	ID                string        `json:"id"`
-	Email             string        `json:"email,optional"`
-	EmailVerified     bool          `json:"emailVerified,optional"`
-	FirstName         string        `json:"firstName,optional"`
-	PreferredUsername string        `json:"preferredUsername"`
-	Sub               string        `json:"sub,optional"`
-	Enabled           bool          `json:"enabled,optional"`
-	RoleList          []RoleSummary `json:"roleList,optional"`
-	FirstTimeLogin    int           `json:"firstTimeLogin,optional"`
-	TipsEnable        int           `json:"tipsEnable,optional"`
-	HomePage          string        `json:"homePage,optional"`
-	Phone             string        `json:"phone,optional"`
-	Source            string        `json:"source,optional"`
-}
-
-type OpenUserPageQuery struct {
-	PageNo      int    `form:"pageNo,optional,default=1"`
-	PageSize    int    `form:"pageSize,optional,default=20"`
-	Username    string `form:"username,optional"`
-	DisplayName string `form:"displayName,optional"`
-	Email       string `form:"email,optional"`
-	Phone       string `form:"phone,optional"`
-	Enabled     *bool  `form:"enabled,optional"`
-}
-
-type OpenUserPageResult struct {
-	Code     int            `json:"code"`
-	PageNo   int            `json:"pageNo"`
-	PageSize int            `json:"pageSize"`
-	Total    int            `json:"total"`
-	Data     []OpenUserInfo `json:"data"`
-}
-
-type OperationGroupReq struct {
-	ID     *int64  `json:"id,string"` //组ID
-	BizId  *string `json:"bizId"`     //业务ID
-	Status *bool   `json:"status"`    // true移入，false移出
-}
-
-type OperationGroupTopReq struct {
-	ID     *int64 `json:"id,string"` //组ID
-	Status *bool  `json:"status"`    // true置顶（sort字段设置为1），false取消置顶(sort字段设置为0)
-}
-
-type OperationResult struct {
+type OpenapiEmptyResp struct {
 	Success bool `json:"success"`
 }
 
-type OrderBy struct {
-	Field string `json:"field,optional"` ////排序的字段名
-	Sort  int64  `json:"sort,optional"`  //排序方式：0 从小到大, 1 从大到小
+type OpenapiFlowCreateResp struct {
+	Id       int64  `json:"id"`
+	BrokerID string `json:"brokerID"`
 }
 
-type OuterStructureVo struct {
-	DataPath string                 `json:"dataPath"`
-	Fields   []*FieldDefine         `json:"fields,omitempty"`
-	ValueMap map[string]interface{} `json:"valueMap,omitempty"`
+type OpenapiFlowDataResp struct {
+	Rev   string        `json:"rev"`
+	Flows []interface{} `json:"flows"`
 }
 
-type PageInfo struct {
-	Page   int64      `json:"page,optional" form:"page,optional"` // 页码
-	Size   int64      `json:"size,optional" form:"size,optional"` // 每页大小
-	Orders []*OrderBy `json:"orders,optional"`                    //排序
+type OpenapiFlowDeployResp struct {
+	FlowId string `json:"flowId"`
 }
 
-type PageListRequest struct {
-	K         string `form:"k,optional"`         // 关键字
-	Type      *int   `form:"type,optional"`      // Dashboard 类型
-	OrderCode string `form:"orderCode,optional"` // 排序字段
-	IsAsc     bool   `form:"isAsc,optional"`     // 是否升序
-	PageNo    int64  `form:"pageNo,default=1"`
-	PageSize  int64  `form:"pageSize,default=10"`
+type OpenapiFlowEmptyResp struct {
+	Success bool `json:"success"`
 }
 
-type PageListUnsByTemplateReq struct {
-	TemplateId int64 `form:"templateId"`
-	PageNo     int64 `form:"pageNo,optional,default=1"`    // 当前页数，默认为1
-	PageSize   int64 `form:"pageSize,optional,default=20"` // 每页记录数，默认为20，最大支持1000
+type OpenapiFlowInfo struct {
+	Id          int64  `json:"id"`
+	FlowId      string `json:"flowId"`
+	FlowName    string `json:"flowName"`
+	FlowType    string `json:"flowType"`
+	FlowStatus  string `json:"flowStatus"`
+	Template    string `json:"template"`
+	Description string `json:"description"`
+	IsFavorite  int64  `json:"isFavorite"`
+	CreatedTime int64  `json:"createdTime"`
+	UpdatedTime int64  `json:"updatedTime"`
 }
 
-type PageListUnsByTemplateResp struct {
-	PageResultDTO
-	Data []*FileVo `json:"data,optional,omitempty"`
+type OpenapiFlowLegacyCreateReq struct {
+	FlowName    string `json:"flowName"`
+	FlowType    string `json:"flowType"`
+	Description string `json:"description,optional"`
+	Template    string `json:"template,optional"`
 }
 
-type PageResp struct {
-	Page     int64 `json:"page,optional"`     // 页码
-	PageSize int64 `json:"pageSize,optional"` // 每页大小
-	Total    int64 `json:"total"`
+type OpenapiFlowLegacyDeleteReq struct {
+	Ids []int64 `json:"ids"`
 }
 
-type PageResultDTO struct {
-	PageNo   int64  `json:"pageNo"`
-	PageSize int64  `json:"pageSize"`
-	Total    int64  `json:"total"`
-	Code     int64  `json:"code,omitzero"`
-	Msg      string `json:"msg,omitempty"`
+type OpenapiFlowLegacyDeployReq struct {
+	Id        int64  `json:"id"`
+	FlowsJson string `json:"flowsJson"`
 }
 
-type PaginationDTO struct {
-	PageNo   int64 `json:"pageNo,default=1" form:"pageNo,default=1"`       // 当前页数，默认为1
-	PageSize int64 `json:"pageSize,default=20" form:"pageSize,default=20"` // 每页记录数，默认为20，最大支持1000
+type OpenapiFlowLegacyGetReq struct {
+	Id int64 `json:"id"`
 }
 
-type ParseJson2TreeUnsResp struct {
-	BaseResult
-	Data []*TreeOuterStructureVo `json:"data"`
+type OpenapiFlowLegacyListReq struct {
+	Keyword  string `json:"keyword,optional"`
+	FlowType string `json:"flowType,optional"`
 }
 
-type ParseJson2UnsResp struct {
-	BaseResult
-	Data []*OuterStructureVo `json:"data"`
+type OpenapiFlowLegacyNodesReq struct {
+	FlowType string `json:"flowType"`
 }
 
-type ParserTopicPayloadReq struct {
-	Topic string `form:"topic"`
+type OpenapiFlowLegacyUpdateReq struct {
+	Id          int64  `json:"id"`
+	FlowName    string `json:"flowName,optional"`
+	Description string `json:"description,optional"`
+	Template    string `json:"template,optional"`
+	IsFavorite  int64  `json:"isFavorite,optional"`
 }
 
-type PasteRequestVO struct {
-	SourceId int64           `json:"sourceId,string"`
-	TargetId int64           `json:"targetId,string,optional"`
-	NewFile  *CreateTopicDto `json:"newF,optional"`
+type OpenapiFlowListResp struct {
+	List []OpenapiFlowInfo `json:"list"`
 }
 
-type PhoneUpdateReq struct {
-	Phone string `form:"phone"`
+type OpenapiFlowNodesResp struct {
+	Nodes []OpenapiNodeRedNodeSet `json:"nodes"`
 }
 
-type Point struct {
-	Longitude float64 `json:"longitude,range=[0:180]"` //经度
-	Latitude  float64 `json:"latitude,range=[0:90]"`   //纬度
+type OpenapiHistoryItem struct {
+	Success bool                 `json:"success"`
+	Topic   string               `json:"topic"`
+	Result  OpenapiHistoryResult `json:"result,optional"`
+	Error   OpenapiItemError     `json:"error,optional"`
 }
 
-type RemoveReq struct {
-	Id            int64 `form:"id"`
-	WithFlow      *bool `form:"withFlow,default=true"`
-	WithDashboard *bool `form:"withDashboard,default=true"`
-	RemoveRefer   *bool `form:"cascade,optional"`
+type OpenapiHistoryResult struct {
+	Values []OpenapiHistoryValue `json:"values"`
+	Meta   HistoryQueryMeta      `json:"meta,optional"`
 }
 
-type RemoveResult struct {
-	BaseResult
-	Data *RemoveTip `json:"data,omitempty"`
+type OpenapiHistoryValue struct {
+	Value     interface{} `json:"value,optional"`
+	Quality   string      `json:"quality"`
+	TimeStamp int64       `json:"timeStamp"`
 }
 
-type RemoveTip struct {
-	Refs int `json:"refs"`
+type OpenapiItemError struct {
+	Code    int64  `json:"code"`
+	Message string `json:"message"`
 }
 
-type RemoveUnsOptions struct {
-	WithFlow        *bool `json:"withFlow,optional"`
-	WithDashboard   *bool `json:"withDashboard,optional"`
-	RemoveRefer     *bool `json:"removeRefer,optional"`
-	CheckMount      *bool `json:"checkMount,optional"`
-	OnlyRemoveChild *bool `json:"onlyRemoveChild,optional"`
+type OpenapiNodeInfo struct {
+	Id               int64             `json:"id"`
+	Path             string            `json:"path"`
+	Name             string            `json:"name"`
+	Type             string            `json:"type"`
+	TopicType        string            `json:"topicType"`
+	Description      string            `json:"description,optional"`
+	DisplayName      string            `json:"displayName,optional"`
+	ExtendProperties map[string]string `json:"extendProperties,optional"`
+	Fields           []SchemaField     `json:"fields,optional"`
+	Children         []OpenapiNodeInfo `json:"children,optional"`
+	Alias            string            `json:"alias,optional"`
+	EnableHistory    bool              `json:"enableHistory,optional"`
+	BindFlowID       int64             `json:"bindFlowID,optional"`
+	Payload          OpenapiVQT        `json:"payload,optional"`
 }
 
-type ResourceBatchDeleteReq struct {
-	IDs []int64 `json:"ids"` // 注意：如果前端传 ["1","2"] 这种字符串数组，这里不能用 ,string；见下方说明
+type OpenapiNodeRedNodeSet struct {
+	Id      string   `json:"id"`
+	Name    string   `json:"name"`
+	Types   []string `json:"types"`
+	Enabled bool     `json:"enabled"`
+	Module  string   `json:"module"`
+	Version string   `json:"version"`
 }
 
-type ResourceIDReq struct {
-	ID int64 `path:"id"`
+type OpenapiReadItem struct {
+	Success  bool             `json:"success"`
+	Topic    string           `json:"topic"`
+	Result   OpenapiVQT       `json:"result,optional"`
+	Error    OpenapiItemError `json:"error,optional"`
+	Metadata OpenapiNodeInfo  `json:"metadata,optional"`
 }
 
-type ResourceInfo struct {
-	PolicyID   string   `json:"policyId,optional"`
-	ResourceID string   `json:"resourceId,optional"`
-	URI        string   `json:"uri"`
-	Methods    []string `json:"methods,optional"`
+type OpenapiUnsNodeSaveReq struct {
+	NodeId           int64         `path:"nodeId,optional"`
+	ParentId         int64         `json:"parentId,optional"`
+	Name             string        `json:"name"`
+	DisplayName      string        `json:"displayName,optional"`
+	Alias            string        `json:"alias,optional"`
+	Namespace        string        `json:"namespace,optional"`
+	NodeType         string        `json:"type,optional"`
+	TopicType        string        `json:"topicType,optional"`
+	Fields           []SchemaField `json:"fields,optional"`
+	Description      string        `json:"description,optional"`
+	LabelIds         []int64       `json:"labelIds,optional"`
+	AssetFileIds     []int64       `json:"assetFileIds,optional"`
+	ExtendProperties string        `json:"extendProperties,optional"`
+	EnableHistory    *bool         `json:"enableHistory,optional"`
+	WithFlow         bool          `json:"withFlow,optional"`
+	AddFlow          bool          `json:"addFlow,optional"`
+	MockData         bool          `json:"mockData,optional"`
 }
 
-type ResourceQuery struct {
-	ParentID int64 `form:"parentId,optional"`
-	Type     int   `form:"type,optional"`
+type OpenapiVQT struct {
+	Value     interface{} `json:"value,optional"`
+	Quality   string      `json:"quality"`
+	TimeStamp int64       `json:"timeStamp"`
 }
 
-type ResourceVO struct {
-	ID              string `json:"id,optional"`
-	ParentID        string `json:"parentId,optional"`
-	Type            int    `json:"type,optional"`
-	Code            string `json:"code,optional"`
-	NameCode        string `json:"nameCode,optional"`
-	ShowName        string `json:"showName,optional"`
-	RouteSource     int    `json:"routeSource,optional"`
-	URL             string `json:"url,optional"`
-	URLType         int    `json:"urlType,optional"`
-	OpenType        int    `json:"openType,optional"`
-	Icon            string `json:"icon,optional"`
-	DescriptionCode string `json:"descriptionCode,optional"`
-	ShowDescription string `json:"showDescription,optional"`
-	Sort            int    `json:"sort,optional"`
-	EditEnable      bool   `json:"editEnable,optional"`
-	HomeEnable      bool   `json:"homeEnable,optional"`
-	Fixed           bool   `json:"fixed,optional"`
-	Enable          bool   `json:"enable,optional"`
-	UpdateAt        string `json:"updateAt,optional"`
-	CreateAt        string `json:"createAt,optional"`
+type OpenapiWriteResult struct {
+	Success bool             `json:"success"`
+	Topic   string           `json:"topic"`
+	Error   OpenapiItemError `json:"error,optional"`
 }
 
-type ResultVO struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data,optional"`
+type PageReq struct {
+	PageNo   int    `form:"pageNo,optional"`
+	PageSize int    `form:"pageSize,optional"`
+	Keyword  string `form:"keyword,optional"`
+	KeyType  string `form:"keyType,optional"`
 }
 
-type RoleDetail struct {
-	RoleID           string         `json:"roleId"`
-	RoleName         string         `json:"roleName"`
-	ResourceList     []RoleResource `json:"resourceList,optional"`
-	DenyResourceList []RoleResource `json:"denyResourceList,optional"`
+type PlatformGetMembersReq struct {
+	Keyword        string   `json:"keyword,optional"`
+	RoleKey        string   `json:"roleKey,optional"`
+	Roles          []string `json:"roles,optional"`
+	Statuses       []string `json:"statuses,optional"`
+	UpdatedAtStart string   `json:"updatedAtStart,optional"`
+	UpdatedAtEnd   string   `json:"updatedAtEnd,optional"`
+	Page           int64    `json:"page,optional"`
+	Size           int64    `json:"size,optional"`
 }
 
-type RoleIDPathReq struct {
-	ID string `path:"id"`
+type PlatformMemberResp struct {
+	UserId    string                   `json:"userId"`
+	UserName  string                   `json:"userName,optional"`
+	NickName  string                   `json:"nickName,optional"`
+	Email     string                   `json:"email,optional"`
+	Status    string                   `json:"status"`
+	Roles     []PlatformMemberRoleResp `json:"roles"`
+	UpdatedAt string                   `json:"updatedAt"`
 }
 
-type RoleInfo struct {
-	RoleID          string `json:"roleId"`
-	RoleName        string `json:"roleName"`
-	RoleDescription string `json:"roleDescription,optional"`
-	ClientRole      bool   `json:"clientRole,optional"`
+type PlatformMemberRoleResp struct {
+	RoleId      string `json:"roleId"`
+	RoleKey     string `json:"roleKey"`
+	RoleName    string `json:"roleName,optional"`
+	Description string `json:"description,optional"`
 }
 
-type RoleResource struct {
-	PolicyID   string   `json:"policyId,optional"`
-	ResourceID string   `json:"resourceId,optional"`
-	URI        string   `json:"uri"`
-	Methods    []string `json:"methods,optional"`
+type PlatformMembersResp struct {
+	List  []PlatformMemberResp `json:"list"`
+	Total int64                `json:"total"`
+	Page  int64                `json:"page"`
+	Size  int64                `json:"size"`
+}
+
+type ReadReq struct {
+	Topics           []string `json:"topics"`
+	IncludeMetadata  bool     `json:"include_metadata,optional"`
+	IncludeLeafValue bool     `json:"include_leaf_value,optional"`
+}
+
+type ReadResp struct {
+	Success bool              `json:"success"`
+	Results []OpenapiReadItem `json:"results"`
+}
+
+type ResourceActionIdReq struct {
+	ResourceId int64 `path:"resourceId"`
+	ActionId   int64 `path:"actionId"`
+}
+
+type ResourceActionSaveReq struct {
+	ResourceId  int64  `path:"resourceId"`
+	ActionId    int64  `path:"actionId,optional"`
+	ActionType  string `json:"actionType"`
+	ActionValue string `json:"actionValue"`
+	Methods     string `json:"methods,optional"`
+	Enabled     int64  `json:"enabled,optional"`
+}
+
+type ResourceIdReq struct {
+	ResourceId int64 `path:"resourceId"`
+}
+
+type ResourceSaveReq struct {
+	ResourceId   int64  `path:"resourceId,optional"`
+	ParentId     int64  `json:"parentId,optional"`
+	ResourceKey  string `json:"resourceKey"`
+	Name         string `json:"name"`
+	ResourceType int64  `json:"type"`
+	RoutePath    string `json:"routePath,optional"`
+	UrlType      int64  `json:"urlType,optional"`
+	OpenType     int64  `json:"openType,optional"`
+	Icon         string `json:"icon,optional"`
+	Sort         int64  `json:"sort,optional"`
+	Enabled      int64  `json:"enabled,optional"`
+}
+
+type RoleResourceReq struct {
+	Uri string `json:"uri"`
 }
 
 type RoleSaveReq struct {
-	ID                string         `json:"id,optional"`
-	Name              string         `json:"name"`
-	AllowResourceList []RoleResource `json:"allowResourceList,optional"`
-	DenyResourceList  []RoleResource `json:"denyResourceList,optional"`
+	Id                int64             `path:"id,optional"`
+	Name              string            `json:"name"`
+	DefaultHomePage   string            `json:"defaultHomePage,optional"`
+	AllowResourceList []RoleResourceReq `json:"allowResourceList,optional"`
+	DenyResourceList  []RoleResourceReq `json:"denyResourceList,optional"`
 }
 
-type RoleSummary struct {
-	RoleID          string `json:"roleId"`
-	RoleName        string `json:"roleName"`
-	RoleDescription string `json:"roleDescription,optional"`
-	ClientRole      bool   `json:"clientRole,optional"`
+type RouteKeyReq struct {
+	RouteKey string `path:"routeKey"`
 }
 
-type RouteListResp struct {
-	Code int             `json:"code"`
-	Msg  string          `json:"msg"`
-	Data []SimpleRouteVO `json:"data"`
-}
-
-type SaveGroupReq struct {
-	ID          *int64  `json:"id,string,optional"`
-	Type        *int16  `json:"type,optional"`
-	Name        *string `json:"name,optional"`
-	Description *string `json:"description,optional"`
-	Sort        *int32  `json:"sort,optional"`
-}
-
-type SaveMenuReq struct {
-	ServiceName string `form:"serviceName,optional"` // 服务名（可选）
-	Name        string `form:"name"`                 // 名称，唯一标识一个菜单
-	ShowName    string `form:"showName"`             // 显示名
-	Description string `form:"description,optional"` // 描述（可选）
-	BaseUrl     string `form:"baseUrl"`              // baseURL
-	OpenType    int    `form:"openType"`             // 跳转方式：0-iframe打开，1-打开新页面，2-app
-}
-
-type SaveResourceReq struct {
-	ID          int64             `json:"id,string,optional"` // 关键：允许 "123" 绑定到 int64
-	Code        string            `json:"code,optional"`
-	Name        string            `json:"name,optional"`
-	ParentID    int64             `json:"parentId,string,optional"` // 如果前端也把 parentId 当字符串传，建议一并加上
-	Type        int               `json:"type,optional"`
-	Source      string            `json:"source,optional"`
-	RouteSource int               `json:"routeSource,optional"`
-	URL         string            `json:"url,optional"`
-	URLType     int               `json:"urlType,optional"`
-	OpenType    int               `json:"openType,optional"`
-	Icon        string            `json:"icon,optional"`
-	Description string            `json:"description,optional"`
-	Sort        int               `json:"sort,optional"`
-	EditEnable  bool              `json:"editEnable,optional"`
-	HomeEnable  bool              `json:"homeEnable,optional"`
-	Fixed       bool              `json:"fixed,optional"`
-	Enable      bool              `json:"enable,optional"`
-	Children    []SaveResourceReq `json:"children,optional"`
-}
-
-type SearchAppsRequest struct {
-	Keyword string `form:"keyword,optional"`
-}
-
-type SearchPagedReq struct {
-	Key              string  `form:"k,optional"`
-	ModelTopic       string  `form:"modelTopic,optional"`
-	SearchType       int     `form:"type,optional,default=2"`
-	Normal           bool    `form:"normal,optional"`
-	DataTypes        []int16 `form:"dataTypes,optional"`
-	PageNo           int     `form:"pageNo,optional,default=1"`
-	PageSize         int     `form:"pageSize,optional,default=10"`
-	NumberFieldCount int     `form:"nfc,optional"`
-}
-
-type SearchTreeReq struct {
-	Keyword    string `form:"key,optional"`
-	ParentId   int64  `form:"parentId,optional,default=-1"`
-	ShowRec    bool   `form:"showRec,optional,default=false"`
-	SearchType int    `form:"type,optional,default=1"`
-	PathType   int16  `form:"pathType,optional,default=-1"`
-}
-
-type SearchTreeResp struct {
-	BaseResult
-	Data []*TopicTreeResult `json:"data,omitempty,optional"`
-}
-
-type SelectFunction struct {
-	Name string        `json:"name"`
-	Args []interface{} `json:"args,optional"`
-}
-
-type SendOption struct {
-	TimeoutToFail  int64 `json:"timeoutToFail,optional"`  //超时失败时间
-	RequestTimeout int64 `json:"requestTimeout,optional"` //请求超时,超时后会进行重试
-	RetryInterval  int64 `json:"retryInterval,optional"`  //重试间隔
-}
-
-type SimpleRouteVO struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Url  string `json:"url"`
-}
-
-type SourceFlowAliasQuery struct {
-	Alias string `form:"alias"`
-}
-
-type SourceFlowBatchAliasReq struct {
-	Aliases []string `json:"aliases"`
-}
-
-type SourceFlowBindUnsReq struct {
-	FlowID   int64  `form:"flowId"`
-	UnsAlias string `form:"unsAlias"`
-}
-
-type SourceFlowCheckBindUnsReq struct {
-	ID         string   `json:"id"`
-	UnsAliases []string `json:"unsAliases"`
-}
-
-type SourceFlowCopyReq struct {
-	SourceID    string `json:"sourceId"`
-	FlowName    string `json:"flowName"`
-	Description string `json:"description,optional"`
-	Template    string `json:"template,optional"`
-	GroupId     *int64 `json:"groupId,optional,string"`
-}
-
-type SourceFlowCreateReq struct {
-	FlowName    string `json:"flowName"`
-	Description string `json:"description,optional"`
-	Template    string `json:"template,optional"`
-	GroupId     *int64 `json:"groupId,optional,string"` // 分组ID
-}
-
-type SourceFlowDeleteReq struct {
-	ID string `form:"id"`
-}
-
-type SourceFlowDeployReq struct {
-	ID    string                   `json:"id"`
-	Flows []map[string]interface{} `json:"flows,optional"`
-}
-
-type SourceFlowDeployResult struct {
-	FlowID  string `json:"flowId,optional"`
-	Version string `json:"version,optional"`
-}
-
-type SourceFlowExportParam struct {
-	GroupIds   []int64 `json:"gids,string,optional,omitempty,omitzero"`
-	FlowIds    []int64 `json:"ids,string,optional,omitempty,omitzero"`
-	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
-}
-
-type SourceFlowGroupPageResp struct {
-	PageResultDTO
-	Data []GroupFlowVO `json:"data"`
-}
-
-type SourceFlowInfo struct {
-	ID          string `json:"id,optional"`
-	FlowName    string `json:"flowName,optional"`
-	FlowID      string `json:"flowId,optional"`
-	Description string `json:"description,optional"`
-	FlowStatus  string `json:"flowStatus,optional"`
-	Template    string `json:"template,optional"`
-	Mark        int    `json:"mark,optional"`
-	Creator     string `json:"creator,optional"`
-	CreateTime  int    `json:"createTime,optional"`
-}
-
-type SourceFlowListQuery struct {
-	Keyword   string `form:"k,optional"`
-	OrderCode string `form:"orderCode,optional"`
-	IsAsc     string `form:"isAsc,optional"`
-	PageNo    int64  `form:"pageNo,optional,default=1"`
-	PageSize  int64  `form:"pageSize,optional,default=10"`
-}
-
-type SourceFlowListResult struct {
-	Code int              `json:"code"`
-	Msg  string           `json:"msg,optional"`
-	Data []SourceFlowInfo `json:"data,optional"`
-}
-
-type SourceFlowMockReq struct {
-	UnsAlias string `json:"unsAlias"`
-	Path     string `json:"path"`
-}
-
-type SourceFlowPageResult struct {
-	Code     int              `json:"code"`
-	PageNo   int64            `json:"pageNo"`
-	PageSize int64            `json:"pageSize"`
-	Total    int64            `json:"total"`
-	Data     []SourceFlowInfo `json:"data,optional"`
-}
-
-type SourceFlowSaveReq struct {
-	ID    string                   `json:"id"`
-	Flows []map[string]interface{} `json:"flows,optional"`
-}
-
-type SourceFlowUpdateReq struct {
-	ID          string `json:"id"`
-	FlowName    string `json:"flowName"`
-	Description string `json:"description,optional"`
-}
-
-type StreamOptions struct {
-}
-
-type StringArrayRequest struct {
-	Items []string `json:"items"`
-}
-
-type StringResult struct {
-	BaseResult
-	Data string `json:"data,optional,omitempty"`
-}
-
-type SubscribeModelReq struct {
-	Id        int64  `form:"id"`
-	Enable    bool   `form:"enable"`
-	Frequency string `form:"frequency,optional"`
-}
-
-type SystemConfigResp struct {
-	AppTitle             string                   `json:"appTitle,optional"`
-	Version              string                   `json:"version,optional"`
-	Lang                 string                   `json:"lang,optional"`
-	AuthEnable           bool                     `json:"authEnable,optional"`
-	LlmType              string                   `json:"llmType,optional"`
-	EnableAi             bool                     `json:"enableAi,optional"`
-	MqttTcpPort          int64                    `json:"mqttTcpPort,optional"`
-	MqttWebsocketTslPort int64                    `json:"mqttWebsocketTslPort,optional"`
-	LoginPath            string                   `json:"loginPath,optional"`
-	PlatformType         string                   `json:"platformType,optional"`
-	EntranceUrl          string                   `json:"entranceUrl,optional"`
-	MultipleTopic        bool                     `json:"multipleTopic,optional"`
-	UseAliasPathAsTopic  bool                     `json:"useAliasPathAsTopic,optional"`
-	ContainerMap         map[string]ContainerInfo `json:"containerMap,optional"`
-	QualityName          string                   `json:"qualityName,optional"`
-	TimestampName        string                   `json:"timestampName,optional"`
-	LazyTree             bool                     `json:"lazyTree,optional"`
-	LdapEnable           bool                     `json:"ldapEnable,optional"`
-	AutoCategoryEnable   bool                     `json:"enableAutoCategorization,optional"` //是否开启文件自动归类
-}
-
-type Tag struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-type TemplateDetailResp struct {
-	BaseResult
-	Data *TemplateVo `json:"data,optional,omitempty"`
-}
-
-type TemplateDownloadReq struct {
-	FileType string `form:"fileType"`
-}
-
-type TemplatePageResp struct {
-	PageResultDTO
-	Data []*TemplateSearchResult `json:"data,optional,omitempty"`
-}
-
-type TemplatePageResult struct {
-	PageNo   int64                  `json:"pageNo"`
-	PageSize int64                  `json:"pageSize"`
-	Total    int64                  `json:"total"`
-	Code     int64                  `json:"code"`
-	Data     []TemplateSearchResult `json:"data,optional"`
-}
-
-type TemplateQueryVo struct {
-	PaginationDTO
-	Key             string `json:"key,optional" schema:"关键字查询，模版名称模糊匹配"`
-	SubscribeEnable *bool  `json:"subscribeEnable,optional" schema:"是否订阅"`
-}
-
-type TemplateSearchResult struct {
-	ID          string  `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,optional"`
-	Alias       string  `json:"alias,optional"`
-}
-
-type TemplateVo struct {
-	ID                 string         `json:"id"`
-	Name               string         `json:"name"`
-	Alias              string         `json:"alias,optional"`
-	Fields             []*FieldDefine `json:"fields,optional,omitempty"`
-	CreateTime         int64          `json:"createTime,optional,omitzero"`
-	Description        string         `json:"description,optional,omitempty"`
-	Topic              string         `json:"topic,optional,omitempty"`
-	SubscribeEnable    *bool          `json:"subscribeEnable,optional,omitempty"`
-	SubscribeFrequency string         `json:"subscribeFrequency,optional,omitempty"`
-}
-
-type TimeRange struct {
-	Start int64 `json:"start,optional"` //开始时间 unix时间戳
-	End   int64 `json:"end,optional"`   //结束时间 unix时间戳
-}
-
-type TipsEnableReq struct {
-	TipsEnable int `form:"tipsEnable"`
-}
-
-type TopicInfo struct {
-	Id              string            `json:"id"`
-	Alias           string            `json:"alias,omitempty"`
-	ParentId        string            `json:"parentId,omitempty"`
-	Name            string            `json:"name,omitempty"`
-	Path            string            `json:"path,omitempty"`
-	Topic           string            `json:"topic,omitempty"`
-	DataType        int               `json:"dataType"`
-	ParentDataType  *int16            `json:"parentDataType,omitempty"`
-	Fields          []*FieldDefine    `json:"fields,omitempty"`
-	Description     string            `json:"description,omitempty"` // Alarm fields
-	RefUns          string            `json:"refUns,omitempty"`      //引用的实例
-	Field           string            `json:"field,omitempty"`
-	AlarmCount      *int64            `json:"alarmCount,omitempty"`      //报警数量
-	NoReadCount     *int64            `json:"noReadCount,omitempty"`     //未读数
-	AlarmRuleDefine *AlarmRuleDefine  `json:"alarmRuleDefine,omitempty"` //Alarm 规则定义
-	WithFlags       *int32            `json:"withFlags,omitempty"`       //接收方式 16-人员 32-工作流程
-	HandlerList     []*AlarmHandlerVo `json:"handlerList,omitempty"`     //处理人列表
-}
-
-type TopicPaginationSearchResult struct {
-	Code int            `json:"code"`
-	Msg  string         `json:"msg,omitempty"`
-	Page *PageResultDTO `json:"page,omitempty"`
-	Data []TopicInfo    `json:"data,omitempty"`
-}
-
-type TopicTreeResult struct {
-	Id             string                 `json:"id"`
-	Alias          string                 `json:"alias,omitempty"`
-	ParentId       *string                `json:"parentId,omitempty"`
-	ParentAlias    *string                `json:"parentAlias,omitempty"`
-	Value          int64                  `json:"value,omitempty"`
-	LastUpdateTime int64                  `json:"lastUpdateTime,omitempty"`
-	CountChildren  *int                   `json:"countChildren,omitempty"`
-	PathType       int16                  `json:"pathType"`
-	DataType       *int16                 `json:"dataType,omitempty"`
-	ParentDataType *int16                 `json:"parentDataType,omitempty"`
-	Name           string                 `json:"name"`
-	DisplayName    *string                `json:"displayName,omitempty"`
-	Path           string                 `json:"path,omitempty"`
-	PathName       string                 `json:"pathName,omitempty"`
-	Description    *string                `json:"description,omitempty"`
-	TemplateAlias  *string                `json:"templateAlias,omitempty"`
-	Protocol       *string                `json:"protocol,omitempty"`
-	Fields         []*FieldDefine         `json:"fields,omitempty"`
-	Children       []*TopicTreeResult     `json:"children,omitempty"`
-	Extend         map[string]interface{} `json:"extend,omitempty"`
-	HasChildren    bool                   `json:"hasChildren"`
-	CreateAt       int64                  `json:"createAt,omitempty"`
-	UpdateAt       int64                  `json:"updateAt,omitempty"`
-	Mount          *MountDetailVo         `json:"mount,omitempty"`
-}
-
-type TreeOuterStructureVo struct {
-	Name     string                  `json:"name"`
-	DataPath string                  `json:"dataPath"`
-	Fields   []FieldDefine           `json:"fields"`
-	Children []*TreeOuterStructureVo `json:"children"`
-}
-
-type TreePageResult struct {
-	PageNo   int64              `json:"pageNo"`
-	PageSize int64              `json:"pageSize"`
-	Total    int64              `json:"total"`
-	Code     int64              `json:"code"`
-	Data     []*TopicTreeResult `json:"data,optional"`
-}
-
-type UninstallAppRequest struct {
-	Name string `path:"name"`
-}
-
-type UninstallAppResponse struct {
-	Code    int             `json:"code"`
-	Message string          `json:"message,optional"`
-	Data    UninstallResult `json:"data"`
-}
-
-type UninstallResult struct {
-	Name    string `json:"name"`
-	Success bool   `json:"success"`
-	Message string `json:"message,optional"`
-}
-
-type UnmarkRequest struct {
-	ID string `form:"id"`
-}
-
-type UnsAttachmentBo struct {
-	Id             int64  `json:"id"`
-	UnsAlias       string `json:"unsAlias"`
-	OriginalName   string `json:"originalName"`
-	AttachmentName string `json:"attachmentName"`
-	AttachmentPath string `json:"attachmentPath"`
-	ExtensionName  string `json:"extensionName"`
-	CreateAt       int64  `json:"createAt"`
-}
-
-type UnsByLabelPageResp struct {
-	BaseResult
-	PageNo   int64    `json:"pageNo"`
-	PageSize int64    `json:"pageSize"`
-	Total    int64    `json:"total"`
-	Data     []FileVo `json:"data"`
-}
-
-type UnsDataResponse struct {
-	BaseResult
-	Data *UnsDataResponseVo `json:"data,omitzero"`
-}
-
-type UnsDataResponseVo struct {
-	NotExists   []string          `json:"notExists,omitempty"`
-	ErrorFields map[string]string `json:"errorFields,omitempty"`
-}
-
-type UnsExportParam struct {
-	ExportType string  `json:"exportType,optional,omitempty,omitzero"`
-	Folders    []int64 `json:"folders,string,optional,omitempty,omitzero"`
-	Files      []int64 `json:"files,string,optional,omitempty,omitzero"`
-}
-
-type UnsHistoryField struct {
+type SchemaField struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 	Unit string `json:"unit,optional"`
 }
 
-type UnsHistoryFileResult struct {
-	Alias  string                 `json:"alias"`
-	Table  string                 `json:"table,optional"`
-	Fields []UnsHistoryField      `json:"fields,optional"`
-	List   []UnsHistoryValuePoint `json:"list,optional"`
+type SearchReq struct {
+	Keyword          string `json:"keyword,optional"`
+	TopicType        string `json:"topicType,optional"`
+	PathPrefix       string `json:"path_prefix,optional"`
+	IncludeMetadata  bool   `json:"include_metadata,optional"`
+	IncludeLeafValue bool   `json:"include_leaf_value,optional"`
+	Page             int64  `json:"page,optional"`
+	Size             int64  `json:"size,optional"`
 }
 
-type UnsHistoryQueryData struct {
-	Results     []UnsHistoryFileResult `json:"results,optional"`
-	NotExists   []string               `json:"notExists,optional"`
-	ErrorFields map[string]string      `json:"errorFields,optional"`
+type SearchResp struct {
+	Objects []OpenapiNodeInfo `json:"objects"`
+	Page    int64             `json:"page"`
+	Size    int64             `json:"size"`
+	Total   int64             `json:"total"`
 }
 
-type UnsHistoryQueryResult struct {
-	BaseResult
-	Data *UnsHistoryQueryData `json:"data,omitzero"`
+type UnsAttachmentInfo struct {
+	UnsId            int64  `json:"unsId"`
+	FileName         string `json:"fileName,optional"`
+	FilePath         string `json:"filePath"`
+	FileUrl          string `json:"fileUrl,optional"`
+	ContentType      string `json:"contentType,optional"`
+	Size             int64  `json:"size,optional"`
+	Sha256           string `json:"sha256,optional"`
+	CreatedAt        int64  `json:"createdAt,optional"`
+	FileUrlExpiresAt int64  `json:"fileUrlExpiresAt,optional"`
 }
 
-type UnsHistoryValuePoint struct {
-	Timestamp int64  `json:"timestamp"`
-	Payload   string `json:"payload"`
+type UnsAttachmentListReq struct {
+	UnsId          int64  `json:"unsId,optional"`
+	Topic          string `json:"topic,optional"`
+	Page           int    `json:"page,optional"`
+	Size           int    `json:"size,optional"`
+	IncludeFileUrl *bool  `json:"includeFileUrl,optional"`
 }
 
-type UnsLabelListReq struct {
-	Key string `form:"key,optional"`
+type UnsAttachmentListResp struct {
+	UnsId int64               `json:"unsId"`
+	List  []UnsAttachmentInfo `json:"list"`
+	Total int64               `json:"total"`
+	Page  int64               `json:"page"`
+	Size  int64               `json:"size"`
 }
 
-type UnsLabelListResp struct {
-	BaseResult
-	Data []*LabelVo `json:"data"`
+type UnsAttachmentUploadReq struct {
+	UnsId    int64  `json:"unsId,optional"`
+	Topic    string `json:"topic,optional"`
+	FileName string `json:"fileName,optional"`
+	Sha256   string `json:"sha256,optional"`
 }
 
-type UnsTreeCondition struct {
-	PageNo          int    `json:"pageNo,optional,default=1" validate:"min=1"`
-	PageSize        int    `json:"pageSize,optional,default=10" validate:"min=1"`
-	SearchType      int    `json:"searchType,optional,default=1" validate:"min=1,max=3"`
-	Keyword         string `json:"keyword,optional"`
-	ParentId        *int64 `json:"parentId,optional,string"`
-	DataType        *int   `json:"dataType,optional,string"`
-	PathType        *int   `json:"pathType,optional,string"`
-	SubscribeEnable *bool  `json:"subscribeEnable,optional,string"`
+type UnsAttachmentUploadResp struct {
+	UnsId            int64  `json:"unsId"`
+	FileName         string `json:"fileName,optional"`
+	FilePath         string `json:"filePath"`
+	FileUrl          string `json:"fileUrl,optional"`
+	ContentType      string `json:"contentType,optional"`
+	Size             int64  `json:"size,optional"`
+	Sha256           string `json:"sha256,optional"`
+	CreatedAt        int64  `json:"createdAt,optional"`
+	FileUrlExpiresAt int64  `json:"fileUrlExpiresAt,optional"`
 }
 
-type UnsTreePageResp struct {
-	PageResultDTO
-	Data []*TopicTreeResult `json:"data,omitempty,optional"`
+type UnsBindFlowReq struct {
+	UnsId  int64 `json:"unsId"`
+	FlowId int64 `json:"flowId"`
 }
 
-type UpdateAppKeyReq struct {
-	AppSecretKey string `json:"appSecretKey"`
-	Status       int32  `json:"status"`
+type UnsBindFlowResp struct {
+	Success bool  `json:"success"`
+	UnsId   int64 `json:"unsId"`
+	FlowId  int64 `json:"flowId"`
 }
 
-type UpdateAppRequest struct {
+type UnsDashboardReq struct {
+	NodeId    int64 `form:"nodeId"`
+	TimeStart int64 `form:"timeStart,optional"`
+	TimeEnd   int64 `form:"timeEnd,optional"`
+	Limit     int   `form:"limit,optional"`
+}
+
+type UnsExportJobReq struct {
+	RootNodeId int64 `json:"rootNodeId,optional"`
+}
+
+type UnsImportJobReq struct {
+	DryRun       bool  `json:"dryRun,optional"`
+	SourceFileId int64 `json:"sourceFileId,optional"`
+}
+
+type UnsLabelReq struct {
+	Id          int64  `path:"id,optional"`
 	Name        string `json:"name"`
+	Color       string `json:"color,optional"`
 	Description string `json:"description,optional"`
-	ImagePath   string `json:"imagePath,optional"`
-	ImageUrl    string `json:"imageUrl,optional"`
-	IconPath    string `json:"iconPath,optional"`
-	MenuUrl     string `json:"menuUrl,optional"`
-	ComposeYaml string `json:"composeYaml,optional"`
-	RouterTrim  *bool  `json:"routerTrim,optional"`
-	KeepHost    *bool  `json:"keepHost,optional"`
 }
 
-type UpdateAppResponse struct {
-	Code    int          `json:"code"`
-	Message string       `json:"message,optional"`
-	Data    UpdateResult `json:"data"`
+type UnsListReq struct {
+	ParentId       int64  `form:"parentId,optional"`
+	ParentIdSet    bool   `form:"parentIdSet,optional"`
+	Keyword        string `form:"keyword,optional"`
+	IncludeRecycle bool   `form:"includeRecycle,optional"`
 }
 
-type UpdateFileDTO struct {
-	Alias string                 `json:"alias"`
-	Data  map[string]interface{} `json:"data"`
+type UnsNodeSaveReq struct {
+	NodeId           int64   `path:"nodeId,optional"`
+	ParentId         int64   `json:"parentId,optional"`
+	Name             string  `json:"name"`
+	DisplayName      string  `json:"displayName,optional"`
+	Alias            string  `json:"alias,optional"`
+	Namespace        string  `json:"namespace,optional"`
+	NodeType         string  `json:"type"`
+	TopicType        string  `json:"topicType,optional"`
+	Schema           string  `json:"schema,optional"`
+	Description      string  `json:"description,optional"`
+	LabelIds         []int64 `json:"labelIds,optional"`
+	AssetFileIds     []int64 `json:"assetFileIds,optional"`
+	ExtendProperties string  `json:"extendProperties,optional"`
+	Persistence      *bool   `json:"persistence,optional"`
+	WithFlow         bool    `json:"withFlow,optional"`
+	AddFlow          bool    `json:"addFlow,optional"`
+	MockData         bool    `json:"mockData,optional"`
 }
 
-type UpdateFileDTOArray struct {
-	Items []UpdateFileDTO `json:"items"`
+type UserPasswordResetReq struct {
+	Id       int64  `path:"id"`
+	Password string `json:"password"`
 }
 
-type UpdateLabelDto struct {
-	LabelName          string `json:"labelName" validate:"required,max=63"`
-	SubscribeEnable    bool   `json:"subscribeEnable,optional"`
-	SubscribeFrequency string `json:"subscribeFrequency,optional"`
+type UserRoleReq struct {
+	RoleId   int64  `json:"roleId"`
+	RoleName string `json:"roleName,optional"`
 }
 
-type UpdateLabelReq struct {
-	ID                 int64  `json:"id,string"`
-	LabelName          string `json:"labelName" validate:"required,max=63"`
-	SubscribeEnable    *bool  `json:"subscribeEnable,optional,string"`
-	SubscribeFrequency string `json:"subscribeFrequency,optional"`
-}
-
-type UpdateLabelSubscribeReq struct {
-	ID                 int64  `form:"id,string"`
-	SubscribeEnable    *bool  `form:"enable,optional,string"`
-	SubscribeFrequency string `form:"frequency,optional"`
-}
-
-type UpdateModeRequestVo struct {
-	Alias            string        `json:"alias"`
-	Fields           []FieldDefine `json:"fields,optional"`
-	ModelDescription string        `json:"modelDescription,optional"`
-}
-
-type UpdateNameVo struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
-type UpdateOpenApiFileDto struct {
-	Name             string                 `json:"name,optional" validate:"max=63"`
-	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
-	ParentAlias      string                 `json:"parentAlias,optional"`
-	Description      string                 `json:"description,optional" validate:"max=512"`
-	Definition       []FieldDefine          `json:"definition,optional"`
-	Persistence      bool                   `json:"persistence,optional"`
-	DashBoard        bool                   `json:"dashBoard,optional"`
-	AddFlow          bool                   `json:"addFlow,optional"`
-	Refers           []InstanceField        `json:"refers,optional"`
-	Expression       string                 `json:"expression,optional" validate:"max=255"`
-	Frequency        string                 `json:"frequency,optional"`
-	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
-	TemplateAlias    string                 `json:"templateAlias,optional"`
-	LabelNames       []string               `json:"labelNames,optional"`
-}
-
-type UpdateOpenApiFolderDto struct {
-	Name             string                 `json:"name,optional" validate:"max=63"`
-	DisplayName      string                 `json:"displayName,optional" validate:"max=128"`
-	ParentAlias      string                 `json:"parentAlias,optional"`
-	Description      string                 `json:"description,optional" validate:"max=512"`
-	Definition       []FieldDefine          `json:"definition,optional"`
-	ExtendProperties map[string]interface{} `json:"extendProperties,optional"`
-	TemplateAlias    string                 `json:"templateAlias,optional"`
-}
-
-type UpdatePersonConfigReq struct {
-	UserID       string `json:"userId"`
-	MainLanguage string `json:"mainLanguage"`
-}
-
-type UpdateResult struct {
-	Name    string `json:"name"`
-	Success bool   `json:"success"`
-	Message string `json:"message,optional"`
-}
-
-type UpdateTemplateBaseInfoReq struct {
-	ID          int64  `form:"id"`
-	Name        string `form:"name,string,optional"`
-	Description string `form:"description,string,optional,default=NULL"`
-}
-
-type UpdateTemplateDto struct {
-	Name        string        `json:"name,optional" validate:"max=63"`
-	Fields      []FieldDefine `json:"fields,optional"`
-	Description string        `json:"description,optional" validate:"max=512"`
-}
-
-type UpdateTemplateFieldsAndDescReq struct {
-	Alias            string         `json:"alias" validate:"omitempty,max=63,alias"`
-	Fields           []*FieldDefine `json:"fields,optional" validate:"min=1"`
-	JsonFields       []*FieldDefine `json:"jsonFields,optional,omitempty"`
-	Description      *string        `json:"description,optional" validate:"omitempty,max=512"`
-	ModelDescription *string        `json:"modelDescription,optional" validate:"omitempty,max=512"`
-}
-
-type UpdateTemplateSubscribeReq struct {
-	ID                 int64  `form:"id"`
-	SubscribeEnable    string `form:"enable,optional,string"`
-	SubscribeFrequency string `form:"frequency,optional"`
-}
-
-type UpdateUnsDto struct {
-	Id                            int64                  `json:"id,string,optional,omitzero"`
-	Name                          string                 `json:"name,optional" validate:"max=63"`
-	DisplayName                   *string                `json:"displayName,optional,omitempty" validate:"max=128"`
-	PathType                      int16                  `json:"pathType,optional" validate:"min=0,max=2"`
-	Path                          string                 `json:"path,optional,omitzero"`
-	Alias                         string                 `json:"alias,optional"`
-	Description                   *string                `json:"description,optional,omitzero" validate:"max=512"`
-	ModelId                       *int64                 `json:"modelId,string,optional,omitempty"`
-	ModelAlias                    *string                `json:"modelAlias,optional,omitempty"`
-	ParentAlias                   *string                `json:"parentAlias,optional,omitempty"`
-	ParentId                      *int64                 `json:"parentId,string,optional,omitempty"`
-	DataType                      *int16                 `json:"dataType,optional,string,omitempty" validate:"min=1,max=7"`
-	ParentDataType                *int16                 `json:"parentDataType,optional,string,omitempty"`
-	Fields                        []*FieldDefine         `json:"fields,optional"`
-	ReferUns                      string                 `json:"referUns,optional,omitzero"`
-	ReferIds                      []int64                `json:"referIds,optional,omitzero"`
-	RefUns                        map[int64]int          `json:"refUns,optional"`
-	ReferTable                    string                 `json:"referTable,optional,omitzero"`
-	RefFields                     []*FieldDefine         `json:"refFields,optional,omitzero"`
-	ReferModelID                  string                 `json:"referModelId,optional,omitzero"`
-	Refers                        []*InstanceField       `json:"refers,optional,omitzero"`
-	Expression                    *string                `json:"expression,optional,omitzero" validate:"max=255"`
-	StreamOptions                 *StreamOptions         `json:"streamOptions,optional,omitzero"`
-	DataPath                      *string                `json:"dataPath,optional"`
-	Protocol                      map[string]interface{} `json:"protocol,optional"`
-	ProtocolType                  *string                `json:"protocolType,optional"`
-	WithFlags                     *int32                 `json:"withFlags,optional,omitempty"`
-	AddFlow                       *bool                  `json:"addFlow,optional,omitempty"`
-	AddDashBoard                  *bool                  `json:"addDashBoard,optional,omitempty"`
-	Save2Db                       *bool                  `json:"save2db,optional,omitempty"`
-	RetainTableWhenDeleteInstance *bool                  `json:"retainTableWhenDeleteInstance,optional,omitempty"`
-	CreateTemplate                *bool                  `json:"createTemplate,optional,omitempty"`
-	SubscribeEnable               *bool                  `json:"subscribeEnable,optional,omitempty"`
-	Frequency                     string                 `json:"frequency,optional,omitzero"`
-	Extend                        map[string]interface{} `json:"extend,optional,omitzero" validate:"max=3"`
-	ExtendFieldUsed               []string               `json:"extendFieldUsed,optional,omitzero"`
-	LabelNames                    []string               `json:"labelNames,optional,omitzero"`
-	RefSource                     string                 `json:"refSource,optional,omitzero"`
-	ValueType                     string                 `json:"valueType,optional,omitzero"`
-	InitValue                     interface{}            `json:"initValue,optional,omitzero"`
-	StrMaxLen                     int                    `json:"strMaxLen,optional,omitzero"`
-	AccessLevel                   string                 `json:"accessLevel,optional,omitzero"`
-	MountType                     *int16                 `json:"mountType,optional,omitempty,string"`
-	MountSource                   *string                `json:"mountSource,optional,omitzero"`
-	UpdateAt                      int64                  `json:"updateAt,optional,omitzero"`
-	CreateAt                      int64                  `json:"createAt,optional,omitzero"`
-}
-
-type UploadAttachmentRequest struct {
-	Category    string   `form:"category,optional"`
-	Description string   `form:"description,optional"`
-	Tags        []string `form:"tags,optional"`
-}
-
-type UploadAttachmentResponse struct {
-	Code    int          `json:"code"`
-	Message string       `json:"message,optional"`
-	Data    UploadResult `json:"data"`
-}
-
-type UploadReq struct {
-	File string `form:"file,multipart/form-data"`
-}
-
-type UploadResult struct {
-	FileID      string `json:"fileId"`
-	Filename    string `json:"filename"`
-	FileSize    int64  `json:"fileSize"`
-	FileType    string `json:"fileType"`
-	MD5         string `json:"md5"`
-	UploadTime  string `json:"uploadTime"`
-	DownloadUrl string `json:"downloadUrl"`
-}
-
-type UserCreateReq struct {
-	ID        string        `json:"id,optional"`
+type UserSaveReq struct {
 	Username  string        `json:"username"`
-	Password  string        `json:"password"`
-	Enabled   *bool         `json:"enabled,optional"`
-	Email     string        `json:"email,optional"`
+	Password  string        `json:"password,optional"`
 	FirstName string        `json:"firstName,optional"`
+	Email     string        `json:"email,optional"`
 	Phone     string        `json:"phone,optional"`
-	Source    string        `json:"source,optional"`
-	RoleList  []RoleSummary `json:"roleList,optional"`
-}
-
-type UserDeleteReq struct {
-	ID string `path:"id"`
-}
-
-type UserDetailResult struct {
-	Code int          `json:"code"`
-	Msg  string       `json:"msg"`
-	Data OpenUserInfo `json:"data,optional"`
-}
-
-type UserInfoVO struct {
-	Sub               string         `json:"sub"`
-	PreferredUsername string         `json:"preferredUsername"`
-	Email             string         `json:"email,optional"`
-	EmailVerified     bool           `json:"email_verified,optional"`
-	FirstName         string         `json:"firstName,optional"`
-	Enabled           bool           `json:"enabled,optional"`
-	HomePage          string         `json:"homePage,optional"`
-	RoleList          []RoleInfo     `json:"roleList,optional"`
-	ResourceList      []ResourceInfo `json:"resourceList,optional"`
-	ButtonList        []string       `json:"buttonList,optional"`
-	SuperAdmin        bool           `json:"superAdmin,optional"`
-}
-
-type UserManageItem struct {
-	ID                string        `json:"id"`
-	Email             string        `json:"email,optional"`
-	EmailVerified     bool          `json:"emailVerified,optional"`
-	FirstName         string        `json:"firstName,optional"`
-	PreferredUsername string        `json:"preferredUsername"`
-	Sub               string        `json:"sub,optional"`
-	Enabled           bool          `json:"enabled,optional"`
-	RoleList          []RoleSummary `json:"roleList,optional"`
-	FirstTimeLogin    int           `json:"firstTimeLogin,optional"`
-	TipsEnable        int           `json:"tipsEnable,optional"`
-	HomePage          string        `json:"homePage,optional"`
-	Phone             string        `json:"phone,optional"`
-	Source            string        `json:"source,optional"`
-}
-
-type UserManagePageReq struct {
-	PageNo            int64  `json:"pageNo,optional"`
-	PageSize          int64  `json:"pageSize,optional"`
-	PreferredUsername string `json:"preferredUsername,optional"`
-	FirstName         string `json:"firstName,optional"`
-	Email             string `json:"email,optional"`
-	RoleName          string `json:"roleName,optional"`
-	Enabled           *bool  `json:"enabled,optional"`
-}
-
-type UserManagePageResp struct {
-	Code     int64            `json:"code"`
-	PageNo   int64            `json:"pageNo"`
-	PageSize int64            `json:"pageSize"`
-	Total    int64            `json:"total"`
-	Data     []UserManageItem `json:"data"`
-}
-
-type UserResetPwdReq struct {
-	UserID      string `json:"userId"`
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	NewPassword string `json:"newPassword"`
-}
-
-type UserSetRoleReq struct {
-	UserID   string        `json:"userId"`
-	Type     int           `json:"type,optional"`
-	RoleList []RoleSummary `json:"roleList,optional"`
+	Enabled   bool          `json:"enabled,optional"`
+	RoleList  []UserRoleReq `json:"roleList,optional"`
 }
 
 type UserUpdateReq struct {
-	UserID         string        `json:"userId"`
-	Username       string        `json:"username,optional"`
-	Password       string        `json:"password,optional"`
-	Enabled        *bool         `json:"enabled,optional"`
-	Email          string        `json:"email,optional"`
-	FirstName      string        `json:"firstName,optional"`
-	Phone          string        `json:"phone,optional"`
-	FirstTimeLogin *int          `json:"firstTimeLogin,optional"`
-	TipsEnable     *int          `json:"tipsEnable,optional"`
-	HomePage       string        `json:"homePage,optional"`
-	RoleList       []RoleSummary `json:"roleList,optional"`
-	OperateRole    *bool         `json:"operateRole,optional"`
-	Source         string        `json:"source,optional"`
+	Id        int64         `path:"id"`
+	Username  string        `json:"username,optional"`
+	FirstName string        `json:"firstName,optional"`
+	Email     string        `json:"email,optional"`
+	Phone     string        `json:"phone,optional"`
+	Enabled   bool          `json:"enabled,optional"`
+	HomePage  string        `json:"homePage,optional"`
+	RoleList  []UserRoleReq `json:"roleList,optional"`
 }
 
-type UuidRequest struct {
-	Uid string `path:"uid"`
+type WriteItem struct {
+	Topic     string      `json:"topic"`
+	Value     interface{} `json:"value,optional"`
+	TimeStamp int64       `json:"timeStamp,optional"`
 }
 
-type WithAlias struct {
-	Alias string `json:"alias" form:"alias"` // 别名
+type WriteReq struct {
+	Writes []WriteItem `json:"writes"`
+	Qos    int64       `json:"qos,optional"`
+	Retain bool        `json:"retain,optional"`
 }
 
-type WithCode struct {
-	Code string `json:"code,optional"`
-}
-
-type WithGroupCode struct {
-	GroupCode string `json:"groupCode,optional"` // id
-	Code      string `json:"code,optional"`
-}
-
-type WithID struct {
-	ID int64 `json:"id,optional" form:"id,optional"` // id
-}
-
-type WithIDOrCode struct {
-	ID   int64  `json:"id,optional"` // id
-	Code string `json:"code,optional"`
-}
-
-type WithIDStr struct {
-	ID int64 `json:"id,string,optional"` // id
-}
-
-type WithUid struct {
-	Uid string `path:"uid"`
+type WriteResp struct {
+	Success bool                 `json:"success"`
+	Results []OpenapiWriteResult `json:"results"`
 }

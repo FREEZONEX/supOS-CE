@@ -1,9 +1,7 @@
-import { type FC, useEffect, useState } from 'react';
-import { App } from 'antd';
+import { type FC, useCallback, useEffect, useState } from 'react';
 import { useDeepCompareEffect } from 'ahooks';
-import { useTranslate } from '@/hooks';
-import { deleteLabel, deleteTemplate } from '@/apis/inter-api/uns';
 import { getTreeStoreSnapshot, TreeStoreProvider, useTreeStore, useTreeStoreRef } from './store/treeStore';
+import { findNodeInfoById, getParentNodes, handlerTreeData } from './store/utils';
 import ModalContext from './ModalContext';
 import TopDom from './TopDom';
 import DetailDom from './DetailDom';
@@ -18,7 +16,8 @@ import ComContent from '@/components/com-layout/ComContent';
 import { setAiResult, useAiStore } from '@/stores/ai-store.ts';
 import { UnsContextProvider } from './UnsContext';
 import type { PageProps } from '@/common-types.ts';
-import { useNavigate } from 'react-router';
+import { useLocation } from 'react-router';
+import { getModelInfo, getTreeData } from '@/apis/core-api/uns';
 
 const initNode = {
   key: '',
@@ -26,8 +25,43 @@ const initNode = {
   pathType: null,
 };
 
-const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
-  const navigate = useNavigate();
+const normalizeNodeKey = (value: unknown) => {
+  const key = String(value ?? '').trim();
+  return key && key !== 'undefined' && key !== 'null' ? key : '';
+};
+
+const findFirstMatchingNode = (treeData: UnsTreeNode[], rawValue: string) => {
+  const target = normalizeNodeKey(rawValue).toLowerCase();
+  if (!target) return undefined;
+  let fallback: UnsTreeNode | undefined;
+
+  const walk = (nodes: UnsTreeNode[]): UnsTreeNode | undefined => {
+    for (const node of nodes) {
+      const candidates = [node.id, node.key, node.path, node.alias, node.name, node.title, node.pathName]
+        .map((value) => normalizeNodeKey(value).toLowerCase())
+        .filter(Boolean);
+      if (candidates.some((value) => value === target)) {
+        return node;
+      }
+      if (!fallback && candidates.some((value) => value.includes(target))) {
+        fallback = node;
+      }
+      const child = walk(node.children || []);
+      if (child) {
+        return child;
+      }
+    }
+    return undefined;
+  };
+
+  return walk(treeData) || fallback;
+};
+
+
+const Module: FC = () => {
+  const location = useLocation();
+  // 默认落在 Agent（画布）——对齐 saas unsTree store 的 `activeTab: 'canvas'` 初始值；
+  // 首次选中节点后由下方 effect 自动切到 detail（同 saas onSelect→uns-info）。
   const { treeType, selectedNode, operationFns } = useTreeStore((state) => ({
     treeType: state.treeType,
     selectedNode: state.selectedNode,
@@ -35,21 +69,135 @@ const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
   }));
   const stateRef = useTreeStoreRef();
 
-  const { loadData, setSelectedNode, setCurrentTreeMapType, setTreeMap } = getTreeStoreSnapshot(stateRef, (state) => ({
-    loadData: state.loadData,
+  const { setSelectedNode, setCurrentTreeMapType, setTreeMap } = getTreeStoreSnapshot(stateRef, (state) => ({
     setSelectedNode: state.setSelectedNode,
     setTreeMap: state.setTreeMap,
     setCurrentTreeMapType: state.setCurrentTreeMapType,
     setPasteNode: state.setPasteNode,
   }));
 
-  const { modal, message } = App.useApp();
-  const formatMessage = useTranslate();
   const [addNamespaceForAi, setAddNamespaceForAi] = useState<any>(null);
   const aiResult = useAiStore((state) => state.aiResult);
 
   const [currentUnusedTopicNode, setCurrentUnusedTopicNode] = useState<UnsTreeNode>(initNode); // 当前unusedTopic节点
   const [unusedTopicBreadcrumbList, setUnusedTopicBreadcrumbList] = useState<UnsTreeNode[]>([]); //当前文件路径Array
+
+
+  const resetToNamespaceGuide = useCallback(() => {
+    setTreeMap(false);
+    setSelectedNode(undefined);
+    setCurrentTreeMapType('all');
+    setCurrentUnusedTopicNode(initNode);
+  }, [setCurrentTreeMapType, setSelectedNode, setTreeMap]);
+
+  useEffect(() => {
+    resetToNamespaceGuide();
+  }, [location.state?.resetUnsLanding, resetToNamespaceGuide]);
+
+  const focusVisibleUnsNode = useCallback(
+    (node: UnsTreeNode, treeData?: UnsTreeNode[]) => {
+      const store = stateRef.getState();
+      const sourceTree = treeData || store.treeData;
+      const nodeKey = normalizeNodeKey(node.id ?? node.key);
+      if (!nodeKey) return;
+
+      const visibleNode = findNodeInfoById(sourceTree, nodeKey) || node;
+      const parents = getParentNodes(sourceTree, visibleNode.key);
+      const selected = parents[parents.length - 1] || visibleNode;
+      const parentKeys = parents
+        .slice(0, -1)
+        .map((item) => normalizeNodeKey(item.id ?? item.key))
+        .filter(Boolean);
+
+      store.setTreeMap(false);
+      store.setCurrentTreeMapType('all');
+      store.setSearchValue('');
+      setCurrentUnusedTopicNode(initNode);
+      if (parentKeys.length) {
+        store.setExpandedKeys((expandedKeys) => Array.from(new Set([...expandedKeys, ...parentKeys])));
+      }
+      store.setSelectedNode(selected, parents.length === 0);
+      window.setTimeout(() => {
+        stateRef.getState().scrollTreeNode?.(selected.id ?? selected.key);
+      }, 0);
+    },
+    [stateRef]
+  );
+
+  const focusUnsNode = useCallback(
+    async (namespaceId: string) => {
+      const targetId = normalizeNodeKey(namespaceId);
+      if (!targetId) return;
+
+      const store = stateRef.getState();
+      const currentNode = findNodeInfoById(store.treeData, targetId);
+      if (currentNode) {
+        focusVisibleUnsNode(currentNode, store.treeData);
+        return;
+      }
+
+      store.setLoading(true);
+      try {
+        const detail = await getModelInfo({ id: targetId });
+        const searchKey = normalizeNodeKey(
+          detail?.path || detail?.alias || detail?.namespace || detail?.name || targetId
+        );
+        const searchedTree = searchKey
+          ? handlerTreeData(await getTreeData({ type: 1, key: searchKey, keyword: searchKey }))
+          : [];
+        const targetNode = findNodeInfoById(searchedTree, targetId);
+
+        if (targetNode) {
+          store.setTreeData(searchedTree);
+          focusVisibleUnsNode(targetNode, searchedTree);
+          return;
+        }
+
+        if (detail?.id) {
+          focusVisibleUnsNode(detail);
+        }
+      } catch (error) {
+        console.error('Failed to focus UNS node:', error);
+      } finally {
+        stateRef.getState().setLoading(false);
+      }
+    },
+    [focusVisibleUnsNode, stateRef]
+  );
+
+  const focusUnsSearchKey = useCallback(
+    async (namespaceKey: string) => {
+      const searchKey = normalizeNodeKey(namespaceKey);
+      if (!searchKey) return;
+
+      const store = stateRef.getState();
+      store.setLoading(true);
+      try {
+        const searchedTree = handlerTreeData(await getTreeData({ type: 1, key: searchKey, keyword: searchKey }));
+        const targetNode = findFirstMatchingNode(searchedTree, searchKey);
+        if (targetNode) {
+          store.setTreeData(searchedTree);
+          focusVisibleUnsNode(targetNode, searchedTree);
+        }
+      } catch (error) {
+        console.error('Failed to focus UNS node:', error);
+      } finally {
+        stateRef.getState().setLoading(false);
+      }
+    },
+    [focusVisibleUnsNode, stateRef]
+  );
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const namespaceId = params.get('namespaceId');
+    const namespaceKey = params.get('namespaceKey');
+    if (namespaceId) {
+      void focusUnsNode(namespaceId);
+    } else if (namespaceKey) {
+      void focusUnsSearchKey(namespaceKey);
+    }
+  }, [focusUnsNode, focusUnsSearchKey, location.search]);
 
   useDeepCompareEffect(() => {
     if (aiResult?.uns) {
@@ -58,61 +206,11 @@ const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
     }
   }, [aiResult?.uns]);
 
-  useEffect(() => {
-    if (locationTreeMap) {
-      // 点击logo过来的需要跳到overview页
-      setTreeMap(true);
-      changeCurrentPath();
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  }, [locationTreeMap]);
-  // uns、template、label删除操作
+  // uns删除操作
   const handleDelete = (item: UnsTreeNode) => {
-    const { id } = item;
     switch (treeType) {
       case 'uns':
         operationFns?.setDeleteOpen(item as any);
-        break;
-      case 'label':
-        modal.confirm({
-          content: formatMessage('uns.areYouSureToDeleteThisLabel'),
-          onOk() {
-            deleteLabel(id as string).then(() => {
-              loadData({ clearSelect: id === selectedNode?.id });
-              message.success(formatMessage('common.deleteSuccessfully'));
-            });
-          },
-          okButtonProps: {
-            title: formatMessage('common.confirm'),
-          },
-          cancelButtonProps: {
-            title: formatMessage('common.cancel'),
-          },
-        });
-        break;
-      case 'template':
-        modal.confirm({
-          content: formatMessage('common.deleteTemplateConfirm'),
-          onOk() {
-            deleteTemplate(id as string).then(() => {
-              loadData(
-                id === selectedNode?.id
-                  ? { clearSelect: id === selectedNode?.id }
-                  : {
-                      queryType: 'deleteTemplate',
-                      newNodeKey: selectedNode?.id,
-                    }
-              );
-              message.success(formatMessage('common.deleteSuccessfully'));
-            });
-          },
-          okButtonProps: {
-            title: formatMessage('common.confirm'),
-          },
-          cancelButtonProps: {
-            title: formatMessage('common.cancel'),
-          },
-        });
         break;
       default:
         break;
@@ -124,13 +222,6 @@ const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
     setCurrentUnusedTopicNode(initNode);
     setCurrentTreeMapType('all');
   };
-  const changeCurrentUnusedTopicPath = (node?: UnsTreeNode) => {
-    setCurrentUnusedTopicNode(node?.id === currentUnusedTopicNode.id ? initNode : node || initNode);
-    setSelectedNode();
-    if (node?.id) {
-      setCurrentTreeMapType('unusedTopic');
-    }
-  };
 
   // const location = useLocation();
   // 新手导航步骤
@@ -141,10 +232,7 @@ const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
       <LeftDom
         changeCurrentPath={changeCurrentPath}
         handleDelete={handleDelete}
-        currentUnusedTopicNode={currentUnusedTopicNode}
         setCurrentUnusedTopicNode={setCurrentUnusedTopicNode}
-        unusedTopicBreadcrumbList={unusedTopicBreadcrumbList}
-        changeCurrentUnusedTopicPath={changeCurrentUnusedTopicPath}
         setUnusedTopicBreadcrumbList={setUnusedTopicBreadcrumbList}
       />
       <ComContent>
@@ -167,11 +255,11 @@ const Module: FC<{ locationTreeMap?: boolean }> = ({ locationTreeMap }) => {
   );
 };
 
-const WrapperModule: FC<PageProps> = ({ location }) => {
+const WrapperModule: FC<PageProps> = () => {
   return (
     <TreeStoreProvider>
       <UnsContextProvider>
-        <Module locationTreeMap={location?.state?.treeMap} />
+        <Module />
       </UnsContextProvider>
     </TreeStoreProvider>
   );

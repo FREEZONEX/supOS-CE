@@ -19,14 +19,7 @@ import useClipboard from '../../hooks/useClipboard.ts';
 
 export type CodeSnippetType = 'single' | 'multi' | 'inline';
 export type DeprecatedCodeSnippetAlignment =
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right'
-  | 'left-bottom'
-  | 'left-top'
-  | 'right-bottom'
-  | 'right-top';
+  'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'left-bottom' | 'left-top' | 'right-bottom' | 'right-top';
 
 export type NewCodeSnippetAlignment =
   | 'top'
@@ -407,7 +400,7 @@ const CodeSnippet: FC<CodeSnippetProps> = ({
             onClick={handleCopyClick}
             aria-label={copyButtonDescription || formatMessage('common.copy')}
           >
-            <Copy color="var(--supos-text-color)" style={{ cursor: 'pointer' }} size={16} />
+            <Copy color="var(--ui-text-color)" style={{ cursor: 'pointer' }} size={16} />
           </button>
         </Tooltip>
       )}

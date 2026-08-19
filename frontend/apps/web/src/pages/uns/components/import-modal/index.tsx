@@ -1,12 +1,16 @@
 import { type FC, useImperativeHandle, useState } from 'react';
-import { Button, Flex, Segmented, Tooltip } from 'antd';
-import { useTranslate } from '@/hooks';
+import { Button, Flex, Tooltip } from 'antd';
+import { CircleHelp, ClipboardPaste } from 'lucide-react';
+import { useClipboard, useTranslate } from '@/hooks';
 import ProModal from '@/components/pro-modal';
+import ComRadio from '@/components/com-radio';
 import './index.scss';
 import ImportDom from '@/pages/uns/components/import-modal/ImportDom.tsx';
 import JsonDom from '@/pages/uns/components/import-modal/JsonDom.tsx';
-import { QuestionCircleOutlined } from '@ant-design/icons';
-import { Download } from '@carbon/icons-react';
+import { Download } from '@/components/lucide-icon/carbon';
+import { downloadFn } from '@/utils/blob';
+import { template } from './data';
+import { agentPrompt } from './agent-prompt';
 
 export interface ImportModalProps {
   initTreeData: any;
@@ -17,7 +21,8 @@ const Module: FC<ImportModalProps> = (props) => {
   const { importRef, initTreeData } = props;
   const [open, setOpen] = useState(false);
   const formatMessage = useTranslate();
-  const [type, setType] = useState('document');
+  const { copy } = useClipboard();
+  const [type, setType] = useState('json');
 
   useImperativeHandle(importRef, () => ({
     setOpen: setOpen,
@@ -25,7 +30,7 @@ const Module: FC<ImportModalProps> = (props) => {
 
   const onCloseModal = () => {
     setOpen(false);
-    setType('document');
+    setType('json');
   };
 
   if (!open) return null;
@@ -34,77 +39,81 @@ const Module: FC<ImportModalProps> = (props) => {
       className="importModalWrap"
       open={open}
       onCancel={onCloseModal}
-      title={
-        <Flex
-          style={{
-            cursor: 'pointer',
-            width: 'fit-content',
-          }}
-          gap={8}
-        >
-          <span>{formatMessage('common.import')}</span>
-          <Tooltip
-            title={
-              <div>
-                {formatMessage('uns.supportScope')}
-                <div>
-                  •{' '}
-                  {formatMessage('uns.overallProject', {
-                    text: `UNS、${formatMessage('home.sourceFlow')}、${formatMessage('home.eventFlow')}、${formatMessage('home.dashboard')}`,
-                  })}
-                </div>
-                <div>• {formatMessage('uns.singleFile', { text: `UNS JSON${formatMessage('common.file')}` })}</div>
-              </div>
-            }
-          >
-            <QuestionCircleOutlined />
-          </Tooltip>
-        </Flex>
-      }
-      width={460}
+      title={formatMessage('common.import')}
+      width={type === 'json' ? 560 : 460}
       maskClosable={false}
       keyboard={false}
       destroyOnHidden
     >
       {(isFullscreen) => {
+        const isJsonTab = type === 'json';
+        const rootStyle = isFullscreen ? { height: '100%' } : isJsonTab ? { height: 580 } : undefined;
+        const panelStyle =
+          isFullscreen || isJsonTab ? { flex: 1, minHeight: 0, overflow: 'hidden' as const } : undefined;
+
         return (
-          <Flex vertical style={{ height: isFullscreen ? '100%' : 500 }}>
-            <Flex style={{ flexShrink: 0, paddingBottom: 16 }} align="center" justify="space-between">
-              <Segmented<string>
-                defaultValue={'document'}
+          <Flex vertical style={rootStyle}>
+            <Flex className="import-modal-toolbar" align="center" justify="space-between">
+              <ComRadio
+                value={type}
                 options={[
                   {
-                    value: 'document',
-                    label: formatMessage('common.all'),
+                    value: 'json',
+                    label: formatMessage('uns.importUnsTab'),
                   },
                   {
-                    value: 'json',
-                    label: 'UNS',
+                    value: 'document',
+                    label: formatMessage('uns.importAllTab'),
                   },
                 ]}
-                value={type}
-                onChange={(value) => {
-                  setType(value);
+                onChange={(e) => {
+                  setType(e.target.value);
                 }}
               />
               {type === 'json' && (
-                <Button
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(`/inter-api/supos/uns/importExport/template/download?fileType=json`, '_self');
-                  }}
-                >
-                  <Download />
-                  {formatMessage('common.downloadTemplate')}
-                </Button>
+                <Flex className="import-modal-toolbar-actions" align="center" gap={8}>
+                  <Button
+                    className="import-download-template-btn"
+                    icon={<Download size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadFn({ data: template, name: 'uns-template.json' });
+                    }}
+                  >
+                    {formatMessage('common.downloadTemplate')}
+                  </Button>
+                  <Button
+                    className="import-copy-for-agent-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copy(agentPrompt);
+                    }}
+                  >
+                    <span className="import-copy-for-agent-content">
+                      <ClipboardPaste size={16} />
+                      <span>{formatMessage('uns.copyForAgent')}</span>
+                      <Tooltip title={formatMessage('uns.copyForAgentTooltip')}>
+                        <CircleHelp
+                          size={16}
+                          className="import-copy-for-agent-help"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        />
+                      </Tooltip>
+                    </span>
+                  </Button>
+                </Flex>
               )}
             </Flex>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <div style={{ display: type === 'document' ? 'inherit' : 'none', height: '100%' }}>
-                <ImportDom initTreeData={initTreeData} onCloseModal={onCloseModal} />
+            <div style={panelStyle}>
+              <div
+                className={isFullscreen ? 'import-document-panel-fill' : undefined}
+                style={{ display: type === 'document' ? 'block' : 'none', height: isJsonTab || isFullscreen ? '100%' : 'auto' }}
+              >
+                <ImportDom fillHeight={isFullscreen} initTreeData={initTreeData} onCloseModal={onCloseModal} />
               </div>
-              <div style={{ display: type === 'json' ? 'inherit' : 'none', height: '100%' }}>
+              <div style={{ display: type === 'json' ? 'block' : 'none', height: '100%' }}>
                 <JsonDom initTreeData={initTreeData} onCloseModal={onCloseModal} />
               </div>
             </div>

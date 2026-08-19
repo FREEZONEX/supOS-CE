@@ -2,54 +2,75 @@ import { type FC, useEffect, useRef } from 'react';
 import type { PageProps } from '@/common-types';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
-import { App, Flex } from 'antd';
-import {
-  Close,
-  Document,
-  DocumentAdd,
-  Folder,
-  FolderAdd,
-  ListDropdown,
-  Renew,
-  View,
-  ViewOff,
-} from '@carbon/icons-react';
+import { App } from 'antd';
+import { Add, Document, Folder, Renew } from '@carbon/icons-react';
 import useTranslate from '@/hooks/useTranslate';
 import ComLeft from '@/components/com-layout/ComLeft.tsx';
 import { SortableTree } from './components/menu-tree';
-import useMenuSetting from './components/menu-setting/useMenuSetting.tsx';
-import { AuthButton, AuthWrapper } from '@/components/auth';
 import { MenuStoreProvider, useMenuStore } from './store/menuStore.tsx';
 import MenuContent from './components/menu-content/MenuContent.tsx';
 import EmptyDetail from './components/empty-detail';
-import { batchEditResourceApi, deleteResourceApi } from '@/apis/inter-api/resource.ts';
-import { ButtonPermission } from '@/common-types/button-permission.ts';
 import { useI18nStore } from '@/stores/i18n-store.ts';
 import { useTabsContext } from '@/contexts/tabs-context.ts';
+import { AuthButton } from '@/components/auth';
+import { ButtonPermission } from '@/common-types/button-permission.ts';
+import styles from './index.module.scss';
 
 const Module: FC<PageProps> = ({ title }) => {
   const formatMessage = useTranslate();
-  const { onMenuModalOpen, MenuModal } = useMenuSetting();
-  const { modal, message } = App.useApp();
+  const { message } = App.useApp();
   const isFirstRender = useRef(true);
-  const { requestMenu, menuTree, setContentType, contentType, setSelectNode, selectNode, setMenuInfo, loading } =
+  const { requestMenu, menuList, menuTree, setContentType, contentType, setSelectNode, selectNode, loading } =
     useMenuStore((state) => ({
       requestMenu: state.requestMenu,
+      menuList: state.menuList,
       menuTree: state.menuTree,
       setContentType: state.setContentType,
       contentType: state.contentType,
       setSelectNode: state.setSelectNode,
       selectNode: state.selectNode,
-      setMenuInfo: state.setMenuInfo,
       loading: state.loading,
     }));
   const { TabsContext } = useTabsContext();
 
   const lang = useI18nStore((state) => state.lang);
+  const menuLabel = (node: any) => formatMessage(node?.showName, undefined, node?.showName || node?.label || '');
+  const isSystemMenu = (node?: any) => Boolean(node?.coreResourceId && node?.editEnable === false);
+
+  const onAddExternalMenu = () => {
+    const parentId =
+      selectNode && !isSystemMenu(selectNode)
+        ? selectNode.type === 1
+          ? selectNode.id
+          : selectNode.parentId
+        : undefined;
+    setSelectNode({
+      id: '',
+      parentId,
+      type: 2,
+      code: '',
+      showName: '',
+      sort: (menuList?.length || 0) * 10 + 100,
+      url: '',
+      urlType: 2,
+      openType: 0,
+      enable: true,
+      children: [],
+    } as any);
+    setContentType('addMenu');
+  };
+
+  const onRefreshMenu = () => {
+    setContentType(null);
+    setSelectNode(null);
+    requestMenu().then(() => {
+      message.success(formatMessage('common.refreshSuccessful'));
+    });
+  };
 
   useEffect(() => {
     requestMenu();
-  }, []);
+  }, [requestMenu]);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -57,195 +78,74 @@ const Module: FC<PageProps> = ({ title }) => {
     } else {
       TabsContext?.current?.onRefreshTab?.('/MenuConfiguration');
     }
-  }, [lang]);
-
-  const onEnabledHandle = (node: any, e: any) => {
-    e.stopPropagation();
-    batchEditResourceApi([
-      {
-        id: node.id,
-        enable: !node?.enable,
-      },
-    ]).then(() => {
-      message.success(formatMessage('common.optsuccess'));
-      requestMenu();
-    });
-  };
+  }, [TabsContext, lang]);
 
   return (
-    <ComLayout>
-      {MenuModal}
-      <ComContent
-        hasBack={false}
-        title={
-          <Flex align="center" gap={8} style={{ lineHeight: 1 }}>
-            <ListDropdown
-              size={20}
-              style={{ justifyContent: 'center', verticalAlign: 'middle' }}
-              onClick={() => onMenuModalOpen()}
-            />
-            <span>{title}</span>
-          </Flex>
-        }
-      >
-        <ComLayout>
+    <ComLayout className={styles.splitLayout}>
+      <ComContent className={styles.menuConfigurationContent} hasBack={false} title={title}>
+        <ComLayout className={styles.splitLayout}>
           <ComLeft
             resize
-            defaultWidth={360}
-            style={{ display: 'flex', flexDirection: 'column', padding: '16px 0 16px 16px' }}
+            defaultWidth={256}
+            className={styles.sidebar}
+            style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}
           >
-            <Flex style={{ marginBottom: 16, marginRight: 16 }} justify="space-between" align="center">
-              <span style={{ fontSize: 20, fontWeight: 500 }}>{formatMessage('MenuConfiguration.menuList')}</span>
-              <Flex align="center">
+            <div className={styles.sidebarHeader}>
+              <span className={styles.sidebarTitle}>{formatMessage('MenuConfiguration.menuList')}</span>
+              <div className={styles.sidebarActions}>
                 <AuthButton
-                  disabled={selectNode?.editEnable === false || [2, 3].includes(selectNode?.type || 0)}
-                  size="small"
-                  type="text"
-                  onClick={() => setContentType('addMenu')}
                   auth={ButtonPermission['MenuConfiguration.addMenu']}
+                  type="text"
+                  className={styles.iconAction}
+                  icon={<Add size={16} />}
                   title={formatMessage('MenuConfiguration.addMenu')}
-                >
-                  <DocumentAdd />
-                </AuthButton>
-                <AuthButton
-                  disabled={selectNode?.editEnable === false || [1, 2, 3].includes(selectNode?.type || 0)}
-                  size="small"
-                  type="text"
-                  onClick={() => setContentType('addGroup')}
-                  auth={ButtonPermission['MenuConfiguration.addMenu']}
-                  title={formatMessage('MenuConfiguration.addGroup')}
-                >
-                  <FolderAdd />
-                </AuthButton>
-                <AuthButton
-                  size="small"
-                  type="text"
+                  onClick={onAddExternalMenu}
+                />
+                <button
+                  type="button"
+                  className={styles.iconAction}
                   title={formatMessage('common.refresh')}
-                  onClick={() => {
-                    setContentType(null);
-                    setSelectNode(null);
-                    requestMenu().then(() => {
-                      message.success(formatMessage('common.refreshSuccessful'));
-                    });
-                  }}
+                  onClick={onRefreshMenu}
                 >
-                  <Renew />
-                </AuthButton>
-              </Flex>
-            </Flex>
-            <SortableTree
-              loading={loading}
-              onHandleDragEnd={(newData: any, tree: any) => {
-                // 先设置，后请求
-                setMenuInfo(tree, newData);
-                batchEditResourceApi(
-                  newData
-                    ?.map((item: any, index: number) => ({
-                      id: item.id,
-                      sort: (item?.index ?? index) + 1,
-                      parentId: item.parentId,
-                    }))
-                    ?.filter((f: any) => !f.id?.includes('tab_container'))
-                ).then(() => {
-                  message.success(formatMessage('common.optsuccess'));
-                  requestMenu();
-                });
-              }}
-              treeData={menuTree as any}
-              style={{ flex: 1, overflow: 'auto', scrollbarGutter: 'stable', paddingRight: 8 }}
-              indicator
-              indentationWidth={32}
-              selectedKey={selectNode ? selectNode.id : null}
-              onSelect={(key: any, node: any) => {
-                setSelectNode(node);
-                if (!key) {
-                  setContentType(null);
-                } else {
-                  setContentType(node.type === 1 ? 'editGroup' : 'editMenu');
-                }
-              }}
-              leftExtra={(node: any) => {
-                if (node.type === 1) {
-                  return <Folder style={{ flexShrink: 0 }} />;
-                } else if (node.type === 2) {
-                  return <Document style={{ flexShrink: 0 }} />;
-                }
-                return null;
-              }}
-              rightExtra={(node: any) => {
-                if (!node?.editEnable) return null;
-                return (
-                  <Flex gap={8}>
-                    {node?.enable ? (
-                      <AuthWrapper auth={ButtonPermission['MenuConfiguration.enabledMenu']}>
-                        <Flex
-                          title={formatMessage('MenuConfiguration.disabled')}
-                          onClick={(e) => onEnabledHandle(node, e)}
-                        >
-                          <View style={{ cursor: 'pointer' }} />
-                        </Flex>
-                      </AuthWrapper>
-                    ) : (
-                      <AuthWrapper auth={ButtonPermission['MenuConfiguration.enabledMenu']}>
-                        <Flex
-                          title={formatMessage('MenuConfiguration.enable')}
-                          onClick={(e) => onEnabledHandle(node, e)}
-                        >
-                          <ViewOff style={{ cursor: 'pointer' }} />
-                        </Flex>
-                      </AuthWrapper>
-                    )}
-                    {(![1, 2].includes(node?.type) ||
-                      (node?.type === 1 && !['80', '50'].includes(node.id)) ||
-                      (node?.type === 2 && node?.urlType === 2)) && (
-                      <AuthWrapper auth={ButtonPermission['MenuConfiguration.deleteMenu']}>
-                        <Flex
-                          title={formatMessage('common.delete')}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            modal.confirm({
-                              title: formatMessage('common.deleteConfirm'),
-                              onOk: async () => {
-                                return deleteResourceApi(node.id).then(() => {
-                                  message.success(formatMessage('common.deleteSuccessfully'));
-                                  requestMenu();
-                                });
-                              },
-                              okButtonProps: {
-                                title: formatMessage('common.confirm'),
-                              },
-                              cancelButtonProps: {
-                                title: formatMessage('common.cancel'),
-                              },
-                            });
-                          }}
-                        >
-                          <Close style={{ cursor: 'pointer' }} />
-                        </Flex>
-                      </AuthWrapper>
-                    )}
-                  </Flex>
-                );
-              }}
-              disabledSelected={(node: any) => {
-                return node.type == 4 && !node.url;
-              }}
-              allowDrop={({ drop, drag }: any) => {
-                // 跟目录都可以放置
-                if (!drop) return true;
-                // 固定不可放置
-                if (drag?.fixed || drop.fixed) return false;
-                // 不可放置 文件
-                if (drop.type === 2) return false;
-                // 组 不可放置 组
-                if (drag?.type === 1 && drop?.type === 1) {
-                  return false;
-                }
-                return true;
-              }}
-            />
+                  <Renew size={16} />
+                </button>
+              </div>
+            </div>
+            <div className={styles.tree}>
+              <SortableTree
+                loading={loading}
+                treeData={menuTree as any}
+                renderLabel={menuLabel}
+                style={{ height: '100%' }}
+                indicator
+                indentationWidth={24}
+                selectedKey={selectNode ? selectNode.id : null}
+                onSelect={(key: any, node: any) => {
+                  setSelectNode(node);
+                  if (!key) {
+                    setContentType(null);
+                  } else {
+                    setContentType(node.type === 1 ? 'editGroup' : 'editMenu');
+                  }
+                }}
+                leftExtra={(node: any) => {
+                  if (node.type === 1) {
+                    return <Folder size={16} style={{ flexShrink: 0 }} />;
+                  }
+                  if (node.type === 2) {
+                    return <Document size={16} style={{ flexShrink: 0 }} />;
+                  }
+                  return null;
+                }}
+                disabledSelected={(node: any) => node.type == 4 && !node.url}
+                disabledDraggable={isSystemMenu}
+                allowDrop={() => false}
+              />
+            </div>
           </ComLeft>
-          <ComContent>{contentType ? <MenuContent /> : <EmptyDetail />}</ComContent>
+          <ComContent className={styles.detailPanel} hasBack={false} mustShowTitle={false} border={false}>
+            {contentType ? <MenuContent /> : <EmptyDetail />}
+          </ComContent>
         </ComLayout>
       </ComContent>
     </ComLayout>

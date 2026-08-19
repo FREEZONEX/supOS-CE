@@ -39,7 +39,7 @@ const CodeSnippetField = (props: PropsTypes) => {
     if (!isJSON) return {};
 
     return {
-      // '--supos-switchwrap-active-bg-color': 'var(--supos-charttop-bg-color)',
+      // '--ui-switchwrap-active-bg-color': 'var(--ui-charttop-bg-color)',
     };
   }, [isJSON]);
   const content = useMemo(() => {

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
 import { filter, find, isEmpty, map } from 'lodash-es';
-import { SUPOS_USER_GUIDE_ROUTES } from '@/common-types/constans';
+import { APP_USER_GUIDE_ROUTES } from '@/common-types/constans';
 import { useTranslate } from '@/hooks';
 import { storageOpt } from '@/utils/storage';
 import { shepherd } from '@/components/shepherd';
@@ -87,16 +87,16 @@ export const useGuideSteps = (steps: any[] = [], startStepId?: string) => {
         });
         tour.on('complete', () => {
           // 监听完成时把当前路由isVisited设置为已浏览
-          const currentUserGuideRoute = storageOpt.get(SUPOS_USER_GUIDE_ROUTES);
+          const currentUserGuideRoute = storageOpt.get(APP_USER_GUIDE_ROUTES);
           storageOpt.set(
-            SUPOS_USER_GUIDE_ROUTES,
+            APP_USER_GUIDE_ROUTES,
             map(currentUserGuideRoute, (route) => (route?.url === pathname ? { ...route, isVisited: true } : route))
           );
         });
       }
     };
 
-    const userGuideRoute = storageOpt.get(SUPOS_USER_GUIDE_ROUTES);
+    const userGuideRoute = storageOpt.get(APP_USER_GUIDE_ROUTES);
     const currentRoute = find(userGuideRoute, (route) => route?.url === pathname);
     // 当前路由没有被访问过，则初始化当前路由的步骤数据
     if (currentRoute && currentRoute?.isVisited === false) {

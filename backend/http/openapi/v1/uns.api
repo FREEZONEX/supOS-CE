@@ -1,0 +1,316 @@
+syntax = "v1"
+
+type ReadReq {
+    topics []string `json:"topics"`
+    includeMetadata bool `json:"include_metadata,optional"`
+    includeLeafValue bool `json:"include_leaf_value,optional"`
+}
+
+type WriteReq {
+    writes []WriteItem `json:"writes"`
+    qos int64 `json:"qos,optional"`
+    retain bool `json:"retain,optional"`
+}
+
+type WriteItem {
+    topic string `json:"topic"`
+    value interface{} `json:"value,optional"`
+    timeStamp int64 `json:"timeStamp,optional"`
+}
+
+type BrowseReq {
+    path string `json:"path,optional"`
+    maxDepth int64 `json:"max_depth,optional"`
+    includeMetadata bool `json:"include_metadata,optional"`
+    includeLeafValue bool `json:"include_leaf_value,optional"`
+}
+
+type SearchReq {
+    keyword string `json:"keyword,optional"`
+    topicType string `json:"topicType,optional"`
+    pathPrefix string `json:"path_prefix,optional"`
+    includeMetadata bool `json:"include_metadata,optional"`
+    includeLeafValue bool `json:"include_leaf_value,optional"`
+    page int64 `json:"page,optional"`
+    size int64 `json:"size,optional"`
+}
+
+type HistoryReq {
+    topics []string `json:"topics"`
+    startTime string `json:"start_time"`
+    endTime string `json:"end_time"`
+    aggregation *HistoryAggregation `json:"aggregation,optional"`
+    page int64 `json:"page,optional"`
+    size int64 `json:"size,optional"`
+}
+
+type HistoryAggregation {
+    interval string `json:"interval"`
+    function string `json:"function,optional"`
+    field string `json:"field,optional"`
+    fields []HistoryAggregationField `json:"fields,optional"`
+}
+
+type HistoryAggregationField {
+    name string `json:"name"`
+    function string `json:"function,optional"`
+}
+
+type NodeCreateReq {
+    namespace []NamespaceNode `json:"namespace"`
+}
+
+type NamespaceNode {
+    name string `json:"name"`
+    Type string `json:"type,optional"`
+    children []NamespaceNode `json:"children,optional"`
+    topicType string `json:"topicType,optional"`
+    fields []SchemaField `json:"fields,optional"`
+    description string `json:"description,optional"`
+    displayName string `json:"displayName,optional"`
+    extendProperties map[string]string `json:"extendProperties,optional"`
+    alias string `json:"alias,optional"`
+    enableHistory *bool `json:"enableHistory,optional"`
+}
+
+type NodeUpdateReq {
+    path string `json:"path"`
+    name string `json:"name,optional"`
+    description string `json:"description,optional"`
+    displayName string `json:"displayName,optional"`
+    extendProperties map[string]string `json:"extendProperties,optional"`
+    fields []SchemaField `json:"fields,optional"`
+    alias string `json:"alias,optional"`
+    enableHistory *bool `json:"enableHistory,optional"`
+    updateMask []string `json:"updateMask,optional"`
+}
+
+type NodeDeleteReq {
+    topics []string `json:"topics"`
+}
+
+
+
+type SchemaField {
+    name string `json:"name"`
+    Type string `json:"type"`
+    unit string `json:"unit,optional"`
+}
+
+type OpenapiItemError {
+    code int64 `json:"code"`
+    message string `json:"message"`
+}
+
+type OpenapiVQT {
+    value interface{} `json:"value,optional"`
+    quality string `json:"quality"`
+    timeStamp int64 `json:"timeStamp"`
+}
+
+type OpenapiNodeInfo {
+    id int64 `json:"id"`
+    path string `json:"path"`
+    name string `json:"name"`
+    Type string `json:"type"`
+    topicType string `json:"topicType"`
+    description string `json:"description,optional"`
+    displayName string `json:"displayName,optional"`
+    extendProperties map[string]string `json:"extendProperties,optional"`
+    fields []SchemaField `json:"fields,optional"`
+    children []OpenapiNodeInfo `json:"children,optional"`
+    alias string `json:"alias,optional"`
+    enableHistory bool `json:"enableHistory,optional"`
+    bindFlowID int64 `json:"bindFlowID,optional"`
+    payload OpenapiVQT `json:"payload,optional"`
+}
+
+type OpenapiReadItem {
+    success bool `json:"success"`
+    topic string `json:"topic"`
+    result OpenapiVQT `json:"result,optional"`
+    error OpenapiItemError `json:"error,optional"`
+    metadata OpenapiNodeInfo `json:"metadata,optional"`
+}
+
+type ReadResp {
+    success bool `json:"success"`
+    results []OpenapiReadItem `json:"results"`
+}
+
+type OpenapiWriteResult {
+    success bool `json:"success"`
+    topic string `json:"topic"`
+    error OpenapiItemError `json:"error,optional"`
+}
+
+type WriteResp {
+    success bool `json:"success"`
+    results []OpenapiWriteResult `json:"results"`
+}
+
+type BrowseResp {
+    tree []OpenapiNodeInfo `json:"tree"`
+}
+
+type SearchResp {
+    objects []OpenapiNodeInfo `json:"objects"`
+    page int64 `json:"page"`
+    size int64 `json:"size"`
+    total int64 `json:"total"`
+}
+
+type OpenapiHistoryValue {
+    value interface{} `json:"value,optional"`
+    quality string `json:"quality"`
+    timeStamp int64 `json:"timeStamp"`
+}
+
+type OpenapiHistoryResult {
+    values []OpenapiHistoryValue `json:"values"`
+    meta HistoryQueryMeta `json:"meta,optional"`
+}
+
+type HistoryQueryMeta {
+    aggregated bool `json:"aggregated"`
+    sampled bool `json:"sampled"`
+    rawTotal int64 `json:"rawTotal"`
+    returnedTotal int64 `json:"returnedTotal"`
+    requestedIntervalMs int64 `json:"requestedIntervalMs,optional"`
+    actualIntervalMs int64 `json:"actualIntervalMs,optional"`
+    strategy string `json:"strategy,optional"`
+}
+
+type OpenapiHistoryItem {
+    success bool `json:"success"`
+    topic string `json:"topic"`
+    result OpenapiHistoryResult `json:"result,optional"`
+    error OpenapiItemError `json:"error,optional"`
+}
+
+type HistoryResp {
+    success bool `json:"success"`
+    results []OpenapiHistoryItem `json:"results"`
+    page int64 `json:"page"`
+    size int64 `json:"size"`
+    total int64 `json:"total"`
+}
+
+type OpenapiCreateResult {
+    success bool `json:"success"`
+    topic string `json:"topic"`
+    error OpenapiItemError `json:"error,optional"`
+}
+
+type CreateResp {
+    success bool `json:"success"`
+    results []OpenapiCreateResult `json:"results"`
+}
+
+type OpenapiEmptyResp {
+    success bool `json:"success"`
+}
+
+type AssetUploadResp {
+    uploadUrl string `json:"uploadUrl"`
+    filePath string `json:"filePath"`
+    fileUrl string `json:"fileUrl,optional"`
+}
+
+type UnsAttachmentInfo {
+    unsId int64 `json:"unsId"`
+    fileName string `json:"fileName,optional"`
+    filePath string `json:"filePath"`
+    fileUrl string `json:"fileUrl,optional"`
+    contentType string `json:"contentType,optional"`
+    size int64 `json:"size,optional"`
+    sha256 string `json:"sha256,optional"`
+    createdAt int64 `json:"createdAt,optional"`
+    fileUrlExpiresAt int64 `json:"fileUrlExpiresAt,optional"`
+}
+
+type UnsAttachmentUploadResp {
+    unsId int64 `json:"unsId"`
+    fileName string `json:"fileName,optional"`
+    filePath string `json:"filePath"`
+    fileUrl string `json:"fileUrl,optional"`
+    contentType string `json:"contentType,optional"`
+    size int64 `json:"size,optional"`
+    sha256 string `json:"sha256,optional"`
+    createdAt int64 `json:"createdAt,optional"`
+    fileUrlExpiresAt int64 `json:"fileUrlExpiresAt,optional"`
+}
+
+type UnsAttachmentListResp {
+    unsId int64 `json:"unsId"`
+    list []UnsAttachmentInfo `json:"list"`
+    total int64 `json:"total"`
+    page int64 `json:"page"`
+    size int64 `json:"size"`
+}
+
+type UnsBindFlowResp {
+    success bool `json:"success"`
+    unsId int64 `json:"unsId"`
+    flowId int64 `json:"flowId"`
+}
+
+type OpenapiUnsNodeSaveReq {
+    nodeId int64 `path:"nodeId,optional"`
+    parentId int64 `json:"parentId,optional"`
+    name string `json:"name"`
+    displayName string `json:"displayName,optional"`
+    alias string `json:"alias,optional"`
+    namespace string `json:"namespace,optional"`
+    nodeType string `json:"type,optional"`
+    topicType string `json:"topicType,optional"`
+    fields []SchemaField `json:"fields,optional"`
+    description string `json:"description,optional"`
+    labelIds []int64 `json:"labelIds,optional"`
+    assetFileIds []int64 `json:"assetFileIds,optional"`
+    extendProperties string `json:"extendProperties,optional"`
+    enableHistory *bool `json:"enableHistory,optional"`
+    withFlow bool `json:"withFlow,optional"`
+    addFlow bool `json:"addFlow,optional"`
+    mockData bool `json:"mockData,optional"`
+}
+
+@server(
+    prefix: /openapi/v1
+    group: openapi/v1/uns
+    middleware: ApiKeyAuth
+)
+service backend {
+    @handler OpenapiUnsRead
+    post /uns/read (ReadReq) returns (ReadResp)
+
+    @handler OpenapiUnsWrite
+    post /uns/write (WriteReq) returns (WriteResp)
+
+    @handler OpenapiUnsBrowse
+    post /uns/browse (BrowseReq) returns (BrowseResp)
+
+    @handler OpenapiUnsSearch
+    post /uns/search (SearchReq) returns (SearchResp)
+
+    @handler OpenapiUnsHistory
+    post /uns/history (HistoryReq) returns (HistoryResp)
+
+    @handler OpenapiUnsCreate
+    post /uns/create (NodeCreateReq) returns (CreateResp)
+
+    @handler OpenapiUnsUpdate
+    post /uns/update (NodeUpdateReq) returns (OpenapiEmptyResp)
+
+    @handler OpenapiUnsDelete
+    post /uns/delete (NodeDeleteReq) returns (OpenapiEmptyResp)
+
+    @handler OpenapiUnsAttachmentUpload
+    post /uns/attachments (UnsAttachmentUploadReq) returns (UnsAttachmentUploadResp)
+
+    @handler OpenapiUnsAttachmentList
+    post /uns/attachments/list (UnsAttachmentListReq) returns (UnsAttachmentListResp)
+
+    @handler OpenapiUnsBindFlow
+    post /uns/unsBindFlow (UnsBindFlowReq) returns (UnsBindFlowResp)
+}

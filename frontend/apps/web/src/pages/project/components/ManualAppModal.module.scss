@@ -1,0 +1,96 @@
+.accessModeSegmented {
+  padding: 2px;
+  background: var(--ui-charttop-bg-color);
+  border: 1px solid var(--ui-line-color);
+  border-radius: 4px;
+
+  :global(.ant-segmented-group) {
+    gap: 2px;
+  }
+
+  :global(.ant-segmented-item) {
+    border-radius: 3px;
+    color: var(--ui-description-card-color);
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  :global(.ant-segmented-item:not(.ant-segmented-item-selected):hover) {
+    color: var(--ui-text-color);
+    background: var(--ui-fill-secondary);
+  }
+
+  :global(.ant-segmented-thumb),
+  :global(.ant-segmented-item-selected) {
+    background: var(--ui-bg-color);
+    box-shadow: 0 0 0 1px var(--ui-line-color);
+  }
+
+  :global(.ant-segmented-item-selected) {
+    color: var(--ui-text-color);
+  }
+
+  :global(.ant-segmented-item-selected:hover) {
+    color: var(--ui-text-color);
+  }
+}
+
+.openInPlatformRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  white-space: nowrap;
+}
+
+.themeSwitch {
+  :global(.ant-switch) {
+    min-width: 44px;
+    background: var(--ui-control-border);
+
+    &:hover:not(:global(.ant-switch-disabled)) {
+      background: color-mix(in srgb, var(--ui-control-border) 75%, var(--ui-text-color));
+    }
+
+    &:global(.ant-switch-checked) {
+      background: var(--ui-theme-color);
+
+      &:hover:not(:global(.ant-switch-disabled)) {
+        background: var(--ui-theme-button-hover-color);
+      }
+    }
+
+    :global(.ant-switch-handle)::before {
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
+    }
+  }
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .accessModeSegmented {
+    background: rgb(255 255 255 / 6%);
+    border-color: var(--ui-control-border);
+
+    :global(.ant-segmented-item) {
+      color: var(--ui-description-card-color);
+    }
+
+    :global(.ant-segmented-item:not(.ant-segmented-item-selected):hover) {
+      color: var(--ui-text-color);
+      background: rgb(255 255 255 / 8%);
+    }
+
+    :global(.ant-segmented-thumb),
+    :global(.ant-segmented-item-selected) {
+      background: color-mix(in srgb, var(--ui-theme-color) 16%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--ui-theme-color) 35%, transparent);
+    }
+
+    :global(.ant-segmented-item-selected) {
+      color: var(--ui-text-color);
+    }
+  }
+}

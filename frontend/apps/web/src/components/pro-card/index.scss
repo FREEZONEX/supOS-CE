@@ -1,31 +1,52 @@
 .pro-card {
   padding: 16px;
-  background-color: var(--supos-card-bg);
+  background-color: var(--ui-card-bg);
   border-radius: 3px;
-  color: var(--supos-table-first-color);
+  color: var(--ui-table-first-color);
 }
 
 .pro-card-border {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--ui-line-color);
 }
 
 .pro-card-hover {
   &:hover {
-    background: var(--supos-card-hover-bg);
+    background: var(--ui-card-hover-bg);
   }
 
   &:active {
-    background-color: var(--supos-card-active-bg);
+    background-color: var(--ui-card-active-bg);
   }
 
   &.pro-card-checked {
-    background-color: var(--supos-card-active-bg);
+    background-color: var(--ui-card-active-bg);
   }
 }
 
 .pro-card-status-header {
   height: 34px;
   padding-bottom: 12px;
+}
+
+.pro-card-header-actions {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.pro-card-icon-wrap {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ui-image-card-color);
+  color: var(--ui-text-color);
+
+  svg {
+    display: block;
+  }
 }
 
 .pro-card-header {
@@ -39,6 +60,13 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .flow-card-title {
+    color: var(--ui-text-color);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
   }
 
   .title-description {
@@ -68,4 +96,34 @@
   letter-spacing: 0.16px;
   flex: 1;
   overflow: hidden;
+}
+
+.dark,
+.chartreuseDark {
+  // 对齐 Launchpad 卡片：暗色用填充面，不描边
+  .pro-card {
+    background-color: rgb(255 255 255 / 6%);
+    border: none;
+    color: var(--ui-text-color);
+  }
+
+  .pro-card-border {
+    border: 1px solid var(--ui-control-border);
+  }
+
+  .pro-card-hover {
+    &:hover {
+      background: rgb(255 255 255 / 10%);
+    }
+
+    &:active,
+    &.pro-card-checked {
+      background-color: rgb(255 255 255 / 10%);
+    }
+  }
+
+  .pro-card-icon-wrap {
+    background: color-mix(in srgb, var(--ui-theme-color) 18%, var(--ui-t-chartreuse-color-100, transparent));
+    color: var(--ui-t-chartreuse-color-40, var(--ui-theme-color));
+  }
 }

@@ -16,7 +16,7 @@ const Index: FC<ComDrawerProps> = (props) => {
       extra={<Close style={{ cursor: 'pointer' }} size={20} onClick={onClose} />}
       {...restProps}
       onClose={onClose}
-      style={{ backgroundColor: 'var(--supos-bg-color) !important', color: 'var(--supos-text-color)', ...style }}
+      style={{ backgroundColor: 'var(--ui-bg-color) !important', color: 'var(--ui-text-color)', ...style }}
       rootClassName={classNames('com-drawer', rootClassName)}
     />
   );

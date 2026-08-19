@@ -1,4 +1,4 @@
-import { type FC, useRef } from 'react';
+import { type FC, type MouseEvent, type ReactNode, useRef } from 'react';
 import { Upload, App } from 'antd';
 import { AddLarge } from '@carbon/icons-react';
 import useTranslate from '@/hooks/useTranslate.ts';
@@ -12,6 +12,8 @@ export interface UploadPictureProps extends Omit<UploadProps, 'onChange'> {
   acceptList?: string[];
   className?: string;
   onActionChange?: UploadProps['onChange'];
+  previewNode?: ReactNode;
+  hint?: ReactNode;
 }
 
 const ComUploadPicture: FC<UploadPictureProps> = ({
@@ -22,6 +24,8 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
   className,
   action = '',
   onActionChange,
+  previewNode,
+  hint,
   ...restProps
 }) => {
   const { message } = App.useApp();
@@ -34,6 +38,15 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
   const acceptMsg = acceptList.map((item) => `.${item}`).join('、');
 
   const uploadRef = useRef<any>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const openFileDialog = (event?: MouseEvent<HTMLElement>) => {
+    event?.stopPropagation();
+    if (restProps.disabled) return;
+    const target = event?.target as HTMLElement | null;
+    if (target?.tagName === 'INPUT') return;
+    rootRef.current?.querySelector<HTMLInputElement>('input[type="file"]')?.click();
+  };
 
   const beforeUpload = (file: any) => {
     const fileType = file.name.split('.').pop();
@@ -63,7 +76,7 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
   };
 
   return (
-    <div className={className}>
+    <div className={className} ref={rootRef} onClick={openFileDialog}>
       <Upload
         action={action}
         listType="picture-card"
@@ -73,6 +86,7 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
         beforeUpload={beforeUpload}
         onRemove={onRemove}
         ref={uploadRef}
+        openFileDialogOnClick={false}
         onChange={
           onActionChange
             ? (info) => {
@@ -99,12 +113,18 @@ const ComUploadPicture: FC<UploadPictureProps> = ({
         }
       >
         {fileList?.length >= maxCount ? null : (
-          <button style={{ color: 'inherit', cursor: 'inherit', border: 0, background: 'none' }} type="button">
-            <AddLarge />
+          <button
+            style={{ color: 'inherit', cursor: 'pointer', border: 0, background: 'none' }}
+            type="button"
+            onClick={openFileDialog}
+          >
+            {previewNode || <AddLarge />}
           </button>
         )}
       </Upload>
-      <span style={{ color: '#6F6F6F', marginTop: 4 }}>{formatMessage('common.imageSize', { size: '28*28' })}</span>
+      <span style={{ color: '#6F6F6F', marginTop: 4 }}>
+        {hint ?? formatMessage('common.imageSize', { size: '28*28' })}
+      </span>
     </div>
   );
 };

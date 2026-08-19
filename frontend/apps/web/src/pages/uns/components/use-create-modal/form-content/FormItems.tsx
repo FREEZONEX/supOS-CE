@@ -1,10 +1,8 @@
 import type { FC } from 'react';
 import { Form, Input, Select, Divider, Collapse, Row, Col } from 'antd';
 import type { FormItemProps } from 'antd';
-import TagSelect from '@/pages/uns/components/use-create-modal/components/TagSelect';
 import SearchSelect from '@/pages/uns/components/use-create-modal/components/SearchSelect';
 import FieldsFormList from '@/pages/uns/components/use-create-modal/components/FieldsFormList';
-import ModelFieldsForm from '@/pages/uns/components/use-create-modal/components/file/ModelFieldsForm';
 import ReverseGeneration from '@/pages/uns/components/use-create-modal/components/file/ReverseGeneration';
 import TopicToUnsFieldsList from '@/pages/uns/components/use-create-modal/components/file/TopicToUnsFieldsList';
 import FrequencyForm from '@/pages/uns/components/use-create-modal/components/file/FrequencyForm';
@@ -55,7 +53,9 @@ const renderItems = (item: FormItemType) => {
         </Form.Item>
       );
     case 'divider':
-      return <Divider style={{ borderColor: '#c6c6c6', margin: '16px 0', ...childProps?.style }} key={key} />;
+      return (
+        <Divider style={{ borderColor: 'var(--ui-line-color)', margin: '16px 0', ...childProps?.style }} key={key} />
+      );
     case 'input':
       return (
         <Form.Item {...formProps} key={key}>
@@ -72,12 +72,6 @@ const renderItems = (item: FormItemType) => {
       return (
         <Form.Item {...formProps} key={key}>
           <Select {...childProps} />
-        </Form.Item>
-      );
-    case 'tagSelect':
-      return (
-        <Form.Item {...formProps} key={key}>
-          <TagSelect {...childProps} />
         </Form.Item>
       );
     case 'searchSelect':
@@ -108,8 +102,6 @@ const renderItems = (item: FormItemType) => {
       return <ExpandedKeyFormList key={key} />;
     case 'fieldsFormList':
       return <FieldsFormList {...childProps} key={key} />;
-    case 'modelFieldsForm':
-      return <ModelFieldsForm {...childProps} key={key} />;
     case 'reverseGeneration':
       return <ReverseGeneration {...childProps} key={key} />;
     case 'topicToUnsFieldsList':

@@ -2,7 +2,7 @@
   :global {
     .ant-tabs-nav-operations,
     .ant-tabs-nav-wrap {
-      background-color: var(--supos-uns-button-color);
+      background-color: var(--ui-uns-button-color);
     }
 
     .ant-tabs-nav-list {
@@ -11,7 +11,7 @@
 
     .ant-tabs-tab-btn {
       &:focus {
-        color: var(--supos-theme-color) !important;
+        color: var(--ui-theme-color) !important;
       }
     }
   }
@@ -26,10 +26,14 @@
   }
 }
 
+.role-homepage {
+  padding: 12px 0 0;
+}
+
 .use-add-modal {
   :global {
     .ant-input-affix-wrapper .anticon.ant-input-password-icon {
-      color: var(--supos-text-color);
+      color: var(--ui-text-color);
     }
   }
 }

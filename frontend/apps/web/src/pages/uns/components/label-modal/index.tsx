@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Button, Form, App, Input } from 'antd';
-import { addLabel } from '@/apis/inter-api/uns';
+import { addLabel } from '@/apis/core-api/uns';
 import { useTranslate } from '@/hooks';
+import { MAX_LENGTHS } from '@/utils/limits';
 
 import type { InitTreeDataFnType, UnsTreeNode } from '@/pages/uns/types';
 import type { TreeStoreActions } from '../../store/types';
@@ -70,7 +71,6 @@ const Module = ({ successCallBack, changeCurrentPath, setTreeMap, scrollTreeNode
         colon={false}
         initialValues={{
           withFlow: false,
-          withDashboard: true,
         }}
         disabled={loading}
       >
@@ -79,12 +79,12 @@ const Module = ({ successCallBack, changeCurrentPath, setTreeMap, scrollTreeNode
           name="name"
           rules={[
             { required: true },
-            { max: 63 },
+            { max: MAX_LENGTHS.name },
             { validator: validateTrim },
             { pattern: /^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/, message: formatMessage('uns.nameFormat') },
           ]}
         >
-          <Input />
+          <Input maxLength={MAX_LENGTHS.name} />
         </Form.Item>
       </Form>
       <Button

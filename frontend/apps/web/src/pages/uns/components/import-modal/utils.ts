@@ -20,26 +20,35 @@ export function readerSSE(response: Response, successHandle: any, errorHandle: a
   const reader = response.body?.getReader();
   if (reader) {
     const decoder = new TextDecoder('utf-8');
+    let hasFinalStatus = false;
     // 递归读取流数据
     function readStream() {
       reader!
         .read()
         .then(({ done, value }) => {
           if (done) {
+            if (!hasFinalStatus) errorHandle?.();
             return;
           }
           // 处理流数据块
           const chunk = decoder.decode(value, { stream: true });
-          processChunk(chunk, successHandle);
+          processChunk(chunk, (data: any) => {
+            if (data?.finished || data?.progress >= 100) {
+              hasFinalStatus = true;
+            }
+            successHandle?.(data);
+          });
           // 继续读取下一个数据块
           readStream();
         })
         .catch((error) => {
           console.error(error);
-          errorHandle();
+          errorHandle?.();
         });
     }
 
     readStream();
+  } else {
+    errorHandle?.();
   }
 }

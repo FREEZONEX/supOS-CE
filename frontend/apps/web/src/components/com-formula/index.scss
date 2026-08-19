@@ -1,7 +1,7 @@
 .comFormula {
   .expression {
     padding: 20px 0 10px;
-    color: var(--supos-text-color);
+    color: var(--ui-text-color);
     font-size: 14px;
     font-style: normal;
     font-weight: 700;
@@ -31,9 +31,9 @@
   }
 
   .expression-readonly {
-    border: 1px solid #dfe2e5;
+    border: 1px solid var(--ui-line-color);
     border-bottom-color: transparent;
-    background-color: var(--supos-table-head-color);
+    background-color: var(--ui-table-head-color);
     padding: 8px 15px;
   }
 }

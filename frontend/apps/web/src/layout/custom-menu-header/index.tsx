@@ -1,44 +1,31 @@
-import { User, Menu as MenuIcon, Close, TreeView as TreeViewIcon, Notification } from '@carbon/icons-react';
-import { useState, useEffect } from 'react';
-import { useMenuNavigate, useTranslate, useMediaSize, useLocalStorage } from '@/hooks';
-import { Divider, Menu, Splitter, Drawer, Badge } from 'antd';
-import { useNavigate, useLocation } from 'react-router';
-import { SUPOS_STORAGE_MENU_WIDTH } from '@/common-types/constans.ts';
+import { useLocalStorage, useMediaSize, useMenuNavigate, useTranslate } from '@/hooks';
+import { Close, Menu as MenuIcon, TreeView as TreeViewIcon, User } from '@/components/lucide-icon/carbon';
+import { Divider, Drawer, Menu } from 'antd';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 // import HelpNav from '../components/HelpNav';
-import './index.scss';
-import LogoImg from '@/layout/custom-menu-header/components/LogoImg.tsx';
-import { useUnsTreeMapContext } from '@/UnsTreeMapContext';
-import { queryNoticeList } from '@/apis/inter-api/notify';
-import IconImage from '@/components/icon-image';
 import ComGroupButton from '@/components/com-group-button';
+import { MenuLucideIcon } from '@/components/lucide-icon';
 import SearchSelect from '@/components/search-select';
-import { storageOpt } from '@/utils/storage';
 import { useBaseStore } from '@/stores/base';
-import { ThemeType, useThemeStore } from '@/stores/theme-store.ts';
+import { useUnsTreeMapContext } from '@/UnsTreeMapContext';
 import { isInIframe } from '@/utils/url-util.ts';
+import './index.scss';
 
 const CustomMenuHeader = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { currentMenuInfo, pluginList, menuTree } = useBaseStore((state) => ({
+  const { currentMenuInfo, menuTree } = useBaseStore((state) => ({
     currentMenuInfo: state.currentMenuInfo,
-    pluginList: state.pluginList,
     menuTree: state.menuTree,
-  }));
-  const { primaryColor, theme } = useThemeStore((state) => ({
-    primaryColor: state.primaryColor,
-    theme: state.theme,
   }));
   const isUnsPath = location.pathname.includes('/uns');
   const { isTreeMapVisible, setTreeMapVisible } = useUnsTreeMapContext();
   const handleNavigate = useMenuNavigate();
-  const [hasNoticePlugin, setHasNoticePlugin] = useState(false);
-  const [noticeDot, setNoticeDot] = useState(false);
-
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { width, isH5 } = useMediaSize();
   const formatMessage = useTranslate();
   const ignoreHeader = useLocalStorage('ignoreHeader');
+  const menuLabel = (showName?: string) => formatMessage(showName || '', undefined, showName || '');
 
   useEffect(() => {
     // 66rem = 1056px (1rem = 16px)
@@ -47,82 +34,28 @@ const CustomMenuHeader = () => {
     }
   }, [width]);
 
-  const getNoticeStatus = () => {
-    queryNoticeList({ pageNo: 1, pageSize: 1, readStatus: 0 }).then((res: any) => {
-      setNoticeDot(res?.total > 0);
-    });
-  };
-
-  useEffect(() => {
-    const noticePluginInstalled =
-      pluginList?.find((i: any) => i?.plugInfoYml?.route?.name === 'NotificationManagement')?.installStatus ===
-      'installed';
-    setHasNoticePlugin(noticePluginInstalled);
-  }, [pluginList]);
-
-  useEffect(() => {
-    if (hasNoticePlugin) getNoticeStatus();
-  }, [hasNoticePlugin]);
-  const menuSelectedKey = (() => {
-    if (!currentMenuInfo?.code) {
-      return undefined;
-    }
-    if (menuTree?.some((item) => item.code === currentMenuInfo.code)) {
-      return currentMenuInfo.code;
-    }
-    if (currentMenuInfo.parentCode && menuTree?.some((item) => item.code === currentMenuInfo.parentCode)) {
-      return currentMenuInfo.parentCode;
-    }
-    const currentKeys = [currentMenuInfo.code, currentMenuInfo.parentCode].filter(Boolean);
-    const matchedRoot = menuTree?.find((item) => item.children?.some((child) => currentKeys.includes(child.code)));
-    return matchedRoot?.code || currentMenuInfo.code;
-  })();
   const items = menuTree?.map?.((parent) => {
     if (parent.children?.length && parent.type !== 2) {
       return {
-        icon: (
-          <IconImage
-            theme={primaryColor}
-            iconName={parent.icon}
-            width={24}
-            height={24}
-            style={{ paddingRight: 4, verticalAlign: 'middle' }}
-          />
-        ),
+        icon: <MenuLucideIcon item={parent} size={24} style={{ paddingRight: 4, verticalAlign: 'middle' }} />,
         popupClassName: 'custom-menu-popover',
         key: parent.code!,
-        label: <span className="menu-label">{parent.showName}</span>,
+        label: <span className="menu-label">{menuLabel(parent.showName)}</span>,
         children: parent?.children?.map((child) => ({
           key: child.code!,
-          icon: (
-            <IconImage
-              theme={primaryColor}
-              iconName={child.icon}
-              width={24}
-              height={24}
-              style={{ paddingRight: 4, verticalAlign: 'middle' }}
-            />
-          ),
+          icon: <MenuLucideIcon item={child} size={24} style={{ paddingRight: 4, verticalAlign: 'middle' }} />,
           onClick: () => {
             handleNavigate(child);
           },
-          label: <span className="menu-label">{child.showName}</span>,
+          label: <span className="menu-label">{menuLabel(child.showName)}</span>,
         })),
       };
     } else {
       return {
-        icon: (
-          <IconImage
-            theme={primaryColor}
-            iconName={parent.icon}
-            width={24}
-            height={24}
-            style={{ paddingRight: 4, verticalAlign: 'middle' }}
-          />
-        ),
+        icon: <MenuLucideIcon item={parent} size={24} style={{ paddingRight: 4, verticalAlign: 'middle' }} />,
         popupClassName: 'custom-menu-popover',
         key: parent.code!,
-        label: <span className="menu-label">{parent.showName}</span>,
+        label: <span className="menu-label">{menuLabel(parent.showName)}</span>,
         onClick: () => {
           handleNavigate(parent);
         },
@@ -136,62 +69,28 @@ const CustomMenuHeader = () => {
     <div
       className="custom-menu-header"
       style={{
-        color: 'var(--supos-bg-color)',
+        color: 'var(--ui-bg-color)',
         display: ignoreHeader === 'true' || window.name === 'equipment_app' ? 'none' : 'flex',
       }}
     >
       {/* 新手导航使用id */}
       <div className="custom-menu-header-left" id="custom_menu_left">
-        <div className="header" style={{ color: 'var(--supos-text-color)' }}>
+        <div className="header" style={{ color: 'var(--ui-text-color)' }}>
           <div className="menu-toggle" style={{ display: isH5 ? 'flex' : 'none' }}>
             {drawerVisible ? (
-              <Close size={20} style={{ color: 'var(--supos-text-color)' }} onClick={() => setDrawerVisible(false)} />
+              <Close size={20} style={{ color: 'var(--ui-text-color)' }} onClick={() => setDrawerVisible(false)} />
             ) : (
-              <MenuIcon size={20} style={{ color: 'var(--supos-text-color)' }} onClick={() => setDrawerVisible(true)} />
+              <MenuIcon size={20} style={{ color: 'var(--ui-text-color)' }} onClick={() => setDrawerVisible(true)} />
             )}
-          </div>
-          <div style={{ minWidth: 50, flexShrink: 0 }}>
-            <LogoImg
-              isDark={theme === ThemeType.Dark}
-              onClick={() => {
-                navigate('/uns', { state: { treeMap: true } });
-              }}
-            />
           </div>
           {/*<span className="title" title={currentMenuInfo?.showName}>*/}
           {/*  {currentMenuInfo?.showName}*/}
           {/*</span>*/}
-          <Divider style={{ height: 24 }} type="vertical" />
+          {isH5 ? <Divider style={{ height: 24 }} type="vertical" /> : null}
         </div>
         <div className="content" style={{ display: !isH5 ? 'flex' : 'none' }}>
-          <Splitter
-            style={{
-              height: '100%',
-              boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-            }}
-            onResizeEnd={(size) => {
-              storageOpt.set(SUPOS_STORAGE_MENU_WIDTH, size?.[0]);
-            }}
-          >
-            <Splitter.Panel
-              defaultSize={storageOpt.get(SUPOS_STORAGE_MENU_WIDTH) || 50}
-              style={{ minWidth: 50 }}
-              min={50}
-              max="70%"
-            >
-              <div className="menu">
-                <Menu
-                  mode="horizontal"
-                  items={items}
-                  selectedKeys={menuSelectedKey ? [menuSelectedKey] : []}
-                />
-              </div>
-            </Splitter.Panel>
-            <Splitter.Panel>
-              {/*渲染tabs header的div*/}
-              <div className="tabs" id="custom-header-container"></div>
-            </Splitter.Panel>
-          </Splitter>
+          {/*渲染tabs header的div*/}
+          <div className="tabs" id="custom-header-container"></div>
         </div>
       </div>
       <div className="footer" id="custom_menu_right">
@@ -208,9 +107,9 @@ const CustomMenuHeader = () => {
                       gap: '4px',
                     }}
                   >
-                    <TreeViewIcon size={20} style={{ color: 'var(--supos-text-color)' }} />
-                    <span style={{ color: 'var(--supos-text-color)' }}>{formatMessage('uns.tree')}</span>
-                    {isTreeMapVisible && <Close size={20} style={{ color: 'var(--supos-text-color)' }} />}
+                    <TreeViewIcon size={20} style={{ color: 'var(--ui-text-color)' }} />
+                    <span style={{ color: 'var(--ui-text-color)' }}>{formatMessage('uns.tree')}</span>
+                    {isTreeMapVisible && <Close size={20} style={{ color: 'var(--ui-text-color)' }} />}
                   </div>
                 ),
                 title: 'treemap',
@@ -239,7 +138,7 @@ const CustomMenuHeader = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       height: '100%',
-                      color: 'var(--supos-text-color)',
+                      color: 'var(--ui-text-color)',
                     }}
                   >
                     <SearchSelect />
@@ -255,30 +154,19 @@ const CustomMenuHeader = () => {
               //   key: 'help',
               // },
               // {
-              //   label: <Task size={20} style={{ color: 'var(--supos-text-color)' }} />,
+              //   label: <Task size={20} style={{ color: 'var(--ui-text-color)' }} />,
               //   title: formatMessage('common.taskCenter'),
               //   key: 'todo',
               //   onClick: handleTodoClick,
               // },
               {
-                label: (
-                  <Badge dot={noticeDot}>
-                    <Notification size={20} style={{ color: 'var(--supos-text-color)' }} />
-                  </Badge>
-                ),
-                title: 'notice',
-                key: 'notice',
-                onClick: getNoticeStatus,
-                hidden: !hasNoticePlugin,
-              },
-              {
-                label: <User size={20} style={{ color: 'var(--supos-text-color)' }} />,
+                label: <User size={20} style={{ color: 'var(--ui-text-color)' }} />,
                 title: 'user',
                 key: 'user',
               },
               // {
               //   auth: ButtonPermission['common.routerEdit'],
-              //   label: <Edit size={20} style={{ color: 'var(--supos-text-color)' }} />,
+              //   label: <Edit size={20} style={{ color: 'var(--ui-text-color)' }} />,
               //   title: formatMessage('common.edit', 'Edit'),
               //   key: 'edit',
               //   onClick: () => setEditOpen(true),

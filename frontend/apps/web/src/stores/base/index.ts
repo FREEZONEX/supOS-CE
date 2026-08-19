@@ -7,17 +7,17 @@ import {
   APP_TITLE,
   MENU_TARGET_PATH,
   STORAGE_PATH,
-  SUPOS_LANG,
-  SUPOS_UNS_TREE,
-  SUPOS_USER_TIPS_ENABLE,
+  APP_LANG,
+  APP_UNS_TREE,
+  APP_USER_TIPS_ENABLE,
 } from '@/common-types/constans.ts';
-import { getPersonConfigApi } from '@/apis/inter-api/uns.ts';
-import { getSystemConfig } from '@/apis/inter-api/system-config.ts';
-import { getUserInfo } from '@/apis/inter-api/auth';
+import { getPersonConfigApi } from '@/apis/core-api/uns.ts';
+import { getSystemConfig } from '@/apis/core-api/system-config.ts';
+import { getUserInfo } from '@/apis/core-api/auth';
+import { coreResourcesForResourceKeys, toLegacyResources } from '@/apis/core-api/core-adapter';
 
 import type { TBaseStore } from '@/stores/base/type.ts';
 import { defaultLanguage, initI18n, useI18nStore } from '../i18n-store.ts';
-import { getRoutesResourceApi } from '@/apis/inter-api/resource.ts';
 import {
   buildResourceTrees,
   type Criteria,
@@ -28,7 +28,7 @@ import {
   mapResource,
   multiGroupByCondition,
 } from '../utils.ts';
-import { getLangListApi } from '@/apis/inter-api/i18n.ts';
+import { getLangListApi } from '@/apis/core-api/i18n.ts';
 
 /**
  * 获取语言包
@@ -68,6 +68,14 @@ export const getLangList = async () => {
     return langList;
   }
 };
+
+const normalizeSystemInfo = (systemInfo: any = {}) => ({
+  ...(systemInfo ?? {}),
+  appTitle: systemInfo?.appTitle || APP_TITLE,
+  qualityName: systemInfo?.qualityName || '_quality',
+  timestampName: systemInfo?.timestampName || '_timestamp',
+  enableAutoCategorization: true,
+});
 /**
  * @description: 系统基础store 路由、用户信息、系统信息、当前菜单信息等
  *
@@ -89,8 +97,7 @@ export const initBaseContent = {
   currentUserInfo: {},
   systemInfo: { appTitle: '' },
   dataBaseType: [],
-  dashboardType: [],
-  userTipsEnable: storageOpt.getOrigin(SUPOS_USER_TIPS_ENABLE) || '',
+  userTipsEnable: storageOpt.getOrigin(APP_USER_TIPS_ENABLE) || '',
   pluginList: [],
   buttonList: [],
   loading: true,
@@ -103,7 +110,7 @@ export const useBaseStore: UseBoundStoreWithEqualityFn<StoreApi<TBaseStore>> = c
 
 // 设置用户tipsEnable
 export const setUserTipsEnable = (value: string) => {
-  storageOpt.setOrigin(SUPOS_USER_TIPS_ENABLE, value);
+  storageOpt.setOrigin(APP_USER_TIPS_ENABLE, value);
   useBaseStore.setState({
     userTipsEnable: value,
   });
@@ -133,30 +140,49 @@ const defaultThemeConfig = {
 const loadAndApplyTheme = async () => {
   try {
     const response = await fetch(`${STORAGE_PATH}${MENU_TARGET_PATH}/theme-config.json`);
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok || !contentType.includes('application/json')) {
+      return defaultThemeConfig;
+    }
     return await response.json();
-  } catch (error) {
-    console.log(error);
+  } catch {
     return defaultThemeConfig;
     // 可加载默认主题或保持原样
   }
 };
+
+const requestStatus = (result: PromiseSettledResult<any>) => {
+  if (result.status === 'fulfilled') {
+    return undefined;
+  }
+  return result.reason?.status || result.reason?.response?.status || result.reason?.code;
+};
+
+const resourcesFromUserKeys = (resourceKeys: string[] = []) =>
+  toLegacyResources(coreResourcesForResourceKeys(resourceKeys));
+const loadRoutesResource = async (info: any, systemInfo: any) => {
+  void systemInfo;
+  return resourcesFromUserKeys(info?.resourceKeys || []);
+}
+
 // edge版本 用户默认支持所有的权限和菜单
 // 更新路由基础方法 (私有)
 const updateBaseStore = async (isFirst: boolean = false) => {
   if (isFirst) {
     try {
-      // 首次需要同时拿到用户信息的url和路由
-      const [{ value: resource, reason }, { value: info }, { value: systemInfo }]: any = await Promise.allSettled([
-        getRoutesResourceApi(),
-        getUserInfo(),
-        getSystemConfig(),
-      ]);
+      // 首次需要先拿到用户信息，再按用户角色决定是否需要完整资源树。
+      const [infoResult, systemInfoResult] = await Promise.allSettled([getUserInfo(), getSystemConfig()]);
+      const info: any = infoResult.status === 'fulfilled' ? infoResult.value : undefined;
+      const systemInfo: any = systemInfoResult.status === 'fulfilled' ? systemInfoResult.value : {};
+      const resource: any = await loadRoutesResource(info, systemInfo);
+      const infoStatus = requestStatus(infoResult);
+      const routesStatus = infoStatus === 401 ? 401 : infoStatus;
       systemInfo.themeConfig = await loadAndApplyTheme();
       // 国际化语言包list
       await getLangList();
 
       // 通过用户的资源池  拿到 - 菜单资源 和 操作资源
-      const { buttonGroup: legacyButtonGroup, others } = multiGroupByCondition(info?.resourceList, criteria);
+      const { buttonGroup: legacyButtonGroup, others } = multiGroupByCondition(info?.resourceList || [], criteria);
       const buttonPermissionList =
         Array.isArray(info?.buttonList) && info.buttonList.length > 0
           ? info.buttonList
@@ -194,6 +220,7 @@ const updateBaseStore = async (isFirst: boolean = false) => {
         superAdmin: info?.superAdmin,
         buttonGroup,
       };
+      const normalizedSystemInfo = normalizeSystemInfo(systemInfo);
       useBaseStore.setState({
         ...initBaseContent,
         homeTree,
@@ -204,47 +231,42 @@ const updateBaseStore = async (isFirst: boolean = false) => {
         originMenu: resource,
         allButtonGroup,
         // pluginList,
-        routesStatus: reason?.status,
+        routesStatus,
         currentUserInfo,
-        systemInfo: {
-          ...(systemInfo ?? {}),
-          appTitle: systemInfo?.appTitle || APP_TITLE,
-        },
+        systemInfo: normalizedSystemInfo,
         containerList,
         buttonList: _buttonList,
-        dataBaseType: systemInfo?.containerMap?.tdengine?.envMap?.service_is_show ? ['tdengine'] : ['timescale'],
-        mqttBrokeType: systemInfo?.containerMap?.emqx?.name,
-        dashboardType:
-          containerList.aboutUs
-            ?.filter((i) => ['fuxa', 'grafana'].includes(i.name) && i.envMap?.service_is_show)
-            ?.map((m) => m.name) ?? [],
+        dataBaseType: normalizedSystemInfo?.containerMap?.tdengine?.envMap?.service_is_show
+          ? ['tdengine']
+          : ['timescale'],
+        mqttBrokeType: normalizedSystemInfo?.containerMap?.emqx?.name,
       });
       // 设置新手引导
-      guideConfig({ systemInfo, menuGroup, info });
+      guideConfig({ systemInfo: normalizedSystemInfo, menuGroup, info });
 
       // 设置unsTree信息
-      const unsTreeInfo = storageOpt.get(SUPOS_UNS_TREE);
+      const unsTreeInfo = storageOpt.get(APP_UNS_TREE);
       if (unsTreeInfo) {
-        storageOpt.set(SUPOS_UNS_TREE, { ...unsTreeInfo, state: { lazyTree: systemInfo?.lazyTree } });
+        storageOpt.set(APP_UNS_TREE, { ...unsTreeInfo, state: { lazyTree: normalizedSystemInfo?.lazyTree } });
       } else {
-        storageOpt.set(SUPOS_UNS_TREE, { state: { lazyTree: systemInfo?.lazyTree }, version: 0 });
+        storageOpt.set(APP_UNS_TREE, { state: { lazyTree: normalizedSystemInfo?.lazyTree }, version: 0 });
       }
       // 请求国际化语言
       const _lang = await fetchUserLanguage({
         userId: currentUserInfo?.sub,
-        lang: systemInfo?.lang,
+        lang: normalizedSystemInfo?.lang,
       });
       // 首次需要初始化语言包
       return await initI18n(_lang);
     } catch (_) {
       console.log(_);
       // 首次需要初始化语言包
-      return await initI18n(storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage);
+      return await initI18n(storageOpt.getOrigin(APP_LANG) || defaultLanguage);
     }
   } else {
     const baseState = useBaseStore.getState();
     // 重新获取菜单
-    return getRoutesResourceApi().then((resource: ResourceProps[]) => {
+    return loadRoutesResource(baseState?.currentUserInfo, baseState?.systemInfo).then((resource: ResourceProps[]) => {
       const allRoutes = filterRouteByUserResource(
         mapResource(resource.filter((r: ResourceProps) => r.type !== 3)),
         baseState?.currentUserInfo?.pageList,
@@ -307,44 +329,100 @@ export const setPluginList = (pluginList: any[]) => {
   });
 };
 
-const getPreferredEnvLanguage = () => import.meta.env.REACT_APP_LOCAL_LANG || import.meta.env.REACT_APP_OS_LANG;
+const getPreferredEnvLanguage = () =>
+  import.meta.env.VITE_LANGUAGE ||
+  import.meta.env.VITE_OS_LANG ||
+  import.meta.env.VITE_APP_LANG ||
+  import.meta.env.REACT_APP_LOCAL_LANG ||
+  import.meta.env.REACT_APP_OS_LANG;
 
 const fetchUserLanguage = async (info: { userId?: string; lang?: string }) => {
   const { lang, userId } = info;
   try {
     if (!userId) {
-      return getPreferredEnvLanguage() || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
+      return getPreferredEnvLanguage() || lang || storageOpt.getOrigin(APP_LANG) || defaultLanguage;
     } else {
       const response = await getPersonConfigApi(userId);
       return (
-        response.mainLanguage ||
-        getPreferredEnvLanguage() ||
-        lang ||
-        storageOpt.getOrigin(SUPOS_LANG) ||
-        defaultLanguage
+        response.mainLanguage || getPreferredEnvLanguage() || lang || storageOpt.getOrigin(APP_LANG) || defaultLanguage
       );
     }
   } catch (error) {
     console.error('配置请求失败', error);
-    return getPreferredEnvLanguage() || lang || storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
+    return getPreferredEnvLanguage() || lang || storageOpt.getOrigin(APP_LANG) || defaultLanguage;
+  }
+};
+
+export const fetchLaunchpadBaseStore = async (): Promise<any> => {
+  useBaseStore.setState({
+    loading: true,
+  });
+
+  try {
+    const [infoResult, systemInfoResult] = await Promise.allSettled([getUserInfo(), getSystemConfig()]);
+    const info: any = infoResult.status === 'fulfilled' ? infoResult.value : undefined;
+    const systemInfo: any = systemInfoResult.status === 'fulfilled' ? systemInfoResult.value : {};
+    const infoStatus = requestStatus(infoResult);
+    const routesStatus = infoStatus === 401 ? 401 : infoStatus;
+    const normalizedSystemInfo = normalizeSystemInfo(systemInfo);
+    normalizedSystemInfo.themeConfig = await loadAndApplyTheme();
+
+    if (routesStatus === 401) {
+      useBaseStore.setState({
+        ...initBaseContent,
+        routesStatus,
+        systemInfo: normalizedSystemInfo,
+        loading: false,
+      });
+      return;
+    }
+    await getLangList();
+
+    const buttonList = Array.isArray(info?.buttonList) ? info.buttonList : [];
+    const currentUserInfo = {
+      ...info,
+      roleList: info?.roleList || [],
+      roleString: info?.roleList?.map((i: any) => i.roleName)?.join('/') || '',
+      buttonList,
+      pageList: info?.resourceList || [],
+      superAdmin: info?.superAdmin,
+      buttonGroup: buttonList.map((uri: string) => ({ uri })),
+    };
+    const lang = await fetchUserLanguage({
+      userId: currentUserInfo?.sub,
+      lang: normalizedSystemInfo?.lang,
+    });
+    await initI18n(lang);
+
+    useBaseStore.setState({
+      ...initBaseContent,
+      routesStatus,
+      currentUserInfo,
+      systemInfo: normalizedSystemInfo,
+      containerList: filterContainerList(normalizedSystemInfo?.containerMap || {}),
+      buttonList,
+      loading: false,
+    });
+  } catch (error) {
+    console.log(error);
+    await initI18n(storageOpt.getOrigin(APP_LANG) || defaultLanguage);
+    useBaseStore.setState({
+      loading: false,
+    });
   }
 };
 
 export const fetchSystemInfo = async (fetchRoute?: boolean): Promise<any> => {
   return await getSystemConfig().then((systemInfo) => {
+    const normalizedSystemInfo = normalizeSystemInfo(systemInfo);
     const containerList = filterContainerList(systemInfo?.containerMap || {});
     useBaseStore.setState({
-      systemInfo: {
-        ...(systemInfo ?? {}),
-        appTitle: systemInfo?.appTitle || APP_TITLE,
-      },
+      systemInfo: normalizedSystemInfo,
       containerList,
-      dataBaseType: systemInfo?.containerMap?.tdengine?.envMap?.service_is_show ? ['tdengine'] : ['timescale'],
-      mqttBrokeType: systemInfo?.containerMap?.emqx?.name,
-      dashboardType:
-        containerList.aboutUs
-          ?.filter((i) => ['fuxa', 'grafana'].includes(i.name) && i.envMap?.service_is_show)
-          ?.map((m) => m.name) ?? [],
+      dataBaseType: normalizedSystemInfo?.containerMap?.tdengine?.envMap?.service_is_show
+        ? ['tdengine']
+        : ['timescale'],
+      mqttBrokeType: normalizedSystemInfo?.containerMap?.emqx?.name,
     });
     if (fetchRoute) {
       return fetchBaseStore?.();

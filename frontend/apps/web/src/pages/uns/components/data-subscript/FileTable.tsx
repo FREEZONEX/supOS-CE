@@ -1,8 +1,8 @@
 import ProTable from '@/components/pro-table';
+import ProSearch from '@/components/pro-search';
 import { usePagination, useTranslate } from '@/hooks';
-import { subscribeFilePage } from '@/apis/inter-api/uns.ts';
-import { Button, Flex, Input } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { subscribeFilePage } from '@/apis/core-api/uns.ts';
+import { Button, Flex } from 'antd';
 import { useState } from 'react';
 import styles from './index.module.scss';
 
@@ -64,22 +64,16 @@ const Index = ({
     <>
       {!isSimple && (
         <Flex justify="flex-end" gap={8} align="center" style={{ marginBottom: 16 }}>
-          <Input
+          <ProSearch
+            size="sm"
+            className="custom-search-page"
             value={searchValue}
             onChange={(e) => {
               setSearchValue(e.target.value);
             }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                onSearch();
-              }
-            }}
+            onSearch={onSearch}
             placeholder={formatMessage('common.searchPlaceholderTem')}
-            style={{ width: 300 }}
           />
-          <Button onClick={onSearch} type="primary" icon={<SearchOutlined />}>
-            {formatMessage('common.search')}
-          </Button>
         </Flex>
       )}
       <ProTable

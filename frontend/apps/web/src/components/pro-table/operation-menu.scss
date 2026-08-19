@@ -1,0 +1,94 @@
+:global(.pro-table-operation-menu) {
+  .ant-dropdown-menu {
+    min-width: 131px;
+    padding: 4px;
+    border-radius: 3px;
+    box-shadow: var(--ui-boxshadow-color, 0 2px 6px rgba(0, 0, 0, 0.2));
+  }
+
+  .ant-dropdown-menu-item,
+  .ant-dropdown-menu-submenu-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    line-height: 22px;
+    border-radius: 2px;
+    color: var(--ui-text-color);
+
+    &:hover,
+    &.ant-dropdown-menu-item-active {
+      background-color: var(--ui-menu-hover-color) !important;
+      color: var(--ui-text-color);
+    }
+  }
+
+  .ant-dropdown-menu-item-danger {
+    color: var(--ui-error-color, #da1e28);
+
+    .ant-dropdown-menu-item-icon,
+    .ant-dropdown-menu-item-icon svg {
+      color: inherit;
+    }
+
+    &:hover,
+    &.ant-dropdown-menu-item-active {
+      color: var(--ui-error-color, #da1e28);
+      background-color: var(--ui-menu-hover-color) !important;
+    }
+  }
+
+  .ant-dropdown-menu-title-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ant-dropdown-menu-submenu-title {
+    padding-inline-end: 28px;
+
+    > .ant-dropdown-menu-item-icon,
+    > svg.ant-dropdown-menu-item-icon {
+      flex: 0 0 16px;
+      align-self: center;
+      margin: 0 !important;
+      line-height: 0;
+      vertical-align: middle;
+    }
+  }
+
+  .ant-dropdown-menu-item-icon {
+    width: 16px;
+    min-width: 16px;
+    margin-inline-end: 0 !important;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+
+    svg {
+      width: 16px !important;
+      height: 16px !important;
+    }
+  }
+
+  .ant-dropdown-menu-submenu-title .ant-dropdown-menu-item-icon {
+    width: 16px;
+    min-width: 16px;
+    margin-inline-end: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 16px !important;
+      height: 16px !important;
+    }
+  }
+
+  .ant-dropdown-menu-item-divider {
+    margin: 4px 0;
+    background-color: var(--ui-line-color) !important;
+    opacity: 1 !important;
+  }
+}

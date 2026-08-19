@@ -147,10 +147,10 @@ const DatabaseInfoModal = forwardRef<ModalRef, ModalProps>((_props, ref) => {
                   <Flex
                     title={item.value}
                     style={{
-                      background: 'var(--supos-bg-color)',
+                      background: 'var(--ui-bg-color)',
                       padding: '4px 12px',
                       borderRadius: '3px',
-                      border: '1px solid #E0E0E0',
+                      border: '1px solid var(--ui-select-card-color)',
                       marginTop: 8,
                     }}
                     align="center"

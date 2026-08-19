@@ -16,6 +16,10 @@
     .useCreateModalForm {
       font-weight: bold;
 
+      .ant-form-item-explain-error {
+        font-weight: 400;
+      }
+
       .namespaceValue {
         width: 100%;
         word-break: break-all;
@@ -23,8 +27,32 @@
 
       .dashedWrap {
         padding: 20px;
-        border: 1px dashed #c6c6c6;
+        border: 1px dashed var(--ui-line-color);
         border-radius: 6px;
+
+        .ant-input,
+        .ant-select .ant-select-selector {
+          font-weight: 400;
+        }
+
+        .ant-input::placeholder {
+          font-weight: 400;
+        }
+
+        .ant-select-selection-placeholder {
+          font-weight: 400;
+        }
+
+        .ant-form-item-explain-error {
+          font-weight: 400;
+          font-size: 14px;
+          line-height: 22px;
+          white-space: nowrap;
+        }
+
+        .ant-form-item-has-error .ant-form-item-additional {
+          overflow: visible;
+        }
       }
 
       .ant-select-selector {
@@ -54,15 +82,15 @@
 
     .functionBox {
       font-weight: bold;
-      border-bottom: 1px solid #c6c6c6;
+      border-bottom: 1px solid var(--ui-line-color);
       margin-bottom: 22px;
 
       .rightSection {
-        border: 1px solid #d9d9d9;
+        border: 1px solid var(--ui-line-color);
         border-radius: 6px;
         padding: 12px;
         min-width: 200px;
-        background-color: var(--supos-user-color);
+        background-color: var(--ui-user-color);
         display: flex;
         flex-direction: column;
         justify-content: center;

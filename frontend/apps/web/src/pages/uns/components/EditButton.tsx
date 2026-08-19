@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button, Flex, App, Form, Input, Select, InputNumber, Divider, ConfigProvider } from 'antd';
-import { AddAlt, SubtractAlt } from '@carbon/icons-react';
+import { AddAlt, SubtractAlt, AddLarge } from '@/components/lucide-icon/carbon';
+import { titleIconProps } from '@/components/lucide-icon/icon-props';
 import { useTranslate } from '@/hooks';
-import { getTypes, detectModel, editModel } from '@/apis/inter-api/uns';
+import { getTypes, detectModel, editModel } from '@/apis/core-api/uns';
 import Icon from '@ant-design/icons';
 
 import type { FieldItem } from '@/pages/uns/types';
@@ -10,8 +11,9 @@ import { AuthButton } from '@/components/auth';
 import ProModal from '@/components/pro-modal';
 import FileEdit from '@/components/svg-components/FileEdit';
 import { useBaseStore } from '@/stores/base';
+import { MAX_LENGTHS } from '@/utils/limits';
 
-const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
+const EditButton = ({ modelInfo, getModel, auth, editType, triggerIcon = 'edit' }: any) => {
   const { alias, dataType, fields = [], moduleId, extendFieldUsed } = modelInfo || {};
   const showMoreBtn = editType === 'file' && dataType === 1 && !moduleId;
   const { message, modal } = App.useApp();
@@ -24,7 +26,13 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
 
   const fieldList = Form.useWatch('fields', form) || [];
 
-  const { qualityName = 'quality', timestampName = 'timeStamp' } = useBaseStore((state) => state.systemInfo);
+  const { qualityName = '_quality', timestampName = '_timestamp' } = useBaseStore((state) => state.systemInfo);
+
+  useEffect(() => {
+    if (show) {
+      form.setFieldsValue({ fields: fields || [] });
+    }
+  }, [show, fields, form]);
 
   const onClose = () => {
     setShow(false);
@@ -32,12 +40,12 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
 
   const editRequest = (fields: FieldItem[]) => {
     setLoading(true);
-    editModel({ alias, [dataType === 8 ? 'jsonFields' : 'fields']: fields, extendFieldUsed })
+    editModel({ ...modelInfo, alias, [dataType === 8 ? 'jsonFields' : 'fields']: fields, extendFieldUsed })
       .then(() => {
         message.success(formatMessage('uns.editSuccessful'));
         setLoading(false);
         onClose();
-        getModel();
+        getModel?.(fields);
       })
       .catch(() => {
         setLoading(false);
@@ -317,15 +325,19 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
         <AuthButton
           auth={auth}
           onClick={() => setShow(true)}
-          style={{ border: '1px solid #C6C6C6', background: 'var(--supos-uns-button-color)' }}
+          style={{ border: '1px solid var(--ui-line-color)', background: 'var(--ui-uns-button-color)' }}
           icon={
-            <Icon
-              component={FileEdit}
-              style={{
-                fontSize: 17,
-                color: 'var(--supos-text-color)',
-              }}
-            />
+            triggerIcon === 'add' ? (
+              <AddLarge {...titleIconProps} style={{ color: 'var(--ui-text-color)' }} />
+            ) : (
+              <Icon
+                component={FileEdit}
+                style={{
+                  fontSize: 17,
+                  color: 'var(--ui-text-color)',
+                }}
+              />
+            )
           }
         />
       </Flex>
@@ -371,7 +383,7 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: 8,
-                                    borderBottom: '1px solid var(--supos-table-tr-color)',
+                                    borderBottom: '1px solid var(--ui-table-tr-color)',
                                     wordBreak: 'break-all',
                                   }}
                                 >
@@ -397,10 +409,10 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
                                       },
                                       { validator: validateUnique }, // 添加自定义校验规则
                                       {
-                                        max: 63,
+                                        max: MAX_LENGTHS.name,
                                         message: formatMessage('uns.labelMaxLength', {
                                           label: formatMessage('common.name'),
-                                          length: 63,
+                                          length: MAX_LENGTHS.name,
                                         }),
                                       },
                                       // { validator: validateSystemField }, // 添加自定义校验规则
@@ -506,15 +518,17 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
                                 triggerNameFieldValidation();
                               }}
                               style={{
-                                border: '1px solid #CBD5E1',
-                                color: 'var(--supos-text-color)',
-                                backgroundColor: 'var(--supos-uns-button-color)',
+                                border: '1px solid var(--ui-line-color)',
+                                color: 'var(--ui-text-color)',
+                                backgroundColor: 'var(--ui-uns-button-color)',
                                 height: moreField ? '70px' : '32px',
                               }}
                             />
                           )}
                         </Flex>
-                        {moreField && <Divider dashed style={{ borderColor: '#c6c6c6', margin: '12px 0' }} />}
+                        {moreField && (
+                          <Divider dashed style={{ borderColor: 'var(--ui-line-color)', margin: '12px 0' }} />
+                        )}
                       </div>
                     );
                   })}
@@ -532,8 +546,8 @@ const EditButton = ({ modelInfo, getModel, auth, editType }: any) => {
                     }}
                     block
                     style={{
-                      color: 'var(--supos-text-color)',
-                      backgroundColor: 'var(--supos-uns-button-color)',
+                      color: 'var(--ui-text-color)',
+                      backgroundColor: 'var(--ui-uns-button-color)',
                     }}
                     icon={<AddAlt size={20} />}
                   />

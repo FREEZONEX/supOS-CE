@@ -1,6 +1,6 @@
 import { type FC, useEffect, useState, useRef } from 'react';
 import { Form, Flex, Select, Divider, Input } from 'antd';
-import { ArrowRight } from '@carbon/icons-react';
+import { ArrowRight } from '@/components/lucide-icon/carbon';
 import { FUNCTION_TYPES } from '@/pages/uns/components/use-create-modal/components/file/timeSeries/FunctionConfig';
 import { useTranslate } from '@/hooks';
 import SearchSelect from '@/pages/uns/components/use-create-modal/components/SearchSelect';
@@ -102,7 +102,7 @@ const FunctionList: FC<any> = () => {
         <SearchSelect onChange={onChange} labelInValue />
       </Form.Item>
 
-      <Divider style={{ borderColor: '#c6c6c6' }} />
+      <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
       <Form.List name="functions">
         {(items) => (
           <>
@@ -154,7 +154,7 @@ const FunctionList: FC<any> = () => {
           />
         </div>
       </div>
-      {/* <Divider style={{ borderColor: '#c6c6c6' }} />
+      {/* <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
       <div className="keyBox">
         <div className="keyLabel">{formatMessage('streams.havingCondition')}</div>
         <div style={{ width: 600, marginTop: '10px' }}>
@@ -169,7 +169,7 @@ const FunctionList: FC<any> = () => {
           />
         </div>
       </div> */}
-      <Divider style={{ borderColor: '#c6c6c6' }} />
+      <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
     </>
   );
 };

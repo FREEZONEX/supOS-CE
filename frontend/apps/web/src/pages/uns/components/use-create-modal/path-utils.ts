@@ -1,6 +1,7 @@
+import { MAX_LENGTHS } from '@/utils/limits';
+
 const PATH_SEGMENT_REG = /^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/;
-const RESERVED_FOLDER_NAMES = new Set(['label', 'template']);
-const MAX_PATH_SEGMENT_LENGTH = 63;
+const RESERVED_FOLDER_NAMES = new Set(['label']);
 
 const CATEGORY_SEGMENT_TO_PARENT_DATA_TYPE: Record<string, number> = {
   State: 1,
@@ -65,7 +66,7 @@ export const validateNamespaceName = (
 ): NamespaceValidationResult => {
   if (!name) return null;
   if (!options.isCreateFolder && name.endsWith('/')) {
-    return { key: 'uns.namespaceCategoryRequired' };
+    return { key: 'uns.nameCannotEndWithSlash' };
   }
   if (name.startsWith('/') || name.endsWith('/') || name.includes('//')) {
     return { key: 'uns.namespaceNameFormat' };
@@ -78,8 +79,8 @@ export const validateNamespaceName = (
     if (!segment || !PATH_SEGMENT_REG.test(segment)) {
       return { key: 'uns.namespaceNameFormat' };
     }
-    if (segment.length > MAX_PATH_SEGMENT_LENGTH) {
-      return { key: 'uns.namespaceSegmentTooLong', values: { length: MAX_PATH_SEGMENT_LENGTH } };
+    if (segment.length > MAX_LENGTHS.name) {
+      return { key: 'uns.namespaceSegmentTooLong', values: { length: MAX_LENGTHS.name } };
     }
     if (options.isCreateFolder || index <= lastDirIndex) {
       if (RESERVED_FOLDER_NAMES.has(segment.toLowerCase())) {

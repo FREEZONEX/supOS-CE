@@ -3,7 +3,7 @@
     height: 250px;
     border-radius: 4px;
     border: none;
-    background: var(--supos-charttop-bg-color);
+    background: var(--ui-charttop-bg-color);
   }
 
   .ant-upload-list {
@@ -12,6 +12,20 @@
 
     .ant-upload-list-item-container {
       overflow: hidden;
+    }
+  }
+}
+
+.dark,
+.chartreuseDark {
+  .com-dragger-upload {
+    .ant-upload-drag {
+      border-radius: 3px;
+      border: 1px dashed var(--ui-control-border);
+
+      &:hover {
+        border-color: var(--ui-theme-color);
+      }
     }
   }
 }

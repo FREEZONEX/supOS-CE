@@ -1,7 +1,8 @@
 .custom-menu-header {
-  border-bottom: 1px solid #e0e0e0;
-  background: var(--background-color-light);
-  height: 48px;
+  border-bottom: 1px solid var(--ui-line-color, #e0e0e0);
+  border-left: 0;
+  background: var(--ui-bg-color, #fff);
+  height: var(--ui-bar-height, 52px);
   flex-shrink: 0;
   display: flex;
   overflow: hidden;
@@ -18,8 +19,8 @@
 
   .header {
     flex-shrink: 0;
-    max-width: 200px;
-    padding-left: 16px;
+    max-width: var(--ui-bar-height, 52px);
+    padding-left: 0;
     color: var(--color-font);
     font-weight: 600;
     display: flex;
@@ -41,11 +42,11 @@
     .menu-toggle {
       align-items: center;
       justify-content: center;
-      width: 48px;
-      height: 48px;
+      width: var(--ui-bar-height, 52px);
+      height: var(--ui-bar-height, 52px);
       cursor: pointer;
       margin-right: 10px;
-      margin-left: -16px;
+      margin-left: 0;
 
       &:hover {
         background-color: rgb(141 141 141 / 12%);
@@ -64,35 +65,26 @@
     justify-content: flex-start;
     align-items: center;
 
-    .ant-splitter-bar-dragger {
-      padding: 0 8px;
-    }
-
-    .menu {
-      overflow: hidden;
-
-      .ant-menu-horizontal {
-        border-bottom-color: transparent;
-        line-height: 47px;
-      }
-    }
-
     .tabs {
+      width: 100%;
       overflow: hidden;
       height: 100%;
       display: flex;
       justify-content: flex-start;
       align-items: center;
-      padding-left: 16px;
+      padding: 0 20px;
+      box-sizing: border-box;
     }
   }
 
   .footer {
     flex-shrink: 0;
     height: 100%;
+    padding-right: 20px;
+    box-sizing: border-box;
 
     .icon-wrapper {
-      color: var(--supos-text-color) !important;
+      color: var(--ui-text-color) !important;
     }
   }
 }
@@ -103,7 +95,7 @@
 // }
 
 .user-guide-icon {
-  color: var(--supos-text-color);
+  color: var(--ui-text-color);
   font-size: 16px;
   width: 100%;
   height: 100%;
@@ -111,9 +103,9 @@
 }
 
 .custom-menu-header-drawer-root {
-  top: 48px;
-  height: calc(100vh - 48px);
-  color: var(--supos-text-color);
+  top: var(--ui-bar-height, 52px);
+  height: calc(100vh - var(--ui-bar-height, 52px));
+  color: var(--ui-text-color);
 }
 
 .custom-menu-header-drawer {
@@ -134,7 +126,7 @@
   }
 
   .ant-drawer-content-wrapper {
-    top: 48px;
+    top: var(--ui-bar-height, 52px);
   }
 }
 

@@ -1,6 +1,48 @@
 .tier0-login {
+  position: relative;
   min-height: 100vh;
   background: #fff;
+}
+
+.tier0-login__language {
+  position: absolute;
+  z-index: 2;
+  top: 32px;
+  right: 40px;
+  width: 126px;
+
+  .ant-select-selector {
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 0;
+    background: #fff !important;
+    color: #151515 !important;
+    box-shadow: none !important;
+  }
+
+  .ant-select-selection-item {
+    color: #151515 !important;
+  }
+
+  .ant-select-arrow {
+    color: #151515 !important;
+  }
+}
+
+.tier0-login__language-popup {
+  background: #fff !important;
+
+  .ant-select-item {
+    color: #151515 !important;
+  }
+
+  .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+    background: #f4f4f4 !important;
+  }
+
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+    background: #e8e8e8 !important;
+    color: #151515 !important;
+  }
 }
 
 .tier0-login__layout {
@@ -50,6 +92,11 @@
   letter-spacing: 0;
 }
 
+.tier0-login__warning {
+  margin-bottom: 20px;
+  border-radius: 6px;
+}
+
 .tier0-login__form {
   .ant-form-item {
     margin-bottom: 24px;
@@ -70,7 +117,7 @@
   .ant-input-affix-wrapper {
     height: 40px;
     padding: 6px 8px;
-    border: 1px solid #d9d9d9;
+    border: 1px solid var(--ui-line-color);
     border-radius: 0;
     background: #fff;
     color: #151515;
@@ -96,7 +143,7 @@
     margin-left: 0;
     padding-left: 16px;
     padding-right: 16px;
-    border-left: 1px solid #d9d9d9;
+    border-left: 1px solid var(--ui-line-color);
     color: #1d1d1d;
   }
 
@@ -110,7 +157,7 @@
   .ant-input-affix-wrapper:focus,
   .ant-input-affix-wrapper-focused,
   .ant-input:focus {
-    border-color: var(--supos-theme-color);
+    border-color: var(--ui-theme-color);
     box-shadow: none;
   }
 
@@ -118,28 +165,33 @@
     height: 40px;
     margin-top: 24px;
     border: 0;
-    border-radius: 0;
-    background: var(--supos-theme-color);
-    color: #fff;
+    border-radius: 4px;
+    background: var(--ui-primary-button-bg);
+    color: var(--ui-primary-button-text);
     box-shadow: none;
     font-size: 16px;
-    font-weight: 400;
+    font-weight: 500;
     line-height: 24px;
   }
 
   .ant-btn-primary:hover,
   .ant-btn-primary:focus {
-    background: var(--supos-theme-button-hover-color);
-    color: #fff;
+    background: var(--ui-primary-button-bg-hover);
+    color: var(--ui-primary-button-text);
   }
 
   .ant-btn-primary:active {
-    background: var(--supos-theme-button-active-color);
-    color: #fff;
+    background: var(--ui-primary-button-bg-hover);
+    color: var(--ui-primary-button-text);
   }
 }
 
-@media (max-width: 980px) {
+@media (width <= 980px) {
+  .tier0-login__language {
+    top: 24px;
+    right: 24px;
+  }
+
   .tier0-login__layout {
     grid-template-columns: 1fr;
   }
@@ -155,7 +207,12 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (width <= 767px) {
+  .tier0-login__language {
+    top: 20px;
+    right: 20px;
+  }
+
   .tier0-login__visual {
     display: none;
   }
@@ -169,7 +226,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .tier0-login__form {
     .ant-form-item {
       margin-bottom: 22px;

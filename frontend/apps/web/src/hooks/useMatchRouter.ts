@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { useLocation, useOutlet, type Location, matchRoutes } from 'react-router';
-import { useDeepCompareEffect } from 'ahooks';
 import { useTranslate } from '@/hooks';
 import { useBaseStore } from '@/stores/base';
 import { getRoutesDom } from '@/routers';
@@ -17,6 +16,7 @@ interface MatchRouteType {
   pathname: string;
   // tab的key，目前和pathname一样
   routePath: string;
+  tabKey: string;
   // 路由，和pathname区别是，详情页 path /:id，routePath是 /1
   path: string;
   // location对象，存储起来用来二次导航
@@ -25,6 +25,20 @@ interface MatchRouteType {
   moduleName?: string;
   // 模块联邦父级菜单
   parentPath?: string;
+  // 是否支持多实例tab（同一路由可以打开多个tab）
+  multiInstance?: boolean;
+  // 是否允许当前路由通过 location.state.tabName 更新页签标题
+  dynamicTabName?: boolean;
+  // 是否允许关闭页签
+  closable?: boolean;
+}
+
+function getMultiInstanceTabKey(location: Location) {
+  const searchParams = new URLSearchParams(location.search || '');
+  const id = searchParams.get('id');
+  const nodeKey = searchParams.get('nodeKey');
+  const instanceKey = id || nodeKey;
+  return instanceKey ? `${location.pathname}?${id ? 'id' : 'nodeKey'}=${instanceKey}` : location.pathname;
 }
 
 // 匹配路由，拿到信息
@@ -34,39 +48,45 @@ export function useMatchRoute(): MatchRouteType | undefined {
     systemInfo: state.systemInfo,
     currentUserInfo: state.currentUserInfo,
   }));
-  // 获取路由组件实例
   const children = useOutlet();
-  // 获取嵌套路由信息
   const formatMessage = useTranslate();
-  // 获取当前url
   const location = useLocation();
 
-  const [matchRoute, setMatchRoute] = useState<MatchRouteType | undefined>();
-
-  // 监听pathname变了，说明路由有变化，重新匹配，返回新路由信息
-  useDeepCompareEffect(() => {
-    // 获取当前匹配的路由
+  return useMemo(() => {
     const matches = matchRoutes(getRoutesDom({ menuGroup, systemInfo, currentUserInfo }), location.pathname) || [];
     const lastRoute = matches.at(-1)?.route;
 
-    if (!lastRoute?.handle) return;
+    if (!lastRoute?.path && !lastRoute?.handle) return undefined;
 
-    setMatchRoute({
+    const normalizedRoutePath = lastRoute?.path?.startsWith('/') ? lastRoute.path : `/${lastRoute?.path || ''}`;
+    const routeHandle = (lastRoute?.handle as any) || {};
+    const multiInstance = routeHandle.multiInstance;
+    const dynamicTabName = routeHandle.dynamicTabName === true || multiInstance;
+    const routeTabKey = typeof routeHandle.tabKey === 'string' ? routeHandle.tabKey : undefined;
+    const fallbackShowName =
+      typeof lastRoute?.path === 'string' && lastRoute.path !== '*'
+        ? lastRoute.path.replace(/^\//, '')
+        : location.pathname;
+
+    return {
       title: formatShowName({
-        code: (lastRoute?.handle as any)?.code,
-        showName: (lastRoute?.handle as any)?.showName,
+        code: routeHandle.code,
+        showName: routeHandle.showName,
         formatMessage,
+        finallyShowName: fallbackShowName,
       }),
-      icon: (lastRoute?.handle as any)?.icon,
-      path: (lastRoute?.handle as any)?.path,
+      icon: routeHandle.icon,
+      path: routeHandle.path || normalizedRoutePath,
       pathname: location.pathname,
       children,
-      routePath: lastRoute?.path || '',
-      moduleName: (lastRoute?.handle as any)?.moduleName,
-      parentPath: (lastRoute?.handle as any)?.parentPath,
+      routePath: normalizedRoutePath,
+      tabKey: routeTabKey || (multiInstance ? getMultiInstanceTabKey(location) : normalizedRoutePath),
+      moduleName: routeHandle.moduleName,
+      parentPath: routeHandle.parentPath,
+      multiInstance,
+      dynamicTabName,
+      closable: routeHandle.closable !== false,
       location,
-    });
-  }, [location, menuGroup, systemInfo, currentUserInfo, formatMessage, children]);
-
-  return matchRoute;
+    };
+  }, [children, currentUserInfo, formatMessage, location, menuGroup, systemInfo]);
 }

@@ -1,0 +1,74 @@
+.allProjects {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    .title {
+      margin: 0;
+      font-family: Inter, 'IBM Plex Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 28px;
+      letter-spacing: -0.1px;
+      color: var(--ui-text-color);
+    }
+
+    .actions {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      gap: 12px;
+
+      .searchInput {
+        width: min(280px, 40vw);
+      }
+
+      // 保证视图切换图标垂直居中、不被裁切
+      :global(.ant-segmented-item-label) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+      }
+
+      // antd 会给 icon 外包一层 .ant-segmented-item-icon，行高撑出竖向 strut 导致图标偏上/被切
+      :global(.ant-segmented-item-icon) {
+        display: inline-flex;
+        align-items: center;
+        margin: 0;
+        line-height: 0;
+      }
+    }
+  }
+
+  .emptyState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px;
+  }
+}
+
+@media (width <= 640px) {
+  .allProjects {
+    .header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .actions {
+      justify-content: space-between;
+
+      .searchInput {
+        flex: 1;
+        width: auto;
+      }
+    }
+  }
+}

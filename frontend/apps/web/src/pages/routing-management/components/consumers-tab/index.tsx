@@ -18,6 +18,7 @@ import {
 } from 'antd';
 import { Add, Renew, TrashCan, Edit } from '@carbon/icons-react';
 import ProTable from '@/components/pro-table';
+import ProSearch from '@/components/pro-search';
 import {
   getConsumers,
   createConsumer,
@@ -38,10 +39,11 @@ import {
   getConsumerJwt,
   createConsumerJwt,
   deleteConsumerJwt,
-} from '@/apis/inter-api/kong';
+} from '@/apis/core-api/kong';
 import useKongTable from '../../hooks/useKongTable';
 import useKongModal from '../../hooks/useKongModal';
 import useTranslate from '@/hooks/useTranslate';
+import { mergeDeleteConfirmProps } from '@/utils/delete-confirm-modal';
 
 const JWT_ALGORITHMS = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'];
 
@@ -130,30 +132,34 @@ const ConsumersTab: FC = () => {
   const handleDeleteCred = useCallback(
     (credId: string) => {
       if (!detailRecord?.id) return;
-      modal.confirm({
-        title: formatMessage('kong.deleteCredential'),
-        okButtonProps: { danger: true },
-        onOk: async () => {
-          switch (credType) {
-            case 'basic-auth':
-              await deleteConsumerBasicAuth(detailRecord.id, credId);
-              break;
-            case 'key-auth':
-              await deleteConsumerKeyAuth(detailRecord.id, credId);
-              break;
-            case 'hmac-auth':
-              await deleteConsumerHmacAuth(detailRecord.id, credId);
-              break;
-            case 'oauth2':
-              await deleteConsumerOAuth2(detailRecord.id, credId);
-              break;
-            case 'jwt':
-              await deleteConsumerJwt(detailRecord.id, credId);
-              break;
-          }
-          fetchCredentials(detailRecord.id, credType);
-        },
-      });
+      modal.confirm(
+        mergeDeleteConfirmProps(
+          {
+            title: formatMessage('kong.deleteCredential'),
+            onOk: async () => {
+              switch (credType) {
+                case 'basic-auth':
+                  await deleteConsumerBasicAuth(detailRecord.id, credId);
+                  break;
+                case 'key-auth':
+                  await deleteConsumerKeyAuth(detailRecord.id, credId);
+                  break;
+                case 'hmac-auth':
+                  await deleteConsumerHmacAuth(detailRecord.id, credId);
+                  break;
+                case 'oauth2':
+                  await deleteConsumerOAuth2(detailRecord.id, credId);
+                  break;
+                case 'jwt':
+                  await deleteConsumerJwt(detailRecord.id, credId);
+                  break;
+              }
+              fetchCredentials(detailRecord.id, credType);
+            },
+          },
+          formatMessage
+        )
+      );
     },
     [modal, detailRecord, credType, fetchCredentials, formatMessage]
   );
@@ -420,14 +426,18 @@ const ConsumersTab: FC = () => {
 
   const handleDelete = useCallback(
     (record: any) => {
-      modal.confirm({
-        title: formatMessage('kong.deleteConsumer', { name: record.username ?? record.id }),
-        okButtonProps: { danger: true },
-        onOk: async () => {
-          await deleteConsumer(record.id);
-          refresh();
-        },
-      });
+      modal.confirm(
+        mergeDeleteConfirmProps(
+          {
+            title: formatMessage('kong.deleteConsumer', { name: record.username ?? record.id }),
+            onOk: async () => {
+              await deleteConsumer(record.id);
+              refresh();
+            },
+          },
+          formatMessage
+        )
+      );
     },
     [modal, refresh, formatMessage]
   );
@@ -587,12 +597,16 @@ const ConsumersTab: FC = () => {
           </Button>
         </div>
         <div className="toolbar-right">
-          <Input.Search
+          <ProSearch
+            size="sm"
             placeholder={formatMessage('kong.searchConsumer')}
-            allowClear
             style={{ width: 280 }}
+            onChange={(e) => {
+              if (!e.target.value) {
+                setSearch('');
+              }
+            }}
             onSearch={setSearch}
-            onChange={(e) => !e.target.value && setSearch('')}
           />
         </div>
       </div>

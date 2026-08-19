@@ -1,12 +1,4 @@
-import {
-  LabelDetail,
-  ModelDetail,
-  RealTimeData,
-  TemplateDetail,
-  TopicDetail,
-  EmptyDetail,
-  UnsDashboard,
-} from '@/pages/uns/components';
+import { ModelDetail, RealTimeData, TopicDetail, EmptyDetail } from '@/pages/uns/components';
 import { getTreeStoreSnapshot, useTreeStore, useTreeStoreRef } from './store/treeStore';
 import type { FC } from 'react';
 import type { UnsTreeNode } from '@/pages/uns/types';
@@ -17,8 +9,7 @@ interface DetailDomProps {
 }
 
 const DetailDom: FC<DetailDomProps> = ({ handleDelete, currentUnusedTopicNode }) => {
-  const { treeMap, currentTreeMapType, selectedNode } = useTreeStore((state) => ({
-    treeMap: state.treeMap,
+  const { currentTreeMapType, selectedNode } = useTreeStore((state) => ({
     currentTreeMapType: state.currentTreeMapType,
     selectedNode: state.selectedNode,
   }));
@@ -33,19 +24,13 @@ const DetailDom: FC<DetailDomProps> = ({ handleDelete, currentUnusedTopicNode })
     switch (selectedNode.pathType) {
       case 0:
         return <ModelDetail currentNode={selectedNode} initTreeData={loadData} />;
-      case 1:
-        return <TemplateDetail currentNode={selectedNode} handleDelete={handleDelete} initTreeData={loadData} />;
       case 2:
         return <TopicDetail currentNode={selectedNode} handleDelete={handleDelete} initTreeData={loadData} />;
-      case 9:
-        return <LabelDetail currentNode={selectedNode} handleDelete={handleDelete} initTreeData={loadData} />;
       default:
         return <EmptyDetail />;
     }
   };
-  return treeMap ? (
-    <UnsDashboard />
-  ) : currentTreeMapType === 'all' ? (
+  return currentTreeMapType === 'all' ? (
     getDetailDom(selectedNode)
   ) : (
     <RealTimeData currentNode={currentUnusedTopicNode} />

@@ -1,6 +1,6 @@
 import { type FC, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { Tabs } from 'antd';
-import { useTabs } from '@/layout/useTabs';
+import { getKeepAliveTabKey, useTabs } from '@/layout/useTabs';
 import styles from './index.module.scss';
 import { createPortal } from 'react-dom';
 import ComTags from './com-tags';
@@ -19,29 +19,42 @@ const TabsLayout: FC<{
   const navigate = useLocationNavigate();
 
   const tabItems = useMemo(() => {
-    return tabs.map((tab) => ({
-      label: tab.title,
-      key: tab.routePath,
-      children: (
-        <div key={tab.key} style={{ height: '100%', overflow: 'hidden' }}>
-          <TabWrapper isActive={activeTabRoutePath === tab.routePath}>
-            {injectPropsToRouteNode(tab.children, { location: tab.location, title: tab?.title })}
-          </TabWrapper>
-        </div>
-      ),
-      closable: tabs.length > 1, // 剩最后一个就不能删除了
-    }));
+    return tabs.map((tab) => {
+      const tabKey = getKeepAliveTabKey(tab);
+      return {
+        label: tab.title,
+        fullTitle: tab.fullTitle,
+        key: tabKey,
+        children: (
+          <div key={tab.key} style={{ height: '100%', overflow: 'hidden' }}>
+            <TabWrapper isActive={activeTabRoutePath === tabKey}>
+              {injectPropsToRouteNode(tab.children, { location: tab.location, title: tab?.title })}
+            </TabWrapper>
+          </div>
+        ),
+        closable: tab.closable !== false && tabs.length > 1, // 剩最后一个就不能删除了
+      };
+    });
   }, [tabs, activeTabRoutePath]);
-
-  const onTabsChange = useMemoizedFn((tabRoutePath: string) => {
-    const { location } = tabs.find((o) => o.routePath === tabRoutePath) || {};
-    if (location) {
-      navigate(location);
+  const onTabsChange = useMemoizedFn((tabKey: string) => {
+    const tab = tabs.find((o) => getKeepAliveTabKey(o) === tabKey);
+    if (tab?.location) {
+      navigate(tab.location);
     }
   });
 
   useEffect(() => {
     if (menuType !== MenuTypeEnum.Top) return;
+    const existingTarget = document.getElementById('custom-header-container');
+    if (existingTarget) {
+      const animationFrame = window.requestAnimationFrame(() => {
+        setContainer(existingTarget);
+      });
+      return () => {
+        window.cancelAnimationFrame(animationFrame);
+      };
+    }
+
     // 使用 MutationObserver 检测 DOM 是否挂载
     const observer = new MutationObserver((mutationsList) => {
       for (const mutation of mutationsList) {
@@ -85,7 +98,7 @@ const TabsLayout: FC<{
     <Tabs
       destroyOnHidden={false}
       animated={false}
-      style={{ color: 'var(--supos-text-color)' }}
+      style={{ color: 'var(--ui-text-color)' }}
       renderTabBar={() => {
         const TabBar = (
           <ComTags
@@ -97,10 +110,11 @@ const TabsLayout: FC<{
             options={tabItems?.map?.((pan) => {
               return {
                 children: pan.label,
+                title: pan.fullTitle,
                 onClick: onTabsChange,
                 onClose: onCloseTab,
                 key: pan.key,
-                closeIcon: tabItems?.length > 1,
+                closable: pan.closable,
               };
             })}
           />

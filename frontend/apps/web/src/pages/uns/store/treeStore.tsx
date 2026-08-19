@@ -2,7 +2,7 @@ import { createContext, type ReactNode, useContext, useState, type Key } from 'r
 import { createStore } from 'zustand/vanilla';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { shallow } from 'zustand/shallow';
-import { getAllLabel, getAllTemplate, getTreeData, getUnsLazyTree } from '@/apis/inter-api/uns';
+import { getTreeData, getUnsLazyTree } from '@/apis/core-api/uns';
 import { immer } from 'zustand/middleware/immer';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import { enableMapSet } from 'immer';
@@ -11,7 +11,6 @@ import {
   createLoadMoreNode,
   findNodeInfoById,
   formatNodeData,
-  formatNodeDataForTemplate,
   getDescendantKeys,
   getParentNodes,
   handlerTreeData,
@@ -21,7 +20,7 @@ import {
 } from './utils';
 import type { TreeStoreProps, TreeStoreState } from './types.ts';
 import { useTranslate } from '@/hooks';
-import { SUPOS_UNS_TREE } from '@/common-types/constans.ts';
+import { APP_UNS_TREE } from '@/common-types/constans.ts';
 import type { UnsTreeNode } from '@/pages/uns/types';
 import { CustomAxiosConfigEnum } from '@/utils/request.ts';
 import { collectChildrenIds, findParentIds } from '@/utils/uns.ts';
@@ -44,8 +43,9 @@ const initialState: TreeStoreState = {
   breadcrumbList: [],
   operationFns: {},
   pasteNode: null,
-  treeMap: true,
+  treeMap: false,
   currentTreeMapType: 'all',
+  walkHighlightKey: undefined,
 };
 
 // 根节点的特殊ID
@@ -87,71 +87,6 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
                 state.lazyTree = next;
               }
             }),
-          recursiveLoadDataForList: async (options, cb) => {
-            const { newNodeKey, queryType } = options || {};
-            const { searchValue, setTreeData, setLoading, setNodePaginationState, scrollTreeNode, loadMoreText } =
-              get();
-            const _newNodeKey = newNodeKey as string;
-            setLoading(true);
-            let childrenData: UnsTreeNode[] = [];
-            async function fn(page: number): Promise<boolean> {
-              const params = {
-                pageNo: page,
-                pageSize: PAGE_SIZE,
-                key: searchValue,
-              };
-              try {
-                const { data, ...restResponse } = await getAllTemplate(params, {
-                  [CustomAxiosConfigEnum.BusinessResponse]: true,
-                });
-                const childNodes = formatNodeDataForTemplate(data);
-                childrenData = uniqueArr([...childrenData, ...childNodes]);
-                // 检查是否找到目标节点
-                if (!data?.some((item: any) => item.id === _newNodeKey)) {
-                  // 如果没有找到目标节点且有更多页，继续请求下一页
-                  if (hasMoreData(restResponse)) {
-                    // 使用await等待递归调用完成
-                    return await fn(restResponse?.pageNo + 1);
-                  }
-                  // 如果没有更多页，返回false表示未找到
-                  return false;
-                } else {
-                  // 找到目标节点，添加hasMore节点（如果需要）
-                  const hasMore = hasMoreData(restResponse);
-                  if (hasMore) {
-                    childrenData = [
-                      ...childrenData,
-                      createLoadMoreNode(ROOT_NODE_ID, page, { key: ROOT_NODE_ID, path: '' }, loadMoreText),
-                    ];
-                    setNodePaginationState((pre) => {
-                      pre[ROOT_NODE_ID] = { currentPage: restResponse?.pageNo, hasMore, isLoading: false };
-                    });
-                  }
-                  // 返回true表示找到了目标节点
-                  return true;
-                }
-              } catch (error) {
-                console.error('递归加载数据出错:', error);
-                return false;
-              }
-            }
-            try {
-              const found = await fn(1);
-              setTreeData(childrenData);
-              console.log('递归加载完成，找到节点:', found);
-              console.log('加载的数据:', childrenData);
-              if (queryType === 'editTemplateName' || queryType === 'deleteTemplate') {
-                setTimeout(() => {
-                  scrollTreeNode(_newNodeKey);
-                }, 0);
-              }
-              cb?.(childrenData);
-            } catch (error) {
-              console.error('递归加载过程出错:', error);
-            } finally {
-              setLoading(false);
-            }
-          },
           recursiveLoadData: async (options, cb) => {
             const { key = '', newNodeKey, queryType, nodeDetail } = options || {};
             const {
@@ -164,6 +99,7 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
               scrollTreeNode,
               loadMoreText,
               setExpandedKeys,
+              loadDataDefaultParams,
             } = get();
             const _newNodeKey = newNodeKey as string;
             setLoading(true);
@@ -175,6 +111,7 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
             // 修改为返回Promise的函数
             async function fn(page: number): Promise<boolean> {
               const params = {
+                ...loadDataDefaultParams,
                 parentId,
                 pageNo: page,
                 pageSize: PAGE_SIZE,
@@ -295,7 +232,7 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
               loadMoreText,
               setSelectedNode,
               resetTreeData,
-              recursiveLoadDataForList,
+              loadDataDefaultParams,
             } = get();
             if (reset) {
               // 重置异步加载key
@@ -371,9 +308,32 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
                     const keyStr = key.toString();
                     setAbortController(keyStr, controller);
                     try {
+                      if (queryType === 'search' && searchValue && keyStr === ROOT_NODE_ID) {
+                        const tree = await getTreeData({
+                          ...loadDataDefaultParams,
+                          type: searchType,
+                          key: searchValue,
+                          keyword: searchValue,
+                        });
+                        if (tree?.length) {
+                          const nextTree = handlerTreeData(tree);
+                          setTreeData(nextTree);
+                          setExpandedKeys(
+                            searchValue.includes('/')
+                              ? collectChildrenIds(nextTree as any, '')
+                              : findParentIds(searchValue, nextTree as any)
+                          );
+                          scrollTreeNode?.(nextTree?.[0]?.id);
+                          cb?.(nextTree);
+                        } else {
+                          resetTreeData();
+                        }
+                        return;
+                      }
                       const pageSize = PAGE_SIZE;
                       const parentId = searchValue && keyStr === ROOT_NODE_ID ? undefined : keyStr;
                       const params = {
+                        ...loadDataDefaultParams,
                         parentId,
                         pageNo: page,
                         pageSize: pageSize,
@@ -465,7 +425,11 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
                     }
                   } else {
                     setLoading(true);
-                    getTreeData({ type: searchType, key: searchValue })
+                    getTreeData({
+                      ...loadDataDefaultParams,
+                      type: searchType,
+                      key: searchValue,
+                    })
                       .then((res: any) => {
                         let tree: any[] = [];
                         if (res?.length) {
@@ -496,141 +460,6 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
                       });
                   }
                 }
-                break;
-              case 'template':
-                {
-                  if (!reset && loadingKeys.has(key)) {
-                    console.log(`节点正在请求：${key};  page: ${page}`);
-                    return;
-                  }
-                  addLoadingKey(key);
-                  setNodePaginationState((pre) => {
-                    pre[key as string] = { ...pre[key as string], isLoading: true };
-                  });
-                  // 创建AbortController用于取消请求
-                  const controller = new AbortController();
-                  const keyStr = key.toString();
-                  setAbortController(keyStr, controller);
-                  try {
-                    const params = {
-                      pageNo: page,
-                      pageSize: PAGE_SIZE,
-                      key: searchValue,
-                    };
-
-                    if (
-                      queryType === 'addTemplate' ||
-                      queryType === 'editTemplateName' ||
-                      queryType === 'deleteTemplate' ||
-                      queryType === 'viewTemplate'
-                    ) {
-                      recursiveLoadDataForList(options, cb);
-                      return;
-                    }
-
-                    const { data, ...restResponse } = await getAllTemplate(params, {
-                      signal: controller.signal,
-                      [CustomAxiosConfigEnum.BusinessResponse]: true,
-                    });
-                    if (page === 1) {
-                      const fn = () => {
-                        if (data && Array.isArray(data)) {
-                          const rootNodes = formatNodeDataForTemplate(data);
-
-                          // 判断是否有更多数据
-                          const hasMore = hasMoreData(restResponse);
-
-                          // 设置根节点分页状态
-                          setNodePaginationState((pre) => {
-                            pre[ROOT_NODE_ID] = { currentPage: restResponse.pageNo, hasMore, isLoading: false };
-                          });
-
-                          // 如果有更多数据，添加"加载更多"节点
-                          if (hasMore) {
-                            return [...rootNodes, createLoadMoreNode(ROOT_NODE_ID, 1, parentInfo, loadMoreText)];
-                          }
-
-                          return rootNodes;
-                        }
-                        return [];
-                      };
-                      const rootNodes = fn();
-                      setTreeData(rootNodes);
-                      if (reset) {
-                        scrollTreeNode?.(rootNodes?.[0]?.id);
-                      }
-                    } else {
-                      let hasMore = false;
-                      hasMore = hasMoreData(restResponse);
-                      setTreeData((pre) => {
-                        // 过滤掉之前的加载更多节点
-                        const filteredData = pre.filter((node) => !node.isLoadMoreNode);
-                        const newNodes = formatNodeDataForTemplate(data);
-                        return hasMore
-                          ? [
-                              ...filteredData,
-                              ...newNodes,
-                              createLoadMoreNode(ROOT_NODE_ID, page, parentInfo, loadMoreText),
-                            ]
-                          : [...filteredData, ...newNodes];
-                      });
-                      setNodePaginationState((pre) => {
-                        pre[key as string] = { currentPage: page, hasMore, isLoading: false };
-                      });
-                      if (reset) {
-                        scrollTreeNode?.(get().treeData?.[0]?.id);
-                      }
-                    }
-                  } catch (error: any) {
-                    // Axios取消请求时会设置error.name为'CanceledError'或message为'canceled'
-                    if (
-                      error?.name === 'AbortError' ||
-                      error?.name === 'CanceledError' ||
-                      error?.message === 'canceled'
-                    ) {
-                      console.log(`取消请求 ${key}`);
-                    } else {
-                      console.error(`获取节点数据失败 ${key}:`, error);
-                    }
-                    setNodePaginationState((pre) => {
-                      pre[key as string] = { ...pre[key as string], isLoading: false };
-                    });
-                  } finally {
-                    removeLoadingKey(key);
-                    setLoading(false);
-                  }
-                }
-                break;
-              case 'label':
-                setLoading(true);
-                getAllLabel({ key: searchValue })
-                  .then((res) => {
-                    if (res && Array.isArray(res)) {
-                      const data = res.map((e: any) => ({
-                        ...e,
-                        name: e.labelName,
-                        pathType: 9,
-                        value: 0,
-                        key: e.id,
-                        title: e.labelName,
-                        isLeaf: true,
-                      }));
-                      setTreeData(data);
-                      if (reset) {
-                        scrollTreeNode?.(res?.[0]?.id);
-                      }
-                      cb?.(data);
-                    } else {
-                      resetTreeData();
-                    }
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                    resetTreeData();
-                  })
-                  .finally(() => {
-                    setLoading(false);
-                  });
                 break;
               default:
                 break;
@@ -824,14 +653,16 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
           setScrollTreeNode: (scrollTreeNode) => set({ scrollTreeNode }),
           handleExpandNode: (expand, node) => {
             const { treeData, setExpandedKeys } = get();
-            const ids = collectChildrenIds(treeData as any, node.id as string) ?? [];
+            if (node.id === undefined) return;
+            const ids: Key[] = [node.id, ...(collectChildrenIds(treeData as any, node.id as string) ?? [])];
             setExpandedKeys((pre) => {
-              return expand ? [...pre, ...ids] : pre.filter((id: any) => !ids.includes(id));
+              return expand ? [...new Set([...pre, ...ids])] : pre.filter((id: any) => !ids.includes(id));
             });
           },
+          setWalkHighlightKey: (walkHighlightKey) => set({ walkHighlightKey }),
         })),
         {
-          name: SUPOS_UNS_TREE,
+          name: APP_UNS_TREE,
           partialize: (state) => ({
             lazyTree: state.lazyTree,
           }),
@@ -843,9 +674,20 @@ const createTreeStore = (initProps?: Partial<TreeStoreProps>) => {
 
 const TreeStoreContext = createContext<ReturnType<typeof createTreeStore> | null>(null);
 
-export function TreeStoreProvider({ children }: { children: ReactNode }) {
+export function TreeStoreProvider({
+  children,
+  initProps,
+}: {
+  children: ReactNode;
+  initProps?: Partial<TreeStoreProps>;
+}) {
   const formatMessage = useTranslate();
-  const [TreeStoreProps] = useState(() => createTreeStore({ loadMoreText: formatMessage('common.loadMore') }));
+  const [TreeStoreProps] = useState(() =>
+    createTreeStore({
+      loadMoreText: formatMessage('common.loadMore'),
+      ...initProps,
+    })
+  );
 
   return <TreeStoreContext.Provider value={TreeStoreProps}>{children}</TreeStoreContext.Provider>;
 }

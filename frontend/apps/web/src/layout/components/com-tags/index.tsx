@@ -1,12 +1,11 @@
 import {
-  cloneElement,
   type CSSProperties,
   type Dispatch,
   type FC,
   forwardRef,
   type HTMLAttributes,
   type MouseEvent,
-  type ReactElement,
+  type ReactNode,
   type SetStateAction,
   useEffect,
   useLayoutEffect,
@@ -20,8 +19,9 @@ import { DndContext, PointerSensor, useSensor } from '@dnd-kit/core';
 import { arrayMove, horizontalListSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
+import classNames from 'classnames';
 import './index.scss';
-import type { KeepAliveTab } from '@/layout/useTabs.ts';
+import { getKeepAliveTabKey, type KeepAliveTab } from '@/layout/useTabs.ts';
 import { ChevronLeft, ChevronRight } from '@carbon/icons-react';
 import { useTranslate } from '@/hooks';
 import { useDeepCompareEffect, useSize } from 'ahooks';
@@ -35,6 +35,7 @@ interface TagProps extends Omit<AntTagProps, 'onClick' | 'onClose'> {
   key: string;
   onClick?: (key: string) => void;
   onClose?: (key: string) => void;
+  closable?: boolean;
 }
 interface ComTagsProps {
   style?: CSSProperties;
@@ -46,6 +47,13 @@ interface ComTagsProps {
   setTabs?: Dispatch<SetStateAction<KeepAliveTab[]>>;
 }
 
+const getTextTitle = (value: ReactNode) => {
+  if (typeof value === 'string' || typeof value === 'number') {
+    return String(value);
+  }
+  return undefined;
+};
+
 const DraggableTagNode = forwardRef<HTMLDivElement, DraggableTabPaneProps>((props: DraggableTabPaneProps, ref) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: props['data-node-key'],
@@ -55,22 +63,27 @@ const DraggableTagNode = forwardRef<HTMLDivElement, DraggableTabPaneProps>((prop
     ...props.style,
     transform: CSS.Transform.toString(transform && { ...transform, scaleX: 1 }),
     transition,
+    display: 'inline-flex',
+    maxWidth: '100%',
   };
 
-  // eslint-disable-next-line react-hooks/refs
-  return cloneElement(props.children as ReactElement, {
-    ref: (node: HTMLDivElement) => {
-      setNodeRef(node);
-      if (typeof ref === 'function') {
-        ref(node);
-      } else if (ref) {
-        ref.current = node;
-      }
-    },
-    style,
-    ...attributes,
-    ...listeners,
-  });
+  return (
+    <div
+      ref={(node) => {
+        setNodeRef(node);
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      }}
+      style={style}
+      {...attributes}
+      {...listeners}
+    >
+      {props.children}
+    </div>
+  );
 });
 
 const ComTags: FC<ComTagsProps> = ({ options = [], activeTag, onClose, onCloseOther, onRefresh, setTabs }) => {
@@ -91,13 +104,15 @@ const ComTags: FC<ComTagsProps> = ({ options = [], activeTag, onClose, onCloseOt
 
   const handleContextMenu = (e: MouseEvent<HTMLSpanElement>, key: string) => {
     e.preventDefault(); // 阻止默认右键菜单
+    const currentOption = options.find((option) => option.key === key);
+    const canClose = currentOption?.closable !== false;
     const menuItems = [
       {
         label: formatMessage('common.refresh'),
         key: 'REFRESH',
         onClick: () => onRefresh?.(key),
       },
-      options?.length > 1
+      options?.length > 1 && canClose
         ? {
             label: formatMessage('common.close'),
             key: 'CLOSE',
@@ -118,8 +133,8 @@ const ComTags: FC<ComTagsProps> = ({ options = [], activeTag, onClose, onCloseOt
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (active.id !== over?.id) {
       setTabs?.((prev) => {
-        const activeIndex = prev.findIndex((i) => i.routePath === active.id);
-        const overIndex = prev.findIndex((i) => i.routePath === over?.id);
+        const activeIndex = prev.findIndex((i) => getKeepAliveTabKey(i) === active.id);
+        const overIndex = prev.findIndex((i) => getKeepAliveTabKey(i) === over?.id);
         return arrayMove(prev, activeIndex, overIndex);
       });
     }
@@ -208,25 +223,35 @@ const ComTags: FC<ComTagsProps> = ({ options = [], activeTag, onClose, onCloseOt
             </div>
           )}
           <div className="com-tags" ref={tabsContainerRef} onWheel={handleWheelScroll}>
-            {options?.map(({ children, key, onClick, onClose, ...restProps }) => (
-              <DraggableTagNode data-node-key={key} key={key} style={{ opacity: activeTag === key ? 1 : 0.6 }}>
-                <Tag
-                  data-key={key}
-                  className="com-tags-item"
-                  bordered={false}
-                  onClose={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onClose?.(key);
-                  }}
-                  onClick={() => onClick?.(key)}
-                  {...restProps}
-                  onContextMenu={(e) => handleContextMenu(e, key)}
-                >
-                  {children}
-                </Tag>
-              </DraggableTagNode>
-            ))}
+            {options?.map(({ children, key, onClick, onClose, closable, ...restProps }) => {
+              const fullTitle = getTextTitle(children);
+              return (
+                <DraggableTagNode data-node-key={key} key={key}>
+                  <Tag
+                    data-key={key}
+                    {...restProps}
+                    className={classNames('com-tags-item', activeTag === key && 'com-tags-item-active')}
+                    bordered={false}
+                    closable={closable}
+                    title={getTextTitle(restProps.title) || fullTitle}
+                    onClose={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onClose?.(key);
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClick?.(key);
+                    }}
+                    onContextMenu={(e) => handleContextMenu(e, key)}
+                  >
+                    <span className="com-tags-item-label" title={getTextTitle(restProps.title) || fullTitle}>
+                      {children}
+                    </span>
+                  </Tag>
+                </DraggableTagNode>
+              );
+            })}
           </div>
           {showNext && (
             <div className="scroll-button right" onClick={handleNextClick}>

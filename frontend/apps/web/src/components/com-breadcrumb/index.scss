@@ -1,14 +1,55 @@
 .com-breadcrumb {
   position: relative;
   width: 100%;
+  min-width: 0;
   overflow: hidden;
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+  }
+
+  &__trail {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
 
   .ant-breadcrumb ol {
     flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .ant-breadcrumb li {
+    min-width: 0;
+    flex-shrink: 0;
+
+    &:last-child {
+      flex: 1;
+      flex-shrink: 1;
+      overflow: hidden;
+      max-width: 100%;
+    }
   }
 
   .ant-breadcrumb .ant-breadcrumb-separator {
     margin-inline: 0;
     padding-inline: 8px;
+    flex-shrink: 0;
+  }
+
+  .ant-breadcrumb-link,
+  .ant-breadcrumb-link .com-text,
+  .com-breadcrumb-current {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
   }
 }

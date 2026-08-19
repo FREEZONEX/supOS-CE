@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Dropdown } from 'antd';
 import { useNavigate } from 'react-router';
 import { find, map } from 'lodash-es';
-import { SUPOS_USER_GUIDE_ROUTES } from '@/common-types/constans';
+import { APP_USER_GUIDE_ROUTES } from '@/common-types/constans';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { useTranslate } from '@/hooks';
 import { useTabsContext } from '@/contexts/tabs-context';
@@ -46,7 +46,7 @@ const HelpNav = () => {
           key: 'guideGroup',
           type: 'group',
           label: (
-            <span style={{ color: 'var(--supos-select-d-color)' }}>
+            <span style={{ color: 'var(--ui-select-d-color)' }}>
               {formatMessage('global.userGuide', 'Beginner’s Guide')}
             </span>
           ),
@@ -63,12 +63,12 @@ const HelpNav = () => {
     if (key === 'tips') {
       setUserTipsEnable('1');
     } else {
-      let currentUserGuideRoute = storageOpt.get(SUPOS_USER_GUIDE_ROUTES);
+      let currentUserGuideRoute = storageOpt.get(APP_USER_GUIDE_ROUTES);
       if (!currentUserGuideRoute) {
         currentUserGuideRoute = userRoute;
       }
       storageOpt.set(
-        SUPOS_USER_GUIDE_ROUTES,
+        APP_USER_GUIDE_ROUTES,
         map(currentUserGuideRoute, (route) => (route?.url === unsRoutePath ? { ...route, isVisited: false } : route))
       );
       navigate(unsRoutePath, { state: { stepId: key } });
@@ -89,7 +89,7 @@ const HelpNav = () => {
     >
       <QuestionCircleOutlined
         style={{
-          color: 'var(--supos-text-color)',
+          color: 'var(--ui-text-color)',
           fontSize: '16px',
           width: '100%',
           height: '100%',

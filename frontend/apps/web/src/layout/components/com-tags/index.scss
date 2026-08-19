@@ -1,24 +1,70 @@
 .com-tags {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   display: flex;
+  align-items: center;
+  gap: 6px;
   overflow-x: auto;
-  white-space: nowrap; /* 禁止换行 */
-  scrollbar-width: none; /* 隐藏滚动条 (Firefox) */
-  -ms-overflow-style: none; /* 隐藏滚动条 (IE/Edge) */
-  .com-tags-item {
-    cursor: pointer;
-    font-size: 14px;
-    padding: 8px 16px;
-    border-radius: 3px;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 
-    .anticon-close {
-      color: var(--supos-text-color);
+  .com-tags-item {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 1 auto;
+    max-width: min(260px, 24vw);
+    min-width: 0;
+    overflow: hidden;
+    cursor: pointer;
+    margin: 0;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: var(--ui-t-gray-color-10, #f4f4f4);
+    color: #8d8d8d;
+    font-size: 14px;
+    line-height: 24px;
+    font-weight: 400;
+    letter-spacing: normal;
+
+    &:hover {
+      color: #161616;
     }
+
+    &.com-tags-item-active {
+      color: #161616;
+    }
+
+    .com-tags-item-label {
+      display: inline-block;
+      flex: 1 1 auto;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: bottom;
+      white-space: nowrap;
+    }
+
+    .ant-tag-close-icon,
+    .anticon-close {
+      flex-shrink: 0;
+      margin-inline-start: 4px;
+      color: currentcolor;
+    }
+  }
+
+  :global(.ant-tag.com-tags-item) {
+    margin-inline-end: 0;
+    padding: 2px 8px;
+    opacity: 1 !important;
   }
 }
 
 .scroll-button {
   cursor: pointer;
-  height: 48px;
+  height: var(--ui-bar-height, 52px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -29,10 +75,36 @@
   }
 
   &.left {
-    box-shadow: 2px 0 4px rgb(0 0 0 / 10%); /* 右侧凸起 */
+    box-shadow: 2px 0 4px rgb(0 0 0 / 10%);
   }
 
   &.right {
-    box-shadow: -2px 0 4px rgb(0 0 0 / 10%); /* 左侧凸起 */
+    box-shadow: -2px 0 4px rgb(0 0 0 / 10%);
+  }
+}
+
+.dark,
+.chartreuseDark {
+  .com-tags {
+    .com-tags-item,
+    .ant-tag.com-tags-item {
+      background: var(--ui-tag-color) !important;
+      border-color: transparent !important;
+      color: var(--ui-description-card-color);
+
+      &:hover {
+        color: var(--ui-text-color);
+        background: var(--ui-charttop-bg-color) !important;
+      }
+
+      &.com-tags-item-active {
+        color: var(--ui-text-color);
+        background: var(--ui-charttop-bg-color) !important;
+      }
+    }
+  }
+
+  .scroll-button:hover {
+    background: var(--ui-fill-tertiary);
   }
 }

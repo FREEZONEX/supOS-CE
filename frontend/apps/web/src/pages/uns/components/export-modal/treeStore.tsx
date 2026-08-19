@@ -6,7 +6,7 @@ import { immer } from 'zustand/middleware/immer';
 import useTranslate from '@/hooks/useTranslate.ts';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { shallow } from 'zustand/vanilla/shallow';
-import { getTreeData, getUnsLazyTree } from '@/apis/inter-api/uns';
+import { getTreeData, getUnsLazyTree } from '@/apis/core-api/uns';
 import {
   appendTreeData,
   createLoadMoreNode,
@@ -74,8 +74,7 @@ export type TreeStoreActions = {
   // 设置树数据
   setTreeData: (
     newTreeData:
-      | ((treeData: TreeStoreState['treeData']) => TreeStoreState['treeData'] | void)
-      | TreeStoreState['treeData']
+      ((treeData: TreeStoreState['treeData']) => TreeStoreState['treeData'] | void) | TreeStoreState['treeData']
   ) => void;
   setCheckedKeys: (newCheckedKeys: ((checkedKeys: Key[]) => Key[] | void) | Key[]) => void;
   setLoading: (value: TreeStoreState['loading']) => void;
@@ -93,8 +92,7 @@ export type TreeStoreActions = {
   // 设置节点懒加载的配置
   setNodePaginationState: (
     newNodePaginationState:
-      | ((nodePaginationState: NodePaginationStateProps) => void | NodePaginationStateProps)
-      | NodePaginationStateProps
+      ((nodePaginationState: NodePaginationStateProps) => void | NodePaginationStateProps) | NodePaginationStateProps
   ) => void;
   // 设置展开收起key
   setExpandedKeys: (newExpandedKeys: ((expandedKeys: Key[]) => Key[] | void) | Key[]) => void;

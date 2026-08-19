@@ -1,0 +1,28 @@
+.containerList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.search {
+  width: min(360px, 100%);
+}
+
+.stateFilter {
+  width: 180px;
+}
+
+@media (width <= 640px) {
+  .search,
+  .stateFilter {
+    width: 100%;
+  }
+}

@@ -1,10 +1,9 @@
 import { type FC, useEffect, useRef, useState } from 'react';
 import type { ResourceProps } from '@/stores/types';
 import { ConfigProvider, Flex, Menu, type MenuProps } from 'antd';
-import { useMenuNavigate } from '@/hooks';
+import { useMenuNavigate, useTranslate } from '@/hooks';
 import styles from './index.module.scss';
-import IconImage from '@/components/icon-image';
-import { useThemeStore } from '@/stores/theme-store.ts';
+import { MenuLucideIcon } from '@/components/lucide-icon';
 
 type MenuItem = Required<MenuProps>['items'][number];
 const SideMenuList: FC<{
@@ -13,11 +12,12 @@ const SideMenuList: FC<{
   setOpenHoverNav: any;
   selectedKeys: string[];
 }> = ({ navList, openHoverNav, setOpenHoverNav, selectedKeys }) => {
-  const primaryColor = useThemeStore((state) => state.primaryColor);
   const handleNavigate = useMenuNavigate();
+  const formatMessage = useTranslate();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [menuSelectedKeys, setSelectedKeys] = useState<string[]>([]);
   const menuRef = useRef<any>(null);
+  const menuLabel = (showName?: string) => formatMessage(showName || '', undefined, showName || '');
   const handleClickOutside = (event: any) => {
     if (menuRef.current) {
       if (event.target.closest('.imgWrap')) return;
@@ -37,8 +37,8 @@ const SideMenuList: FC<{
               key: parent.code!,
               label: (
                 <Flex align="center" gap={4} className={styles['side-menu-list-item']}>
-                  <IconImage theme={primaryColor} iconName={parent.icon} width={24} height={24} />
-                  {parent.showName}
+                  <MenuLucideIcon item={parent} size={24} />
+                  {menuLabel(parent.showName)}
                 </Flex>
               ),
               children: parent?.children?.map((child) => ({
@@ -49,8 +49,8 @@ const SideMenuList: FC<{
                 },
                 label: (
                   <Flex align="center" gap={4} className={styles['side-menu-list-item']}>
-                    <IconImage theme={primaryColor} iconName={child.code} width={24} height={24} />
-                    {child.showName}
+                    <MenuLucideIcon item={child} size={24} />
+                    {menuLabel(child.showName)}
                   </Flex>
                 ),
               })),
@@ -60,8 +60,8 @@ const SideMenuList: FC<{
               key: parent.code!,
               label: (
                 <Flex align="center" gap={4} className={styles['side-menu-list-item']}>
-                  <IconImage theme={primaryColor} iconName={parent.icon} width={24} height={24} />
-                  {parent.showName}
+                  <MenuLucideIcon item={parent} size={24} />
+                  {menuLabel(parent.showName)}
                 </Flex>
               ),
               onClick: () => {
@@ -85,7 +85,7 @@ const SideMenuList: FC<{
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openHoverNav]);
+  }, [openHoverNav, navList, selectedKeys, formatMessage]);
 
   return openHoverNav ? (
     <div ref={menuRef}>
@@ -93,7 +93,7 @@ const SideMenuList: FC<{
         theme={{
           components: {
             Menu: {
-              itemSelectedColor: 'var(--supos-theme-color)',
+              itemSelectedColor: 'var(--ui-theme-color)',
             },
           },
         }}

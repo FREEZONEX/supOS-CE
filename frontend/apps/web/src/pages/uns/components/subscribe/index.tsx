@@ -4,7 +4,7 @@ import { useTranslate } from '@/hooks';
 import ProModal from '@/components/pro-modal';
 import styles from './index.module.scss';
 import FrequencyForm from '../use-create-modal/components/file/FrequencyForm';
-import { BookmarkAdd, BookmarkFilled } from '@carbon/icons-react';
+import { BookmarkAdd, BookmarkFilled } from '@/components/lucide-icon/carbon';
 
 interface PropsTypes {
   value: boolean; // 是否选中

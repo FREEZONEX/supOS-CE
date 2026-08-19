@@ -1,0 +1,299 @@
+.projectGrid {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 280px));
+
+  .projectCard {
+    // Figma Launchpad 项目卡：灰底 + chartreuse folder badge
+    --launchpad-folder-bg: var(--ui-t-chartreuse-color-30);
+    --launchpad-folder-fg: var(--ui-text-color);
+
+    width: 100%;
+    min-width: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--ui-card-bg);
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: var(--ui-card-hover-bg);
+    }
+
+    &:active {
+      background: var(--ui-card-active-bg);
+    }
+
+    :global(.ant-card-body) {
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .cardHeader {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+
+      .projectInfo {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+
+        .iconWrapper {
+          display: flex;
+          flex-shrink: 0;
+          align-items: center;
+          justify-content: center;
+          width: 52px;
+          height: 52px;
+          background: var(--launchpad-folder-bg);
+          border-radius: 6.5px;
+
+          .folderIcon {
+            color: var(--launchpad-folder-fg);
+          }
+        }
+
+        .textInfo {
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+          gap: 4px;
+          min-width: 0;
+
+          .projectName {
+            overflow: hidden;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 24px;
+            color: var(--ui-text-color);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .appsCount {
+            overflow: hidden;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            color: var(--ui-description-card-color);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+
+      // 与 Favorited & Recent Apps（AppCard）收藏按钮一致
+      .starButton {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        margin: 0;
+        color: var(--ui-nocheck-color);
+        cursor: pointer;
+        background: var(--ui-bg-color);
+        border: 1.2px solid var(--ui-active-bg-color);
+        border-radius: 4px;
+        transition:
+          color 0.2s ease,
+          border-color 0.2s ease;
+
+        &:hover {
+          color: var(--ui-warning-color);
+          border-color: var(--ui-select-d-color);
+        }
+
+        svg {
+          display: block;
+        }
+
+        &.starActive {
+          color: var(--ui-warning-color);
+
+          svg {
+            fill: var(--ui-warning-color);
+          }
+        }
+      }
+    }
+
+    .appIcons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+
+      .appIcon {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        width: 100%;
+        min-width: 0;
+        aspect-ratio: 16 / 9;
+        font-size: 24px;
+        background: var(--ui-bg-color);
+        border: 1px solid var(--ui-active-bg-color);
+        border-radius: 4px;
+        transition: background 0.2s ease;
+
+        &.appIconEmpty {
+          color: var(--ui-description-card-color);
+          background: color-mix(in srgb, var(--ui-bg-color) 55%, var(--ui-card-bg));
+          border-style: dashed;
+
+          .emptyIcon {
+            opacity: 0.24;
+          }
+        }
+
+        .iconContainer {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 33px;
+          height: 33px;
+          background-color: var(--ui-bg-color);
+          border-radius: 50%;
+
+          .appIconImage {
+            width: 17px;
+            height: 17px;
+            object-fit: contain;
+          }
+        }
+
+        .coverImage {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: filter 0.18s ease;
+        }
+
+        .appNameOverlay {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 8px;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 16px;
+          color: var(--ui-image-overlay-text);
+          text-align: center;
+          background: var(--ui-image-overlay-bg);
+          opacity: 0;
+          transition: opacity 0.18s ease;
+
+          .appNameText {
+            display: block;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+
+        &:not(.appIconEmpty):hover {
+          .coverImage {
+            filter: grayscale(1);
+          }
+
+          .appNameOverlay {
+            opacity: 1;
+          }
+        }
+      }
+    }
+  }
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .projectGrid {
+    .projectCard {
+      // 暗色：深橄榄底 + 柔和柠色图标，避免浅色 chartreuse 发灰发刺
+      --launchpad-folder-bg: color-mix(in srgb, var(--ui-t-chartreuse-color-70) 18%, var(--ui-t-chartreuse-color-100));
+      --launchpad-folder-fg: var(--ui-t-chartreuse-color-40);
+
+      background: rgb(255 255 255 / 6%);
+
+      &:hover {
+        background: rgb(255 255 255 / 10%);
+
+        .appIcon {
+          border-color: var(--ui-control-border);
+          background: var(--ui-home-panel-bg-hover);
+        }
+      }
+
+      .cardHeader {
+        .projectInfo {
+          .iconWrapper {
+            background: var(--launchpad-folder-bg);
+          }
+
+          .textInfo {
+            .appsCount {
+              color: var(--ui-description-card-color);
+            }
+          }
+        }
+
+        .starButton {
+          color: var(--ui-description-card-color);
+          background: var(--ui-card-color);
+          border-color: var(--ui-control-border);
+
+          &:hover {
+            color: var(--ui-warning-color);
+            border-color: var(--ui-select-d-color);
+          }
+
+          &.starActive {
+            color: var(--ui-warning-color);
+
+            svg {
+              fill: var(--ui-warning-color);
+            }
+          }
+        }
+      }
+
+      .appIcons {
+        .appIcon {
+          background: var(--ui-fill-secondary);
+          border: 1px solid var(--ui-control-border);
+
+          &.appIconEmpty {
+            color: var(--ui-description-card-color);
+            background: var(--ui-fill-tertiary);
+            border-style: dashed;
+          }
+
+          .iconContainer {
+            background-color: var(--ui-fill-secondary);
+            color: var(--ui-text-color);
+          }
+        }
+      }
+    }
+  }
+}

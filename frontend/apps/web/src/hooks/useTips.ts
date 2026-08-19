@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { storageOpt } from '@/utils/storage';
-import { SUPOS_USER_GUIDE_ROUTES, SUPOS_USER_LAST_LOGIN_ENABLE } from '@/common-types/constans';
+import { APP_USER_GUIDE_ROUTES, APP_USER_LAST_LOGIN_ENABLE } from '@/common-types/constans';
 import { shepherd } from '@/components/shepherd';
-import { updateTipsEnable } from '@/apis/inter-api/user-manage';
+import { updateTipsEnable } from '@/apis/core-api/user-manage';
 import { find, shuffle } from 'lodash-es';
 import { useLocation } from 'react-router';
 import { useTranslate } from '@/hooks';
@@ -22,7 +22,7 @@ export const useTips = (originTips: any[] = []) => {
   const userTipsEnable = useBaseStore((state) => state.userTipsEnable);
   const tour = useRef(shepherd()).current;
   const [checked, setChecked] = useState<boolean>(true);
-  const loginEnable = storageOpt.getOrigin(SUPOS_USER_LAST_LOGIN_ENABLE); // 是否为免登录
+  const loginEnable = storageOpt.getOrigin(APP_USER_LAST_LOGIN_ENABLE); // 是否为免登录
 
   useEffect(() => {
     // 每次登录出现的tips都打乱步骤顺序，随机出现tips功能点
@@ -110,7 +110,7 @@ export const useTips = (originTips: any[] = []) => {
   }, []);
 
   useEffect(() => {
-    const userGuideRoute = storageOpt.get(SUPOS_USER_GUIDE_ROUTES);
+    const userGuideRoute = storageOpt.get(APP_USER_GUIDE_ROUTES);
     const currentRoute = find(userGuideRoute, (route) => route?.url === pathname);
     // 新手导航存在则先不触发，新手导航优先级更高
     if (currentRoute && currentRoute?.isVisited === false) {

@@ -12,7 +12,7 @@ export default tsEslint.config(
   // 此插件附带了一个 eslint-plugin-prettier/recommended 配置，可一次性设置 eslint-plugin-prettier 和 eslint-config-prettier
   eslintPluginPrettierRecommended,
   {
-    files: ['**/*.{ts,tsx,js,jsx}'],
+    files: ['**/*.{ts,tsx,js,jsx,mjs}'],
     languageOptions: {
       globals: {
         ...globals.browser,

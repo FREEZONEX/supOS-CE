@@ -47,6 +47,8 @@ export interface UserInfoProps {
   phone?: string;
   // 来源，带source = external的  不允许编辑和删除
   source?: string;
+  // 当前密码是否仍是默认密码
+  forceChangePassword?: boolean;
 }
 export interface ContainerItemProps {
   name: string;
@@ -54,8 +56,8 @@ export interface ContainerItemProps {
   description?: string;
   envMap?: {
     service_is_show: boolean;
-    service_logo: boolean;
-    service_redirect_url?: boolean;
+    service_logo?: string;
+    service_redirect_url?: string;
     service_account?: string;
     service_password?: string;
   };
@@ -67,25 +69,27 @@ export interface SystemInfoProps {
   lang?: string;
   // 版本
   version?: string;
-  // 模型
-  llmType?: 'openai' | 'ollama';
-  // 端口号
+  productVersion?: string;
+  // MQTT TCP 端口号
   mqttTcpPort?: string;
-  // 端口号
+  // MQTT WebSocket 端口号
+  mqttWebsocketPort?: string;
+  // MQTT WebSocket TLS 端口号
   mqttWebsocketTslPort?: string;
   // 登录地址
   loginPath?: string;
   // title
   appTitle?: string;
   lazyTree?: boolean;
+  unsTreeLoadMode?: 'auto' | 'lazy' | 'full';
+  unsTreeAutoThreshold?: number;
+  unsTreeActiveNodeCount?: number;
   // 关于我们 高阶使用配置
   containerMap?: {
     [key: string]: ContainerItemProps;
   };
   // 单topic还是多topic影响demo的数据展示
   multipleTopic?: boolean;
-  // 是否使用别名作为topic
-  useAliasPathAsTopic?: boolean;
 
   qualityName?: string;
   timestampName?: string;
@@ -97,7 +101,13 @@ export interface SystemInfoProps {
 
   // 是否开启文件分类配置
   enableAutoCategorization?: boolean;
-  enableAi?: boolean;
+  cluster?: {
+    enabled?: boolean;
+    isHost?: boolean;
+    role?: string;
+    nodeKey?: string;
+    nodeName?: string;
+  };
 }
 
 /**
@@ -117,6 +127,10 @@ export interface ResourceProps {
   parentId?: string;
   // 主键ID
   id: string;
+  // 后端 sys_resource_info 原始 ID
+  coreResourceId?: string;
+  // 后端 sys_resource_info.resource_key
+  resourceKey?: string;
   // 菜单分组 1-导航 2-菜单 home    属于哪组  3-tab home页tab
   // groupType?: number;
   // 菜单类型（1、目录 2、菜单 3、按钮 4、home_tab 5、子菜单 ）
@@ -124,9 +138,9 @@ export interface ResourceProps {
   // icon 不写类型默认svg, 不传默认使用code
   /**
    * 历史icon 为 xxx.svg
-   * 最终路由为 `/inter-api/supos/uns/attachment?objectName=${encodeURI(icon)}`
+   * 最终路由为 `/api/core/assets?objectName=${encodeURI(icon)}`
    * 上传icon 为 /uns/xxxx.svg
-   * 最终路由为 `/files/system/resource/supos/${encodeURI(selectNode.icon)}`
+   * 最终路由为 `/files/system/resource/menu-icons/${encodeURI(selectNode.icon)}`
    * */
   icon?: string;
   // name/code historically acts as the unique key used by frontend routing

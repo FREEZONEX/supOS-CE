@@ -18,3 +18,4 @@ export * from './fetch';
 export * from './chat2db';
 export * from './workflowEditor';
 export * from './plugin';
+export * from './delete-confirm-modal';

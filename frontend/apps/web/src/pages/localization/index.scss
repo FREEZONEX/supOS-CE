@@ -12,7 +12,7 @@
 
 .editable-row:hover .editable-cell-value-wrap {
   padding: 4px 11px;
-  border: 1px solid #c6c6c6;
+  border: 1px solid var(--ui-line-color);
   border-radius: 2px;
   height: 32px;
 }

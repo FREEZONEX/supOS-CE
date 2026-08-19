@@ -2,13 +2,13 @@
  * @description 模块联邦配置
  * */
 export const mfConfig = {
-  name: 'supos-ce/host',
+  name: 'app-shell/host',
   manifest: true,
   exposes: {
     './components': './src/components/index.ts',
     './utils': './src/utils/index.ts',
     './hooks': './src/hooks/index.ts',
-    './apis': './src/apis/inter-api/index.ts',
+    './apis': './src/apis/core-api/index.ts',
     './button-permission': './src/common-types/button-permission.ts',
     './constans': './src/common-types/constans.ts',
     './i18nStore': './src/stores/i18n-store.ts',

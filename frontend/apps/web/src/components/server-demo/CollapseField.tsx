@@ -33,7 +33,7 @@ const CollapseField = (props: any) => {
       bordered={false}
       defaultActiveKey={['1', '2', '3', '4', '5']}
       expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-      style={{ background: 'var(--supos-switchwrap-active-bg-color)' }}
+      style={{ background: 'var(--ui-switchwrap-active-bg-color)' }}
       items={getItems(panelStyle)}
     />
   );

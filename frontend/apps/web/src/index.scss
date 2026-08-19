@@ -1,5 +1,6 @@
 @use './reset';
 @use './theme/theme' as *;
+@use './components/pro-table/operation-menu.scss';
 @use '@ibm/plex-sans/scss' as PlexSans with (
   $font-prefix: '@ibm/plex-sans',
   $font-weights: (
@@ -10,7 +11,6 @@
     // italic: false,
     // light: false,
     // lightItalic: false,
-    medium: false,
     mediumItalic: false,
     // regular: false,
     // semibold: false,
@@ -21,8 +21,30 @@
     thinItalic: false,
   )
 );
+@use '@ibm/plex-mono/scss' as PlexMono with (
+  $font-prefix: '@ibm/plex-mono',
+  $font-weights: (
+    bold: false,
+    boldItalic: false,
+    extralight: false,
+    extralightItalic: false,
+    italic: false,
+    light: false,
+    lightItalic: false,
+    medium: false,
+    mediumItalic: false,
+    // regular: false,
+    semibold: false,
+    semiboldItalic: false,
+    text: false,
+    textItalic: false,
+    thin: false,
+    thinItalic: false,
+  )
+);
 
 @include PlexSans.all();
+@include PlexMono.all();
 
 * {
   font-family:
@@ -32,6 +54,30 @@
     BlinkMacSystemFont,
     '.SFNSText-Regular',
     sans-serif !important ;
+}
+
+.cm-editor,
+.cm-editor .cm-scroller,
+.cm-editor .cm-content,
+.cm-editor .cm-line,
+.cm-editor .cm-gutters,
+.cm-editor .cm-placeholder,
+.cm-content,
+.cm-gutters,
+.cm-line,
+.cm-placeholder,
+code,
+pre,
+kbd,
+samp,
+tt {
+  font-family: var(--ui-font-mono) !important;
+}
+
+.CodeMirror,
+.CodeMirror-hints,
+.CodeMirror-hints li {
+  font-family: var(--ui-font-mono) !important;
 }
 
 iframe {
@@ -46,256 +92,1448 @@ iframe {
 
 /* 默认主题（明亮主题） */
 :root {
-  --supos-text-color: var(--supos-t-gray-color-100);
-  --supos-anti-text-color: var(--supos-t-white-color);
-  --supos-bg-color: var(--supos-t-white-color);
-  --supos-header-bg-color: var(--supos-t-white-color);
-  --supos-color-fill: rgb(0 0 0 / 15%);
-  --supos-check-color: #050b14;
-  --supos-nocheck-color: var(--supos-t-gray-color-50);
-  --supos-table-head-bg-color: var(--supos-t-gray-color-50);
-  --supos-border-color: var(--supos-t-gray-color-80);
-  --supos-charttop-bg-color: var(--supos-t-gray-color-10);
-  --supos-switchwrap-bg-color: var(--supos-t-gray-color-10);
-  --supos-switchwrap-active-bg-color: var(--supos-t-white-color);
-  --supos-switchwrap-active-text-color: #050b14;
-  --supos-menu-hover-color: var(--supos-t-gray-color-20);
-  --supos-menu-active-color: #e6f4ff;
-  --supos-table-head-color: var(--supos-t-table-head-color);
-  --supos-table-first-color: var(--supos-t-table-first-color);
-  --supos-payloadfirsttd-color: var(--supos-t-gray-color-10);
-  --supos-uns-button-color: var(--supos-t-gray-color-10);
-  --supos-user-color: var(--supos-t-gray-color-10);
-  --supos-common-card-color: #2f343b;
-  --supos-select-card-color: #e0e0e0;
-  --supos-hover-card-color: #e0e0e0;
-  --supos-lable-card-color: var(--supos-t-table-first-color);
-  --supos-description-card-color: var(--supos-t-gray-color-70);
-  --supos-image-card-color: var(--supos-t-white-color);
-  --supos-pagination-color: var(--supos-t-white-color);
-  --supos-card-hover-color: var(--supos-t-blue-color-10);
-  --supos-card-color: var(--supos-t-white-color);
-  --supos-card-active-color: #8ebbfe;
-  --supos-copilot-color: var(--supos-t-blue-color-10);
-  --supos-navwrap-color: rgb(255 255 255 / 60%);
-  --supos-message-color: var(--supos-t-gray-color-70);
-  --supos-gray-color-10-message: var(--supos-t-gray-color-10);
-  --supos-blue-color-10: var(--supos-t-blue-color-10);
-  --supos-button-def-10: rgb(0 0 0 / 4%);
-  --supos-view-item: var(--supos-t-table-first-color);
-  --supos-useremail-color: #515151;
-  --supos-tree-fooer-color: var(--supos-t-white-color);
-  --supos-input-color: var(--supos-t-white-color);
-  --supos-select-active-color: #e6f4ff;
-  --supos-tag-color: var(--supos-t-gray-color-10);
-  --supos-icon-color: var(--supos-t-icon-color);
-  --supos-shadow-color: var(--supos-t-shadow-color);
-  --supos-select-d-color: var(--supos-t-gray-color-40);
-  --supos-modal-color: var(--supos-t-modal-color);
-  --supos-useravatar-color: var(--supos-t-white-color);
-  --supos-boxshadow-color: var(--supos-t-boxshadow-light-color);
-  --supos-theme-color: var(--supos-t-blue-color-70);
-  --supos-theme-color-rgb: 29, 119, 254;
-  --supos-theme-button-hover-color: var(--supos-t-blue-color-80);
-  --supos-theme-button-active-color: var(--supos-t-blue-color-90);
-  --supos-home-bg-color: var(--supos-t-white-color);
-  --supos-home-border-color: var(--supos-t-gray-color-30);
-  --supos-uns-home-color: var(--supos-t-table-head-color);
-  --supos-active-bg-color: var(--supos-t-gray-color-20);
-  --supos-table-tr-color: var(--supos-t-gray-color-30);
-  --supos-card-border-color: var(--supos-t-blue-color-20);
-  --supos-fill-secondary: rgb(0 0 0 / 6%);
-  --supos-fill-tertiary: rgb(0 0 0 / 4%);
-  --supos-active-with-range-bg: var(--supos-t-blue-color-10);
-  --supos-cell-hover-bg: rgb(0 0 0 / 4%);
-  --supos-header-splitter-color: var(--supos-t-gray-color-20);
-  --supos-primary-bg: var(--supos-t-blue-color-10);
-  --supos-primary-bg-hover: var(--supos-t-blue-color-20);
-  --supos-promodal-bg-pg-color: var(--supos-t-white-color);
-  --supos-modal-mask-bg: rgb(0 0 0 / 45%);
-  --supos-icon-disabled-color: var(--supos-t-gray-color-40);
-  --supos-t-card-select-bg: var(--supos-t-light-card-select-bg);
-  --supos-t-card-hover-bg: var(--supos-t-table-head-color);
-  --supos-background-selected: rgb(141 141 141 / 20%);
-  --supos-border-interactive: #0f62fe;
-  --supos-craft-bg-color: #f4f4f4;
-  --supos-t-text-disabled-color: var(--supos-t-select-d-color);
-  --supos-t-dividr-color: var(--supos-fill-secondary);
-  --supos-card-bg: var(--supos-t-gray-color-10);
-  --supos-card-hover-bg: var(--supos-t-gray-color-20);
-  --supos-card-active-bg: var(--supos-t-gray-color-30);
+  --ui-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --ui-text-color: var(--ui-t-gray-color-100);
+  --ui-anti-text-color: var(--ui-t-white-color);
+  --ui-bg-color: var(--ui-t-white-color);
+  --ui-header-bg-color: var(--ui-t-white-color);
+  --ui-color-fill: rgb(0 0 0 / 15%);
+  --ui-check-color: #050b14;
+  --ui-nocheck-color: var(--ui-t-gray-color-50);
+  --ui-table-head-bg-color: var(--ui-t-white-color);
+  --ui-line-color: var(--ui-t-line-color);
+  --ui-control-border: var(--ui-line-color);
+  --ui-border-color: var(--ui-line-color);
+  --ui-charttop-bg-color: var(--ui-t-gray-color-10);
+  --ui-switchwrap-bg-color: var(--ui-t-gray-color-10);
+  --ui-switchwrap-active-bg-color: var(--ui-t-white-color);
+  --ui-switchwrap-active-text-color: #050b14;
+  --ui-menu-hover-color: var(--ui-t-gray-color-20);
+  --ui-menu-active-color: #e6f4ff;
+  --ui-table-head-color: var(--ui-t-table-head-color);
+  --ui-table-first-color: var(--ui-t-table-first-color);
+  --ui-payloadfirsttd-color: var(--ui-t-gray-color-10);
+  --ui-uns-button-color: var(--ui-t-gray-color-10);
+  --ui-modal-secondary-btn-hover-bg: color-mix(in srgb, var(--ui-uns-button-color) 70%, #fff 30%);
+  --ui-user-color: var(--ui-t-gray-color-10);
+  --ui-common-card-color: #2f343b;
+  --ui-select-card-color: #e0e0e0;
+  --ui-hover-card-color: #e0e0e0;
+  --ui-lable-card-color: var(--ui-t-table-first-color);
+  --ui-description-card-color: var(--ui-t-gray-color-70);
+  --ui-image-card-color: var(--ui-t-white-color);
+  --ui-image-upload-bg: #fcfcfc;
+  --ui-image-upload-border: #ebebeb;
+  --ui-image-upload-icon: #949494;
+  --ui-image-upload-label: #0f172a;
+  --ui-image-upload-muted: #878787;
+  --ui-image-upload-overlay: rgb(5 11 20 / 50%);
+  --ui-image-overlay-bg: rgb(5 11 20 / 50%);
+  --ui-image-overlay-text: #fff;
+  --ui-image-upload-preview-bg: #fafafa;
+  --ui-image-upload-text: #050b14;
+  --ui-pagination-color: var(--ui-t-white-color);
+  --ui-card-hover-color: var(--ui-t-blue-color-10);
+  --ui-card-color: var(--ui-t-white-color);
+  --ui-card-active-color: #8ebbfe;
+  --ui-copilot-color: var(--ui-t-blue-color-10);
+  --ui-navwrap-color: rgb(255 255 255 / 60%);
+  --ui-message-color: var(--ui-t-gray-color-70);
+  --ui-gray-color-10-message: var(--ui-t-gray-color-10);
+  --ui-blue-color-10: var(--ui-t-blue-color-10);
+  --ui-button-def-10: rgb(0 0 0 / 4%);
+  --ui-view-item: var(--ui-t-table-first-color);
+  --ui-useremail-color: #515151;
+  --ui-tree-fooer-color: var(--ui-t-white-color);
+  --ui-input-color: var(--ui-t-white-color);
+  --ui-select-active-color: #e6f4ff;
+  --ui-tag-color: var(--ui-t-gray-color-10);
+  // 信息类胶囊标签(设计稿 Primary/Blue 20 / 80)
+  --ui-tag-info-bg: var(--ui-t-blue-color-20);
+  --ui-tag-info-color: var(--ui-t-blue-color-80);
+  // 输出项标签(设计稿 Primary/Green 50 / 300 / 900,300 与主按钮底色同源)
+  --ui-tag-output-bg: #f7fde8;
+  --ui-tag-output-border: var(--ui-t-green-button-bg);
+  --ui-tag-output-color: #4b640c;
+  // 任务状态胶囊(设计稿 Secondary/Blue、Secondary/Warning、Secondary/Error、Primary/Grey)
+  --ui-status-running-bg: #a7f0ba;
+  --ui-status-running-color: #0e6027;
+  --ui-status-starting-bg: #b0dfff;
+  --ui-status-starting-color: #00548c;
+  --ui-status-warning-bg: #fff2cb;
+  --ui-status-warning-color: #b5983e;
+  --ui-status-error-bg: #ffdcdc;
+  --ui-status-error-color: #dd3636;
+  --ui-status-idle-bg: #f3f3f3;
+  --ui-status-idle-color: #242424;
+  // 计划外空闲(已部署但不在排班窗口)用橙色,和灰色的「已停止」区分开
+  --ui-status-scheduled-bg: #ffe8cc;
+  --ui-status-scheduled-color: #b35c00;
+  // UNS Topic 卡片(设计稿 Primary/White/100 + Primary/Grey/200)
+  --ui-uns-card-bg: #fcfcfc;
+  --ui-uns-card-border: #ebebeb;
+  // 检测区域绘制中的多边形(未 finish)用黄色虚线
+  --ui-region-draft-color: #f0b429;
+  --ui-icon-color: var(--ui-t-icon-color);
+  --ui-shadow-color: var(--ui-t-shadow-color);
+  --ui-select-d-color: var(--ui-t-gray-color-40);
+  --ui-modal-color: var(--ui-t-modal-color);
+  --ui-useravatar-color: var(--ui-t-white-color);
+  --ui-boxshadow-color: var(--ui-t-boxshadow-light-color);
+  --ui-theme-color: var(--ui-t-blue-color-70);
+  --ui-theme-color-rgb: 29, 119, 254;
+  --ui-theme-button-hover-color: var(--ui-t-blue-color-80);
+  --ui-theme-button-active-color: var(--ui-t-blue-color-90);
+  --ui-home-bg-color: var(--ui-t-white-color);
+  --ui-home-border-color: var(--ui-line-color);
+  --ui-uns-home-color: var(--ui-t-table-head-color);
+  --ui-active-bg-color: var(--ui-t-gray-color-20);
+  --ui-modal-close-hover-bg: var(--ui-t-gray-color-20);
+  --ui-table-tr-color: var(--ui-line-color);
+  --ui-card-border-color: var(--ui-t-blue-color-20);
+  --ui-fill-secondary: rgb(0 0 0 / 6%);
+  --ui-fill-tertiary: rgb(0 0 0 / 4%);
+  --ui-active-with-range-bg: var(--ui-t-blue-color-10);
+  --ui-cell-hover-bg: rgb(0 0 0 / 4%);
+  --ui-header-splitter-color: var(--ui-line-color);
+  --ui-bar-height: 52px;
+  --ui-bar-height: 52px;
+  --ui-primary-bg: var(--ui-t-blue-color-10);
+  --ui-primary-bg-hover: var(--ui-t-blue-color-20);
+  --ui-primary-button-bg: var(--ui-theme-color);
+  --ui-primary-button-bg-hover: var(--ui-theme-button-hover-color);
+  --ui-primary-button-text: #fff;
+  --ui-promodal-bg-pg-color: var(--ui-t-white-color);
+  --ui-modal-mask-bg: rgb(0 0 0 / 45%);
+  --ui-icon-disabled-color: var(--ui-t-gray-color-40);
+  --ui-t-card-select-bg: var(--ui-t-light-card-select-bg);
+  --ui-t-card-hover-bg: var(--ui-t-table-head-color);
+  --ui-background-selected: rgb(141 141 141 / 20%);
+  --ui-border-interactive: #0f62fe;
+  --ui-craft-bg-color: #f4f4f4;
+  --ui-t-text-disabled-color: var(--ui-t-select-d-color);
+  --ui-t-dividr-color: var(--ui-line-color);
+  --ui-card-bg: var(--ui-t-gray-color-10);
+  --ui-card-hover-bg: var(--ui-t-gray-color-20);
+  --ui-card-active-bg: var(--ui-t-gray-color-30);
+  --ui-home-panel-bg: transparent;
+  --ui-home-panel-bg-hover: var(--ui-card-hover-bg);
+  --ui-sidebar-bg: var(--ui-bg-color);
+  --ui-sidebar-border-color: var(--ui-line-color);
+  --ui-sidebar-text-color: var(--ui-text-color);
+  --ui-sidebar-muted-color: var(--ui-description-card-color);
+  --ui-sidebar-hover-bg: var(--ui-fill-tertiary);
+  --ui-sidebar-active-bg: var(--ui-menu-active-color);
+  --ui-status-active-bg: #f6fef9;
+  --ui-status-active-text: #53b483;
+  --ui-status-active-border: #b8f182;
+  --ui-status-inactive-bg: #fef2f2;
+  --ui-status-inactive-text: #dd3636;
+  --ui-status-inactive-border: #f77c7c;
+  --ui-icon-wrapper-bg: rgb(244 244 244 / 60%);
+  --ui-icon-wrapper-border: transparent;
+  --ui-icon-wrapper-color: inherit;
+  --ui-icon-wrapper-group-bg: #a8a8a8;
+  --ui-icon-wrapper-group-color: #fff;
+  --ui-tree-search-bg: transparent;
+  --ui-tree-node-count-color: inherit;
+  --ui-tree-auto-category-color: #161616;
+  --ui-export-panel-border: rgb(198, 198, 198);
+  --ui-uns-topic-state-bg: #fefce8;
+  --ui-uns-topic-state-text: #854d0e;
+  --ui-uns-topic-state-icon: #854d0e;
+  --ui-uns-topic-action-bg: #f7fee7;
+  --ui-uns-topic-action-text: #3f6212;
+  --ui-uns-topic-action-icon: #3f6212;
+  --ui-uns-topic-metric-bg: #eff6ff;
+  --ui-uns-topic-metric-text: #1e40af;
+  --ui-uns-topic-metric-icon: #1e40af;
+  --ui-error-color: #da1e28;
+  --ui-alert-error-bg: #fee2e2;
+  --ui-alert-error-border: #fca5a5;
+  --ui-alert-error-text: #0f172a;
+  --ui-alert-error-icon: #dc2626;
+  --ui-warning-color: #f1c21b;
+
+  /* Access Level Colors - Purple */
+  --ui-access-purple-bg: #faf5ff;
+  --ui-access-purple-border: #d8b4fe;
+  --ui-access-purple-text: #9333ea;
+
+  /* Access Level Colors - Blue */
+  --ui-access-blue-bg: var(--ui-t-blue-color-10);
+  --ui-access-blue-border: var(--ui-t-blue-color-30);
+  --ui-access-blue-text: var(--ui-t-blue-color-70);
+
+  /* Access Level Colors - Gray */
+  --ui-access-gray-bg: var(--ui-t-gray-color-10);
+  --ui-access-gray-border: var(--ui-t-gray-color-30);
+  --ui-access-gray-text: var(--ui-t-gray-color-60);
+
+  /* Role Colors - Orange */
+  --ui-role-orange-bg: #fff4e5;
+  --ui-role-orange-border: #ffb380;
+  --ui-role-orange-text: var(--ui-t-orange-color);
 }
 
 /* dark Theme */
 .dark {
-  --supos-craft-bg-color: #262626;
-  --supos-text-color: var(--supos-t-white-color);
-  --supos-anti-text-color: var(--supos-t-gray-color-100);
-  --supos-bg-color: var(--supos-t-gray-color-100);
-  --supos-header-bg-color: var(--supos-t-gray-color-100);
-  --supos-color-fill: rgb(255 255 255 / 15%);
-  --supos-check-color: var(--supos-t-white-color);
-  --supos-table-head-bg-color: var(--supos-t-gray-color-50);
-  --supos-nocheck-color: #ffc;
-  --supos-charttop-bg-color: var(--supos-t-gray-color-80);
-  --supos-switchwrap-bg-color: var(--supos-t-gray-color-90);
-  --supos-switchwrap-active-bg-color: var(--supos-t-gray-color-80);
-  --supos-switchwrap-active-text-color: var(--supos-t-white-color);
-  --supos-menu-hover-color: var(--supos-t-menu-hover-color);
-  --supos-menu-active-color: var(--supos-t-menu-active-color);
-  --supos-table-head-color: var(--supos-t-gray-color-80);
-  --supos-table-first-color: var(--supos-t-gray-color-10);
-  --supos-payloadfirsttd-color: var(--supos-t-gray-color-90);
-  --supos-uns-button-color: var(--supos-t-gray-color-90);
-  --supos-user-color: var(--supos-t-gray-color-100);
-  --supos-common-card-color: var(--supos-t-gray-color-10);
-  --supos-select-card-color: var(--supos-t-menu-active-color);
-  --supos-hover-card-color: var(--supos-t-menu-hover-color);
-  --supos-lable-card-color: var(--supos-t-white-color);
-  --supos-description-card-color: var(--supos-t-gray-color-40);
-  --supos-image-card-color: var(--supos-t-gray-color-100);
-  --supos-pagination-color: var(--supos-t-gray-color-90);
-  --supos-card-hover-color: var(--supos-t-gray-color-80);
-  --supos-card-color: var(--supos-t-gray-color-90);
-  --supos-card-active-color: var(--supos-t-gray-color-80);
-  --supos-copilot-color: var(--supos-t-blue-color-100);
-  --supos-navwrap-color: rgb(5 11 20 / 20%);
-  --supos-message-color: var(--supos-t-gray-color-10);
-  --supos-gray-color-10-message: var(--supos-t-gray-color-80);
-  --supos-blue-color-10: var(--supos-t-blue-color-50);
-  --supos-button-def-10: var(--supos-t-gray-color-80);
-  --supos-view-item: var(--supos-t-gray-color-40);
-  --supos-useremail-color: var(--supos-t-gray-color-10);
-  --supos-tree-fooer-color: var(--supos-t-gray-color-80);
-  --supos-input-color: var(--supos-t-gray-color-80);
-  --supos-select-active-color: var(--supos-t-gray-color-70);
-  --supos-tag-color: var(--supos-t-gray-color-90);
-  --supos-icon-color: var(--supos-text-color);
-  --supos-shadow-color: var(--supos-t-gray-color-90);
-  --supos-select-d-color: rgb(255 255 255 / 25%);
-  --supos-modal-color: var(--supos-t-gray-color-100);
-  --supos-useravatar-color: var(--supos-t-gray-color-90);
-  --supos-boxshadow-color: var(--supos-t-boxshadow-dark-color);
-  --supos-theme-color: var(--supos-t-blue-color-70);
-  --supos-theme-color-rgb: 29, 119, 254;
-  --supos-theme-button-hover-color: var(--supos-t-blue-color-80);
-  --supos-theme-button-active-color: var(--supos-t-blue-color-90);
-  --supos-home-bg-color: var(--supos-t-gray-color-100);
-  --supos-home-border-color: var(--supos-t-gray-color-80);
-  --supos-uns-home-color: var(--supos-t-gray-color-70);
-  --supos-active-bg-color: var(--supos-t-gray-color-60);
-  --supos-table-tr-color: var(--supos-t-gray-color-50);
-  --supos-fill-secondary: rgb(255 255 255 / 8%);
-  --supos-fill-tertiary: rgb(255 255 255 / 6%);
-  --supos-active-with-range-bg: var(--supos-t-gray-color-70);
-  --supos-cell-hover-bg: var(--supos-t-gray-color-80);
-  --supos-header-splitter-color: var(--supos-t-white-color);
-  --supos-primary-bg: var(--supos-t-gray-color-70);
-  --supos-primary-bg-hover: var(--supos-t-gray-color-80);
-  --supos-promodal-bg-pg-color: var(--supos-t-boxshadow-dark-color);
-  --supos-modal-mask-bg: rgb(255 255 255 / 45%);
-  --supos-icon-disabled-color: rgb(255 255 255 / 25%);
-  --supos-t-card-select-bg: var(--supos-t-gray-color-80);
-  --supos-t-card-hover-bg: var(--supos-t-menu-hover-color);
-  --supos-layer-selecter-hover: #d1d1d1;
-  --supos-t-text-disabled-color: var(--supos-t-white-select-d-color);
-  --supos-t-dividr-color: #6e6e6e;
-  --supos-card-bg: var(--supos-t-gray-color-90);
-  --supos-card-hover-bg: var(--supos-t-gray-color-80);
-  --supos-card-active-bg: var(--supos-t-gray-color-70);
+  --ui-codemirror-gutter-border: rgb(255 255 255 / 30%);
+  --ui-craft-bg-color: var(--ui-t-gray-color-90);
+  --ui-line-color: var(--ui-t-gray-color-80);
+  --ui-control-border: var(--ui-t-gray-color-70);
+  --ui-border-color: var(--ui-line-color);
+  --ui-text-color: var(--ui-t-white-color);
+  --ui-anti-text-color: var(--ui-t-gray-color-100);
+  --ui-bg-color: var(--ui-t-gray-color-100);
+  --ui-header-bg-color: var(--ui-t-gray-color-100);
+  --ui-color-fill: rgb(255 255 255 / 15%);
+  --ui-check-color: var(--ui-t-white-color);
+  --ui-table-head-bg-color: var(--ui-t-gray-color-100);
+  --ui-nocheck-color: #ffc;
+  --ui-charttop-bg-color: var(--ui-t-gray-color-80);
+  --ui-switchwrap-bg-color: var(--ui-t-gray-color-90);
+  --ui-switchwrap-active-bg-color: var(--ui-t-gray-color-80);
+  --ui-switchwrap-active-text-color: var(--ui-t-white-color);
+  --ui-menu-hover-color: var(--ui-t-gray-color-90);
+  --ui-menu-active-color: var(--ui-t-blue-color-100);
+  --ui-table-head-color: var(--ui-t-gray-color-80);
+  --ui-table-first-color: var(--ui-t-gray-color-10);
+  --ui-payloadfirsttd-color: var(--ui-t-gray-color-90);
+  --ui-uns-button-color: var(--ui-t-gray-color-90);
+  --ui-modal-secondary-btn-hover-bg: color-mix(in srgb, var(--ui-uns-button-color) 70%, #fff 30%);
+  --ui-user-color: var(--ui-t-gray-color-100);
+  --ui-common-card-color: var(--ui-t-gray-color-10);
+  --ui-select-card-color: var(--ui-t-menu-active-color);
+  --ui-hover-card-color: var(--ui-t-menu-hover-color);
+  --ui-lable-card-color: var(--ui-t-white-color);
+  --ui-description-card-color: var(--ui-t-gray-color-40);
+  --ui-image-card-color: var(--ui-t-gray-color-100);
+  --ui-image-upload-bg: var(--ui-input-color);
+  --ui-image-upload-border: var(--ui-line-color);
+  --ui-image-upload-icon: var(--ui-description-card-color);
+  --ui-image-upload-label: var(--ui-text-color);
+  --ui-image-upload-muted: var(--ui-description-card-color);
+  --ui-image-upload-overlay: rgb(5 11 20 / 50%);
+  --ui-image-overlay-bg: rgb(5 11 20 / 58%);
+  --ui-image-overlay-text: #fff;
+  --ui-image-upload-preview-bg: var(--ui-input-color);
+  --ui-image-upload-text: var(--ui-text-color);
+  --ui-pagination-color: var(--ui-t-gray-color-90);
+  --ui-card-hover-color: var(--ui-t-gray-color-80);
+  --ui-card-color: var(--ui-t-gray-color-90);
+  --ui-card-active-color: var(--ui-t-gray-color-70);
+  --ui-copilot-color: var(--ui-t-blue-color-100);
+  --ui-navwrap-color: rgb(5 11 20 / 20%);
+  --ui-message-color: var(--ui-t-gray-color-10);
+  --ui-gray-color-10-message: var(--ui-t-gray-color-80);
+  --ui-blue-color-10: var(--ui-t-blue-color-50);
+  --ui-button-def-10: var(--ui-t-gray-color-80);
+  --ui-view-item: var(--ui-t-gray-color-40);
+  --ui-useremail-color: var(--ui-t-gray-color-10);
+  --ui-tree-fooer-color: var(--ui-t-gray-color-80);
+  --ui-input-color: var(--ui-t-gray-color-80);
+  --ui-select-active-color: var(--ui-t-blue-color-100);
+  --ui-tag-color: var(--ui-t-gray-color-90);
+  // 暗色下标签底色压深、文字取亮档，保证对比度
+  --ui-tag-info-bg: var(--ui-t-blue-color-90);
+  --ui-tag-info-color: var(--ui-t-blue-color-20);
+  --ui-tag-output-bg: var(--ui-t-chartreuse-color-100);
+  --ui-tag-output-border: var(--ui-t-chartreuse-color-80);
+  --ui-tag-output-color: var(--ui-t-chartreuse-color-30);
+  // 暗色下状态胶囊压深底色、提亮文字
+  --ui-status-running-bg: #0e6027;
+  --ui-status-running-color: #a7f0ba;
+  --ui-status-starting-bg: #00548c;
+  --ui-status-starting-color: #b0dfff;
+  --ui-status-warning-bg: #5c4b12;
+  --ui-status-warning-color: #fff2cb;
+  --ui-status-error-bg: #6b1414;
+  --ui-status-error-color: #ffdcdc;
+  --ui-status-idle-bg: var(--ui-t-gray-color-80);
+  --ui-status-idle-color: var(--ui-t-gray-color-20);
+  --ui-status-scheduled-bg: #7a3d00;
+  --ui-status-scheduled-color: #ffe8cc;
+  --ui-uns-card-bg: var(--ui-t-gray-color-90);
+  --ui-uns-card-border: var(--ui-t-gray-color-80);
+  --ui-region-draft-color: #f0b429;
+  --ui-icon-color: var(--ui-text-color);
+  --ui-shadow-color: var(--ui-t-gray-color-90);
+  --ui-select-d-color: rgb(255 255 255 / 25%);
+  --ui-modal-color: var(--ui-t-gray-color-90);
+  --ui-useravatar-color: var(--ui-t-gray-color-90);
+  --ui-boxshadow-color: var(--ui-t-boxshadow-dark-color);
+  --ui-theme-color: var(--ui-t-blue-color-70);
+  --ui-theme-color-rgb: 29, 119, 254;
+  --ui-theme-button-hover-color: var(--ui-t-blue-color-80);
+  --ui-theme-button-active-color: var(--ui-t-blue-color-90);
+  --ui-home-bg-color: var(--ui-t-gray-color-100);
+  --ui-home-border-color: var(--ui-line-color);
+  --ui-uns-home-color: var(--ui-t-gray-color-70);
+  --ui-active-bg-color: var(--ui-t-gray-color-80);
+  --ui-modal-close-hover-bg: var(--ui-t-gray-color-80);
+  --ui-table-tr-color: var(--ui-line-color);
+  --ui-fill-secondary: rgb(255 255 255 / 8%);
+  --ui-fill-tertiary: rgb(255 255 255 / 6%);
+  --ui-active-with-range-bg: var(--ui-t-gray-color-70);
+  --ui-cell-hover-bg: var(--ui-t-gray-color-80);
+  --ui-header-splitter-color: var(--ui-line-color);
+  --ui-bar-height: 52px;
+  --ui-primary-bg: var(--ui-t-blue-color-100);
+  --ui-primary-bg-hover: var(--ui-t-blue-color-90);
+  --ui-primary-button-bg: var(--ui-theme-color);
+  --ui-primary-button-bg-hover: var(--ui-theme-button-hover-color);
+  --ui-primary-button-text: #fff;
+  --ui-promodal-bg-pg-color: var(--ui-t-boxshadow-dark-color);
+  --ui-modal-mask-bg: rgb(0 0 0 / 55%);
+  --ui-icon-disabled-color: rgb(255 255 255 / 25%);
+  --ui-t-card-select-bg: var(--ui-t-gray-color-80);
+  --ui-t-card-hover-bg: var(--ui-t-menu-hover-color);
+  --ui-layer-selecter-hover: var(--ui-t-gray-color-40);
+  --ui-t-text-disabled-color: var(--ui-t-white-select-d-color);
+  --ui-t-dividr-color: var(--ui-line-color);
+  --ui-card-bg: var(--ui-t-gray-color-100);
+  --ui-card-hover-bg: var(--ui-t-gray-color-80);
+  --ui-card-active-bg: var(--ui-t-gray-color-70);
+  --ui-home-panel-bg: rgb(255 255 255 / 3%);
+  --ui-home-panel-bg-hover: rgb(255 255 255 / 5%);
+  --ui-sidebar-bg: var(--ui-t-gray-color-90);
+  --ui-sidebar-border-color: var(--ui-t-gray-color-80);
+  --ui-sidebar-text-color: var(--ui-t-gray-color-10);
+  --ui-sidebar-muted-color: var(--ui-t-gray-color-40);
+  --ui-sidebar-hover-bg: var(--ui-t-gray-color-90);
+  --ui-sidebar-active-bg: var(--ui-t-gray-color-80);
+  --ui-status-active-bg: #1a3a2a;
+  --ui-status-active-text: #53b483;
+  --ui-status-active-border: #3d6b4a;
+  --ui-status-inactive-bg: #3a1f22;
+  --ui-status-inactive-text: #ff8a8a;
+  --ui-status-inactive-border: #7f343a;
+  --ui-icon-wrapper-bg: rgb(38 38 38 / 60%);
+  --ui-icon-wrapper-border: var(--ui-control-border);
+  --ui-icon-wrapper-color: var(--ui-theme-color);
+  --ui-icon-wrapper-group-bg: var(--ui-t-gray-color-80);
+  --ui-icon-wrapper-group-color: var(--ui-t-gray-color-10);
+  --ui-tree-search-bg: var(--ui-input-color);
+  --ui-tree-node-count-color: var(--ui-icon-color);
+  --ui-tree-auto-category-color: var(--ui-icon-color);
+  --ui-export-panel-border: var(--ui-control-border);
+  --ui-uns-topic-state-bg: #4a2f10;
+  --ui-uns-topic-state-text: #f5bd54;
+  --ui-uns-topic-state-icon: #d99a22;
+  --ui-uns-topic-action-bg: #3b560b;
+  --ui-uns-topic-action-text: #c8f36a;
+  --ui-uns-topic-action-icon: #9bd117;
+  --ui-uns-topic-metric-bg: #082e6f;
+  --ui-uns-topic-metric-text: #9fc4ff;
+  --ui-uns-topic-metric-icon: #3d8bff;
+  --ui-error-color: #fa4d56;
+  --ui-alert-error-bg: #3a1f22;
+  --ui-alert-error-border: #7f343a;
+  --ui-alert-error-text: var(--ui-text-color);
+  --ui-alert-error-icon: var(--ui-error-color);
+  --ui-warning-color: #f1c21b;
+
+  /* Access Level Colors - Purple (Dark Mode) */
+  --ui-access-purple-bg: var(--ui-t-magenta-color-90);
+  --ui-access-purple-border: var(--ui-t-magenta-color-70);
+  --ui-access-purple-text: var(--ui-t-magenta-color-40);
+
+  /* Access Level Colors - Blue (Dark Mode) */
+  --ui-access-blue-bg: var(--ui-t-blue-color-90);
+  --ui-access-blue-border: var(--ui-t-blue-color-70);
+  --ui-access-blue-text: var(--ui-t-blue-color-40);
+
+  /* Access Level Colors - Gray (Dark Mode) */
+  --ui-access-gray-bg: var(--ui-t-gray-color-90);
+  --ui-access-gray-border: var(--ui-t-gray-color-70);
+  --ui-access-gray-text: var(--ui-t-gray-color-40);
+
+  /* Role Colors - Orange (Dark Mode) */
+  --ui-role-orange-bg: #3d2817;
+  --ui-role-orange-border: #d97020;
+  --ui-role-orange-text: #ffb380;
 }
 // chartreuse
 .chartreuse {
-  --supos-theme-color: var(--supos-t-chartreuse-color-70);
-  --supos-theme-color-rgb: 148, 198, 24;
-  --supos-theme-button-hover-color: var(--supos-t-chartreuse-color-80);
-  --supos-theme-button-active-color: var(--supos-t-chartreuse-color-90);
-  --supos-card-hover-color: var(--supos-t-chartreuse-color-10);
-  --supos-card-color: var(--supos-t-chartreuse-color-90);
-  --supos-card-active-color: var(--supos-t-chartreuse-color-30);
-  --supos-card-border-color: var(--supos-t-chartreuse-color-30);
-  --supos-select-active-color: var(--supos-t-chartreuse-color-10);
-  --supos-menu-active-color: var(--supos-t-chartreuse-color-10);
-  --supos-icon-color: var(--supos-t-chartreuse-color-70);
-  --supos-copilot-color: var(--supos-t-chartreuse-color-10);
-  --supos-active-with-range-bg: var(--supos-t-chartreuse-color-10);
-  --supos-primary-bg: var(--supos-t-chartreuse-color-10);
-  --supos-primary-bg-hover: var(--supos-t-chartreuse-color-20);
+  --ui-theme-color: var(--ui-t-chartreuse-color-70);
+  --ui-theme-color-rgb: 148, 198, 24;
+  --ui-theme-button-hover-color: var(--ui-t-chartreuse-color-80);
+  --ui-theme-button-active-color: var(--ui-t-chartreuse-color-90);
+  --ui-card-hover-color: var(--ui-t-chartreuse-color-10);
+  --ui-card-color: var(--ui-t-chartreuse-color-90);
+  --ui-card-active-color: var(--ui-t-chartreuse-color-30);
+  --ui-card-border-color: var(--ui-t-chartreuse-color-30);
+  --ui-select-active-color: var(--ui-t-chartreuse-color-10);
+  --ui-menu-active-color: var(--ui-t-chartreuse-color-10);
+  --ui-icon-color: var(--ui-t-chartreuse-color-70);
+  --ui-copilot-color: var(--ui-t-chartreuse-color-10);
+  --ui-active-with-range-bg: var(--ui-t-chartreuse-color-10);
+  --ui-primary-bg: var(--ui-t-chartreuse-color-10);
+  --ui-primary-bg-hover: var(--ui-t-chartreuse-color-20);
+  --ui-primary-button-bg: var(--ui-t-green-button-bg);
+  --ui-primary-button-bg-hover: var(--ui-t-green-button-bg-hover);
+  --ui-primary-button-text: var(--ui-t-green-button-text);
 }
 // chartreuseDark 用来覆盖亮绿色主题和其它暗主题保持一致
 .chartreuseDark {
-  --supos-card-hover-color: var(--supos-t-gray-color-80);
-  --supos-select-active-color: var(--supos-t-gray-color-70);
-  --supos-menu-active-color: var(--supos-t-menu-active-color);
-  --supos-copilot-color: var(--supos-t-chartreuse-color-100);
-  --supos-active-with-range-bg: var(--supos-t-gray-color-70);
-  --supos-primary-bg: var(--supos-t-gray-color-70);
-  --supos-primary-bg-hover: var(--supos-t-gray-color-80);
+  --ui-card-hover-color: var(--ui-t-gray-color-80);
+  --ui-select-active-color: var(--ui-t-chartreuse-color-100);
+  --ui-menu-active-color: var(--ui-t-chartreuse-color-100);
+  --ui-copilot-color: var(--ui-t-chartreuse-color-100);
+  --ui-active-with-range-bg: var(--ui-t-chartreuse-color-100);
+  --ui-primary-bg: var(--ui-t-chartreuse-color-100);
+  --ui-primary-bg-hover: var(--ui-t-chartreuse-color-90);
+}
+
+.dark,
+.chartreuseDark {
+  .ant-checkbox:not(.ant-checkbox-disabled) {
+    .ant-checkbox-inner {
+      background-color: transparent;
+      border-color: var(--ui-control-border);
+    }
+
+    &:hover .ant-checkbox-inner {
+      border-color: var(--ui-theme-color);
+    }
+  }
+
+  .ant-checkbox-checked:not(.ant-checkbox-disabled) {
+    .ant-checkbox-inner {
+      background-color: var(--ui-theme-color) !important;
+      border-color: var(--ui-theme-color) !important;
+    }
+  }
+
+  .ant-checkbox-indeterminate:not(.ant-checkbox-disabled) {
+    .ant-checkbox-inner {
+      background-color: transparent !important;
+      border-color: var(--ui-control-border) !important;
+
+      &::after {
+        background-color: var(--ui-theme-color);
+      }
+    }
+  }
+
+  .ant-select-multiple {
+    .ant-select-selection-item {
+      background: rgb(255 255 255 / 8%);
+      border: 1px solid var(--ui-control-border);
+      color: var(--ui-text-color);
+    }
+
+    .ant-select-selection-item-remove {
+      color: var(--ui-description-card-color);
+
+      &:hover {
+        color: var(--ui-text-color);
+      }
+
+      .anticon,
+      svg {
+        color: inherit;
+      }
+    }
+  }
 }
 
 .ant-select-arrow {
-  color: var(--supos-text-color) !important; /* 设置下拉箭头的颜色 */
+  color: var(--ui-text-color) !important; /* 设置下拉箭头的颜色 */
 }
 
 .ant-spin .ant-spin-dot-holder {
-  color: var(--supos-theme-color);
+  color: var(--ui-theme-color);
 }
 
 .ant-menu-submenu-popup > .ant-menu-sub > .ant-menu-item {
   &:focus {
-    background-color: var(--supos-menu-active-color) !important;
+    background-color: var(--ui-menu-active-color) !important;
   }
 }
 
 .ant-menu-submenu-vertical > .ant-menu-submenu-title {
   &:focus {
-    background-color: var(--supos-menu-active-color) !important;
+    background-color: var(--ui-menu-active-color) !important;
   }
 }
 
 .ant-menu-submenu-horizontal.ant-menu-submenu-selected > .ant-menu-submenu-title {
-  color: var(--supos-text-color) !important;
+  color: var(--ui-text-color) !important;
 }
 
 .ant-menu-submenu-vertical.ant-menu-submenu-selected > .ant-menu-submenu-title {
-  color: var(--supos-theme-color) !important;
+  color: var(--ui-theme-color) !important;
 }
 
 .ant-menu-horizontal .ant-menu-item.ant-menu-item-selected .menu-label {
-  color: var(--supos-text-color) !important;
+  color: var(--ui-text-color) !important;
 }
 
 input {
-  caret-color: var(--supos-text-color) !important;
+  caret-color: var(--ui-text-color) !important;
 }
 
 input:-webkit-autofill {
-  box-shadow: 0 0 0 1000px var(--supos-input-color) inset !important;
+  box-shadow: 0 0 0 1000px var(--ui-input-color) inset !important;
 }
 
 input:-internal-autofill-previewed,
 input:-internal-autofill-selected {
-  -webkit-text-fill-color: var(--supos-text-color) !important;
+  -webkit-text-fill-color: var(--ui-text-color) !important;
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
 input::placeholder {
-  color: var(--supos-t-placeholder-color) !important;
+  color: var(--ui-t-placeholder-color) !important;
 }
+
+/* Unified structural line color (#E0E0E0) */
+.ant-divider {
+  border-block-start-color: var(--ui-line-color) !important;
+}
+
+.ant-divider-vertical {
+  border-inline-start-color: var(--ui-line-color) !important;
+}
+
+.ant-table-wrapper {
+  .ant-table,
+  .ant-table-container,
+  .ant-table-content > table,
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td,
+  .ant-table-summary > tr > td,
+  .ant-table-summary > tr > th {
+    border-color: var(--ui-line-color) !important;
+  }
+
+  .ant-table-thead > tr > th,
+  .ant-table-thead > tr > th.ant-table-cell-fix-right,
+  .ant-table-thead > tr > th.ant-table-cell-fix-left {
+    height: 47px;
+    padding: 12px 16px;
+    background: var(--ui-bg-color) !important;
+    color: var(--ui-t-gray-color-40, #a8a8a8) !important;
+    font-size: 14px;
+    font-weight: 500 !important;
+    line-height: 22px;
+    border-bottom: 1px solid var(--ui-line-color) !important;
+  }
+
+  .ant-table-thead > tr > th::before {
+    background-color: var(--ui-line-color) !important;
+  }
+
+  .ant-table-cell-fix-right,
+  .ant-table-cell-fix-left {
+    background: var(--ui-bg-color) !important;
+  }
+
+  // 固定列表头左侧短分隔线（与列间 ::before 一致），去掉阴影；表体行不显示
+  .ant-table-thead > tr > th.ant-table-cell-fix-right-first::after,
+  .ant-table-thead > tr > th.ant-table-cell-fix-left-last::after {
+    box-shadow: none !important;
+    inset-inline-start: 0 !important;
+    inset-inline-end: auto !important;
+    top: 50% !important;
+    bottom: auto !important;
+    width: 1px !important;
+    height: 1.6em !important;
+    transform: translateY(-50%) !important;
+    background: var(--ui-line-color) !important;
+    content: '' !important;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  // 固定列左侧只保留一条分隔线，避免与前一列 ::before 重叠变粗
+  .ant-table-thead > tr > th:not(.ant-table-cell-fix-right):has(+ th.ant-table-cell-fix-right-first)::before {
+    display: none !important;
+  }
+
+  .ant-table-tbody > tr > td.ant-table-cell-fix-right-first::after,
+  .ant-table-tbody > tr > td.ant-table-cell-fix-left-last::after,
+  .ant-table-tbody > tr > td.ant-table-cell-fix-right-last::after,
+  .ant-table-tbody > tr > td.ant-table-cell-fix-left-first::after {
+    display: none !important;
+  }
+
+  .ant-table-ping-right .ant-table-container::after,
+  .ant-table-ping-left .ant-table-container::before {
+    display: none !important;
+  }
+
+  .ant-table-tbody > tr.ant-table-row:hover > td.ant-table-cell-fix-right,
+  .ant-table-tbody > tr.ant-table-row:hover > td.ant-table-cell-fix-left {
+    background: var(--ui-charttop-bg-color) !important;
+  }
+
+  .ant-table-tbody > tr.ant-table-row:hover > td.ant-table-cell-scrollbar,
+  .ant-table-tbody > tr.ant-table-row-hover > td.ant-table-cell-scrollbar {
+    background: var(--ui-charttop-bg-color) !important;
+  }
+
+  .ant-table-tbody > tr > td.ant-table-cell-scrollbar {
+    background: var(--ui-bg-color) !important;
+  }
+
+  // 行 hover 时：可跳转链接自动加下划线
+  .ant-table-tbody > tr.ant-table-row:hover {
+    .table-link-button,
+    .table-nav-link,
+    .notebook-name-text {
+      text-decoration: underline;
+    }
+  }
+
+  // 表格行内操作图标统一 16x16
+  .ant-table-tbody > tr > td {
+    .operation,
+    .custom-operation,
+    .custom-pin {
+      svg {
+        width: 16px !important;
+        height: 16px !important;
+      }
+    }
+
+    svg.custom-operation,
+    svg.custom-pin {
+      width: 16px !important;
+      height: 16px !important;
+      flex-shrink: 0;
+    }
+
+    .custom-operation:not(svg) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      .anticon,
+      svg {
+        width: 16px;
+        height: 16px;
+        font-size: 16px;
+      }
+    }
+
+    .operation {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+
+      > i {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+
+.ant-select-dropdown .ant-select-tree {
+  .ant-select-tree-switcher,
+  .ant-select-tree-switcher-noop {
+    width: 18px !important;
+    margin-inline-end: 0 !important;
+  }
+
+  .ant-select-tree-indent-unit {
+    width: 12px !important;
+  }
+
+  .ant-select-tree-node-content-wrapper {
+    padding-inline-start: 2px !important;
+    background-color: transparent !important;
+  }
+
+  .ant-select-tree-treenode {
+    width: 100%;
+    align-items: center;
+    border-radius: 3px;
+
+    &:hover {
+      background-color: var(--ui-charttop-bg-color, #f4f4f4);
+    }
+  }
+
+  .ant-select-tree-node-content-wrapper:hover {
+    background-color: transparent !important;
+  }
+
+  .ant-select-tree-treenode-selected {
+    background-color: var(--ui-select-active-color, #e8e8e8);
+  }
+
+  .ant-select-tree-node-content-wrapper.ant-select-tree-node-selected {
+    background-color: transparent !important;
+  }
+
+  .ant-select-tree-switcher:not(.ant-select-tree-switcher-noop):hover::before,
+  .ant-select-tree-switcher:hover::before {
+    background-color: transparent !important;
+  }
+}
+
+.ant-input:not(:focus):not(.ant-input-focused),
+.ant-input-affix-wrapper:not(.ant-input-affix-wrapper-focused),
+.ant-input-number:not(.ant-input-number-focused),
+.ant-select:not(.ant-select-focused) .ant-select-selector,
+.ant-picker:not(.ant-picker-focused),
+.ant-segmented,
+.ant-card-bordered {
+  border-color: var(--ui-line-color) !important;
+}
+
+.ant-menu-horizontal {
+  border-bottom-color: var(--ui-line-color) !important;
+}
+
+.ant-tabs-nav::before {
+  border-bottom-color: var(--ui-line-color) !important;
+}
+
+.upload-drag-content {
+  padding: 20px 0;
+  text-align: center;
+}
+
+.upload-drag-icon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+  color: var(--ui-text-color);
+  opacity: 0.45;
+}
+
+.upload-hint-primary {
+  margin: 8px 0 0;
+  color: var(--ui-text-color);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.upload-hint-secondary {
+  margin: 4px 0 0;
+  color: var(--ui-description-card-color);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.ant-upload-wrapper {
+  .ant-upload-list-item {
+    .ant-upload-icon,
+    .ant-upload-icon .anticon {
+      color: var(--ui-theme-color);
+    }
+  }
+}
+
+.dark,
+.chartreuseDark {
+  .ant-input-affix-wrapper {
+    .ant-input-clear-icon {
+      color: var(--ui-description-card-color);
+
+      &:hover {
+        color: var(--ui-text-color);
+      }
+    }
+  }
+
+  .ant-table-wrapper {
+    .ant-table-column-sorter,
+    .ant-table-column-sorter-up,
+    .ant-table-column-sorter-down {
+      color: var(--ui-description-card-color) !important;
+    }
+
+    .ant-table-column-sorter-up.active,
+    .ant-table-column-sorter-down.active {
+      color: var(--ui-theme-color) !important;
+    }
+  }
+
+  .ant-alert-info {
+    border-color: var(--ui-access-blue-border);
+    background: var(--ui-access-blue-bg);
+
+    .ant-alert-icon,
+    .ant-alert-message,
+    .ant-alert-description {
+      color: var(--ui-access-blue-text);
+    }
+  }
+
+  .ant-empty {
+    color: var(--ui-description-card-color);
+
+    .ant-empty-description {
+      color: var(--ui-description-card-color);
+    }
+
+    .ant-empty-image {
+      svg {
+        color: rgb(255 255 255 / 60%);
+      }
+
+      path,
+      rect,
+      ellipse {
+        stroke: rgb(255 255 255 / 100%) !important;
+        fill: rgb(255 255 255 / 60%) !important;
+      }
+
+      svg > g > g > path:nth-of-type(2) {
+        fill: #dadada !important;
+      }
+    }
+  }
+
+  .ant-upload-wrapper {
+    .ant-upload-drag {
+      border: 1px dashed var(--ui-control-border) !important;
+      border-radius: 3px;
+      background: var(--ui-charttop-bg-color) !important;
+      color: var(--ui-text-color);
+      transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+
+      &:not(.ant-upload-disabled):hover,
+      &.ant-upload-drag-hover {
+        border-color: var(--ui-theme-color) !important;
+        background: var(--ui-fill-tertiary) !important;
+      }
+
+      .ant-upload-btn {
+        color: var(--ui-text-color);
+      }
+
+      .ant-upload-drag-icon,
+      .ant-upload-text {
+        color: var(--ui-text-color);
+      }
+
+      .ant-upload-hint {
+        color: var(--ui-description-card-color);
+      }
+    }
+
+    .ant-upload-list {
+      .ant-upload-list-item {
+        .ant-upload-icon,
+        .ant-upload-icon .anticon {
+          color: var(--ui-theme-color) !important;
+        }
+
+        .ant-upload-list-item-action,
+        .ant-upload-list-item-actions {
+          .ant-btn,
+          .ant-btn-text,
+          .ant-btn-icon-only {
+            color: var(--ui-description-card-color) !important;
+
+            .anticon,
+            .ant-btn-icon,
+            svg {
+              color: inherit !important;
+            }
+
+            &:hover,
+            &:focus,
+            &:active {
+              color: var(--ui-t-gray-color-10) !important;
+              background: transparent !important;
+              opacity: 1 !important;
+            }
+          }
+        }
+
+        &:hover {
+          .ant-upload-list-item-action,
+          .ant-upload-list-item-actions {
+            .ant-btn,
+            .ant-btn-text,
+            .ant-btn-icon-only {
+              color: var(--ui-t-gray-color-10) !important;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .ant-dropdown {
+    .ant-dropdown-menu {
+      background: var(--ui-bg-color);
+    }
+
+    .ant-dropdown-menu-item,
+    .ant-dropdown-menu-submenu-title {
+      color: var(--ui-text-color);
+    }
+
+    .ant-dropdown-menu-item:hover,
+    .ant-dropdown-menu-submenu-title:hover,
+    .ant-dropdown-menu-item-active,
+    .ant-dropdown-menu-submenu-title-active {
+      background: var(--ui-charttop-bg-color) !important;
+      color: var(--ui-text-color) !important;
+    }
+
+    .ant-dropdown-menu-item-divider {
+      background-color: rgb(255 255 255 / 30%) !important;
+      opacity: 1 !important;
+    }
+  }
+
+  .ant-message {
+    .ant-message-notice-content {
+      border: 1px solid var(--ui-control-border);
+      background: var(--ui-modal-color);
+      color: var(--ui-text-color);
+      box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+    }
+
+    .ant-message-custom-content {
+      color: var(--ui-text-color);
+    }
+
+    .anticon {
+      color: var(--ui-theme-color);
+    }
+
+    .anticon-check-circle {
+      color: var(--ui-status-active-text);
+    }
+
+    .anticon-close-circle {
+      color: var(--ui-error-color);
+    }
+
+    .anticon-exclamation-circle {
+      color: var(--ui-warning-color);
+    }
+  }
+
+  .ant-btn-default.ant-btn-variant-filled {
+    border: 1px solid var(--ui-control-border) !important;
+    background: var(--ui-input-color) !important;
+    color: var(--ui-text-color) !important;
+    box-shadow: none !important;
+
+    &:not(:disabled):hover,
+    &:not(:disabled):focus,
+    &:not(:disabled):active {
+      border-color: var(--ui-theme-color) !important;
+      background: var(--ui-fill-secondary) !important;
+      color: var(--ui-text-color) !important;
+    }
+  }
+
+  .ant-btn-default.ant-btn-variant-outlined {
+    border: 1px solid var(--ui-control-border) !important;
+    background: rgb(255 255 255 / 6%) !important;
+    color: var(--ui-text-color) !important;
+    box-shadow: none !important;
+
+    &:not(:disabled):hover,
+    &:not(:disabled):focus,
+    &:not(:disabled):active {
+      border-color: var(--ui-theme-color) !important;
+      background: rgb(255 255 255 / 10%) !important;
+      color: var(--ui-text-color) !important;
+    }
+  }
+
+  .ant-modal-close {
+    color: var(--ui-text-color) !important;
+    background: transparent !important;
+
+    &:hover,
+    &:focus {
+      color: var(--ui-text-color) !important;
+      background: var(--ui-fill-secondary) !important;
+    }
+
+    .ant-modal-close-x,
+    .anticon,
+    svg {
+      color: inherit !important;
+    }
+  }
+
+  .ant-drawer-close {
+    color: var(--ui-text-color) !important;
+    background: transparent !important;
+
+    &:hover,
+    &:focus {
+      color: var(--ui-text-color) !important;
+      background: var(--ui-fill-secondary) !important;
+    }
+
+    .anticon,
+    svg {
+      color: inherit !important;
+      fill: currentColor !important;
+    }
+  }
+}
+
 // 全局分页样式
 .custom-pagination {
   .ant-pagination-item,
   .ant-pagination-options-quick-jumper,
   .ant-pagination-options-quick-jumper input {
-    background-color: var(--supos-header-bg-color) !important;
+    background-color: var(--ui-header-bg-color) !important;
   }
 
   .ant-pagination-item-active,
   .ant-pagination-options-quick-jumper input:focus-within {
-    border-color: var(--supos-theme-color) !important;
+    border-color: var(--ui-theme-color) !important;
   }
 
   .ant-pagination-item-active a {
-    color: var(--supos-theme-color) !important;
+    color: var(--ui-theme-color) !important;
+  }
+}
+
+.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  .ant-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+  }
+}
+
+.ant-btn-primary:not(:disabled):not(.ant-btn-dangerous) {
+  color: var(--ui-primary-button-text) !important;
+  background: var(--ui-primary-button-bg) !important;
+  border-color: var(--ui-primary-button-bg) !important;
+  box-shadow: none !important;
+
+  &:not(:disabled):hover,
+  &:not(:disabled):focus {
+    color: var(--ui-primary-button-text) !important;
+    background: var(--ui-primary-button-bg-hover) !important;
+    border-color: var(--ui-primary-button-bg-hover) !important;
+  }
+
+  &:not(:disabled):active {
+    color: var(--ui-primary-button-text) !important;
+    background: var(--ui-primary-button-bg-hover) !important;
+    border-color: var(--ui-primary-button-bg-hover) !important;
+  }
+}
+
+.ant-form-item-tooltip {
+  cursor: default !important;
+}
+
+/* 全局弹窗垂直居中 + Figma 弹窗排版规范 */
+.ant-modal-root {
+  .ant-modal-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &::before {
+      display: none;
+    }
+
+    .ant-modal:not(.fullscreen-mode) {
+      top: auto !important;
+      padding-bottom: 0;
+      margin: 0 auto;
+      max-width: calc(100vw - 32px);
+    }
+  }
+
+  .ant-modal:not(.fullscreen-mode) .ant-modal-content {
+    padding: 24px 24px 22px;
+    border-radius: 3px;
+    background: var(--ui-modal-color);
+  }
+
+  .ant-modal-header {
+    margin-bottom: 24px;
+    padding: 0;
+    background: transparent;
+  }
+
+  .ant-modal-title,
+  .ant-modal-confirm-title {
+    color: var(--ui-text-color);
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 30px;
+  }
+
+  .ant-modal-body {
+    padding: 0;
+  }
+
+  .ant-modal-close {
+    top: 24px;
+    inset-inline-end: 24px;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    color: var(--ui-text-color) !important;
+    background: transparent !important;
+    transition: background 0.2s;
+
+    &:hover,
+    &:focus {
+      color: var(--ui-text-color) !important;
+      background: var(--ui-modal-close-hover-bg) !important;
+    }
+
+    .ant-modal-close-x {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .anticon,
+    svg {
+      color: inherit !important;
+    }
+  }
+
+  .ant-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 0;
+
+    .ant-btn {
+      min-width: 72px;
+      height: 32px;
+      border-radius: 3px;
+    }
+  }
+
+  .ant-modal-footer,
+  .ant-modal-confirm-btns,
+  .operation-form__footer,
+  .operation-form > .ant-flex,
+  .ant-modal-body .ant-flex-justify-end,
+  .ant-modal-body .ant-flex-justify-flex-end,
+  .ant-modal-body .upload-modal-footer {
+    .ant-btn-default:not(.ant-btn-dangerous):not(.ant-btn-primary) {
+      border: none !important;
+      background: var(--ui-uns-button-color) !important;
+      color: var(--ui-text-color) !important;
+      box-shadow: none !important;
+
+      &:not(:disabled):hover,
+      &:not(:disabled):focus,
+      &:not(:disabled):active {
+        border: none !important;
+        background: var(--ui-modal-secondary-btn-hover-bg) !important;
+        color: var(--ui-text-color) !important;
+      }
+    }
+  }
+
+  .ant-modal-confirm-body {
+    .ant-modal-confirm-title {
+      color: var(--ui-text-color);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 30px;
+    }
+  }
+
+  .ant-modal-confirm-content {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  .ant-modal-confirm-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 24px;
+
+    .ant-btn {
+      min-width: 72px;
+      height: 32px;
+      border-radius: 3px;
+    }
+  }
+
+  .tier0-delete-confirm-modal {
+    .ant-modal-content {
+      background: var(--ui-modal-color);
+    }
+
+    .ant-modal-confirm-body {
+      display: block;
+    }
+
+    .ant-modal-confirm-paragraph {
+      margin: 0;
+      row-gap: 4px;
+    }
+
+    .ant-modal-confirm-title {
+      margin: 0;
+      color: var(--ui-text-color);
+    }
+
+    .ant-modal-confirm-content {
+      max-width: none;
+      margin-top: 4px;
+      color: var(--ui-text-color);
+    }
+
+    .tier0-delete-confirm-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 0;
+      color: var(--ui-text-color);
+    }
+
+    .tier0-delete-confirm-message {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: var(--ui-text-color);
+      font-size: 14px;
+      line-height: 22px;
+    }
+
+    .ant-modal-confirm-btns {
+      .ant-btn-dangerous.ant-btn-primary {
+        color: #fff;
+
+        &:hover,
+        &:focus {
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  .menu-unsaved-confirm-modal {
+    .ant-modal-content {
+      padding: 24px;
+      background: var(--ui-modal-color);
+    }
+
+    .ant-modal-confirm-body {
+      display: block;
+      padding: 0;
+    }
+
+    .ant-modal-confirm-content {
+      max-width: none;
+      margin-top: 0;
+      color: var(--ui-text-color);
+      font-size: 16px;
+      line-height: 24px;
+    }
+
+    .menu-unsaved-confirm-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-height: 48px;
+      overflow-wrap: anywhere;
+    }
+
+    .menu-unsaved-confirm-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--ui-warning-color);
+      stroke-width: 1.75;
+    }
+
+    .ant-modal-confirm-btns {
+      margin-top: 24px;
+    }
+  }
+
+  .oauth-client-form-modal {
+    .ant-modal-content {
+      background: var(--ui-modal-color);
+    }
+
+    .ant-modal-confirm-body {
+      display: block;
+    }
+
+    .ant-modal-confirm-paragraph {
+      margin: 0;
+      row-gap: 0;
+    }
+
+    .ant-modal-confirm-title {
+      margin: 0;
+    }
+
+    .ant-modal-confirm-content {
+      max-width: none;
+      margin-top: 8px;
+      color: var(--ui-text-color);
+    }
+  }
+
+  .oauth-client-success-modal {
+    .ant-modal-content {
+      padding: 24px;
+      background: var(--ui-modal-color);
+    }
+
+    .ant-modal-confirm-body {
+      display: block;
+      padding: 0;
+    }
+
+    .ant-modal-confirm-content {
+      max-width: none;
+      margin-top: 0;
+      color: var(--ui-text-color);
+    }
+
+    .oauth-client-success-content {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 16px 12px;
+      align-items: start;
+    }
+
+    .oauth-client-success-icon {
+      grid-row: 1 / span 3;
+      margin-top: 3px;
+      color: var(--ui-status-active-text);
+      stroke-width: 1.75;
+    }
+
+    .oauth-client-success-title {
+      margin: 0;
+      color: var(--ui-text-color);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 30px;
+    }
+
+    .oauth-client-success-label {
+      color: var(--ui-text-color);
+      font-size: 14px;
+      line-height: 22px;
+    }
+
+    .ant-modal-confirm-btns {
+      margin-top: 24px;
+    }
+  }
+
+  .ant-form-item-label > label {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 18px;
+  }
+
+  .ant-form-vertical .ant-form-item-label {
+    padding: 0 0 8px;
+  }
+
+  .ant-form .ant-form-item {
+    margin-bottom: 16px;
+  }
+
+  .operation-form {
+    padding: 0;
+
+    &__footer,
+    > .ant-flex {
+      gap: 8px !important;
+
+      .ant-btn,
+      .com-button {
+        min-width: 72px;
+        height: 32px;
+        border-radius: 3px;
+      }
+    }
+  }
+
+  .delete-confirm-modal {
+    .ant-modal-close {
+      top: 24px;
+      inset-inline-end: 24px;
+    }
+
+    .delete-confirm-close-icon {
+      font-size: 18px;
+      color: inherit;
+      vertical-align: middle;
+    }
+
+    .ant-modal-confirm-body {
+      display: block;
+      padding: 0;
+    }
+
+    .ant-modal-confirm-paragraph {
+      margin: 0;
+    }
+
+    .ant-modal-confirm-title {
+      display: block;
+      margin: 0;
+      padding-right: 48px;
+      min-height: 28px;
+      font-size: 20px;
+      line-height: 28px;
+    }
+
+    .ant-modal-confirm-content {
+      margin-top: 8px;
+      color: #525252;
+      font-size: 14px;
+      line-height: 22px;
+    }
+
+    .ant-modal-confirm-content:empty {
+      display: none;
+      margin-top: 0;
+    }
+
+    .ant-modal-confirm-btns .ant-btn-dangerous {
+      color: #fff;
+      background: #da1e28;
+      border-color: #da1e28;
+
+      &:hover,
+      &:focus {
+        color: #fff;
+        background: #da1e28;
+        border-color: #da1e28;
+      }
+    }
   }
 }

@@ -1,11 +1,12 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { pageListUnsByLabel, cancelLabel } from '@/apis/inter-api/uns';
+import { pageListUnsByLabel, cancelLabel } from '@/apis/core-api/uns';
 import { useTranslate } from '@/hooks';
 import { Flex, App, Tooltip } from 'antd';
-import { Document, TrashCan } from '@carbon/icons-react';
-import { ButtonPermission } from '@/common-types/button-permission.ts';
+import { Document, TrashCan } from '@/components/lucide-icon/carbon';
 import ProTable from '@/components/pro-table';
 import { hasPermission } from '@/utils/auth';
+
+const legacyLabelDetailAuth = 'Namespace.label_detail';
 
 interface FileListRefProps {
   getList: (id: string, params?: any) => void;
@@ -94,7 +95,7 @@ const FileList = forwardRef<FileListRefProps, FileListProps>(({ labelId }, ref) 
             dataIndex: 'path',
             width: '70%',
             render: (text: any) => (
-              <span style={{ color: 'var(--supos-theme-color)', wordBreak: 'break-word' }}>{text}</span>
+              <span style={{ color: 'var(--ui-theme-color)', wordBreak: 'break-word' }}>{text}</span>
             ),
           },
           {
@@ -102,7 +103,7 @@ const FileList = forwardRef<FileListRefProps, FileListProps>(({ labelId }, ref) 
             dataIndex: 'operation',
             width: '5%',
             align: 'center',
-            hidden: !hasPermission(ButtonPermission['uns.labelDetail']),
+            hidden: !hasPermission(legacyLabelDetailAuth),
             render: (_, record: any) => (
               <Tooltip title={formatMessage('common.delete')}>
                 <TrashCan

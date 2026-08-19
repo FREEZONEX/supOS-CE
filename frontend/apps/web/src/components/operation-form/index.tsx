@@ -41,13 +41,19 @@ const OperationForm: FC<OperationFormProps> = ({
         height: 40,
       }
     : {
-        height: 30,
+        height: 32,
       };
+  const stretchButtonStyle = buttonConfig?.block
+    ? {
+        flex: 1,
+        minWidth: 0,
+      }
+    : undefined;
   return (
     <Form
       labelAlign={'left'}
       className={'operation-form'}
-      style={{ padding: '20px 40px', overflow: 'hidden', ...style }}
+      style={{ overflow: 'visible', ...style }}
       colon={false}
       labelCol={{ span: 11 }}
       wrapperCol={{ span: 13 }}
@@ -69,14 +75,11 @@ const OperationForm: FC<OperationFormProps> = ({
       {footer ? (
         footer
       ) : (
-        <Flex gap="10px" justify="end">
+        <Flex gap="8px" justify="end" className="operation-form__footer">
           <ComButton
             style={{
-              flex: 1,
-              minWidth: 0,
+              ...stretchButtonStyle,
               ...buttonStyle,
-              backgroundColor: 'var(--supos-uns-button-color)',
-              color: 'var(--supos-text-color)',
             }}
             color="default"
             variant="filled"
@@ -88,8 +91,7 @@ const OperationForm: FC<OperationFormProps> = ({
           </ComButton>
           <ComButton
             style={{
-              flex: 1,
-              minWidth: 0,
+              ...stretchButtonStyle,
               ...buttonStyle,
             }}
             type="primary"
