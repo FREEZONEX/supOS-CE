@@ -76,7 +76,7 @@ services:
       - ${HOST_SYS_PATH:-/sys}:/host/sys:ro
 
   tsdb:
-    image: harbor.tier0.dev/library/timescaledb:2.20.0-pg17-pgvector0.8.5
+    image: timescale/timescaledb:2.20.0-pg17
     container_name: ${COMPOSE_PROJECT_NAME:-edge}-tsdb
     profiles:
       - local-db
@@ -113,7 +113,7 @@ services:
       - runtime
 
   redis:
-    image: harbor.tier0.dev/library/redis:7-alpine
+    image: redis:7-alpine
     container_name: ${COMPOSE_PROJECT_NAME:-edge}-redis
     profiles:
       - local-redis
@@ -135,7 +135,7 @@ services:
       - runtime
 
   emqx:
-    image: harbor.tier0.dev/library/emqx:5.8
+    image: emqx/emqx:5.8
     container_name: ${COMPOSE_PROJECT_NAME:-edge}-emqx
     restart: ${EMQX_RESTART_POLICY:-unless-stopped}
     logging:
@@ -168,7 +168,7 @@ services:
       - runtime
 
   sourceflow:
-    image: harbor.tier0.dev/library/node-red:4.1.10-22
+    image: nodered/node-red:4.1.10
     container_name: ${COMPOSE_PROJECT_NAME:-edge}-sourceflow
     restart: unless-stopped
     logging:
@@ -204,7 +204,7 @@ services:
           - nodered
 
   eventflow:
-    image: harbor.tier0.dev/library/node-red:4.1.10-22
+    image: nodered/node-red:4.1.10
     container_name: ${COMPOSE_PROJECT_NAME:-edge}-eventflow
     restart: unless-stopped
     logging:

@@ -195,8 +195,8 @@ volume_has_contents() {
 cleanup_helper_image() {
   local image
   for image in \
-    "harbor.tier0.dev/library/redis:7-alpine" \
-    "harbor.tier0.dev/library/timescaledb:2.20.0-pg17-pgvector0.8.5"; do
+    "redis:7-alpine" \
+    "timescale/timescaledb:2.20.0-pg17"; do
     if docker image inspect "${image}" >/dev/null 2>&1; then
       printf '%s\n' "${image}"
       return 0

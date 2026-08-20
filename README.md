@@ -52,7 +52,7 @@ cd Tier0-Edge/deploy
 bash bin/install.sh
 ```
 
-The default development image is `harbor.tier0.dev/tier0/tier0-edge-backend:dev`. The installer creates `.env`, generates internal runtime secrets, pulls the configured images, and starts the complete stack. The development login is `tier0` / `tier0`. Resolved values are written to `deploy/.env.runtime`; keep that file private and do not edit it manually.
+The default backend image is `tier0/tier0-edge:3.0.0`. The installer creates `.env`, generates internal runtime secrets, pulls the configured images, and starts the complete stack. The development login is `tier0` / `tier0`. Resolved values are written to `deploy/.env.runtime`; keep that file private and do not edit it manually.
 
 To customize ports, domains, storage, or the backend image before first startup:
 
@@ -63,7 +63,7 @@ cp .env.default .env
 bash bin/install.sh
 ```
 
-`harbor.tier0.dev` permits anonymous pulls for the public repositories used by this deployment.
+All default runtime images are public Docker Hub images and can be pulled without Harbor credentials.
 
 After installation:
 
