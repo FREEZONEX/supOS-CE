@@ -120,7 +120,7 @@ const SettingsPage = () => {
     []
   );
   const isLaunchpadStandalone = isLaunchpadStandalonePort();
-  const disabledOpenSourceSettings = new Set(['license', 'ai-settings']);
+  const disabledOpenSourceSettings = new Set(['ai-settings']);
   const sourceGroups = (isLaunchpadStandalone ? groups.filter((group) => group.key === 'user') : groups).map((group) => ({
     ...group,
     items: group.items.filter((item) => !disabledOpenSourceSettings.has(item.key)),

@@ -41,9 +41,17 @@ export const regressionContract = {
     'OAuth 客户端',
     '审计日志',
   ],
+  disabledLicenseLabels: [
+    'License',
+    '许可证',
+    'common.license',
+    'license.status.unknown',
+    'license.validUntil',
+  ],
   hiddenUserManagementLabels: ['Role Permission', 'Role Settings', '角色权限'],
   hiddenUserTableHeaders: ['Role', '角色'],
   retainedSettingsRoutes: ['/settings/users'],
+  licenseFreeSettingsRoutes: ['/settings/system-configuration'],
   disabledSettingsRoutes: [],
   disabledFrontendRoutes: [
     '/account-management',
@@ -51,5 +59,6 @@ export const regressionContract = {
     '/MenuConfiguration',
     '/oauth-clients',
     '/audit-log',
+    '/license-activation',
   ],
 };
