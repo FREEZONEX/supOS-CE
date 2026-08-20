@@ -256,6 +256,11 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
     `open ${baseURL}/settings/profile`,
     'wait --load networkidle',
     browserEval("JSON.stringify({settingsPath:location.pathname,settingsItems:document.querySelector('aside').innerText,settingsBody:document.body.innerText.slice(0,1500)})"),
+    ...regressionContract.licenseFreeSettingsRoutes.flatMap((path) => [
+      `open ${baseURL}${path}`,
+      'wait --load networkidle',
+      browserEval(`JSON.stringify({licenseFreeSettingsRoute:${JSON.stringify(path)},path:location.pathname,body:document.body.innerText.slice(0,6000)})`),
+    ]),
     ...regressionContract.retainedSettingsRoutes.flatMap((path) => [
       `open ${baseURL}${path}`,
       'wait --load networkidle',
@@ -322,6 +327,21 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
   if (leakedSettingsLabels.length) {
     throw new Error(`disabled settings remain visible: ${leakedSettingsLabels.join(', ')}`);
   }
+  const licenseFreeSettingsRouteStates = browserObjects.filter((item) =>
+    Object.hasOwn(item, 'licenseFreeSettingsRoute')
+  );
+  for (const path of regressionContract.licenseFreeSettingsRoutes) {
+    const routeState = licenseFreeSettingsRouteStates.find((item) => item.licenseFreeSettingsRoute === path);
+    if (!routeState) throw new Error(`license-free settings route state was not emitted: ${path}`);
+    if (routeState.path !== path) {
+      throw new Error(`license-free settings route landed on ${routeState.path || '<empty>'}, expected ${path}`);
+    }
+    const body = String(routeState.body || '');
+    const leakedLicenseLabels = regressionContract.disabledLicenseLabels.filter((label) => body.includes(label));
+    if (leakedLicenseLabels.length) {
+      throw new Error(`License UI remains visible on ${path}: ${leakedLicenseLabels.join(', ')}`);
+    }
+  }
   const retainedSettingsRouteStates = browserObjects.filter((item) => Object.hasOwn(item, 'retainedSettingsRoute'));
   for (const path of regressionContract.retainedSettingsRoutes) {
     const routeState = retainedSettingsRouteStates.find((item) => item.retainedSettingsRoute === path);
@@ -383,6 +403,7 @@ const runBrowserRegression = ({ baseURL, username, password, screenshot }) => {
     forbiddenRequestsObserved: false,
     notFoundOrPermissionState: false,
     disabledSettingsVisible: false,
+    licenseUIHidden: true,
     userManagementVisible: true,
     roleManagementHidden: true,
     newUserRoleSelectorHidden: true,

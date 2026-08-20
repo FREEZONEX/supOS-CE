@@ -1,23 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { App, Button, Form, Input, Modal, Tabs, Alert } from 'antd';
-import { Copy, Edit, Password, UserAvatar } from '@carbon/icons-react';
+import { App, Button, Form, Input, Modal, Alert } from 'antd';
+import { Edit, Password, UserAvatar } from '@carbon/icons-react';
 import ComSelect from '@/components/com-select';
 import HomePageSelect from '@/components/home-page-select';
 import { setHomePageApi, updateCurrentUserProfile, userResetPwd } from '@/apis/core-api/user-manage';
 import { logoutApi } from '@/apis/core-api/auth';
-import {
-  queryIdentity,
-  queryLicenseStatus,
-  replaceLicenseBundle,
-  replaceLicenseKey,
-  type LicenseStatusResp,
-} from '@/apis/core-api/license';
 import { LOGIN_URL, OMC_MODEL, APP_USER_GUIDE_ROUTES, APP_USER_TIPS_ENABLE } from '@/common-types/constans';
 import { useTranslate } from '@/hooks';
 import { fetchBaseStore, fetchSystemInfo, updateForUserInfo, useBaseStore } from '@/stores/base';
 import { initI18n, useI18nStore } from '@/stores/i18n-store.ts';
 import { removeToken } from '@/utils/auth';
-import { copyToClipboard } from '@/utils/common';
 import { passwordRegex, validNameRegex } from '@/utils/pattern';
 import { preloadPluginLang } from '@/utils/plugin.ts';
 import { storageOpt } from '@/utils/storage';
@@ -26,11 +18,10 @@ import { isLaunchpadStandalonePort } from '@/utils/launchpad-site';
 import Cookies from 'js-cookie';
 import styles from './account-settings-panel.module.scss';
 
-type SettingsTab = 'profile' | 'preferences' | 'security' | 'license';
+type SettingsTab = 'profile' | 'preferences' | 'security';
 
 type AccountSettingsPanelProps = {
   activeTab?: SettingsTab;
-  embedded?: boolean;
 };
 
 const logout = (path?: string) => {
@@ -44,14 +35,8 @@ const logout = (path?: string) => {
   });
 };
 
-const maskLicenseKey = (licenseKey?: string) => {
-  if (!licenseKey) return '----';
-  if (licenseKey.includes('*')) return licenseKey;
-  if (licenseKey.length <= 8) return licenseKey;
-  return `${licenseKey.slice(0, 5)}****${licenseKey.slice(-4)}`;
-};
 
-const AccountSettingsPanel = ({ activeTab = 'profile', embedded = false }: AccountSettingsPanelProps) => {
+const AccountSettingsPanel = ({ activeTab = 'profile' }: AccountSettingsPanelProps) => {
   const formatMessage = useTranslate();
   const { message } = App.useApp();
   const { currentUserInfo, systemInfo, menuGroup, pluginList } = useBaseStore((state) => ({
@@ -70,22 +55,9 @@ const AccountSettingsPanel = ({ activeTab = 'profile', embedded = false }: Accou
   const [passwordForm] = Form.useForm();
   const [homeForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [licenseLoading, setLicenseLoading] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
-  const [isEditingLicense, setIsEditingLicense] = useState(false);
-  const [licenseDeviceToken, setLicenseDeviceToken] = useState('');
-  const [licenseActiveTab, setLicenseActiveTab] = useState('online');
-  const [licenseKeyInput, setLicenseKeyInput] = useState('');
-  const [bundleJsonInput, setBundleJsonInput] = useState('');
-  const [licenseError, setLicenseError] = useState('');
   const preferencesRoutesLoadedRef = useRef(false);
-  const [licenseInfo, setLicenseInfo] = useState<{
-    licenseKey?: string;
-    status?: 'active' | 'expiring_soon' | 'expired' | 'unknown';
-    validUntil?: string;
-    daysRemaining?: number;
-  }>({});
   const name = currentUserInfo.firstName || currentUserInfo.preferredUsername || '';
   const avatarInitial = name.trim().slice(0, 1).toLocaleUpperCase();
   const canEditAccount = currentUserInfo?.sub !== 'guest';
@@ -98,81 +70,6 @@ const AccountSettingsPanel = ({ activeTab = 'profile', embedded = false }: Accou
       phone: currentUserInfo?.phone,
       email: currentUserInfo?.email,
     });
-  };
-
-  const fetchLicenseStatus = async () => {
-    setLicenseLoading(true);
-    try {
-      const data: LicenseStatusResp = await queryLicenseStatus();
-      const phase = data?.phase;
-      const isActivated = data?.activated;
-      let status: 'active' | 'expiring_soon' | 'expired' | 'unknown' = 'unknown';
-      if (!isActivated || phase === 'none') {
-        status = 'unknown';
-      } else if (phase === 'warning') {
-        status = 'expiring_soon';
-      } else if (phase === 'grace' || phase === 'hard_expired') {
-        status = 'expired';
-      } else {
-        status = 'active';
-      }
-
-      setLicenseInfo({
-        licenseKey: data?.licenseKey,
-        validUntil: data?.expireAt,
-        daysRemaining: data?.daysLeft,
-        status,
-      });
-    } finally {
-      setLicenseLoading(false);
-    }
-  };
-
-  const fetchDeviceToken = async () => {
-    const resp = await queryIdentity();
-    if (resp?.device_token) {
-      setLicenseDeviceToken(resp.device_token);
-    }
-  };
-
-  const resolveUpdateLicenseKeyErrorMessage = (rawMessage?: string) => {
-    const messageText = (rawMessage || '').trim();
-    if (!messageText) {
-      return formatMessage('license.updateLicenseKeyFailed');
-    }
-
-    // license.error.* 开头的 key 直接走 i18n 翻译
-    if (messageText.startsWith('license.error.')) {
-      return formatMessage(messageText, {}, messageText);
-    }
-
-    const normalized = messageText.toLowerCase();
-    if (
-      messageText.includes('License激活被服务端拒绝') ||
-      messageText.includes('License 激活被服务端拒绝') ||
-      messageText.includes('许可证密钥未通过服务端校验') ||
-      normalized.includes('license activation rejected by server') ||
-      normalized.includes('license key was rejected by the server')
-    ) {
-      return formatMessage('license.updateLicenseKeyRejectedDetail');
-    }
-    if (
-      messageText.includes('许可证密钥无效') ||
-      normalized.includes('this license key is invalid') ||
-      normalized.includes('license key not found on cloud server')
-    ) {
-      return formatMessage('license.invalidLicenseKey');
-    }
-    if (
-      messageText.includes('许可证已被禁用') ||
-      messageText.includes('该许可证已被禁用') ||
-      normalized.includes('license has been disabled') ||
-      normalized.includes('this license has been disabled')
-    ) {
-      return formatMessage('license.disabledLicenseKey');
-    }
-
-    return messageText;
   };
 
   const onSaveProfile = async () => {
@@ -237,78 +134,6 @@ const AccountSettingsPanel = ({ activeTab = 'profile', embedded = false }: Accou
     });
   };
 
-  const resetLicenseModal = () => {
-    setIsEditingLicense(false);
-    setLicenseActiveTab('online');
-    setLicenseKeyInput('');
-    setBundleJsonInput('');
-    setLicenseError('');
-  };
-
-  const onSaveLicense = async () => {
-    setLicenseError('');
-    if (licenseActiveTab === 'online') {
-      if (!licenseKeyInput.trim()) {
-        setLicenseError(formatMessage('rule.required'));
-        return;
-      }
-    } else {
-      const trimmed = bundleJsonInput.trim();
-      if (!trimmed) {
-        setLicenseError(formatMessage('rule.required'));
-        return;
-      }
-      try {
-        JSON.parse(trimmed);
-      } catch {
-        setLicenseError(formatMessage('license.invalidJson'));
-        return;
-      }
-    }
-
-    setLicenseLoading(true);
-    try {
-      if (licenseActiveTab === 'online') {
-        await replaceLicenseKey(licenseKeyInput.trim());
-      } else {
-        await replaceLicenseBundle(bundleJsonInput.trim());
-      }
-      message.success(formatMessage('license.updateLicenseKeySuccess'));
-      resetLicenseModal();
-      void fetchLicenseStatus;
-    } catch (error: any) {
-      message.error(resolveUpdateLicenseKeyErrorMessage(error?.msg));
-    } finally {
-      setLicenseLoading(false);
-    }
-  };
-
-  const getLicenseStatusInfo = (status?: string) => {
-    switch (status) {
-      case 'active':
-        return formatMessage('license.status.active');
-      case 'expiring_soon':
-        return formatMessage('license.status.expiring');
-      case 'expired':
-        return formatMessage('license.status.expired');
-      default:
-        return formatMessage('license.status.unknown');
-    }
-  };
-
-  const getLicenseStatusClassName = (status?: string) => {
-    switch (status) {
-      case 'active':
-        return styles['status-active'];
-      case 'expiring_soon':
-        return styles['status-warning'];
-      case 'expired':
-        return styles['status-expired'];
-      default:
-        return styles['status-unknown'];
-    }
-  };
-
   useEffect(() => {
     resetProfileForm();
   }, [currentUserInfo?.email, currentUserInfo?.firstName, currentUserInfo?.phone]);
@@ -327,10 +152,6 @@ const AccountSettingsPanel = ({ activeTab = 'profile', embedded = false }: Accou
     homeForm.setFieldValue('homePage', currentUserInfo?.homePage);
   }, [activeTab, currentUserInfo?.homePage, homeForm, showHomePagePreference]);
 
-  useEffect(() => {
-    void fetchLicenseStatus;
-    void fetchDeviceToken;
-  }, []);
 
   if (activeTab === 'preferences') {
     return (
@@ -500,134 +321,6 @@ const AccountSettingsPanel = ({ activeTab = 'profile', embedded = false }: Accou
               <Input.Password placeholder={formatMessage('appGui.password')} disabled={!canEditAccount} />
             </Form.Item>
           </Form>
-        </Modal>
-      </div>
-    );
-  }
-
-  if (activeTab === 'license') {
-    return (
-      <div className={`${styles['settings-panel']} ${styles['license-panel']}`}>
-        {embedded ? (
-          <h2 className={styles['section-title']}>{formatMessage('common.license')}</h2>
-        ) : (
-          <div className={styles['panel-header']}>
-            <h1 className={styles['panel-title']}>{formatMessage('common.license')}</h1>
-            <div className={styles['panel-subtitle']}>{formatMessage('settings.licenseDesc')}</div>
-          </div>
-        )}
-        <div className={styles['license-section']}>
-          <div className={styles['license-row']}>
-            <div className={styles['license-label']}>{formatMessage('license.licenseKey')}</div>
-            <div className={styles['license-value']}>
-              <span className={styles.mono}>{maskLicenseKey(licenseInfo.licenseKey)}</span>
-              <Button icon={<Edit size={14} />} onClick={() => setIsEditingLicense(true)} />
-            </div>
-          </div>
-          <div className={styles['license-row']}>
-            <div className={styles['license-label']}>{formatMessage('common.status')}</div>
-            <div className={styles['license-value']}>
-              <span className={`${styles.status} ${getLicenseStatusClassName(licenseInfo.status)}`}>
-                <span className={styles['status-dot']} />
-                {getLicenseStatusInfo(licenseInfo.status)}
-              </span>
-            </div>
-          </div>
-          <div className={styles['license-row']}>
-            <div className={styles['license-label']}>{formatMessage('license.validUntil')}</div>
-            <div className={styles['license-value']}>{licenseInfo.validUntil || '----'}</div>
-          </div>
-          <div className={styles['license-row']}>
-            <div className={styles['license-label']}>{formatMessage('license.deviceToken')}</div>
-            <div className={styles['license-value']}>
-              <span className={`${styles.mono} ${styles['token-value']}`}>{licenseDeviceToken || '----'}</span>
-              {licenseDeviceToken ? (
-                <Button
-                  icon={<Copy size={14} />}
-                  onClick={() => {
-                    copyToClipboard(licenseDeviceToken, (success) => {
-                      if (success) {
-                        message.success(formatMessage('license.copySuccess'));
-                      } else {
-                        message.error(formatMessage('common.copyFail'));
-                      }
-                    });
-                  }}
-                />
-              ) : null}
-            </div>
-          </div>
-        </div>
-        <Modal
-          open={isEditingLicense}
-          title={formatMessage('common.license')}
-          footer={null}
-          width={560}
-          className={styles.licenseModal}
-          onCancel={resetLicenseModal}
-          destroyOnClose
-        >
-          <div className={styles['license-modal-content']}>
-            <Tabs
-              activeKey={licenseActiveTab}
-              onChange={setLicenseActiveTab}
-              items={[
-                { key: 'online', label: formatMessage('license.onlineActivation') },
-                { key: 'offline', label: formatMessage('license.offlineActivation') },
-              ]}
-            />
-            {licenseActiveTab === 'online' && (
-              <div className={styles['form-field']}>
-                <label>{formatMessage('license.licenseKey')}</label>
-                <Input
-                  value={licenseKeyInput}
-                  onChange={(e) => setLicenseKeyInput(e.target.value)}
-                  placeholder={formatMessage('license.enterLicenseKey')}
-                />
-              </div>
-            )}
-            {licenseActiveTab === 'offline' && (
-              <>
-                <Alert type="info" showIcon message={formatMessage('license.offlineInfo')} />
-                <div className={styles['form-field']}>
-                  <label>{formatMessage('license.deviceTokenLabel')}</label>
-                  <div className={styles['token-row']}>
-                    <Input value={licenseDeviceToken} readOnly />
-                    <Button
-                      icon={<Copy size={14} />}
-                      onClick={() => {
-                        copyToClipboard(licenseDeviceToken, (success) => {
-                          if (success) {
-                            message.success(formatMessage('license.copySuccess'));
-                          } else {
-                            message.error(formatMessage('common.copyFail'));
-                          }
-                        });
-                      }}
-                    >
-                      {formatMessage('license.copyDeviceToken')}
-                    </Button>
-                  </div>
-                </div>
-                <div className={styles['form-field']}>
-                  <label>{formatMessage('license.bundleJson')}</label>
-                  <Input.TextArea
-                    value={bundleJsonInput}
-                    onChange={(e) => setBundleJsonInput(e.target.value)}
-                    rows={6}
-                    placeholder={formatMessage('license.pasteBundle')}
-                  />
-                </div>
-              </>
-            )}
-            {licenseError && <div className={styles['license-error']}>{licenseError}</div>}
-            <div className={styles.actions}>
-              <Button onClick={resetLicenseModal}>{formatMessage('common.cancel')}</Button>
-              <Button type="primary" loading={licenseLoading} onClick={onSaveLicense}>
-                {licenseActiveTab === 'online' ? formatMessage('common.save') : formatMessage('license.importBundle')}
-              </Button>
-            </div>
-          </div>
         </Modal>
       </div>
     );

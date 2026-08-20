@@ -4,7 +4,6 @@ import ComLayout from '@/components/com-layout';
 import ComSelect from '@/components/com-select';
 import HelpTooltip from '@/components/help-tooltip';
 import { useTranslate } from '@/hooks';
-import AccountSettingsPanel from '@/pages/settings/AccountSettingsPanel';
 import styles from './index.module.scss';
 
 type SessionDurationValue = '12h' | '1d' | '7d' | '30d' | 'permanent';
@@ -43,9 +42,6 @@ const SystemConfiguration: FC<SystemConfigurationProps> = ({ title }) => {
             />
           </div>
         </section>
-        <div className={styles.license}>
-          <AccountSettingsPanel activeTab="license" embedded />
-        </div>
       </ComContent>
     </ComLayout>
   );
