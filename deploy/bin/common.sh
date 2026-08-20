@@ -27,7 +27,7 @@ if [[ ! "${DEFAULT_PRODUCT_VERSION}" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]*$ ]]; then
 fi
 CURRENT_INSTALL_SCHEMA_VERSION=3
 INSTALL_SCHEMA_VERSION="${CURRENT_INSTALL_SCHEMA_VERSION}"
-BACKEND_IMAGE_REPOSITORY="harbor.tier0.dev/tier0/tier0-edge-backend"
+BACKEND_IMAGE_REPOSITORY="tier0/tier0-edge"
 
 # shellcheck source=env-loader.sh
 source "${SCRIPT_DIR}/env-loader.sh"

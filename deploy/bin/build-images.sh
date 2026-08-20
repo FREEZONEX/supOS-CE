@@ -9,7 +9,7 @@ if [[ -f "${DEPLOY_DIR}/.env" ]]; then
   source_env_pair "${DEPLOY_DIR}/.env" "${DEPLOY_DIR}/.env.runtime"
 fi
 : "${PRODUCT_VERSION:?PRODUCT_VERSION is required}"
-image_ref="${BACKEND_IMAGE:-harbor.tier0.dev/tier0/tier0-edge-backend:${PRODUCT_VERSION}}"
+image_ref="${BACKEND_IMAGE:-tier0/tier0-edge:${PRODUCT_VERSION}}"
 LOCAL_FRONTEND_DEV="${LOCAL_FRONTEND_DEV:-false}" "${SCRIPT_DIR}/prepare-web-artifacts.sh"
 build_args=(--pull=false)
 if [[ -n "${DOCKER_BUILD_NETWORK:-}" ]]; then
