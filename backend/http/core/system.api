@@ -1,0 +1,24 @@
+syntax = "v1"
+
+@server(
+    group: core/system
+)
+service backend {
+    @handler Healthz
+    get /healthz returns (Envelope)
+
+    @handler Readyz
+    get /readyz returns (Envelope)
+
+    @handler Metrics
+    get /metrics returns (Envelope)
+}
+
+@server(
+    prefix: /api/core
+    group: core/system
+)
+service backend {
+    @handler Config
+    get /system/config returns (Envelope)
+}

@@ -1,4 +1,5 @@
-import { type ReactNode, useRef, useState } from 'react';
+import { type ReactNode, Suspense, useRef, useState } from 'react';
+import { Spin } from 'antd';
 import { TabsLifecycleContext } from '@/contexts/tabs-lifecycle-context.ts';
 import { useMount, useUpdateEffect } from 'ahooks';
 
@@ -35,7 +36,15 @@ const TabWrapper = ({ children, isActive }: { children: ReactNode; isActive: boo
 
   return (
     <TabsLifecycleContext.Provider value={{ activate, unActivate, isShowRef }}>
-      {children}
+      <Suspense
+        fallback={
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <Spin />
+          </div>
+        }
+      >
+        {children}
+      </Suspense>
     </TabsLifecycleContext.Provider>
   );
 };

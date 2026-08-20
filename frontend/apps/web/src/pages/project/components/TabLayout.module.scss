@@ -1,0 +1,16 @@
+.toolbarActions {
+  grid-column: 2;
+  grid-row: 1;
+  place-self: center end;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-right: 24px;
+}
+
+.tabContent {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 100%;
+  overflow: auto;
+}

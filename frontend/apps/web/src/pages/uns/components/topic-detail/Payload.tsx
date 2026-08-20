@@ -12,16 +12,33 @@ interface PayloadProps {
   fields: FieldItem[];
 }
 
+const normalizeDateTimeValue = (value: any) => {
+  if (value === null || value === undefined || value === '') return '';
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^\d+$/.test(trimmed)) return Number(trimmed);
+  }
+  return value;
+};
+
+const formatDateTimeValue = (value: any) => {
+  const normalized = normalizeDateTimeValue(value);
+  const formatted = formatTimestamp(normalized);
+  return formatted && formatted !== 'Invalid Date' ? formatted : value;
+};
+
 const Payload: FC<PayloadProps> = ({ websocketData, fields }) => {
-  const { data, dt = {}, msg } = websocketData || {};
   const formatMessage = useTranslate();
+  const { data, dt = {}, msg } = websocketData || {};
   if (msg) {
     return <Alert message={<span style={{ color: '#161616' }}>{msg}</span>} type="error" showIcon />;
   }
   const tableData = Object.keys(data || {}).map((key: string) => ({
     key,
     value:
-      fields?.find((e) => e.name === key)?.type?.toLowerCase() === 'datetime' ? formatTimestamp(data[key]) : data[key],
+      fields?.find((e) => e.name === key)?.type?.toLowerCase() === 'datetime'
+        ? formatDateTimeValue(data[key])
+        : data[key],
     timestamp: typeof dt[key] === 'string' ? (dt[key] as any) - 0 : dt[key],
   }));
   return (
@@ -41,13 +58,13 @@ const Payload: FC<PayloadProps> = ({ websocketData, fields }) => {
           width: '30%',
           ellipsis: true,
           render: (text) => {
-            console.log(text);
             const _text = simpleFormat(text);
             return (
               <ComCopyContent
                 textToCopy={_text}
+                className="payload-copy-content"
                 style={{
-                  color: 'var(--supos-theme-color)',
+                  color: 'var(--ui-text-color)',
                   background: 'transparent',
                   padding: 0,
                 }}
@@ -61,7 +78,7 @@ const Payload: FC<PayloadProps> = ({ websocketData, fields }) => {
           width: '40%',
           ellipsis: true,
           render: (_, record) => (
-            <span style={{ color: 'var(--supos-theme-color)' }}>{formatTimestamp(record.timestamp)}</span>
+            <span style={{ color: 'var(--ui-theme-color)' }}>{formatTimestamp(record.timestamp)}</span>
           ),
         },
       ]}

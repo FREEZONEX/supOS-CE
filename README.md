@@ -1,103 +1,80 @@
-# TIER0: The Unified Namespace Software
+# Tier0 Edge
 
+Tier0 Edge is an open-source industrial data platform for collecting, organizing, and serving edge data through UNS, Flow, MQTT, and HTTP APIs.
 
-[![Static Badge](https://img.shields.io/badge/Try%20Tier0-Live%20Demo-blue?style=flat&logo=rocket&logoColor=red)](https://tier0.app/trial)
-[![Docs](https://img.shields.io/badge/docs-available-brightgreen?style=flat&logo=readthedocs)](https://tier0edge.vercel.app/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-yellow?style=flat&logo=open-source-initiative)](./LICENSE)
+## Included capabilities
 
-**Tier0** is an open-source industrial data integration platform built on the **Unified Namespace (UNS)** methodology and powered by production-grade open-source technologies.
+- Core UNS (permanent delete; no recycle bin)
+- Source Flow and Event Flow (no versions or rollback)
+- API Key with UNS and Flow scopes
+- Local user and role management plus personal settings
+- Anonymous MQTT transport
+- Local filesystem storage only
 
----
+## Architecture
 
-## Hardware Requirements
+```mermaid
+flowchart LR
+  Browser[Web browser] --> Backend[Backend API and web gateway]
+  Devices[Devices and MQTT clients] --> EMQX[EMQX broker]
+  EMQX --> Backend
+  Backend --> TSDB[(TimescaleDB)]
+  Backend --> Redis[(Redis)]
+  Backend --> LocalFiles[(Local filesystem)]
+  Backend <--> SourceFlow[SourceFlow / Node-RED]
+  Backend <--> EventFlow[EventFlow / Node-RED]
+```
 
-|             | Minimum Requirement                  | Recommended Requirement                       |
-|-------------|--------------------------------------|-----------------------------------------------|
-| CPU         | 4 cores                              | 8 cores                                       |
-| Memory      | 8 GB                                 | 16 GB                                         |
-| Disk        | 100 GB, 1000 IOPS (30% random write)      | 1 TB, 2000 IOPS (30% random write)        |
-| Browser     | Chrome 89, Edge 89, Firefox 89, Safari 15 | Chrome 89, Edge 89, Firefox 89, Safari 15 |
+| Component | Responsibility |
+| --- | --- |
+| `backend/` | Go API service, authentication, UNS, gateway, migrations, and built web assets |
+| `frontend/` | Web application source |
+| `deploy/` | Single-node Docker Compose templates and lifecycle scripts |
+| TimescaleDB | Metadata and time-series persistence |
+| Redis | Cache and runtime coordination |
+| EMQX | Anonymous MQTT connectivity for local and external clients |
+| SourceFlow / EventFlow | Node-RED based collection and event processing |
+| Local filesystem | Files under `VOLUMES_PATH/backend/files` |
 
-## Deployment
-> For detailed guides and advanced examples, see the <a href="https://tier0edge.tech/">Tier0 Community Docs</a>.
-### 1.Linux
-#### 1.1 Operating Environment
-- **Operating System**: Currently tested on Ubuntu Server 24.04 with Docker. We welcome feedback on other OS distributions.
-- **Docker**: We assume you have Docker (with `docker compose` and `buildx`) installed. Our tested versions:
-  - Docker Engine - Community: 27.4.0
-  - Docker Buildx: v0.19.2
-  - Docker Compose: v2.31.0
-  - containerd: 1.7.24
+## Installation
 
-#### 1.2 Installing Tier0
-1. Clone the project.
-   ```bash
-   git clone <this repo>
-   ```
-2. Navigate to the `Tier0` directory and edit environment variables in the `.env` file.
-   ```bash
-   cd Tier0-Edge/deploy
-   vi .env.default
-   ```
-  - Update `VOLUMES_PATH` (directory for storing project data).
-  - Update `ENTRANCE_DOMAIN` (frontend entry domain/IP address).
-  - Modify other variables as needed.
-3. Install Tier0.
-   ```bash
-   bash bin/install.sh
-   ```
-### 2.Windows
-#### 2.1 Operating Environment
-- Install the latest version of **Docker Desktop** and **Git** on Windows 10 or Windows 11.
-- It is recommended to perform all operations in **Git Bash** for better compatibility.
-#### 2.2 Installing Tier0
-1. Clone the project using **Git Bash**.
-   ```bash
-   git clone <this repo>
-   ```
-2. Navigate to the `Tier0` directory and edit environment variables in the `.env` file.
-   ```bash
-   cd Tier0-Edge/deploy
-   vi .env.default
-   ```
-  - Update `OS_PLATFORM_TYPE` = windows
-  - Update `VOLUMES_PATH` (directory for storing project data).
-  - Update `ENTRANCE_DOMAIN`  (Do not use 127.0.0.1 or localhost, otherwise login and authentication functions **will NOT** work.)
-  - Modify other variables as required by the system.
-3. Install Tier0.
-   ```bash
-   bash bin/install.sh
-   ```
-### 3. Access the Platform
-1. Visit `http://<YOUR-DOMAIN>:<YOUR-PORT>` in your browser (based on ENTRANCE_DOMAIN and ENTRANCE_PORT in `.env`).
-2. Sign in to Tier0 with default account and password: `tier0/tier0`.
----
+### Prerequisites
 
-## Important Startup Operations
-### 1. UNS Data Model Creation
-1. Send the template JSON from **Import** to an LLM, and use a similar prompt.
-    ```
-    Generate a UNS model used for xx in xx plant, including xx equipment and data sources based on the template.
-    ```
-2. Import the generated result in UNS.
+- Linux, macOS, WSL, or Windows with a Bash-compatible shell
+- Docker Engine or Docker Desktop with Docker Compose v2
+- Network access to Docker Hub
 
-### 2. Model Data Source Connection
-> Connect real data to make models alive.
-1. Use nodes based on the data source type to build a flow, and end it with an `mqtt out` node.
-  > Install nodes from Node-RED community for your requirements. Official nodes often start with `node-red-contrib`.
+### Install
 
-2. Make sure the **Server** of the `mqtt out` node is set to the UNS broker, and topic is a model from **UNS**.
-  > The UNS broker has the same name as that of the flow.
----
-## License
-This project is licensed under the [Apache 2.0 License](./LICENSE).
+```bash
+git clone https://github.com/FREEZONEX/Tier0-Edge.git
+cd Tier0-Edge/deploy
+cp .env.default .env
+# Edit .env before the first start (see the configuration table below).
+bash bin/install.sh
+```
 
-## Support & Contact
-- 📖 [Documentation](https://suposcommunity.vercel.app)
-- 🐞 [GitHub Issues](./issues)
+The default backend image is `tier0/tier0-edge:3.0.0`; TimescaleDB, Redis, EMQX, and Node-RED also use public Docker Hub images. The installer generates internal runtime secrets, pulls the configured images, and starts the complete stack.
 
-## Contributors
-We gratefully acknowledge the following individuals for their contributions to Tier0:
+### Common `.env` settings
 
-**Wenhao Yu**, **Liebo**, **Weipeng Dong**, **Kangxi**, **Lifang Sun**, **Minghe Zhuang**,  
-**Wangji Xin**, **Fayue Zheng & Yue Yang**, **Yanqiu Liu**, **Dongdong An**, **Jianan Zhu**
+| Setting | Use | Example |
+| --- | --- | --- |
+| `VOLUMES_PATH` | Host directory that stores all persistent database, Flow, MQTT, and file data. Choose a durable disk before the first start. | `/srv/tier0/data` on Linux; `D:/tier0/data` or `/d/tier0/data` in Windows Bash |
+| `ENTRANCE_DOMAIN` / `ENTRANCE_PORT` | Address and port used to open the platform. | `192.168.1.10` / `8088` |
+| `ADMIN_INITIAL_PASSWORD` | Password for the initial `tier0` administrator. Change it before exposing the service. | A strong private password |
+| `COMPOSE_PROJECT_NAME` / `PORT_OFFSET` | Isolate multiple instances running on the same host. | `edge_lab` / `100` |
+
+`VOLUMES_PATH` is the most important setting: keep it stable for the lifetime of an instance. Back up that directory before uninstalling, relocating Docker, or performing destructive maintenance. Do not edit `deploy/.env.runtime`; it contains generated secrets and resolved runtime values.
+
+### Access and verify
+
+- Open `http://127.0.0.1:8088/uns` when using the defaults.
+- Sign in with `tier0` / `tier0` when using the defaults.
+- Check service health and readiness from `deploy/`:
+
+```bash
+bash bin/compose.sh ps
+bash bin/compose.sh logs -f backend
+curl -fsS http://127.0.0.1:8088/readyz
+```

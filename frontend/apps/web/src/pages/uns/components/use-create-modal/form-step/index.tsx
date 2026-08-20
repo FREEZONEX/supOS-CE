@@ -1,8 +1,7 @@
 import { type FC, useState, type Dispatch, type SetStateAction, useEffect } from 'react';
-import { ChevronRight, ChevronLeft } from '@carbon/icons-react';
+import { ChevronRight, ChevronLeft } from '@/components/lucide-icon/carbon';
 import { Form, App, Button, Flex } from 'antd';
-import { addModel, pasteUns } from '@/apis/inter-api/uns';
-import { topic2Uns } from '@/apis/inter-api/external';
+import { addModel, pasteUns } from '@/apis/core-api/uns';
 import { useTranslate, useFormValue } from '@/hooks';
 import dayjs from 'dayjs';
 import { cloneDeep } from 'lodash-es';
@@ -46,9 +45,7 @@ const FormStep: FC<FormStepProps> = ({
   const form = Form.useFormInstance();
   const [loading, setLoading] = useState(false);
 
-  const { operationFns, setCurrentTreeMapType, lazyTree, treeData } = useTreeStore((state) => ({
-    operationFns: state.operationFns,
-    setCurrentTreeMapType: state.setCurrentTreeMapType,
+  const { lazyTree, treeData } = useTreeStore((state) => ({
     lazyTree: state.lazyTree,
     treeData: state.treeData,
   }));
@@ -72,6 +69,23 @@ const FormStep: FC<FormStepProps> = ({
     return obj;
   };
 
+  const hasFieldDefinition = (field?: Partial<FieldItem>) => {
+    if (!field) return false;
+    return [field.name, field.type, field.unit].some(
+      (value) => value !== undefined && value !== null && String(value).trim() !== ''
+    );
+  };
+
+  const normalizeSchemaField = (field: FieldItem) => ({
+    name: field.name,
+    type: field.type,
+    unit: field.unit,
+    unique: field.unique,
+  });
+
+  const normalizeSchemaFields = (fieldItems?: FieldItem[]) =>
+    Array.isArray(fieldItems) ? fieldItems.filter(hasFieldDefinition).map(normalizeSchemaField) : [];
+
   const save = () => {
     form
       .validateFields()
@@ -88,23 +102,17 @@ const FormStep: FC<FormStepProps> = ({
           description,
           extend,
           addFlow,
-          addDashBoard,
-          save2db,
+          persistence,
           calculationType,
           refers,
           expression,
-          tags,
           mainKey,
           frequency,
           referIds,
           referId,
-          modelId,
           name,
-          createTemplate,
           displayName,
           timeReference,
-          accessLevel,
-          extendFieldUsed,
 
           functions,
           DataSource,
@@ -116,7 +124,6 @@ const FormStep: FC<FormStepProps> = ({
           _advancedOptions,
           table,
 
-          path,
           pasteInfo,
           parentDataType,
           pasteNode,
@@ -142,63 +149,22 @@ const FormStep: FC<FormStepProps> = ({
               alias,
               dataType,
               description,
-              save2db,
+              persistence,
               pathType: 2,
               extend: extendToObj(extend),
-              labelNames: tags?.map(({ label, value }: { label: string; value: string }) => label || value) || [],
               fields: [1, 2, 3, 8].includes(dataType) ? fields : undefined,
-              addDashBoard,
               parentDataType: derivedParentDataType || parentDataType,
             };
-
-        if (isCreateFolder && modelId === 'custom' && fields?.length > 0) {
-          data.createTemplate = createTemplate;
-        }
-        data.modelId = modelId && modelId !== 'custom' ? modelId : undefined;
 
         if (!isCreateFolder) {
           switch (dataType) {
             case 1:
             case 2:
               if (dataType === 1) {
-                data.fields = fields
-                  .filter((e: FieldItem) => !e.systemField)
-                  .map(
-                    ({
-                      name,
-                      type,
-                      displayName,
-                      remark,
-                      maxLen,
-                      unit,
-                      upperLimit,
-                      lowerLimit,
-                      decimal,
-                    }: FieldItem) => ({
-                      name,
-                      type,
-                      displayName,
-                      remark,
-                      maxLen,
-                      unit: extendFieldUsed?.includes('unit') ? unit : undefined,
-                      upperLimit: extendFieldUsed?.includes('upperLimit') ? upperLimit : undefined,
-                      lowerLimit: extendFieldUsed?.includes('lowerLimit') ? lowerLimit : undefined,
-                      decimal: extendFieldUsed?.includes('decimal') ? decimal : undefined,
-                    })
-                  );
-                if (!modelId) {
-                  data.extendFieldUsed = extendFieldUsed;
-                }
+                data.fields = normalizeSchemaFields(fields.filter((e: FieldItem) => !e.systemField));
               } else {
                 if (mainKey > -1) fields[mainKey].unique = true;
-                data.fields = fields.map((e: FieldItem) => ({
-                  name: e.name,
-                  type: e.type,
-                  displayName: e.displayName,
-                  remark: e.remark,
-                  maxLen: e.maxLen,
-                  unique: e.unique,
-                }));
+                data.fields = normalizeSchemaFields(fields);
               }
               data.addFlow = addFlow;
               if (table?.value) {
@@ -209,36 +175,10 @@ const FormStep: FC<FormStepProps> = ({
                     ?.join('.'),
                 };
               }
-              data.accessLevel = accessLevel;
               break;
             case 3:
               if (calculationType === 3) {
-                data.extendFieldUsed = extendFieldUsed;
-                data.fields = fields
-                  .filter((e: FieldItem) => !e.systemField)
-                  .map(
-                    ({
-                      name,
-                      type,
-                      displayName,
-                      remark,
-                      maxLen,
-                      unit,
-                      upperLimit,
-                      lowerLimit,
-                      decimal,
-                    }: FieldItem) => ({
-                      name,
-                      type,
-                      displayName,
-                      remark,
-                      maxLen,
-                      unit: extendFieldUsed?.includes('unit') ? unit : undefined,
-                      upperLimit: extendFieldUsed?.includes('upperLimit') ? upperLimit : undefined,
-                      lowerLimit: extendFieldUsed?.includes('lowerLimit') ? lowerLimit : undefined,
-                      decimal: extendFieldUsed?.includes('decimal') ? decimal : undefined,
-                    })
-                  );
+                data.fields = normalizeSchemaFields(fields.filter((e: FieldItem) => !e.systemField));
 
                 type ReferItemType = {
                   refer: {
@@ -297,13 +237,12 @@ const FormStep: FC<FormStepProps> = ({
             case 7:
               Object.assign(data, {
                 referIds: [referId?.value],
-                save2db: undefined,
-                addDashBoard: undefined,
+                persistence: undefined,
               });
               break;
             case 8:
               Object.assign(data, {
-                fields: [{ name: 'json', type: 'string' }],
+                fields: normalizeSchemaFields(fields),
               });
               break;
             default:
@@ -344,18 +283,6 @@ const FormStep: FC<FormStepProps> = ({
             }
           );
         };
-        const labelList =
-          tags?.map(({ label, value }: { label: string; value: string | number }) => ({
-            ...(label ? { id: value } : { labelName: value }),
-          })) || [];
-
-        const addRequest = isFormTopic ? topic2Uns : addModel;
-        if (isFormTopic) {
-          delete data.alias;
-          delete data.parentId;
-          data.path = path;
-          data.labelList = labelList;
-        }
         if (pasteInfo) {
           pasteUns({
             sourceId: pasteInfo?.sourceId || undefined,
@@ -375,23 +302,17 @@ const FormStep: FC<FormStepProps> = ({
               setLoading(false);
             });
         } else {
-          const finalData = [2, 8].includes(data?.dataType)
-            ? {
-                ...data,
-                fields: [1, 2, 3].includes(dataType) ? fields : undefined,
-                jsonFields: [8].includes(dataType) && fields?.[0]?.name ? fields : undefined,
-              }
-            : data;
-          addRequest(finalData)
+          const finalData =
+            data?.dataType === 2
+              ? {
+                  ...data,
+                  fields: data.fields,
+                }
+              : data;
+          addModel(finalData)
             .then((res: any) => {
               message.success(formatMessage('uns.newSuccessfullyAdded'));
-              if (isFormTopic) {
-                setCurrentTreeMapType('all');
-                handleCallback(res, 'addFile');
-                operationFns?.refreshUnusedTopicTree?.(path);
-              } else {
-                handleCallback(res, isCreateFolder ? 'addFolder' : 'addFile');
-              }
+              handleCallback(res, isCreateFolder ? 'addFolder' : 'addFile');
               handleClose(() => setLoading(false));
             })
             .catch((err) => {
@@ -409,9 +330,7 @@ const FormStep: FC<FormStepProps> = ({
             });
         }
       })
-      .catch((info) => {
-        console.error('校验失败:', info);
-      })
+      .catch(() => undefined)
       .finally(() => {
         if (addNamespaceForAi) {
           setAddNamespaceForAi?.(null);
@@ -442,8 +361,7 @@ const FormStep: FC<FormStepProps> = ({
         <Button
           color="default"
           variant="filled"
-          size="small"
-          style={{ color: 'var(--supos-text-color)', backgroundColor: 'var(--supos-uns-button-color)' }}
+          style={{ color: 'var(--ui-text-color)', backgroundColor: 'var(--ui-uns-button-color)' }}
           icon={<ChevronLeft />}
           onClick={() => {
             setStep(() => step - 1);
@@ -467,7 +385,7 @@ const FormStep: FC<FormStepProps> = ({
             save?.();
           }}
         >
-          <Button color="primary" variant="solid" size="small" onClick={save} loading={loading}>
+          <Button color="primary" variant="solid" onClick={save} loading={loading}>
             {formatMessage('common.save')}
           </Button>
         </ComPopupGuide>
@@ -492,7 +410,6 @@ const FormStep: FC<FormStepProps> = ({
           <Button
             color="default"
             variant="filled"
-            size="small"
             icon={<ChevronRight />}
             iconPosition="end"
             onClick={handleStep}

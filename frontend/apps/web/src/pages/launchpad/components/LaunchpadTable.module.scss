@@ -1,0 +1,88 @@
+.nameCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  .nameIcon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    color: var(--ui-text-color);
+    background: var(--ui-icon-wrapper-bg);
+    border-radius: 4px;
+
+    .nameIconImg {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+    }
+  }
+
+  // 项目表格 folder badge：与卡片视角配色对齐
+  .nameIconFolder {
+    --launchpad-folder-bg: var(--ui-t-chartreuse-color-30);
+    --launchpad-folder-fg: var(--ui-text-color);
+
+    color: var(--launchpad-folder-fg);
+    background: var(--launchpad-folder-bg);
+
+    .folderIcon {
+      color: var(--launchpad-folder-fg);
+    }
+  }
+
+  .nameText {
+    overflow: hidden;
+    color: var(--ui-text-color);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.starButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--ui-description-card-color);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--ui-warning-color);
+    background: var(--ui-menu-hover-color);
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.starActive {
+  color: var(--ui-warning-color);
+
+  svg {
+    fill: var(--ui-warning-color);
+  }
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .nameCell {
+    .nameIconFolder {
+      --launchpad-folder-bg: color-mix(in srgb, var(--ui-t-chartreuse-color-70) 18%, var(--ui-t-chartreuse-color-100));
+      --launchpad-folder-fg: var(--ui-t-chartreuse-color-40);
+
+      background: var(--launchpad-folder-bg);
+    }
+  }
+}

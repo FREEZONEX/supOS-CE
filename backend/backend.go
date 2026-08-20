@@ -1,114 +1,75 @@
+// Code scaffolded by goctl. Safe to edit.
+// goctl 1.9.2-1
+
 package main
 
 import (
+	"backend/internal/bootstrap"
+	"backend/internal/config"
+	"backend/internal/gateway"
+	"backend/internal/handler"
+	"backend/internal/middleware"
+	"backend/internal/repo"
+	"backend/internal/svc"
 	"context"
 	"flag"
 	"fmt"
-	"io/fs"
-	"net/http"
-	"os"
-	"strings"
 
-	_ "backend/internal/adapters/grafana"
-	_ "backend/internal/adapters/msg_consumer" // 手动导入 adapter
-	"backend/internal/common/event"
-	"backend/internal/config"
-	"backend/internal/handler"
-	service "backend/internal/logic/supos/appkey/service"
-	_ "backend/internal/logic/supos/uns/dashboard/service"
-	"backend/internal/logic/supos/uns/system"
-	_ "backend/internal/logic/supos/uns/topology/service" // 导入触发 init() 注册
-	_ "backend/internal/logic/supos/uns/uns/service"
-	"backend/internal/svc"
-	"backend/share/spring"
-
-	"embed"
-
-	"gitee.com/unitedrhino/share/utils"
+	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/logx"
 	_ "github.com/zeromicro/go-zero/core/proc" //开启pprof采集 https://mp.weixin.qq.com/s/yYFM3YyBbOia3qah3eRVQA
+
 	"github.com/zeromicro/go-zero/rest"
 )
 
-//go:embed swagger/dist/*
-var swaggerFS embed.FS
-
 func main() {
-	defer utils.Recover(context.Background())
+	migrateOnly := flag.Bool("migrate-only", false, "run database migrations and exit")
 	flag.Parse()
 	logx.DisableStat()
 	var c config.Config
-	var confFile = "etc/backend.yaml"
-	if info, er := os.Stat("../deploy/"); er == nil && info.IsDir() {
-		confFile = "etc/backend-local.yaml"
-	}
-	utils.ConfMustLoad(confFile, &c)
-	// 设置最大请求体大小为2GB
-	c.MaxBytes = 2 * 1024 * 1024 * 1024
-	// 提供 Swagger UI 静态资源
-	var opts []rest.RunOption
-	opts = append(opts, rest.WithFileServer("/files/", http.Dir("/app/go-edge")))
+	conf.MustLoad("etc/backend.yaml", &c)
+	c.Normalize()
 
-	swaggerSubFS, err := fs.Sub(swaggerFS, "swagger/dist")
+	if *migrateOnly {
+		if err := runMigrateOnly(context.Background(), c); err != nil {
+			panic(err)
+		}
+		fmt.Println("database migration complete")
+		return
+	}
+
+	app, err := bootstrap.New(context.Background(), c)
 	if err != nil {
 		panic(err)
 	}
+	defer app.Close()
 
-	opts = append(opts, rest.WithFileServer(
-		"/swagger-ui",
-		http.FS(swaggerSubFS),
-	))
-
-	server := rest.MustNewServer(c.RestConf, opts...)
+	server := newRestServer(c, app)
 	defer server.Stop()
 
-	system.SetLogLevel(c.Log.Level)
 
-	ctx := svc.NewServiceContext(c)
-	handler.RegisterHandlers(server, ctx)
-	handler.RegisterExtHandlers(server, ctx)
 	server.PrintRoutes()
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
-	spring.RegisterBean[*svc.ServiceContext](ctx)
-
-	// 初始化 AppKeyService
-	appKeyService := spring.GetBean[*service.AppKeyService]()
-	if err := appKeyService.Init(c); err != nil {
-		logx.Errorf("Failed to initialize AppKeyService: %v", err)
-		os.Exit(-1)
-	}
-
-	spring.RefreshBeanContext()
-	_ = spring.PublishEvent(&event.ContextRefreshedEvent{SvcContext: ctx})
-	defer func() {
-		_ = spring.PublishEvent(&event.ContextClosedEvent{SvcContext: ctx})
-	}()
-	fmt.Printf("Started server at %s:%d...\n", c.Host, c.Port)
-	server.StartWithOpts(withSwaggerBinaryContentType())
+	server.StartWithOpts(gateway.WithHTTPGateway(app.HTTPGateway))
 }
 
-// withSwaggerBinaryContentType forces the swagger yaml downloads to use application/octet-stream.
-func withSwaggerBinaryContentType() rest.StartOption {
-	return func(svr *http.Server) {
-		if svr == nil || svr.Handler == nil {
-			return
-		}
-
-		handler := svr.Handler
-		svr.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if isSwaggerBinaryFile(r.URL.Path) {
-				w.Header().Set("Content-Type", "application/octet-stream")
-			}
-			handler.ServeHTTP(w, r)
-		})
+func runMigrateOnly(ctx context.Context, c config.Config) error {
+	store, err := repo.Open(ctx, c.Database)
+	if err != nil {
+		return fmt.Errorf("open db: %w", err)
 	}
+	defer store.Close()
+	if err := store.Migrate(ctx); err != nil {
+		return fmt.Errorf("migrate db: %w", err)
+	}
+	return nil
 }
 
-func isSwaggerBinaryFile(path string) bool {
-	switch strings.ToLower(path) {
-	case "/files/system/resource/swagger/supos.yaml", "/files/system/resource/swagger/supos-en.yaml":
-		return true
-	default:
-		return false
-	}
+func newRestServer(c config.Config, app *bootstrap.App) *rest.Server {
+	server := rest.MustNewServer(c.RestConf)
+	ctx := svc.NewServiceContext(c, app)
+	server.Use(middleware.NewAuditLogMiddleware(app.Audit).Handle)
+	handler.RegisterHandlers(server, ctx)
+	handler.RegisterExtraHandlers(server)
+	return server
 }

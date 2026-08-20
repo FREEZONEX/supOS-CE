@@ -1,0 +1,65 @@
+.com-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--ui-header-splitter-color);
+
+  .left-section {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    flex: 1;
+
+    .info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
+
+      .name {
+        margin: 0;
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 24px;
+        color: var(--ui-text-color);
+        max-width: 90%;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .description {
+        margin: 0;
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 18px;
+        color: var(--ui-icon-disabled-color);
+        max-width: 90%;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+  }
+
+  .right-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+
+    .search-input {
+      width: 240px;
+
+      :global(.ant-input) {
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 14px;
+      }
+    }
+  }
+}

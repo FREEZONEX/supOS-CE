@@ -42,9 +42,8 @@ export interface TreeNode extends TreeDataNode {
   pathType: number;
   description?: string;
   tags?: string[];
-  save2db?: boolean;
+  persistence?: boolean;
   addFlow?: boolean;
-  addDashBoard?: boolean;
   mainKey?: number;
   fields?: FieldItem[];
   parentDataPath?: string;

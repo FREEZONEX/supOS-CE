@@ -22,6 +22,7 @@
         line-height: 32px;
         margin-bottom: 0;
         padding-left: 10px;
+        padding-right: 10px;
         font-weight: bold;
 
         &::before {
@@ -29,11 +30,11 @@
         }
 
         &:has(.rightKeySelected) {
-          background: var(--supos-t-card-hover-bg);
+          background: var(--ui-t-card-hover-bg);
         }
 
         &:hover {
-          background-color: var(--supos-t-card-hover-bg);
+          background-color: var(--ui-t-card-hover-bg);
         }
 
         .customTreeNode {
@@ -46,6 +47,8 @@
           &:hover {
             .treeNodeIconWrap {
               display: flex;
+              align-items: center;
+              gap: 8px;
             }
           }
 
@@ -89,7 +92,8 @@
       }
 
       .ant-tree-treenode-selected {
-        background-color: var(--supos-hover-card-color);
+        background-color: var(--ui-hover-card-color);
+        border-radius: 4px;
         position: relative;
 
         &::before {
@@ -98,7 +102,8 @@
           height: 32px;
           top: 0;
           left: 0;
-          background-color: var(--supos-theme-color);
+          border-radius: 4px 0 0 4px;
+          background-color: var(--ui-t-chartreuse-color-60, #b2ed1d);
         }
 
         .ant-tree-node-content-wrapper.ant-tree-node-selected {

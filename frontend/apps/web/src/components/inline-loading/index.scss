@@ -30,7 +30,7 @@
 
   .ods-loading_stroke {
     fill: none;
-    stroke: var(--supos-theme-color);
+    stroke: var(--ui-theme-color);
     stroke-width: 14px;
     stroke-linecap: round;
     stroke-dasharray: 125.6;
@@ -38,7 +38,7 @@
   }
 
   &-text {
-    color: var(--supos-t-menu-active-color);
+    color: var(--ui-t-menu-active-color);
     font-weight: 400;
     overflow: hidden;
     //width: 100%;

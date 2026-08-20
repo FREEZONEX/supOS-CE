@@ -5,7 +5,7 @@
       margin-inline-end: 0;
 
       .ant-radio-input:focus + .ant-radio-inner {
-        outline: 2px solid var(--supos-theme-color);
+        outline: 2px solid var(--ui-theme-color);
         outline-offset: 1px;
       }
 
@@ -15,28 +15,28 @@
       }
 
       .ant-radio-inner {
-        border-color: var(--supos-text-color);
-        background-color: var(--supos-bg-color);
+        border-color: var(--ui-text-color);
+        background-color: var(--ui-bg-color);
 
         &::after {
-          background-color: var(--supos-text-color);
+          background-color: var(--ui-text-color);
         }
       }
 
       &.ant-radio-checked .ant-radio-inner {
-        border-color: var(--supos-text-color);
+        border-color: var(--ui-text-color);
       }
 
       &:hover .ant-radio-inner {
-        border-color: var(--supos-text-color);
+        border-color: var(--ui-text-color);
       }
 
       .ant-radio-disabled {
         .ant-radio-inner {
-          border-color: var(--supos-icon-disabled-color);
+          border-color: var(--ui-icon-disabled-color);
 
           &::after {
-            background-color: var(--supos-icon-disabled-color);
+            background-color: var(--ui-icon-disabled-color);
           }
         }
       }
@@ -47,7 +47,7 @@
 
       .radio-description {
         font-size: 12px;
-        color: var(--supos-text-color);
+        color: var(--ui-text-color);
         margin-left: 24px;
       }
     }

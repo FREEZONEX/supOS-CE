@@ -1,115 +1,167 @@
 import { useTranslate } from '@/hooks';
-import { Divider, Form, type FormItemProps, Input } from 'antd';
+import { Form, type FormItemProps, Input } from 'antd';
+import type { ReactNode } from 'react';
 import ComCheckbox from '@/components/com-checkbox';
 import ComRadio from '../../../../components/com-radio';
 import SourceSelect from '@/pages/menu-configuration/components/menu-content/SourceSelect.tsx';
 import { Fragment } from 'react';
-import UploadPicture from '@/pages/menu-configuration/components/menu-content/UploadPicture.tsx';
 import CodeInput from '@/pages/menu-configuration/components/menu-content/CodeInput.tsx';
+import MenuIconField from '@/pages/menu-configuration/components/menu-content/MenuIconField.tsx';
+import type { MenuProps } from '@/pages/menu-configuration/store/types.ts';
+import styles from './BasicInfo.module.scss';
 
 export interface FormItemType {
   formType: string;
+  label?: string;
   formProps: FormItemProps;
   childProps?: { [key: string]: any };
 }
 
 const { TextArea } = Input;
 
-const render = (item: FormItemType) => {
-  const { formType, formProps, childProps } = item;
+const FieldRow = ({ label, children, className }: { label?: string; children: ReactNode; className?: string }) => (
+  <div className={`${styles.fieldRow}${className ? ` ${className}` : ''}`}>
+    <div className={styles.fieldLabel}>{label}</div>
+    <div className={styles.fieldValue}>{children}</div>
+  </div>
+);
+
+const render = (item: FormItemType, iconMenuItem?: MenuProps | null, iconDisabled?: boolean) => {
+  const { formType, label, formProps, childProps } = item;
+  if (formProps.hidden) {
+    switch (formType) {
+      case 'checkbox':
+        return (
+          <Form.Item {...formProps} key={formProps.name}>
+            <ComCheckbox {...childProps} />
+          </Form.Item>
+        );
+      default:
+        return (
+          <Form.Item {...formProps} key={formProps.name}>
+            <Input {...childProps} />
+          </Form.Item>
+        );
+    }
+  }
+
   switch (formType) {
     case 'checkbox':
       return (
-        <Form.Item {...formProps}>
-          <ComCheckbox {...childProps} />
-        </Form.Item>
+        <FieldRow key={formProps.name} label={label}>
+          <Form.Item {...formProps} noStyle>
+            <ComCheckbox {...childProps} />
+          </Form.Item>
+        </FieldRow>
       );
     case 'codeInput':
       return (
-        <Form.Item {...formProps}>
-          <CodeInput {...childProps} />
-        </Form.Item>
+        <FieldRow key={formProps.name} label={label}>
+          <Form.Item {...formProps} noStyle>
+            <CodeInput {...childProps} />
+          </Form.Item>
+        </FieldRow>
       );
     case 'radioGroup':
       return (
-        <Form.Item {...formProps}>
-          <ComRadio {...childProps} />
-        </Form.Item>
+        <FieldRow key={formProps.name} label={label}>
+          <Form.Item {...formProps} noStyle>
+            <ComRadio {...childProps} />
+          </Form.Item>
+        </FieldRow>
+      );
+    case 'custom':
+      return (
+        <FieldRow key={formProps.name} label={label}>
+          <Form.Item {...formProps} noStyle>
+            {childProps?.children}
+          </Form.Item>
+        </FieldRow>
       );
     case 'sourceSelect':
       return (
-        <Form.Item {...formProps}>
-          <SourceSelect {...childProps} />
-        </Form.Item>
+        <FieldRow key={formProps.name} label={label}>
+          <Form.Item {...formProps} noStyle>
+            <SourceSelect {...childProps} />
+          </Form.Item>
+        </FieldRow>
       );
-    case 'uploadPicture':
+    case 'menuIcon':
       return (
-        <Form.Item {...formProps}>
-          <UploadPicture {...childProps} />
-        </Form.Item>
+        <FieldRow key={formProps.name} label={label} className={styles.menuIconRow}>
+          <Form.Item {...formProps} noStyle>
+            <MenuIconField menuItem={iconMenuItem} disabled={iconDisabled} />
+          </Form.Item>
+        </FieldRow>
       );
     case 'textArea':
       return (
-        <Form.Item {...formProps}>
-          <TextArea {...childProps} />
-        </Form.Item>
+        <FieldRow key={formProps.name} label={label}>
+          <Form.Item {...formProps} noStyle>
+            <TextArea {...childProps} />
+          </Form.Item>
+        </FieldRow>
       );
     default:
       return (
-        <Form.Item {...formProps}>
-          <Input {...childProps} />
-        </Form.Item>
+        <FieldRow key={formProps.name} label={label}>
+          <Form.Item {...formProps} noStyle>
+            <Input {...childProps} />
+          </Form.Item>
+        </FieldRow>
       );
   }
 };
 
-const BasicInfo = ({ configs }: { configs: FormItemType[] }) => {
+const BasicInfo = ({
+  configs,
+  iconMenuItem,
+  iconDisabled,
+}: {
+  configs: FormItemType[];
+  iconMenuItem?: MenuProps | null;
+  iconDisabled?: boolean;
+}) => {
   const formatMessage = useTranslate();
   return (
-    <>
-      <div style={{ fontSize: 20, fontWeight: 500 }}>{formatMessage('MenuConfiguration.basicInfo')}</div>
-      <Divider style={{ backgroundColor: '#C6C6C6', margin: '16px 0' }} />
-      {[
-        {
-          formType: 'input',
-          formProps: {
-            name: 'sort',
-            hidden: true,
+    <section className={styles.basicSection}>
+      <h3 className={styles.sectionTitle}>{formatMessage('MenuConfiguration.basicInfo')}</h3>
+      <div className={styles.fieldList}>
+        {[
+          {
+            formType: 'input',
+            formProps: {
+              name: 'sort',
+              hidden: true,
+            },
           },
-        },
-        {
-          formType: 'input',
-          formProps: {
-            name: 'type',
-            hidden: true,
+          {
+            formType: 'input',
+            formProps: {
+              name: 'type',
+              hidden: true,
+            },
           },
-        },
-        {
-          formType: 'input',
-          formProps: {
-            name: 'id',
-            hidden: true,
+          {
+            formType: 'input',
+            formProps: {
+              name: 'id',
+              hidden: true,
+            },
           },
-        },
-        {
-          formType: 'input',
-          formProps: {
-            name: 'parentId',
-            hidden: true,
+          {
+            formType: 'input',
+            formProps: {
+              name: 'parentId',
+              hidden: true,
+            },
           },
-        },
-        {
-          formType: 'input',
-          formProps: {
-            name: 'icon',
-            hidden: true,
-          },
-        },
-        ...configs,
-      ]?.map((item) => {
-        return <Fragment key={item.formProps.name}>{render(item)}</Fragment>;
-      })}
-    </>
+          ...configs,
+        ]?.map((item) => {
+          return <Fragment key={item.formProps.name}>{render(item, iconMenuItem, iconDisabled)}</Fragment>;
+        })}
+      </div>
+    </section>
   );
 };
 

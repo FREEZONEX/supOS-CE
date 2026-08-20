@@ -1,6 +1,6 @@
 import type { Dispatch, RefObject, SetStateAction } from 'react';
-import { type FC, useImperativeHandle, useMemo, useState } from 'react';
-import { App, Divider, Flex, Form, type FormInstance, Segmented } from 'antd';
+import { type FC, useImperativeHandle, useState } from 'react';
+import { App, Divider, Flex, Form, Segmented } from 'antd';
 import { useTranslate } from '@/hooks';
 import ProModal from '@/components/pro-modal';
 import { UnsTree } from '@/pages/uns/components/export-modal/uns-tree.tsx';
@@ -9,10 +9,9 @@ import { TreeStoreProvider, useTreeStore } from '@/pages/uns/components/export-m
 import { CodeDom } from '@/pages/uns/components/export-modal/code-dom.tsx';
 import ComButton from '../../../../components/com-button';
 import OtherDom from '@/pages/uns/components/export-modal/other-dom.tsx';
-import ComStatusDot from '@/components/com-status-dot/ComStatusDot.tsx';
 import { processedCheckedKeys } from '@/pages/uns/store/utils.ts';
 import { getParamsForArray, SelectAllId } from '@/utils';
-import { exportExcelGlobal } from '@/apis/inter-api';
+import { exportExcelGlobal } from '@/apis/core-api';
 import { useDownloadNotification } from '@/hooks/useDownloadNotification';
 
 interface ExportModalRef {
@@ -23,81 +22,29 @@ export interface ExportModalProps {
   exportRef?: RefObject<ExportModalRef>;
 }
 
-const Tab = ({ form }: { form: FormInstance }) => {
+const Tab = ({ onChange }: { onChange: (value: 'uns' | 'others') => void }) => {
   const formatMessage = useTranslate();
-  const { tabType, setTabType, checkedKeys, allChecked } = useTreeStore((state) => ({
+  const { tabType } = useTreeStore((state) => ({
     tabType: state.tabType,
-    setTabType: state.setTabType,
-    checkedKeys: state.checkedKeys,
-    allChecked: state.allChecked,
   }));
 
-  const isSelect = Form.useWatch((values) => {
-    return (
-      values?.dashboardExportParam?.length ||
-      values?.eventFlowExportParam?.length ||
-      values?.sourceFlowExportParam?.length
-    );
-  }, form);
-
-  const unsStatus = useMemo(() => {
-    const isSelect = allChecked || checkedKeys?.length > 0;
-    if (tabType === 'uns') {
-      if (isSelect) {
-        return 'breathing';
-      } else {
-        return 'active';
-      }
-    } else {
-      if (isSelect) {
-        return 'unactive';
-      } else {
-        return 'stop';
-      }
-    }
-  }, [tabType, checkedKeys, allChecked]);
-
-  const othersStatus = useMemo(() => {
-    if (tabType === 'others') {
-      if (isSelect) {
-        return 'breathing';
-      } else {
-        return 'active';
-      }
-    } else {
-      if (isSelect) {
-        return 'unactive';
-      } else {
-        return 'stop';
-      }
-    }
-  }, [tabType, isSelect]);
   return (
     <Segmented<string>
+      className={styles.exportSegmented}
       defaultValue={'uns'}
       options={[
         {
           value: 'uns',
-          label: (
-            <Flex gap={4} align="center">
-              <ComStatusDot status={unsStatus} />
-              <span>UNS</span>
-            </Flex>
-          ),
+          label: formatMessage('uns.importUnsTab'),
         },
         {
           value: 'others',
-          label: (
-            <Flex gap={4} align="center">
-              <ComStatusDot status={othersStatus} />
-              <span>{formatMessage('common.others')}</span>
-            </Flex>
-          ),
+          label: formatMessage('common.others'),
         },
       ]}
       value={tabType}
-      onChange={(value: any) => {
-        setTabType(value);
+      onChange={(value) => {
+        onChange(value as 'uns' | 'others');
       }}
     />
   );
@@ -122,23 +69,40 @@ const getParams = (list: any) => {
 
 const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open: boolean; onClose: () => void }) => {
   const formatMessage = useTranslate();
-  const { tabType, checkedKeys, allChecked, treeData } = useTreeStore((state) => ({
-    tabType: state.tabType,
-    setTabType: state.setTabType,
-    checkedKeys: state.checkedKeys,
-    allChecked: state.allChecked,
-    treeData: state.treeData,
-  }));
+  const { tabType, checkedKeys, allChecked, treeData, setTabType, setCheckedKeys, setAllChecked, setJsonData } =
+    useTreeStore((state) => ({
+      tabType: state.tabType,
+      setTabType: state.setTabType,
+      checkedKeys: state.checkedKeys,
+      allChecked: state.allChecked,
+      treeData: state.treeData,
+      setCheckedKeys: state.setCheckedKeys,
+      setAllChecked: state.setAllChecked,
+      setJsonData: state.setJsonData,
+    }));
   const [form] = Form.useForm();
   const [showDownloadNotification, contextHolder] = useDownloadNotification();
   const { message } = App.useApp();
+
+  const handleTabChange = (value: 'uns' | 'others') => {
+    if (value === 'uns') {
+      form.setFieldsValue({
+        sourceFlowExportParam: [],
+        eventFlowExportParam: [],
+      });
+    } else {
+      setCheckedKeys([]);
+      setAllChecked(false);
+      setJsonData(undefined);
+    }
+    setTabType(value);
+  };
 
   const onExport = async () => {
     const values = await form.validateFields();
     const params: any = {};
     if (
       !(allChecked || checkedKeys?.length) &&
-      !values?.dashboardExportParam?.length &&
       !values?.eventFlowExportParam?.length &&
       !values?.sourceFlowExportParam?.length
     ) {
@@ -167,9 +131,6 @@ const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open
         checkSmallFile: false,
       };
     }
-    if (values.dashboardExportParam?.length > 0) {
-      params['dashboardExportParam'] = getParams(values.dashboardExportParam);
-    }
     if (values.sourceFlowExportParam?.length > 0) {
       params['sourceFlowExportParam'] = getParams(values.sourceFlowExportParam);
     }
@@ -178,15 +139,21 @@ const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open
     }
     return exportExcelGlobal(params).then((zip) => {
       showDownloadNotification({ data: zip, name: 'global-export.zip' });
+      message.success(formatMessage('common.optsuccess'));
+      onClose();
     });
   };
+  const isUnsTab = tabType === 'uns';
+  const rootStyle = isFullscreen ? { height: '100%' } : isUnsTab ? { height: 600 } : undefined;
+  const unsPanelStyle =
+    isFullscreen || isUnsTab ? { flex: 1, minHeight: 0, display: isUnsTab ? ('inherit' as const) : ('none' as const), overflow: 'hidden' as const } : { display: 'none' as const };
+  const othersPanelStyle =
+    tabType === 'others'
+      ? { flex: isFullscreen ? 1 : undefined, minHeight: isFullscreen ? 0 : undefined, overflow: isFullscreen ? ('hidden' as const) : undefined }
+      : { display: 'none' as const };
+
   return (
-    <Flex
-      style={{
-        height: isFullscreen ? '100%' : 600,
-      }}
-      vertical
-    >
+    <Flex style={rootStyle} vertical>
       {contextHolder}
       <div
         style={{
@@ -194,32 +161,34 @@ const Content = ({ isFullscreen, open, onClose }: { isFullscreen?: boolean; open
           flexShrink: 0,
         }}
       >
-        <Tab form={form} />
+        <Tab onChange={handleTabChange} />
       </div>
       {/*uns*/}
-      <Flex gap={16} style={{ flex: 1, display: tabType === 'uns' ? 'inherit' : 'none', overflow: 'hidden' }}>
+      <Flex gap={16} style={unsPanelStyle}>
         <Flex vertical style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
           <Flex className={styles['export-label']}>
-            <span>UNS</span>
+            <span>{formatMessage('uns.importUnsTab')}</span>
           </Flex>
           <UnsTree open={open} />
         </Flex>
         <Flex vertical style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
           <Flex className={styles['export-label']}>
-            <span>JSON</span>
+            <span>{formatMessage('uns.exportJsonLabel')}</span>
           </Flex>
           <CodeDom />
         </Flex>
       </Flex>
 
-      <div style={{ flex: 1, display: tabType === 'others' ? 'inherit' : 'none' }}>
+      <div style={othersPanelStyle}>
         <OtherDom form={form} />
       </div>
 
       <div style={{ flexShrink: 0 }}>
-        <Divider style={{ backgroundColor: 'rgb(198, 198, 198)' }} />
+        <Divider className={styles.exportFooterDivider} />
         <Flex align="center" gap={8} justify="flex-end">
-          <ComButton onClick={onClose}>{formatMessage('common.cancel')}</ComButton>
+          <ComButton color="default" variant="filled" onClick={onClose}>
+            {formatMessage('common.cancel')}
+          </ComButton>
           <ComButton type="primary" onClick={onExport}>
             {formatMessage('common.export')}
           </ComButton>

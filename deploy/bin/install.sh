@@ -1,159 +1,80 @@
-#!/bin/bash
+#!/usr/bin/env bash
+if [ "${BASH##*/}" != "bash" ]; then
+  exec bash "$0" "$@"
+fi
+set -euo pipefail
 
-set -e
-
-# --- 1. Initialization ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Load the cross-platform compatibility layer first so sed_i, get_local_ips,
-# and DOCKER_CERTS_PATH are available immediately (and bash version is
-# validated / re-exec'd before any bash-4+ syntax is encountered).
-source "$SCRIPT_DIR/util/platform-compat.sh"
+NO_START="false"
+ADOPT_VOLUMES="false"
+TLS_MODE=""
+VOLUMES_PATH_ARG=""
+SKIP_NODERED_PACKAGES=""
+LOCAL_FRONTEND_DEV_ARG=""
 
-ENV_FILE="$SCRIPT_DIR/../.env.default"
-if [ -f "$SCRIPT_DIR/../.env" ]; then
-  ENV_FILE="$SCRIPT_DIR/../.env"
-fi
 
-sed_i 's/\r$//' "$ENV_FILE"
-source "$ENV_FILE"
-source "$SCRIPT_DIR/global/log.sh"
-source "$SCRIPT_DIR/global/choose-profile-command.sh"
+usage() {
+  printf 'Tier0 Edge installer\n\n'
+  cat <<'EOF'
+Usage: bash bin/install.sh [options]
 
-SKIP_VOLUME_SYNC=false
-for arg in "$@"; do
-  case "$arg" in
-    --skip-volumes-sync|--skip-volumes)
-      SKIP_VOLUME_SYNC=true
+Options:
+  --no-start                 Write configuration without starting services.
+  --volumes-path <path>      Persistent data path for this member.
+  --adopt-volumes            Adopt an existing volume path.
+  --tls <mode>               TLS mode: off, self-signed, or provided.
+  --skip-nodered-packages    Skip Node-RED package installation.
+  --local-frontend-dev       Enable local frontend development proxying.
+  --no-local-frontend-dev    Disable local frontend development proxying.
+  -h, --help                 Show this help.
+
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --no-start)
+      NO_START="true"
+      shift
+      ;;
+    --volumes-path)
+      VOLUMES_PATH_ARG="${2:?missing volumes path}"
+      shift 2
+      ;;
+    --adopt-volumes)
+      ADOPT_VOLUMES="true"
+      shift
+      ;;
+    --tls)
+      TLS_MODE="${2:?missing tls mode}"
+      shift 2
+      ;;
+    --skip-nodered-packages)
+      SKIP_NODERED_PACKAGES="true"
+      shift
+      ;;
+    --local-frontend-dev)
+      LOCAL_FRONTEND_DEV_ARG="true"
+      shift
+      ;;
+    --no-local-frontend-dev)
+      LOCAL_FRONTEND_DEV_ARG="false"
+      shift
       ;;
     -h|--help)
-      cat <<'EOF'
-Usage: bash install.sh [--skip-volumes-sync]
-
-  --skip-volumes-sync, --skip-volumes
-      Skip copying and updating files under VOLUMES_PATH. Use this only when
-      the volume directory has already been initialized.
-EOF
+      usage
       exit 0
+      ;;
+    *)
+      echo "unknown argument: $1" >&2
+      exit 2
       ;;
   esac
 done
-export SKIP_VOLUME_SYNC
 
-info "Starting installation on platform: $PLATFORM"
-echo
+# shellcheck source=common.sh
+source "${SCRIPT_DIR}/common.sh"
 
-# --- 2. Configuration Setup (sourcing from /util) ---
-source "$SCRIPT_DIR/util/handle-volumes-path.sh"
-source "$SCRIPT_DIR/util/select-ip-address.sh"
-
-# --- 3. Dependency Installation ---
-bash "$SCRIPT_DIR/deb/install-docker.sh"
-
-# --- 4. Service Profile Selection ---
-# This script will set the 'command' variable for docker-compose
-source "$SCRIPT_DIR/util/select-service-profile.sh"
-
-# --- 5. Pre-run Initialization ---
-# Render temporary env overrides from the selected compose profiles first so
-# Kong and the init scripts all see the same service matrix.
-source "$SCRIPT_DIR/util/set-temp-env.sh" "$SCRIPT_DIR/../" "${COMPOSE_PROFILE_ARGS[@]}"
-# Kong is configured declaratively. Re-render it before each install so login
-# redirects and enabled routes match the current entrance address and profiles.
-bash "$SCRIPT_DIR/init/init-kong-property.sh" "$SCRIPT_DIR/.."
-source "$SCRIPT_DIR/util/wait-compose-healthy.sh"
-
-DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../docker-compose.yml"
-
-# --- 6. Volume and Image Management ---
-source "$SCRIPT_DIR/util/handle-volumes.sh"
-
-if [ -d "$SCRIPT_DIR/../images/" ] && [ "$(ls -A "$SCRIPT_DIR/../images/")" ]; then
-  bash "$SCRIPT_DIR/util/load-images.sh"
-fi
-
-# --- 7. Main Execution: Start services and run post-init scripts ---
-info "Starting Docker containers in detached mode..."
-if ! docker compose --env-file "$ENV_FILE" --env-file "$SCRIPT_DIR/../.env.tmp" --project-name tier0 "${COMPOSE_PROFILE_ARGS[@]}" -f "$DOCKER_COMPOSE_FILE" up -d --build --remove-orphans; then
-    error "Failed to start Docker containers. Please check the logs above."
-    exit 1
-fi
-info "Containers started successfully. Waiting for core services to become healthy..."
-echo
-if ! WAIT_COMPOSE_HEALTH_ALLOW_RUNNING_SERVICES="nodered eventflow" wait_compose_healthy 300 5; then
-    error "Containers did not become healthy in time."
-    exit 1
-fi
-info "All required containers are healthy."
-
-info "Synchronizing Kong runtime URL settings..."
-sync_kong_output="$(bash "$SCRIPT_DIR/util/sync-kong-runtime-url.sh")"
-printf '%s\n' "$sync_kong_output"
-if printf '%s\n' "$sync_kong_output" | grep -q '^SYNC_KONG_RUNTIME_URL_CHANGED=1$'; then
-    KONG_RUNTIME_RESTART_WAIT_SECONDS="${KONG_RUNTIME_RESTART_WAIT_SECONDS:-20}"
-    info "Kong runtime URL settings changed. Restarting Kong to apply the updated database config..."
-    docker restart kong >/dev/null
-    if ! wait_compose_healthy "$KONG_RUNTIME_RESTART_WAIT_SECONDS" 5; then
-        error "Kong did not become healthy after applying runtime URL changes."
-        exit 1
-    fi
-fi
-
-# Backend migration creates the IAM OAuth tables, so seed the built-in
-# Portainer OAuth client only after the stack is healthy.
-info "Seeding IAM OAuth client..."
-bash "$SCRIPT_DIR/init/init-iam-sql.sh"
-
-# Run each initialization script individually for clearer error reporting
-info "Initializing Node-RED modules..."
-bash "$SCRIPT_DIR/init/init-nodered.sh" || {
-    error "Failed to initialize Node-RED."
-    exit 1
-}
-
-info "Initializing EventFlow modules..."
-bash "$SCRIPT_DIR/init/init-eventflow.sh" || {
-    error "Failed to initialize EventFlow."
-    exit 1
-}
-
-info "Hiding Node-RED entrypoints..."
-bash "$SCRIPT_DIR/init/hide-nodered.sh" || {
-    warn "Failed to hide Node-RED entrypoints. Continuing installation..."
-}
-
-# Portainer is initialized last because it depends on Kong, IAM OAuth, and
-# the final externally reachable BASE_URL.
-info "Initializing Portainer OAuth..."
-bash "$SCRIPT_DIR/init/init-portainer.sh" || {
-    warn "Failed to initialize Portainer OAuth."
-}
-
-
-# --- 8. Success ---
-echo -e "\n============================================================"
-echo -e "🎉  All services are up and running!"
-echo -e "👉  Open the platform in your browser:\n"
-
-if [[ "$ENTRANCE_PROTOCOL" == "https" ]]; then
-  _PORT="$ENTRANCE_SSL_PORT"
-else
-  _PORT="$ENTRANCE_PORT"
-fi
-if [[ "$_PORT" == "80" || "$_PORT" == "443" ]]; then
-  PLATFORM_URL="${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}/uns"
-else
-  PLATFORM_URL="${ENTRANCE_PROTOCOL}://${ENTRANCE_DOMAIN}:${_PORT}/uns"
-fi
-
-IAM_BOOTSTRAP_USERNAME="${IAM_BOOTSTRAP_USERNAME:-tier0}"
-IAM_BOOTSTRAP_PASSWORD="${IAM_BOOTSTRAP_PASSWORD:-tier0}"
-IAM_BOOTSTRAP_EMAIL="${IAM_BOOTSTRAP_EMAIL-}"
-
-echo -e "      $PLATFORM_URL\n"
-echo -e "    Default username: ${IAM_BOOTSTRAP_USERNAME}\n"
-echo -e "            password: ${IAM_BOOTSTRAP_PASSWORD}\n"
-if [[ -n "${IAM_BOOTSTRAP_EMAIL}" ]]; then
-  echo -e "               email: ${IAM_BOOTSTRAP_EMAIL}\n"
-fi
-echo -e "============================================================"
+tier0_require_rootful_docker || exit 1
+run_deploy_workflow

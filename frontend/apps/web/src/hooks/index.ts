@@ -8,11 +8,17 @@ export { default as usePropsValue } from './usePropsValue';
 export { default as useRefreshLocalStorage } from './useRefreshLocalStorage';
 export { default as useTranslate } from './useTranslate';
 export { default as useFormValue } from './useFormValue';
+export { default as useFlowIframeThemeBridge } from './useFlowIframeThemeBridge';
 export { default as useSimpleRequest } from './useSimpleRequest';
 export { default as useLangChange } from './useLangChange';
 export { default as useSSE } from './useSSE';
+export { default as useDebounceFn } from './useDebounceFn';
+export { default as useDebouncedRequest } from './useDebouncedRequest';
 
+export * from './useViewModeStorage';
 export * from './useGuideSteps';
 export * from './useMatchRouter';
 export * from './useTips';
 export * from './useSSE';
+export * from './useTabName';
+export * from './useFlowIframeThemeBridge';

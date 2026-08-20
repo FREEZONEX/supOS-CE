@@ -124,13 +124,13 @@ const Index: FC<TagFilterProps> = ({
             </Flex>
           }
           size="small"
-          style={{ flexShrink: 0, background: 'var(--supos-switchwrap-bg-color)' }}
+          style={{ flexShrink: 0, background: 'var(--ui-switchwrap-bg-color)' }}
           color="default"
           variant="filled"
         />
       </Popover>
       {showNumber && (
-        <Tag style={{ backgroundColor: 'var(--supos-table-head-color)', flexShrink: 0 }}>{v?.length ?? 0}</Tag>
+        <Tag style={{ backgroundColor: 'var(--ui-table-head-color)', flexShrink: 0 }}>{v?.length ?? 0}</Tag>
       )}
       {showTag && canScrollLeft && (
         <Button
@@ -162,7 +162,7 @@ const Index: FC<TagFilterProps> = ({
             return (
               <Tag
                 closable
-                style={{ backgroundColor: 'var(--supos-bg-color)', flexShrink: 0 }}
+                style={{ backgroundColor: 'var(--ui-bg-color)', flexShrink: 0 }}
                 key={id}
                 onClose={() => {
                   onValueChange(v.filter((value: Key) => value !== id));

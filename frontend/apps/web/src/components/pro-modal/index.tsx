@@ -162,14 +162,13 @@ const ProModal: FC<ProModalProps> & { confirm: typeof confirm } = ({
               ''
             )}
             {closable && (
-              <Tooltip title={closeButtonTitle ?? formatMessage('common.close')}>
-                <Button
-                  type="text"
-                  icon={<CloseOutlined className="close-icon" />}
-                  onClick={restProps?.onCancel}
-                  className="control-button close-button"
-                />
-              </Tooltip>
+              <Button
+                type="text"
+                icon={<CloseOutlined className="close-icon" />}
+                onClick={restProps?.onCancel}
+                className="control-button close-button"
+                aria-label={closeButtonTitle ?? formatMessage('common.close')}
+              />
             )}
           </div>
         </div>

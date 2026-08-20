@@ -5,7 +5,7 @@ import { type ButtonProps, Popconfirm, type PopconfirmProps } from 'antd';
 
 export interface OperationProps {
   key: string | number;
-  type?: 'Button' | 'Custom' | 'Popconfirm' | 'Loading';
+  type?: 'Button' | 'Custom' | 'Popconfirm' | 'Loading' | 'divider';
   auth?: string | string[];
   label?: ReactNode;
   title?: string;

@@ -1,0 +1,46 @@
+syntax = "v1"
+
+type PlatformGetMembersReq {
+    keyword string `json:"keyword,optional"`
+    roleKey string `json:"roleKey,optional"`
+    roles []string `json:"roles,optional"`
+    statuses []string `json:"statuses,optional"`
+    updatedAtStart string `json:"updatedAtStart,optional"`
+    updatedAtEnd string `json:"updatedAtEnd,optional"`
+    page int64 `json:"page,optional"`
+    size int64 `json:"size,optional"`
+}
+
+type PlatformMemberRoleResp {
+    roleId string `json:"roleId"`
+    roleKey string `json:"roleKey"`
+    roleName string `json:"roleName,optional"`
+    description string `json:"description,optional"`
+}
+
+type PlatformMemberResp {
+    userId string `json:"userId"`
+    userName string `json:"userName,optional"`
+    nickName string `json:"nickName,optional"`
+    email string `json:"email,optional"`
+    status string `json:"status"`
+    roles []PlatformMemberRoleResp `json:"roles"`
+    updatedAt string `json:"updatedAt"`
+}
+
+type PlatformMembersResp {
+    list []PlatformMemberResp `json:"list"`
+    total int64 `json:"total"`
+    page int64 `json:"page"`
+    size int64 `json:"size"`
+}
+
+@server(
+    prefix: /openapi/v1
+    group: openapi/v1/platform
+    middleware: ApiKeyAuth
+)
+service backend {
+    @handler OpenapiPlatformGetMembers
+    post /platform/getMembers (PlatformGetMembersReq) returns (PlatformMembersResp)
+}

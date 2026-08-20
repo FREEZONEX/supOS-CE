@@ -1,0 +1,247 @@
+.business-sidebar {
+  position: relative;
+  width: 248px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  background: var(--ui-bg-color, #fff);
+  border-right: 1px solid var(--ui-line-color, #e0e0e0);
+  transition: width 160ms ease;
+
+  &.collapsed {
+    width: 48px;
+
+    .sidebar-logo {
+      position: relative;
+      justify-content: center;
+      padding-inline: 0;
+
+      > :not(.collapse-trigger) {
+        display: none;
+      }
+
+      .collapse-trigger {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        display: inline-flex;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .business-menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0 16px;
+    }
+
+    .menu-group {
+      width: 100%;
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      &:not(:last-child)::after {
+        content: '';
+        display: block;
+        width: 24px;
+        height: 1px;
+        margin: 8px 0;
+        background: var(--ui-line-color, #e0e0e0);
+      }
+    }
+
+    .group-items {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .menu-item {
+      width: 32px;
+      height: 32px;
+      min-height: 32px;
+      margin: 0;
+      justify-content: center;
+      padding: 0;
+      border-radius: 4px;
+
+      span {
+        display: none;
+      }
+
+      .menu-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      &:hover {
+        background: rgb(0 0 0 / 4%);
+      }
+
+      &.active {
+        background: var(--ui-line-color, #e0e0e0);
+      }
+    }
+  }
+}
+
+.sidebar-logo {
+  height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  overflow: hidden;
+  padding: 16px;
+
+  :global {
+    .ant-image {
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+.business-menu {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 0 16px;
+  background: transparent;
+}
+
+.menu-group {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.group-title {
+  padding: 4px 24px 6px;
+  color: #878787;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.group-items {
+  display: grid;
+  gap: 2px;
+}
+
+.menu-item {
+  width: calc(100% - 32px);
+  min-height: 36px;
+  margin-inline: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  color: #050b14;
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(0 0 0 / 4%);
+  }
+
+  &.active {
+    background: var(--ui-line-color, #e0e0e0);
+  }
+
+  .menu-icon {
+    flex-shrink: 0;
+    color: currentcolor;
+  }
+
+  span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 16px;
+    line-height: 24px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.collapse-trigger {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--ui-text-color);
+  background: transparent;
+  border: 0;
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 1;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+    color: var(--ui-theme-color);
+    background: var(--ui-fill-tertiary);
+    outline: none;
+  }
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .business-sidebar {
+    background: var(--ui-sidebar-bg);
+    border-right-color: var(--ui-sidebar-border-color);
+
+    &.collapsed {
+      .menu-group:not(:last-child)::after {
+        background: var(--ui-sidebar-border-color);
+      }
+
+      .menu-item:hover {
+        background: var(--ui-sidebar-hover-bg);
+      }
+
+      .menu-item.active {
+        background: var(--ui-sidebar-active-bg);
+      }
+    }
+  }
+
+  .group-title {
+    color: var(--ui-sidebar-muted-color);
+  }
+
+  .menu-item {
+    color: var(--ui-sidebar-text-color);
+
+    &:hover {
+      background: var(--ui-sidebar-hover-bg);
+    }
+
+    &.active {
+      background: var(--ui-sidebar-active-bg);
+    }
+  }
+
+  .collapse-trigger {
+    color: var(--ui-sidebar-text-color);
+  }
+}

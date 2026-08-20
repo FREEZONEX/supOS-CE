@@ -2,7 +2,7 @@ import { useMemo, useState, type FC, useEffect } from 'react';
 import { Spin, Select, Divider, Button } from 'antd';
 import type { SelectProps } from 'antd';
 import { debounce } from 'lodash-es';
-import { searchTreeData } from '@/apis/inter-api/uns';
+import { searchTreeData } from '@/apis/core-api/uns';
 import { useTranslate } from '@/hooks';
 
 export interface DebounceSelectProps extends Omit<SelectProps, 'onChange'> {
@@ -89,7 +89,7 @@ const DebounceSelect: FC<DebounceSelectProps> = ({
           {menu}
           {options.length > 0 && ((selectAll && mode) || options.length > 99) && (
             <>
-              <Divider style={{ margin: '4px 0', borderColor: '#c6c6c6' }} />
+              <Divider style={{ margin: '4px 0', borderColor: 'var(--ui-line-color)' }} />
               {selectAll && mode && (
                 <div style={{ textAlign: 'center' }}>
                   <Button
@@ -99,7 +99,7 @@ const DebounceSelect: FC<DebounceSelectProps> = ({
                       selectAll(options);
                     }}
                     size="small"
-                    style={{ backgroundColor: 'var(--supos-uns-button-color)' }}
+                    style={{ backgroundColor: 'var(--ui-uns-button-color)' }}
                   >
                     {formatMessage('uns.select100Items')}
                   </Button>

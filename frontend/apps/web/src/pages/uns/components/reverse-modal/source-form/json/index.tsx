@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Form, Input, Flex, Button, Divider, App } from 'antd';
-import { ChevronLeft, ChevronRight, Folder, FolderOpen, Document } from '@carbon/icons-react';
-import TagSelect from '@/pages/uns/components/use-create-modal/components/TagSelect';
+import { ChevronLeft, ChevronRight, Folder, FolderOpen, Document } from '@/components/lucide-icon/carbon';
 import FieldsFormList from '@/pages/uns/components/use-create-modal/components/FieldsFormList';
 import JsonTree from './JsonTree';
 import type { TreeNode, FieldItem } from './JsonTree';
-import { json2fsTree, batchReverser } from '@/apis/inter-api/uns';
+import { json2fsTree, batchReverser } from '@/apis/core-api/uns';
 import { cloneDeep } from 'lodash-es';
 
 import type { UnsTreeNode, InitTreeDataFnType } from '@/pages/uns/types';
@@ -15,6 +14,7 @@ import ComCheckbox from '@/components/com-checkbox';
 import ComRadio from '@/components/com-radio';
 import { generateAlias } from '@/utils/uns';
 import { useBaseStore } from '@/stores/base';
+import { MAX_LENGTHS } from '@/utils/limits';
 
 const { TextArea } = Input;
 
@@ -46,14 +46,11 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
     const jsonTreeRef = useRef<any>(null);
 
     const {
-      dashboardType,
-      systemInfo: { qualityName = 'quality', timestampName = 'timeStamp', enableAutoCategorization },
+      systemInfo: { qualityName = '_quality', timestampName = '_timestamp', enableAutoCategorization },
     } = useBaseStore((state) => ({
-      dashboardType: state.dashboardType,
       systemInfo: state.systemInfo,
     }));
     const globalDataType = Form.useWatch('dataType', form);
-    const hasGrafana = dashboardType?.includes('grafana');
     const jsonData = Form.useWatch('jsonData', form);
     const globalParentDataType = Form.useWatch('parentDataType', form);
     const currentParentDataType = Form.useWatch(['currentNode', 'parentDataType'], form);
@@ -185,14 +182,12 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
           pathType,
           name,
           description,
-          tags,
-          save2db = false,
+          persistence = false,
           mainKey,
           fields,
           alias,
           parentAlias,
           addFlow = false,
-          addDashBoard = false,
           dataType,
           parentDataType,
         } = node;
@@ -216,10 +211,8 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
               dataType,
               name,
               description,
-              labelNames: tags?.map((tag: any) => tag.label || tag.value) || [],
               addFlow,
-              addDashBoard,
-              save2db,
+              persistence,
               fields: fields?.filter(
                 (i) => !(i?.systemField || (dataType === 1 && [qualityName, timestampName].includes(i?.name)))
               ),
@@ -352,7 +345,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                     {getTargetNode(treeData, selectedInfo.dataPath)?.name}
                   </span>
                 </Flex>
-                <Divider style={{ borderColor: '#c6c6c6', margin: '10px 0' }} />
+                <Divider style={{ borderColor: 'var(--ui-line-color)', margin: '10px 0' }} />
                 <Form.Item
                   name={['currentNode', 'name']}
                   label={formatMessage('common.name')}
@@ -361,12 +354,15 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                     { required: true, message: formatMessage('uns.pleaseInputName') },
                     { pattern: /^[\u4e00-\u9fa5a-zA-Z0-9_-]+$/, message: formatMessage('uns.nameFormat') },
                     {
-                      max: 63,
-                      message: formatMessage('uns.labelMaxLength', { label: formatMessage('common.name'), length: 63 }),
+                      max: MAX_LENGTHS.name,
+                      message: formatMessage('uns.labelMaxLength', {
+                        label: formatMessage('common.name'),
+                        length: MAX_LENGTHS.name,
+                      }),
                     },
                     {
                       validator: (_, value) => {
-                        if (selectedInfo.pathType === 0 && ['label', 'template'].includes(value)) {
+                        if (selectedInfo.pathType === 0 && value === 'label') {
                           return Promise.reject(new Error(formatMessage('uns.prohibitKeywords')));
                         } else {
                           return Promise.resolve();
@@ -382,12 +378,12 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                   label={formatMessage(`uns.${selectedInfo?.pathType === 2 ? 'fileDescription' : 'folderDescription'}`)}
                   rules={[
                     {
-                      max: 512,
+                      max: MAX_LENGTHS.description,
                       message: formatMessage('uns.labelMaxLength', {
                         label: formatMessage(
                           `uns.${selectedInfo?.pathType === 2 ? 'fileDescription' : 'folderDescription'}`
                         ),
-                        length: 512,
+                        length: MAX_LENGTHS.description,
                       }),
                     },
                   ]}
@@ -396,11 +392,6 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                 </Form.Item>
                 {selectedInfo.pathType === 2 ? (
                   <>
-                    <Form.Item name={['currentNode', 'tags']} label={formatMessage('common.label')}>
-                      <TagSelect />
-                    </Form.Item>
-                    <Divider style={{ borderColor: '#c6c6c6' }} />
-
                     {enableAutoCategorization && (
                       <Form.Item
                         name={['currentNode', 'parentDataType']}
@@ -431,9 +422,9 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                     <Form.Item name={['currentNode', 'dataType']} label={formatMessage('uns.databaseType')}>
                       <ComRadio options={getDataTypeOptions()} />
                     </Form.Item>
-                    <Divider style={{ borderColor: '#c6c6c6' }} />
+                    <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
                     <Form.Item
-                      name={['currentNode', 'save2db']}
+                      name={['currentNode', 'persistence']}
                       label={formatMessage('uns.persistence')}
                       valuePropName="checked"
                     >
@@ -446,18 +437,9 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
                     >
                       <ComCheckbox />
                     </Form.Item>
-                    {hasGrafana && (
-                      <Form.Item
-                        name={['currentNode', 'addDashBoard']}
-                        label={formatMessage('uns.autoDashboard')}
-                        valuePropName="checked"
-                      >
-                        <ComCheckbox />
-                      </Form.Item>
-                    )}
                   </>
                 ) : (
-                  <Divider style={{ borderColor: '#c6c6c6' }} />
+                  <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
                 )}
                 <FieldsFormList
                   types={types}
@@ -470,7 +452,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
               </div>
             )}
           </Flex>
-          <Divider style={{ borderColor: '#c6c6c6' }} />
+          <Divider style={{ borderColor: 'var(--ui-line-color)' }} />
         </>
       ) : (
         <div style={{ position: 'relative', width: '100%' }}>
@@ -560,21 +542,15 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
       });
     };
 
-    const allPersistenceChecked = fileList.length > 0 && fileList.every((e) => e.save2db);
+    const allPersistenceChecked = fileList.length > 0 && fileList.every((e) => e.persistence);
     const allMockDataChecked = fileList.length > 0 && fileList.every((e) => e.addFlow);
-    const allAutoDashboardChecked = fileList.length > 0 && fileList.every((e) => e.addDashBoard);
-
     const batchPersistence = () => {
-      handleNodeInfo(treeData, 'save2db', !allPersistenceChecked);
-      form.setFieldValue(['currentNode', 'save2db'], !allPersistenceChecked);
+      handleNodeInfo(treeData, 'persistence', !allPersistenceChecked);
+      form.setFieldValue(['currentNode', 'persistence'], !allPersistenceChecked);
     };
     const batchMockData = () => {
       handleNodeInfo(treeData, 'addFlow', !allMockDataChecked);
       form.setFieldValue(['currentNode', 'addFlow'], !allMockDataChecked);
-    };
-    const batchAutoDashboard = () => {
-      handleNodeInfo(treeData, 'addDashBoard', !allAutoDashboardChecked);
-      form.setFieldValue(['currentNode', 'addDashBoard'], !allAutoDashboardChecked);
     };
     const batchModifyDataType = (type: number, parentDataType?: number) => {
       handleNodeInfo(treeData, 'dataType', type);
@@ -585,12 +561,12 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
       form.setFieldValue(['currentNode', 'dataType'], type);
     };
 
-    const renderBatchChecks = (hasGrafana: boolean) => {
+    const renderBatchChecks = () => {
       return isSave ? (
         <Flex gap={8}>
           <ComCheckbox
             checked={allPersistenceChecked}
-            indeterminate={!allPersistenceChecked && fileList.some((e) => e.save2db)}
+            indeterminate={!allPersistenceChecked && fileList.some((e) => e.persistence)}
             onChange={batchPersistence}
           >
             {formatMessage('uns.batchPersistence')}
@@ -602,15 +578,6 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
           >
             {formatMessage('uns.batchMockData')}
           </ComCheckbox>
-          {hasGrafana && (
-            <ComCheckbox
-              checked={allAutoDashboardChecked}
-              indeterminate={!allAutoDashboardChecked && fileList.some((e) => e.addDashBoard)}
-              onChange={batchAutoDashboard}
-            >
-              {formatMessage('uns.batchAutoDashboard')}
-            </ComCheckbox>
-          )}
         </Flex>
       ) : (
         <div />
@@ -621,7 +588,7 @@ const JsonForm = forwardRef<JsonFormRefProps, JsonFormProps>(
       <>
         {renderContent()}
         <Flex justify="space-between">
-          {renderBatchChecks(hasGrafana)}
+          {renderBatchChecks()}
           <Flex gap={10}>{renderButtons()}</Flex>
         </Flex>
       </>

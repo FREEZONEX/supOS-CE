@@ -15,7 +15,7 @@ const ComDot: FC<ComDotProps> = ({
   children,
   style,
   className,
-  color = 'var(--supos-theme-color)',
+  color = 'var(--ui-theme-color)',
   breathing = false,
 }) => {
   const dotClassName = classNames('com-dot-dot', {

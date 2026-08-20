@@ -1,11 +1,13 @@
 import { type FC, useCallback, useMemo, useState, useEffect } from 'react';
-import { Button, App, Tag, Input, Descriptions, Drawer, Form, Select, Typography } from 'antd';
+import { Button, App, Tag, Descriptions, Drawer, Form, Input, Select, Typography } from 'antd';
 import { Add, Renew, Edit, TrashCan } from '@carbon/icons-react';
 import ProTable from '@/components/pro-table';
-import { getRoutes, createRoute, updateRoute, deleteRoute, getServices } from '@/apis/inter-api/kong';
+import ProSearch from '@/components/pro-search';
+import { getRoutes, createRoute, updateRoute, deleteRoute, getServices } from '@/apis/core-api/kong';
 import useKongTable from '../../hooks/useKongTable';
 import useKongModal from '../../hooks/useKongModal';
 import useTranslate from '@/hooks/useTranslate';
+import { mergeDeleteConfirmProps } from '@/utils/delete-confirm-modal';
 
 const PROTOCOLS = ['http', 'https', 'grpc', 'grpcs', 'tcp', 'tls', 'udp'];
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE'];
@@ -136,14 +138,18 @@ const RoutesTab: FC<RoutesTabProps> = ({ initialDetail }) => {
 
   const handleDelete = useCallback(
     (record: any) => {
-      modal.confirm({
-        title: formatMessage('kong.deleteRoute', { name: record.name ?? record.id }),
-        okButtonProps: { danger: true },
-        onOk: async () => {
-          await deleteRoute(record.id);
-          refresh();
-        },
-      });
+      modal.confirm(
+        mergeDeleteConfirmProps(
+          {
+            title: formatMessage('kong.deleteRoute', { name: record.name ?? record.id }),
+            onOk: async () => {
+              await deleteRoute(record.id);
+              refresh();
+            },
+          },
+          formatMessage
+        )
+      );
     },
     [modal, refresh, formatMessage]
   );
@@ -239,12 +245,16 @@ const RoutesTab: FC<RoutesTabProps> = ({ initialDetail }) => {
           </Button>
         </div>
         <div className="toolbar-right">
-          <Input.Search
+          <ProSearch
+            size="sm"
             placeholder={formatMessage('kong.searchRoute')}
-            allowClear
             style={{ width: 280 }}
+            onChange={(e) => {
+              if (!e.target.value) {
+                setSearch('');
+              }
+            }}
             onSearch={setSearch}
-            onChange={(e) => !e.target.value && setSearch('')}
           />
         </div>
       </div>

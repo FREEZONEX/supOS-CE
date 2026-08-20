@@ -1,54 +1,26 @@
-# Use official Go image as build environment
-FROM golang:1.24-alpine AS builder
-# 设置 Alpine 使用国内镜像源
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-# Set working directory
+FROM golang:1.25-alpine AS builder
 WORKDIR /app
-
-# Install necessary system dependencies
-RUN apk add --no-cache ca-certificates 
-
-ENV GOPROXY=https://goproxy.cn,direct
-ENV GOSUMDB=sum.golang.google.cn
 ENV GO111MODULE=on
-
-# Copy go mod files
+ARG GOPROXY="https://proxy.golang.org,direct"
+ENV GOPROXY=${GOPROXY}
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
-
-# Copy source code
 COPY . .
 
-COPY swagger ./swagger
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /out/backend ./backend.go
+RUN mkdir -p /out/web && \
+    if [ -d .build/web ] && [ -n "$(find .build/web -mindepth 1 -maxdepth 1 -print -quit)" ]; then \
+      cp -R .build/web/. /out/web/; \
+    else \
+      printf '%s\n' '<!doctype html><html><body><div id="root">frontend dev server is not bundled in this backend image</div></body></html>' > /out/web/index.html; \
+    fi
 
-# Build application - static compilation
-RUN CGO_ENABLED=0 GOOS=linux  go build -ldflags="-w -s" -o backend ./backend.go
-
-# Use lightweight alpine image as runtime environment
-FROM alpine:latest
-
-# Install necessary runtime dependencies
-RUN apk --no-cache add ca-certificates tzdata
-
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-
-# Set working directory
+FROM alpine:3.21
 WORKDIR /app
-
-# Copy binary file from build stage
-COPY --from=builder /app/backend .
-RUN chmod +x ./backend
-
-# swagger
-#COPY --from=builder /app/swagger ./swagger
-
-# Copy configuration files from build stage
-COPY --from=builder /app/etc ./etc
-
-# Expose port
-EXPOSE 8080
-
-# Start application
-CMD ["./backend"]
+RUN apk --no-cache add ca-certificates tzdata curl
+COPY --from=builder /out/backend /app/backend
+COPY --from=builder /app/etc /app/etc
+COPY --from=builder /app/http /app/http
+COPY --from=builder /out/web /app/web
+ENV WEB_DIR=/app/web
+CMD ["/app/backend"]

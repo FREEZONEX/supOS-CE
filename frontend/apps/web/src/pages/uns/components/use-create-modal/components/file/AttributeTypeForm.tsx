@@ -4,7 +4,6 @@ import { useTranslate, useFormValue } from '@/hooks';
 import { useI18nStore } from '@/stores/i18n-store';
 import ComRadio from '@/components/com-radio';
 import FieldsFormList from '@/pages/uns/components/use-create-modal/components/FieldsFormList';
-import ModelFieldsForm from '@/pages/uns/components/use-create-modal/components/file/ModelFieldsForm';
 import ReverseGeneration from '@/pages/uns/components/use-create-modal/components/file/ReverseGeneration';
 
 interface AttributeTypeFormProps {
@@ -12,14 +11,12 @@ interface AttributeTypeFormProps {
   addNamespaceForAi?: { [key: string]: any };
   setAddNamespaceForAi?: (e: any) => void;
   dataType?: number;
-  templateList?: any[];
 }
 const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
   types,
   addNamespaceForAi,
   setAddNamespaceForAi,
   dataType,
-  templateList,
 }) => {
   const formatMessage = useTranslate();
   const lang = useI18nStore((state) => state.lang);
@@ -36,10 +33,9 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
             addNamespaceForAi={addNamespaceForAi}
             setAddNamespaceForAi={setAddNamespaceForAi}
             showMoreBtn={dataType === 1}
+            requiredFields={dataType !== 8}
           />
         );
-      case 2:
-        return <ModelFieldsForm options={(templateList || []).slice(1)} types={types} />;
       case 3:
         return <ReverseGeneration require={dataType !== 8} onlyJson types={types} />;
       default:
@@ -48,7 +44,7 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
   };
   return (
     <>
-      {/*<Divider style={{ borderColor: '#c6c6c6' }} />*/}
+      {/*<Divider style={{ borderColor: 'var(--ui-line-color)' }} />*/}
       <div className="dashedWrap">
         <Form.Item
           name="attributeType"
@@ -60,9 +56,6 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
                 <span>• {formatMessage('common.custom')}</span> —&nbsp;
                 {formatMessage('uns.attributeGenerationMethodTooltip-Custom')}
                 <br />
-                <span>• {formatMessage('common.template')}</span> —&nbsp;
-                {formatMessage('uns.attributeGenerationMethodTooltip-Template')}
-                <br />
                 <span>• {formatMessage('uns.reverseGeneration')}</span> —&nbsp;
                 {formatMessage('uns.attributeGenerationMethodTooltip-ReverseGeneration')}
               </div>
@@ -73,14 +66,11 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
           <ComRadio
             options={[
               { label: formatMessage('common.custom'), value: 1 },
-              { label: formatMessage('common.template'), value: 2 },
               { label: formatMessage('uns.reverseGeneration'), value: 3 },
             ]}
             onChange={() => {
               form.setFieldsValue({
                 fields: [{}],
-
-                modelId: undefined,
                 jsonData: undefined,
                 jsonList: [],
                 jsonDataPath: undefined,
@@ -93,7 +83,7 @@ const AttributeTypeForm: FC<AttributeTypeFormProps> = ({
             }}
           />
         </Form.Item>
-        <Divider style={{ borderColor: '#c6c6c6' }} dashed />
+        <Divider style={{ borderColor: 'var(--ui-line-color)' }} dashed />
         {renderContent()}
       </div>
     </>

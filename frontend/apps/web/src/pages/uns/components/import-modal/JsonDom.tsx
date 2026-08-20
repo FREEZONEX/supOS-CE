@@ -3,29 +3,40 @@ import { codemirrorTheme } from '@/theme/codemirror-theme.tsx';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
 import { placeholder } from '@/pages/uns/components/import-modal/data.ts';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSize } from 'ahooks';
 import styles from '@/theme/codemirror.module.scss';
-import { CheckmarkFilled, Copy, ErrorFilled } from '@carbon/icons-react';
+import { CheckmarkFilled, Copy, ErrorFilled } from '@/components/lucide-icon/carbon';
 import { useClipboard, useTranslate } from '@/hooks';
 import { App, Divider, Flex, Progress } from 'antd';
 import ComButton from '../../../../components/com-button';
 import ComEllipsis from '../../../../components/com-ellipsis';
 import type { SocketDataType } from './type.ts';
-import { readerSSE } from '@/pages/uns/components/import-modal/utils.ts';
+import { readerSSE } from './utils.ts';
+import { getToken } from '@/utils/auth.ts';
 
 const JsonDom = ({ initTreeData, onCloseModal }: any) => {
   const [jsonValue, setJsonValue] = useState<any>();
   const ref = useRef<HTMLDivElement>(null);
   const size = useSize(ref);
   const formatMessage = useTranslate();
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const { copy } = useClipboard();
   const [socketData, setSocketData] = useState<SocketDataType>({});
-  const [moduleMap, setModuleMap] = useState(new Map());
-  console.log(moduleMap);
   const [loading, setLoading] = useState(false);
   const timer = useRef<number>();
+
+  const showImportError = (error?: unknown) => {
+    const msg = error instanceof Error && error.message ? error.message : formatMessage('uns.importFailed');
+    setSocketData({
+      code: 500,
+      finished: true,
+      progress: 100,
+      module: 'uns',
+      msg,
+    });
+    setLoading(false);
+  };
 
   const onSave = async () => {
     try {
@@ -33,8 +44,7 @@ const JsonDom = ({ initTreeData, onCloseModal }: any) => {
       if (jsonValue) {
         try {
           JSON.parse(jsonValue);
-        } catch (e) {
-          console.log(e);
+        } catch {
           message.error(formatMessage('uns.errorInTheSyntaxOfTheJSON'));
           return;
         }
@@ -44,142 +54,106 @@ const JsonDom = ({ initTreeData, onCloseModal }: any) => {
         return;
       }
       setLoading(true);
-      const response = await fetch('/inter-api/supos/uns/importExport/import', {
+      const response = await fetch('/api/core/uns/import', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${getToken() || ''}`,
+        },
         body: fd,
       });
+      if (!response.ok) {
+        const msg = await response.text();
+        throw new Error(msg || response.statusText || formatMessage('uns.importFailed'));
+      }
       readerSSE(
         response,
         (data: any) => {
-          setModuleMap((prevMap) => {
-            const newMap = new Map(prevMap);
-            newMap.set(data.module, data);
-            return newMap;
-          });
+          const finished = data?.finished || data?.progress >= 100;
           setSocketData({
             code: data?.code,
-            finished: data?.progress >= 100,
+            finished,
             progress: data?.progress,
             errTipFile: data?.errTipFile,
+            module: data?.module || 'uns',
+            msg: data?.msg,
           });
-          if (data?.progress >= 100) initTreeData({ reset: true });
+          if (finished && [200, 206].includes(data?.code)) initTreeData({ reset: true });
         },
         () => {
-          setLoading(false);
+          showImportError();
         }
       );
     } catch (error) {
-      console.error(error);
-      setLoading(false);
+      showImportError(error);
     }
   };
 
   const onReupload = () => {
     setLoading(false);
     setSocketData({});
-    setModuleMap(new Map());
-    setJsonValue(undefined);
   };
 
   const { code, finished, progress } = socketData;
   const reimport = finished;
-  const onClose = () => {
+  const onClose = useCallback(() => {
     onCloseModal?.();
-  };
+  }, [onCloseModal]);
 
   useEffect(() => {
     if (socketData.finished) {
       clearInterval(timer.current);
       if (socketData.code === 200) {
         message.success(formatMessage('uns.importFinished'));
-        // setTimeout(() => {
-        //   onClose();
-        // }, 3000);
+        onClose();
+      } else if (socketData.code !== 206) {
+        message.error(socketData.msg || formatMessage('uns.importFailed'));
       }
     }
     if (socketData.code === 206) {
-      modal.confirm({
-        title: formatMessage('uns.PartialDataImportFailed'),
-        onOk() {
-          window.open(`/inter-api/supos/uns/importExport/file/download?path=${socketData.errTipFile}`, '_self');
-        },
-        okButtonProps: {
-          title: formatMessage('common.confirm'),
-        },
-        cancelButtonProps: {
-          title: formatMessage('common.cancel'),
-        },
-      });
+      message.warning(socketData.msg || formatMessage('uns.PartialDataImportFailed'));
     }
-  }, [socketData]);
+  }, [formatMessage, message, onClose, socketData]);
 
   return (
     <Flex vertical style={{ height: '100%', overflow: 'hidden' }}>
-      <div
-        ref={ref}
-        style={{
-          flex: 1,
-          borderRadius: 4,
-          border: '1px solid rgb(198, 198, 198)',
-          padding: 16,
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-        className={styles['custom-theme']}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            right: 4,
-            top: 0,
-            color: 'var(--supos-text-color)',
-            zIndex: 1,
-          }}
-        >
-          {jsonValue ? (
-            <Copy
-              style={{
-                cursor: 'pointer',
-                marginTop: 4,
-              }}
-              onClick={() => {
-                copy(jsonValue || JSON.stringify(JSON.parse(placeholder), null, 2));
-              }}
-            />
-          ) : (
-            <span
-              style={{
-                marginRight: 14,
-                fontSize: '12px',
-                pointerEvents: 'none',
-                zIndex: 10,
-                color: '#c6c6c6',
-              }}
-            >
-              {formatMessage('uns.ctrlPQuickApplyExample')}
-            </span>
-          )}
+      <div className="import-json-layout">
+        <div ref={ref} className={`${styles['custom-theme']} import-json-editor`}>
+          <div className={`import-json-quick-tip${jsonValue ? ' is-copy' : ''}`}>
+            {jsonValue ? (
+              <Copy
+                style={{
+                  cursor: 'pointer',
+                  marginTop: 4,
+                }}
+                onClick={() => {
+                  copy(jsonValue || JSON.stringify(JSON.parse(placeholder), null, 2));
+                }}
+              />
+            ) : (
+              <span>{formatMessage('uns.ctrlPQuickApplyExample')}</span>
+            )}
+          </div>
+          <CodeMirror
+            theme={codemirrorTheme}
+            placeholder={placeholder}
+            onChange={setJsonValue}
+            value={jsonValue}
+            height={(size?.height || 32) - 32 + 'px'}
+            extensions={[json(), linter(jsonParseLinter()), lintGutter()]}
+            onKeyDownCapture={(e) => {
+              if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                setJsonValue(placeholder);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+              }
+            }}
+          />
         </div>
-        <CodeMirror
-          theme={codemirrorTheme}
-          placeholder={placeholder}
-          onChange={setJsonValue}
-          value={jsonValue}
-          height={(size?.height || 32) - 32 + 'px'}
-          extensions={[json(), linter(jsonParseLinter()), lintGutter()]}
-          onKeyDownCapture={(e) => {
-            if (e.ctrlKey && e.key === 'Enter') {
-              e.preventDefault();
-              e.stopPropagation();
-              setJsonValue(placeholder);
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.ctrlKey && e.key === 'Enter') {
-              e.preventDefault();
-            }
-          }}
-        />
       </div>
       {loading && (
         <div style={{ flexShrink: 0, paddingTop: 16 }}>

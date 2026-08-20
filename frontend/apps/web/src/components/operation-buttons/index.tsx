@@ -9,7 +9,7 @@ const colorType: any = {
     color: 'primary',
     variant: 'outlined',
     style: {
-      background: 'var(--supos-bg-color)',
+      background: 'var(--ui-bg-color)',
     },
   },
   primary: {
@@ -20,7 +20,7 @@ const colorType: any = {
     color: 'default',
     variant: 'solid',
     style: {
-      background: 'var(--supos-description-card-color)',
+      background: 'var(--ui-description-card-color)',
     },
   },
   link: {

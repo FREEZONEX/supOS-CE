@@ -1,17 +1,19 @@
-import { Button, Flex } from 'antd';
+import { Button, Flex, Select } from 'antd';
 import ComEllipsis from '@/components/com-ellipsis';
 import ComCopy from '@/components/com-copy';
 import useTranslate from '@/hooks/useTranslate.ts';
 import { useBaseStore } from '@/stores/base';
 import SearchSelect from '@/pages/uns/components/use-create-modal/components/SearchSelect.tsx';
-import { type CSSProperties, useRef, useState } from 'react';
-import { getInstanceInfo } from '@/apis/inter-api';
-import { getExampleForJavaType } from '@/utils';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { getInstanceInfo } from '@/apis/core-api';
 import { fromPairs, map } from 'lodash-es';
 import DatabaseInfoModal, { type ModalRef } from './DatabaseInfoModal.tsx';
-import { DataBase } from '@carbon/icons-react';
+import { DataBase } from '@/components/lucide-icon/carbon';
 import styles from './index.module.scss';
 import HelpTooltip from '../../../../components/help-tooltip';
+import useSSE from '@/hooks/useSSE.ts';
+
+const DEFAULT_MQTT_WSS_PORT = '8084';
 
 const Item = ({ item, height = 32, ellipsis = true }: any) => {
   const formatMessage = useTranslate();
@@ -26,7 +28,9 @@ const Item = ({ item, height = 32, ellipsis = true }: any) => {
   return (
     <div key={item.key}>
       <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
-        <ComEllipsis style={{ fontWeight: 400, fontSize: 12, lineHeight: '20px', color: '#525252' }}>
+        <ComEllipsis
+          style={{ fontWeight: 400, fontSize: 12, lineHeight: '20px', color: 'var(--ui-description-card-color)' }}
+        >
           {formatMessage(item.label)}
         </ComEllipsis>
         {item?.extra && <div style={{ flexShrink: 0, lineHeight: 1 }}>{item?.extra}</div>}
@@ -40,9 +44,9 @@ const Item = ({ item, height = 32, ellipsis = true }: any) => {
       >
         <pre
           style={{
-            background: 'var(--supos-bg-color)',
+            background: 'var(--ui-bg-color)',
             borderRadius: '3px',
-            border: '1px solid #E0E0E0',
+            border: '1px solid var(--ui-select-card-color)',
             width: '100%',
             height,
             padding: '4px 12px',
@@ -57,26 +61,110 @@ const Item = ({ item, height = 32, ellipsis = true }: any) => {
   );
 };
 
+const formatPanelValue = (value: any) => {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+    try {
+      return JSON.stringify(JSON.parse(trimmed), null, 2);
+    } catch {
+      return trimmed;
+    }
+  }
+  return JSON.stringify(value, null, 2);
+};
+
+const pickRealtimePayload = (rawData: any) => {
+  if (typeof rawData !== 'string') {
+    return rawData;
+  }
+  const trimmed = rawData.trim();
+  if (!trimmed || trimmed === 'Connected') {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed?.lastPayload !== undefined) return parsed.lastPayload;
+    if (parsed?.payload !== undefined) return parsed.payload;
+    if (parsed?.data !== undefined) return parsed.data;
+    return parsed;
+  } catch {
+    return trimmed;
+  }
+};
+
+const buildSchemaPayload = (data: any, jsonBFallback: string) => {
+  if (!data) {
+    return '';
+  }
+  if (data?.schema && Object.keys(data.schema).length > 0) {
+    return formatPanelValue(data.schema);
+  }
+  if (data?.dataType === 8) {
+    return jsonBFallback;
+  }
+  const fieldExampleList = data?.fields?.map((item: any) => ({
+    key: item.name,
+    value: item.type,
+  }));
+  return formatPanelValue(fromPairs(map(fieldExampleList, (item) => [item.key, item.value])));
+};
+
 const MQTT = () => {
   const formatMessage = useTranslate();
   const systemInfo = useBaseStore((state) => state.systemInfo);
-  const wsPort = systemInfo?.mqttTcpPort ?? window.location.port;
+  const wsPort = systemInfo?.mqttWebsocketTslPort || DEFAULT_MQTT_WSS_PORT;
+  const endpointOptions = useMemo(
+    () => [
+      {
+        label: `WSS ${wsPort}`,
+        value: 'wss',
+        port: wsPort,
+        url: `wss://${window.location.hostname}:${wsPort}/mqtt`,
+      },
+    ],
+    [wsPort]
+  );
+  const [endpointType, setEndpointType] = useState(endpointOptions[0].value);
+  const currentEndpoint = endpointOptions.find((item) => item.value === endpointType) || endpointOptions[0];
   const mqttList = [
     {
       key: 'url',
       label: 'uns.MQTTUrl',
       style: { marginBottom: 8 },
-      text: `mqtt://${window.location.hostname}:${wsPort}`,
-    },
-    {
-      key: 'port',
-      label: 'uns.MQTTPort',
-      text: wsPort,
+      text: currentEndpoint.url,
     },
   ];
   const [topicInfo, setTopicInfo] = useState<any>(null);
   const modalRef = useRef<ModalRef>(null);
-  const [payloadInfo, setPayLoadInfo] = useState<any>(null);
+  const [schemaPayload, setSchemaPayload] = useState('');
+  const [realtimePayload, setRealtimePayload] = useState('');
+  const selectedTopicId = topicInfo?.id;
+
+  useEffect(() => {
+    setEndpointType(endpointOptions[0].value);
+  }, [endpointOptions]);
+
+  useEffect(() => {
+    setRealtimePayload('');
+  }, [selectedTopicId]);
+
+  useSSE(selectedTopicId ? `/api/core/uns/newMsg?id=${selectedTopicId}` : '', {
+    autoConnect: Boolean(selectedTopicId),
+    onMessage: (event) => {
+      const nextPayload = pickRealtimePayload(event.data);
+      const formatted = formatPanelValue(nextPayload);
+      if (formatted) {
+        setRealtimePayload(formatted);
+      }
+    },
+  });
+
   return (
     <Flex vertical className={styles['mqtt']}>
       <Flex align="center" gap={8} style={{ marginBottom: 5 }}>
@@ -88,7 +176,38 @@ const MQTT = () => {
         {mqttList?.map((item: any) => {
           return <Item item={item} key={item.key} />;
         })}
-        <ComEllipsis style={{ fontWeight: 400, fontSize: 12, lineHeight: '20px', color: '#525252', margin: '8px 0' }}>
+        <ComEllipsis
+          style={{
+            fontWeight: 400,
+            fontSize: 12,
+            lineHeight: '20px',
+            color: 'var(--ui-description-card-color)',
+            margin: '8px 0',
+          }}
+        >
+          {formatMessage('uns.MQTTPort')}
+        </ComEllipsis>
+        <Select
+          value={endpointType}
+          options={endpointOptions.map((item) => ({
+            label: item.label,
+            value: item.value,
+          }))}
+          style={{
+            width: '100%',
+            marginBottom: 8,
+          }}
+          onChange={setEndpointType}
+        />
+        <ComEllipsis
+          style={{
+            fontWeight: 400,
+            fontSize: 12,
+            lineHeight: '20px',
+            color: 'var(--ui-description-card-color)',
+            margin: '8px 0',
+          }}
+        >
           {formatMessage('uns.topic')}
         </ComEllipsis>
         <SearchSelect
@@ -105,26 +224,15 @@ const MQTT = () => {
               getInstanceInfo({ id: e?.value })
                 .then((data) => {
                   setTopicInfo(data);
-                  const fieldExampleList = data?.fields?.map((item: any) => {
-                    return {
-                      key: item.name,
-                      value: getExampleForJavaType(item.type, item.name),
-                      type: item.type,
-                    };
-                  });
-                  if (data?.dataType === 8) {
-                    setPayLoadInfo(formatMessage('uns.jsonBExample'));
-                  } else {
-                    const jsObj = fromPairs(map(fieldExampleList, (item) => [item.key, item.value]));
-                    setPayLoadInfo(JSON.stringify(jsObj, null, 2));
-                  }
+                  setSchemaPayload(buildSchemaPayload(data, formatMessage('uns.jsonBExample')));
                 })
                 .catch(() => {
                   setTopicInfo(null);
+                  setSchemaPayload('');
                 });
             } else {
               setTopicInfo(null);
-              setPayLoadInfo(null);
+              setSchemaPayload('');
             }
           }}
           labelInValue
@@ -135,8 +243,8 @@ const MQTT = () => {
           item={{
             key: 'payload',
             label: 'uns.payload',
-            text: payloadInfo,
-            extra: topicInfo?.withSave2db ? (
+            text: realtimePayload || schemaPayload,
+            extra: topicInfo?.persistence ? (
               <Button
                 // type="link"
                 title={formatMessage('uns.databaseInfo')}

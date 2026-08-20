@@ -1,6 +1,6 @@
 import { FolderAdd } from '@carbon/icons-react';
 import { App, type UploadProps, type GetRef, Upload, type UploadFile } from 'antd';
-import { type CSSProperties, forwardRef } from 'react';
+import { type CSSProperties, type MouseEvent, forwardRef, useRef } from 'react';
 import usePropsValue from '@/hooks/usePropsValue.ts';
 import { useTranslate } from '@/hooks';
 import './index.scss';
@@ -44,6 +44,15 @@ const ProDraggerUpload = forwardRef<DraggerRef, ComDraggerUploadProps>(
     const formatMessage = useTranslate();
     const { message } = App.useApp();
     const accept = acceptList.map((item) => `.${item}`).join(',');
+    const rootRef = useRef<HTMLDivElement>(null);
+
+    const openFileDialog = (event?: MouseEvent<HTMLElement>) => {
+      event?.stopPropagation();
+      const target = event?.target as HTMLElement | null;
+      if (target?.tagName === 'INPUT') return;
+      if (target?.closest('.ant-upload-list')) return;
+      rootRef.current?.querySelector<HTMLInputElement>('input[type="file"]')?.click();
+    };
 
     const beforeUpload = (file: any) => {
       if (size && file?.size > size) {
@@ -65,7 +74,7 @@ const ProDraggerUpload = forwardRef<DraggerRef, ComDraggerUploadProps>(
     };
 
     return (
-      <div style={style} className={className}>
+      <div style={style} className={className} ref={rootRef} onClick={openFileDialog}>
         <Dragger
           className="com-dragger-upload"
           action={action}
@@ -73,6 +82,7 @@ const ProDraggerUpload = forwardRef<DraggerRef, ComDraggerUploadProps>(
           maxCount={1}
           beforeUpload={beforeUpload}
           fileList={fileList}
+          openFileDialogOnClick={false}
           onRemove={() => {
             setFileList([]);
           }}

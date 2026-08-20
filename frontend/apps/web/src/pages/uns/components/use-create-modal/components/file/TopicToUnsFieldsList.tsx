@@ -1,6 +1,6 @@
 import { type FC, useState, useEffect } from 'react';
 import { Form, Flex, Button, Input } from 'antd';
-import { ChevronRight, ChevronLeft } from '@carbon/icons-react';
+import { ChevronRight, ChevronLeft } from '@/components/lucide-icon/carbon';
 import { useTranslate } from '@/hooks';
 import FieldsFormList from '@/pages/uns/components/use-create-modal/components/FieldsFormList';
 import ComRadio from '@/components/com-radio';

@@ -1,0 +1,97 @@
+.title {
+  margin: 0;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--ui-text-color);
+  max-width: 90%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.projectId {
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ui-icon-disabled-color);
+}
+
+.content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  padding: 24px 0;
+  box-sizing: border-box;
+}
+
+.toolbarRow {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.toolbarActions {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.tabContentWrapper {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: contents;
+}
+
+.tabs {
+  padding: 6px 5px;
+  border-radius: 3px;
+  background: var(--ui-switchwrap-bg-color);
+}
+
+.importButton {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 2px;
+
+  :global(.ant-btn-icon) {
+    display: inline-flex;
+  }
+}
+
+.emptyState {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  color: var(--ui-description-card-color, #878787);
+}
+
+.emptyImage {
+  width: 120px;
+  height: 103px;
+}
+
+.emptyTitle {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.144px;
+}
+
+.emptyDesc {
+  font-size: 14px;
+  line-height: 20px;
+}

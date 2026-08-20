@@ -132,7 +132,7 @@ const ProCard: FC<ProCardProps> = ({
                         ellipsis={{
                           rows: 1,
                         }}
-                        style={{ margin: 0, wordBreak: 'break-all', color: 'var(--supos-table-first-color)' }}
+                        style={{ margin: 0, wordBreak: 'break-all', color: 'var(--ui-table-first-color)' }}
                       >
                         {statusInfo.label}
                       </Paragraph>
@@ -152,33 +152,38 @@ const ProCard: FC<ProCardProps> = ({
                     </Flex>
                   )}
                 </Flex>
-                {pinOptions && (
-                  <ComButton
-                    title={isPin ? formatMessage('common.pin') : formatMessage('common.unPin')}
-                    auth={pinOptions?.auth}
-                    disabled={pinOptions?.disabled}
-                    onClick={() => pinOptions?.onClick?.(item)}
-                    icon={isPin ? <Pin style={{ color: '#525252' }} /> : <PinFilled />}
-                    size="small"
-                    type={'text'}
-                  />
-                )}
-                {actions && actionShowType === 'header' && (
-                  <Dropdown
-                    menu={{
-                      items: actions.map(({ key, label, icon, title, onClick, disabled, extra }) => ({
-                        key,
-                        label,
-                        icon,
-                        title: title ? title : typeof label === 'string' ? label : '',
-                        onClick: (e) => handleClick(e, onClick),
-                        disabled,
-                        extra,
-                      })),
-                    }}
-                  >
-                    <Button type="text" icon={<OverflowMenuVertical />} size="small" />
-                  </Dropdown>
+                {(pinOptions || (actions && actionShowType === 'header')) && (
+                  <Flex className="pro-card-header-actions" align="center" gap={8}>
+                    {pinOptions && (
+                      <ComButton
+                        title={isPin ? formatMessage('common.pin') : formatMessage('common.unPin')}
+                        auth={pinOptions?.auth}
+                        disabled={pinOptions?.disabled}
+                        onClick={() => pinOptions?.onClick?.(item)}
+                        icon={isPin ? <Pin style={{ color: '#525252' }} /> : <PinFilled />}
+                        size="small"
+                        type={'text'}
+                      />
+                    )}
+                    {actions && actionShowType === 'header' && (
+                      <Dropdown
+                        overlayClassName="pro-table-operation-menu"
+                        menu={{
+                          items: actions.map(({ key, label, icon, title, onClick, disabled, extra }) => ({
+                            key,
+                            label,
+                            icon,
+                            title: title ? title : typeof label === 'string' ? label : '',
+                            onClick: (e) => handleClick(e, onClick),
+                            disabled,
+                            extra,
+                          })),
+                        }}
+                      >
+                        <Button type="text" icon={<OverflowMenuVertical />} size="small" />
+                      </Dropdown>
+                    )}
+                  </Flex>
                 )}
               </Flex>
               {allowCheck ? (
@@ -204,13 +209,13 @@ const ProCard: FC<ProCardProps> = ({
           >
             {(iconSrc || customIcon) && (
               <Flex
+                align="center"
+                justify="center"
+                className={cx(iconBg && 'pro-card-icon-wrap')}
                 style={
-                  iconBg
+                  iconBg && customIconBg
                     ? {
-                        borderRadius: 3,
-                        // backgroundColor: 'var(--supos-image-card-color)',
-                        backgroundColor: customIconBg ? customIconBg : 'var(--supos-image-card-color)',
-                        padding: 6,
+                        backgroundColor: customIconBg,
                       }
                     : undefined
                 }
@@ -246,7 +251,9 @@ const ProCard: FC<ProCardProps> = ({
                   </div>
                 )}
               </Flex>
-              {(onClick || headerClick) && <ChevronRight style={{ flexShrink: 0 }} size={26} />}
+              {(onClick || headerClick) && header?.showChevron !== false && (
+                <ChevronRight style={{ flexShrink: 0 }} size={26} />
+              )}
             </Flex>
           </Flex>
           {/* description */}
@@ -259,7 +266,7 @@ const ProCard: FC<ProCardProps> = ({
               }}
             >
               {!_description ? (
-                <span style={{ color: '#8D8D8D' }}>
+                <span style={{ color: 'var(--ui-description-card-color)', fontSize: 12 }}>
                   {formatMessage(
                     typeof description !== 'string' && description?.empty ? description?.empty : 'common.noDescription'
                   )}
@@ -269,7 +276,7 @@ const ProCard: FC<ProCardProps> = ({
                   ellipsis={{
                     rows: typeof description === 'string' ? 2 : description?.rows || 2,
                   }}
-                  style={{ margin: 0, wordBreak: 'break-all', color: 'var(--supos-table-first-color)', fontSize: 12 }}
+                  style={{ margin: 0, wordBreak: 'break-all', color: 'var(--ui-table-first-color)', fontSize: 12 }}
                 >
                   {typeof description === 'string' ? description : description?.content}
                 </Paragraph>
@@ -290,7 +297,7 @@ const ProCard: FC<ProCardProps> = ({
             <Divider
               style={{
                 margin: '12px 0',
-                backgroundColor: 'var(--supos-t-dividr-color)',
+                backgroundColor: 'var(--ui-t-dividr-color)',
               }}
             />
           )}
@@ -322,6 +329,7 @@ const ProCard: FC<ProCardProps> = ({
               </Flex>
               {actionShowType === 'foot' && Array.isArray(actions) && actions.length > actionNum && (
                 <Dropdown
+                  overlayClassName="pro-table-operation-menu"
                   menu={{
                     items: actions.slice(actionNum).map(({ key, label, icon, title, onClick, disabled, extra }) => ({
                       key,

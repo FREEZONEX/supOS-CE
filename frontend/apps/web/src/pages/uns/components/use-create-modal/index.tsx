@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Close } from '@carbon/icons-react';
-import { Form, Drawer, Tooltip, Button, Input } from 'antd';
-import { getInstanceInfo, getModelInfo, searchTreeData, getTemplateDetail } from '@/apis/inter-api/uns';
-import { parserTopicPayload } from '@/apis/inter-api/external';
+import { getInstanceInfo, getModelInfo, searchTreeData } from '@/apis/core-api/uns';
 import { useTranslate } from '@/hooks';
-import { v4 as uuidv4 } from 'uuid';
+import { Close } from '@/components/lucide-icon/carbon';
+import { Button, Drawer, Form, Input, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { pinyin } from 'pinyin-pro';
+import { useCallback, useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import FormContent from './form-content';
 import FormStep from './form-step';
 import {
@@ -17,10 +16,10 @@ import {
 } from './path-utils';
 import './index.scss';
 
-import type { UnsTreeNode, InitTreeDataFnType, FieldItem } from '@/pages/uns/types';
-import type { TreeStoreActions } from '../../store/types';
-import { getExpression, parseArrayToObjects, parseTime } from '@/utils/uns';
+import type { FieldItem, InitTreeDataFnType, UnsTreeNode } from '@/pages/uns/types';
 import { useBaseStore } from '@/stores/base';
+import { getExpression, parseArrayToObjects, parseTime } from '@/utils/uns';
+import type { TreeStoreActions } from '../../store/types';
 
 export interface UseOptionModalProps {
   successCallBack: InitTreeDataFnType;
@@ -54,7 +53,7 @@ const useOptionModal = ({
   const [uuid, setUuid] = useState('');
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
-  const [addModalType, setAddModalType] = useState<string>(''); //addFolder,addFile,topicToFile
+  const [addModalType, setAddModalType] = useState<string>(''); //addFolder,addFile
   const [sourcePath, setSourcePath] = useState<string>(''); //父文件路径
   const [sourceId, setSourceId] = useState<string>(''); //父文件id
   const [topicType, setTopicType] = useState<number>(0); //文件夹类型
@@ -66,7 +65,6 @@ const useOptionModal = ({
   }));
 
   const name = Form.useWatch('name', form) || form.getFieldValue('name');
-  const modelId = Form.useWatch('modelId', form) || form.getFieldValue('modelId');
   const dataType = Form.useWatch('dataType', form) || form.getFieldValue('dataType');
   const parentDataType = Form.useWatch('parentDataType', form) || form.getFieldValue('parentDataType');
 
@@ -119,7 +117,6 @@ const useOptionModal = ({
             displayName,
             description,
             name,
-            modelId: 'custom',
             fields,
             extend: extendToArr(extend),
             pasteInfo: pasteNode ? { sourceId: pasteNode.id, targetId: targetNode?.id } : undefined,
@@ -130,19 +127,15 @@ const useOptionModal = ({
             displayName,
             description,
             pathName: name,
-            modelId,
             jsonFields,
             dataType,
             protocol = {},
-            labelList,
-            withDashboard,
             withFlow,
-            withSave2db,
+            persistence,
             expression,
             refers = [],
             dataPath,
             extend,
-            accessLevel,
             extendFieldUsed,
             parentDataType,
             pathType,
@@ -157,11 +150,7 @@ const useOptionModal = ({
             displayName,
             description,
             name,
-            tags: labelList
-              ? labelList.map((e: { labelName: string; id: string | number }) => ({ label: e.labelName, value: e.id }))
-              : [],
-            addDashBoard: withDashboard,
-            save2db: withSave2db,
+            persistence,
             extend: extendToArr(extend),
             dataType,
             pasteInfo: pasteNode ? { sourceId: pasteNode.id, targetId: targetNode?.id } : undefined,
@@ -172,11 +161,9 @@ const useOptionModal = ({
               case 1:
               case 2:
                 Object.assign(backfillForm, {
-                  attributeType: modelId ? 2 : 1,
-                  modelId: modelId,
+                  attributeType: 1,
                   addFlow: withFlow,
                   mainKey: fields.findIndex((item: FieldItem) => item.unique === true),
-                  accessLevel,
                   extendFieldUsed,
                 });
                 fields.forEach((e: FieldItem) => {
@@ -301,40 +288,22 @@ const useOptionModal = ({
       } else {
         setAddModalType(type || '');
         const _id = nodeType === 0 ? id : nodeType === 2 ? parentId : '';
-        if (type === 'topicToFile') {
-          const res = await parserTopicPayload({ topic: path });
-          res?.forEach?.((e: any) => {
-            e.dataPath = e.dataPath || 'default';
-          });
-          form.setFieldsValue({
-            path,
-            topicName: path.split('/').pop(),
-            topic: folderPath,
-            fields: res?.[0]?.fields || [{}],
-            modelId: undefined,
-            jsonList: res,
-            jsonDataPath: res?.[0]?.dataPath,
-          });
-          return;
-        }
         if (_id) {
           const detail: any = await getModelInfo({ id: _id });
-          const { fields }: { fields: FieldItem[]; modelId?: string } = detail || {};
+          const { fields }: { fields: FieldItem[] } = detail || {};
 
           switch (type) {
             case 'addFolder':
               form.setFieldsValue({
                 topic: folderPath,
                 fields: fields,
-                modelId: 'custom',
               });
               break;
             case 'addFile':
               form.setFieldsValue({
                 topic: folderPath,
-                fields: fields || [{}],
+                fields: [...(fields || []), {}],
                 attributeType: 1,
-                modelId: undefined,
                 ...(enableAutoCategorization
                   ? {
                       parentDataType: _topicType || 1,
@@ -349,10 +318,9 @@ const useOptionModal = ({
         } else {
           form.setFieldsValue(
             type?.includes('File')
-              ? { fields: [{}], modelId: undefined }
+              ? { fields: [{}] }
               : {
                   fields: undefined,
-                  modelId: 'custom',
                 }
           );
         }
@@ -408,25 +376,11 @@ const useOptionModal = ({
       .catch(() => undefined);
   }, [open, addModalType, name, dataType, parentDataType, form]);
 
-  useEffect(() => {
-    if (modelId && modelId !== 'custom') {
-      getTemplateDetail({ id: modelId }).then((res) => {
-        res?.fields.forEach((e: FieldItem) => {
-          e.systemField = false;
-        });
-        setTimeout(() => {
-          form.setFieldValue('fields', res?.fields || []);
-        });
-      });
-    }
-  }, [modelId, form]);
-
   const titleMap: { [key: string]: string } = {
     addFolder: formatMessage('uns.newFolder'),
     addFile: formatMessage('uns.newFile'),
     pasteFolder: formatMessage('uns.pasteFolder'),
     pasteFile: formatMessage('uns.pasteFile'),
-    topicToFile: formatMessage('uns.topicToFile'),
   };
 
   const Dom = (

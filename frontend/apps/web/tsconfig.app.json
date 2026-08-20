@@ -1,12 +1,18 @@
 {
-  "extends": "@supos-os-edge/typescript-config/react",
+  "extends": "@internal/typescript-config/react",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": ["vite/client"],
     /* Linting */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      // anchor 子应用引入 React 19 类型后，shamefully-hoist 会把根 node_modules/@types/react
+      // 提升为 19，第三方库 d.ts 会串用；显式钉住主站的 React 18 类型
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/*": ["./node_modules/@types/react-dom/*"]
     },
     "customConditions": ["development"]
   },

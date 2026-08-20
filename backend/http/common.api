@@ -1,95 +1,605 @@
-info(
-    title: "公共结构体定义"
-    desc: "公共结构体定义"
-    author: "杨磊"
-    email: "603685348@qq.com"
-    version: "v1"
-)
+syntax = "v1"
 
-type(
-    PageInfo{
-        Page     int64 `json:"page,optional" form:"page,optional"`         // 页码
-        Size int64 `json:"size,optional" form:"size,optional"` // 每页大小
-        Orders []*OrderBy `json:"orders,optional"` //排序
-    }
-    PageResp{
-        Page     int64 `json:"page,optional"`         // 页码
-        PageSize int64 `json:"pageSize,optional"` // 每页大小
-        Total int64 `json:"total"`
-    }
-    OrderBy{
-        Field string `json:"field,optional"` ////排序的字段名
-        Sort int64 `json:"sort,optional"`//排序方式：0 从小到大, 1 从大到小
-    }
-    CommonResp{
-        ID int64 `json:"id,optional"`         // id
-    }
-    IDList{
-        IDs []int64 `json:"ids"`
-    }
-    WithID{
-        ID int64 `json:"id,optional" form:"id,optional"`         // id
-    }
-    WithAlias {
-        Alias string `json:"alias" form:"alias"`         // 别名
-    }
-    WithUid{
-        Uid string  `path:"uid"`
-    }
-    WithIDStr{
-        ID int64 `json:"id,string,optional"`         // id
-    }
-    WithCode{
-        Code string `json:"code,optional"`
-    }
-    WithIDOrCode{
-        ID int64 `json:"id,optional"`         // id
-        Code string `json:"code,optional"`
-    }
-    WithGroupCode{
-        GroupCode string `json:"groupCode,optional"`         // id
-        Code string `json:"code,optional"`
-    }
-    Tag  {
-        Key string `json:"key"`
-        Value string `json:"value"`
-    }
+type Empty {}
 
-    Point {
-        Longitude float64 `json:"longitude,range=[0:180]"`                           //经度
-        Latitude  float64 `json:"latitude,range=[0:90]"`                            //纬度
-    }
+type CliAuthStatusReq {
+    setupCode string `json:"setupCode"`
+}
 
-    DateRange {
-        Start string `json:"start,optional"`       //开始时间 格式：yyyy-mm-dd
-        End string `json:"end,optional"`           //结束时间 格式：yyyy-mm-dd
-    }
-    TimeRange  {
-        Start int64 `json:"start,optional"`       //开始时间 unix时间戳
-        End int64 `json:"end,optional"`           //结束时间 unix时间戳
-    }
+type CliAuthStatusResp {
+    status string `json:"status"`
+    apiKey string `json:"apiKey"`
+    workspaceName string `json:"workspaceName"`
+    expiresAt string `json:"expiresAt"`
+}
 
-    SendOption  {
-        TimeoutToFail  int64 `json:"timeoutToFail,optional"`   //超时失败时间
-        RequestTimeout int64 `json:"requestTimeout,optional"` //请求超时,超时后会进行重试
-        RetryInterval  int64 `json:"retryInterval,optional"`   //重试间隔
-    }
+type CliAuthBindReq {
+    setupCode string `json:"setupCode"`
+    name string `json:"name,optional"`
+    permission string `json:"permission,optional"`
+}
 
-    Empty{
+type CliAuthBindResp {
+    apiKey string `json:"apiKey"`
+    name string `json:"name"`
+    permission string `json:"permission"`
+    workspaceName string `json:"workspaceName,optional"`
+}
 
-    }
-    
-    CompareInt64{
-        CmpTYpe string `json:"cmpType"`//"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询
-        Value int64 `json:"value,string"`
-    }
-    CompareString{
-        CmpTYpe string `json:"cmpType"`//"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询
-        Value string `json:"value"`
-    }
-    Compare{
-        CmpTYpe string `json:"cmpType"`//"=":相等 "!=":不相等 ">":大于">=":大于等于"<":小于"<=":小于等于 "like":模糊查询,只有string类型可以使用
-        Value string `json:"value"`
-        CastTo string  `json:"castTo"` //参数的类型(填写了会进行数据类型的转换): int float string
-    }
-)
+type Envelope {
+    code int `json:"code"`
+    msg string `json:"msg"`
+    data interface{} `json:"data,optional"`
+}
+
+type LoginReq {
+    username string `json:"username"`
+    password string `json:"password"`
+}
+
+type LoginResp {
+    token string `json:"token"`
+    userId int64 `json:"userId"`
+    userName string `json:"userName"`
+    nickName string `json:"nickName"`
+    email string `json:"email"`
+    phone string `json:"phone"`
+    roleCode string `json:"roleCode,optional"`
+    isRandomPwd bool `json:"isRandomPwd"`
+    forceChangePassword bool `json:"forceChangePassword"`
+    resourceKeys []string `json:"resourceKeys"`
+    uiActions []string `json:"uiActions"`
+}
+
+type CurrentUserResp {
+    userId int64 `json:"userId"`
+    userName string `json:"userName"`
+    nickName string `json:"nickName"`
+    email string `json:"email"`
+    phone string `json:"phone"`
+    roleCode string `json:"roleCode,optional"`
+    forceChangePassword bool `json:"forceChangePassword"`
+    resourceKeys []string `json:"resourceKeys"`
+    uiActions []string `json:"uiActions"`
+}
+
+type CurrentUserConfigReq {
+    homePage string `json:"homePage,optional"`
+    mainLanguage string `json:"mainLanguage,optional"`
+}
+
+type CurrentUserConfigResp {
+    userId int64 `json:"userId"`
+    homePage string `json:"homePage,optional"`
+    mainLanguage string `json:"mainLanguage,optional"`
+}
+
+type CurrentUserProfileReq {
+    firstName string `json:"firstName,optional"`
+    email string `json:"email,optional"`
+    phone string `json:"phone,optional"`
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type PageReq {
+    pageNo int `form:"pageNo,optional"`
+    pageSize int `form:"pageSize,optional"`
+    keyword string `form:"keyword,optional"`
+    keyType string `form:"keyType,optional"`
+}
+
+type UserRoleReq {
+    roleId int64 `json:"roleId"`
+    roleName string `json:"roleName,optional"`
+}
+
+type UserSaveReq {
+    username string `json:"username"`
+    password string `json:"password,optional"`
+    firstName string `json:"firstName,optional"`
+    email string `json:"email,optional"`
+    phone string `json:"phone,optional"`
+    enabled bool `json:"enabled,optional"`
+    roleList []UserRoleReq `json:"roleList,optional"`
+}
+
+type UserUpdateReq {
+    id int64 `path:"id"`
+    username string `json:"username,optional"`
+    firstName string `json:"firstName,optional"`
+    email string `json:"email,optional"`
+    phone string `json:"phone,optional"`
+    enabled bool `json:"enabled,optional"`
+    homePage string `json:"homePage,optional"`
+    roleList []UserRoleReq `json:"roleList,optional"`
+}
+
+type UserPasswordResetReq {
+    id int64 `path:"id"`
+    password string `json:"password"`
+}
+
+type CurrentUserPasswordReq {
+    oldPassword string `json:"oldPassword,optional"`
+    password string `json:"password,optional"`
+    newPassword string `json:"newPassword"`
+}
+
+type IdReq {
+    id int64 `path:"id"`
+}
+
+type NodeIdReq {
+    nodeId int64 `path:"nodeId"`
+}
+
+type FlowIdReq {
+    flowId int64 `path:"flowId"`
+}
+
+
+
+
+
+type NodeRedNodeTypeListReq {
+    flowType string `form:"flowType"`
+}
+
+type NodeRedMissingNodeListReq {
+    flowType string `form:"flowType"`
+}
+
+type NodeRedMissingNodeDeleteReq {
+    id string `form:"id"`
+    flowId string `form:"flowId,optional"`
+    scope string `form:"scope,optional"`
+    flowType string `form:"flowType"`
+}
+
+type NodeRedMissingNodeCleanupReq {
+    flowType string `json:"flowType,optional"`
+}
+
+
+
+
+
+
+
+type FileIdReq {
+    fileId int64 `path:"fileId"`
+}
+
+type JobIdReq {
+    jobId string `path:"jobId"`
+}
+
+type ListResp {
+    list []interface{} `json:"list"`
+    total int64 `json:"total"`
+}
+
+type ContainerAppIdReq {
+    appId int64 `path:"appId"`
+}
+
+type ContainerAppSaveReq {
+    appId int64 `path:"appId,optional"`
+    name string `json:"name"`
+    description string `json:"description,optional"`
+    iconAssetId int64 `json:"iconAssetId,optional"`
+    entryUrl string `json:"entryUrl"`
+    openInPlatform bool `json:"openInPlatform,optional"`
+}
+
+type ContainerAppVisibilityReq {
+    appId int64 `path:"appId"`
+    enabled bool `json:"enabled"`
+}
+
+type GatewayRouteReq {
+    routeKey string `json:"routeKey"`
+    name string `json:"name"`
+    description string `json:"description,optional"`
+    targetType string `json:"targetType"`
+    matchType string `json:"matchType"`
+    pathPattern string `json:"pathPattern"`
+    methods []string `json:"methods,optional"`
+    targetUrl string `json:"targetUrl,optional"`
+    targetPath string `json:"targetPath,optional"`
+    stripPrefix bool `json:"stripPrefix,optional"`
+    rewritePath string `json:"rewritePath,optional"`
+    authPolicy string `json:"authPolicy"`
+    resourceKey string `json:"resourceKey,optional"`
+    timeoutMs int `json:"timeoutMs,optional"`
+    priority int `json:"priority,optional"`
+    enabled bool `json:"enabled"`
+}
+
+type RouteKeyReq {
+    routeKey string `path:"routeKey"`
+}
+
+type ResourceSaveReq {
+    resourceId int64 `path:"resourceId,optional"`
+    parentId int64 `json:"parentId,optional"`
+    resourceKey string `json:"resourceKey"`
+    name string `json:"name"`
+    resourceType int64 `json:"type"`
+    routePath string `json:"routePath,optional"`
+    urlType int64 `json:"urlType,optional"`
+    openType int64 `json:"openType,optional"`
+    icon string `json:"icon,optional"`
+    sort int64 `json:"sort,optional"`
+    enabled int64 `json:"enabled,optional"`
+}
+
+type GatewayRouteListResp {
+    list []GatewayRouteReq `json:"list"`
+    total int64 `json:"total"`
+}
+
+type AuthWhoamiResp {
+    userID int64 `json:"userID"`
+    userName string `json:"userName"`
+    email string `json:"email"`
+    workspaceID int64 `json:"workspaceID"`
+    workspaceName string `json:"workspaceName"`
+    apiKeyName string `json:"apiKeyName"`
+    keyPrefix string `json:"keyPrefix"`
+    permissions []string `json:"permissions"`
+    roles []string `json:"roles"`
+    keyType string `json:"keyType"`
+}
+
+type InfoResp {
+    name string `json:"name"`
+    version string `json:"version"`
+    capabilities []string `json:"capabilities"`
+    mqttBroker string `json:"mqttBroker"`
+}
+
+type OpenapiFlowLegacyListReq {
+    keyword string `json:"keyword,optional"`
+    flowType string `json:"flowType,optional"`
+}
+
+type OpenapiFlowLegacyGetReq {
+    id int64 `json:"id"`
+}
+
+type OpenapiFlowLegacyCreateReq {
+    flowName string `json:"flowName"`
+    flowType string `json:"flowType"`
+    description string `json:"description,optional"`
+    template string `json:"template,optional"`
+}
+
+type OpenapiFlowLegacyUpdateReq {
+    id int64 `json:"id"`
+    flowName string `json:"flowName,optional"`
+    description string `json:"description,optional"`
+    template string `json:"template,optional"`
+    isFavorite int64 `json:"isFavorite,optional"`
+}
+
+type OpenapiFlowLegacyDeleteReq {
+    ids []int64 `json:"ids"`
+}
+
+type OpenapiFlowLegacyDeployReq {
+    id int64 `json:"id"`
+    flowsJson string `json:"flowsJson"`
+}
+
+type OpenapiFlowLegacyNodesReq {
+    flowType string `json:"flowType"`
+}
+
+type UnsListReq {
+    parentId int64 `form:"parentId,optional"`
+    parentIdSet bool `form:"parentIdSet,optional"`
+    keyword string `form:"keyword,optional"`
+    includeRecycle bool `form:"includeRecycle,optional"`
+}
+
+type UnsNodeSaveReq {
+    nodeId int64 `path:"nodeId,optional"`
+    parentId int64 `json:"parentId,optional"`
+    name string `json:"name"`
+    displayName string `json:"displayName,optional"`
+    alias string `json:"alias,optional"`
+    namespace string `json:"namespace,optional"`
+    nodeType string `json:"type"`
+    topicType string `json:"topicType,optional"`
+    schema string `json:"schema,optional"`
+    description string `json:"description,optional"`
+    labelIds []int64 `json:"labelIds,optional"`
+    assetFileIds []int64 `json:"assetFileIds,optional"`
+    extendProperties string `json:"extendProperties,optional"`
+    persistence *bool `json:"persistence,optional"`
+    withFlow bool `json:"withFlow,optional"`
+    addFlow bool `json:"addFlow,optional"`
+    mockData bool `json:"mockData,optional"`
+}
+
+type UnsDashboardReq {
+    nodeId int64 `form:"nodeId"`
+    timeStart int64 `form:"timeStart,optional"`
+    timeEnd int64 `form:"timeEnd,optional"`
+    limit int `form:"limit,optional"`
+}
+
+
+
+
+
+type UnsImportJobReq {
+    dryRun bool `json:"dryRun,optional"`
+    sourceFileId int64 `json:"sourceFileId,optional"`
+}
+
+type UnsExportJobReq {
+    rootNodeId int64 `json:"rootNodeId,optional"`
+}
+
+type UnsLabelReq {
+    id int64 `path:"id,optional"`
+    name string `json:"name"`
+    color string `json:"color,optional"`
+    description string `json:"description,optional"`
+}
+
+type FlowListReq {
+    flowType string `form:"flowType,optional"`
+    parentId int64 `form:"parentId,optional"`
+    keyword string `form:"keyword,optional"`
+}
+
+type FlowMockField {
+    name string `json:"name"`
+    fieldType string `json:"type,optional"`
+}
+
+type FlowSaveReq {
+    flowId int64 `path:"flowId,optional"`
+    sourceId int64 `json:"sourceId,optional"`
+    parentId int64 `json:"parentId,optional"`
+    flowType string `json:"flowType"`
+    nodeType string `json:"nodeType"`
+    name string `json:"name"`
+    description string `json:"description,optional"`
+    template string `json:"template,optional"`
+    unsNodeIds []int64 `json:"unsNodeIds,optional"`
+    mockData bool `json:"mockData,optional"`
+    mockTopic string `json:"mockTopic,optional"`
+    mockFields []FlowMockField `json:"mockFields,optional"`
+    mockTriggerMode string `json:"mockTriggerMode,optional"`
+}
+
+type FlowDataReq {
+    flowId int64 `path:"flowId"`
+    flowData string `json:"flowData"`
+}
+
+type FlowMarkReq {
+    flowId int64 `path:"flowId"`
+    pinned bool `json:"pinned"`
+}
+
+type FlowStatusReq {
+    flowId int64 `path:"flowId"`
+    status string `json:"status"`
+}
+
+type FlowDeployReq {
+    flowId int64 `path:"flowId"`
+    flowData string `json:"flowData,optional"`
+}
+
+type AssetListReq {
+    pageNo int `form:"pageNo,optional"`
+    pageSize int `form:"pageSize,optional"`
+    ownerType string `form:"ownerType,optional"`
+    ownerId int64 `form:"ownerId,optional"`
+}
+
+type AssetUploadReq {
+    fileName string `json:"fileName"`
+    contentType string `json:"contentType,optional"`
+    size int64 `json:"size,optional"`
+    sha256 string `json:"sha256,optional"`
+    storageKey string `json:"storageKey,optional"`
+    isPublic bool `json:"isPublic,optional"`
+    business string `json:"business,optional"`
+    useBy string `json:"useBy,optional"`
+}
+
+type UnsAttachmentUploadReq {
+    unsId int64 `json:"unsId,optional"`
+    topic string `json:"topic,optional"`
+    fileName string `json:"fileName,optional"`
+    sha256 string `json:"sha256,optional"`
+}
+
+type UnsAttachmentListReq {
+    unsId int64 `json:"unsId,optional"`
+    topic string `json:"topic,optional"`
+    page int `json:"page,optional"`
+    size int `json:"size,optional"`
+    includeFileUrl *bool `json:"includeFileUrl,optional"`
+}
+
+type UnsBindFlowReq {
+    unsId int64 `json:"unsId"`
+    flowId int64 `json:"flowId"`
+}
+
+type AssetBindReq {
+    fileId int64 `json:"fileId"`
+    ownerType string `json:"ownerType"`
+    ownerId string `json:"ownerId"`
+    permissionKey string `json:"permissionKey,optional"`
+}
+
+type ApiKeyCreateReq {
+    name string `json:"name"`
+    permission string `json:"permission,optional"`
+    usageType string `json:"usageType,optional"`
+    keyType string `json:"keyType,optional"`
+    resourceKeys []string `json:"resourceKeys,optional"`
+    expireTime int64 `json:"expireTime,optional"`
+}
+
+type ApiKeyIdReq {
+    apiKeyId int64 `path:"apiKeyId"`
+}
+
+type ApiKeyUpdateReq {
+    apiKeyId int64 `path:"apiKeyId"`
+    name string `json:"name,optional"`
+    permission string `json:"permission,optional"`
+}
+
+type RoleResourceReq {
+    uri string `json:"uri"`
+}
+
+type RoleSaveReq {
+    id int64 `path:"id,optional"`
+    name string `json:"name"`
+    defaultHomePage string `json:"defaultHomePage,optional"`
+    allowResourceList []RoleResourceReq `json:"allowResourceList,optional"`
+    denyResourceList []RoleResourceReq `json:"denyResourceList,optional"`
+}
+
+type ResourceIdReq {
+    resourceId int64 `path:"resourceId"`
+}
+
+type ResourceActionIdReq {
+    resourceId int64 `path:"resourceId"`
+    actionId int64 `path:"actionId"`
+}
+
+type ResourceActionSaveReq {
+    resourceId int64 `path:"resourceId"`
+    actionId int64 `path:"actionId,optional"`
+    actionType string `json:"actionType"`
+    actionValue string `json:"actionValue"`
+    methods string `json:"methods,optional"`
+    enabled int64 `json:"enabled,optional"`
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type OAuthClientReq {
+    id int64 `path:"id,optional"`
+    clientName string `json:"clientName"`
+    redirectUris []string `json:"redirectUris"`
+    allowedOrigins []string `json:"allowedOrigins,optional"`
+    appId int64 `json:"appId,optional"`
+}
+
+type OAuthAuthorizeReq {
+    responseType string `form:"responseType"`
+    clientId string `form:"clientId"`
+    redirectUri string `form:"redirectUri"`
+    scope string `form:"scope,optional"`
+    state string `form:"state,optional"`
+    codeChallenge string `form:"codeChallenge,optional"`
+    codeChallengeMethod string `form:"codeChallengeMethod,optional"`
+}
+
+type OAuthTokenReq {
+    grantType string `json:"grantType"`
+    code string `json:"code,optional"`
+    redirectUri string `json:"redirectUri,optional"`
+    clientId string `json:"clientId"`
+    codeVerifier string `json:"codeVerifier,optional"`
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+type AuditLogPageReq {
+    pageNo int `json:"pageNo,optional"`
+    pageSize int `json:"pageSize,optional"`
+    scopeType int `json:"scopeType,optional"`
+    scopeId int64 `json:"scopeId,optional"`
+    resType string `json:"resType,optional"`
+    businessType string `json:"businessType,optional"`
+    operatorKeyword string `json:"operatorKeyword,optional"`
+    code int `json:"code,optional"`
+    startTime string `json:"startTime,optional"`
+    endTime string `json:"endTime,optional"`
+}
+
+type HomeRecentReq {
+    limit int `form:"limit,optional"`
+}
+
+type HomeRecentItem {
+    key string `json:"key"`
+    resourceKey string `json:"resourceKey"`
+    resourceName string `json:"resourceName"`
+    resourceType string `json:"resourceType"`
+    businessType string `json:"businessType"`
+    routePath string `json:"routePath"`
+    icon string `json:"icon"`
+    operatedAt int64 `json:"operatedAt"`
+}

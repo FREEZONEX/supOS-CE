@@ -3,7 +3,7 @@ import ProModal from '@/components/pro-modal';
 import { useRef, useState } from 'react';
 import { App, Form } from 'antd';
 import OperationForm from '@/components/operation-form';
-import { addResourcesApi, editResourcesApi } from '@/apis/inter-api/i18n.ts';
+import { addResourcesApi, editResourcesApi } from '@/apis/core-api/i18n.ts';
 import { passwordRegex } from '@/utils';
 import { useI18nStore } from '@/stores/i18n-store.ts';
 

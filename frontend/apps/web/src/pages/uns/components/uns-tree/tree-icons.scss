@@ -1,0 +1,33 @@
+.uns-topic-type-icon-wrap {
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: #f4f4f4;
+}
+
+.uns-topic-type-icon-wrap--state {
+  background: var(--ui-uns-topic-state-bg);
+}
+
+.uns-topic-type-icon-wrap--action {
+  background: var(--ui-uns-topic-action-bg);
+}
+
+.uns-topic-type-icon-wrap--metric {
+  background: var(--ui-uns-topic-metric-bg);
+}
+
+.uns-tree-node-count {
+  font-size: 12px;
+  color: var(--ui-tree-auto-category-color);
+}
+
+.uns-tree-node-count--plain {
+  color: var(--ui-text-color);
+}
+
+.dark,
+.chartreuseDark {
+  .uns-tree-node-count:not(.uns-tree-node-count--plain) {
+    color: var(--ui-theme-color);
+  }
+}

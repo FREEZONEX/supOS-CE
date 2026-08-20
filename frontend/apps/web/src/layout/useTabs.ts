@@ -1,4 +1,5 @@
 import { type ReactNode, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
 import { useMatchRoute, useTranslate } from '@/hooks';
 import type { Location } from 'react-router';
 import { getRoutesDom, useLocationNavigate } from '@/routers';
@@ -10,12 +11,24 @@ import { formatShowName } from '@/utils';
 
 export interface KeepAliveTab {
   title: ReactNode;
+  fullTitle?: string;
   routePath: string;
   key: string;
+  tabKey: string;
   pathname: string;
   icon?: any;
   children: any;
   location: Location;
+  // 是否支持多实例tab
+  multiInstance?: boolean;
+  // 是否允许通过 location.state.tabName 更新页签标题
+  dynamicTabName?: boolean;
+  // 是否允许关闭页签
+  closable?: boolean;
+}
+
+export function getKeepAliveTabKey(tab: Pick<KeepAliveTab, 'multiInstance' | 'pathname' | 'routePath' | 'tabKey'>) {
+  return tab.tabKey || (tab.multiInstance ? tab.pathname : tab.routePath);
 }
 
 function getKey() {
@@ -26,6 +39,7 @@ const initActive = {
   isActive: false,
   pathName: '',
 };
+
 export function useTabs() {
   const navigate = useLocationNavigate();
   const { menuGroup, systemInfo, currentUserInfo } = useBaseStore((state) => ({
@@ -41,70 +55,128 @@ export function useTabs() {
   // 主动操作
   const isActiveOpt = useRef(initActive);
   const formatMessage = useTranslate();
+  const location = useLocation();
 
   const matchRoute = useMatchRoute();
 
   useDeepCompareEffect(() => {
     if (!matchRoute) return;
+    const matchTabKey = matchRoute.tabKey || matchRoute.routePath;
     if (
       !isActiveOpt.current?.isActive &&
-      (!isActiveOpt.current?.pathName || isActiveOpt.current?.pathName !== matchRoute.pathname)
+      (!isActiveOpt.current?.pathName || isActiveOpt.current?.pathName !== matchTabKey)
     ) {
-      const existKeepAliveTab = keepAliveTabs.find((o) => o.routePath === matchRoute?.routePath);
+      const existKeepAliveTab = keepAliveTabs.find((o) => getKeepAliveTabKey(o) === matchTabKey);
       if (!existKeepAliveTab) {
-        // 如果不存在则需要插入
-        setKeepAliveTabs((prev) => [
-          ...prev,
-          {
-            ...matchRoute,
-            key: getKey(),
-          },
-        ]);
+        const activeTabIndex = keepAliveTabs.findIndex((o) => getKeepAliveTabKey(o) === activeTabRoutePath);
+        const activeTab = keepAliveTabs[activeTabIndex];
+        const shouldReplaceActiveTab = Boolean(
+          matchRoute.location.state?.replaceCurrentTab && activeTabIndex >= 0 && activeTab?.multiInstance
+        );
+        if (shouldReplaceActiveTab) {
+          setKeepAliveTabs((prev) =>
+            prev.map((tab, index) =>
+              index === activeTabIndex
+                ? {
+                    ...matchRoute,
+                    key: getKey(),
+                    location: {
+                      ...matchRoute.location,
+                      state: {
+                        ...matchRoute.location.state,
+                        replaceCurrentTab: undefined,
+                      },
+                    },
+                  }
+                : tab
+            )
+          );
+        } else {
+          // 如果不存在则需要插入
+          setKeepAliveTabs((prev) => [
+            ...prev,
+            {
+              ...matchRoute,
+              key: getKey(),
+            },
+          ]);
+        }
       } else if (!existKeepAliveTab.children) {
-        // 如果pathname相同，但是children为空，说明重缓存中加载的数据，我们只需要刷新当前页签并且把children设置为新的children
+        // 如果tab相同，但是children为空，说明重缓存中加载的数据，我们只需要刷新当前页签并且把children设置为新的children
         setKeepAliveTabs((prev) => {
-          const index = (prev || []).findIndex((tab) => tab.routePath === matchRoute.routePath);
+          const index = (prev || []).findIndex((tab) => getKeepAliveTabKey(tab) === matchTabKey);
           if (index >= 0 && prev) {
-            prev[index].key = getKey();
-            prev[index].children = matchRoute.children;
+            return prev.map((tab, i) => (i === index ? { ...tab, key: getKey(), children: matchRoute.children } : tab));
           }
           return [...(prev || [])];
         });
       } else if (existKeepAliveTab && !compareLocations(matchRoute.location, existKeepAliveTab.location, ['key'])) {
-        // 处理location
+        // 处理location - 创建新对象以确保 React 检测到变化
+        // 保留已有的 tabName，避免返回导航时丢失标签名称
         setKeepAliveTabs((prev) => {
-          const index = (prev || []).findIndex((tab) => tab.routePath === matchRoute.routePath);
+          const index = (prev || []).findIndex((tab) => getKeepAliveTabKey(tab) === matchTabKey);
           if (index >= 0 && prev) {
-            prev[index].location = matchRoute.location;
+            const existingTab = prev[index];
+            // 单 tab 路由在参数变化时会复用同一个缓存实例。
+            // 这里同步 children；当 pathname 变化时重置 key，确保路由节点重挂载。
+            const shouldResetKey = existingTab.location?.pathname !== matchRoute.location.pathname;
+            const shouldKeepExistingTabName =
+              matchRoute.dynamicTabName && (!shouldResetKey || matchRoute.multiInstance);
+            const mergedLocation = {
+              ...matchRoute.location,
+              state: {
+                ...matchRoute.location.state,
+                tabName:
+                  matchRoute.location.state?.tabName ||
+                  (shouldKeepExistingTabName ? existingTab.location?.state?.tabName : undefined),
+              },
+            };
+            return prev.map((tab, i) =>
+              i === index
+                ? {
+                    ...tab,
+                    ...matchRoute,
+                    location: mergedLocation,
+                    children: matchRoute.children,
+                    tabKey: matchTabKey,
+                    key: shouldResetKey ? getKey() : tab.key,
+                  }
+                : tab
+            );
           }
           return [...(prev || [])];
         });
       }
     }
-    setActiveTabRoutePath(matchRoute.routePath);
+    setActiveTabRoutePath(matchTabKey);
     isActiveOpt.current = initActive;
-  }, [matchRoute]);
+  }, [matchRoute, location.pathname, location.search, location.key]);
 
   // 关闭tab
   const onCloseTab = useMemoizedFn((routePath: string = activeTabRoutePath || '') => {
     if (!keepAliveTabs?.length) {
       return;
     }
-    const index = (keepAliveTabs || []).findIndex((o) => o.routePath === routePath);
+    const index = (keepAliveTabs || []).findIndex(
+      (o) => getKeepAliveTabKey(o) === routePath || o.routePath === routePath
+    );
     if (index === -1) return;
+    if (keepAliveTabs[index]?.closable === false) return;
+
+    const tabKey = getKeepAliveTabKey(keepAliveTabs[index]);
     let _location: any;
-    if (keepAliveTabs[index].routePath === activeTabRoutePath && keepAliveTabs.length > 1) {
+    if (tabKey === activeTabRoutePath && keepAliveTabs.length > 1) {
+      let nextTab: KeepAliveTab;
       if (index > 0) {
-        const { location } = keepAliveTabs[index - 1];
-        _location = location;
+        nextTab = keepAliveTabs[index - 1];
       } else {
-        const { location } = keepAliveTabs[index + 1];
-        _location = location;
+        nextTab = keepAliveTabs[index + 1];
       }
+      _location = nextTab.location;
       navigate(_location);
       isActiveOpt.current = {
         isActive: true,
-        pathName: _location?.pathname || activeTabRoutePath,
+        pathName: getKeepAliveTabKey(nextTab),
       };
     }
     keepAliveTabs.splice(index, 1);
@@ -115,7 +187,9 @@ export function useTabs() {
     if (!keepAliveTabs?.length) {
       return;
     }
-    const index = (keepAliveTabs || []).findIndex((o) => o.routePath === routePath);
+    const index = (keepAliveTabs || []).findIndex(
+      (o) => getKeepAliveTabKey(o) === routePath || o.routePath === routePath
+    );
     if (index === -1) return;
 
     keepAliveTabs.splice(index, 1);
@@ -125,7 +199,9 @@ export function useTabs() {
   // 刷新tab
   const onRefreshTab = useMemoizedFn((routePath: string = activeTabRoutePath || '') => {
     setKeepAliveTabs((prev) => {
-      const index = (prev || []).findIndex((tab) => tab.routePath === routePath);
+      const index = (prev || []).findIndex(
+        (tab) => getKeepAliveTabKey(tab) === routePath || tab.routePath === routePath
+      );
       if (index >= 0 && prev) {
         prev[index].key = getKey();
       }
@@ -138,11 +214,13 @@ export function useTabs() {
     if (!keepAliveTabs?.length) {
       return;
     }
-    const tab = keepAliveTabs.find((o) => o.routePath === routePath);
-    const toCloseTabs = keepAliveTabs.filter((o) => o.routePath === routePath);
+    const tab = keepAliveTabs.find((o) => getKeepAliveTabKey(o) === routePath || o.routePath === routePath);
+    const fixedTabs = keepAliveTabs.filter((o) => o.closable === false && getKeepAliveTabKey(o) !== routePath);
+    if (!tab && !fixedTabs.length) return;
+    const toCloseTabs = tab ? [...fixedTabs, tab] : fixedTabs;
 
     setKeepAliveTabs(toCloseTabs);
-    const { location } = tab || {};
+    const { location } = tab || fixedTabs[0] || {};
     if (location) {
       navigate(location);
     } else {
@@ -150,13 +228,26 @@ export function useTabs() {
     }
     isActiveOpt.current = {
       isActive: true,
-      pathName: location ? location.pathname : tab?.pathname || routePath,
+      pathName: tab ? getKeepAliveTabKey(tab) : routePath,
     };
   });
   const tabs = useCreation(() => {
-    const childrenRoutes = getRoutesDom({ menuGroup, systemInfo, currentUserInfo })?.[1]?.children || [];
+    const childrenRoutes = getRoutesDom({ menuGroup, systemInfo, currentUserInfo }).flatMap(
+      (route) => route.children || []
+    );
     return keepAliveTabs?.map((o) => {
       const info = childrenRoutes?.find((f) => f.path === o.routePath);
+
+      if (o.dynamicTabName && o.location?.state?.tabName) {
+        const tabName = String(o.location.state.tabName);
+        const tabNameFull = String(o.location.state.tabNameFull || tabName);
+        return {
+          ...o,
+          title: tabName,
+          fullTitle: tabNameFull,
+        };
+      }
+
       return {
         ...o,
         title: info
@@ -164,6 +255,7 @@ export function useTabs() {
               code: (info?.handle as any)?.code,
               showName: (info?.handle as any)?.showName,
               formatMessage,
+              finallyShowName: typeof o.title === 'string' ? o.title : undefined,
             })
           : o.title,
       };

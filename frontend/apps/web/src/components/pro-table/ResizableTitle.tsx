@@ -20,7 +20,7 @@ const findScrollParents = (element: HTMLElement | null): (HTMLElement | Window)[
 };
 
 export const ResizableTitle: FC<Readonly<HTMLAttributes<any> & TitlePropsType>> = (props) => {
-  const { changeWidth, width, minWidth = 100, children, ...restProps } = props;
+  const { changeWidth, width, minWidth = 100, maxWidth, children, ...restProps } = props;
   const [tableRect, setTableRect] = useState<DOMRect | null>(null);
   const isResizingRef: any = useRef(false);
   const thRef = useRef<HTMLTableHeaderCellElement>(null);
@@ -57,15 +57,17 @@ export const ResizableTitle: FC<Readonly<HTMLAttributes<any> & TitlePropsType>> 
     if (!isResizingRef.current || !thRef.current) return;
     //实际宽度 = th的宽度 + 鼠标移动的距离 - 鼠标按下时的x坐标
     const realWidth = thRef.current?.clientWidth + e.clientX - thStartXRef.current;
-    //记录当前th的最左侧的x坐标
     const thRectX = thRef.current?.getBoundingClientRect()?.x;
-    // if (minWidth && realWidth < minWidth) {
-    thWidthRef.current = Math.max(minWidth, realWidth);
-    highLineRef.current.style.left = Math.max(thRectX + minWidth - 1, e.clientX - diffXRef.current) + 'px';
-    // } else {
-    //   thWidthRef.current = Math.max(80, realWidth);
-    //   highLineRef.current.style.left = Math.max(thRectX + 80 - 1, e.clientX - diffXRef.current) + 'px';
-    // }
+    let nextWidth = Math.max(minWidth, realWidth);
+    if (typeof maxWidth === 'number') {
+      nextWidth = Math.min(maxWidth, nextWidth);
+    }
+    thWidthRef.current = nextWidth;
+    const lineLeft =
+      typeof maxWidth === 'number'
+        ? Math.max(thRectX + minWidth - 1, Math.min(thRectX + maxWidth - 1, e.clientX - diffXRef.current))
+        : Math.max(thRectX + minWidth - 1, e.clientX - diffXRef.current);
+    highLineRef.current.style.left = `${lineLeft}px`;
   };
 
   const handleMouseUp = () => {
@@ -91,7 +93,7 @@ export const ResizableTitle: FC<Readonly<HTMLAttributes<any> & TitlePropsType>> 
       width: 1px;
       height: ${tableRect?.height}px;
       top: ${tableRect?.top}px;
-      background: var(--supos-theme-color);
+      background: var(--ui-theme-color);
     `;
   }, [tableRect]);
 

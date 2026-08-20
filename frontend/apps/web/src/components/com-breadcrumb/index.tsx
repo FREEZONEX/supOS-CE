@@ -129,7 +129,7 @@ const ComBreadcrumb: FC<ComBreadcrumbProps> = ({ items = [], addonAfter, respons
               }}
             >
               <span
-                style={{ cursor: 'pointer', display: 'inline-block', maxWidth: 40, color: 'var(--supos-theme-color)' }}
+                style={{ cursor: 'pointer', display: 'inline-block', maxWidth: 40, color: 'var(--ui-theme-color)' }}
               >
                 ...
               </span>
@@ -149,8 +149,8 @@ const ComBreadcrumb: FC<ComBreadcrumbProps> = ({ items = [], addonAfter, respons
       <div ref={shadowRef} style={{ position: 'absolute', zIndex: -99999, whiteSpace: 'nowrap', visibility: 'hidden' }}>
         {measuring && <Breadcrumb items={items} {...restProps} />}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-        <Breadcrumb items={renderItems} {...restProps} />
+      <div className="com-breadcrumb__inner">
+        <Breadcrumb className="com-breadcrumb__trail" items={renderItems} {...restProps} />
         {addonAfter && (
           <div style={{ paddingLeft: 8, flexShrink: 0 }} ref={addonAfterRef}>
             {addonAfter}

@@ -37,7 +37,7 @@ const ProCodemirror = (props: ProCodemirrorProps) => {
           position: 'absolute',
           right: 4,
           top: 0,
-          color: 'var(--supos-text-color)',
+          color: 'var(--ui-text-color)',
           zIndex: 1,
         }}
       >
@@ -101,7 +101,7 @@ const ProCodemirror = (props: ProCodemirrorProps) => {
             position: 'absolute',
             right: 0,
             bottom: 0,
-            color: 'var(--supos-text-color)',
+            color: 'var(--ui-text-color)',
             zIndex: 1,
           }}
           onClick={() => setIsExpanded(!isExpanded)}

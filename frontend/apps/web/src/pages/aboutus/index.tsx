@@ -21,7 +21,7 @@ const Index = () => {
   return (
     <ComLayout>
       <ComContent title={<div></div>} hasBack={false} mustShowTitle={false}>
-        <div className={styles['home-title']} style={{ borderBottom: '1px solid var(--supos-home-border-color)' }}>
+        <div className={styles['home-title']} style={{ borderBottom: '1px solid var(--ui-home-border-color)' }}>
           <Title style={{ fontWeight: 400, marginBottom: 5 }} type="secondary" level={2}>
             {formatMessage('aboutus.aboutus1', { appTitle: systemInfo.appTitle })}
           </Title>
@@ -32,7 +32,7 @@ const Index = () => {
             bordered={false}
             defaultActiveKey={['1']}
             expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
-            style={{ background: 'var(--supos-uns-button-color)', marginTop: 8 }}
+            style={{ background: 'var(--ui-uns-button-color)', marginTop: 8 }}
             items={[
               {
                 key: '1',
@@ -58,7 +58,7 @@ const Index = () => {
                   </>
                 ),
                 style: {
-                  background: 'var(--supos-uns-button-color)',
+                  background: 'var(--ui-uns-button-color)',
                   borderRadius: token.borderRadiusLG,
                   border: 'none',
                 },

@@ -18,7 +18,7 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
             {
               key: 'restApiUrl',
               label: getIntl('restApiUrl'),
-              value: `${window.location.origin}/open-api`,
+              value: `${window.location.origin}/openapi/v1`,
             },
             {
               key: 'appSceretKey',
@@ -620,22 +620,22 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
                   <td>--transport streamable</td>
                 </tr>
                 <tr>
-                  <td>--supos-api-url</td>
-                  <td>${getIntl('suposApiUrlDesc')}</td>
+                  <td>--ui-api-url</td>
+                  <td>${getIntl('platformApiUrlDesc')}</td>
                   <td>-</td>
-                  <td>--supos-api-url https://api.supos.com</td>
+                  <td>--ui-api-url https://api.example.com</td>
                 </tr>
                 <tr>
-                  <td>--supos-api-key</td>
-                  <td>${getIntl('suposApiKeyDesc')}</td>
+                  <td>--ui-api-key</td>
+                  <td>${getIntl('platformApiKeyDesc')}</td>
                   <td>-</td>
-                  <td>--supos-api-key your-api-key</td>
+                  <td>--ui-api-key your-api-key</td>
                 </tr>
                 <tr>
                   <td>--openapi-path</td>
                   <td>${getIntl('openapiPathDesc')}</td>
-                  <td>{supos-api-url}/swagger-ui/v3/api-docs/supOS-openAPI</td>
-                  <td>--openapi-path http://api.supos.com/openapi.yaml</td>
+                  <td>{api-base-url}/openapi/v1/swagger.json</td>
+                  <td>--openapi-path http://api.example.com/openapi.yaml</td>
                 </tr>
               </table>
             `,
@@ -654,17 +654,17 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
                   <th>${getIntl('correspondingCommandLineParameter')}</th>
                 </tr>
                 <tr>
-                  <td>SUPOS_API_URL</td>
-                  <td>${getIntl('suposApiUrlDesc')}</td>
-                  <td>--supos-api-url</td>
+                  <td>APP_API_URL</td>
+                  <td>${getIntl('platformApiUrlDesc')}</td>
+                  <td>--ui-api-url</td>
                 </tr>
                 <tr>
-                  <td>SUPOS_API_KEY</td>
-                  <td>${getIntl('suposApiKeyDesc')}</td>
-                  <td>--supos-api-key</td>
+                  <td>APP_API_KEY</td>
+                  <td>${getIntl('platformApiKeyDesc')}</td>
+                  <td>--ui-api-key</td>
                 </tr>
                 <tr>
-                  <td>SUPOS_OPEN_PATH</td>
+                  <td>APP_OPEN_PATH</td>
                   <td>${getIntl('openapiPathDesc')}</td>
                   <td>--openapi-path</td>
                 </tr>
@@ -681,23 +681,23 @@ const data: { [x: string]: ConfigTypes | ((arg0: any) => ConfigTypes) } = {
             minCollapsedNumberOfRows: 27,
             maxCollapsedNumberOfRows: 27,
             style: {
-              backgroundColor: 'var(--supos-switchwrap-active-bg-color)',
+              backgroundColor: 'var(--ui-switchwrap-active-bg-color)',
             },
             value: `{
   "mcpServers": {
-    "mcp-server-supos-stdio": { // ${getIntl('stdioTransport')}
+    "mcp-server-app-stdio": { // ${getIntl('stdioTransport')}
       "disabled": false,
       "timeout": 60,
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@sup-platform/mcp-server"],
       "env": {
-        "SUPOS_API_URL": "xxx",
-        "SUPOS_API_KEY": "xxx",
-        "SUPOS_OPEN_PATH": "xxx"
+        "APP_API_URL": "xxx",
+        "APP_API_KEY": "xxx",
+        "APP_OPEN_PATH": "xxx"
       }
     },
-    "mcp-server-supos-streamable": { // ${getIntl('streamableTransport')}
+    "mcp-server-app-streamable": { // ${getIntl('streamableTransport')}
       "timeout": 60,
       "url": "http://localhost:3000/mcp", // ${getIntl('streamableServerUrl')}
       "type": "streamableHttp"

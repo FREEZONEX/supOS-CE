@@ -16,7 +16,7 @@ const StatusDot: FC<{ status: boolean | string }> = ({ status }) => {
         boxShadow: '0 0 6px rgba(111, 220, 140, 0.3)',
       }
     : {
-        backgroundColor: 'var(--supos-text-color)',
+        backgroundColor: 'var(--ui-text-color)',
         opacity: '0.5',
       };
 

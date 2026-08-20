@@ -1,11 +1,9 @@
 import { Button, Flex, ConfigProvider, Card } from 'antd';
 import { useTranslate } from '@/hooks';
 import styles from './index.module.scss';
-import { Tag, WatsonHealth3DMprToggle, Folders, DocumentMultiple_02 } from '@carbon/icons-react';
+import { Folders, DocumentMultiple_02 } from '@/components/lucide-icon/carbon';
 import FileTable from './FileTable';
 import FolderTable from './FolderTable.tsx';
-import TagTable from './TagTable.tsx';
-import TemplateTable from './TemplateTable.tsx';
 import { ProModal } from '@/components';
 import { useMemo, useState } from 'react';
 import { useTreeStore } from '@/pages/uns/store/treeStore.tsx';
@@ -72,20 +70,6 @@ const DataSubscript = () => {
       content: FileTable,
       key: 'uns.instance',
     },
-    {
-      label: 'common.template',
-      icon: <WatsonHealth3DMprToggle size={18} />,
-      onClick: onMoreClick,
-      content: TemplateTable,
-      key: 'common.template',
-    },
-    {
-      label: 'common.label',
-      icon: <Tag size={18} />,
-      onClick: onMoreClick,
-      content: TagTable,
-      key: 'common.label',
-    },
   ];
 
   const ModalContent = useMemo(() => {
@@ -99,20 +83,20 @@ const DataSubscript = () => {
       theme={{
         components: {
           Table: {
-            headerBg: 'var(--supos-switchwrap-bg-color)',
-            borderColor: '#f0f0f0',
+            headerBg: 'var(--ui-bg-color)',
+            borderColor: 'var(--ui-line-color)',
           },
           Card: {
             bodyPadding: 16,
             headerPadding: 16,
-            headerBg: 'var(--supos-bg-color)',
-            colorBgContainer: 'var(--supos-bg-color)',
+            headerBg: 'var(--ui-bg-color)',
+            colorBgContainer: 'var(--ui-bg-color)',
           },
         },
       }}
     >
       <div style={{ padding: 20 }}>
-        <Flex wrap gap={8} style={{ background: 'var(--supos-switchwrap-bg-color)', padding: 8 }}>
+        <Flex wrap gap={8} style={{ background: 'var(--ui-switchwrap-bg-color)', padding: 8 }}>
           {list?.map((item) => {
             const Content = item.content;
             return (

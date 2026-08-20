@@ -7,3 +7,18 @@
     background-color: rgb(141 141 141 / 50%);
   }
 }
+
+.page-search-compact {
+  .ant-select {
+    .ant-select-selector {
+      border-start-end-radius: 3px !important;
+      border-end-end-radius: 3px !important;
+    }
+  }
+
+  .page-search-close {
+    border-start-end-radius: 3px;
+    border-end-end-radius: 3px;
+    color: var(--ui-text-color);
+  }
+}

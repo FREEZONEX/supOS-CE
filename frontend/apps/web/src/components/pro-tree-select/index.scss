@@ -32,4 +32,10 @@
     align-items: center;
     gap: 8px;
   }
+
+  .pro-tree-select-select-all {
+    :global(.ant-checkbox-wrapper) {
+      color: var(--ui-text-color);
+    }
+  }
 }

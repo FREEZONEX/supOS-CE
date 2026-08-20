@@ -217,19 +217,6 @@ export const formatNodeData = (data: any[], parentPath: string = '', preId?: any
   }));
 };
 
-export const formatNodeDataForTemplate = (data: any[], preId?: any): UnsTreeNode[] => {
-  return data.map((item: any, index: number) => ({
-    ...item,
-    pathType: 1,
-    value: 0,
-    title: item.name,
-    isLeaf: true,
-    key: item.id,
-    preId: index === 0 && preId ? preId : data?.[index - 1]?.id,
-    nextId: data?.[index + 1]?.id,
-  }));
-};
-
 /**
  * 创建"加载更多"节点
  * @param parentId 父节点ID

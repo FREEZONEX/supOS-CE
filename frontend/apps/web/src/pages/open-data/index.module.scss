@@ -1,9 +1,401 @@
-.titleBox {
+.tableToolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
-.buttonTabs {
-  margin: 16px 0;
+.keyTypeTabs {
+  margin-bottom: 0;
+}
+
+.searchInput {
+  width: 320px;
+}
+
+.secretKeyCell {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ui-text-color);
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 13px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.permissionTag {
+  min-height: 24px;
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: #f2f2f2;
+  color: #3c4048;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.actionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #3c4048;
+
+  &:hover {
+    color: var(--ui-theme-color);
+  }
+}
+
+.deleteActionLink {
+  color: #d45b5b;
+
+  &:hover {
+    color: #b93636;
+  }
+}
+
+.accessCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.accessCard {
+  min-height: 230px;
+  padding: 22px;
+  border: 1px solid var(--ui-line-color);
+  border-radius: 4px;
+  background: #fff;
+
+  p {
+    margin: 12px 0 26px;
+    color: #7b7f86;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.accessCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1f1f1f;
+  font-size: 16px;
+}
+
+.accessIcon,
+.accessIconText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: #bff14a;
+  color: #1b1f26;
+}
+
+.accessIconText {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.accessHint {
+  margin: 16px 0 8px;
+  color: #3c4048;
+  font-size: 13px;
+}
+
+.codeBox {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--ui-line-color);
+  border-radius: 4px;
+  background: #fafafa;
+
+  pre {
+    min-height: 22px;
+    margin: 0;
+    overflow: hidden;
+    color: #20242b;
+    font-family: 'IBM Plex Mono', Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    text-overflow: ellipsis;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+.apiListLink {
+  margin-top: 16px;
+  padding: 0;
+  color: var(--ui-theme-color);
+}
+
+.aiConfigSection {
+  width: 100%;
+}
+
+.aiConfigHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ui-line-color, #e0e0e0);
+
+  h2 {
+    margin: 0;
+    color: var(--ui-text-color);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 26px;
+  }
+
+  p {
+    max-width: 760px;
+    margin: 6px 0 0;
+    color: #7b7f86;
+    font-size: 14px;
+    line-height: 22px;
+  }
+}
+
+.aiSingletonForm {
+  width: min(640px, 100%);
+}
+
+.aiFieldHint {
+  color: var(--ui-access-gray-text, #7b7f86);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.aiFieldError {
+  color: var(--ui-error-color, #d45b5b);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.aiConfigActions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 16px;
+}
+
+.apiKeyFormModal {
+  :global {
+    .ant-modal-content {
+      background: var(--ui-modal-color);
+    }
+
+    .ant-modal-confirm-body {
+      display: block;
+    }
+
+    .ant-modal-confirm-paragraph {
+      margin: 0;
+      row-gap: 0;
+    }
+
+    .ant-modal-confirm-title {
+      margin: 0;
+      color: var(--ui-text-color);
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 24px;
+    }
+
+    .ant-modal-confirm-content {
+      max-width: none;
+      margin-top: 16px;
+      color: var(--ui-text-color);
+    }
+
+    .ant-modal-confirm-btns {
+      margin-top: 24px;
+    }
+  }
+}
+
+.apiKeyForm {
+  :global(.ant-form-item) {
+    margin-bottom: 16px;
+  }
+
+  :global(.ant-form-item:last-child) {
+    margin-bottom: 0;
+  }
+}
+
+.createdKeyModal {
+  :global(.ant-modal-content) {
+    padding: 20px 22px 22px;
+    border-radius: 6px;
+    background: var(--ui-modal-color);
+  }
+
+  :global(.ant-modal-body) {
+    padding: 0;
+  }
+
+  :global(.ant-modal-confirm-content) {
+    margin-top: 8px;
+  }
+
+  :global(.ant-modal-close) {
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    color: #3c4048;
+  }
+}
+
+.createdKeyModalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.createdKeyDescription {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.createdKeyRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 8px;
+}
+
+.createdKeyInput {
+  height: 40px;
+  overflow: hidden;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.createdKeyCopyButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .permissionTag {
+    border: 1px solid var(--ui-access-gray-border);
+    background: var(--ui-access-gray-bg);
+    color: var(--ui-access-gray-text);
+  }
+
+  .actionLink {
+    color: var(--ui-text-color);
+
+    &:hover {
+      color: var(--ui-theme-color);
+    }
+  }
+
+  .deleteActionLink {
+    color: var(--ui-error-color);
+
+    &:hover {
+      color: var(--ui-error-color);
+    }
+  }
+
+  .accessCard {
+    border-color: var(--ui-control-border);
+    background: var(--ui-card-bg);
+
+    p {
+      color: var(--ui-description-card-color);
+    }
+  }
+
+  .accessCardTitle {
+    color: var(--ui-text-color);
+  }
+
+  .accessIcon,
+  .accessIconText {
+    border: 1px solid var(--ui-icon-wrapper-border);
+    background: var(--ui-primary-bg);
+    color: var(--ui-theme-color);
+  }
+
+  .accessHint {
+    color: var(--ui-text-color);
+  }
+
+  .codeBox {
+    border-color: var(--ui-control-border);
+    background: var(--ui-input-color);
+
+    pre {
+      color: var(--ui-text-color);
+    }
+  }
+
+  .createdKeyModal {
+    :global(.ant-modal-close) {
+      color: var(--ui-text-color);
+    }
+  }
+
+  .createdKeyDescription {
+    color: var(--ui-description-card-color);
+  }
+
+  .aiConfigHeader p {
+    color: var(--ui-description-card-color);
+  }
+}
+
+@media (width <= 768px) {
+  .tableToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .searchInput {
+    width: 100%;
+  }
+
+  .accessCards {
+    grid-template-columns: 1fr;
+  }
+
+  .aiConfigHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .createdKeyModal {
+    :global(.ant-modal-content) {
+      padding: 22px 20px 24px;
+    }
+
+    :global(.ant-modal-close) {
+      top: 14px;
+      right: 12px;
+    }
+  }
 }

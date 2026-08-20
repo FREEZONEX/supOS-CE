@@ -5,7 +5,7 @@
 
   &:hover {
     .MainKey {
-      color: var(--supos-theme-color);
+      color: var(--ui-theme-color);
     }
   }
 
@@ -17,10 +17,10 @@
 }
 
 .activeKeyIndexBtn {
-  background: var(--supos-select-active-color) !important;
+  background: var(--ui-select-active-color) !important;
 
   .MainKey {
-    color: var(--supos-theme-color);
+    color: var(--ui-theme-color);
   }
 
   &:hover {

@@ -1,127 +1,101 @@
 import ProModal from '@/components/pro-modal';
 import useTranslate from '@/hooks/useTranslate.ts';
-import { type Key, useState } from 'react';
+import { type Key, useMemo, useState } from 'react';
 import { useImmer } from 'use-immer';
 import ProTree from '@/components/pro-tree/index.ts';
 import type { TreeProps } from 'antd';
 const defaultData: any[] = [
   {
-    title: '首页',
-    key: 'home',
+    title: 'UNS',
+    titleKey: 'menu.tag.uns',
+    key: 'uns',
     children: [
       {
-        title: '概述',
-        key: 'overview',
+        title: 'Namespace',
+        titleKey: 'Namespace',
+        key: 'namespace',
         isLeaf: true,
-        parentKey: 'home',
+        parentKey: 'uns',
       },
       {
-        title: '示例',
-        key: 'examples',
+        title: 'Source Flow',
+        titleKey: 'SourceFlow',
+        key: 'source-flow',
         isLeaf: true,
-        parentKey: 'home',
+        parentKey: 'uns',
       },
       {
-        title: '资源监控',
-        key: 'resource-monitor',
+        title: 'Event Flow',
+        titleKey: 'EventFlow',
+        key: 'event-flow',
         isLeaf: true,
-        parentKey: 'home',
+        parentKey: 'uns',
+      },
+      {
+        title: 'Edge Connection',
+        titleKey: 'Edge Connection',
+        key: 'mqtt-auth',
+        isLeaf: true,
+        parentKey: 'uns',
       },
     ],
   },
   {
-    title: '数据管理',
-    key: 'data-management',
-    children: [
-      {
-        title: '数据连接',
-        key: 'data-connection',
-        isLeaf: true,
-        parentKey: 'data-management',
-      },
-      {
-        title: '数据建模',
-        key: 'data-modeling',
-        isLeaf: true,
-        parentKey: 'data-management',
-      },
-      {
-        title: '事件流程',
-        key: 'event-process',
-        isLeaf: true,
-        parentKey: 'data-management',
-      },
-      {
-        title: '采集器网关管理',
-        key: 'collector-gateway',
-        isLeaf: true,
-        parentKey: 'data-management',
-      },
-    ],
+    title: 'Project',
+    titleKey: 'Project',
+    key: 'project',
+    isLeaf: true,
   },
   {
-    title: '工具集',
-    key: 'toolset',
-    children: [
-      {
-        title: 'CICD',
-        key: 'cicd',
-        isLeaf: true,
-        parentKey: 'toolset',
-      },
-      {
-        title: '数据源链接',
-        key: 'data-source-link',
-        isLeaf: true,
-        parentKey: 'toolset',
-      },
-      {
-        title: '报警管理',
-        key: 'alarm-management',
-        isLeaf: true,
-        parentKey: 'toolset',
-      },
-      {
-        title: 'SQL编辑器',
-        key: 'sql-editor',
-        isLeaf: true,
-        parentKey: 'toolset',
-      },
-    ],
+    title: 'Launchpad',
+    titleKey: 'Launchpad',
+    key: 'launchpad',
+    isLeaf: true,
   },
   {
-    title: '应用集',
-    key: 'application-set',
-    children: [
-      {
-        title: 'PRIDE智能监控',
-        key: 'pride-monitor',
-        isLeaf: true,
-        parentKey: 'application-set',
-      },
-    ],
+    title: 'Notebook',
+    titleKey: 'Notebook',
+    key: 'notebook',
+    isLeaf: true,
   },
   {
-    title: '系统配置',
-    key: 'system-config',
+    title: 'System',
+    titleKey: 'menu.tag.system',
+    key: 'system',
     children: [
       {
-        title: '用户管理',
+        title: 'User Management',
+        titleKey: 'UserManagement',
         key: 'user-management',
         isLeaf: true,
-        parentKey: 'system-config',
+        parentKey: 'system',
       },
       {
-        title: 'APP管理',
-        key: 'app-management',
+        title: 'API Key',
+        titleKey: 'API Key',
+        key: 'api-key',
         isLeaf: true,
-        parentKey: 'system-config',
+        parentKey: 'system',
+      },
+      {
+        title: 'Audit Log',
+        titleKey: 'AuditLog',
+        key: 'audit-log',
+        isLeaf: true,
+        parentKey: 'system',
+      },
+      {
+        title: 'OAuth Client',
+        titleKey: 'menu.oauthClient',
+        key: 'oauth-clients',
+        isLeaf: true,
+        parentKey: 'system',
       },
     ],
   },
 ];
-const HOME_KEY = 'home';
-const SYSTEM_CONFIG_KEY = 'system-config';
+const HOME_KEY = 'uns';
+const SYSTEM_CONFIG_KEY = 'system';
 const disableDND = [HOME_KEY, SYSTEM_CONFIG_KEY];
 
 const loop = (data: any[], key: Key, callback: (node: any, i: number, data: any[]) => void) => {
@@ -135,11 +109,22 @@ const loop = (data: any[], key: Key, callback: (node: any, i: number, data: any[
   }
 };
 
+const translateTreeData = (
+  data: any[],
+  formatMessage: (key: string, values?: any, defaultMessage?: string) => string
+): any[] =>
+  data.map((item) => ({
+    ...item,
+    title: item.titleKey ? formatMessage(item.titleKey, undefined, item.title) : item.title,
+    children: item.children ? translateTreeData(item.children, formatMessage) : undefined,
+  }));
+
 const useMenuSetting = () => {
   const [open, setOpen] = useState(false);
   // const [gData, setData] = useState(defaultData);
   const [gData, setData] = useImmer(defaultData);
   const formatMessage = useTranslate();
+  const treeData = useMemo(() => translateTreeData(gData, formatMessage), [formatMessage, gData]);
 
   const onMenuModalOpen = () => {
     setOpen(true);
@@ -188,7 +173,7 @@ const useMenuSetting = () => {
         <ProTree
           multiple
           onDrop={onDrop}
-          treeData={gData}
+          treeData={treeData}
           draggable={{
             icon: false,
             nodeDraggable: (node: any) => {

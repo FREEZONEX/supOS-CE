@@ -1,0 +1,94 @@
+.view-mode-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  line-height: 0;
+}
+
+.toolbar-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  padding: 7px !important;
+  line-height: 0;
+}
+
+.view-mode-segmented {
+  padding: 2px;
+  background: var(--ui-charttop-bg-color);
+  border: 1px solid var(--ui-line-color);
+  border-radius: 4px;
+
+  :global(.ant-segmented-group) {
+    gap: 2px;
+  }
+
+  :global(.ant-segmented-item) {
+    min-width: 28px;
+    min-height: 22px;
+    border-radius: 3px;
+    color: var(--ui-description-card-color);
+    cursor: pointer;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  :global(.ant-segmented-item-label) {
+    min-height: 22px;
+    padding: 2px 6px;
+    line-height: 18px;
+  }
+
+  :global(.ant-segmented-item:not(.ant-segmented-item-selected):hover) {
+    color: var(--ui-text-color);
+    background: var(--ui-fill-secondary);
+  }
+
+  :global(.ant-segmented-thumb),
+  :global(.ant-segmented-item-selected) {
+    background: var(--ui-bg-color);
+    box-shadow: 0 0 0 1px var(--ui-line-color);
+  }
+
+  :global(.ant-segmented-item-selected) {
+    color: var(--ui-text-color);
+  }
+
+  :global(.ant-segmented-item-selected:hover) {
+    color: var(--ui-text-color);
+  }
+}
+
+:global(.dark),
+:global(.chartreuseDark) {
+  .view-mode-segmented {
+    background: rgb(255 255 255 / 6%);
+    border-color: var(--ui-control-border);
+
+    :global(.ant-segmented-item) {
+      color: var(--ui-description-card-color);
+    }
+
+    :global(.ant-segmented-item:not(.ant-segmented-item-selected):hover) {
+      color: var(--ui-text-color);
+      background: rgb(255 255 255 / 8%);
+    }
+
+    :global(.ant-segmented-thumb),
+    :global(.ant-segmented-item-selected) {
+      // Keep selected chip elevated vs track (track ≈ 6% white; avoid same-as-active-bg washout)
+      background: rgb(255 255 255 / 16%);
+      box-shadow: 0 0 0 1px var(--ui-control-border);
+    }
+
+    :global(.ant-segmented-item-selected) {
+      color: var(--ui-text-color);
+    }
+  }
+}

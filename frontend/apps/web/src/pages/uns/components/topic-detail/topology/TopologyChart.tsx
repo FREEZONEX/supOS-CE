@@ -1,410 +1,547 @@
-import { App, Flex } from 'antd';
-import { useEffect, useRef, useState } from 'react';
-import { register } from '@antv/x6-react-shape';
+import { Flex, App } from 'antd';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent, PointerEvent as ReactPointerEvent } from 'react';
 import styles from './TopologyChart.module.scss';
-import { TypeEnum } from './types.ts';
-import {
-  Apps,
-  ButtonError,
-  DataBase,
-  DataBaseDetail,
-  Mqtt,
-  MqttDetail,
-  MqttDetail2,
-  NodeRed,
-  NodeRedDetail,
-} from './Components.tsx';
-import ReactDOM from 'react-dom/client'; // React 18 使用 'react-dom/client'
-import { Graph } from '@antv/x6';
-import { debounce } from 'lodash-es';
-import { findDate } from '@/pages/uns/components/topic-detail/topology/data.ts';
+import { Launch, AddLarge } from '@/components/lucide-icon/carbon';
+import { titleIconProps } from '@/components/lucide-icon/icon-props';
+import nodeRedIcon from '@/assets/home-icons/node-red.svg';
+import postgresql from '@/assets/home-icons/postgresql.svg';
+import tdengine from '@/assets/home-icons/tdengine.png';
+import timescaleDB from '@/assets/home-icons/timescaleDB.svg';
 import { useBaseStore } from '@/stores/base';
 import { getSearchParamsString } from '@/utils';
-import { bindFlowForUns, createFlow, goFlow } from '@/apis/inter-api/flow.ts';
+import { bindFlowForUns, createFlow, goFlow, sourceFlowBindingPage } from '@/apis/core-api/flow.ts';
 import { useNavigate } from 'react-router';
 import { useTranslate } from '@/hooks';
-import { useDeepCompareEffect } from 'ahooks';
 import { getRefreshList, getSourceList } from '@/apis/chat2db';
-import { bindDashboardForUns } from '@/apis/inter-api/dashboard.ts';
+import Binding from '../binding/Binding.tsx';
+import {
+  NodeRedDetail,
+  MqttDetail,
+  MqttDetail2,
+  DataBaseDetail,
+  resolveDatabaseSchemaName,
+  resolveDatabaseTableName,
+} from './Components.tsx';
 
-register({
-  shape: TypeEnum.NodeRed,
-  width: 220,
-  height: 52,
-  component: NodeRed,
-});
+type TopologyNodeType = 'sourceFlow' | 'eventFlow' | 'mqtt' | 'database';
+type TopologyNodeData = {
+  active?: boolean;
+  id?: string | number;
+  flowId?: string | number;
+  flowName?: string;
+  bindId?: string | number;
+  loading?: boolean;
+  dataType?: number;
+  alias?: string;
+  enabled?: boolean;
+  onBindingChange?: (_type: string, item: any) => Promise<void>;
+};
+type TopologyNode = {
+  id: TopologyNodeType;
+  type: TopologyNodeType;
+  data: TopologyNodeData;
+};
+type TopologyDragState = {
+  pointerId: number | null;
+  startX: number;
+  scrollLeft: number;
+};
 
-register({
-  shape: TypeEnum.Mqtt,
-  width: 150,
-  height: 52,
-  component: Mqtt,
-});
+function SourceFlowNode({ data, readOnly }: { data: TopologyNodeData; readOnly?: boolean }) {
+  const formatMessage = useTranslate();
+  const configured = data.id || data.flowId || data.flowName;
+  const loading = data.loading;
+  const statusColor = configured ? '#4CAF50' : '#B1973B';
 
-register({
-  shape: TypeEnum.DataBase,
-  width: 190,
-  height: 52,
-  component: DataBase,
-});
+  return (
+    <div className={styles['rf-node-wrap']}>
+      <div className={`${styles['rf-node']} ${styles['rf-node-wide']} ${data.active ? styles['rf-node-active'] : ''}`}>
+        <img src={nodeRedIcon} alt="" width="28px" />
+        <div className={styles['rf-node-text']}>
+          <span className={styles['rf-node-subtitle']}>{formatMessage('common.nodeRed', 'Node-Red')}</span>
+          <span className={styles['rf-node-title']} title={formatMessage('home.sourceFlow')}>
+            {formatMessage('home.sourceFlow')}
+          </span>
+        </div>
+        {!readOnly && (
+          <div className={styles['rf-node-actions']}>
+            <div data-action="navigate" className={styles['rf-node-btn']}>
+              {loading ? (
+                <div className={styles['loading-spinner']} />
+              ) : configured ? (
+                <Launch {...titleIconProps} />
+              ) : (
+                <AddLarge {...titleIconProps} />
+              )}
+            </div>
+            <div data-action="noNavigate" className={styles['rf-node-btn']}>
+              <Binding
+                selectValue={data.bindId ? String(data.bindId) : undefined}
+                api={sourceFlowBindingPage}
+                onBinding={(item: any) =>
+                  data.onBindingChange ? data.onBindingChange('nodeRed1', item) : Promise.resolve()
+                }
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      <div className={styles['rf-indicator']}>
+        <span className={styles['rf-indicator-dot']} style={{ background: statusColor }} />
+        <span>{formatMessage(configured ? 'common.configured' : 'common.unconfigured')}</span>
+      </div>
+    </div>
+  );
+}
 
-register({
-  shape: TypeEnum.Apps,
-  width: 210,
-  height: 52,
-  component: Apps,
-});
-
-const TopologyChart = ({ instanceInfo, dashboardInfo, getFileDetail }: any) => {
-  const topologyContainerRef = useRef<any>(null);
-  const topologyRef = useRef<Graph>(undefined);
-  const dashboardType = useBaseStore((state) => state.dashboardType);
-  const modeState = useRef<any>([]);
-  const [active, setActive] = useState<any>('');
-  const navigate = useNavigate();
-  const [datas, setDatas] = useState<any>({});
-  const { message } = App.useApp();
-  const interls = useRef<any>(null);
+function EventFlowNode() {
   const formatMessage = useTranslate();
 
-  const initTopology = () => {
-    if (topologyRef.current) return topologyRef.current;
-    const topologyInstance = new Graph({
-      container: topologyContainerRef.current,
-      background: { color: 'var(--supos-gray-color-10-message)' },
-      interacting: false,
-      panning: true,
-      mousewheel: { enabled: true, modifiers: ['ctrl', 'meta'] },
-      scaling: { min: 0.05, max: 12 },
-    });
+  return (
+    <div className={styles['rf-node-wrap']}>
+      <div className={`${styles['rf-node']} ${styles['rf-node-static']}`}>
+        <img src={nodeRedIcon} alt="" width="28px" />
+        <div className={styles['rf-node-text']}>
+          <span className={styles['rf-node-subtitle']}>{formatMessage('common.nodeRed', 'Node-Red')}</span>
+          <span className={styles['rf-node-title']}>{formatMessage('home.eventFlow')}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    topologyInstance.options.onEdgeLabelRendered = (args: any) => {
-      const { selectors, edge } = args; // 获取edge对象
-      const content = selectors.foContent as HTMLDivElement;
-      if (content) {
-        const root = ReactDOM.createRoot(content);
-        const nodeStatu = modeState.current?.find((item: any) => item.topologyNode === edge.id);
-        root.render(<ButtonError nodeStatu={nodeStatu} />); // 渲染组件
-      }
-    };
+function MqttNode({ data }: { data: TopologyNodeData }) {
+  const mqttBrokeType = useBaseStore((state) => state.mqttBrokeType);
 
-    topologyInstance.positionPoint({ x: 210, y: 0 }, 40, '40%');
-    topologyRef.current = topologyInstance;
-    return topologyInstance;
-  };
+  return (
+    <div className={styles['rf-node-wrap']}>
+      <div className={`${styles['rf-node']} ${data.active ? styles['rf-node-active'] : ''}`}>
+        <div className={styles['rf-node-text']}>
+          <span className={styles['rf-node-subtitle']}>{mqttBrokeType?.toUpperCase() || 'EMQX'}</span>
+          <span className={styles['rf-node-title']}>MQTT Broker</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  const fetchNodeRedData = async (alias: string) => {
+function DataBaseNode({ data, readOnly }: { data: TopologyNodeData; readOnly?: boolean }) {
+  const formatMessage = useTranslate();
+  const { dataBaseType, systemInfo } = useBaseStore((state) => ({
+    dataBaseType: state.dataBaseType,
+    systemInfo: state.systemInfo,
+  }));
+  const isRelational = [2, 8].includes(Number(data.dataType));
+  const statusColor = data.enabled ? '#4CAF50' : '#B1973B';
+
+  return (
+    <div className={styles['rf-node-wrap']}>
+      <div
+        className={`${styles['rf-node']} ${!data.enabled ? styles['rf-node-disabled'] : ''} ${
+          data.active ? styles['rf-node-active'] : ''
+        }`}
+        aria-disabled={!data.enabled}
+      >
+        <img
+          src={isRelational ? postgresql : dataBaseType.includes('tdengine') ? tdengine : timescaleDB}
+          alt=""
+          width="28px"
+        />
+        <div className={styles['rf-node-text']}>
+          <span className={styles['rf-node-subtitle']}>{isRelational ? 'PostgreSQL' : 'TimescaleDB'}</span>
+          <span className={styles['rf-node-title']}>
+            {isRelational ? 'Relational DB' : dataBaseType.includes('tdengine') ? 'tdengine' : 'Database'}
+          </span>
+        </div>
+        {!readOnly && data.enabled && isRelational && systemInfo?.containerMap?.chat2db && (
+          <div data-action="navigate" className={styles['rf-node-btn']}>
+            <Launch {...titleIconProps} />
+          </div>
+        )}
+      </div>
+      <div className={styles['rf-indicator']}>
+        <span className={styles['rf-indicator-dot']} style={{ background: statusColor }} />
+        <span>{formatMessage(data.enabled ? 'common.configured' : 'resourceAction.disabled')}</span>
+      </div>
+    </div>
+  );
+}
+
+const emptyTopologyData = {};
+const getTopologyKey = (id?: string | number, alias?: string) => String(id ?? alias ?? 'empty');
+
+// ─── 主组件 ───
+
+const TopologyChart = ({ instanceInfo, getFileDetail, readOnly = false }: any) => {
+  const [active, setActive] = useState<string>('');
+  const [isTopologyDragging, setIsTopologyDragging] = useState(false);
+  const topologyDragStateRef = useRef<TopologyDragState>({ pointerId: null, startX: 0, scrollLeft: 0 });
+  const didTopologyDragRef = useRef(false);
+  const pendingTopologyNodeRef = useRef<TopologyNodeType | null>(null);
+  const suppressNextTopologyClickRef = useRef(false);
+  const topologyKey = useMemo(
+    () => getTopologyKey(instanceInfo?.id, instanceInfo?.alias),
+    [instanceInfo?.id, instanceInfo?.alias]
+  );
+  const [datasState, setDatasState] = useState<{ topologyKey: string; data: any }>({
+    topologyKey: '',
+    data: emptyTopologyData,
+  });
+  const datas = datasState.topologyKey === topologyKey ? datasState.data : emptyTopologyData;
+  const navigate = useNavigate();
+  const { message } = App.useApp();
+  const formatMessage = useTranslate();
+
+  const refreshNodeRedData = useCallback(async (alias: string, unsId?: string | number) => {
     try {
-      const result = await goFlow(alias);
-      setDatas(result || {});
+      const result = await goFlow(alias, unsId);
+      setDatasState({ topologyKey: getTopologyKey(unsId, alias), data: result || emptyTopologyData });
       return result;
     } catch (error) {
       console.error('Error fetching topology data:', error);
       return null;
     }
-  };
-
-  const onBindingChange = (type: string, item: any) => {
-    if (type === 'apps1') {
-      return bindDashboardForUns({
-        dashboardId: item.id,
-        unsAlias: instanceInfo.alias,
-      }).then(() => {
-        message.success(formatMessage('common.optsuccess'));
-        getFileDetail(instanceInfo.id);
-      });
-    } else {
-      return bindFlowForUns({
-        flowId: item.id,
-        unsAlias: instanceInfo.alias,
-      }).then(() => {
-        message.success(formatMessage('common.optsuccess'));
-        getFileDetail(instanceInfo.id);
-        fetchNodeRedData(instanceInfo.alias);
-      });
-    }
-  };
-
-  const updateTopologyData = (instanceInfo: any) => {
-    const { nodes, edges } = findDate({ ...instanceInfo, dashboardType }) || { nodes: [], edges: [] };
-    modeState.current = [];
-    if (topologyRef.current) {
-      topologyRef.current.clearCells();
-      // 添加节点和边
-      nodes.forEach((node) => {
-        if (node.id === TypeEnum.NodeRed) {
-          node.data.onBindingChange = onBindingChange;
-          node.data.active = true;
-          setActive(TypeEnum.NodeRed);
-        } else if (node.id === TypeEnum.Apps) {
-          node.data.onBindingChange = onBindingChange;
-        }
-        topologyRef.current?.addNode(node);
-      });
-      edges.forEach((edge) => {
-        topologyRef.current?.addEdge(edge);
-      });
-      // 重新设置edge的位置
-      const newEdges = topologyRef.current.getEdges();
-      newEdges.forEach((edge: any) => {
-        const sourceCell = edge.getSourceCell();
-        const targetCell = edge.getTargetCell();
-
-        if (sourceCell && targetCell) {
-          const sourceBBox = sourceCell.getBBox();
-          const targetBBox = targetCell.getBBox();
-          const sourcePoint = {
-            x: sourceBBox.x + sourceBBox.width,
-            y: sourceBBox.y + sourceBBox.height / 2,
-          };
-          const targetPoint = {
-            x: targetBBox.x,
-            y: targetBBox.y + targetBBox.height / 2,
-          };
-          // 使用绝对坐标设置连接点
-          edge.setSource({
-            x: sourcePoint.x,
-            y: sourcePoint.y,
-          });
-
-          edge.setTarget({
-            x: targetPoint.x,
-            y: targetPoint.y,
-          });
-        }
-      });
-    }
-  };
-
-  useEffect(() => {
-    initTopology();
-    const handleResize = debounce(() => {
-      if (topologyRef.current) {
-        const ww = document.getElementsByClassName('treemapTitle')[0].clientWidth;
-        const width = window.innerWidth - ww - 50; // 宽度减去侧边栏宽度
-        const height = 200; // 计算容器高度
-        topologyRef.current.resize(width, height);
-      }
-    }, 200); // 防抖 200 毫秒
-    window.addEventListener('resize', handleResize);
-
-    // 清理函数
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (topologyRef.current) {
-        topologyRef.current?.clearCells();
-        topologyRef.current = undefined;
-      }
-    };
   }, []);
 
-  useDeepCompareEffect(() => {
-    if (topologyRef.current) {
-      topologyRef.current.dispose?.();
-      topologyRef.current = undefined;
-    }
-    // 请求nodered
-    initTopology();
-    updateTopologyData(instanceInfo);
-    const nodeClickFn = ({ cell, e }: any) => {
-      const target = e.target as HTMLElement;
-      const launchButton = target.closest('[data-action="navigate"]');
+  const onBindingChange = useCallback(
+    async (_type: string, item: any) => {
+      await bindFlowForUns({
+        flowId: item.id,
+        unsAlias: instanceInfo.alias,
+        unsId: instanceInfo.id,
+      });
+      await Promise.all([
+        Promise.resolve(getFileDetail(instanceInfo.id)),
+        refreshNodeRedData(instanceInfo.alias, instanceInfo.id),
+      ]);
+      message.success(formatMessage('common.optsuccess'));
+    },
+    [instanceInfo, message, formatMessage, getFileDetail, refreshNodeRedData]
+  );
 
-      if (target.closest('[data-action="noNavigate"]')) {
-        e.stopPropagation();
-        return;
-      }
-      if (cell?.id === TypeEnum.NodeRed && launchButton) {
-        if (cell.data.id || cell.data.flowId || cell.data.flowName) {
+  useEffect(() => {
+    let isCurrent = true;
+    if (!instanceInfo?.alias || !instanceInfo?.id) {
+      return () => {
+        isCurrent = false;
+      };
+    }
+
+    goFlow(instanceInfo.alias, instanceInfo.id)
+      .then((result) => {
+        if (isCurrent) {
+          setDatasState({ topologyKey, data: result || emptyTopologyData });
+        }
+      })
+      .catch((error) => {
+        if (isCurrent) {
+          console.error('Error fetching topology data:', error);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [instanceInfo?.alias, instanceInfo?.id, topologyKey]);
+
+  const nodes: TopologyNode[] = useMemo(() => {
+    const dataType = instanceInfo?.dataType;
+    const result: TopologyNode[] = [];
+    const hasSourceNode = dataType !== 3;
+
+    if (hasSourceNode) {
+      result.push({
+        id: 'sourceFlow',
+        type: 'sourceFlow',
+        data: {
+          active: active === 'sourceFlow',
+          id: datas?.id || '',
+          flowId: datas?.flowId || '',
+          flowName: datas?.flowName || '',
+          bindId: datas?.id || '',
+          loading: false,
+          onBindingChange,
+        },
+      });
+    }
+
+    result.push({
+      id: 'mqtt',
+      type: 'mqtt',
+      data: { active: active === 'mqtt' },
+    });
+
+    result.push({
+      id: 'database',
+      type: 'database',
+      data: {
+        active: active === 'database',
+        dataType: instanceInfo?.dataType,
+        alias: instanceInfo?.alias,
+        enabled: Boolean(instanceInfo?.persistence || Number(instanceInfo?.enableHistory) === 1),
+      },
+    });
+
+    result.push({
+      id: 'eventFlow',
+      type: 'eventFlow',
+      data: {},
+    });
+
+    return result;
+  }, [instanceInfo, datas, active, onBindingChange]);
+
+  // 节点点击处理
+  // 节点内按钮点击（通过 data-action 区分）
+  const handleNavigateClick = useCallback(
+    (nodeId: string, nodeData: any) => {
+      if (nodeId === 'sourceFlow') {
+        const d = nodeData;
+        if (d.id || d.flowId || d.flowName) {
           navigate(
             `/collection-flow/flow-editor?${getSearchParamsString({
-              id: cell.data.id,
-              name: cell.data.flowName,
-              status: cell.data.flowStatus,
-              flowId: cell.data.flowId,
+              id: d.id,
+              name: d.flowName,
+              flowId: d.flowId,
               from: location.pathname,
             })}`
           );
-        } else {
-          if (cell.data.loading) {
-            return;
-          }
-          if (instanceInfo?.alias && instanceInfo?.path) {
-            // 设置节点loading状态
-            const node = topologyRef.current!.getCellById(cell.id);
-            node.setData({
-              ...node.data,
-              loading: true,
-            });
-            createFlow({ unsAlias: instanceInfo?.alias, path: instanceInfo?.path })
-              .then((res: any) => {
-                if (res) {
-                  setDatas(res || {});
-                  navigate(
-                    `/collection-flow/flow-editor?${getSearchParamsString({
-                      id: res.id,
-                      name: res.flowName,
-                      flowId: res.flowId,
-                      from: location.pathname,
-                    })}`
-                  );
-                }
-                // 清除节点loading状态
-                node.setData({
-                  ...node.data,
-                  loading: false,
-                });
-                return res;
-              })
-              .catch(() => {
-                // 清除节点loading状态
-                node.setData({
-                  ...node.data,
-                  loading: false,
-                });
-              });
-          }
+        } else if (instanceInfo?.id && instanceInfo?.alias && instanceInfo?.path) {
+          createFlow({
+            unsAlias: instanceInfo?.alias,
+            path: instanceInfo?.path,
+            unsId: instanceInfo?.id,
+            unsNodeIds: [Number(instanceInfo.id)],
+            mockData: true,
+            mockTopic: instanceInfo?.topic || instanceInfo?.path || instanceInfo?.namespace || instanceInfo?.alias,
+            mockFields: instanceInfo?.fields || instanceInfo?.jsonFields || [],
+            mockTriggerMode: 'manual',
+          })
+            .then((res: any) => {
+              if (res) {
+                setDatasState({ topologyKey, data: res || emptyTopologyData });
+                navigate(
+                  `/collection-flow/flow-editor?${getSearchParamsString({
+                    id: res.id,
+                    name: res.flowName,
+                    flowId: res.flowId,
+                    from: location.pathname,
+                  })}`
+                );
+              }
+            })
+            .catch(() => {});
         }
-        return;
-      }
-
-      if (cell?.id === TypeEnum.DataBase && cell.data.dataType === 2 && launchButton) {
+      } else if (nodeId === 'database' && nodeData.enabled && nodeData.dataType === 2) {
         getSourceList().then((data: any) => {
           const sourceData = data?.data?.data?.find((i: any) => i.alias === '@postgresql');
           const loadData = (params: any) => {
             getRefreshList(params).then((res: any) => {
               if (res.hasNextPage) {
-                loadData({
-                  dataSourceId: sourceData?.id,
-                  pageNo: res.data?.pageNo + 1,
-                });
+                loadData({ dataSourceId: sourceData?.id, pageNo: res.data?.pageNo + 1 });
               } else {
+                const schemaName = resolveDatabaseSchemaName(instanceInfo);
+                const tableName = resolveDatabaseTableName(instanceInfo);
                 navigate(
-                  `/SQLEditor?dataSourceName=@postgresql&databaseName=postgres&databaseType=POSTGRESQL&schemaName=public&tableName=${instanceInfo?.alias}`
+                  `/SQLEditor?${getSearchParamsString({
+                    dataSourceName: '@postgresql',
+                    databaseName: 'postgres',
+                    databaseType: 'POSTGRESQL',
+                    schemaName,
+                    tableName,
+                  })}`
                 );
               }
             });
           };
           loadData({ dataSourceId: sourceData?.id });
         });
+      }
+    },
+    [instanceInfo, navigate, topologyKey]
+  );
+
+  const selectTopologyNode = useCallback((node: TopologyNode) => {
+    if (node.id === 'eventFlow' || (node.id === 'database' && !node.data.enabled)) {
+      return;
+    }
+
+    setActive((prev) => (prev === node.id ? '' : node.id));
+  }, []);
+
+  const handleNodeClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>, node: TopologyNode) => {
+      const target = event.target as HTMLElement;
+
+      // 点击绑定按钮区域，不做跳转
+      if (target.closest('[data-action="noNavigate"]')) {
         return;
       }
-      if (cell?.id === TypeEnum.Apps && dashboardType?.includes('grafana') && launchButton) {
-        if (!dashboardInfo) {
-          message.error(formatMessage('common.dashboardNotFound'));
-          return;
+
+      // 只有点击跳转按钮才触发导航
+      if (target.closest('[data-action="navigate"]')) {
+        handleNavigateClick(node.id, node.data);
+        return;
+      }
+
+      // 其他区域：切换选中节点详情
+      selectTopologyNode(node);
+    },
+    [handleNavigateClick, selectTopologyNode]
+  );
+
+  const renderNode = useCallback(
+    (node: TopologyNode) => {
+      const nodeContent = (() => {
+        switch (node.type) {
+          case 'sourceFlow':
+            return <SourceFlowNode data={node.data} readOnly={readOnly} />;
+          case 'mqtt':
+            return <MqttNode data={node.data} />;
+          case 'database':
+            return <DataBaseNode data={node.data} readOnly={readOnly} />;
+          case 'eventFlow':
+            return <EventFlowNode />;
+          default:
+            return null;
         }
-        // navigate('/grafana-design', { state: { url: getAppsLink(dashboardInfo), name: 'GrafanaDesign' } });
-        navigate(
-          `/dashboards/preview?${getSearchParamsString({ id: dashboardInfo.id, type: dashboardInfo.type, status: 'preview', name: dashboardInfo.name })}`
-        );
-        return;
-      }
-      setActive((active: any) => (active === cell.id ? '' : cell.id));
-      const node = topologyRef.current!.getCellById(cell.id);
-      if (node.data.active) {
-        // 清空所有节点的选中状态
-        topologyRef.current!.getNodes().forEach((node: any) => {
-          node.setData({
-            active: false,
-          });
-        });
-      } else {
-        // 清空所有节点的选中状态
-        topologyRef.current!.getNodes().forEach((node: any) => {
-          node.setData({
-            active: false,
-          });
-        });
-        // 给节点添加选中样式
-        node.setData({
-          active: true,
-        });
-      }
+      })();
+
+      return (
+        <div
+          className={styles['topology-node-item']}
+          data-topology-node-id={node.id}
+          onClick={(event) => handleNodeClick(event, node)}
+        >
+          {nodeContent}
+        </div>
+      );
+    },
+    [handleNodeClick, readOnly]
+  );
+
+  const handleTopologyPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+
+    const target = event.target as HTMLElement;
+    pendingTopologyNodeRef.current = null;
+    if (target.closest('[data-action]')) return;
+
+    const nodeElement = target.closest('[data-topology-node-id]') as HTMLElement | null;
+    pendingTopologyNodeRef.current = (nodeElement?.dataset.topologyNodeId as TopologyNodeType | undefined) || null;
+
+    topologyDragStateRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      scrollLeft: event.currentTarget.scrollLeft,
     };
-    // 为边绑定点击事件
-    const edgeClickFn = ({ cell }: any) => {
-      setActive((active: any) => (active === cell.id ? '' : cell.id));
-      clearInterval(interls.current);
-      // getTopologyState();
-      const xx = modeState.current?.filter((item: any) => item.topologyNode == cell.id && item.eventCode != 0) || [];
-      console.log('click', modeState.current, cell, xx);
-      modeState.current = [];
-    };
-    // 设置事件监听器
-    topologyRef.current!.on('node:click', nodeClickFn);
-    topologyRef.current!.on('edge:click', edgeClickFn);
-    interls.current = setInterval(() => {
-      // getTopologyStateData();
-    }, 2000);
-    // 清理事件监听器
-    return () => {
-      clearInterval(interls.current);
-      interls.current = null;
-      if (topologyRef.current) {
-        topologyRef.current.off('node:click', nodeClickFn);
-        topologyRef.current.off('edge:click', edgeClickFn);
-      }
-    };
-  }, [instanceInfo, dashboardInfo?.id]);
+    didTopologyDragRef.current = false;
+    setIsTopologyDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, []);
 
-  useDeepCompareEffect(() => {
-    fetchNodeRedData(instanceInfo.alias);
-  }, [instanceInfo]);
+  const handleTopologyPointerMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const dragState = topologyDragStateRef.current;
+    if (dragState.pointerId !== event.pointerId) return;
 
-  useEffect(() => {
-    const node = topologyRef.current!.getCellById(TypeEnum.NodeRed);
-    if (node) {
-      // 将nodered的值设置进去
-      node.setData({
-        id: datas?.id || '',
-        flowStatus: datas?.flowStatus || '',
-        flowId: datas?.flowId || '',
-        flowName: datas?.flowName || '',
-        bindId: datas?.id || '',
-      });
+    const deltaX = event.clientX - dragState.startX;
+    if (Math.abs(deltaX) > 3) {
+      didTopologyDragRef.current = true;
     }
-    if (topologyRef.current) {
-      const node = topologyRef.current!.getCellById(TypeEnum.DataBase);
-      if (node) {
-        // 将DataBase的值设置进去
-        node.setData({
-          dataType: instanceInfo?.dataType,
-          alias: instanceInfo?.alias,
-        });
-      }
+    if (didTopologyDragRef.current) {
+      event.preventDefault();
+      event.currentTarget.scrollLeft = dragState.scrollLeft - deltaX;
     }
-  }, [datas]);
+  }, []);
 
-  useDeepCompareEffect(() => {
-    if (topologyRef.current) {
-      const node = topologyRef.current!.getCellById(TypeEnum.Apps);
-      if (node) {
-        // 将apps的值设置进去
-        node.setData({
-          bindId: dashboardInfo?.id,
-          subtitle: dashboardInfo?.type === 2 ? 'fuxa' : 'Grafana',
-        });
+  const handleTopologyPointerEnd = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const dragState = topologyDragStateRef.current;
+      if (dragState.pointerId !== event.pointerId) return;
+
+      if (!didTopologyDragRef.current && pendingTopologyNodeRef.current) {
+        const pendingNode = nodes.find((node) => node.id === pendingTopologyNodeRef.current);
+        if (pendingNode) {
+          selectTopologyNode(pendingNode);
+          suppressNextTopologyClickRef.current = true;
+          window.setTimeout(() => {
+            suppressNextTopologyClickRef.current = false;
+          }, 0);
+        }
       }
-    }
-  }, [dashboardInfo]);
 
-  useDeepCompareEffect(() => {
-    // 渲染拓扑图
-  }, [datas, dashboardInfo?.id]);
+      pendingTopologyNodeRef.current = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      topologyDragStateRef.current = { pointerId: null, startX: 0, scrollLeft: 0 };
+      setIsTopologyDragging(false);
+    },
+    [nodes, selectTopologyNode]
+  );
+
+  const handleTopologyClickCapture = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    if (suppressNextTopologyClickRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      suppressNextTopologyClickRef.current = false;
+      didTopologyDragRef.current = false;
+      return;
+    }
+
+    if (!didTopologyDragRef.current) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    didTopologyDragRef.current = false;
+  }, []);
+
   return (
-    <Flex vertical wrap className={styles['topology-wrap']}>
-      {/*  拓扑图 */}
-      <div ref={topologyContainerRef} className={styles['topology-content']}></div>
-      {/*  节点详情 */}
-      {[TypeEnum.NodeRed, TypeEnum.DataBase, TypeEnum.Mqtt].includes(active) && (
+    <Flex vertical className={styles['topology-wrap']}>
+      <div
+        className={`${styles['topology-content']} ${isTopologyDragging ? styles['topology-content-dragging'] : ''}`}
+        onClickCapture={handleTopologyClickCapture}
+        onPointerDown={handleTopologyPointerDown}
+        onPointerMove={handleTopologyPointerMove}
+        onPointerUp={handleTopologyPointerEnd}
+        onPointerCancel={handleTopologyPointerEnd}
+      >
+        <div className={styles['topology-flow']}>
+          {nodes.map((node, index) => (
+            <Fragment key={node.id}>
+              {renderNode(node)}
+              {index < nodes.length - 1 && (
+                <div
+                  className={`${styles['topology-link']} ${
+                    node.type === 'sourceFlow' ? styles['topology-link-after-wide'] : ''
+                  }`}
+                  aria-hidden
+                />
+              )}
+            </Fragment>
+          ))}
+        </div>
+      </div>
+      {/* 节点详情面板 */}
+      {active === 'sourceFlow' && (
         <div className={styles['topology-detail']}>
-          {active == TypeEnum.NodeRed ? <NodeRedDetail flowList={datas} /> : ''}
-          {active == TypeEnum.Mqtt && instanceInfo.dataType !== 3 ? <MqttDetail /> : ''}
-          {active == TypeEnum.Mqtt && instanceInfo.dataType === 3 ? <MqttDetail2 instanceInfo={instanceInfo} /> : ''}
-          {active == TypeEnum.DataBase ? <DataBaseDetail instanceInfo={instanceInfo} /> : ''}
+          <NodeRedDetail flowList={datas} />
+        </div>
+      )}
+      {active === 'mqtt' && instanceInfo.dataType !== 3 && (
+        <div className={styles['topology-detail']}>
+          <MqttDetail />
+        </div>
+      )}
+      {active === 'mqtt' && instanceInfo.dataType === 3 && (
+        <div className={styles['topology-detail']}>
+          <MqttDetail2 instanceInfo={instanceInfo} />
+        </div>
+      )}
+      {active === 'database' && Boolean(instanceInfo?.persistence || Number(instanceInfo?.enableHistory) === 1) && (
+        <div className={styles['topology-detail']}>
+          <DataBaseDetail instanceInfo={instanceInfo} />
         </div>
       )}
     </Flex>

@@ -12,6 +12,7 @@ export interface SortableTreeProps {
   selectedKey?: UniqueIdentifier | null;
   onSelect?: (key?: UniqueIdentifier, node?: TreeDataProps) => void;
   disabledSelected?: (node: TreeDataProps) => boolean;
+  disabledDraggable?: (node: TreeDataProps) => boolean;
   style?: CSSProperties;
   loading?: boolean;
   treeData?: TreeDataProps[];
@@ -52,6 +53,8 @@ export interface TreeItemProps extends Omit<HTMLAttributes<HTMLDivElement>, 'id'
   node?: TreeDataProps;
   // 禁止点击
   disabledSelect?: boolean;
+  // 只读置灰
+  readonly?: boolean;
 }
 
 export interface SortableTreeItemProps extends TreeItemProps {
@@ -63,9 +66,11 @@ export interface TreeDataProps {
   showTabs?: boolean;
   id: UniqueIdentifier;
   parentId?: UniqueIdentifier | null;
+  type?: number;
   collapsed?: boolean;
   // 是否拖拽
   fixed?: boolean;
+  editEnable?: boolean;
   isLeaf?: boolean;
   children: TreeDataProps[];
   tabChildren?: TreeDataProps[];

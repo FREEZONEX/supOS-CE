@@ -2,10 +2,19 @@ import type { TableColumnsType, TableProps } from 'antd';
 import type { CSSProperties } from 'react';
 import type { OperationProps } from '@/components/operation-buttons/utils.tsx';
 
-export interface ATableProps extends Omit<TableProps, 'columns'> {
+export type ProTableColumn<RecordType = any> = TableColumnsType<RecordType>[number] & {
+  titleIntlId?: string;
+  maxWidth?: number;
+};
+
+export type ProTableColumns<RecordType = any> = ProTableColumn<RecordType>[];
+
+export interface ATableProps<RecordType = any> extends Omit<TableProps<RecordType>, 'columns'> {
   // titleIntlId 国际化key
-  columns: TableColumnsType & { titleIntlId?: string; [key: string]: any };
+  columns: ProTableColumns<RecordType>;
   resizeable?: boolean;
+  /** 列宽铺满容器、互斥弹性收缩、最大宽度限制；默认与 resizeable 一并开启 */
+  columnFit?: boolean;
   // 是否隐藏空白
   hiddenEmpty?: boolean;
   fixedPosition?: boolean; // 是否固定页码在底部
@@ -32,5 +41,6 @@ export interface ATableProps extends Omit<TableProps, 'columns'> {
 export interface TitlePropsType {
   width?: number;
   minWidth?: number;
+  maxWidth?: number;
   changeWidth: (width: number) => void;
 }

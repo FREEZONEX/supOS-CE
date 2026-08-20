@@ -1,55 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslate } from '@/hooks';
 import { App, Button, Col, Form, Input, Row } from 'antd';
-import { createUser, getRoleList, updateUser } from '@/apis/inter-api/user-manage';
+import { createUser, updateUser } from '@/apis/core-api/user-manage';
 import styles from './RoleSetting.module.scss';
-import ComSelect from '@/components/com-select';
 import ProModal from '@/components/pro-modal';
-import { validNameRegex, phoneRegex, passwordRegex } from '@/utils/pattern';
+import { validNameRegex, passwordRegex, passwordStrengthRegex } from '@/utils/pattern';
 import { useBaseStore } from '@/stores/base';
+import HomePageSelect from '@/components/home-page-select';
 
 const useAddUser = ({ onSaveBack }: any) => {
   const { message } = App.useApp();
   const [open, setOpen] = useState(false);
   const [isEdit, setEdit] = useState(false);
-  const [options, setOptions] = useState([]);
   const [form] = Form.useForm();
   const formatMessage = useTranslate();
   const [loading, setLoading] = useState(false);
-  const [isSupos, setSupos] = useState(false);
+  const [isLocalEditableUser, setLocalEditableUser] = useState(false);
   const ldapEnable = useBaseStore((state) => state?.systemInfo?.ldapEnable);
-
-  useEffect(() => {
-    if (open) {
-      getRoleList().then((data: any) => {
-        setOptions(
-          data?.map((d: any) => ({
-            label: d?.roleName,
-            value: d?.roleId,
-          }))
-        );
-      });
-    }
-  }, [open]);
+  const menuGroupNoSub = useBaseStore((state) => state.menuGroup?.filter((item) => !item.subMenu));
+  const editingUserId = Form.useWatch('userId', form);
 
   const onAddOpen = (data?: any) => {
     if (data) {
       setEdit(true);
-      setSupos(data?.preferredUsername === 'supos');
+      setLocalEditableUser(data?.source !== 'external' || data?.preferredUsername === 'tier0');
       form.setFieldsValue({
         ...data,
         username: data.preferredUsername,
         userId: data.id,
-        roleList:
-          data?.roleList?.length > 0
-            ? {
-                label: data?.roleList?.[0]?.roleName,
-                value: data?.roleList?.[0]?.roleId,
-              }
-            : undefined,
       });
     } else {
       setEdit(false);
+      setLocalEditableUser(false);
     }
     setOpen(true);
   };
@@ -62,20 +44,19 @@ const useAddUser = ({ onSaveBack }: any) => {
     const info = await form.validateFields();
     setLoading(true);
     const api = isEdit ? updateUser : createUser;
-    api({
-      ...info,
-      roleList: info?.roleList ? [{ roleId: info?.roleList?.value, roleName: info?.roleList?.label }] : [],
-      enabled: true,
-      operateRole: isEdit ? true : undefined,
-    })
-      .then(() => {
-        message.success(formatMessage('common.optsuccess'));
-        onClose();
-        onSaveBack?.();
-      })
-      .finally(() => {
-        setLoading(false);
+    try {
+      await api({
+        ...info,
+        enabled: true,
       });
+      message.success(formatMessage('common.optsuccess'));
+      onClose();
+      onSaveBack?.();
+    } catch {
+      // 请求封装会统一提示接口错误，这里只负责收束保存流程。
+    } finally {
+      setLoading(false);
+    }
   };
   const Dom = (
     <ProModal
@@ -96,7 +77,7 @@ const useAddUser = ({ onSaveBack }: any) => {
               label={formatMessage('account.account')}
               name="username"
               rules={
-                ldapEnable && !isSupos
+                ldapEnable && !isLocalEditableUser
                   ? [
                       {
                         required: true,
@@ -111,8 +92,11 @@ const useAddUser = ({ onSaveBack }: any) => {
                       {
                         type: 'string',
                         min: 1,
-                        max: 200,
-                        message: formatMessage('rule.characterLimit'),
+                        max: 60,
+                        message: formatMessage('uns.labelMaxLength', {
+                          label: formatMessage('account.account'),
+                          length: 60,
+                        }),
                       },
                       {
                         pattern: validNameRegex,
@@ -123,7 +107,7 @@ const useAddUser = ({ onSaveBack }: any) => {
             >
               <Input
                 className="username"
-                disabled={isEdit || (ldapEnable && !isSupos)}
+                disabled={isEdit || (ldapEnable && !isLocalEditableUser)}
                 placeholder={formatMessage('account.account')}
               />
             </Form.Item>
@@ -139,13 +123,10 @@ const useAddUser = ({ onSaveBack }: any) => {
                     message: formatMessage('rule.required'),
                   },
                   {
-                    max: 10,
-                    message: formatMessage('uns.labelMaxLength', {
-                      label: formatMessage('appGui.password'),
-                      length: 10,
-                    }),
+                    pattern: passwordRegex,
+                    message: formatMessage('rule.password'),
                   },
-                  { pattern: passwordRegex, message: formatMessage('rule.password') },
+                  { pattern: passwordStrengthRegex, message: formatMessage('rule.passwordStrength') },
                 ]}
               >
                 <Input.Password placeholder={formatMessage('appGui.password')} autoComplete="new-password" />
@@ -154,82 +135,61 @@ const useAddUser = ({ onSaveBack }: any) => {
           )}
           <Col span={12}>
             <Form.Item
-              label={formatMessage('common.name')}
+              label={formatMessage('account.displayName')}
               name="firstName"
               rules={
-                ldapEnable && !isSupos
+                ldapEnable && !isLocalEditableUser
                   ? []
                   : [
                       {
                         type: 'string',
                         min: 1,
-                        max: 200,
-                        message: formatMessage('rule.characterLimit'),
+                        max: 60,
+                        message: formatMessage('uns.labelMaxLength', {
+                          label: formatMessage('account.displayName'),
+                          length: 60,
+                        }),
                       },
                       {
-                        pattern: /^[\u4e00-\u9fa5a-zA-Z0-9_\-.@&+]*$/,
+                        pattern: validNameRegex,
                         message: formatMessage('rule.invalidChars'),
                       },
                     ]
               }
             >
-              <Input disabled={ldapEnable && !isSupos} placeholder={formatMessage('common.name')} />
+              <Input disabled={ldapEnable && !isLocalEditableUser} placeholder={formatMessage('account.displayName')} />
             </Form.Item>
           </Col>
 
           <Col span={12}>
-            <Form.Item
-              label={formatMessage('account.phone')}
-              name="phone"
-              rules={ldapEnable && !isSupos ? [] : [{ pattern: phoneRegex, message: formatMessage('rule.phone') }]}
-              validateTrigger={['onBlur']}
-            >
-              <Input
-                disabled={ldapEnable && !isSupos}
-                placeholder={formatMessage('account.phone')}
-                onFocus={() => {
-                  form.setFields([
-                    {
-                      name: 'phone',
-                      errors: undefined, // 清除校验错误
-                    },
-                  ]);
-                }}
-              />
+            <Form.Item label={formatMessage('account.phone')} name="phone">
+              <Input disabled={ldapEnable && !isLocalEditableUser} placeholder={formatMessage('account.phone')} />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
               label={formatMessage('account.email')}
               name="email"
-              rules={ldapEnable && !isSupos ? [] : [{ type: 'email' }]}
+              rules={ldapEnable && !isLocalEditableUser ? [] : [{ type: 'email' }]}
             >
-              <Input disabled={ldapEnable && !isSupos} placeholder={formatMessage('account.email')} />
+              <Input disabled={ldapEnable && !isLocalEditableUser} placeholder={formatMessage('account.email')} />
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item
-              label={formatMessage('account.role')}
-              name="roleList"
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage('rule.required'),
-                },
-              ]}
-            >
-              <ComSelect
-                placeholder={formatMessage('account.role')}
-                options={options}
-                // mode="multiple"
-                allowClear
-                onClick={(e) => {
-                  e.preventDefault();
-                }}
-                labelInValue
-              />
-            </Form.Item>
-          </Col>
+
+          {isEdit && (
+            <Col span={12}>
+              <Form.Item label={formatMessage('account.homePage')} name="homePage">
+                <HomePageSelect
+                  enabled={open && Boolean(editingUserId)}
+                  resources={menuGroupNoSub}
+                  targetUserId={editingUserId}
+                  placeholder={formatMessage('common.searchPage')}
+                  allowClear
+                  showSearch
+                />
+              </Form.Item>
+            </Col>
+          )}
         </Row>
 
         <Button

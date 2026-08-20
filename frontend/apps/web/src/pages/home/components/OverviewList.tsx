@@ -1,16 +1,19 @@
-import type { CSSProperties, FC } from 'react';
+import type { CSSProperties, FC, ReactElement } from 'react';
 import { Divider, Flex, Typography } from 'antd';
 import type { ResourceProps } from '@/stores/types';
 import { useMenuNavigate } from '@/hooks';
-import IconImage from '@/components/icon-image';
-import { useThemeStore } from '@/stores/theme-store.ts';
-import type { ExampleProps } from '@/pages/home';
+import { MenuLucideIcon } from '@/components/lucide-icon';
 import ProCardContainer from '@/components/pro-card/ProCardContainer';
 import ProCard from '@/components/pro-card/ProCard.tsx';
 const { Paragraph } = Typography;
 
+interface OverviewItemProps extends ResourceProps {
+  iconComp?: ReactElement;
+  status?: number | string;
+}
+
 interface MenuListProps {
-  list: ExampleProps[];
+  list: OverviewItemProps[];
   type?: string;
   customOptRender?: (params: any) => any;
   loadingViews?: string[];
@@ -19,7 +22,6 @@ interface MenuListProps {
 
 const OverviewList: FC<MenuListProps> = ({ list, type, customOptRender, loadingViews, style }) => {
   const handleNavigate = useMenuNavigate();
-  const primaryColor = useThemeStore((state) => state.primaryColor);
 
   const handleClickItem = (item: ResourceProps) => {
     if (type === 'example') {
@@ -37,13 +39,7 @@ const OverviewList: FC<MenuListProps> = ({ list, type, customOptRender, loadingV
             <Paragraph style={{ margin: '30px 0 20px' }}>
               <Flex align="center" gap={4}>
                 {item.iconComp || (
-                  <IconImage
-                    theme={primaryColor}
-                    iconName={item.icon}
-                    width={24}
-                    height={24}
-                    style={{ paddingRight: 4, verticalAlign: 'middle' }}
-                  />
+                  <MenuLucideIcon item={item} size={24} style={{ paddingRight: 4, verticalAlign: 'middle' }} />
                 )}
                 <span style={{ fontSize: 20 }}>{item.showName}</span>
               </Flex>
@@ -66,7 +62,7 @@ const OverviewList: FC<MenuListProps> = ({ list, type, customOptRender, loadingV
                             {c.iconComp}
                           </div>
                         ) : (
-                          <IconImage theme={primaryColor} iconName={c.icon} width={28} height={28} />
+                          <MenuLucideIcon item={c} size={28} />
                         ),
                       }}
                       onClick={() => handleClickItem(c)}

@@ -9,8 +9,10 @@
 import type { StoreApi } from 'zustand';
 import { shallow } from 'zustand/vanilla/shallow';
 import { createIntl, createIntlCache, type IntlShape } from 'react-intl';
-import { SUPOS_LANG_MESSAGE, SUPOS_LANG } from '@/common-types/constans.ts';
+import { APP_LANG_MESSAGE, APP_LANG } from '@/common-types/constans.ts';
 import { type I18nData, loadMessages, loadAntdLocale } from '@/utils/i18ns';
+import localZhCN from '@/locale/zh-CN.json';
+import localEnUS from '@/locale/en-US.json';
 import { storageOpt } from '@/utils/storage';
 import { createWithEqualityFn, type UseBoundStoreWithEqualityFn } from 'zustand/traditional';
 import { subscribeWithSelector } from 'zustand/middleware';
@@ -28,6 +30,27 @@ export enum I18nEnum {
 }
 
 export const defaultLanguage = I18nEnum.EnUS; // 默认语言为英文
+const fallbackEnUS = localEnUS as I18nData;
+const fallbackZhCN = localZhCN as I18nData;
+const localMessages: Record<string, I18nData> = {
+  [I18nEnum.EnUS]: fallbackEnUS,
+  [I18nEnum.ZhCN]: fallbackZhCN,
+};
+
+const formatLocalMessage = (template: string, opt?: Record<string, unknown>) => {
+  if (!opt) {
+    return template;
+  }
+  return template.replace(/\{(\w+)\}/g, (match, key) => {
+    const value = opt[key];
+    return value === undefined || value === null ? match : String(value);
+  });
+};
+
+const getLocalFallbackMessage = (id: string, lang: string, opt?: Record<string, unknown>) => {
+  const template = localMessages[lang]?.[id] || fallbackEnUS[id];
+  return template ? formatLocalMessage(template, opt) : undefined;
+};
 
 interface LanguageProps {
   hasUsed?: boolean;
@@ -55,8 +78,8 @@ type InitI18nOptions = {
 
 export const useI18nStore: UseBoundStoreWithEqualityFn<StoreApi<TI18nStore>> = createWithEqualityFn(
   subscribeWithSelector(() => {
-    const lang = storageOpt.getOrigin(SUPOS_LANG) || defaultLanguage;
-    const messages = storageOpt.get(SUPOS_LANG_MESSAGE) || {};
+    const lang = storageOpt.getOrigin(APP_LANG) || defaultLanguage;
+    const messages = { ...(localMessages[lang] || localEnUS), ...(storageOpt.get(APP_LANG_MESSAGE) || {}) };
     return {
       lang,
       langMessages: messages,
@@ -79,24 +102,33 @@ export const initI18n = async (lang: string = defaultLanguage, pluginLang: any =
   loadDayjsLocale(lang === I18nEnum.ZhCN ? 'zh-cn' : 'en');
   const antMessages = await loadAntdLocale(lang);
   return await loadMessages(lang as I18nEnum, options).then((res: I18nData) => {
-    const finallyMsg = { ...res, ...pluginLang };
-    storageOpt.set(SUPOS_LANG_MESSAGE, finallyMsg);
+    const fallbackMessages = localMessages[lang] || fallbackEnUS;
+    const existingMessages = storageOpt.get(APP_LANG_MESSAGE) || {};
+    const finallyMsg = { ...fallbackMessages, ...res, ...pluginLang };
+    const shouldKeepExistingCache =
+      !options?.skipRemoteMessages &&
+      Object.keys(res).length < 100 &&
+      Object.keys(existingMessages).length > Object.keys(finallyMsg).length;
+    const messagesForStore = shouldKeepExistingCache ? { ...existingMessages, ...pluginLang } : finallyMsg;
+    if (!shouldKeepExistingCache) {
+      storageOpt.set(APP_LANG_MESSAGE, messagesForStore);
+    }
     // node-red的语言
     storageOpt.setOrigin('editor-language', lang);
     // emq的语言 兼容prida需求 原来是en 和zh
     storageOpt.setOrigin('language', lang === I18nEnum.EnUS ? 'en-us' : 'zh-cn');
     // chat2db语言
     storageOpt.setOrigin('lang', lang === I18nEnum.EnUS ? 'en-us' : 'zh-cn');
-    // supos语言
-    storageOpt.setOrigin(SUPOS_LANG, lang);
+    // 平台语言
+    storageOpt.setOrigin(APP_LANG, lang);
     useI18nStore.setState({
-      langMessages: finallyMsg,
+      langMessages: messagesForStore,
       lang,
       antMessages,
       intl: createIntl(
         {
           locale: lang,
-          messages: finallyMsg,
+          messages: messagesForStore,
         },
         intlCache
       ),
@@ -115,7 +147,8 @@ export const cleanupI18nSubscriptions = () => {
 
 // FIXME: 在react组件中请使用useTranslate这个hooks，其他js文件中使用getIntl
 export const getIntl = (id: string, opt?: any, defaultMessage?: string, description?: string | object) => {
-  return (intl || useI18nStore.getState()?.intl)?.formatMessage(
+  const state = useI18nStore.getState();
+  const formatted = (intl || state?.intl)?.formatMessage(
     {
       id: id,
       defaultMessage: defaultMessage,
@@ -123,6 +156,10 @@ export const getIntl = (id: string, opt?: any, defaultMessage?: string, descript
     },
     opt
   );
+  if (formatted && formatted !== id) {
+    return formatted;
+  }
+  return getLocalFallbackMessage(id, state?.lang || defaultLanguage, opt) || formatted || defaultMessage || id;
 };
 
 /**
@@ -145,5 +182,5 @@ export const connectI18nMessage = (messages: I18nData) => {
       intlCache
     ),
   });
-  storageOpt.set(SUPOS_LANG_MESSAGE, finalMessages);
+  storageOpt.set(APP_LANG_MESSAGE, finalMessages);
 };

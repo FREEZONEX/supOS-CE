@@ -1,4 +1,4 @@
-# @supos-os-edge/scripts
+# @internal/scripts
 
 平台执行脚本包
 
@@ -32,12 +32,12 @@ npm run dev
 
 ```bash
 # 使用编译后的脚本
-supos-scripts <script-name>
+workspace-scripts <script-name>
 
 # 示例
-supos-scripts intl:once
-supos-scripts intl:watch
-supos-scripts json-to-properties --prefix=myapp --config=config.json
-supos-scripts json-to-properties --prefix=myapp
-supos-scripts json-to-properties
+workspace-scripts intl:once
+workspace-scripts intl:watch
+workspace-scripts json-to-properties --prefix=myapp --config=config.json
+workspace-scripts json-to-properties --prefix=myapp
+workspace-scripts json-to-properties
 ```

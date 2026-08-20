@@ -9,14 +9,14 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    border: 1px solid #c6c6c6;
+    border: 1px solid var(--ui-line-color);
     border-radius: 3px;
     padding: 20px 30px;
 
     .detailInfo-list-item {
       display: inline-flex;
       align-items: center;
-      border-bottom: 1px solid #c6c6c6;
+      border-bottom: 1px solid var(--ui-line-color);
       padding-bottom: 10px;
 
       &:last-child {
@@ -26,9 +26,9 @@
 
       :global {
         .ant-tag {
-          color: var(--supos-theme-color);
-          border-color: var(--supos-theme-color);
-          background-color: var(--supos-primary-bg);
+          color: var(--ui-theme-color);
+          border-color: var(--ui-theme-color);
+          background-color: var(--ui-primary-bg);
           display: flex;
           align-items: center;
         }

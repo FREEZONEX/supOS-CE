@@ -11,9 +11,9 @@ const NotFoundPage = () => {
   return (
     <Result
       status="404"
-      title={<span style={{ color: 'var(--supos-text-color)' }}>{formatMessage('common.notFound')}</span>}
-      subTitle={<span style={{ color: 'var(--supos-text-color)' }}>{formatMessage('common.pageNotFound')}</span>}
-      style={{ backgroundColor: 'var(--supos-bg-color)' }}
+      title={<span style={{ color: 'var(--ui-text-color)' }}>{formatMessage('common.notFound')}</span>}
+      subTitle={<span style={{ color: 'var(--ui-text-color)' }}>{formatMessage('common.pageNotFound')}</span>}
+      style={{ backgroundColor: 'var(--ui-bg-color)' }}
       extra={
         security && (
           <Button type="primary" onClick={onClick}>

@@ -1,102 +1,141 @@
-import { type FC, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { App, Button, Dropdown, Form, message, Space, Breadcrumb, Flex } from 'antd';
-import { copyFlow, deployFlow, getVersionFlow, saveFlow } from '@/apis/inter-api/event-flow';
-import { ChevronLeft, OverflowMenuVertical } from '@carbon/icons-react';
-import { useLocalStorage, useTranslate } from '@/hooks';
-import { useUpdateEffect } from 'ahooks';
+import {
+  deployFlow,
+  getFlowDetail,
+  saveFlow,
+} from '@/apis/core-api/event-flow';
 import type { PageProps } from '@/common-types';
 import { ButtonPermission } from '@/common-types/button-permission.ts';
-import './index.scss';
-import ComText from '@/components/com-text';
 import { AuthButton } from '@/components/auth';
-import ComDrawer from '@/components/com-drawer';
+import ComBackButton from '@/components/com-back-button';
 import ComLayout from '@/components/com-layout';
 import ComContent from '@/components/com-layout/ComContent';
-import OperationForm from '@/components/operation-form';
+import ComText from '@/components/com-text';
+import { postFlowIframeTheme, useFlowIframeThemeBridge, useLocalStorage, useTabName, useTranslate } from '@/hooks';
 import { hasPermission } from '@/utils/auth';
-import { validInputPattern } from '@/utils/pattern';
-import { getSearchParamsObj, getSearchParamsString, getDevProxyBaseUrl } from '@/utils/url-util';
+import { getDevProxyBaseUrl, getSearchParamsObj, getSearchParamsString } from '@/utils/url-util';
+import { ChevronLeft, OverflowMenuVertical } from '@/components/lucide-icon/carbon';
+import { useUpdateEffect } from 'ahooks';
+import { Breadcrumb, Button, Dropdown, Flex, message, Space } from 'antd';
+import { type FC, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
+import './index.scss';
+
+type NodeRedWorkspaceState = {
+  activeWorkspaceId?: string;
+  activeWorkspaceName?: string;
+  activeWorkspaceType?: string;
+  rootWorkspaceId?: string;
+  rootWorkspaceName?: string;
+  isSubflow?: boolean;
+};
+
+const FLOW_TAB_MAX_NAME_LENGTH = 18;
+const truncateFlowTabName = (value: string) =>
+  value.length > FLOW_TAB_MAX_NAME_LENGTH ? `${value.slice(0, FLOW_TAB_MAX_NAME_LENGTH)}...` : value;
 
 const EventFlowPreview: FC<PageProps> = ({ location }) => {
-  const { modal } = App.useApp();
-  const [form] = Form.useForm();
-  const [show, setShow] = useState(false);
   const state = getSearchParamsObj(location?.search) || {};
+  const fromPath = state.from;
   const navigate = useNavigate();
-  const iframeUrl = `/eventflow/home/?sup_event_flow_id=${state.id}&sup_origin_event_flow_id=${state.flowId}`;
-  const breadcrumbList = [
-    {
-      name: state.name,
-    },
-  ];
   const formatMessage = useTranslate();
+  const [flowName, setFlowName] = useState(state.name || '');
+  const tabRawName = String(flowName || state.name || '').trim();
+  const flowTabPrefix = `${formatMessage('common.flow')} · `;
+  useTabName(tabRawName, {
+    displayName: tabRawName ? `${flowTabPrefix}${truncateFlowTabName(tabRawName)}` : undefined,
+    fullName: tabRawName ? `${flowTabPrefix}${tabRawName}` : undefined,
+  });
   const nodeRedLang = useLocalStorage('editor-language');
   const flowIframeRef = useRef<HTMLIFrameElement | null>(null);
   const [loading, setLoading] = useState(true);
-  const [apiLoading, setApiLoading] = useState(false);
+  const [nodeRedWorkspace, setNodeRedWorkspace] = useState<NodeRedWorkspaceState | null>(null);
   const observerRef = useRef<any>(null);
   // const [buttonDisabled, setDisabled] = useState(state?.status === 'RUNNING');
   const loadRef = useRef(false);
   // iframe的key
-  // eslint-disable-next-line react-hooks/purity
-  const [key, setKey] = useState(Date.now());
+
+  const [key, setKey] = useState(() => Date.now());
+  const iframeTheme = useFlowIframeThemeBridge(flowIframeRef);
+  const iframeThemeRef = useRef(iframeTheme);
+  const [initialIframeTheme] = useState(iframeTheme);
+  const iframeParams = new URLSearchParams({
+    flowId: String(state.id || ''),
+    rootWorkspaceId: String(state.flowId || ''),
+    theme: initialIframeTheme,
+  });
+  const runtimeFlowId = String(state.flowId || '');
+  const iframeHash = runtimeFlowId ? `#flow/${encodeURIComponent(runtimeFlowId)}` : '';
+  const iframeUrl = `/eventflow/home/?${iframeParams.toString()}${iframeHash}`;
+  const isInSubflow = !!nodeRedWorkspace?.isSubflow;
+  useEffect(() => {
+    iframeThemeRef.current = iframeTheme;
+  }, [iframeTheme]);
+
+  const onShowRootWorkspace = () => {
+    flowIframeRef.current?.contentWindow?.postMessage(
+      { type: 'nodeRedShowWorkspace', data: { id: nodeRedWorkspace?.rootWorkspaceId } },
+      '*'
+    );
+  };
+  const breadcrumbList = [
+    {
+      name: flowName || state.name,
+      onClick: isInSubflow ? onShowRootWorkspace : undefined,
+    },
+    ...(isInSubflow
+      ? [
+          {
+            name: nodeRedWorkspace?.activeWorkspaceName || formatMessage('flowEditor.subflow'),
+          },
+        ]
+      : []),
+  ];
+
   useUpdateEffect(() => {
     if (!loadRef.current) return;
     if (nodeRedLang) {
       setKey(Date.now());
     }
   }, [nodeRedLang]);
+
+  useEffect(() => {
+    if (!state?.id) return;
+    getFlowDetail(state.id)
+      .then((flow) => {
+        if (flow?.flowName) {
+          setFlowName(flow.flowName);
+        }
+      })
+      .catch(() => {
+        setFlowName(state.name || '');
+      });
+  }, [state?.id, state.name]);
   // 将 flows 数据保存到后端
-  const saveFlowsToBackend = async (data: any) => {
-    try {
-      const { flows, type } = data;
-      // 需要过滤掉type为tab的数据
-      const filterFlows = flows?.filter((item: any) => item.type !== 'tab');
-      const api = type === 'save' ? saveFlow : deployFlow;
-      setLoading(true);
-      if (type === 'deploy') {
-        getVersionFlow().then((version) => {
-          if (flowIframeRef.current) {
-            flowIframeRef.current.contentWindow!.postMessage({ data: version, type: 'updateVersion' }, '*');
-          }
-          api({
-            flows: filterFlows,
-            id: state?.id,
-          })
-            .then(({ flowId }: any) => {
-              if (type === 'deploy') {
-                if (!state.flowId && flowId) {
-                  navigate(`/EventFlow/Editor?${getSearchParamsString({ ...state, flowId: flowId })}`, {
-                    replace: true,
-                  });
-                }
-                setKey(Date.now());
-              }
-              message.success(formatMessage('appGui.deployOk'));
-            })
-            .catch(() => {
-              setLoading(false);
-            });
-        });
-      } else {
-        api({
-          flows: filterFlows,
-          id: state?.id,
-        })
-          .then(() => {
-            setLoading(false);
-            message.success(formatMessage('appGui.saveSuccess'));
-          })
-          .catch(() => {
-            setLoading(false);
-          });
+const saveFlowsToBackend = async (data: any) => {
+  try {
+    const { flows, type } = data;
+    const filteredFlows = flows?.filter(
+      (item: any) => item.type !== 'tab' && item._contextOnly !== true && item._contextOnly !== 'true'
+    );
+    const api = type === 'save' ? saveFlow : deployFlow;
+    setLoading(true);
+    const result: any = await api({ flows: filteredFlows, id: state?.id });
+    if (type === 'deploy') {
+      const flowId = result?.flowId;
+      if (!state.flowId && flowId) {
+        navigate(`/event-flow/flow-editor?${getSearchParamsString({ ...state, flowId })}`, { replace: true });
       }
-    } catch (error) {
-      console.error('Error saving flows:', error);
-      setLoading(false);
+      setKey(Date.now());
+      message.success(formatMessage('appGui.deployOk'));
+    } else {
+      message.success(formatMessage('appGui.saveSuccess'));
     }
-  };
+  } catch (error) {
+    console.error('Error saving flows:', error);
+  } finally {
+    setLoading(false);
+  }
+}
 
   // 监听 iframe 加载
   useUpdateEffect(() => {
@@ -104,6 +143,7 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
     if (!iframe) return;
 
     const handleLoad = () => {
+      postFlowIframeTheme(iframe, iframeThemeRef.current);
       setLoading(false);
     };
 
@@ -115,15 +155,19 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
     setLoading(true);
     // 监听来自 Node-RED 的 flows 数据
     const handleMessage = (event: any) => {
+      if (!flowIframeRef.current || event.source !== flowIframeRef.current.contentWindow) return;
       if (event.data.type === 'currentEventFlows') {
         saveFlowsToBackend(event.data.data);
       } else if (event.data.type === 'eventFlowsChange') {
         // setDisabled(!event.data?.data?.contentsChanged);
+      } else if (event.data.type === 'nodeRedWorkspaceState') {
+        setNodeRedWorkspace(event.data.data || null);
       }
     };
 
     const loadFn = () => {
       loadRef.current = true;
+      postFlowIframeTheme(flowIframeRef.current, iframeThemeRef.current);
       setLoading(false);
     };
     if (flowIframeRef.current) {
@@ -140,6 +184,10 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
     };
   }, [state?.id, state?.flowId]);
 
+  useEffect(() => {
+    setNodeRedWorkspace(null);
+  }, [key, state?.id, state?.flowId]);
+
   const setPostMessage = (type: string) => {
     if (flowIframeRef.current) {
       setLoading(true);
@@ -148,70 +196,16 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
   };
 
   // 点击按钮请求 flows 数据
-  const onSaveFlows = () => {
-    setPostMessage('save');
-  };
-
   const onDeployFlows = () => {
     setPostMessage('deploy');
   };
 
-  const onCopyFlows = () => {
-    setShow(true);
-  };
 
   const onOpenMenuHandle = (id: string) => {
     if (flowIframeRef.current) {
       flowIframeRef.current.contentWindow!.postMessage({ data: { id }, type: 'openEventMenu' }, '*');
     }
   };
-
-  const onClose = () => {
-    setShow(false);
-    form.resetFields();
-  };
-
-  const formItemOptions = [
-    {
-      label: formatMessage('eventFlow.copyFlow'),
-    },
-    {
-      label: formatMessage('common.name'),
-      name: 'flowName',
-      rules: [
-        { required: true, message: '' },
-        { pattern: validInputPattern, message: '' },
-      ],
-    },
-    {
-      label: formatMessage('collectionFlow.flowTemplate'),
-      name: 'template',
-      type: 'Select',
-      properties: {
-        options: [
-          {
-            label: 'node-red',
-            value: 'node-red',
-          },
-        ],
-        disabled: true,
-      },
-      initialValue: 'node-red',
-      rules: [{ required: true, message: '' }],
-    },
-    {
-      label: formatMessage('uns.description'),
-      name: 'description',
-    },
-    {
-      label: 'id',
-      name: 'id',
-      hidden: true,
-    },
-    {
-      type: 'divider',
-    },
-  ];
 
   useEffect(() => {
     const targetId = 'red-ui-loading-progress';
@@ -275,41 +269,6 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
     };
   }, [key, state?.id, state?.flowId]);
 
-  const onSave = async () => {
-    const values = await form.validateFields();
-    setApiLoading(true);
-    copyFlow({
-      ...values,
-      sourceId: state.id,
-    })
-      .then((data) => {
-        setShow(false);
-        modal.confirm({
-          title: formatMessage('common.copyConfirm'),
-          onOk: () => {
-            form.resetFields();
-            navigate(
-              `/EventFlow/Editor?${getSearchParamsString({ id: data, name: values.flowName, status: 'DRAFT' })}`,
-              {
-                replace: true,
-              }
-            );
-          },
-          onCancel: () => {
-            form.resetFields();
-          },
-          okButtonProps: {
-            title: formatMessage('common.confirm'),
-          },
-          cancelButtonProps: {
-            title: formatMessage('common.cancel'),
-          },
-        });
-      })
-      .finally(() => {
-        setApiLoading(false);
-      });
-  };
 
   const items: any = [
     {
@@ -357,6 +316,14 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
     ?.filter((f) => {
       return !f.auth || hasPermission(f.auth);
     });
+
+  const handleBack = () => {
+    if (fromPath) {
+      navigate(fromPath);
+    } else {
+      navigate(-1);
+    }
+  };
   return (
     <ComLayout loading={loading}>
       <ComContent
@@ -373,19 +340,7 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Button
-                variant="outlined"
-                color="default"
-                style={{ paddingLeft: '5.5px', gap: '3px' }}
-                onClick={() => {
-                  navigate(-1);
-                }}
-              >
-                <Flex align="center" gap={8}>
-                  <ChevronLeft size={16} />
-                  {formatMessage('common.back')}
-                </Flex>
-              </Button>
+              <ComBackButton onClick={handleBack} />
               <Breadcrumb
                 separator=">"
                 items={breadcrumbList?.map((item: any, idx: number) => {
@@ -397,31 +352,31 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
                   return {
                     title: <ComText>{item.name}</ComText>,
                     onClick: () => {
+                      if (item.onClick) {
+                        item.onClick();
+                        return;
+                      }
                       if (!item.path) return;
                       navigate(item.path);
                     },
                   };
                 })}
               />
+              {isInSubflow && (
+                <Button
+                  variant="outlined"
+                  color="default"
+                  style={{ paddingLeft: '5.5px', gap: '3px' }}
+                  onClick={onShowRootWorkspace}
+                >
+                  <Flex align="center" gap={8}>
+                    <ChevronLeft size={16} />
+                    {formatMessage('flowEditor.returnParent')}
+                  </Flex>
+                </Button>
+              )}
             </div>
             <Space>
-              <AuthButton
-                auth={ButtonPermission['EventFlow.copy']}
-                loading={loading}
-                color="primary"
-                variant="outlined"
-                onClick={onCopyFlows}
-              >
-                {formatMessage('common.copy')}
-              </AuthButton>
-              <AuthButton
-                auth={ButtonPermission['EventFlow.save']}
-                loading={loading}
-                type="primary"
-                onClick={onSaveFlows}
-              >
-                {formatMessage('common.save')}
-              </AuthButton>
               <AuthButton
                 auth={ButtonPermission['EventFlow.deploy']}
                 loading={loading}
@@ -441,7 +396,7 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
                 placement="bottomRight"
               >
                 <div className="flow-dropdown-more">
-                  <OverflowMenuVertical />
+                  <OverflowMenuVertical size={16} />
                 </div>
               </Dropdown>
             </Space>
@@ -460,15 +415,6 @@ const EventFlowPreview: FC<PageProps> = ({ location }) => {
           src={`${getDevProxyBaseUrl()}${iframeUrl}`}
         />
       </ComContent>
-      <ComDrawer title=" " open={show} onClose={onClose}>
-        <OperationForm
-          loading={apiLoading}
-          form={form}
-          onCancel={onClose}
-          onSave={onSave}
-          formItemOptions={formItemOptions}
-        />
-      </ComDrawer>
     </ComLayout>
   );
 };

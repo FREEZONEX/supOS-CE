@@ -2,22 +2,22 @@
   width: 100%;
   min-height: 480px;
   border-radius: 3px;
-  border: 1px solid var(--supos-table-tr-color);
-  background: var(--supos-uns-button-color);
+  border: 1px solid var(--ui-table-tr-color);
+  background: var(--ui-uns-button-color);
   padding: 12px;
 
   .fetch-data-tab {
     width: 100%;
-    background: var(--supos-uns-button-color);
+    background: var(--ui-uns-button-color);
 
     & > :global(.ant-tabs-nav) {
       margin: 0;
       border-radius: 3px;
-      border: 1px solid #c9c9c9;
+      border: 1px solid var(--ui-line-color);
 
       :global {
         .ant-tabs-nav-wrap {
-          background: var(--supos-switchwrap-active-bg-color);
+          background: var(--ui-switchwrap-active-bg-color);
 
           .ant-tabs-tab {
             padding: 11px 16px;
@@ -42,10 +42,10 @@
 
 .fetch-data-info {
   flex: 1;
-  color: var(--supos-text-color);
-  background: var(--supos-switchwrap-active-bg-color);
+  color: var(--ui-text-color);
+  background: var(--ui-switchwrap-active-bg-color);
   border-radius: 3px;
-  border: 1px solid #c9c9c9;
+  border: 1px solid var(--ui-line-color);
   padding: 12px;
   overflow: hidden;
 
@@ -65,10 +65,10 @@
 
 .fetch-data-code {
   flex: 1;
-  color: var(--supos-text-color);
-  background: var(--supos-switchwrap-active-bg-color);
+  color: var(--ui-text-color);
+  background: var(--ui-switchwrap-active-bg-color);
   border-radius: 3px;
-  border: 1px solid #c9c9c9;
+  border: 1px solid var(--ui-line-color);
   overflow: hidden;
 
   :global {
@@ -81,7 +81,7 @@
     }
 
     .codeViewWrap {
-      background: var(--supos-switchwrap-active-bg-color);
+      background: var(--ui-switchwrap-active-bg-color);
       padding: 12px !important;
     }
   }

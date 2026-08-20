@@ -42,10 +42,6 @@ const useFormModal = ({
         footer={
           <Flex gap="10px" justify="end">
             <ComButton
-              style={{
-                backgroundColor: 'var(--supos-uns-button-color)',
-                color: 'var(--supos-text-color)',
-              }}
               color="default"
               variant="filled"
               onClick={onCancel}

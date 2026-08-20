@@ -7,7 +7,7 @@ const ProCardContainer: FC<{ children?: ReactNode; style?: CSSProperties; minWid
   minWidth = 260,
 }) => {
   return (
-    <div className="proCardContainer" style={{ ...style, '--supos-pro-card-grid-min-width': minWidth + 'px' }}>
+    <div className="proCardContainer" style={{ ...style, '--ui-pro-card-grid-min-width': minWidth + 'px' }}>
       {children}
     </div>
   );

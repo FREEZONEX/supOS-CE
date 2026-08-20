@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Flex } from 'antd';
-import { ChevronDown, User, Task } from '@carbon/icons-react';
-import { useNavigate } from 'react-router';
+import { ChevronDown, User } from '@/components/lucide-icon/carbon';
 import logoLight from '@/assets/custom-nav/logo-light.svg';
 import logoDark from '@/assets/custom-nav/logo-dark.svg';
 import SideNavList from './components/SideNavList';
@@ -17,11 +16,11 @@ import './index.scss';
 import UserPopover from '@/components/com-group-button/UserPopover';
 import DraggableContainer from '@/components/draggable-container';
 import SearchSelect from '@/components/search-select';
+import { useTranslate } from '@/hooks';
 import { useBaseStore } from '@/stores/base';
 import { MenuTypeEnum, setMenuType, ThemeType, useThemeStore } from '@/stores/theme-store';
 
 const Module = () => {
-  const navigate = useNavigate();
   const { menuTree, currentMenuInfo } = useBaseStore((state) => ({
     menuTree: state.menuTree,
     currentMenuInfo: state.currentMenuInfo,
@@ -31,6 +30,8 @@ const Module = () => {
   const [openHoverNav, setOpenHoverNav] = useState(false);
   const [showAllNav, setShowAllNav] = useState(false);
   const [searchOpen, setSearchOpen] = useState(true);
+  const formatMessage = useTranslate();
+  const currentMenuName = formatMessage(currentMenuInfo?.showName || '', undefined, currentMenuInfo?.showName || '');
 
   return (
     <DraggableContainer>
@@ -48,7 +49,7 @@ const Module = () => {
               className="imgWrap"
               style={{
                 opacity: openHoverNav ? 0.2 : 1,
-                '--color-font': 'var(--supos-text-color)',
+                '--color-font': 'var(--ui-text-color)',
               }}
               onClick={() => {
                 setOpenHoverNav((pre) => !pre);
@@ -57,8 +58,8 @@ const Module = () => {
               }}
             >
               <img src={isDark ? logoDark : logoLight} />
-              <span style={{ margin: '0 5px' }} title={currentMenuInfo?.showName}>
-                {currentMenuInfo?.showName}
+              <span style={{ margin: '0 5px' }} title={currentMenuName}>
+                {currentMenuName}
               </span>
               <ChevronDown />
             </div>
@@ -106,15 +107,6 @@ const Module = () => {
               {/*</div>*/}
               <div className="iconWrapper" style={{ padding: 0 }}>
                 <HelpNav />
-              </div>
-              <div
-                className="iconWrapper"
-                style={{ padding: 0 }}
-                onClick={() => {
-                  navigate('/todo');
-                }}
-              >
-                <Task size={20} style={{ color: 'var(--supos-text-color)' }} />
               </div>
               <UserPopover zIndex={10000} placement={'top'}>
                 <div className="iconWrapper">

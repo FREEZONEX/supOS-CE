@@ -1,3 +1,4 @@
+import type { LicenseModules } from '@/apis/core-api/license.ts';
 import type { ContainerItemProps, ResourceProps, SystemInfoProps, UserInfoProps } from '@/stores/types.ts';
 
 export type TBaseStore = {
@@ -21,17 +22,14 @@ export type TBaseStore = {
   currentUserInfo: UserInfoProps;
   // 系统信息集合
   systemInfo: SystemInfoProps;
-  // 高阶使用和关于我们
+  // 关于我们
   containerList?: {
-    advancedUse?: ContainerItemProps[];
     aboutUs?: ContainerItemProps[];
   };
   // 数据库类型 TimescaleDB tdEngine
   dataBaseType: string[];
   // mqtt broke类型 emqx gmqtt
   mqttBrokeType?: string;
-  // 数据看板类型 fuxa grafana
-  dashboardType: string[];
   // 当前菜单信息
   currentMenuInfo?: ResourceProps;
   // 用户是否启用tips
@@ -41,4 +39,6 @@ export type TBaseStore = {
   pluginList: any[];
   // 按钮权限列表
   buttonList: string[];
+  // license 授权的模块开关；接口失败或字段缺失时为 undefined，按「不限制」处理
+  licenseModules?: LicenseModules;
 };

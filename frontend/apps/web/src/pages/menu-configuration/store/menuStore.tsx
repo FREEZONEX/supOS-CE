@@ -4,7 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import { createContext, type ReactNode, useContext, useState } from 'react';
 import { useStoreWithEqualityFn } from 'zustand/traditional';
 import { shallow } from 'zustand/shallow';
-import { getRoutesResourceApi } from '@/apis/inter-api/resource.ts';
+import { getMenuResourceApi } from '@/apis/core-api/resource.ts';
 import { listToTree } from '@/pages/menu-configuration/store/utils.ts';
 
 const initialState: MenuStoreState = {
@@ -24,13 +24,15 @@ export const createMenuStore = (initProps?: Partial<MenuStoreProps>) => {
         set({
           loading: true,
         });
-        return await getRoutesResourceApi()
+        return await getMenuResourceApi()
           .then((data) => {
-            set({
-              menuList: data,
-              menuTree: listToTree(data),
+            const resources = data.filter((item: any) => {
+              return [1, 2, 4, 5].includes(item.type);
             });
-            return data;
+            set({
+              menuList: resources,
+              menuTree: listToTree(resources),
+            });
           })
           .finally(() =>
             set({
