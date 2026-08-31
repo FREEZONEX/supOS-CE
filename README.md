@@ -35,8 +35,8 @@
 
 |             | Minimum Requirement                  | Recommended Requirement                       |
 |-------------|--------------------------------------|-----------------------------------------------|
-| CPU         | 4 cores                              | 8 cores                                       |
-| Memory      | 8 GB                                 | 16 GB                                         |
+| CPU         | 2 cores                              | 4 cores                                       |
+| Memory      | 4 GB                                 | 4 GB                                         |
 | Disk        | 100 GB, 1000 IOPS (30% random write)      | 1 TB, 2000 IOPS (30% random write)        |
 | Browser     | Chrome 89, Edge 89, Firefox 89, Safari 15 | Chrome 89, Edge 89, Firefox 89, Safari 15 |
 
